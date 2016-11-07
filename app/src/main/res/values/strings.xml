@@ -1,0 +1,18 @@
+<resources>
+    <string name="app_name">Musical Library Organizer</string>
+
+    <string name="dummy_button">Continuar</string>
+    <string name="dummy_content"></string>
+    <string name="bring_to_you">Bring to you by:</string>
+
+    <string name="instructions">Instrucciones</string>
+    <string name="description">Lorem ipsum dolor sit amet, a commodo sagittis et accumsan suspendisse. Dolor leo nonummy sociosqu in. Leo rutrum. Varius imperdiet tristique leo tristique eu nulla, nulla explicabo tortor elit, wisi proin quam nec sapien eget, tincidunt nunc eget, dolor in. Cras venenatis, vestibulum quis, pulvinar mollis pharetra. Sagittis fringilla adipiscing phasellus curabitur libero amet, congue rutrum condimentum imperdiet, potenti eleifend, bibendum felis, pellentesque eros etiam adipiscing vitae ante. Amet wisi lacus lorem. Tempus lorem id morbi enim suscipit, nunc eros quam nullam a non. Ac fringilla et enim sit ligula tortor, sollicitudin in luctus, eget nascetur aenean at vel in, tempus arcu nulla convallis turpis posuere luctus. Scelerisque consectetur lacinia tincidunt orci sit lobortis, lectus arcu ipsum justo fringilla penatibus, vulputate urna mi nonummy, aliquam ut ullamcorper, sem vivamus. Augue lacus suspendisse imperdiet ac sed, volutpat urna ultrices eget facilisi vehicula arcu, quisque ante integer. Mi aliquam elit vel eros egestas risus, sed nulla dui mauris donec nam, tincidunt aliquet pellentesque dapibus neque, rutrum ante enim neque.</string>
+    <string name="politics">Politicas de privacidad</string>
+    <string name="privacy">Terminos y condiciones</string>
+
+    <string name="library_scan">Escaneo de biblioteca</string>
+    <string name="description_scan">Selecciona tipo de escaneo de biblioteca: el escaneo manual te permite seleccionar las carpetas que contienen tu colección de música; el escaneo automático hará una busqueda en tus carpetas e intentará encontrar todas los archivos de audio posibles</string>
+    <string name="radio_auto">Automático</string>
+    <string name="radio_manual">Manual</string>
+    <string name="continue_scan">Aceptar</string>
+</resources>
