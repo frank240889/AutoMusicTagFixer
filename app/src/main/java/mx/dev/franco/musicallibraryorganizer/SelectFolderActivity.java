@@ -1,9 +1,11 @@
 package mx.dev.franco.musicallibraryorganizer;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
@@ -37,7 +39,7 @@ public class SelectFolderActivity extends AppCompatActivity implements Navigatio
     private ArrayList<File> files = new ArrayList<File>();
     private ArrayList<File> arrayListFiles;
     private int requestCode;
-    private LinearLayout view;
+    public LinearLayout view;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -110,9 +112,8 @@ public class SelectFolderActivity extends AppCompatActivity implements Navigatio
         return super.onOptionsItemSelected(item);
     }
 
-    @SuppressWarnings("StatementWithEmptyBody")
     @Override
-    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+    public boolean onNavigationItemSelected(MenuItem item) {
         // Handle navigation view item clicks here.
         int id = item.getItemId();
         System.out.println("click aqui "+id);
@@ -139,46 +140,9 @@ public class SelectFolderActivity extends AppCompatActivity implements Navigatio
 
 
     public void showFoldersFromSystem(int scanType){
-//getting SDcard root path
-
-        File root = new File(Environment.getExternalStorageDirectory().getPath());
-        arrayListFiles = getFile(root,scanType);
-
-        for (int i = 0; i < arrayListFiles.size(); i++) {
-            TextView textView = new TextView(this);
-            textView.setText(arrayListFiles.get(i).getName());
-            textView.setPadding(5, 5, 5, 5);
-
-
-
-            //if (files.get(i).isDirectory()) {
-                //files.remove(i);
-                //textView.setTextColor(Color.parseColor("#FF0000"));
-           // }
-            view.addView(textView);
-        }
-
-    }
-
-    public ArrayList<File> getFile(File dir, int scanType) {
-        File listFile[] = dir.listFiles();
-        if (listFile != null && listFile.length > 0) {
-            for (int i = 0; i < listFile.length; i++) {
-
-                if (listFile[i].isDirectory()) {
-                    fileList.add(listFile[i]);
-                    getFile(listFile[i], scanType);
-
-                } else {
-                    if (listFile[i].getName().endsWith(".mp3")){
-                        files.add(listFile[i]);
-                        //System.out.println(fileList.get(i).getName());
-                    }
-                }
-
-            }
-        }
-        return (scanType == 1) ? files:fileList;
+//Obtenemos el path de la SD card
+    AsyncSearch asyncSearch = new AsyncSearch(scanType, this, view);
+        asyncSearch.execute();
     }
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
@@ -213,5 +177,74 @@ public class SelectFolderActivity extends AppCompatActivity implements Navigatio
                 return;
 
 
+    }
+
+    private class AsyncSearch extends AsyncTask <Void, Integer, Void>{
+        private AppCompatActivity activity;
+        private int scanCode;
+        private LinearLayout view;
+
+        public AsyncSearch(int scanCode, AppCompatActivity activity, LinearLayout view){
+            this.scanCode = scanCode;
+            this.activity = activity;
+            this.view = view;
+        }
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            File root = new File(Environment.getExternalStorageDirectory().getPath());
+            arrayListFiles = getFile(root,this.scanCode);
+            for (int i = 0; i < arrayListFiles.size(); i++) {
+                publishProgress(i);
+
+
+                //if (files.get(i).isDirectory()) {
+                //files.remove(i);
+                //textView.setTextColor(Color.parseColor("#FF0000"));
+                // }
+
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            progressBar.setVisibility(View.VISIBLE);
+        }
+
+        public ArrayList<File> getFile(File dir, int scanType) {
+            File listFile[] = dir.listFiles();
+            if (listFile != null && listFile.length > 0) {
+                for (int i = 0; i < listFile.length; i++) {
+
+                    if (listFile[i].isDirectory()) {
+                        fileList.add(listFile[i]);
+                        getFile(listFile[i], scanType);
+
+                    } else {
+                        if (listFile[i].getName().endsWith(".mp3")){
+                            files.add(listFile[i]);
+                            //System.out.println(fileList.get(i).getName());
+                        }
+                    }
+
+                }
+            }
+            return (scanType == 1) ? files:fileList;
+        }
+        @Override
+        protected void onPostExecute(Void result) {
+            progressBar.setVisibility(View.GONE);
+        }
+        @Override
+        protected void onProgressUpdate(Integer... progress) {
+            System.out.println(progress[0] + "--- " + arrayListFiles.get(progress[0]).getName() );
+            super.onProgressUpdate(progress);
+            TextView textView = new TextView(activity);
+            textView.setText(arrayListFiles.get(progress[0]).getName());
+            textView.setPadding(5, 5, 5, 5);
+            view.addView(textView);
+            progressBar.setProgress(progress[0]);
+        }
     }
 }
