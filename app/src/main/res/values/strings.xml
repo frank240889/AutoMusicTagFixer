@@ -1,18 +1,43 @@
 <resources>
     <string name="app_name">Musical Library Organizer</string>
 
-    <string name="dummy_button">Continuar</string>
-    <string name="dummy_content"></string>
     <string name="bring_to_you">Bring to you by:</string>
 
-    <string name="instructions">Instrucciones</string>
-    <string name="description">Lorem ipsum dolor sit amet, a commodo sagittis et accumsan suspendisse. Dolor leo nonummy sociosqu in. Leo rutrum. Varius imperdiet tristique leo tristique eu nulla, nulla explicabo tortor elit, wisi proin quam nec sapien eget, tincidunt nunc eget, dolor in. Cras venenatis, vestibulum quis, pulvinar mollis pharetra. Sagittis fringilla adipiscing phasellus curabitur libero amet, congue rutrum condimentum imperdiet, potenti eleifend, bibendum felis, pellentesque eros etiam adipiscing vitae ante. Amet wisi lacus lorem. Tempus lorem id morbi enim suscipit, nunc eros quam nullam a non. Ac fringilla et enim sit ligula tortor, sollicitudin in luctus, eget nascetur aenean at vel in, tempus arcu nulla convallis turpis posuere luctus. Scelerisque consectetur lacinia tincidunt orci sit lobortis, lectus arcu ipsum justo fringilla penatibus, vulputate urna mi nonummy, aliquam ut ullamcorper, sem vivamus. Augue lacus suspendisse imperdiet ac sed, volutpat urna ultrices eget facilisi vehicula arcu, quisque ante integer. Mi aliquam elit vel eros egestas risus, sed nulla dui mauris donec nam, tincidunt aliquet pellentesque dapibus neque, rutrum ante enim neque.</string>
-    <string name="politics">Politicas de privacidad</string>
-    <string name="privacy">Terminos y condiciones</string>
+    <string name="omit">OMITIR</string>
+    <string name="nextSlide">SIGUIENTE</string>
+    <bool name="firstTimeOpen">false</bool>
+
+    <string name="welcome">¡Bienvenido!</string>
+    <string name="description">Mantén mejor organizada tu biblioteca musical</string>
+    <string name="little_description">Corrige automaticamente el nombre del archivo y sus metadatos</string>
+    <string name="step_1">Paso 1</string>
+    <string name="step_1_detail">Deja a la aplicación buscar automaticamente ó selecciona las carpetas de tu música</string>
+    <string name="step_2">Paso 2</string>
+    <string name="step_2_detail">Elije el método de corrección</string>
+    <string name="step_3">Paso 3</string>
+    <string name="step_3_detail">¡Corrige tus canciones!</string>
+    <string name="ok_button_last_slide">Entendido</string>
+
 
     <string name="library_scan">Escaneo de biblioteca</string>
     <string name="description_scan">Selecciona tipo de escaneo de biblioteca: el escaneo manual te permite seleccionar las carpetas que contienen tu colección de música; el escaneo automático hará una busqueda en tus carpetas e intentará encontrar todas los archivos de audio posibles</string>
     <string name="radio_auto">Automático</string>
     <string name="radio_manual">Manual</string>
-    <string name="continue_scan">Aceptar</string>
+    <string name="auto_scan_detail">Espera un momento por favor, estamos buscando tu música</string>
+    <string name="manual_scan_detail">Selecciona las carpetas donde se encuentra tu música</string>
+    <string name="title_scantype_dialog">Busca tu música</string>
+    <string name="title_activity_choser">ChoserActivity</string>
+    <string name="title_activity_folder_choser">Tu biblioteca musical</string>
+    <string name="title_activity_select_folder">Selecciona las carpetas que contengan música</string>
+
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="scan_library">Explorar biblioteca</string>
+    <string name="options">Opciones</string>
+    <string name="donate">Donar</string>
+    <string name="rate">Califica la App</string>
+    <string name="share">Comparte la App</string>
+    <string name="title_list_files">¿Qué canciones quieres corregír?</string>
+
+    <string name="action_settings">Settings</string>
 </resources>
