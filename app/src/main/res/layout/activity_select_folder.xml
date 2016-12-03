@@ -7,13 +7,16 @@
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
     tools:openDrawer="start">
-
-
     <include
         layout="@layout/app_bar_select_folder"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
-
+    <LinearLayout
+        android:orientation="vertical"
+        android:id="@+id/list_of_files"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+    </LinearLayout>
     <android.support.design.widget.NavigationView
         android:id="@+id/nav_view"
         android:layout_width="wrap_content"
@@ -22,12 +25,5 @@
         android:fitsSystemWindows="true"
         app:headerLayout="@layout/nav_header_select_folder"
         app:menu="@menu/activity_select_folder_drawer" />
-    <LinearLayout
-        android:orientation="vertical"
-        android:id="@+id/list_of_files"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
-    </LinearLayout>
-
 
 </android.support.v4.widget.DrawerLayout>

@@ -1,10 +1,8 @@
 package mx.dev.franco.musicallibraryorganizer;
 
-import android.app.Activity;
+import android.Manifest;
 import android.content.Context;
-import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -14,6 +12,8 @@ import android.support.annotation.RequiresApi;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -21,29 +21,43 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
+import android.widget.CheckBox;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.File;
 import java.util.ArrayList;
 
-
 import static mx.dev.franco.musicallibraryorganizer.SplashActivity.sharedPreferences;
 
 public class SelectFolderActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
+    protected int scanRequestType;
     protected ProgressBar progressBar;
     private ArrayList<File> fileList = new ArrayList<File>();
     private ArrayList<File> files = new ArrayList<File>();
     private ArrayList<File> arrayListFiles;
     private int requestCode;
+    private TypeScanDialogFragment typeScanDialog;
     public LinearLayout view;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_select_folder);
+        view = (LinearLayout) findViewById(R.id.list_of_files);
+        view.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                Toast.makeText(getApplicationContext(),"TOUCH",Toast.LENGTH_SHORT).show();
+                if(event.getAction() == MotionEvent.ACTION_DOWN) {
+
+                    return true;
+                }
+                return false;
+            }
+        });
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         progressBar = (ProgressBar)findViewById(R.id.searching);
@@ -56,7 +70,7 @@ public class SelectFolderActivity extends AppCompatActivity implements Navigatio
         boolean grantedAccessFiles = sharedPreferences.getBoolean("accessFilesPermission",false);
         System.out.println(grantedAccessFiles);
         //if(!grantedAccessFiles) {
-            TypeScanDialogFragment typeScanDialog = new TypeScanDialogFragment();
+            typeScanDialog = new TypeScanDialogFragment();
             typeScanDialog.show(getFragmentManager(), "TypeScanDialogFragment");
             typeScanDialog.setCancelable(false);
         //}
@@ -65,7 +79,7 @@ public class SelectFolderActivity extends AppCompatActivity implements Navigatio
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Aun en construcción", Snackbar.LENGTH_LONG).setAction("Action", null).show();
+                Snackbar.make(view, "EN DESARROLLO...", Snackbar.LENGTH_LONG).setAction("Action", null).show();
             }
         });
 
@@ -76,7 +90,8 @@ public class SelectFolderActivity extends AppCompatActivity implements Navigatio
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
-        view = (LinearLayout) findViewById(R.id.list_of_files);
+        navigationView.getMenu().findItem(R.id.scan).setChecked(true);
+
     }
 
     @Override
@@ -115,19 +130,20 @@ public class SelectFolderActivity extends AppCompatActivity implements Navigatio
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
         // Handle navigation view item clicks here.
+        item.setChecked(true);
         int id = item.getItemId();
         System.out.println("click aqui "+id);
         if (id == R.id.preferences) {
-            // Handle the camera action
+            Toast.makeText(this,"En desarrollo",Toast.LENGTH_SHORT).show();
         } else if (id == R.id.donate) {
-
+            Toast.makeText(this,"En desarrollo",Toast.LENGTH_SHORT).show();
         } else if (id == R.id.rate) {
-
+            Toast.makeText(this,"En desarrollo",Toast.LENGTH_SHORT).show();
         } else if (id == R.id.share) {
-
+            Toast.makeText(this,"En desarrollo",Toast.LENGTH_SHORT).show();
         } else if (id == R.id.scan){
-
-            TypeScanDialogFragment typeScanDialog = new TypeScanDialogFragment();
+            view.removeAllViews();
+            System.out.println("WIdgets removidos");
             typeScanDialog.show(getFragmentManager(), "TypeScanDialogFragment");
             typeScanDialog.setCancelable(false);
         }
@@ -177,6 +193,38 @@ public class SelectFolderActivity extends AppCompatActivity implements Navigatio
                 return;
 
 
+    }
+
+    protected void executeScan(View view){
+        if(view.getId() == R.id.autoScanRadio) {
+            scanRequestType = 1;
+        } else if(view.getId() == R.id.manualScanRadio) {
+            scanRequestType = 2;
+        }
+
+        typeScanDialog.getDialog().cancel();
+        progressBar.setVisibility(View.VISIBLE);
+        askForPermission(Manifest.permission.READ_EXTERNAL_STORAGE,scanRequestType);
+
+
+
+    }
+
+    protected void askForPermission(String permission, Integer requestCode) {
+
+        if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{permission}, requestCode);
+        } else {
+
+            if(requestCode == 1){
+                Toast.makeText(this, "Buscando música", Toast.LENGTH_LONG).show();
+            } else {
+                Toast.makeText(this, "Selecciona las carpetas que contengan música", Toast.LENGTH_LONG).show();
+                //Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+                //startActivityForResult(intent, 1);
+            }
+            showFoldersFromSystem(requestCode);
+        }
     }
 
     private class AsyncSearch extends AsyncTask <Void, Integer, Void>{
@@ -238,12 +286,15 @@ public class SelectFolderActivity extends AppCompatActivity implements Navigatio
         }
         @Override
         protected void onProgressUpdate(Integer... progress) {
-            System.out.println(progress[0] + "--- " + arrayListFiles.get(progress[0]).getName() );
+            System.out.println(progress[0] + "--- " + arrayListFiles.get(progress[0]).getName() + "---" + arrayListFiles.get(progress[0]).lastModified());
             super.onProgressUpdate(progress);
-            TextView textView = new TextView(activity);
-            textView.setText(arrayListFiles.get(progress[0]).getName());
-            textView.setPadding(5, 5, 5, 5);
-            view.addView(textView);
+            CheckBox checkbox = new CheckBox(activity);
+            checkbox.setId(progress[0]);
+            checkbox.setText(arrayListFiles.get(progress[0]).getName());
+            checkbox.setPadding(5,5,5,5);
+            checkbox.setTextSize(20);
+
+            view.addView(checkbox);
             progressBar.setProgress(progress[0]);
         }
     }

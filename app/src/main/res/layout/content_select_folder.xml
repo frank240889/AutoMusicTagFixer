@@ -36,7 +36,9 @@
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
-        android:id="@+id/textView2" />
+        android:id="@+id/textView2"
+        android:textSize="18sp"
+        android:textColor="?android:attr/textColorPrimary" />
     <ProgressBar
         style="?android:attr/progressBarStyle"
         android:layout_width="wrap_content"
