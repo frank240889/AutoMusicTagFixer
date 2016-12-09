@@ -28,29 +28,6 @@ public class TypeScanDialogFragment extends DialogFragment {
         final Button manualButton = (Button)formElementsView.findViewById(R.id.manualScanRadio);
 
         builder.setView(formElementsView).setMessage(R.string.title_scantype_dialog);
-        /*scanTypeRadioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener(){
-            @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-            @Override
-            public void onCheckedChanged(RadioGroup radioGroup, int id){
-
-                if(id == R.id.autoScanRadio) {
-                    scanRequestType = 1;
-                } else if(id == R.id.manualScanRadio) {
-                    scanRequestType = 2;
-                }
-                new CountDownTimer(1000, 1000) {
-                    public void onTick(long millisUntilFinished) {}
-
-                    public void onFinish() {
-                        getDialog().cancel();
-                        ((SelectFolderActivity)getActivity()).progressBar.setVisibility(View.VISIBLE);
-                        askForPermission(Manifest.permission.READ_EXTERNAL_STORAGE,scanRequestType);
-
-                    }
-                }.start();
-
-            }
-        });*/
 
         // Se crea el Dialog y se retorna
         return builder.create();

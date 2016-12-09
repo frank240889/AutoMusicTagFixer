@@ -13,13 +13,7 @@
     tools:context="mx.dev.franco.musicallibraryorganizer.SelectFolderActivity"
     tools:showIn="@layout/app_bar_select_folder">
 
-    <ScrollView
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentStart="true"
-        android:layout_marginTop="38dp"
-        android:id="@+id/scrollView2">
+
         <LinearLayout
             android:id="@+id/list_of_files"
             android:layout_width="match_parent"
@@ -27,8 +21,14 @@
             android:orientation="vertical"
             android:padding="8dp"
             android:scrollbars="vertical">
+            <ListView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginTop="38dp"
+                android:id="@+id/list_view_songs">
+            </ListView>
         </LinearLayout>
-    </ScrollView>
+
 
     <TextView
         android:text="@string/title_list_files"

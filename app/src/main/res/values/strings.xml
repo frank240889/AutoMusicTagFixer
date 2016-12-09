@@ -39,5 +39,10 @@
     <string name="share">Comparte la App</string>
     <string name="title_list_files">¿Qué canciones quieres corregír?</string>
 
+    <string name="track_list_title_label">Título: </string>
+    <string name="track_list_artist_label">Artista: </string>
+    <string name="track_list_album_label">Álbum: </string>
+    <string name="track_list_path_label">Ubicación: </string>
+
     <string name="action_settings">Settings</string>
 </resources>

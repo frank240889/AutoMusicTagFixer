@@ -3,6 +3,7 @@ package mx.dev.franco.musicallibraryorganizer;
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -23,10 +24,16 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
-import android.widget.CheckBox;
+import android.widget.ArrayAdapter;
 import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
+
+import com.google.android.gms.appindexing.Action;
+import com.google.android.gms.appindexing.AppIndex;
+import com.google.android.gms.appindexing.Thing;
+import com.google.android.gms.common.api.GoogleApiClient;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -38,10 +45,19 @@ public class SelectFolderActivity extends AppCompatActivity implements Navigatio
     protected ProgressBar progressBar;
     private ArrayList<File> fileList = new ArrayList<File>();
     private ArrayList<File> files = new ArrayList<File>();
+    protected ArrayAdapter<File> filesAdapter;
     private ArrayList<File> arrayListFiles;
     private int requestCode;
     private TypeScanDialogFragment typeScanDialog;
     public LinearLayout view;
+    private TrackAdapter adapter;
+    protected ListView listSongs;
+    /**
+     * ATTENTION: This was auto-generated to implement the App Indexing API.
+     * See https://g.co/AppIndexing/AndroidStudio for more information.
+     */
+    private GoogleApiClient client;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -50,8 +66,8 @@ public class SelectFolderActivity extends AppCompatActivity implements Navigatio
         view.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-                Toast.makeText(getApplicationContext(),"TOUCH",Toast.LENGTH_SHORT).show();
-                if(event.getAction() == MotionEvent.ACTION_DOWN) {
+                Toast.makeText(getApplicationContext(), "TOUCH", Toast.LENGTH_SHORT).show();
+                if (event.getAction() == MotionEvent.ACTION_DOWN) {
 
                     return true;
                 }
@@ -60,19 +76,21 @@ public class SelectFolderActivity extends AppCompatActivity implements Navigatio
         });
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        progressBar = (ProgressBar)findViewById(R.id.searching);
+        progressBar = (ProgressBar) findViewById(R.id.searching);
         progressBar.setVisibility(View.GONE);
 
 
         //Verificamos que ya se han concedido permisos, de los contrario, aparecera el Dialogo que nos pregunta el tipo de busqueda de musica,
         //el cual nos va a pedir el permiso de acceos a los archivos
         SplashActivity.sharedPreferences = getSharedPreferences("ShaPreferences", Context.MODE_PRIVATE);
-        boolean grantedAccessFiles = sharedPreferences.getBoolean("accessFilesPermission",false);
+        boolean grantedAccessFiles = sharedPreferences.getBoolean("accessFilesPermission", false);
         System.out.println(grantedAccessFiles);
+
+        //Si ya teniamos concedido el permiso de acceso archivos ya no preguntamos al inicio de la app el tipo de escaneo
         //if(!grantedAccessFiles) {
-            typeScanDialog = new TypeScanDialogFragment();
-            typeScanDialog.show(getFragmentManager(), "TypeScanDialogFragment");
-            typeScanDialog.setCancelable(false);
+        typeScanDialog = new TypeScanDialogFragment();
+        typeScanDialog.show(getFragmentManager(), "TypeScanDialogFragment");
+        typeScanDialog.setCancelable(false);
         //}
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
@@ -92,6 +110,9 @@ public class SelectFolderActivity extends AppCompatActivity implements Navigatio
         navigationView.setNavigationItemSelectedListener(this);
         navigationView.getMenu().findItem(R.id.scan).setChecked(true);
 
+        // ATTENTION: This was auto-generated to implement the App Indexing API.
+        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
     }
 
     @Override
@@ -132,16 +153,16 @@ public class SelectFolderActivity extends AppCompatActivity implements Navigatio
         // Handle navigation view item clicks here.
         item.setChecked(true);
         int id = item.getItemId();
-        System.out.println("click aqui "+id);
+        System.out.println("click aqui " + id);
         if (id == R.id.preferences) {
-            Toast.makeText(this,"En desarrollo",Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "En desarrollo", Toast.LENGTH_SHORT).show();
         } else if (id == R.id.donate) {
-            Toast.makeText(this,"En desarrollo",Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "En desarrollo", Toast.LENGTH_SHORT).show();
         } else if (id == R.id.rate) {
-            Toast.makeText(this,"En desarrollo",Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "En desarrollo", Toast.LENGTH_SHORT).show();
         } else if (id == R.id.share) {
-            Toast.makeText(this,"En desarrollo",Toast.LENGTH_SHORT).show();
-        } else if (id == R.id.scan){
+            Toast.makeText(this, "En desarrollo", Toast.LENGTH_SHORT).show();
+        } else if (id == R.id.scan) {
             view.removeAllViews();
             System.out.println("WIdgets removidos");
             typeScanDialog.show(getFragmentManager(), "TypeScanDialogFragment");
@@ -153,149 +174,170 @@ public class SelectFolderActivity extends AppCompatActivity implements Navigatio
         return true;
     }
 
+    protected void executeScan(View view) {
+        if (view.getId() == R.id.autoScanRadio) {
+            scanRequestType = 1;
+        } else if (view.getId() == R.id.manualScanRadio) {
+            scanRequestType = 2;
+        }
 
+        typeScanDialog.getDialog().cancel();
+        progressBar.setVisibility(View.VISIBLE);
+        askForPermission(Manifest.permission.READ_EXTERNAL_STORAGE, scanRequestType);
+    }
 
-    public void showFoldersFromSystem(int scanType){
-//Obtenemos el path de la SD card
-    AsyncSearch asyncSearch = new AsyncSearch(scanType, this, view);
-        asyncSearch.execute();
+    protected void askForPermission(String permission, Integer requestCode) {
+        //Sino tenemos el permiso lo pedimos
+        if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{permission}, requestCode);
+        }
+        else {
+        //Si ya tenemos el permiso, verificamos que tipo de escaneo se hara, en caso que se requiera hacer un escaneo
+            if (requestCode == 1) {
+                Toast.makeText(this, "Buscando música", Toast.LENGTH_LONG).show();
+            } else {
+                Toast.makeText(this, "Selecciona las carpetas que contengan música", Toast.LENGTH_LONG).show();
+            }
+            //Permiso concedido, obtenemos las carpeta del sistema en busca de arhivos mp3 y el arreglo lo pasamos al adapter.
+            ListView listView = (ListView) findViewById(R.id.list_view_songs);
+            filesAdapter = new TrackAdapter(this,new ArrayList<File>());
+            listView.setAdapter(filesAdapter);
+            AsyncReadFile asyncReadFile = new AsyncReadFile(requestCode,new File(Environment.getExternalStorageDirectory().getPath()));
+            asyncReadFile.execute();
+        }
     }
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[], @NonNull int[] grantResults) {
         this.requestCode = requestCode;
-                // If request is cancelled, the result arrays are empty.
-                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    SplashActivity.editor = sharedPreferences.edit();
-                    SplashActivity.editor.putBoolean("accessFilesPermission",true);
-                    SplashActivity.editor.apply();
-                    if(requestCode == 1){
-                        Toast.makeText(this, "Permiso concedido... Buscando musica", Toast.LENGTH_LONG).show();
-                    } else {
-                        Toast.makeText(this, "Permiso concedido... Selecciona las carpetas que contengan musica", Toast.LENGTH_LONG).show();
-                        //Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
-                        //startActivityForResult(intent, 1);
+        // If request is cancelled, the result arrays are empty.
+        if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            //Guardamos el permiso concedido para no volver a solicitarlo
+            SplashActivity.editor = sharedPreferences.edit();
+            SplashActivity.editor.putBoolean("accessFilesPermission", true);
+            SplashActivity.editor.apply();
+            if (requestCode == 1) {
+                Toast.makeText(this, "Permiso concedido... Buscando musica", Toast.LENGTH_LONG).show();
+            } else {
+                Toast.makeText(this, "Permiso concedido... Selecciona las carpetas que contengan musica", Toast.LENGTH_LONG).show();
+            }
 
-                    }
+            //Permiso concedido, obtenemos las carpeta del sistema en busca de arhivos mp3 y el arreglo lo pasamos al adapter.
 
-                    showFoldersFromSystem(requestCode);
+            ListView listView = (ListView) findViewById(R.id.list_view_songs);
+            filesAdapter = new TrackAdapter(this,new ArrayList<File>());
+            listView.setAdapter(filesAdapter);
+            AsyncReadFile asyncReadFile = new AsyncReadFile(requestCode,new File(Environment.getExternalStorageDirectory().getPath()));
+            asyncReadFile.execute();
 
-                    // permission was granted, yay! Do the
-                    // contacts-related task you need to do.
-
-                } else {
-
-
-                    // permission denied, boo! Disable the
-                    // functionality that depends on this permission.
-                }
-                return;
-
-
-    }
-
-    protected void executeScan(View view){
-        if(view.getId() == R.id.autoScanRadio) {
-            scanRequestType = 1;
-        } else if(view.getId() == R.id.manualScanRadio) {
-            scanRequestType = 2;
-        }
-
-        typeScanDialog.getDialog().cancel();
-        progressBar.setVisibility(View.VISIBLE);
-        askForPermission(Manifest.permission.READ_EXTERNAL_STORAGE,scanRequestType);
-
-
-
-    }
-
-    protected void askForPermission(String permission, Integer requestCode) {
-
-        if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{permission}, requestCode);
         } else {
 
-            if(requestCode == 1){
-                Toast.makeText(this, "Buscando música", Toast.LENGTH_LONG).show();
-            } else {
-                Toast.makeText(this, "Selecciona las carpetas que contengan música", Toast.LENGTH_LONG).show();
-                //Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
-                //startActivityForResult(intent, 1);
-            }
-            showFoldersFromSystem(requestCode);
+            ListView listView = (ListView) findViewById(R.id.list_view_songs);
+            filesAdapter = new TrackAdapter(this,new ArrayList<File>());
+            listView.setAdapter(filesAdapter);
+            AsyncReadFile asyncReadFile = new AsyncReadFile(requestCode,new File(Environment.getExternalStorageDirectory().getPath()));
+            asyncReadFile.execute();
+            Toast.makeText(this,"sin permiso",Toast.LENGTH_SHORT);
+            //Sin permisos
         }
+
     }
 
-    private class AsyncSearch extends AsyncTask <Void, Integer, Void>{
-        private AppCompatActivity activity;
-        private int scanCode;
-        private LinearLayout view;
 
-        public AsyncSearch(int scanCode, AppCompatActivity activity, LinearLayout view){
-            this.scanCode = scanCode;
-            this.activity = activity;
-            this.view = view;
+    private class AsyncReadFile extends AsyncTask<Void, File, Void> {
+        private int code;
+        private File path;
+
+        AsyncReadFile(int code,File path){
+            this.code = code;
+            this.path = path;
         }
 
-        @Override
-        protected Void doInBackground(Void... voids) {
-            File root = new File(Environment.getExternalStorageDirectory().getPath());
-            arrayListFiles = getFile(root,this.scanCode);
-            for (int i = 0; i < arrayListFiles.size(); i++) {
-                publishProgress(i);
-
-
-                //if (files.get(i).isDirectory()) {
-                //files.remove(i);
-                //textView.setTextColor(Color.parseColor("#FF0000"));
-                // }
-
-            }
-            return null;
-        }
-
-        @Override
-        protected void onPreExecute() {
-            progressBar.setVisibility(View.VISIBLE);
-        }
-
-        public ArrayList<File> getFile(File dir, int scanType) {
+        protected ArrayList<File> getFile(File dir) {
             File listFile[] = dir.listFiles();
             if (listFile != null && listFile.length > 0) {
                 for (int i = 0; i < listFile.length; i++) {
 
                     if (listFile[i].isDirectory()) {
                         fileList.add(listFile[i]);
-                        getFile(listFile[i], scanType);
+                        getFile(listFile[i]);
 
                     } else {
                         if (listFile[i].getName().endsWith(".mp3")){
                             files.add(listFile[i]);
+                            //publishProgress(listFile[i]);
                             //System.out.println(fileList.get(i).getName());
                         }
                     }
 
                 }
             }
-            return (scanType == 1) ? files:fileList;
+            return this.code == 1 ? files:fileList;
         }
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            ArrayList<File> arrayListFiles = getFile(this.path);
+            for (int i = 0; i < arrayListFiles.size(); i++) {
+                publishProgress(arrayListFiles.get(i));
+            }
+            return null;
+        }
+
+
+        @Override
+        protected void onPreExecute() {
+            progressBar.setVisibility(View.VISIBLE);
+        }
+
         @Override
         protected void onPostExecute(Void result) {
             progressBar.setVisibility(View.GONE);
         }
         @Override
-        protected void onProgressUpdate(Integer... progress) {
-            System.out.println(progress[0] + "--- " + arrayListFiles.get(progress[0]).getName() + "---" + arrayListFiles.get(progress[0]).lastModified());
+        protected void onProgressUpdate(File... progress) {
             super.onProgressUpdate(progress);
-            CheckBox checkbox = new CheckBox(activity);
-            checkbox.setId(progress[0]);
-            checkbox.setText(arrayListFiles.get(progress[0]).getName());
-            checkbox.setPadding(5,5,5,5);
-            checkbox.setTextSize(20);
-
-            view.addView(checkbox);
-            progressBar.setProgress(progress[0]);
+            filesAdapter.add(progress[0]);
         }
     }
+
+
+
+    /**
+     * ATTENTION: This was auto-generated to implement the App Indexing API.
+     * See https://g.co/AppIndexing/AndroidStudio for more information.
+     */
+    public Action getIndexApiAction() {
+        Thing object = new Thing.Builder()
+                .setName("SelectFolder Page") // TODO: Define a title for the content shown.
+                // TODO: Make sure this auto-generated URL is correct.
+                .setUrl(Uri.parse("http://[ENTER-YOUR-URL-HERE]"))
+                .build();
+        return new Action.Builder(Action.TYPE_VIEW)
+                .setObject(object)
+                .setActionStatus(Action.STATUS_TYPE_COMPLETED)
+                .build();
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+
+        // ATTENTION: This was auto-generated to implement the App Indexing API.
+        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        client.connect();
+        AppIndex.AppIndexApi.start(client, getIndexApiAction());
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+
+        // ATTENTION: This was auto-generated to implement the App Indexing API.
+        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        AppIndex.AppIndexApi.end(client, getIndexApiAction());
+        client.disconnect();
+    }
+
 }
