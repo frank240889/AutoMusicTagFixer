@@ -2,24 +2,41 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent" android:layout_height="match_parent">
 
-    <Button
-        android:text="Automática"
-        android:layout_width="150sp"
-        android:layout_height="wrap_content"
-        android:id="@+id/autoScanRadio"
-        android:layout_marginEnd="37dp"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentEnd="true"
-        android:onClick="executeScan" />
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
 
-    <Button
-        android:text="Manual"
-        android:layout_width="150sp"
-        android:layout_height="wrap_content"
-        android:id="@+id/manualScanRadio"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentStart="true"
-        android:layout_marginStart="49dp"
-        android:onClick="executeScan" />
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <Button
+                android:text="Manual"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/manualScanRadio"
+                android:onClick="executeScan"
+                android:layout_alignParentTop="true"
+                android:layout_toStartOf="@+id/autoScanRadio"
+                android:layout_marginStart="25dp"
+                android:layout_marginEnd="25dp"
+                android:layout_weight="0.5" />
+
+            <Button
+                android:text="Automática"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/autoScanRadio"
+                android:layout_marginStart="25dp"
+                android:layout_marginEnd="25dp"
+                android:layout_alignParentTop="true"
+                android:layout_alignParentEnd="true"
+                android:onClick="executeScan"
+                android:layout_weight="0.5" />
+        </LinearLayout>
+
+    </LinearLayout>
 
 </RelativeLayout>

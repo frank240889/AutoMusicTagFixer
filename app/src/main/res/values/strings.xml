@@ -29,6 +29,7 @@
     <string name="title_activity_choser">ChoserActivity</string>
     <string name="title_activity_folder_choser">Tu biblioteca musical</string>
     <string name="title_activity_select_folder">Selecciona las carpetas que contengan música</string>
+    <string name="title_fragment_dialog">Exploración de carpetas</string>
 
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>

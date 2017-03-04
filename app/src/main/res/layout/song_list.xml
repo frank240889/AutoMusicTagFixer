@@ -2,50 +2,55 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:orientation="vertical" android:layout_width="match_parent"
+    android:orientation="horizontal" android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:weightSum="1"
+    android:descendantFocusability="blocksDescendants"
     style="@android:style/TextAppearance.Holo">
 
-    <CheckBox
-        android:paddingStart="5dp"
-        android:paddingEnd="5dp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/checkbox_track_name" />
 
     <LinearLayout
         android:orientation="vertical"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:onClick="editInfoTrack">
+        android:layout_height="wrap_content">
+
+        <ImageButton
+            android:onClick="onClickPlayImageButton"
+            android:layout_width="wrap_content"
+            android:contentDescription="Vista previa de archivo"
+            android:layout_height="wrap_content"
+            app:srcCompat="@android:drawable/ic_media_play"
+            android:id="@+id/playTrack" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
 
         <LinearLayout
-            android:paddingStart="5dp"
-            android:paddingEnd="5dp"
             android:orientation="horizontal"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content">
 
             <TextView
+                android:textIsSelectable="false"
                 android:text="@string/track_list_title_label"
                 android:labelFor="@+id/track_name"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:paddingStart="0dp"
-                android:paddingEnd="5dp"
-                android:layout_weight="0.4" />
+                android:maxLines="1"/>
 
             <TextView
                 android:id="@+id/track_name"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text=""
-                android:layout_weight="0.6" />
+                android:textAlignment="textStart"
+                android:maxLines="1"/>
         </LinearLayout>
 
         <LinearLayout
-            android:paddingStart="5dp"
-            android:paddingEnd="5dp"
             android:orientation="horizontal"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content">
@@ -54,21 +59,17 @@
                 android:labelFor="@+id/artist_name"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:paddingStart="0dp"
-                android:paddingEnd="5dp"
-                android:layout_weight="0.4" />
+                android:maxLines="1"/>
 
             <TextView
                 android:id="@+id/artist_name"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text=""
-                android:layout_weight="0.6" />
+                android:maxLines="1"/>
         </LinearLayout>
 
         <LinearLayout
-            android:paddingStart="5dp"
-            android:paddingEnd="5dp"
             android:orientation="horizontal"
             android:layout_width="wrap_content"
             android:layout_height="match_parent">
@@ -77,39 +78,14 @@
                 android:labelFor="@+id/album_name"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:paddingStart="0dp"
-                android:paddingEnd="5dp"
-                android:layout_weight="0.4" />
+                android:maxLines="1"/>
 
             <TextView
                 android:id="@+id/album_name"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text=""
-                android:layout_weight="0.6" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:paddingStart="5dp"
-            android:paddingEnd="5dp"
-            android:orientation="horizontal"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:weightSum="1">
-            <TextView
-                android:text="@string/track_list_path_label"
-                android:labelFor="@+id/track_path"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:paddingStart="0dp"
-                android:paddingEnd="5dp"
-                android:layout_weight="0.4" />
-            <TextView
-                android:id="@+id/track_path"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text=""
-                android:layout_weight="0.6" />
+                android:maxLines="1"/>
         </LinearLayout>
 
     </LinearLayout>
