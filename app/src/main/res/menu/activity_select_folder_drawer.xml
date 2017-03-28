@@ -7,10 +7,6 @@
             android:icon="@android:drawable/ic_menu_search"
             android:title="@string/library_scan" />
         <item
-            android:id="@+id/preferences"
-            android:icon="@android:drawable/ic_menu_preferences"
-            android:title="@string/options" />
-        <item
             android:id="@+id/donate"
             android:icon="@mipmap/usd_48"
             android:title="@string/donate" />

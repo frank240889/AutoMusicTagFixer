@@ -9,4 +9,19 @@
         <attr name="metaButtonBarButtonStyle" format="reference" />
     </declare-styleable>
 
+    <declare-styleable name="CustomTrackView">
+        <attr name="absoluteTrackPath" format="string" />
+        <attr name="relativeTrackPath" format="string" />
+        <attr name="trackName" format="string" />
+        <attr name="albumName" format="string" />
+        <attr name="authorName" format="string" />
+        <attr name="titleName" format="string" />
+        <attr name="bitrate" format="string" />
+        <attr name="genre" format="string" />
+        <attr name="duration" format="string" />
+        <attr name="absolutePosition" format="string" />
+        <attr name="isSelected" format="boolean" />
+        <attr name="isPlaying" format="boolean" />
+    </declare-styleable>
+
 </resources>

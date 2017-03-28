@@ -11,12 +11,7 @@
         layout="@layout/app_bar_select_folder"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
-    <LinearLayout
-        android:orientation="vertical"
-        android:id="@+id/list_of_files"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
-    </LinearLayout>
+
     <android.support.design.widget.NavigationView
         android:id="@+id/nav_view"
         android:layout_width="wrap_content"

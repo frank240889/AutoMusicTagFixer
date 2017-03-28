@@ -2,10 +2,10 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 25
-    buildToolsVersion "25.0.1"
+    buildToolsVersion "25.0.2"
     defaultConfig {
         applicationId "mx.dev.franco.musicallibraryorganizer"
-        minSdkVersion 19
+        minSdkVersion 21
         targetSdkVersion 25
         versionCode 1
         versionName "1.0"
@@ -29,4 +29,7 @@ dependencies {
     compile 'com.android.support:design:25.0.1'
     testCompile 'junit:junit:4.12'
     compile 'com.google.android.gms:play-services-appindexing:8.4.0'
+    compile files('libs/gnsdk.jar')
+    compile files('libs/gnsdk_helpers.jar')
+    compile files('libs/MyID3_for_Android.jar')
 }
