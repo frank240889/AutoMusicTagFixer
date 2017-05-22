@@ -1,118 +1,192 @@
 <?xml version="1.0" encoding="utf-8"?>
-<mx.dev.franco.musicallibraryorganizer.CustomTrackView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:orientation="horizontal"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/itemListView"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:layout_weight="1"
     android:descendantFocusability="blocksDescendants"
+    android:orientation="horizontal"
     android:weightSum="1">
 
 
     <LinearLayout
+        android:id="@+id/statusProcess"
+        android:layout_width="35dp"
+        android:layout_height="35dp"
+        android:layout_gravity="center_vertical|center_horizontal"
+        android:layout_weight="0.1"
+        android:background="@drawable/ic_help_black_24dp"
+        android:clickable="true"
+        android:onClick="onClickStatusIcon"
         android:orientation="vertical"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_vertical">
+        android:scaleX="0.7"
+        android:scaleY="0.7"></LinearLayout>
 
-        <ImageButton
-            android:id="@+id/playTrack"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:background="@android:color/transparent"
-            app:srcCompat="@drawable/circled_play"
-            android:onClick="onClickPlayImageButton"
-            android:scaleType="fitCenter"
-            android:adjustViewBounds="true"/>
+    <LinearLayout
+        android:id="@+id/checkBoxTrack"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_gravity="center_vertical|center_horizontal"
+        android:layout_weight="0.1"
+        android:background="@drawable/unchecked2"
+        android:clickable="true"
+        android:onClick="onClickCheckedItem"
+        android:orientation="vertical"
+        android:scaleX="0.5"
+        android:scaleY="0.5">
+
+        <ProgressBar
+            android:id="@+id/progressProcessingFile"
+            style="?android:attr/progressBarStyle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:visibility="gone"
+            tools:visibility="gone" />
     </LinearLayout>
 
     <LinearLayout
-        android:layout_width="300dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_weight="0.69"
+        android:layout_gravity="center_vertical|center_horizontal"
+        android:layout_weight="0.6"
         android:orientation="vertical">
 
         <LinearLayout
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <TextView
-                android:id="@+id/track_name_label"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:labelFor="@+id/track_name"
-                android:maxLines="1"
-                android:text="@string/track_list_title_label"
-                android:textIsSelectable="false" />
+            android:orientation="horizontal"
+            android:paddingBottom="0.2dp">
 
             <TextView
                 android:id="@+id/track_name"
-                android:layout_width="wrap_content"
+                android:layout_width="240dp"
                 android:layout_height="wrap_content"
+                android:ellipsize="end"
                 android:maxLines="1"
                 android:text=""
-                android:textAlignment="textStart" />
+                android:textAlignment="textStart"
+                android:textSize="16sp"
+                android:textStyle="italic" />
+
+            <TextView
+                android:id="@+id/trackDuration"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:layout_weight="1"
+                android:paddingLeft="5dp"
+                android:text=""
+                android:textAlignment="viewEnd"
+                android:textStyle="italic" />
         </LinearLayout>
 
         <LinearLayout
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:paddingBottom="0.2dp"
+            android:weightSum="1">
 
-            <TextView
-                android:id="@+id/artist_name_label"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:labelFor="@+id/artist_name"
-                android:maxLines="1"
-                android:text="@string/track_list_artist_label" />
+            <LinearLayout
+                android:layout_width="140dp"
+                android:layout_height="match_parent"
+                android:layout_gravity="left"
+                android:layout_weight="0.4"
+                android:orientation="horizontal"
+                android:textAlignment="textStart">
 
-            <TextView
-                android:id="@+id/artist_name"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:maxLines="1"
-                android:text="" />
+                <TextView
+                    android:id="@+id/artist_name"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="left"
+                    android:layout_marginStart="0dp"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:singleLine="true"
+                    android:text=""
+                    android:textAlignment="viewStart"
+                    android:textStyle="italic" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="31dp"
+                android:layout_height="24dp"
+                android:layout_weight="0.2"
+                android:orientation="horizontal">
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="140dp"
+                android:layout_height="match_parent"
+                android:layout_gravity="right"
+                android:layout_toEndOf="@+id/linearLayout"
+                android:layout_weight="0.4"
+                android:elevation="0dp"
+                android:orientation="horizontal"
+                android:textAlignment="textEnd">
+
+                <TextView
+                    android:id="@+id/album_name"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentStart="true"
+                    android:layout_gravity="right"
+                    android:layout_marginEnd="0dp"
+                    android:layout_weight="1"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:singleLine="true"
+                    android:text=""
+                    android:textAlignment="viewEnd"
+                    android:textStyle="italic" />
+            </LinearLayout>
+
         </LinearLayout>
 
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:orientation="horizontal">
-
-            <TextView
-                android:id="@+id/album_name_label"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:labelFor="@+id/album_name"
-                android:maxLines="1"
-                android:text="@string/track_list_album_label" />
-
-            <TextView
-                android:id="@+id/album_name"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:maxLines="1"
-                android:text="" />
-        </LinearLayout>
+        <ProgressBar
+            android:id="@+id/progressBarPlaying"
+            style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:scrollbarStyle="outsideOverlay"
+            android:visibility="gone"
+            tools:visibility="gone" />
 
     </LinearLayout>
 
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center"
+        android:layout_gravity="center_vertical|center_horizontal"
+        android:layout_weight="0.2"
         android:orientation="vertical">
 
         <Button
             android:id="@+id/contextualMenuButton"
+            style="@style/Widget.AppCompat.Button.Small"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="0dp"
+            android:layout_weight="1"
             android:background="@android:color/transparent"
-            android:textSize="32sp"
-            android:textAlignment="center"
-            android:text="@string/vertical_ellipsis" />
-
+            android:clickable="true"
+            android:onClick="onClickContextualMenu"
+            android:text="@string/vertical_ellipsis"
+            android:textAppearance="@android:style/TextAppearance.DeviceDefault.Small"
+            android:textSize="24sp" />
     </LinearLayout>
 
-</mx.dev.franco.musicallibraryorganizer.CustomTrackView>
+    <TextView
+        android:id="@+id/path"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_weight="0"
+        android:text="TextView"
+        android:visibility="gone" />
+
+</LinearLayout>

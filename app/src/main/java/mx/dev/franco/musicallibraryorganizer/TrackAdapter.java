@@ -1,37 +1,34 @@
 package mx.dev.franco.musicallibraryorganizer;
 
 import android.content.Context;
-import android.graphics.BitmapFactory;
-import android.graphics.Color;
-import android.graphics.Typeface;
-import android.media.MediaMetadataRetriever;
 import android.support.annotation.NonNull;
-import android.support.v7.widget.PopupMenu;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.ImageButton;
+import android.widget.Filter;
+import android.widget.Filterable;
+import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import java.io.File;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 
 /**
  * Created by franco on 4/12/16.
  */
 
-class TrackAdapter extends ArrayAdapter<File>{
+class TrackAdapter extends ArrayAdapter<AudioItem> implements Filterable{
     private int position;
     private Context context;
-    private ArrayList<File> audioTracks;
+    protected ArrayList<AudioItem> audioTracks;
+    protected CustomFilter customFilter;
+    protected ArrayList<AudioItem> originalAudioTracks = null;
 
-    TrackAdapter(Context context, ArrayList<File> songs){
+    @SuppressWarnings("unchecked")
+    TrackAdapter(Context context, ArrayList<AudioItem> songs){
         super(context,0,songs);
         this.context = context;
         this.audioTracks = songs;
@@ -40,179 +37,197 @@ class TrackAdapter extends ArrayAdapter<File>{
 
     @NonNull
     @Override
-    public View getView(final int position, View convertView, final ViewGroup parent){
-        // Obtenemos el item en la posicion actual
-        CustomAudioFile track = (CustomAudioFile) getItem(position);
-        CustomAudioFile track2 = (CustomAudioFile)audioTracks.get(position);
-        try {
-            assert ((CustomAudioFile)track) != null;
-            Log.d("TRACK_TITLE", track.getTitle());
-            Log.d("AUDIO_TRACKS", ((CustomAudioFile)audioTracks.get(position)).getTitle());
-        }
-        catch (Exception e){
-            e.printStackTrace();
-        }
-
-        DataTrackHolder dataTrackHolder = null;
-
-        // Vamos reutilizando las vistas que son visibles
-        if (convertView == null) {
-            convertView = LayoutInflater.from(getContext()).inflate(R.layout.song_list, parent, false);
-            dataTrackHolder = new DataTrackHolder();
-            dataTrackHolder.imageButton = (ImageButton) convertView.findViewById(R.id.playTrack);
-            dataTrackHolder.button = (Button) convertView.findViewById(R.id.contextualMenuButton);
-            dataTrackHolder.trackName = (TextView) convertView.findViewById(R.id.track_name);
-            dataTrackHolder.artistName = (TextView) convertView.findViewById(R.id.artist_name);
-            dataTrackHolder.albumName = (TextView) convertView.findViewById(R.id.album_name);
-            convertView.setTag(dataTrackHolder);
-        }
-        else{
-            dataTrackHolder = (DataTrackHolder) convertView.getTag();
+    public View getView(final int position, View convertView, @NonNull final ViewGroup parent){
+        int ignoreRowPosition = position;
+        // We get the item from current position of list.
+        AudioItem track = (AudioItem) getItem(position);
+        //Ignore some rows because of settings app
+        if(!track.isVisible()){
+            if(position < getCount()) {
+                ignoreRowPosition++;
+                track = getItem(ignoreRowPosition);
+            }
         }
 
-        Log.d("GETVIEW",position+"");
 
-        if(SelectFolderActivity.selectedTracksList.containsKey((Integer) position)){
-            convertView.setBackgroundColor(Color.parseColor("#ff0099cc"));
-        }
-        else{
-            convertView.setBackgroundColor(Color.TRANSPARENT);
-        }
-        ((CustomTrackView) convertView).setAbsoluteTrackPath(track.getAbsolutePath());
-        // Extraemos los metadatos y los seteamos en su view correspondiente
-        try {
-            Log.d("EL TITULO EN ADAPTER", track.getTitle());
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-        if(track.getTitle() != null && track.getTitle().length() > 51){
-            dataTrackHolder.trackName.setText(track.getTitle().substring(0,50));
-        }
-        else {
-            dataTrackHolder.trackName.setText(track.getTitle());
-        }
+        assert track != null;
 
-        if(track.getArtist() != null && track.getArtist().length() > 51){
-            dataTrackHolder.artistName.setText(track.getArtist().substring(0,50));
-        }
-        else {
-            dataTrackHolder.artistName.setText(track.getArtist());
-        }
 
-        if(track.getAlbum() != null && track.getAlbum().length() > 51){
-            dataTrackHolder.albumName.setText(track.getAlbum().substring(0,50));
-        }
-        else {
-            dataTrackHolder.albumName.setText(track.getAlbum());
-        }
 
-        dataTrackHolder.button.setTag(track.getAbsolutePath());
-        final View finalConvertView = convertView;
-         //if(!dataTrackHolder.button.hasOnClickListeners()){
-              dataTrackHolder.button.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    showContextualMenu(position,v, finalConvertView);
+            DataTrackHolder dataTrackHolder = null;
+            // Vamos reutilizando las vistas que son visibles
+            if (convertView == null) {
+                convertView = LayoutInflater.from(getContext()).inflate(R.layout.song_list, parent, false);
+                dataTrackHolder = new DataTrackHolder();
+                dataTrackHolder.itemList = (LinearLayout) convertView.findViewById(R.id.itemListView);
+                dataTrackHolder.checked = (LinearLayout) convertView.findViewById(R.id.checkBoxTrack);
+                dataTrackHolder.statusIcon = (LinearLayout) convertView.findViewById(R.id.statusProcess);
+                dataTrackHolder.button = (Button) convertView.findViewById(R.id.contextualMenuButton);
+                dataTrackHolder.trackName = (TextView) convertView.findViewById(R.id.track_name);
+                dataTrackHolder.artistName = (TextView) convertView.findViewById(R.id.artist_name);
+                dataTrackHolder.albumName = (TextView) convertView.findViewById(R.id.album_name);
+                dataTrackHolder.progressBar = (ProgressBar) convertView.findViewById(R.id.progressProcessingFile);
+                dataTrackHolder.progressBarPlaying = (ProgressBar) convertView.findViewById(R.id.progressBarPlaying);
+                dataTrackHolder.duration = (TextView) convertView.findViewById(R.id.trackDuration);
+                dataTrackHolder.path = (TextView) convertView.findViewById(R.id.path);
+                convertView.setTag(dataTrackHolder);
+            } else {
+                dataTrackHolder = (DataTrackHolder) convertView.getTag();
+            }
+
+            //Log.d("SELECTED", String.valueOf(track.isProcessing()));
+
+            if (track.isProcessing()) {
+                dataTrackHolder.checked.setBackground(null);
+                dataTrackHolder.progressBar.setVisibility(View.VISIBLE);
+                convertView.setActivated(false);
+            } else {
+                convertView.setActivated(true);
+                dataTrackHolder.progressBar.setVisibility(View.GONE);
+
+                if (track.isSelected()) {
+                    dataTrackHolder.checked.setBackground(this.context.getResources().getDrawable(R.drawable.checked2, null));
+                } else {
+                    dataTrackHolder.checked.setBackground(this.context.getResources().getDrawable(R.drawable.unchecked2, null));
                 }
-           });
-        //}
 
-        dataTrackHolder.imageButton.setTag(track.getAbsolutePath());
-        dataTrackHolder.trackName.setTypeface(Typeface.defaultFromStyle(Typeface.ITALIC));
-        dataTrackHolder.artistName.setTypeface(Typeface.defaultFromStyle(Typeface.ITALIC));
-        dataTrackHolder.albumName.setTypeface(Typeface.defaultFromStyle(Typeface.ITALIC));
+                if (track.getStatus() == AudioItem.FILE_STATUS_NO_PROCESSED) {
+                    dataTrackHolder.statusIcon.setBackground(this.context.getDrawable(R.drawable.audio_file));
+                } else {
+                    switch (track.getStatus()) {
+                        case AudioItem.FILE_STATUS_BAD:
+                            dataTrackHolder.statusIcon.setBackground(this.context.getResources().getDrawable(R.drawable.fail, null));
+                            break;
+                        case AudioItem.FILE_STATUS_INCOMPLETE:
+                            dataTrackHolder.statusIcon.setBackground(this.context.getResources().getDrawable(R.drawable.attention, null));
+                            break;
+                        case AudioItem.FILE_STATUS_OK:
+                            dataTrackHolder.statusIcon.setBackground(this.context.getResources().getDrawable(R.drawable.ok, null));
+                            break;
+                        case AudioItem.FILE_STATUS_EDIT_BY_USER:
+                            dataTrackHolder.statusIcon.setBackground(this.context.getResources().getDrawable(R.drawable.ic_edit_black_24dp, null));
+                            break;
+                        case AudioItem.FILE_STATUS_DOES_NOT_EXIST:
+                            dataTrackHolder.statusIcon.setBackground(this.context.getResources().getDrawable(R.drawable.ic_remove_circle_black_24dp, null));
+                            break;
+                    }
+                }
 
-        if(!dataTrackHolder.imageButton.getTag().toString().equals(SelectFolderActivity.activeTrack)){
-            if(track.getDecodedAlbumArt() !=null) {
-                dataTrackHolder.imageButton.setImageBitmap(track.getDecodedAlbumArt());
             }
-            else{
-                dataTrackHolder.imageButton.setImageResource(R.drawable.generic_album);
+
+
+            if (track.isPlayingAudio()) {
+                dataTrackHolder.progressBarPlaying.setVisibility(View.VISIBLE);
+            } else {
+                dataTrackHolder.progressBarPlaying.setVisibility(View.GONE);
             }
-        }
-        else{
-            dataTrackHolder.imageButton.setImageResource(R.drawable.circled_pause);
-        }
+
+            if (track.getTitle() != null) {
+                dataTrackHolder.trackName.setText(track.getTitle());
+            } else {
+                dataTrackHolder.trackName.setText(this.context.getText(R.string.no_available));
+            }
+
+            if (track.getArtist() != null) {
+                dataTrackHolder.artistName.setText(track.getArtist());
+            } else {
+                dataTrackHolder.artistName.setText(this.context.getText(R.string.no_available));
+            }
+
+
+            if (track.getAlbum() != null) {
+                dataTrackHolder.albumName.setText(track.getAlbum());
+            } else {
+                dataTrackHolder.albumName.setText(this.context.getText(R.string.no_available));
+            }
+
+            dataTrackHolder.duration.setText(track.getHumanReadableDuration());
+            dataTrackHolder.button.setTag(position);
+            dataTrackHolder.checked.setTag(position);
+            dataTrackHolder.statusIcon.setTag(position);
+            dataTrackHolder.path.setTag(track.getNewAbsolutePath());
+
+
 
 
         return convertView;
 
     }
 
-    private void showContextualMenu(int position, View button, final View parent){
-        this.position = position;
-        Log.d("CONTEXTUAL MENU",this.position+"");
-        PopupMenu trackContextualMenu = new PopupMenu(getContext(),button);
-        MenuInflater menuInflater = trackContextualMenu.getMenuInflater();
-        menuInflater.inflate(R.menu.track_contextual_menu, trackContextualMenu.getMenu());
-
-        if(!SelectFolderActivity.selectedTracksList.containsKey((Integer) this.position)) {
-              trackContextualMenu.getMenu().findItem(R.id.action_select).setTitle(R.string.select_to_process);
+    @NonNull
+    @Override
+    public Filter getFilter(){
+        if(this.customFilter == null){
+            this.customFilter = new CustomFilter();
         }
-        else {
-             trackContextualMenu.getMenu().findItem(R.id.action_select).setTitle(R.string.deselect_to_process);
-        }
-
-        trackContextualMenu.show();
-        trackContextualMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener(){
-
-            @Override
-            public boolean onMenuItemClick(MenuItem item) {
-
-                switch (item.getItemId()){
-                    case R.id.action_select:
-                        if(!SelectFolderActivity.selectedTracksList.containsKey((Integer) TrackAdapter.this.position)) {
-                            SelectFolderActivity.selectedTracksList.put((Integer)TrackAdapter.this.position,((CustomTrackView)parent).getAbsoluteTrackPath());
-                            parent.setBackgroundColor(Color.parseColor("#ff0099cc"));
-                        }else {
-                            SelectFolderActivity.selectedTracksList.remove((Integer) TrackAdapter.this.position);
-                            parent.setBackgroundColor(Color.TRANSPARENT);
-                        }
-
-                        if(SelectFolderActivity.selectedTracksList.isEmpty()){
-                            ((View) parent).getRootView().findViewById(R.id.fab).setEnabled(false);
-                            ((View) parent).getRootView().findViewById(R.id.fab).setAlpha(0.8f);
-                        }
-                        else{
-                            ((View) parent).getRootView().findViewById(R.id.fab).setEnabled(true);
-                            ((View) parent).getRootView().findViewById(R.id.fab).setAlpha(1);
-                        }
-                        break;
-                    case R.id.action_details:
-
-                        //snackbar.setText("En desarrollo" + "... " +item.getTitle());
-
-                        break;
-                    case R.id.action_delete:
-                        if(SelectFolderActivity.isPlaying){
-                            SelectFolderActivity.mediaPlayer.stop();
-                            SelectFolderActivity.isPlaying = false;
-                        }
-                        TrackAdapter.this.remove(TrackAdapter.this.getItem(TrackAdapter.this.position));
-                        SelectFolderActivity.selectedTracks.remove((Integer) TrackAdapter.this.position);
-                        Log.d("NUMERO DE ITEMS",TrackAdapter.this.getCount()+"");
-
-                        //snackbar.setText("En desarrollo" + "... " +item.getTitle());
-
-                        break;
-                    default:
-                        break;
-                }
-
-                return false;
-            }
-        });
+        return this.customFilter;
     }
 
-
-
-    private static class DataTrackHolder extends Object{
+    private static class DataTrackHolder {
         DataTrackHolder(){};
-        ImageButton imageButton ;
+        LinearLayout itemList;
+        LinearLayout checked ;
+        LinearLayout statusIcon;
         Button button ;
         TextView trackName ;
         TextView artistName ;
         TextView albumName ;
+        TextView duration;
+        TextView path;
+        ProgressBar progressBar;
+        ProgressBar progressBarPlaying;
+    }
+
+    private class CustomFilter extends Filter{
+        @SuppressWarnings("unchecked")
+        @Override
+        protected FilterResults performFiltering(CharSequence constraint) {
+            //Log.d(this.getClass().getName(),constraint.toString());
+            if(originalAudioTracks == null){
+                originalAudioTracks = (ArrayList<AudioItem>) audioTracks.clone();
+            }
+
+            //Log.d("AUDIOTRACKS_SIZE", String.valueOf(originalAudioTracks.size()));
+            FilterResults results = new FilterResults();
+            if(constraint.toString().length() > 0 || constraint != null){
+                ArrayList<AudioItem> resultList = new ArrayList<AudioItem>();
+                for(int count = 0 ; count < originalAudioTracks.size() ;count++){
+                    AudioItem tempItem = originalAudioTracks.get(count);
+                    //Log.d("tempItem.getFileName()",tempItem.getFileName());
+                    if(tempItem.getFileName().toLowerCase().contains(constraint.toString().toLowerCase())
+                            //||((AudioItem)tempItem).getTitle().toLowerCase().contains(constraint.toString().toLowerCase())
+                            //|| ((AudioItem)tempItem).getArtist().toLowerCase().contains(constraint.toString().toLowerCase())
+                            //|| ((AUdioItem)tempItem).getAlbum().toLowerCase().contains(constraint.toString().toLowerCase())
+                        ){
+                        resultList.add(tempItem);
+                    }
+                }
+                results.count = resultList.size();
+                results.values = resultList;
+            }
+            else{
+                //synchronized (this) {
+                    results.count = originalAudioTracks.size();
+                    results.values = originalAudioTracks;
+                //}
+            }
+            return results;
+        }
+        @SuppressWarnings("unchecked")
+        @Override
+        protected void publishResults(CharSequence constraint, FilterResults results) {
+            //Log.d(this.getClass().getName(),"Publish results "+ results.count);
+            ArrayList<AudioItem> filteredList = (ArrayList<AudioItem>) results.values;
+            if(results.count == 0){
+                notifyDataSetInvalidated();
+            }
+            else {
+                clear();
+                addAll(filteredList);
+                notifyDataSetChanged();
+
+            }
+        }
     }
 }
 

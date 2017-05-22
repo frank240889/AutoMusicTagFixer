@@ -14,26 +14,28 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom">
-                <ImageView
-                    android:layout_width="match_parent"
-                    android:layout_height="150sp"
-                    app:srcCompat="@mipmap/edit_validated"
-                    android:src="@mipmap/edit_validated"
-                    android:id="@+id/imageView5"
-                    android:layout_centerHorizontal="true"
-                    android:layout_marginTop="50sp" />
 
-                <TextView style="?android:textAppearanceMedium"
-                    android:padding="16dp"
-                    android:lineSpacingMultiplier="1.2"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/step_3_detail"
-                    android:textColor="@android:color/background_light"
-                    android:textAlignment="center"
-                    android:textAllCaps="false"
-                    android:layout_alignParentBottom="true"
-                    android:layout_alignParentStart="true" />
+            <ImageView
+                android:id="@+id/imageView5"
+                android:layout_width="match_parent"
+                android:layout_height="150dp"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="50sp"
+                android:src="@drawable/slide4"
+                app:srcCompat="@drawable/slide4" />
+
+            <TextView
+                style="?android:textAppearanceMedium"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:layout_alignParentStart="true"
+                android:lineSpacingMultiplier="1.2"
+                android:padding="16dp"
+                android:text="@string/step_3_detail"
+                android:textAlignment="center"
+                android:textAllCaps="false"
+                android:textColor="@color/base3" />
 
         </RelativeLayout>
 

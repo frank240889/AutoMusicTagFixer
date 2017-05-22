@@ -8,6 +8,7 @@ import android.support.v7.app.AlertDialog;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
+import android.widget.Toast;
 
 /**
  * Created by franco on 12/11/16.
@@ -26,7 +27,12 @@ public class TypeScanDialogFragment extends DialogFragment {
 
         final Button autoButton = (Button)formElementsView.findViewById(R.id.autoScanRadio);
         final Button manualButton = (Button)formElementsView.findViewById(R.id.manualScanRadio);
-        manualButton.setEnabled(false);
+        manualButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(getActivity().getApplicationContext(),getText(R.string.snackbar_message_in_development),Toast.LENGTH_SHORT).show();
+            }
+        });
         //builder.setIcon(R.drawable.search_icon);
         //builder.setTitle("Exploración de carpetas.");
         //builder.setMessage();

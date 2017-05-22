@@ -9,14 +9,14 @@
 
     <string name="welcome">¡Bienvenido!</string>
     <string name="description">Mantén mejor organizada tu biblioteca musical</string>
-    <string name="little_description">Corrige automaticamente el nombre del archivo y sus metadatos</string>
+    <string name="little_description">Corrigiendo el nombre del archivo y sus metadatos(título, artista, album, etc.)</string>
     <string name="step_1">Paso 1</string>
     <string name="step_1_detail">Deja a la aplicación buscar automaticamente ó selecciona las carpetas de tu música</string>
     <string name="step_2">Paso 2</string>
-    <string name="step_2_detail">Elije el método de corrección</string>
+    <string name="step_2_detail">Selecciona las canciones a corregir automaticamente</string>
     <string name="step_3">Paso 3</string>
-    <string name="step_3_detail">¡Corrige tus canciones!</string>
-    <string name="ok_button_last_slide">Entendido</string>
+    <string name="step_3_detail">O editalas manualmente</string>
+    <string name="ok_button_last_slide">Vamos allá</string>
 
 
     <string name="library_scan">Escaneo de biblioteca</string>
@@ -34,23 +34,45 @@
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
     <string name="scan_library">Explorar biblioteca</string>
-    <string name="options">Opciones</string>
+    <string name="options">Configuración</string>
     <string name="donate">Donar</string>
-    <string name="rate">Califica la App</string>
-    <string name="share">Comparte la App</string>
+    <string name="rate">Calificar aplicación</string>
+    <string name="share">Compartir aplicación</string>
     <string name="title_list_files">¿Qué canciones quieres corregír?</string>
 
+    <string name="tittle_track_detail">Detalles</string>
     <string name="track_list_title_label">Título: </string>
     <string name="track_list_artist_label">Artista: </string>
     <string name="track_list_album_label">Álbum: </string>
+    <string name="track_list_album_artist_label">Artista de álbum: </string>
+    <string name="track_list_composer_label">Compositor: </string>
+    <string name="track_list_number_label">Número: </string>
+    <string name="track_list_year_label">Año: </string>
+    <string name="track_list_genre_label">Genero: </string>
+    <string name="track_list_type_label">Tipo: </string>
+    <string name="track_list_duration_label">Duración: </string>
+    <string name="track_list_sampling_rate_label">Muestreo: </string>
+    <string name="track_list_resolution_label">Resolución: </string>
+    <string name="track_list_channels_label">Canales: </string>
+    <string name="track_list_speed_label">Velocidad: </string>
+    <string name="track_list_size_label">Tamaño: </string>
     <string name="track_list_path_label">Ubicación: </string>
-    <string name="try_again_permission">No se encontraron archivos, toca en el ícono para intentar de nuevo</string>
+
+    <string name="no_available">No disponible</string>
+    <string name="try_again_permission">Volver a buscar</string>
     <string name="explanation_permission_access_files">Es necesario que otorgues el permiso de Espacio de almacenamiento para que la aplicación pueda buscar los archivos de audio, no se recopila ninguna otra información</string>
-<string name="important_tittle">¡Importante!</string>
+    <string name="important_tittle">¡Importante!</string>
+    <string name="ok_button">Aceptar</string>
+    <string name="nextTrack">Siguiente</string>
+    <string name="previousTrack">Anterior</string>
+    <string name="previewTrack">Reproducir</string>
+    <string name="edit_info_track">Editar</string>
+    <string name="save_info_track">Guardar</string>
+    <string name="cancel_edit_track">Cancelar</string>
 
     <string name="action_settings">Opciones</string>
     <string name="placeholder_search">Encuentra tu canción más rápido</string>
-    <string name="retrieving_metadata">Recuperando información de las canciones...</string>
+    <string name="retrieving_metadata">Analizando información de canciones...</string>
     <string name="no_all_data_found">No se pudieron encontrar todos los datos de </string>
     <string name="audiofile_succesfully_processed">Archivo de audio procesado correctamente</string>
 
@@ -62,9 +84,75 @@
     <string name="select_to_process">Seleccionar</string>
     <string name="deselect_to_process">Deseleccionar</string>
 
-    <string name="snackbar_message_in_development">En desarrollo...</string>
+    <string name="snackbar_message_in_development">En desarrollo…</string>
     <string name="snackbar_message_track_preview">Vista previa de </string>
     <string name="toast_track_added_to_fix">Canción añadida para corregir</string>
     <string name="toast_track_remove_from_fixlist">Canción removida de esta lista</string>
     <string name="toast_empty_list">Ninguna canción para corregir</string>
+
+    <string name="file_status_ok">Archivo de audio procesado correctamente</string>
+    <string name="file_status_incomplete">No se encontraron todos los datos para este archivo de audio</string>
+    <string name="file_status_bad">No se encontraron datos disponibles, no se modificó este archivo</string>
+    <string name="file_status_no_processed">Aún no se ha procesado este archivo de audio</string>
+    <string name="file_status_edit_by_user">Archivo de audio editado por usuario</string>
+    <string name="file_status_does_not_exist">Archivo de audio no encontrado</string>
+    <string name="title_activity_options">Options</string>
+
+    <string name="begin_processing">Iniciando procesamiento de archivo…</string>
+    <string name="querying_info_">Solicitando información de archivo…</string>
+    <string name="complete_identification">Identificación completa.</string>
+    <string name="title_activity_settings">Configuración</string>
+
+
+
+    <!-- Strings related to Settings -->
+
+    <!-- General settings -->
+    <string name="pref_header_general">General</string>
+
+    <string name="pref_title_change">Renombrar archivo automaticamente.</string>
+    <string name="pref_title_change_description">Si el servicio de reconocimiento de música encuentra el título de la canción, tambien se utilizará como nombre del archivo; si ya existe un archivo con nombre igual, se añadira un número al final del nombre.
+    </string>
+    <string name="pref_manual_title_change">Renombrar archivo manualmente.</string>
+    <string name="pref_manual_title_change_description">Se utilizará el titulo como nombre de archivo cuando edites la información de la canción; si ya existe el archivo con nombre igual, se añadira un número al final del nombre.
+    </string>
+    <string name="pref_limit_little_duration_files">Mostrar archivos menores a 1 minuto.</string>
+    <string name="pref_limit_little_files">Mostrar archivos menores a 1 Mb.</string>
+
+
+    <!-- Settings for Data save -->
+    <string name="pref_header_size_album_art">Ahorro de datos</string>
+
+    <string name="pref_title_size_album_art">Tamaño de carátula de album</string>
+    <string-array name="pref_size_album_art_titles">
+        <item>No descargar carátula</item>
+        <item>Chica (75x75)</item>
+        <item>Mediana (450x450)</item>
+        <item>Grande (720x720)</item>
+        <item>Extragrande (1080x1080)</item>
+    </string-array>
+    <string-array name="pref_size_album_art_values">
+        <item>-1</item>
+        <item>kImageSize75</item>
+        <item>kImageSize450</item>
+        <item>kImageSize720</item>
+        <item>kImageSize1080</item>
+    </string-array>
+
+    <string-array name="list_preference_entries">
+        <item>No descargar carátula</item>
+        <item>Chica (75x75)</item>
+        <item>Mediana (450x450)</item>
+        <item>Grande (720x720)</item>
+        <item>Extragrande (1080x1080)</item>
+    </string-array>
+
+    <string-array name="list_preference_entry_values">
+        <item>-1</item>
+        <item>kImageSize75</item>
+        <item>kImageSize450</item>
+        <item>kImageSize720</item>
+        <item>kImageSize1080</item>
+    </string-array>
+
 </resources>

@@ -2,16 +2,6 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     >
-    <!--item
-        android:id="@+id/action_preview"
-        android:orderInCategory="100"
-        android:title="@string/play_track"
-        app:showAsAction="never"/-->
-    <item
-        android:id="@+id/action_select"
-        android:orderInCategory="100"
-        android:title="@string/select_to_process"
-        app:showAsAction="never" />
     <item
         android:id="@+id/action_details"
         android:orderInCategory="100"

@@ -2,52 +2,75 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical" android:layout_width="match_parent"
-    android:layout_height="match_parent">
-    <LinearLayout
-        android:orientation="vertical"
-        android:layout_width="128dp"
-        android:layout_height="128dp"
-        android:layout_gravity="center_vertical">
+    android:layout_height="match_parent"
+    android:id="@+id/details_layout">
 
-        <ImageView
-            android:id="@+id/playTrack"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:adjustViewBounds="true"
-            android:scaleType="fitCenter"
-            app:srcCompat="@drawable/generic_album" />
-    </LinearLayout>
     <LinearLayout
-        android:layout_width="300dp"
-        android:layout_height="wrap_content"
-        android:layout_weight="0.69"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:gravity="center"
         android:orientation="vertical">
 
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:text="@string/tittle_track_detail"
+            android:textAlignment="center"
+            android:textAppearance="@style/TextAppearance.AppCompat.Title"
+            android:textColor="@android:color/black" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="256dp"
+        android:layout_height="256dp"
+        android:layout_gravity="center_vertical|center_horizontal"
+        android:orientation="vertical"
+        android:paddingTop="10dp">
+
+        <ImageButton
+            android:id="@+id/albumArt"
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:adjustViewBounds="true"
+            android:background="@android:color/transparent"
+            android:scaleType="fitCenter"
+            app:srcCompat="@drawable/nocoverart" />
+
+        <EditText
+            android:id="@+id/track_name_details"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:enabled="false"
+            android:maxLines="1"
+            android:text=""
+            android:textAlignment="center"
+            android:textSize="16sp"
+            android:textStyle="italic"
+            android:typeface="normal" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical|center_horizontal"
+        android:layout_weight="0.69"
+        android:orientation="vertical"
+        android:paddingBottom="10dp"
+        android:paddingLeft="10dp"
+        android:paddingRight="10dp"
+        android:paddingTop="10dp">
+
         <LinearLayout
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal">
 
-            <TextView
-                android:id="@+id/track_name_label"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:labelFor="@+id/track_name"
-                android:maxLines="1"
-                android:text="@string/track_list_title_label"
-                android:textIsSelectable="false" />
-
-            <TextView
-                android:id="@+id/track_name"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:maxLines="1"
-                android:text=""
-                android:textAlignment="textStart" />
         </LinearLayout>
 
         <LinearLayout
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal">
 
@@ -55,38 +78,320 @@
                 android:id="@+id/artist_name_label"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:labelFor="@+id/artist_name"
+                android:labelFor="@+id/artist_name_details"
                 android:maxLines="1"
-                android:text="@string/track_list_artist_label" />
+                android:text="@string/track_list_artist_label"
+                android:textStyle="bold" />
 
-            <TextView
-                android:id="@+id/artist_name"
-                android:layout_width="wrap_content"
+            <EditText
+                android:id="@+id/artist_name_details"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:maxLines="1"
-                android:text="" />
+                android:textSize="14sp"
+                android:enabled="false"
+                android:paddingStart="5dp"
+                android:text=""
+                android:textStyle="italic" />
         </LinearLayout>
 
         <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:orientation="horizontal">
 
             <TextView
                 android:id="@+id/album_name_label"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:labelFor="@+id/album_name"
+                android:labelFor="@+id/album_name_details"
                 android:maxLines="1"
-                android:text="@string/track_list_album_label" />
+                android:text="@string/track_list_album_label"
+                android:textStyle="bold" />
+
+            <EditText
+                android:id="@+id/album_name_details"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:maxLines="1"
+                android:textSize="14sp"
+                android:enabled="false"
+                android:paddingStart="5dp"
+                android:text=""
+                android:textStyle="italic" />
+        </LinearLayout>
+
+        <!--LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
 
             <TextView
-                android:id="@+id/album_name"
+                android:id="@+id/track_composer_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:labelFor="@+id/track_album_artist"
+                android:maxLines="1"
+                android:text="@string/track_list_composer_label"
+                android:textStyle="bold" />
+
+            <EditText
+                android:id="@+id/track_composer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:maxLines="1"
+                android:textSize="14sp"
+                android:enabled="false"
+                android:paddingStart="5dp"
+                android:text=""
+                android:textStyle="italic" />
+        </LinearLayout-->
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/track_track_number_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:labelFor="@+id/track_number"
+                android:maxLines="1"
+                android:text="@string/track_list_number_label"
+                android:textStyle="bold" />
+
+            <EditText
+                android:id="@+id/track_number"
+                android:layout_width="40dp"
+                android:layout_height="wrap_content"
+                android:maxLines="1"
+                android:textSize="14sp"
+                android:enabled="false"
+                android:paddingStart="5dp"
+                android:text=""
+                android:textStyle="italic" />
+
+            <TextView
+                android:id="@+id/track_year_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:labelFor="@+id/track_year"
+                android:maxLines="1"
+                android:text="@string/track_list_year_label"
+                android:textStyle="bold" />
+
+            <EditText
+                android:id="@+id/track_year"
+                android:layout_width="60dp"
+                android:layout_height="wrap_content"
+                android:maxLines="1"
+                android:textSize="14sp"
+                android:enabled="false"
+                android:paddingStart="5dp"
+                android:text=""
+                android:textStyle="italic" />
+
+            <TextView
+                android:id="@+id/track_genre_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:labelFor="@+id/track_genre"
+                android:maxLines="1"
+                android:text="@string/track_list_genre_label"
+                android:textStyle="bold" />
+
+            <EditText
+                android:id="@+id/track_genre"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:maxLines="1"
+                android:textSize="14sp"
+                android:enabled="false"
+                android:paddingStart="5dp"
+                android:text=""
+                android:textStyle="italic" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/track_duration_details"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:maxLines="1"
-                android:text="" />
+                android:paddingStart="5dp"
+                android:text=""
+                android:textStyle="italic" />
+
+
+            <TextView
+                android:id="@+id/track_channels"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:maxLines="1"
+                android:paddingStart="5dp"
+                android:text=""
+                android:textStyle="italic" />
+
+            <TextView
+                android:id="@+id/track_speed"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:maxLines="1"
+                android:paddingStart="5dp"
+                android:text=""
+                android:textStyle="italic" />
+            <TextView
+                android:id="@+id/track_speed_units"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:maxLines="1"
+                android:paddingStart="5dp"
+                android:text="Kbps"
+                android:textStyle="italic" />
+
+            <TextView
+                android:id="@+id/track_sampling_rate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:maxLines="1"
+                android:paddingStart="5dp"
+                android:text=""
+                android:textStyle="italic" />
+            <TextView
+                android:id="@+id/track_sampling_rate_units"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:maxLines="1"
+                android:paddingStart="5dp"
+                android:text="Khz"
+                android:textStyle="italic" />
+
+
+            <!--TextView
+                android:id="@+id/track_resolution"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:maxLines="1"
+                android:paddingStart="5dp"
+                android:text="16"
+                android:textStyle="italic" />
+
+            <TextView
+                android:id="@+id/track_resolution_units"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:maxLines="1"
+                android:paddingStart="5dp"
+                android:text="bits"
+                android:textStyle="italic" /-->
+
+            <TextView
+                android:id="@+id/track_size"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:maxLines="1"
+                android:paddingStart="5dp"
+                android:text=""
+                android:textAlignment="center"
+                android:textStyle="italic" />
+            <TextView
+                android:id="@+id/track_size_units"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:maxLines="1"
+                android:paddingStart="5dp"
+                android:text="Kb"
+                android:textAlignment="center"
+                android:textStyle="italic" />
+
+            <TextView
+                android:id="@+id/track_type"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:maxLines="1"
+                android:paddingStart="5dp"
+                android:text=""
+                android:textAlignment="center"
+                android:textStyle="italic" />
+
         </LinearLayout>
+
+        <!--LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+        </LinearLayout-->
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/track_path"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:singleLine="true"
+                android:maxLines="1"
+                android:paddingStart="5dp"
+                android:text=""
+                android:scrollHorizontally="true"
+
+                android:ellipsize="marquee"
+                android:marqueeRepeatLimit="marquee_forever"
+
+                android:textStyle="italic" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/cancel"
+                    style="@style/Widget.AppCompat.Button.Borderless"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical|center_horizontal"
+                    android:layout_weight="1"
+                    android:text="@string/cancel_edit_track" />
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_weight="1"
+                    android:orientation="horizontal">
+
+                    <ProgressBar
+                        android:id="@+id/progressSavingData"
+                        style="?android:attr/progressBarStyle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:layout_weight="1"
+                        android:visibility="invisible" />
+                </LinearLayout>
+
+                <Button
+                    android:id="@+id/editTrackInfo"
+                    style="@style/Widget.AppCompat.Button.Borderless"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical|center_horizontal"
+                    android:layout_weight="1"
+                    android:text="@string/edit_info_track" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
 
     </LinearLayout>
 

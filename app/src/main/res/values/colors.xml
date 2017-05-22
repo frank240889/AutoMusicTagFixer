@@ -6,4 +6,16 @@
 
     <color name="black_overlay">#66000000</color>
     <color name="true_black">#000000</color>
+
+    <!-- Solarized dark-->
+    <color name="base00">#657b83</color>
+    <color name="base01">#586e75</color>
+    <color name="base02">#073642</color>
+    <color name="base03">#002b36</color>
+    <color name="base0">#839496</color>
+    <color name="base1">#93a1a1</color>
+    <color name="base2">#eee8d5</color>
+    <color name="base3">#fdf6e3</color>
+    <color name="true_white">#ffffff</color>
+
 </resources>

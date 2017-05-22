@@ -1,0 +1,28 @@
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <SwitchPreference
+        android:defaultValue="true"
+        android:key="title_service_change_switch"
+        android:summary="@string/pref_title_change_description"
+        android:title="@string/pref_title_change" />
+    <SwitchPreference
+        android:defaultValue="false"
+        android:key="title_manual_change_switch"
+        android:summary="@string/pref_manual_title_change_description"
+        android:title="@string/pref_manual_title_change" />
+    <SwitchPreference
+        android:defaultValue="false"
+        android:key="show_small_files"
+        android:title="@string/pref_limit_little_files" />
+    <SwitchPreference
+        android:defaultValue="false"
+        android:key="show_short_files"
+        android:title="@string/pref_limit_little_duration_files" />
+    <SwitchPreference
+        android:defaultValue="false"
+        android:enabled="false"
+        android:key="show_dark_theme"
+        android:summary="Útil en pantallas AMOLED para ayudar a ahorrar batería"
+        android:title="Tema oscuro (En desarrollo)"/>
+
+</PreferenceScreen>

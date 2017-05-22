@@ -1,6 +1,9 @@
 package mx.dev.franco.musicallibraryorganizer;
 
+import android.content.Context;
 import android.content.Intent;
+import android.media.MediaMetadataRetriever;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
@@ -12,6 +15,10 @@ import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ListView;
+
+import java.io.File;
+import java.util.ArrayList;
 
 
 /**
@@ -20,7 +27,6 @@ import android.widget.Button;
 
 public class ScreenSlidePagerActivity extends FragmentActivity {
 
-    ScreenSlidePagerActivity _this;
     /**
      * The number of pages (wizard steps) to show in this demo.
      */
@@ -48,7 +54,6 @@ public class ScreenSlidePagerActivity extends FragmentActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_screen_slide);
-        _this = this;
         gestureDetector = new GestureDetector(this, new MyGestureDetector());
         gestureListener = new View.OnTouchListener() {
             public boolean onTouch(View v, MotionEvent event) {
@@ -66,7 +71,8 @@ public class ScreenSlidePagerActivity extends FragmentActivity {
         buttonOmit.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent(_this, SelectFolderActivity.class);
+                Intent intent = new Intent(ScreenSlidePagerActivity.this, SelectFolderActivity.class);
+                onClickLastPager();
                 startActivity(intent);
                 finish();
             }
@@ -81,7 +87,8 @@ public class ScreenSlidePagerActivity extends FragmentActivity {
                     buttonNext.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View view) {
-                            Intent intent = new Intent(_this, SelectFolderActivity.class);
+                            Intent intent = new Intent(ScreenSlidePagerActivity.this, SelectFolderActivity.class);
+                            onClickLastPager();
                             startActivity(intent);
                             finish();
                         }
@@ -111,7 +118,8 @@ public class ScreenSlidePagerActivity extends FragmentActivity {
                         buttonNext.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View view) {
-                                Intent intent = new Intent(_this, SelectFolderActivity.class);
+                                Intent intent = new Intent(ScreenSlidePagerActivity.this, SelectFolderActivity.class);
+                                onClickLastPager();
                                 startActivity(intent);
                                 finish();
                             }
@@ -126,6 +134,13 @@ public class ScreenSlidePagerActivity extends FragmentActivity {
 
 
 
+    }
+
+    private void onClickLastPager(){
+        SplashActivity.sharedPreferences = getSharedPreferences("ShaPreferences", Context.MODE_PRIVATE);
+        SplashActivity.editor = SplashActivity.sharedPreferences.edit();
+        SplashActivity.editor.putBoolean("first",false);
+        SplashActivity.editor.apply();
     }
 
     /**
@@ -180,8 +195,9 @@ public class ScreenSlidePagerActivity extends FragmentActivity {
                         buttonNext.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View view) {
-                                Intent intent = new Intent(_this,SelectFolderActivity.class);
+                                Intent intent = new Intent(ScreenSlidePagerActivity.this,SelectFolderActivity.class);
                                 startActivity(intent);
+                                onClickLastPager();
                                 finish();
                             }
                         });

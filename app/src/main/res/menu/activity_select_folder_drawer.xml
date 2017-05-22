@@ -4,15 +4,15 @@
     <group android:checkableBehavior="single">
         <item
             android:id="@+id/scan"
-            android:icon="@android:drawable/ic_menu_search"
+            android:icon="@drawable/ic_search_black_24dp"
             android:title="@string/library_scan" />
         <item
-            android:id="@+id/donate"
-            android:icon="@mipmap/usd_48"
-            android:title="@string/donate" />
+            android:id="@+id/settings"
+            android:icon="@drawable/ic_settings_black_24dp"
+            android:title="@string/options" />
         <item
             android:id="@+id/rate"
-            android:icon="@android:drawable/btn_star_big_on"
+            android:icon="@drawable/ic_star_black_24dp"
             android:title="@string/rate" />
         <item
             android:id="@+id/share"
