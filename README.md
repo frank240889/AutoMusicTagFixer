@@ -8,6 +8,7 @@ Artist.
 Track number.
 Disc year.
 Album art.
+
 This app is intended for only personal use. No ads, not pays for use, this app is free and open source, if you like, share it, you can take the source code for improving, fork, or any other plan you have, just give me credits for it.
 
 This app use a music recognition technology powered by Gracenote. It use plugins of another delevelopers. Credits for their respectives creators and owners.
