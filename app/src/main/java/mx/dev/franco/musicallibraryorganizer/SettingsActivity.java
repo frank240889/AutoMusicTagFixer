@@ -224,24 +224,31 @@ public class SettingsActivity extends AppCompatPreferenceActivity{
         }
     }
 
+    /**
+     * This private class update the item list shown in main activity,
+     * according to selected option "Ocultar canciones en la lista"
+     */
 
     private class AsyncSetVisibility extends AsyncTask<Void, AudioItem, Void>{
         DataTrackDbHelper dataTrackDbHelper = DataTrackDbHelper.getInstance(getApplicationContext());
         int _duration;
         AsyncSetVisibility(int duration){
+            //The duration is in millis, so we need to convert to seconds
             _duration = duration == 0 ? duration : duration*1000;
         }
         @Override
         protected void onPreExecute(){
+            //First we removed all elements from its current item list
             SelectFolderActivity.audioItemArrayAdapterAdapter.clear();
         }
 
         @Override
         protected Void doInBackground(Void... params) {
 
-
+                //we set invisible all records with its duration lesser than minimum duration _duration limit
                 dataTrackDbHelper.setVisibleAllItems(_duration);
 
+            //The we get all items in database an discard
                 Cursor cursor;
                 cursor = dataTrackDbHelper.getDataFromDB();
                 int dataLength = cursor.getCount(), i = 0;
@@ -249,6 +256,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity{
                 if (cursor != null && cursor.getCount() > 0) {
                     while (cursor.moveToNext()) {
 
+                        //if record is invisible, the it means that its duration is lesser than minimuin required, so we  discard it
                         boolean isVisible = cursor.getInt(cursor.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_IS_VISIBLE)) == 1;
                         Log.d("NEW AUDIO", isVisible +"   " + cursor.getInt(cursor.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_IS_VISIBLE)));
                         if (isVisible){
@@ -286,6 +294,8 @@ public class SettingsActivity extends AppCompatPreferenceActivity{
         protected void onProgressUpdate(AudioItem... audioItems){
             super.onProgressUpdate(audioItems);
             Log.d("ITEM ADDED",audioItems[0].getFileName());
+            //we add the record to item list here, because this method runs on UI thread,
+            //meaning that can be changes without any error.
             SelectFolderActivity.audioItemArrayAdapterAdapter.add(audioItems[0]);
             SelectFolderActivity.audioItemArrayAdapterAdapter.notifyDataSetChanged();
         }
