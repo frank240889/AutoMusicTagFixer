@@ -6,20 +6,16 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
-import android.media.Ringtone;
-import android.media.RingtoneManager;
-import android.net.Uri;
+import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
-import android.support.v7.app.ActionBar;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
-import android.preference.RingtonePreference;
-import android.text.TextUtils;
+import android.support.v7.app.ActionBar;
 import android.util.Log;
 import android.view.MenuItem;
 
@@ -45,13 +41,11 @@ public class SettingsActivity extends AppCompatPreferenceActivity{
         @Override
         public boolean onPreferenceChange(Preference preference, Object value) {
             String stringValue = value.toString();
-
-            if (preference instanceof ListPreference) {
+            if (preference instanceof SeekBarListPreference || preference instanceof ListPreference) {
                 // For list preferences, look up the correct display value in
                 // the preference's 'entries' list.
                 ListPreference listPreference = (ListPreference) preference;
                 int index = listPreference.findIndexOfValue(stringValue);
-
                 // Set the summary to reflect the new value.
                 preference.setSummary( index >= 0 ? listPreference.getEntries()[index] : null);
 
@@ -137,11 +131,11 @@ public class SettingsActivity extends AppCompatPreferenceActivity{
         return PreferenceFragment.class.getName().equals(fragmentName)
                 || GeneralPreferenceFragment.class.getName().equals(fragmentName)
                 || DataSyncPreferenceFragment.class.getName().equals(fragmentName);
-                //|| NotificationPreferenceFragment.class.getName().equals(fragmentName);
     }
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        //Log.d(key,  sharedPreferences.getString(key,""));
         switch (key){
             case "size_album_art":
                 SelectedOptions.ALBUM_ART_SIZE = sharedPreferences.getString(key,"-1");
@@ -156,15 +150,14 @@ public class SettingsActivity extends AppCompatPreferenceActivity{
 
                 Log.d(key,  SelectedOptions.MANUAL_CHANGE_FILE+"");
                 break;
-            case "show_small_files":
-                SelectedOptions.SHOW_LITTLE_FILES = sharedPreferences.getBoolean(key, false);
-                Log.d(key,  SelectedOptions.SHOW_LITTLE_FILES+"");
+            case "title_automatically_replace_strange_chars":
+                SelectedOptions.AUTOMATICALLY_REPLACE_STRANGE_CHARACTERS = sharedPreferences.getBoolean(key,false);
+                Log.d(key, SelectedOptions.AUTOMATICALLY_REPLACE_STRANGE_CHARACTERS+"");
                 break;
-            case "show_short_files":
-                SelectedOptions.SHOW_SHORT_FILES = sharedPreferences.getBoolean(key, false);
-                new AsyncSetVisibility().execute(SelectedOptions.SHOW_SHORT_FILES);
-                //SelectFolderActivity.hideFiles(SelectedOptions.SHOW_SHORT_FILES, false);
-                Log.d(key,  SelectedOptions.SHOW_SHORT_FILES+"");
+            case "time_limit":
+                int durationLimit = Integer.parseInt(sharedPreferences.getString(key,"0"));
+                new AsyncSetVisibility(durationLimit).execute();
+                //Log.d(key,  sharedPreferences.getString(key,"0"));
                 break;
         }
     }
@@ -187,37 +180,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity{
             // guidelines.
 
             //bindPreferenceSummaryToValue(findPreference("example_text"));
-            //bindPreferenceSummaryToValue(findPreference("example_list"));
-        }
-
-        @Override
-        public boolean onOptionsItemSelected(MenuItem item) {
-            int id = item.getItemId();
-            if (id == android.R.id.home) {
-                startActivity(new Intent(getActivity(), SettingsActivity.class));
-                return true;
-            }
-            return super.onOptionsItemSelected(item);
-        }
-    }
-
-    /**
-     * This fragment shows notification preferences only. It is used when the
-     * activity is showing a two-pane settings UI.
-     */
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-    public static class NotificationPreferenceFragment extends PreferenceFragment {
-        @Override
-        public void onCreate(Bundle savedInstanceState) {
-            super.onCreate(savedInstanceState);
-            addPreferencesFromResource(R.xml.pref_notification);
-            setHasOptionsMenu(true);
-
-            // Bind the summaries of EditText/List/Dialog/Ringtone preferences
-            // to their values. When their values change, their summaries are
-            // updated to reflect the new value, per the Android Design
-            // guidelines.
-            bindPreferenceSummaryToValue(findPreference("notifications_new_message_ringtone"));
+            bindPreferenceSummaryToValue(findPreference("time_limit"));
         }
 
         @Override
@@ -262,28 +225,75 @@ public class SettingsActivity extends AppCompatPreferenceActivity{
     }
 
 
-    class AsyncSetVisibility extends AsyncTask<Boolean, Void, Void>{
+    private class AsyncSetVisibility extends AsyncTask<Void, AudioItem, Void>{
+        DataTrackDbHelper dataTrackDbHelper = DataTrackDbHelper.getInstance(getApplicationContext());
+        int _duration;
+        AsyncSetVisibility(int duration){
+            _duration = duration == 0 ? duration : duration*1000;
+        }
+        @Override
+        protected void onPreExecute(){
+            SelectFolderActivity.audioItemArrayAdapterAdapter.clear();
+        }
 
         @Override
-        protected Void doInBackground(Boolean... params) {
-            for (int i = 0; i < SelectFolderActivity.audioItemArrayAdapterAdapter.getCount(); i++) {
-                if(!params[0]) {
-                    SelectFolderActivity.audioItemArrayAdapterAdapter.getItem(i).setVisible(SelectFolderActivity.audioItemArrayAdapterAdapter.getItem(i).getDuration() > 300000); //show files only grater than 3 minutes
-                }
-                else {
-                    SelectFolderActivity.audioItemArrayAdapterAdapter.getItem(i).setVisible(true); //show all files
-                }
-                Log.d("THREAD", SelectFolderActivity.audioItemArrayAdapterAdapter.getItem(i).isVisible()+" " + SelectFolderActivity.audioItemArrayAdapterAdapter.getItem(i).getDuration());
-                    runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        SelectFolderActivity.audioItemArrayAdapterAdapter.notifyDataSetChanged();
-                    }
-                });
+        protected Void doInBackground(Void... params) {
 
-            }
+
+                dataTrackDbHelper.setVisibleAllItems(_duration);
+
+                Cursor cursor;
+                cursor = dataTrackDbHelper.getDataFromDB();
+                int dataLength = cursor.getCount(), i = 0;
+
+                if (cursor != null && cursor.getCount() > 0) {
+                    while (cursor.moveToNext()) {
+
+                        boolean isVisible = cursor.getInt(cursor.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_IS_VISIBLE)) == 1;
+                        Log.d("NEW AUDIO", isVisible +"   " + cursor.getInt(cursor.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_IS_VISIBLE)));
+                        if (isVisible){
+                            boolean isSelected = cursor.getInt(cursor.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_IS_SELECTED)) != 0;
+                            String title = cursor.getString(cursor.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_TITLE)).equals("") ?
+                                    "No disponible" : cursor.getString(cursor.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_TITLE));
+                            String artist = cursor.getString(cursor.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_ARTIST)).equals("") ?
+                                    "No disponible" : cursor.getString(cursor.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_ARTIST));
+                            String album = cursor.getString(cursor.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_ALBUM)).equals("") ?
+                                    "No disponible" : cursor.getString(cursor.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_ALBUM));
+                            String filename = cursor.getString(cursor.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_CURRENT_FILENAME)).equals("") ?
+                                    "No disponible" : cursor.getString(cursor.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_CURRENT_FILENAME));
+                            String id = cursor.getString(cursor.getColumnIndexOrThrow(TrackContract.TrackData._ID));
+                            String fullPath = cursor.getString(cursor.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_CURRENT_FULL_PATH));
+                            String path = cursor.getString(cursor.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_CURRENT_PATH));
+                            int totalSeconds = Integer.parseInt(cursor.getString(cursor.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_DURATION)));
+                            String sFilesizeInMb = cursor.getString(cursor.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_FILE_SIZE));
+                            float fFileSizeInMb = Float.parseFloat(sFilesizeInMb);
+                            String status = cursor.getString(cursor.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_STATUS));
+                            final AudioItem audioItem = new AudioItem();
+                            audioItem.setTitle(title).setArtist(artist).setAlbum(album).setDuration(totalSeconds).setHumanReadableDuration(AudioItem.getHumanReadableDuration(totalSeconds)).setId(Long.parseLong(id)).setNewAbsolutePath(fullPath).setPosition(i).setStatus(Integer.parseInt(status)).setFileName(filename).setSize(fFileSizeInMb).setVisible(true).setPath(path).setSelected(isSelected);
+                            totalSeconds = 0;
+
+                            publishProgress(audioItem);
+                            i++;
+                        }
+                    }
+                    cursor.close();
+                }
 
             return null;
         }
+
+        @Override
+        protected void onProgressUpdate(AudioItem... audioItems){
+            super.onProgressUpdate(audioItems);
+            Log.d("ITEM ADDED",audioItems[0].getFileName());
+            SelectFolderActivity.audioItemArrayAdapterAdapter.add(audioItems[0]);
+            SelectFolderActivity.audioItemArrayAdapterAdapter.notifyDataSetChanged();
+        }
+
+        @Override
+        protected void onPostExecute(Void voids){
+            Log.d("COUNT",SelectFolderActivity.audioItemArrayAdapterAdapter.getCount()+"");
+        }
+
     }
 }
