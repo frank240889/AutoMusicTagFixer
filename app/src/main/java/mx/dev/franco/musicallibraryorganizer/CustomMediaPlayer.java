@@ -35,6 +35,10 @@ public final class CustomMediaPlayer extends MediaPlayer implements MediaPlayer.
         setOnCompletionListener(this);
     }
 
+    /**
+     * This method creates a reference of audio item list.
+     * @param filesAdapter
+     */
     void setParameters(ArrayAdapter<AudioItem> filesAdapter){
         if(this.filesAdapter == null) {
             this.filesAdapter = filesAdapter;
@@ -113,15 +117,31 @@ public final class CustomMediaPlayer extends MediaPlayer implements MediaPlayer.
     }
 
 
+    /**
+     * Get the Id from current item playing.
+     * @return
+     */
     long getCurrentId() {
         return currentId;
     }
 
+    /**
+     * Implementatation of completion interface for
+     * handling correctly the ends of song if is playing.
+     * @param mp
+     */
     @Override
     public void onCompletion(MediaPlayer mp) {
         Log.d("OnCompletion","OnCompletion");
         onCompletePlayback(currentId);
     }
+
+    /**
+     * If song reachs its end, then we stop and reset player
+     * for having it ready for next playback, and doesn't throw
+     * any error.
+     * @param id
+     */
 
     static void onCompletePlayback(long id){
         mediaPlayer.stop();
