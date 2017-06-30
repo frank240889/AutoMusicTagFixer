@@ -57,6 +57,9 @@
     <string name="track_list_speed_label">Velocidad: </string>
     <string name="track_list_size_label">Tamaño: </string>
     <string name="track_list_path_label">Ubicación: </string>
+    <string name="download_cover">Descargar carátula</string>
+    <string name="message_no_data_updated">No se pudieron actualizar los datos.</string>
+    <string name="message_data_update">Se actualizaron correctamente los datos.</string>
 
     <string name="no_available">No disponible</string>
     <string name="try_again_permission">Volver a buscar</string>
@@ -69,10 +72,14 @@
     <string name="edit_info_track">Editar</string>
     <string name="save_info_track">Guardar</string>
     <string name="cancel_edit_track">Cancelar</string>
+    <string name="empty_message">No puede haber campos vacíos.</string>
+    <string name="not_allowed_characters_message">Caracteres inválidos: </string>
+    <string name="data_too_long_message">Texto muy largo</string>
+    <string name="file_is_processing">No se pueden actualizar los datos mientras esta ejecutandose la corrección automática en este mismo archivo.</string>
 
     <string name="action_settings">Opciones</string>
     <string name="placeholder_search">Encuentra tu canción más rápido</string>
-    <string name="retrieving_metadata">Analizando información de canciones...</string>
+    <string name="retrieving_metadata">Obteniendo información de canciones...</string>
     <string name="no_all_data_found">No se pudieron encontrar todos los datos de </string>
     <string name="audiofile_succesfully_processed">Archivo de audio procesado correctamente</string>
 
@@ -85,7 +92,8 @@
     <string name="deselect_to_process">Deseleccionar</string>
 
     <string name="snackbar_message_in_development">En desarrollo…</string>
-    <string name="snackbar_message_track_preview">Vista previa de </string>
+    <string name="snackbar_message_track_preview">Reproduciendo vista previa, presiona de nuevo para detener.</string>
+    <string name="snackbar_message_track_is_processing">No puede reproducir el archivo mientras se procesa.</string>
     <string name="toast_track_added_to_fix">Canción añadida para corregir</string>
     <string name="toast_track_remove_from_fixlist">Canción removida de esta lista</string>
     <string name="toast_empty_list">Ninguna canción para corregir</string>
@@ -116,9 +124,50 @@
     <string name="pref_manual_title_change">Renombrar archivo manualmente.</string>
     <string name="pref_manual_title_change_description">Se utilizará el titulo como nombre de archivo cuando edites la información de la canción; si ya existe el archivo con nombre igual, se añadira un número al final del nombre.
     </string>
-    <string name="pref_limit_little_duration_files">Mostrar archivos menores a 1 minuto.</string>
-    <string name="pref_limit_little_files">Mostrar archivos menores a 1 Mb.</string>
+    <string name="pref_limit_little_duration_files">Ocultar canciones en la lista</string>
+    <string name="pref_automatically_replace_strange_chars">Reemplazar caracteres no válidos</string>
+    <string name="pref_automatically_replace_strange_chars_description">Cuando el usuario edite manualmente una canción, los caracteres extraños se cambiarán automaticamente por el caracter vacío cuando oprima el botón Guardar</string>
 
+    <string-array name="timeListArray">
+        <item>No mostrar las que duren menos de 10 segundos</item>
+        <item>No mostrar las que duren menos de 20 segundos</item>
+        <item>No mostrar las que duren menos de 30 segundos</item>
+        <item>No mostrar las que duren menos de 40 segundos</item>
+        <item>No mostrar las que duren menos de 50 segundos</item>
+        <item>No mostrar las que duren menos de 1 minuto</item>
+        <item>No mostrar las que duren menos de 2 minutos</item>
+        <item>No mostrar las que duren menos de 3 minutos</item>
+        <item>No mostrar las que duren menos de 4 minutos</item>
+        <item>No mostrar las que duren menos de 5 minutos</item>
+        <item>No mostrar las que duren menos de 6 minutos</item>
+        <item>No mostrar las que duren menos de 7 minutos</item>
+        <item>No mostrar las que duren menos de 8 minutos</item>
+        <item>No mostrar las que duren menos de 9 minutos</item>
+        <item>No mostrar las que duren menos de 10 minutos</item>
+        <item>No mostrar las que duren menos de 12 minutos</item>
+        <item>Mostrar todas las canciones</item>
+    </string-array>
+
+    <!--This is going to be in seconds-->
+    <string-array name="timeListValues">
+        <item>10</item>
+        <item>20</item>
+        <item>30</item>
+        <item>40</item>
+        <item>50</item>
+        <item>60</item>
+        <item>120</item>
+        <item>180</item>
+        <item>240</item>
+        <item>300</item>
+        <item>360</item>
+        <item>420</item>
+        <item>480</item>
+        <item>540</item>
+        <item>600</item>
+        <item>720</item>
+        <item>0</item>
+    </string-array>
 
     <!-- Settings for Data save -->
     <string name="pref_header_size_album_art">Ahorro de datos</string>
