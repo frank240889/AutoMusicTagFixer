@@ -1,15 +1,12 @@
 package mx.dev.franco.musicallibraryorganizer;
 
-import android.app.Application;
 import android.content.Context;
 import android.media.MediaPlayer;
-import android.os.Handler;
 import android.os.PowerManager;
 import android.util.Log;
-import android.view.View;
+import android.view.Gravity;
 import android.widget.ArrayAdapter;
-import android.widget.ProgressBar;
-import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.IOException;
 
@@ -17,221 +14,120 @@ import java.io.IOException;
  * Created by franco on 29/03/17.
  */
 
-public final class CustomMediaPlayer extends MediaPlayer {
+public final class CustomMediaPlayer extends MediaPlayer implements MediaPlayer.OnCompletionListener {
+
     private static CustomMediaPlayer mediaPlayer;
-    private int currentPositionAudioSource=-1;
-    private final int PREVIEW_LENGTH = 10;
     private int rangeToPlay;
-    private Handler handler = null, myProgressHandler = null;
-    private MyTimer timeOut = null;
     private ArrayAdapter<AudioItem> filesAdapter;
-    private ProgressBar progressBar;
-    private int progressStatus = 0;
-    private String lastPlayedPath = "", currentPlayedPath;
-    private AudioItem lastAudioItem, currentAudioItem;
-    private View lastView, currentView;
-    private Thread threadProgressBar;
-    private ProgressBarUpdater progressBarUpdater;
-    private MyCounter myCounter;
+    private AudioItem currentAudioItem;
+    private static long currentId = -1;
     private Context context;
 
-    private CustomMediaPlayer(){
+    /**
+     * Don't let instantiate this class, we need only one instance,
+     * so we use a singleton pattern in order to make this.
+     * @param context
+     */
+    private CustomMediaPlayer(Context context){
         super();
-    }
-
-    void setParameters(ArrayAdapter<AudioItem> filesAdapter, Context appContext){
+        this.context = context;
         this.setVolume(1f,1f);
-        this.filesAdapter = filesAdapter;
-        context = appContext;
+        setOnCompletionListener(this);
     }
 
-    static CustomMediaPlayer getInstance(){
-        if(mediaPlayer == null){
-            mediaPlayer = new CustomMediaPlayer();
+    void setParameters(ArrayAdapter<AudioItem> filesAdapter){
+        if(this.filesAdapter == null) {
+            this.filesAdapter = filesAdapter;
         }
+    }
+
+    /**
+     *
+     * @param context
+     * @return An unique instance of CustomMediaPlayer.
+     */
+    static CustomMediaPlayer getInstance(Context context){
+        if(mediaPlayer == null){
+            mediaPlayer = new CustomMediaPlayer(context.getApplicationContext());
+        }
+        mediaPlayer.setWakeMode(context.getApplicationContext(), PowerManager.PARTIAL_WAKE_LOCK);
         return mediaPlayer;
     }
 
     /**
-     * Play a preview of 10 seconds of the audiofile.
-     * @param view A reference to the current view that was pressed in listview
+     * Play a preview of audiofile.
+     * @param id The current id item that was pressed in listview
      * @throws IOException
      * @throws InterruptedException
      */
 
-    void playPreview(View view) throws IOException, InterruptedException {
-        String trackPath =  (String)(view.findViewById(R.id.path)).getTag();
-        SelectFolderActivity selectFolderActivity = ((SelectFolderActivity) context);
-        //Not playing any file
-            if (!isPlaying()) {
+    void playPreview(long id) throws IOException, InterruptedException {
 
-
-                currentAudioItem = selectFolderActivity.selectItemByIdOrPath(-1,trackPath);
-                lastAudioItem =  currentAudioItem;
-
-                currentPlayedPath = trackPath;
-                lastPlayedPath = currentPlayedPath;
-
-
-                if(currentView != lastView){
-                    lastView = currentView;
-                    currentView =  view;
-                }
-                else {
-                    currentView =  view;
-                    lastView = currentView;
-                }
-
-                reset();
-                setDataSource(currentPlayedPath);
-                setWakeMode(context.getApplicationContext(), PowerManager.PARTIAL_WAKE_LOCK);
-
-                prepare();
-                rangeToPlay = (getDuration()/2)-15;
-                seekTo(rangeToPlay);
-                currentAudioItem.setPlayingAudio(true);
-
-                //Set the timeout for playing only 10 seconds
-                handler = new Handler();
-                timeOut = new MyTimer();
-                handler.postDelayed(timeOut,PREVIEW_LENGTH*1000);
-                progressBar = (ProgressBar) currentView.findViewById(R.id.progressBarPlaying);
-                progressBar.setVisibility(View.VISIBLE);
-
-                //Set the thread that execute the update of the progressbar
-                progressBarUpdater = new ProgressBarUpdater();
-                myProgressHandler = new Handler();
-                myCounter = new MyCounter();
-                threadProgressBar =  new Thread(myCounter);
-                threadProgressBar.start();
-
-                //Starts playing the audiofile
-                this.start();
-
-                //Notify to the adapter for redrawing the visible items
-                filesAdapter.notifyDataSetChanged();
-            }
-            //Playing an audiofile
-            else {
-                myCounter.playRunning(false);
-                try {
-                    handler.removeCallbacks(timeOut);
-                    myProgressHandler.removeCallbacks(progressBarUpdater);
-                    threadProgressBar.join();
-                    handler = null;
-                    myProgressHandler = null;
-                    myCounter = null;
-                    timeOut = null;
-                }catch (Exception e){
-                    e.printStackTrace();
-                }
-
-                lastPlayedPath = currentPlayedPath;
-                currentPlayedPath = trackPath;
-
-                //Is the same audiofile?
-                if(lastPlayedPath.equals(currentPlayedPath)){
-                    currentAudioItem = selectFolderActivity.selectItemByIdOrPath(-1,currentPlayedPath);
-                    lastAudioItem = currentAudioItem;
-
-                    lastView = view;
-                    currentView =  view;
-
-                    currentAudioItem.setPlayingAudio(false);
-                    progressBar = (ProgressBar) currentView.findViewById(R.id.progressBarPlaying);
-                    progressBar.setVisibility(View.GONE);
-                    progressBar.setProgress(0);
-                    stop();
-                    return;
-                }
-                else{
-                    lastAudioItem = currentAudioItem;
-                    currentAudioItem = selectFolderActivity.selectItemByIdOrPath(-1,currentPlayedPath);
-
-                    lastView = currentView;
-                    currentView =  view;
-
-                    lastAudioItem.setPlayingAudio(false);
-                    lastView.findViewById(R.id.progressBarPlaying).setVisibility(View.GONE);
-                    ((ProgressBar)lastView.findViewById(R.id.progressBarPlaying)).setProgress(0);
-                    progressBar = (ProgressBar) currentView.findViewById(R.id.progressBarPlaying);
-                    progressBar.setVisibility(View.VISIBLE);
-                    progressBar.setProgress(0);
-                }
-
-
-                //if is not the same audiofile
-                stop();
-                reset();
-
-                setDataSource(currentPlayedPath);
-                prepare();
-                rangeToPlay = (this.getDuration()/2)-15;
-                seekTo(this.rangeToPlay);
-
-                currentAudioItem.setPlayingAudio(true);
-
-                handler = new Handler();
-                timeOut = new MyTimer();
-                handler.postDelayed(timeOut,PREVIEW_LENGTH*1000);
-
-                progressBarUpdater = new ProgressBarUpdater();
-                myProgressHandler = new Handler();
-                myCounter = new MyCounter();
-                threadProgressBar =  new Thread(myCounter);
-                threadProgressBar.start();
-
-                this.start();
-
-                filesAdapter.notifyDataSetChanged();
-            }
-    }
-
-
-    private class MyTimer implements Runnable {
-        @Override
-        public void run() {
+        // Was pressed the same item? then stop
+        if(currentId == id && mediaPlayer.isPlaying()) {
+            mediaPlayer.stop();
+            mediaPlayer.reset();
             currentAudioItem.setPlayingAudio(false);
-            CustomMediaPlayer.this.stop();
-            CustomMediaPlayer.this.progressBar.setVisibility(View.GONE);
+            SelectFolderActivity.audioItemArrayAdapterAdapter.notifyDataSetChanged();
+            return;
         }
+
+        // playing any item while pressing another item? then stop previous
+        // and then play the new item pressed
+        if(mediaPlayer.isPlaying()){
+            mediaPlayer.stop();
+            mediaPlayer.reset();
+            currentAudioItem.setPlayingAudio(false);
+        }
+
+
+        currentId = id;
+
+        currentAudioItem = SelectFolderActivity.selectItemByIdOrPath(currentId, "");
+
+        if(currentAudioItem.isProcessing()){
+            Toast toast = Toast.makeText(context, context.getString(R.string.snackbar_message_track_is_processing),Toast.LENGTH_SHORT);
+            toast.setGravity(Gravity.CENTER,0,0);
+            toast.show();
+            return;
+        }
+        try{
+            Log.d("path", currentAudioItem.getNewAbsolutePath());
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+
+        mediaPlayer.setDataSource(currentAudioItem.getNewAbsolutePath());
+        mediaPlayer.prepare();
+        if(getDuration() > 30000) { // if audio is not too short
+            rangeToPlay = (getDuration() / 2) - 15;
+            mediaPlayer.seekTo(rangeToPlay);
+        }
+        currentAudioItem.setPlayingAudio(true);
+        currentAudioItem.setStatusText(context.getString(R.string.snackbar_message_track_preview));
+        //listView.getChildAt(currentAudioItem.getPosition()).startAnimation(AnimationUtils.loadAnimation(context.getApplicationContext(), R.anim.blink_playing_preview));
+        //listView.getSelectedView().startAnimation(AnimationUtils.loadAnimation(context.getApplicationContext(), R.anim.blink_playing_preview));
+
+        mediaPlayer.start();
+        SelectFolderActivity.audioItemArrayAdapterAdapter.notifyDataSetChanged();
     }
 
-    private class MyCounter implements Runnable{
-        private boolean running = true;
 
-            @Override
-            public void run() {
-                progressStatus = 0;
-                Log.d("UPDATING_running",progressStatus+"");
-                while(progressStatus < 100 && running){
-                    //Se actualiza el progreso de la barra.
-                    progressStatus += 1;
-
-                    // Esperamos un segundo para que se vuelva a incrementar el progreso,
-                    //lo que nos pemitira ver el avance del preview de la cancion
-                    try{
-                        Thread.sleep(100);
-                    }catch(InterruptedException e){
-                        e.printStackTrace();
-                    }
-
-
-                    Log.d("UPDATING_PROGRESSING_1",progressStatus+"");
-                    myProgressHandler.post(progressBarUpdater);
-                }
-            }
-
-            void playRunning(boolean stop){
-                this.running = stop;
-            }
+    long getCurrentId() {
+        return currentId;
     }
 
+    @Override
+    public void onCompletion(MediaPlayer mp) {
+        Log.d("OnCompletion","OnCompletion");
+        onCompletePlayback(currentId);
+    }
 
-    private class ProgressBarUpdater implements Runnable{
-        @Override
-        public void run() {
-            progressBar.setProgress(progressStatus);
-        }
+    static void onCompletePlayback(long id){
+        mediaPlayer.stop();
+        mediaPlayer.reset();
+        AudioItem audioItem = SelectFolderActivity.selectItemByIdOrPath(id,"");
+        audioItem.setPlayingAudio(false);
+        SelectFolderActivity.audioItemArrayAdapterAdapter.notifyDataSetChanged();
     }
 }
