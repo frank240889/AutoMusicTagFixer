@@ -5,7 +5,6 @@ import android.media.MediaPlayer;
 import android.os.PowerManager;
 import android.util.Log;
 import android.view.Gravity;
-import android.widget.ArrayAdapter;
 import android.widget.Toast;
 
 import java.io.IOException;
@@ -18,10 +17,10 @@ public final class CustomMediaPlayer extends MediaPlayer implements MediaPlayer.
 
     private static CustomMediaPlayer mediaPlayer;
     private int rangeToPlay;
-    private ArrayAdapter<AudioItem> filesAdapter;
-    private AudioItem currentAudioItem;
+    private static AudioItem currentAudioItem;
     private static long currentId = -1;
     private Context context;
+    private String currentPath;
 
     /**
      * Don't let instantiate this class, we need only one instance,
@@ -30,19 +29,9 @@ public final class CustomMediaPlayer extends MediaPlayer implements MediaPlayer.
      */
     private CustomMediaPlayer(Context context){
         super();
-        this.context = context;
+        this.context = context.getApplicationContext();
         this.setVolume(1f,1f);
         setOnCompletionListener(this);
-    }
-
-    /**
-     * This method creates a reference of audio item list.
-     * @param filesAdapter
-     */
-    void setParameters(ArrayAdapter<AudioItem> filesAdapter){
-        if(this.filesAdapter == null) {
-            this.filesAdapter = filesAdapter;
-        }
     }
 
     /**
@@ -72,7 +61,8 @@ public final class CustomMediaPlayer extends MediaPlayer implements MediaPlayer.
             mediaPlayer.stop();
             mediaPlayer.reset();
             currentAudioItem.setPlayingAudio(false);
-            SelectFolderActivity.audioItemArrayAdapterAdapter.notifyDataSetChanged();
+            currentPath = "";
+            SelectFolderActivity.audioItemArrayAdapter.notifyItemChanged(currentAudioItem.getPosition());
             return;
         }
 
@@ -82,12 +72,14 @@ public final class CustomMediaPlayer extends MediaPlayer implements MediaPlayer.
             mediaPlayer.stop();
             mediaPlayer.reset();
             currentAudioItem.setPlayingAudio(false);
+            SelectFolderActivity.audioItemArrayAdapter.notifyItemChanged(currentAudioItem.getPosition());
         }
 
 
         currentId = id;
 
-        currentAudioItem = SelectFolderActivity.selectItemByIdOrPath(currentId, "");
+        currentAudioItem = SelectFolderActivity.getItemByIdOrPath(currentId, "");
+        currentPath = currentAudioItem.getFileName();
 
         if(currentAudioItem.isProcessing()){
             Toast toast = Toast.makeText(context, context.getString(R.string.snackbar_message_track_is_processing),Toast.LENGTH_SHORT);
@@ -109,11 +101,9 @@ public final class CustomMediaPlayer extends MediaPlayer implements MediaPlayer.
         }
         currentAudioItem.setPlayingAudio(true);
         currentAudioItem.setStatusText(context.getString(R.string.snackbar_message_track_preview));
-        //listView.getChildAt(currentAudioItem.getPosition()).startAnimation(AnimationUtils.loadAnimation(context.getApplicationContext(), R.anim.blink_playing_preview));
-        //listView.getSelectedView().startAnimation(AnimationUtils.loadAnimation(context.getApplicationContext(), R.anim.blink_playing_preview));
 
         mediaPlayer.start();
-        SelectFolderActivity.audioItemArrayAdapterAdapter.notifyDataSetChanged();
+        SelectFolderActivity.audioItemArrayAdapter.notifyItemChanged(currentAudioItem.getPosition());
     }
 
 
@@ -123,6 +113,14 @@ public final class CustomMediaPlayer extends MediaPlayer implements MediaPlayer.
      */
     long getCurrentId() {
         return currentId;
+    }
+
+    String getCurrentPath(){
+        return currentPath;
+    }
+
+    AudioItem getCurrentAudioItem(){
+        return currentAudioItem;
     }
 
     /**
@@ -146,8 +144,7 @@ public final class CustomMediaPlayer extends MediaPlayer implements MediaPlayer.
     static void onCompletePlayback(long id){
         mediaPlayer.stop();
         mediaPlayer.reset();
-        AudioItem audioItem = SelectFolderActivity.selectItemByIdOrPath(id,"");
-        audioItem.setPlayingAudio(false);
-        SelectFolderActivity.audioItemArrayAdapterAdapter.notifyDataSetChanged();
+        currentAudioItem.setPlayingAudio(false);
+        SelectFolderActivity.audioItemArrayAdapter.notifyItemChanged(currentAudioItem.getPosition());
     }
 }
