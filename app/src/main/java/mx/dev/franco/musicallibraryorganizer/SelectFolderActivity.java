@@ -2,23 +2,21 @@ package mx.dev.franco.musicallibraryorganizer;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
-import android.app.Application;
+import android.content.BroadcastReceiver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.ServiceConnection;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.graphics.Color;
-import android.graphics.PorterDuff;
+import android.media.MediaMetadataRetriever;
+import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
@@ -27,29 +25,31 @@ import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.GravityCompat;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v4.widget.DrawerLayout;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.PopupMenu;
+import android.support.v7.view.ActionMode;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
+import android.transition.Fade;
 import android.util.Log;
-import android.view.LayoutInflater;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.Window;
+import android.view.WindowManager;
 import android.webkit.MimeTypeMap;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.ImageButton;
-import android.widget.LinearLayout;
-import android.widget.ListView;
-import android.widget.ProgressBar;
-import android.widget.RelativeLayout;
+import android.widget.CheckBox;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -57,116 +57,92 @@ import com.google.android.gms.appindexing.Action;
 import com.google.android.gms.appindexing.AppIndex;
 import com.google.android.gms.appindexing.Thing;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.gracenote.gnsdk.GnAssetFetch;
-import com.gracenote.gnsdk.GnAudioFile;
-import com.gracenote.gnsdk.GnDataLevel;
-import com.gracenote.gnsdk.GnDescriptor;
-import com.gracenote.gnsdk.GnError;
-import com.gracenote.gnsdk.GnException;
-import com.gracenote.gnsdk.GnImageSize;
-import com.gracenote.gnsdk.GnLanguage;
-import com.gracenote.gnsdk.GnLicenseInputMode;
-import com.gracenote.gnsdk.GnLocale;
-import com.gracenote.gnsdk.GnLocaleGroup;
-import com.gracenote.gnsdk.GnLookupData;
-import com.gracenote.gnsdk.GnManager;
-import com.gracenote.gnsdk.GnMusicIdFile;
-import com.gracenote.gnsdk.GnMusicIdFileCallbackStatus;
-import com.gracenote.gnsdk.GnMusicIdFileInfo;
-import com.gracenote.gnsdk.GnMusicIdFileInfoManager;
-import com.gracenote.gnsdk.GnMusicIdFileProcessType;
-import com.gracenote.gnsdk.GnMusicIdFileResponseType;
-import com.gracenote.gnsdk.GnRegion;
-import com.gracenote.gnsdk.GnResponseAlbums;
-import com.gracenote.gnsdk.GnResponseDataMatches;
-import com.gracenote.gnsdk.GnStatus;
-import com.gracenote.gnsdk.GnUser;
-import com.gracenote.gnsdk.GnUserStore;
-import com.gracenote.gnsdk.IGnCancellable;
-import com.gracenote.gnsdk.IGnMusicIdFileEvents;
 
-import org.cmc.music.common.ID3WriteException;
-import org.cmc.music.metadata.ImageData;
-import org.cmc.music.metadata.MusicMetadata;
-import org.cmc.music.metadata.MusicMetadataSet;
-import org.cmc.music.myid3.MyID3;
-
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.Vector;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.List;
+
+import mx.dev.franco.musicallibraryorganizer.services.DetectorInternetConnection;
+import mx.dev.franco.musicallibraryorganizer.services.FixerTrackService;
+import mx.dev.franco.musicallibraryorganizer.services.Job;
 
 import static mx.dev.franco.musicallibraryorganizer.SplashActivity.sharedPreferences;
+import static mx.dev.franco.musicallibraryorganizer.services.GnService.apiInitialized;
 
-public class SelectFolderActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener{
-    static String TAG_SELECT_FOLDER = SelectFolderActivity.class.getName();
-    static boolean apiInitialized = false;
-    static boolean isProcessingTask = false;
-    CustomMediaPlayer mediaPlayer;
-    static ConcurrentHashMap<Integer,String> selectedTracksList;
-    int scanRequestType;
-    ProgressBar progressBar;
-    SearchView searchView;
-    FloatingActionButton fab;
-    static Snackbar snackbar;
-    static ArrayAdapter<AudioItem> audioItemArrayAdapterAdapter; //Adapter with AudioItem objects for display in listview
-    int requestCode;
-    TypeScanDialogFragment typeScanDialog;
-    LinearLayout view;
-    RelativeLayout loadingMetadataLayout;
-    DetailsTrackDialog detailsTrackDialog;
-    ArrayList<String> modifiedFiles;
-    boolean isExecutingTask = false;
 
-    DataTrackDbHelper dbHelper;
-    ServiceConnection serviceConnection;
-    NewFilesScannerService newFilesScannerService;
-    DetectorChangesFiles detectorChangesFiles;
+public class SelectFolderActivity extends AppCompatActivity
+        implements NavigationView.OnNavigationItemSelectedListener,
+        MediaPlayer.OnCompletionListener,
+        Toolbar.OnMenuItemClickListener,
+        ActionMode.Callback,
+    TrackAdapter.AudioItemHolder.ClickListener{
 
-    volatile GnManager gnManager;
-    volatile GnUser gnUser;
-    String gnsdkLicenseString = "-- BEGIN LICENSE v1.0 A75228BC --\\r\\nname: \\r\\nnotes: Gracenote Open Developer Program\\r\\nstart_date: 0000-00-00\\r\\nclient_id: 843162123\\r\\nmusicid_file: enabled\\r\\nmusicid_text: enabled\\r\\nmusicid_stream: enabled\\r\\nmusicid_cd: enabled\\r\\nplaylist: enabled\\r\\nvideoid: enabled\\r\\nvideo_explore: enabled\\r\\nlocal_images: enabled\\r\\nlocal_mood: enabled\\r\\nvideoid_explore: enabled\\r\\nacr: enabled\\r\\nepg: enabled\\r\\n-- SIGNATURE A75228BC --\\r\\nlAADAgAe/WEZPZ5IaetmxgKEpZm7EjG1SLm/yLvyhTwzlr8cAB4R2GcEuN/6PovFycqgCmnnmr3ioB/KXt3EDTz8yYk=\\r\\n-- END LICENSE A75228BC --\\r\\n";
-    volatile GnLocale gnLocale;
-    static final String gnsdkClientId = "843162123";
-    static final String gnsdkClientTag = "4E937B773F03BA431014169770593072";
-    static final String appString = "AutoMusicTagFixer";
-    static boolean rescan = false;
-    /**
-     * ATTENTION: This was auto-generated to implement the App Indexing API.
-     * See https://g.co/AppIndexing/AndroidStudio for more information.
-     */
+
+    public static volatile boolean shouldContinue = true;
+    public static boolean isProcessingTask = false;
+    public static boolean isGettingData = false;
+
+    public static final int ACTION_PLAY = 30;
+    public static final int ACTION_EDIT = 31;
+    public static final int ACTION_SHOW_INFO = 32;
+
+    public static String TAG_SELECT_FOLDER = SelectFolderActivity.class.getName();
+    public static CustomMediaPlayer mediaPlayer;
+    public static Snackbar snackbar;
+    public static TrackAdapter audioItemArrayAdapter; //Adapter with AudioItem objects for display in listview
+    public static List<AudioItem> audioItemList;
+    public static Toast statusProcessToast;
+
+    private static final int RE_SCAN = 20;
+    private static final int CREATE_DATABASE = 21;
+    private static final int READ_FROM_DATABASE = 22;
+
+    private int scanRequestType;
+    private TextView searchAgainMessage;
+    private SearchView searchView;
+    private FloatingActionButton fab;
+    private SwipeRefreshLayout swipeRefreshLayout;
+    private RecyclerView recyclerView;
+    private ActionMode actionMode;
+    private Menu menu;
+    private DataTrackDbHelper dbHelper;
+    private AudioItem currentAudioItem;
+    private LocalBroadcastManager localBroadcastManager;
+    private IntentFilter intentFilter;
+    private IntentFilter intentFilter1;
+    private IntentFilter intentFilter2;
+    private ResponseReceiver receiver;
     private GoogleApiClient client;
+    private MenuItem selectAllItem;
+    private Toolbar toolbar;
+    private Intent intentFixerTrackService;
 
-    @Override
-    public void onStart() {
-        super.onStart();
 
-        // ATTENTION: This was auto-generated to implement the App Indexing API.
-        // See https://g.co/AppIndexing/AndroidStudio for more information.
-        client.connect();
-        AppIndex.AppIndexApi.start(client, getIndexApiAction());
-        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
 
-        //Intent intent = new Intent(this, NewFilesScannerService.class);
-        //bindService(intent,serviceConnection, Context.BIND_NOT_FOREGROUND);
-    }
+    //ServiceConnection serviceConnection;
+    //NewFilesScannerService newFilesScannerService;
+    //DetectorChangesFiles detectorChangesFiles;
 
+
+    @RequiresApi(api = Build.VERSION_CODES.M)
     @SuppressLint("UseSparseArrays")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
+        intentFilter = new IntentFilter(FixerTrackService.ACTION_DONE);
+        intentFilter1 = new IntentFilter(FixerTrackService.ACTION_CANCEL);
+        intentFilter2 = new IntentFilter(FixerTrackService.ACTION_COMPLETE_TASK);
+        receiver = new ResponseReceiver();
+        localBroadcastManager = LocalBroadcastManager.getInstance(getApplicationContext());
+
         /*serviceConnection = new ServiceConnection() {
             @Override
             public void onServiceConnected(ComponentName name, IBinder service) {
                 NewFilesScannerService.BinderService binderService = (NewFilesScannerService.BinderService) service;
                 newFilesScannerService = binderService.getService();
-                newFilesScannerService.setParameters(audioItemArrayAdapterAdapter, SelectFolderActivity.this);
+                newFilesScannerService.setParameters(audioItemArrayAdapter, SelectFolderActivity.this);
                 modifiedFiles = newFilesScannerService.getChangedFiles();
                 Log.d(TAG_SELECT_FOLDER,"CONNECTED");
             }
@@ -177,77 +153,115 @@ public class SelectFolderActivity extends AppCompatActivity implements Navigatio
             }
         };*/
 
-        //detectorChangesFiles = new DetectorChangesFiles("/storage/emulated/0/Music/TestMusic/", this, audioItemArrayAdapterAdapter);
+        //detectorChangesFiles = new DetectorChangesFiles("/storage/emulated/0/Music/TestMusic/", this, audioItemArrayAdapter);
         //detectorChangesFiles.startWatching();
 
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS,WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+        getWindow().setAllowEnterTransitionOverlap(true);
+        getWindow().setAllowReturnTransitionOverlap(true);
+        getWindow().requestFeature(Window.FEATURE_ACTION_MODE_OVERLAY);
+        getWindow().requestFeature(Window.FEATURE_CONTENT_TRANSITIONS);
+        getWindow().setSharedElementExitTransition(new Fade());
+
+
+
+
         setContentView(R.layout.activity_select_folder);
-        view = (LinearLayout) findViewById(R.id.list_of_files);
-        loadingMetadataLayout = (RelativeLayout) findViewById(R.id.loadingMetadataLayout);
+        searchAgainMessage = (TextView) findViewById(R.id.searchAgainMessage);
 
-        selectedTracksList = new ConcurrentHashMap<Integer, String>();
+        dbHelper = DataTrackDbHelper.getInstance(getApplicationContext());
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        toolbar = (Toolbar) findViewById(R.id.toolbar);
+        toolbar.setOnMenuItemClickListener(this);
         setSupportActionBar(toolbar);
-        progressBar = (ProgressBar) findViewById(R.id.searching);
-        progressBar.setVisibility(View.GONE);
-        progressBar.getIndeterminateDrawable().setColorFilter(Color.parseColor("#ff0099cc"), PorterDuff.Mode.MULTIPLY);
-        searchView = (SearchView) findViewById(R.id.searchView);
-        snackbar = Snackbar.make(view, "", Snackbar.LENGTH_LONG).setAction("Action", null);
-        snackbar.getView().setBackgroundColor(Color.parseColor("#ff0099cc"));
-        audioItemArrayAdapterAdapter = new TrackAdapter(SelectFolderActivity.this,new ArrayList<AudioItem>());
-
-        //Verificamos que ya se han concedido permisos, de los contrario, aparecera el Dialogo que nos pregunta el tipo de busqueda de musica,
-        //el cual nos va a pedir el permiso de acceso a los archivos
-        SplashActivity.sharedPreferences = getSharedPreferences("ShaPreferences", Context.MODE_PRIVATE);
-        //Default value is false, otherwise will be the obtained value
-        boolean grantedAccessFiles = sharedPreferences.getBoolean("accessFilesPermission", false);
-        initializeAPIGnsdk();
-
-        //If we already had the permission granted, lets go to read data from database and pass it to audioItemArrayAdapterAdapter variable, to show in the ListView,
-        //otherwise we ask the scan type
-        if(!grantedAccessFiles) {
-            typeScanDialog = new TypeScanDialogFragment();
-            typeScanDialog.show(getFragmentManager(), "TypeScanDialogFragment");
-            typeScanDialog.setCancelable(false);
-        }
-        else{
-            AsyncReadFile asyncReadFile = new AsyncReadFile(this.scanRequestType);
-            asyncReadFile.execute();
-        }
-
-
 
         this.fab = (FloatingActionButton) findViewById(R.id.fab);
-        this.fab.setVisibility(View.GONE);
+        this.fab.hide();
+
+        //Initialize data source and adapter
+        audioItemList = new ArrayList<>();
+        audioItemArrayAdapter = new TrackAdapter(getApplicationContext(), audioItemList, this);
+
+        //Initialize recycler view, and swipe refresh layout
+        swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.list_of_files);
+
+        swipeRefreshLayout.setColorSchemeColors(getResources().getColor(R.color.mainColor,null));
+        //Lets implement functionality of refresh layout listener
+        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                searchAgainMessage.setVisibility(View.GONE);
+                //No permission to access files ? show reason
+                if(!RequiredPermissions.ACCESS_GRANTED_FILES) {
+                    showReason();
+                }
+                //lets read the files from content provider, type scan is re_scan because is the second (or more) use of app,
+                //or the user make a refresh to get some files that has recently copied to SD card.
+                else{
+                    AsyncReadFile asyncReadFile = new AsyncReadFile(RE_SCAN);
+                    asyncReadFile.execute();
+                }
+            }
+
+        });
+
+        statusProcessToast = Toast.makeText(getApplicationContext(),"",Toast.LENGTH_SHORT);
+        statusProcessToast.setGravity(Gravity.CENTER,0,0);
+
+        snackbar = Snackbar.make(swipeRefreshLayout, "", Snackbar.LENGTH_INDEFINITE);
+
+        //If we already had the permission granted, lets go to read data from database and pass them to audioItemArrayAdapter, to show in the ListView,
+        //otherwise we show the reason to access files
+        if(!RequiredPermissions.ACCESS_GRANTED_FILES) {
+            showReason();
+        }
+
+        else{
+            //if we have the permission, check Bundle object to verify if the activity comes from onPause or from onCreate
+            if(savedInstanceState == null){
+                setupAdapter();
+                int taskType = DataTrackDbHelper.existDatabase(this) && dbHelper.getCount(null) > 0 ? READ_FROM_DATABASE : CREATE_DATABASE;
+                AsyncReadFile asyncReadFile = new AsyncReadFile(taskType);
+                asyncReadFile.execute();
+            }
+        }
+
+
+
+
         this.fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
 
-                if(ContextCompat.checkSelfPermission(SelectFolderActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED){
+                if(ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED){
                     ActivityCompat.requestPermissions(SelectFolderActivity.this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 2);
                 }
                 else {
-                    if(mediaPlayer != null && mediaPlayer.isPlaying()){
-                        mediaPlayer.stop();
-                        mediaPlayer.release();
+
+
+                    if(!allowExecute())
+                        return;
+
+                    if(getCountSelectedItems() == 0) {
+                        Toast toast = Toast.makeText(getApplicationContext(),getString(R.string.no_songs_to_correct),Toast.LENGTH_SHORT);
+                        toast.setGravity(Gravity.CENTER,0,0);
+                        toast.show();
+                        return;
                     }
 
-                    if(!selectedTracksList.isEmpty()) {
-                        if(!apiInitialized){
-                            snackbar.setText("La API de reconocimiento se esta inicializando, espere unos instantes.");
-                            snackbar.show();
-                            return;
+                    for(int i = 0; i < audioItemArrayAdapter.getItemCount() ; i++){
+                        AudioItem audioItem = audioItemList.get(i);
+                        if(audioItem.isSelected()){
+                            SelectFolderActivity.this.recyclerView.smoothScrollToPosition(audioItem.getPosition());
+                            break;
                         }
-                        snackbar.setText("Procesando... espere por favor.");
-                        snackbar.show();
+                    }
 
-                        AsyncProcessTrack asyncProcessTrack = new AsyncProcessTrack();
-                        asyncProcessTrack.execute();
-                    }
-                    else {
-                        snackbar.setText("No hay ninguna canción seleccionada para corregir");
-                        snackbar.show();
-                    }
+                    final Intent intent = new Intent(SelectFolderActivity.this, FixerTrackService.class);
+                    intent.putExtra("singleTrack",false);
+                    startService(intent);
+                    startTask();
+
                 }
 
             }
@@ -260,61 +274,79 @@ public class SelectFolderActivity extends AppCompatActivity implements Navigatio
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
-        navigationView.getMenu().findItem(R.id.scan).setChecked(true);
-
-        //dbHelper = new DataTrackDbHelper(getApplicationContext());
-
 
         // ATTENTION: This was auto-generated to implement the App Indexing API.
         // See https://g.co/AppIndexing/AndroidStudio for more information.
         client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
+        dbHelper = DataTrackDbHelper.getInstance(getApplicationContext());
+        mediaPlayer = CustomMediaPlayer.getInstance(this);
+        mediaPlayer.setOnCompletionListener(this);
+    }
 
+    @Override
+    public void onRestoreInstanceState(Bundle savedInstanceState){
+        super.onRestoreInstanceState(savedInstanceState);
 
     }
 
-    /*static void hideFiles(final boolean showShortFiles, boolean showLittleFiles){
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                for (int i = 0; i < audioItemArrayAdapterAdapter.getCount(); i++) {
-                    if(!showShortFiles) {
-                        audioItemArrayAdapterAdapter.getItem(i).setVisible(audioItemArrayAdapterAdapter.getItem(i).getDuration() > 180000); //show files only grater than 3 minutes
-                        }
-                    else {
-                        audioItemArrayAdapterAdapter.getItem(i).setVisible(audioItemArrayAdapterAdapter.getItem(i).getDuration() < 180000); //show all files
-                    }
-                    Log.d("THREAD", audioItemArrayAdapterAdapter.getItem(i).isVisible()+" " + audioItemArrayAdapterAdapter.getItem(i).getDuration());
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            audioItemArrayAdapterAdapter.notifyDataSetChanged();
-                        }
-                    });
+    /**
+     * ATTENTION: This was auto-generated to implement the App Indexing API.
+     * See https://g.co/AppIndexing/AndroidStudio for more information.
+     */
 
-                }
+    @Override
+    public void onStart() {
+        super.onStart();
 
+        // ATTENTION: This was auto-generated to implement the App Indexing API.
+        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        client.connect();
+        AppIndex.AppIndexApi.start(client, getIndexApiAction());
+        //Intent intent = new Intent(this, NewFilesScannerService.class);
+        //bindService(intent,serviceConnection, Context.BIND_NOT_FOREGROUND);
+
+    }
+
+    @Override
+    protected void onResume(){
+        super.onResume();
+        localBroadcastManager.registerReceiver(receiver,intentFilter);
+        localBroadcastManager.registerReceiver(receiver,intentFilter1);
+        localBroadcastManager.registerReceiver(receiver,intentFilter2);
+
+    }
+
+    @Override
+    protected void onPause(){
+        super.onPause();
+        localBroadcastManager.unregisterReceiver(receiver);
+    }
+
+    @Override
+    public void onStop() {
+
+        //Log.d("onStop","onStop");
+        // ATTENTION: This was auto-generated to implement the App Indexing API.
+        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        AppIndex.AppIndexApi.end(client, getIndexApiAction());
+        client.disconnect();
+
+
+        super.onStop();
+    }
+
+    @Override
+    public void onDestroy(){
+        if(mediaPlayer != null && mediaPlayer.isPlaying()){
+            try {
+                mediaPlayer.playPreview(mediaPlayer.getCurrentId());
+            }catch (Exception e){
+                e.printStackTrace();
             }
-        }).start();
-    }*/
-
-    void initializeAPIGnsdk(){
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                //We initialize the necessary objects for using the GNSDK API in a different thread for not blocking the UI
-                try {
-                    gnManager =  new GnManager(SelectFolderActivity.this,gnsdkLicenseString,GnLicenseInputMode.kLicenseInputModeString);
-                    gnUser = new GnUser(new GnUserStore(getApplicationContext()),gnsdkClientId,gnsdkClientTag,appString);
-                    gnLocale = new GnLocale(GnLocaleGroup.kLocaleGroupMusic,GnLanguage.kLanguageSpanish,GnRegion.kRegionDefault, GnDescriptor.kDescriptorDetailed,gnUser);
-                    gnLocale.setGroupDefault();
-                    apiInitialized = true;
-                    Log.d("GNSDK","API Initialized");
-                } catch (GnException e) {
-                    e.printStackTrace();
-                }
-
-            }
-        }).start();
+            mediaPlayer.release();
+            mediaPlayer = null;
+        }
+        super.onDestroy();
     }
 
     @Override
@@ -328,10 +360,71 @@ public class SelectFolderActivity extends AppCompatActivity implements Navigatio
     }
 
     @Override
+    public void onSaveInstanceState(Bundle savedInstanceState){
+        super.onSaveInstanceState(savedInstanceState);
+        savedInstanceState.putBoolean("createItemList",false);
+        savedInstanceState.putParcelable("stateList",recyclerView.getLayoutManager().onSaveInstanceState());
+        //Log.d("onSaveInstanceState","onSaved");
+    }
+
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
 
-        //getMenuInflater().inflate(R.menu.select_folder, menu);
+        getMenuInflater().inflate(R.menu.select_folder, menu);
+
+        selectAllItem = menu.findItem(R.id.select_all);
+
+        if(SelectedOptions.ALL_SELECTED)
+            selectAllItem.setIcon(getResources().getDrawable(R.drawable.ic_check_box_outline_blank_white_24px,null));
+        else
+            selectAllItem.setIcon(getResources().getDrawable(R.drawable.ic_check_box_white_24px,null));
+
+
+        MenuItem searchItem = menu.findItem(R.id.action_search);
+        searchView = (SearchView) MenuItemCompat.getActionView(searchItem);
+
+        // Define the listener
+        MenuItemCompat.OnActionExpandListener expandListener = new MenuItemCompat.OnActionExpandListener() {
+            @Override
+            public boolean onMenuItemActionCollapse(MenuItem item) {
+                if(audioItemArrayAdapter != null && audioItemArrayAdapter.getItemCount() > 0) {
+                    audioItemArrayAdapter.getFilter().filter("");
+                }
+
+                searchView.setOnQueryTextListener(null);
+                return true;  // Return true to collapse action swipeRefreshLayout
+            }
+
+            @Override
+            public boolean onMenuItemActionExpand(MenuItem item) {
+                searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener(){
+
+                    @Override
+                    public boolean onQueryTextSubmit(String query) {
+                        return true;
+                    }
+
+                    @Override
+                    public boolean onQueryTextChange(String newText) {
+                        if(audioItemArrayAdapter !=null && audioItemArrayAdapter.getItemCount() > 0) {
+                            audioItemArrayAdapter.getFilter().filter(newText);
+                        }
+                        else {
+                            Toast toast = Toast.makeText(getApplicationContext(),getString(R.string.empty_list),Toast.LENGTH_SHORT);
+                            toast.setGravity(Gravity.CENTER,0,0);
+                            toast.show();
+                        }
+                        return true;
+                    }
+                });
+                return true;  // Return true to expand action swipeRefreshLayout
+            }
+        };
+
+        // Assign the listener to that action item
+        MenuItemCompat.setOnActionExpandListener(searchItem, expandListener);
         return true;
     }
 
@@ -341,12 +434,26 @@ public class SelectFolderActivity extends AppCompatActivity implements Navigatio
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
-
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            Intent intent = new Intent(this, SettingsActivity.class);
-            startActivity(intent);
-            return true;
+
+        switch (id){
+            case R.id.select_all:
+                    selectAllItems();
+                break;
+            case R.id.go_to_current_playback:
+                if(mediaPlayer != null && mediaPlayer.isPlaying() && audioItemArrayAdapter.getItemCount() > 0){
+                    int position = getItemByIdOrPath(mediaPlayer.getCurrentId(),"").getPosition();
+                    recyclerView.smoothScrollToPosition(position);
+                }
+                else {
+                    Toast toast = Toast.makeText(getApplicationContext(),getString(R.string.empty_list),Toast.LENGTH_SHORT);
+                    toast.setGravity(Gravity.CENTER,0,0);
+                    toast.show();
+                }
+                break;
+            case R.id.faq:
+
+                break;
         }
 
         return super.onOptionsItemSelected(item);
@@ -355,7 +462,7 @@ public class SelectFolderActivity extends AppCompatActivity implements Navigatio
 
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
-        // Handle navigation view item clicks here.
+        // Handle navigation swipeRefreshLayout item clicks here.
         //item.setChecked(true);
         int id = item.getItemId();
 
@@ -365,113 +472,149 @@ public class SelectFolderActivity extends AppCompatActivity implements Navigatio
             Toast.makeText(this, "En desarrollo", Toast.LENGTH_SHORT).show();
         }
         else if(id == R.id.settings){
+
             Intent intent = new Intent(this, SettingsActivity.class);
             startActivity(intent);
         }
-        else if (id == R.id.scan) {
 
-            rescan = true;
-            if(typeScanDialog == null){
-                typeScanDialog = new TypeScanDialogFragment();
-                typeScanDialog.setCancelable(false);
-            }
-            else{
-                typeScanDialog.setCancelable(true);
-            }
-            typeScanDialog.show(getFragmentManager(), "TypeScanDialogFragment");
-
-
-        }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
     }
 
-    protected void onClickReloadList(View view){
 
-        typeScanDialog = new TypeScanDialogFragment();
-        typeScanDialog.show(getFragmentManager(), "TypeScanDialogFragment");
-        typeScanDialog.setCancelable(false);
-        findViewById(R.id.reloadButtons).setVisibility(View.GONE);
-    }
+    boolean allowExecute(){
 
-
-    protected void executeScan(View view) {
-        if (view.getId() == R.id.autoScanRadio) {
-            this.scanRequestType = 1;
-        } else if (view.getId() == R.id.manualScanRadio) {
-            this.scanRequestType = 2;
-        }
-
-        typeScanDialog.getDialog().cancel();
-        askForPermission(Manifest.permission.READ_EXTERNAL_STORAGE);
-    }
-    protected boolean checkIfExist(final String path){
-        Log.d("PATH EXIST", path);
-        if(!new File(path).exists()){
-            final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            LayoutInflater inflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
-                builder.setTitle("Archivo no encontrado").setMessage("El archivo sobre el que se esta ejecutando la " +
-                        "acción no existe, fue movido, eliminado o renombrado, ¿Deseas quitarlo de la lista?")
-                        .setNegativeButton("No", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                dialog.cancel();
-                            }
-                        })
-                        .setPositiveButton("Si", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                            removeItemFromLists(path);
-                            }
-                        });
-            final AlertDialog dialog =  builder.create();
-            dialog.setCancelable(false);
-            dialog.show();
+        //No internet connection
+        if(!DetectorInternetConnection.isConnected(getApplicationContext())){
+            Toast toast = Toast.makeText(getApplicationContext(),getString(R.string.no_internet_connection),Toast.LENGTH_SHORT);
+            toast.setGravity(Gravity.CENTER,0,0);
+            toast.show();
             return false;
         }
+
+        //API not initialized
+        if(!apiInitialized){
+            Toast toast = Toast.makeText(getApplicationContext(),getString(R.string.initializing_recognition_api),Toast.LENGTH_SHORT);
+            toast.setGravity(Gravity.CENTER,0,0);
+            toast.show();
+            Job.scheduleJob(getApplicationContext());
+            return false;
+        }
+
+        //Task is already executing
+        if(isProcessingTask){
+            Toast toast = Toast.makeText(getApplicationContext(),
+                    "Espera a que termine la corrección en curso, selecciona las canciones y toca el boton verde para corrección multiple.",
+                    Toast.LENGTH_LONG);
+            toast.setGravity(Gravity.CENTER,0,0);
+            toast.show();
+            return false;
+        }
+
         return true;
     }
 
-    private void removeItemFromLists(String path){
-        for(int t = 0 ; t < audioItemArrayAdapterAdapter.getCount() ; t++){
-            if(audioItemArrayAdapterAdapter.getItem(t).getNewAbsolutePath().equals(path)){
-                dbHelper.removeItem(audioItemArrayAdapterAdapter.getItem(t).getId(), TrackContract.TrackData.TABLE_NAME);
-                audioItemArrayAdapterAdapter.remove(audioItemArrayAdapterAdapter.getItem(t));
-                break;
-            }
-        }
+    public void setSnackBar(int action, String message, boolean playing, final long id, final Context context){
 
-        try {
-            for(int g = 0 ; g < selectedTracksList.size() ; g++){
-                if(selectedTracksList.get(g).equals(path)){
-                    selectedTracksList.remove(g);
-                    break;
-                }
+        switch (action){
+            case ACTION_PLAY:
+                snackbar.setDuration(Snackbar.LENGTH_INDEFINITE);
+                snackbar.setAction("Detener", new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        if(mediaPlayer.isPlaying()){
+                            try {
+                                mediaPlayer.playPreview(mediaPlayer.getCurrentId());
+                                snackbar.dismiss();
+                            } catch (IOException | InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+                });
+                if(playing)
+                    snackbar.show();
+                else
+                    snackbar.dismiss();
+
+                snackbar.setText("Reproduciendo " + message);
+                break;
+            case ACTION_EDIT:
+                snackbar.setText(message);
+                snackbar.setDuration(5000);
+                snackbar.setAction("Editar", new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        Intent intent2 = new Intent(SelectFolderActivity.this, DetailsTrackDialogActivity.class);
+                        intent2.putExtra("itemId",id);
+                        context.startActivity(intent2);
+                        snackbar.dismiss();
+                    }
+                });
+                snackbar.show();
+                break;
+            case ACTION_SHOW_INFO:
+                snackbar.setText(message);
+                snackbar.setDuration(Snackbar.LENGTH_SHORT);
+                snackbar.setAction("", null);
+                break;
+        }
+    }
+
+    private void selectAllItems(){
+        SharedPreferences shaPreferences = getSharedPreferences("ShaPreferences", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = shaPreferences.edit();
+
+        final boolean areAllSelected = audioItemArrayAdapter.areAllSelected();
+
+        if(areAllSelected){
+            audioItemArrayAdapter.setAllSelected(false);
+            selectAllItem.setIcon(getResources().getDrawable(R.drawable.ic_check_box_white_24px,null));
+            editor.putBoolean("allSelected",false);
+        }
+        else {
+            audioItemArrayAdapter.setAllSelected(true);
+            selectAllItem.setIcon(getResources().getDrawable(R.drawable.ic_check_box_outline_blank_white_24px,null));
+            editor.putBoolean("allSelected",true);
+        }
+        editor.apply();
+
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                ContentValues values = new ContentValues();
+                values.put(TrackContract.TrackData.COLUMN_NAME_IS_SELECTED,!areAllSelected);
+                dbHelper.updateData(values);
             }
-        }catch (Exception e){
-            e.printStackTrace();
+        }).start();
+
+        for(int f = 0; f< audioItemArrayAdapter.getItemCount() ; f++){
+            audioItemList.get(f).setChecked(!areAllSelected);
+            audioItemArrayAdapter.notifyItemChanged(f);
         }
 
     }
 
-    protected AudioItem selectItemByIdOrPath(long id, String path){
+    public static AudioItem getItemByIdOrPath(long id, String path){
         AudioItem audioItem = null;
+
         if(id != -1){
-            for(int t = 0 ; t < audioItemArrayAdapterAdapter.getCount() ; t++){
-                if(audioItemArrayAdapterAdapter.getItem(t).getId() == id ){
-                        audioItem = audioItemArrayAdapterAdapter.getItem(t);
+            for(int t = 0; t < audioItemArrayAdapter.getItemCount() ; t++){
+                if(audioItemList.get(t).getId() == id ){
+                        audioItem =  audioItemList.get(t);
                     break;
                 }
             }
             return audioItem;
         }
 
-        if(!path.equals("")){
-            for(int t = 0 ; t < audioItemArrayAdapterAdapter.getCount() ; t++){
-                if(audioItemArrayAdapterAdapter.getItem(t).getNewAbsolutePath().equals(path)){
-                        audioItem = audioItemArrayAdapterAdapter.getItem(t);
+        if(path != null && !path.equals("")){
+            for(int t = 0; t < audioItemArrayAdapter.getItemCount() ; t++){
+                if(audioItemList.get(t).getNewAbsolutePath().equals(path)){
+                        audioItem = audioItemList.get(t);
                     break;
                 }
             }
@@ -480,218 +623,324 @@ public class SelectFolderActivity extends AppCompatActivity implements Navigatio
         return audioItem;
     }
 
-    protected AudioItem selectItemByAbsolutePosition(int pos){
-        AudioItem audioItem = null;
-        for(int t = 0 ; t < audioItemArrayAdapterAdapter.getCount() ; t++){
-            if(audioItemArrayAdapterAdapter.getItem(t).getPosition() == pos){
-                audioItem = audioItemArrayAdapterAdapter.getItem(t);
-                break;
+    /**
+     *
+     * @return the number of elements marked
+     *          as selected
+     */
+    int getCountSelectedItems(){
+        int numberOfSelectedItems = 0;
+        if(audioItemArrayAdapter != null && audioItemArrayAdapter.getItemCount() >0) {
+            for (int t = 0; t < audioItemArrayAdapter.getItemCount(); t++) {
+                if (audioItemList.get(t).isChecked()) {
+                    numberOfSelectedItems++;
+                }
             }
         }
-        return audioItem;
-    }
 
-    protected void onClickPlayImageButton(View view,int position) throws IOException, InterruptedException {
-        assert ((AudioItem)audioItemArrayAdapterAdapter.getItem(position)) != null;
-        int absolutePosition = ((AudioItem)audioItemArrayAdapterAdapter.getItem(position)).getPosition();
-        AudioItem audioItem = selectItemByAbsolutePosition(absolutePosition);
-        Log.d("VISIBLE",audioItem.isVisible()+"");
-        String trackPath = audioItemArrayAdapterAdapter.getItem(position).getNewAbsolutePath();//audioItem.getNewAbsolutePath();
-        boolean existFile = checkIfExist(trackPath);
-        if(!existFile){
+        return numberOfSelectedItems;
+    }
+    protected void correctSong(final View view, int position) throws IOException, InterruptedException {
+        final long id = (long) view.findViewById(R.id.path).getTag();
+        final AudioItem audioItem = getItemByIdOrPath(id,"");
+
+        Log.d("ACCESS_GRANTED_FILES",position+"");
+
+
+        if(!RequiredPermissions.ACCESS_GRANTED_FILES){
+            Toast toast = Toast.makeText(getApplicationContext(), getString(R.string.permission_denied),Toast.LENGTH_SHORT);
+            toast.setGravity(Gravity.CENTER,0,0);
+            toast.show();
             return;
         }
 
-        if(mediaPlayer == null){
-            mediaPlayer = CustomMediaPlayer.getInstance();
-            mediaPlayer.setParameters(audioItemArrayAdapterAdapter, this);
+        if(audioItem.isProcessing()){
+            Toast toast = Toast.makeText(getApplicationContext(), getString(R.string.current_file_processing),Toast.LENGTH_SHORT);
+            toast.setGravity(Gravity.CENTER,0,0);
+            toast.show();
+            return;
         }
-        /*if(mediaPlayer.getCurrentPositionAudioSource() != position || !mediaPlayer.isPlaying()) {
-            snackbar.setText(getResources().getString(R.string.snackbar_message_track_preview) + ": " + trackPath).show();
-        }*/
-        mediaPlayer.playPreview(view);
+
+        if(!checkFileIntegrity(audioItem)){
+            showConfirmationDialog(position,audioItem,null);
+            return;
+        }
+
+
+        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle(getString(R.string.confirm_correction_title)).setMessage(getString(R.string.confirm_correction) + " " + audioItem.getTitle() + "?")
+                .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.cancel();
+                    }
+                })
+                .setPositiveButton("Si", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        shouldContinue = true;
+                        audioItem.setProcessing(true);
+                        audioItemArrayAdapter.notifyItemChanged(audioItem.getPosition());
+                        intentFixerTrackService = new Intent(SelectFolderActivity.this, FixerTrackService.class);
+                        intentFixerTrackService.putExtra("singleTrack",true);
+                        intentFixerTrackService.putExtra("id",id);
+                        startService(intentFixerTrackService);
+                        startTask();
+
+                    }
+                });
+        final AlertDialog dialog =  builder.create();
+        dialog.setCancelable(false);
+        dialog.show();
+
 
     }
 
-    protected void onClickCheckedItem(View v){
-        int pos = (int) v.getTag();
-        v.setBackground(getResources().getDrawable(R.drawable.checked2, null));
-        selectItem(pos, view);
+    private boolean checkFileIntegrity(long id){
+        final AudioItem audioItem = getItemByIdOrPath(id,"");
+        String path = audioItem.getNewAbsolutePath();
+        File file = new File(path);
+
+        return file.exists() && file.length() > 0 && file.canRead();
     }
 
-    protected void onClickContextualMenu(final View view){
-        final int p = (int) view.getTag();
+    private boolean checkFileIntegrity(AudioItem audioItem){
+        String path = audioItem.getNewAbsolutePath();
+        File file = new File(path);
 
-        PopupMenu trackContextualMenu = new PopupMenu(this,view);
-        MenuInflater menuInflater = trackContextualMenu.getMenuInflater();
-        menuInflater.inflate(R.menu.track_contextual_menu, trackContextualMenu.getMenu());
-        trackContextualMenu.show();
-        trackContextualMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener(){
+        return file.exists() && file.length() > 0 && file.canRead();
+    }
 
+    private void showConfirmationDialog(final int position, final AudioItem audioItem, final String[] ids){
+        String msg = "";
+        String title = "";
+
+        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
             @Override
-            public boolean onMenuItemClick(MenuItem item) {
-                String pathTrack = dbHelper.getPath(audioItemArrayAdapterAdapter.getItem(p).getId(), TrackContract.TrackData.TABLE_NAME);
-
-                switch (item.getItemId()){
-                    case R.id.action_details:
-
-                        if(!checkIfExist(pathTrack)){
-                            break;
-                        }
-
-                        detailsTrackDialog = new DetailsTrackDialog();
-                        detailsTrackDialog.setData(pathTrack, audioItemArrayAdapterAdapter, p, dbHelper);
-                        detailsTrackDialog.show(getFragmentManager(), DetailsTrackDialog.FRAGMENT_NAME);
-                        detailsTrackDialog.setCancelable(true);
-                        break;
-
-                    case R.id.action_delete:
-                        if(mediaPlayer != null && mediaPlayer.isPlaying()){
-                            mediaPlayer.stop();
-                        }
-                        removeItemFromLists(pathTrack);
-                        break;
-
-                    default:
-                        break;
-                }
-
-                return false;
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
             }
         });
+
+        if(ids != null){
+            msg = "¿Confirme que desea eliminar de la lista los items seleccionados?";
+            title = "Eliminar seleccionados.";
+            builder.setPositiveButton("Si", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    try {
+                        if(mediaPlayer.isPlaying())
+                            mediaPlayer.playPreview(mediaPlayer.getCurrentId());
+                    } catch (IOException | InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    dbHelper.deleteItems(audioItemArrayAdapter.getIdsSelectedItems());
+                    audioItemArrayAdapter.removeItems(audioItemArrayAdapter.getSelectedItems());
+                    audioItemArrayAdapter.sortByPath();
+                    audioItemArrayAdapter.renewItemsPositions();
+                    actionMode.finish();
+                }
+            });
+        }
+        else{
+            msg = getString(R.string.file_error);
+            title = getString(R.string.title_dialog_file_error);
+            builder.setPositiveButton("Si", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    try {
+                        if(mediaPlayer.isPlaying())
+                            mediaPlayer.playPreview(mediaPlayer.getCurrentId());
+                    } catch (IOException | InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    audioItemArrayAdapter.removeItem(position);
+                    dbHelper.removeItem(audioItem.getId(), TrackContract.TrackData.TABLE_NAME);
+                    audioItemArrayAdapter.sortByPath();
+                    audioItemArrayAdapter.renewItemsPositions();
+                }
+            });
+        }
+
+        builder.setTitle(title).setMessage(msg);
+
+        final AlertDialog dialog =  builder.create();
+        dialog.setCancelable(false);
+        dialog.show();
     }
 
-    protected void onClickStatusIcon(View v){
-        int p = (int) v.getTag();
-        Log.d("POSITION",p+"");
-        int status = ((AudioItem)audioItemArrayAdapterAdapter.getItem(p)).getStatus();
-        Toast toast = null;
-        switch (status){
-            case AudioItem.FILE_STATUS_OK:
-                toast =  Toast.makeText(this,getText(R.string.file_status_ok),Toast.LENGTH_LONG);
-                break;
-            case AudioItem.FILE_STATUS_INCOMPLETE:
-                toast =  Toast.makeText(this,getText(R.string.file_status_incomplete),Toast.LENGTH_LONG);
-                break;
-            case AudioItem.FILE_STATUS_BAD:
-                toast =  Toast.makeText(this,getText(R.string.file_status_bad),Toast.LENGTH_LONG);
-                break;
-            case AudioItem.FILE_STATUS_EDIT_BY_USER:
-                toast =  Toast.makeText(this,getText(R.string.file_status_edit_by_user),Toast.LENGTH_LONG);
-                break;
-            case AudioItem.FILE_STATUS_DOES_NOT_EXIST:
-                toast =  Toast.makeText(this,getText(R.string.file_status_does_not_exist),Toast.LENGTH_LONG);
-                break;
-            default:
-                toast =  Toast.makeText(this,getText(R.string.file_status_no_processed),Toast.LENGTH_LONG);
-                break;
+
+    public void onClickCoverArt(View view, int position){
+
+
+        final long p = (long) ((ViewGroup)view.getParent()).findViewById(R.id.path).getTag();
+        final AudioItem audioItem = getItemByIdOrPath(p,"");
+
+        if(audioItem.isProcessing()){
+            Toast toast = Toast.makeText(getApplicationContext(), getString(R.string.current_file_processing),Toast.LENGTH_SHORT);
+            toast.setGravity(Gravity.CENTER,0,0);
+            toast.show();
+            return;
         }
 
-        toast.show();
+        if(!checkFileIntegrity(audioItem.getId())){
+            showConfirmationDialog(position,audioItem,null);
+            return;
+        }
+
+        Intent intent = new Intent(this, DetailsTrackDialogActivity.class);
+        //TransitionManager.beginDelayedTransition();
+        intent.putExtra("itemId",(long)((ViewGroup)view.getParent()).findViewById(R.id.path).getTag());
+
+        startActivity(intent);
     }
 
-    protected void selectItem(int position, View view){
-        String message = "";
+    protected void selectItem(long id, View view){
 
-        int absolutePosition = audioItemArrayAdapterAdapter.getItem(position).getPosition();
-        AudioItem audioItem = selectItemByAbsolutePosition(absolutePosition);
+        Cursor data = dbHelper.getDataRow(id);
+        CheckBox checkBox = null;
 
-        if( (audioItem.getStatus() != AudioItem.FILE_STATUS_NO_PROCESSED)) {
-            audioItem.setStatus(AudioItem.FILE_STATUS_NO_PROCESSED);
-        }
+        if(data != null){
+            if(view != null) {
+                checkBox = (CheckBox) view;
+                Log.d("THE_PATH",view.getTag()+"");
 
-        if(!selectedTracksList.containsKey((int)(audioItem.getId())))  {
-            selectedTracksList.put((int)audioItem.getId(), audioItem.getNewAbsolutePath());
-            ContentValues data = new ContentValues();
-            data.put(TrackContract.TrackSelected.COLUMN_NAME_ID_TRACK, (int)audioItem.getId());
-            data.put(TrackContract.TrackSelected.COLUMN_NAME_CURRENT_FULL_PATH, audioItem.getNewAbsolutePath());
-            dbHelper.saveFileData(data, TrackContract.TrackSelected.TABLE_NAME);
-            message = getResources().getString(R.string.toast_track_added_to_fix);
-            audioItem.setSelected(true);
-        }else {
-            selectedTracksList.remove((int)audioItem.getId());
-            dbHelper.removeItem(audioItem.getId(), TrackContract.TrackSelected.TABLE_NAME);
-            message = getResources().getString(R.string.toast_track_remove_from_fixlist);
-            audioItem.setSelected(false);
-        }
-        //Para que se redibujen los items en pantalla y se vea el cambio de añadir una cancion.
-        audioItemArrayAdapterAdapter.notifyDataSetChanged();
-    }
-
-    protected void runScantypeSelected(){
-        //Si ya tenemos el permiso, verificamos que tipo de escaneo se hara, en caso que se requiera hacer un escaneo
-        if(this.scanRequestType!=1){
-            this.scanRequestType = 1;
-        }
-        if (this.scanRequestType == 1) {
-            Toast.makeText(this, "Buscando música", Toast.LENGTH_LONG).show();
-            //Permiso concedido, obtenemos las carpeta del sistema en busca de arhivos mp3 y el arreglo lo pasamos al adapter.
-            //audioItemArrayAdapterAdapter = new TrackAdapter(this,new ArrayList<AudioItem>());
-
-            setupAdapter();
-            if(dbHelper == null){
-                dbHelper = new DataTrackDbHelper(this);
             }
 
-            AsyncReadFile asyncReadFile = new AsyncReadFile(this.scanRequestType);
-            asyncReadFile.execute();
+            data.moveToFirst();
+            boolean isChecked = data.getInt(data.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_IS_SELECTED)) != 0;
+            Log.d("IS_SELECTED_FROM_DB",isChecked+"");
+            AudioItem audioItem = getItemByIdOrPath(id, "");
+            Log.d("ID_POSITION",id + "_" + audioItem.getPosition());
+            ContentValues newValues = new ContentValues();
+            if(isChecked) {
+                newValues.put(TrackContract.TrackData.COLUMN_NAME_IS_SELECTED, false);
+                audioItem.setChecked(false);
+                if(checkBox != null){
+                    checkBox.setChecked(false);
+                }
+                else {
+                    audioItemArrayAdapter.notifyItemChanged(audioItem.getPosition());
+                }
+
+
+            }
+            else {
+                newValues.put(TrackContract.TrackData.COLUMN_NAME_IS_SELECTED, true);
+                audioItem.setChecked(true);
+                if(checkBox != null){
+                    checkBox.setChecked(true);
+                }
+                else {
+                    audioItemArrayAdapter.notifyItemChanged(audioItem.getPosition());
+                }
+
+
+            }
+            dbHelper.updateData(id, newValues);
+            isChecked = data.getInt(data.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_IS_SELECTED)) != 0;
+            Log.d("IS_SELECTED_NOW",isChecked+"");
+            newValues.clear();
+            data.close();
+            data = null;
+            System.gc();
+        }
+    }
+
+    protected void executeScan(){
+        Toast toast = Toast.makeText(this, "Buscando música", Toast.LENGTH_SHORT);
+        toast.setGravity(Gravity.CENTER,0,0);
+        toast.show();
+
+        AsyncReadFile asyncReadFile = new AsyncReadFile(CREATE_DATABASE);
+        asyncReadFile.execute();
+
+    }
+
+    @Override
+    public void onItemClicked(int position, View view) {
+        if (actionMode == null){
+            switch (view.getId()) {
+                case R.id.coverArt:
+                    onClickCoverArt(view, position);
+                    break;
+                case R.id.checkBoxTrack:
+                    selectItem((long) view.getTag(), view);
+                    break;
+                default:
+                    if (!allowExecute())
+                        return;
+
+                    try {
+                        correctSong(view, position);
+                    } catch (IOException | InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    break;
+            }
+        }
+        else {
+            long id;
+
+            switch (view.getId()) {
+                case R.id.coverArt:
+                    id = (long) ((ViewGroup)view.getParent()).findViewById(R.id.path).getTag();
+                    break;
+                case R.id.checkBoxTrack:
+                    id = (long)view.getTag();
+                    break;
+                default:
+                    id = (long)view.findViewById(R.id.path).getTag();
+                    break;
+            }
+            toggleSelection(position,id);
+
+        }
+    }
+
+    @Override
+    public boolean onItemLongClicked(int position, View view) {
+        Log.d("longclic",position+"");
+        if(actionMode == null) {
+            currentAudioItem = getItemByIdOrPath((long)view.findViewById(R.id.path).getTag(),null);
+            SelectFolderActivity.this.actionMode = startSupportActionMode(SelectFolderActivity.this);
+            toggleSelection(position, currentAudioItem.getId());
+        }
+        else{
+            currentAudioItem = null;
+            actionMode.finish();
+            actionMode = null;
+        }
+        return false;
+    }
+
+    private void toggleSelection(int position, long id) {
+        audioItemArrayAdapter.toggleSelection(position, id);
+        int count = audioItemArrayAdapter.getSelectedItemCount();
+
+        if (count == 0) {
+            actionMode.finish();
         } else {
-            snackbar.setText(R.string.snackbar_message_in_development);
-            snackbar.show();
+            //actionMode.setTitle(String.valueOf(count));
+            actionMode.invalidate();
         }
     }
 
     protected void setupAdapter(){
         Log.d("ADAPTER","SETUP_ADAPTER");
-        audioItemArrayAdapterAdapter.setNotifyOnChange(true);
-        final ListView listView = (ListView) findViewById(R.id.list_view_songs);
-        listView.setAdapter(audioItemArrayAdapterAdapter);
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener(){
-            @Override
-            public void onItemClick(AdapterView<?>adapter, View view, int position, long arg){
-                //Log.d("Click aqui",position+"");
-                try {
-
-                    onClickPlayImageButton(view,position);
-                } catch (IOException | InterruptedException e) {
-                    e.printStackTrace();
-                }
-
-            }
-        } );
-        listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener(){
-            @Override
-            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id){
-                selectItem(position,view);
-                return true;
-            }
-        });
-
-        SearchView searchView = (SearchView) this.findViewById(R.id.searchView);
-        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener(){
-
-            @Override
-            public boolean onQueryTextSubmit(String query) {
-                return true;
-            }
-
-            @Override
-            public boolean onQueryTextChange(String newText) {
-                audioItemArrayAdapterAdapter.getFilter().filter(newText);
-                return true;
-            }
-        });
+        audioItemList = new ArrayList<>();
+        recyclerView = (RecyclerView) findViewById(R.id.list_view_songs);
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
+        recyclerView.setLayoutManager(linearLayoutManager);
+        recyclerView.setHasFixedSize(true);
+        audioItemArrayAdapter = new TrackAdapter(getApplicationContext(), audioItemList, SelectFolderActivity.this);
+        recyclerView.setAdapter(audioItemArrayAdapter);
     }
 
     private void detachAdapter(){
         Log.d("ADAPTER","DETACH_ADAPTER");
-        final ListView listView = (ListView) findViewById(R.id.list_view_songs);
-        listView.setAdapter(null);
-        listView.setOnItemClickListener(null);
-        listView.setOnItemLongClickListener(null);
-
-        SearchView searchView = (SearchView) this.findViewById(R.id.searchView);
-        searchView.setOnQueryTextListener(null);
+        recyclerView.setAdapter(null);
     }
 
     protected void askForPermission(String permission) {
@@ -701,16 +950,10 @@ public class SelectFolderActivity extends AppCompatActivity implements Navigatio
                 //Sino tenemos el permiso lo pedimos
                 if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
                     ActivityCompat.requestPermissions(this, new String[]{permission}, this.scanRequestType);
-                    //ActivityCompat.requestPermissions(this, new String[]{INTERNET}, this.scanRequestType);
                 }
-
                 else {
-                    this.runScantypeSelected();
+                    executeScan();
                 }
-            break;
-
-            case Manifest.permission.INTERNET:
-
             break;
         }
 
@@ -720,770 +963,466 @@ public class SelectFolderActivity extends AppCompatActivity implements Navigatio
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[], @NonNull int[] grantResults) {
-        this.requestCode = requestCode;
-        //Log.d("REQUEST_CODE", String.valueOf(requestCode));
-        // If request is cancelled, the result arrays are empty.
 
-        switch (requestCode){
-            case 2:
-                break;
-            case RequiredPermissions.READ_INTERNAL_STORAGE_PERMISSION:
-                //Log.d("PERMISSION GRANTED","READ_INTERNAL_STORAGE");
-                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    runScantypeSelected();
-                    SplashActivity.sharedPreferences = getSharedPreferences("ShaPreferences", Context.MODE_PRIVATE);
-                    SplashActivity.editor = sharedPreferences.edit();
-                    SplashActivity.editor.putBoolean("accessFilesPermission", true);
-                    SplashActivity.editor.apply();
-
-                }
-                else{
-                    findViewById(R.id.reloadButtons).setVisibility(View.VISIBLE);
-                    Toast.makeText(this,"No se obtuvo el permiso",Toast.LENGTH_SHORT).show();
-                    final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                    LayoutInflater inflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
-                    View view = inflater.inflate(R.layout.warning_permission,null,false);
-                    Button buttonOk = (Button) view.findViewById(R.id.ok_button);
-                    builder.setView(view);
-                    final AlertDialog dialog =  builder.create();
-                    buttonOk.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            dialog.cancel();
-                        }
-                    });
-                    dialog.setCancelable(false);
-                    dialog.show();
-                }
-                break;
+        if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            setFilePermissionGranted();
+            executeScan();
         }
-    }
-
-    @Override
-    protected void onPause(){
-        super.onPause();
-        if(mediaPlayer != null && mediaPlayer.isPlaying()){
-            mediaPlayer.stop();
+        else{
+            searchAgainMessage.setVisibility(View.VISIBLE);
+            /*Intent i = new Intent();
+            i.setAction(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+            i.addCategory(Intent.CATEGORY_DEFAULT);
+            i.setData(Uri.parse("package:" + getPackageName()));
+            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            i.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+            i.addFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
+            startActivity(i);
+            SelectFolderActivity.this.swipeRefreshLayout.setRefreshing(false);*/
         }
+
     }
 
-    @Override
-    protected void onResume(){
-        super.onResume();
+    private void startTask(){
+        this.fab.setOnClickListener(null);
+        this.fab.setImageDrawable(getDrawable(R.drawable.ic_stop_white_24dp));
+        this.fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                final AlertDialog.Builder builder = new AlertDialog.Builder(SelectFolderActivity.this);
+                builder.setTitle("Cancelando...").setMessage("¿Desea cancelar la corrección en curso?")
+                        .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.cancel();
+                            }
+                        })
+                        .setPositiveButton("Si", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                shouldContinue = false;
+                                FixerTrackService.cancelGnMusicIdFileProcessing();
+                                Log.d("shouldContinue",shouldContinue+"");
+                                finishTaskByUser();
+                            }
+                        });
+                final AlertDialog dialog =  builder.create();
+                dialog.setCancelable(false);
+                dialog.show();
+            }
+        });
     }
 
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        Log.d("RESULT_ACTIVITY", requestCode + "");
-        if (requestCode == DetailsTrackDialog.INTENT_OPEN_GALLERY && data != null){
-            Uri imageData = data.getData();
-            try {
-                Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), imageData);
-                if(bitmap.getHeight() > 1080 || bitmap.getWidth() > 1080){
-                    Toast.makeText(this, "Las dimensiones de la imagen son mayores a 1080x1080 pixeles, selecciona otra o reduce sus dimensiones",Toast.LENGTH_LONG).show();
+    private void finishTaskByUser(){
+        this.fab.setOnClickListener(null);
+        this.fab.setImageDrawable(getDrawable(R.drawable.ic_android_white_24px));
+        this.fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED){
+                    ActivityCompat.requestPermissions(SelectFolderActivity.this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 2);
                 }
                 else {
-                    ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-                    bitmap.compress(Bitmap.CompressFormat.JPEG,75,byteArrayOutputStream);
-                    DetailsTrackDialog.newAlbumArt = byteArrayOutputStream.toByteArray();
-                    ((ImageButton) detailsTrackDialog.getDialog().findViewById(R.id.albumArt)).setImageBitmap(bitmap);
+
+
+                    if(!allowExecute())
+                        return;
+
+                    if(getCountSelectedItems() == 0) {
+                        Toast toast = Toast.makeText(getApplicationContext(),getString(R.string.no_songs_to_correct),Toast.LENGTH_SHORT);
+                        toast.setGravity(Gravity.CENTER,0,0);
+                        toast.show();
+                        return;
+                    }
+
+                    intentFixerTrackService = new Intent(SelectFolderActivity.this, FixerTrackService.class);
+                    intentFixerTrackService.putExtra("singleTrack",false);
+                    startService(intentFixerTrackService);
+                    startTask();
+
                 }
-            } catch (IOException e) {
-                e.printStackTrace();
             }
-        }
+        });
     }
 
-    private class AsyncReadFile extends AsyncTask<Void, Integer, Void> {
-        private int code;
+    private void setFilePermissionGranted(){
+        SplashActivity.sharedPreferences = getSharedPreferences("ShaPreferences", Context.MODE_PRIVATE);
+        SplashActivity.editor = sharedPreferences.edit();
+        SplashActivity.editor.putBoolean("accessFilesPermission", true);
+        SplashActivity.editor.apply();
+        RequiredPermissions.ACCESS_GRANTED_FILES = true;
+        Log.d("READ_INTERNAL",PackageManager.PERMISSION_GRANTED+"");
+    }
 
-        AsyncReadFile(int code){
-            this.code = code;
-            if(SelectFolderActivity.rescan){
-                dbHelper.clearDb();
-                audioItemArrayAdapterAdapter.clear();
-                detachAdapter();
+    private void showReason(){
+        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle(R.string.title_dialog_permision).setMessage(R.string.explanation_permission_access_files);
+        builder.setPositiveButton(R.string.ok_button, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                askForPermission(Manifest.permission.READ_EXTERNAL_STORAGE);
+            }
+        });
+        builder.setNegativeButton(R.string.cancel_button, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                searchAgainMessage.setVisibility(View.VISIBLE);
+                SelectFolderActivity.this.swipeRefreshLayout.setRefreshing(false);
+            }
+        });
+        final AlertDialog dialog =  builder.create();
+        dialog.setCancelable(false);
+        dialog.show();
+    }
+
+
+
+    @Override
+    public void onCompletion(MediaPlayer mp) {
+        CustomMediaPlayer.onCompletePlayback(mediaPlayer.getCurrentId());
+                    SelectFolderActivity.snackbar.dismiss();
+    }
+
+    @Override
+    public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+        MenuInflater inflater = mode.getMenuInflater();
+        inflater.inflate(R.menu.cab_menu, menu);
+        fab.hide();
+        swipeRefreshLayout.setEnabled(false);
+        return true;
+    }
+
+    @Override
+    public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+        return false;
+    }
+
+    @Override
+    public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+
+
+        if(item.getItemId() == R.id.action_play){
+            if(isProcessingTask){
+                Toast toast = Toast.makeText(getApplicationContext(),
+                        "Espera a que termine la corrección en curso para poder editar esta canción.",
+                        Toast.LENGTH_LONG);
+                toast.setGravity(Gravity.CENTER,0,0);
+                toast.show();
+            }
+
+
+            if(mediaPlayer == null){
+                mediaPlayer = CustomMediaPlayer.getInstance(SelectFolderActivity.this);
+            }
+            try {
+                mediaPlayer.playPreview(currentAudioItem.getId());
+                if(mediaPlayer.isPlaying()){
+                    //setSnackBar(mediaPlayer.getCurrentPath(), true);
+                }
+                else{
+                    snackbar.dismiss();
+                }
+            } catch (IOException | InterruptedException e) {
+                e.printStackTrace();
+            }
+            mode.finish();
+        }
+        else{
+            showConfirmationDialog(0,null, audioItemArrayAdapter.getIdsSelectedItems());
+        }
+
+        return false;
+    }
+
+    @Override
+    public void onDestroyActionMode(ActionMode mode) {
+        this.actionMode = null;
+        fab.show();
+        audioItemArrayAdapter.clearSelection();
+        swipeRefreshLayout.setEnabled(true);
+    }
+
+    @Override
+    public boolean onMenuItemClick(MenuItem item) {
+        return false;
+    }
+
+    private class AsyncReadFile extends AsyncTask<Void, AudioItem, Void> {
+        private DataTrackDbHelper trackDbHelper = DataTrackDbHelper.getInstance(getApplicationContext());
+        private int taskType;
+        private int counterPosition = 0;
+        private Cursor data;
+
+        AsyncReadFile(int codeTaskType){
+            this.taskType = codeTaskType;
+            if(codeTaskType == CREATE_DATABASE){
+                trackDbHelper.clearDb();
             }
         }
 
+        /**
+         * This method gets data from media store,
+         * only mp3 files data is retrieved
+         * @return
+         */
         Cursor getDataFromDevice() {
 
             String mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension("mp3");
 
+            //Only select mp3 music files
             String selection = MediaStore.Audio.Media.IS_MUSIC + " != 0" + " and "
-                    + MediaStore.Audio.Media.MIME_TYPE + " = " + " \'" +mimeType + "\'"; //ONly select music mp3 files
+                    + MediaStore.Audio.Media.MIME_TYPE + " = " + " \'" +mimeType + "\'";
 
             String[] projection = { //Columns to retrieve
+                    MediaStore.Audio.Media._ID,
                     MediaStore.Audio.Media.TITLE,
                     MediaStore.Audio.Media.ARTIST,
-                    MediaStore.Audio.Media.ALBUM,
+                    MediaStore.Audio.AlbumColumns.ALBUM ,
                     MediaStore.Audio.Media.DURATION,
                     MediaStore.Audio.Media.DATA, // filepath of the audio file
                     MediaStore.Audio.AudioColumns.DISPLAY_NAME,
                     MediaStore.Audio.Media.SIZE
             };
-
-            Cursor cursor = getApplicationContext().getContentResolver().query(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+            //get data from content provider
+            // the last parameter sorts the data alphanumerically by the "DATA" field
+            return getApplicationContext().getContentResolver().query(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
                     projection,
                     selection,
                     null,
-                    MediaStore.Audio.Media.DISPLAY_NAME);
+                    MediaStore.Audio.Media.DATA);
+        }
 
-            // the last parameter sorts the data alphanumerically
+        /**
+         * This method rescan mediastore DB, and
+         * if there are new elements, add them to list
+         */
+        void rescanAndUpdateList(){
+            data = getDataFromDevice();
+            while(data.moveToNext()){
+                boolean existInTable = trackDbHelper.existInDatabase(data.getInt(0));
+                Log.d("existInTable",existInTable+"");
+                if(!existInTable){
+                    addElement();
+                    audioItemArrayAdapter.setSorted(false);
+                }
+            }
+        }
 
-            return cursor;
+        /**
+         * This method creates new table, in case is
+         * the first use of app, then passes this data to adapter
+         */
+        void createNewTable(){
+            data = getDataFromDevice();
+            if(data.moveToFirst()) {
+                do {
+                    addElement();
+                } while (data.moveToNext());
+
+            }
+        }
+
+        /**
+         * This method read data from our
+         * DB created after the first use of app,
+         * then passes this data to adapter
+         */
+        void readFromDatabase(){
+
+            data = trackDbHelper.getDataFromDB();
+            int dataLength = data != null ? data.getCount() : 0;
+            if (dataLength > 0) {
+                while (data.moveToNext()) {
+                        boolean isChecked = data.getInt(data.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_IS_SELECTED)) != 0;
+                        String title = data.getString(data.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_TITLE)).equals("") ?
+                                "No disponible" : data.getString(data.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_TITLE));
+                        String artist = data.getString(data.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_ARTIST)).equals("") ?
+                                "No disponible" : data.getString(data.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_ARTIST));
+                        String album = data.getString(data.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_ALBUM)).equals("") ?
+                                "No disponible" : data.getString(data.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_ALBUM));
+                        String filename = data.getString(data.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_CURRENT_FILENAME)).equals("") ?
+                                "No disponible" : data.getString(data.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_CURRENT_FILENAME));
+                        String id = data.getString(data.getColumnIndexOrThrow(TrackContract.TrackData._ID));
+                        String fullPath = data.getString(data.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_CURRENT_FULL_PATH));
+                        String path = data.getString(data.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_CURRENT_PATH));
+                        int totalSeconds = Integer.parseInt(data.getString(data.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_DURATION)));
+                        String sFilesizeInMb = data.getString(data.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_FILE_SIZE));
+                        float fFileSizeInMb = Float.parseFloat(sFilesizeInMb);
+                        String status = data.getString(data.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_STATUS));
+                        byte[] cover = data.getBlob(data.getColumnIndex(TrackContract.TrackData.COLUMN_NAME_COVER_ART));
+
+                        AudioItem audioItem = new AudioItem();
+                        audioItem.setTitle(title).setArtist(artist).setAlbum(album).setDuration(totalSeconds).setHumanReadableDuration(AudioItem.getHumanReadableDuration(totalSeconds)).setId(Long.parseLong(id)).setNewAbsolutePath(fullPath).setPosition(counterPosition).setStatus(Integer.parseInt(status)).setFileName(filename).setSize(fFileSizeInMb).setPath(path).setChecked(isChecked).setCoverArt(cover);
+                        totalSeconds = 0;
+                        publishProgress(audioItem);
+                        counterPosition++;
+
+                }//end while
+            }//end if
+        }
+
+
+        /**
+         * Here we add the audio item to adapter
+         * created at onCreated callback from
+         * parent activity.
+         */
+        void addElement(){
+            //We get the track duration to decide if adding it or not to adapter, depending on Settings app.
+            int duration = data.getInt(4);
+
+            int mediaStoreId = data.getInt(0);
+            String title = !data.getString(1).equals("<unknown>") ? data.getString(1) : "No disponible";
+            String artist = !data.getString(2).equals("<unknown>") ? data.getString(2) : "No disponible";
+            String album = !data.getString(3).equals("<unknown>") ? data.getString(3) : "No disponible";
+
+            String humanReadableDuration = AudioItem.getHumanReadableDuration(duration);
+            String fullPath = Uri.parse(data.getString(5)).toString();
+            String filename = data.getString(6);
+            String fileSize = data.getString(7);
+            String path = new File(fullPath).getParent();
+            float fileSizeInMb = Float.parseFloat(fileSize) / 1048576;
+
+
+            ContentValues values = new ContentValues();
+            values.put(TrackContract.TrackData.COLUMN_NAME_MEDIASTORE_ID,mediaStoreId);
+            values.put(TrackContract.TrackData.COLUMN_NAME_TITLE, title);
+            values.put(TrackContract.TrackData.COLUMN_NAME_ARTIST, artist);
+            values.put(TrackContract.TrackData.COLUMN_NAME_ALBUM, album);
+            values.put(TrackContract.TrackData.COLUMN_NAME_DURATION, duration);
+            values.put(TrackContract.TrackData.COLUMN_NAME_FILE_SIZE, fileSizeInMb);
+            values.put(TrackContract.TrackData.COLUMN_NAME_CURRENT_FILENAME, filename);
+            values.put(TrackContract.TrackData.COLUMN_NAME_CURRENT_PATH, path);
+            values.put(TrackContract.TrackData.COLUMN_NAME_CURRENT_FULL_PATH, fullPath);
+            values.put(TrackContract.TrackData.COLUMN_NAME_STATUS, AudioItem.FILE_STATUS_NO_PROCESSED);
+            values.put(TrackContract.TrackData.COLUMN_NAME_ADDED_RECENTLY,true);
+
+
+            AudioItem audioItem = new AudioItem();
+
+            values.put(TrackContract.TrackData.COLUMN_NAME_IS_VISIBLE, true);
+            //we need to set id in audio item because all operations
+            //we do, relay in this id,
+            //so when we save row to DB
+            //it returns its id as a result
+            long _id = trackDbHelper.insertRow(values, TrackContract.TrackData.TABLE_NAME);
+            audioItem.setTitle(title).setArtist(artist).setAlbum(album).setDuration(duration).setHumanReadableDuration(humanReadableDuration).setNewAbsolutePath(fullPath).setFileName(filename).setPosition(counterPosition).setSize(fileSizeInMb);
+            audioItem.setId(_id);
+
+            publishProgress(audioItem);
+            counterPosition++;
+            values.clear();
+            values = null;
         }
 
         @Override
         protected Void doInBackground(Void... voids) {
-            Cursor cursor;
-            if (SelectFolderActivity.this.dbHelper == null) {
-                SelectFolderActivity.this.dbHelper = new DataTrackDbHelper(getApplicationContext());
+
+            switch (taskType){
+                //If we are updating for new elements added
+                case RE_SCAN:
+                    rescanAndUpdateList();
+                    break;
+                //if database does not exist
+                case CREATE_DATABASE:
+                    createNewTable();
+                    break;
+                //if we are reading data from database
+                case READ_FROM_DATABASE:
+                    readFromDatabase();
+                    break;
             }
-
-            if (!SplashActivity.existDatabase || rescan){
-
-                cursor = getDataFromDevice();
-                int count = 0, count2 = cursor.getCount();
-                if (cursor != null && count2 > 0) {
-
-                    while (cursor.moveToNext()) {
-                        Log.d("NEW AUDIO_1",count+"");
-                        String title = cursor.getString(0) != null ? cursor.getString(0) : "";
-                        String artist = cursor.getString(1) != null ? cursor.getString(1) : "";
-                        String album = cursor.getString(2) != null ? cursor.getString(2) : "";
-                        int duration = cursor.getInt(3);
-                        String humanReadableDuration = AudioItem.getHumanReadableDuration(duration);
-                        String fullPath = Uri.parse(cursor.getString(4)).toString();
-                        String filename = cursor.getString(5);
-                        String fileSize = cursor.getString(6);
-                        float fileSizeInMb = Integer.parseInt(fileSize)/1048576;
-
-                        final AudioItem audioItem = new AudioItem();
-                        audioItem.setTitle(title).setArtist(artist).setAlbum(album).setDuration(duration).setHumanReadableDuration(humanReadableDuration).setNewAbsolutePath(fullPath).setFileName(filename).setPosition(count).setSize(fileSizeInMb);
-
-                        ContentValues values = new ContentValues();
-                        values.put(TrackContract.TrackData.COLUMN_NAME_TITLE, title);
-                        values.put(TrackContract.TrackData.COLUMN_NAME_ARTIST, artist);
-                        values.put(TrackContract.TrackData.COLUMN_NAME_ALBUM, album);
-                        values.put(TrackContract.TrackData.COLUMN_NAME_DURATION,duration);
-                        values.put(TrackContract.TrackData.COLUMN_NAME_FILE_SIZE, fileSizeInMb);
-                        values.put(TrackContract.TrackData.COLUMN_NAME_CURRENT_FILENAME,filename);
-                        values.put(TrackContract.TrackData.COLUMN_NAME_CURRENT_FULL_PATH, fullPath);
-                        values.put(TrackContract.TrackData.COLUMN_NAME_STATUS, AudioItem.FILE_STATUS_NO_PROCESSED);
-                        long _id = SelectFolderActivity.this.dbHelper.saveFileData(values, TrackContract.TrackData.TABLE_NAME);
-                        audioItem.setId(_id);
-                        count++;
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                audioItemArrayAdapterAdapter.add(audioItem);
-                                audioItemArrayAdapterAdapter.notifyDataSetChanged();
-
-                            }
-                        });
-                        count++;
-                        publishProgress((int) ((count / (float) count2) * 100)/2);
-
-                        values.clear();
-                    }
-                    cursor.close();
-                }
-            }
-            else {
-
-                Log.d("READ FROM DB", "leyendo de la BD");
-                cursor = SelectFolderActivity.this.dbHelper.getDataFromDB();
-                int dataLength = cursor.getCount(), i = 0;
-                if (cursor != null && cursor.getCount() > 0) {
-                    while (cursor.moveToNext()) {
-                        Log.d("NEW AUDIO", i + "");
-                        String title = cursor.getString(cursor.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_TITLE)).equals("") ?
-                                "No disponible" : cursor.getString(cursor.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_TITLE));
-                        String artist = cursor.getString(cursor.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_ARTIST)).equals("") ?
-                                "No disponible" : cursor.getString(cursor.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_ARTIST));
-                        String album = cursor.getString(cursor.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_ALBUM)).equals("") ?
-                                "No disponible" : cursor.getString(cursor.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_ALBUM));
-                        String filename = cursor.getString(cursor.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_CURRENT_FILENAME)).equals("") ?
-                                "No disponible" : cursor.getString(cursor.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_CURRENT_FILENAME));
-                        String id = cursor.getString(cursor.getColumnIndexOrThrow(TrackContract.TrackData._ID));
-                        String fullPath = cursor.getString(cursor.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_CURRENT_FULL_PATH));
-                        int totalSeconds = Integer.parseInt(cursor.getString(cursor.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_DURATION)));
-                        String sFilesizeInMb = cursor.getString(cursor.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_FILE_SIZE));
-                        float fFileSizeInMb = Float.parseFloat(sFilesizeInMb);
-                        String status = cursor.getString(cursor.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_STATUS));
-
-                        final AudioItem audioItem = new AudioItem();
-                        audioItem.setTitle(title).setArtist(artist).setAlbum(album).setDuration(totalSeconds).setHumanReadableDuration(AudioItem.getHumanReadableDuration(totalSeconds)).setId(Long.parseLong(id)).setNewAbsolutePath(fullPath).setPosition(i).setStatus(Integer.parseInt(status)).setFileName(filename).setSize(fFileSizeInMb);
-                        totalSeconds = 0;
-                        i++;
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                audioItemArrayAdapterAdapter.add(audioItem);
-                                audioItemArrayAdapterAdapter.notifyDataSetChanged();
-                            }
-                        });
-                        publishProgress((int) ((i / (float) dataLength) * 100));
-                    }
-                    cursor.close();
-                }
-            }
-
             return null;
         }
 
 
         @Override
         protected void onPreExecute() {
-            try{
-                audioItemArrayAdapterAdapter.clear();
-                ListView listView = (ListView) findViewById(R.id.list_view_songs);
-                listView.invalidateViews();
-                selectedTracksList.clear();
-                detachAdapter();
-            }catch (Exception e){
-                e.printStackTrace();
-            }
-            setupAdapter();
-            findViewById(R.id.reloadButtons).setVisibility(View.GONE);
-            searchView.setVisibility(View.GONE);
-            loadingMetadataLayout.setVisibility(View.VISIBLE);
+            swipeRefreshLayout.setRefreshing(true);
 
-            //progressBar.setVisibility(View.VISIBLE);
-            findViewById(R.id.fab).setVisibility(View.GONE);
+            Toast toast = Toast.makeText(getApplicationContext(),"Actualizando lista...",Toast.LENGTH_SHORT);
+
+            if(taskType == CREATE_DATABASE) {
+                toast.setText("Obteniendo información de canciones...");
+                try {
+                    //audioItemList.clear();
+                    recyclerView.invalidate();
+                    detachAdapter();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                //setupAdapter();
+                fab.hide();
+            }
+
+            else if(taskType == READ_FROM_DATABASE){
+                toast.setText("Cargando lista.");
+                //setupAdapter();
+            }
+            else{
+                toast.setText("Actualizando lista.");
+            }
+            toast.setGravity(Gravity.CENTER,0,0);
+            toast.show();
         }
 
         @Override
         protected void onPostExecute(Void result) {
-            SelectFolderActivity.this.fab.setVisibility(View.VISIBLE);
-            searchView.setVisibility(View.VISIBLE);
-            loadingMetadataLayout.setVisibility(View.INVISIBLE);
-            Log.d("SIZE ADAPTER",audioItemArrayAdapterAdapter.getCount()+"");
+
+            swipeRefreshLayout.setRefreshing(false);
+            isGettingData = false;
+            counterPosition = 0;
+
+
+            //close cursor
+            if(this.data != null) {
+                data.close();
+                data = null;
+            }
+
+            //there are not songs?
+            if(audioItemList.size() == 0){
+                Toast toast =  Toast.makeText(getApplicationContext(),"No se encontraron canciones en MP3.",Toast.LENGTH_SHORT);
+                toast.setGravity(Gravity.CENTER,0,0);
+                toast.show();
+            }
+
+            //reset counter
+
+
+            if(!audioItemArrayAdapter.isSorted()) {
+                audioItemArrayAdapter.sortByPath();
+                audioItemArrayAdapter.notifyDataSetChanged();
+                //Log.d("sort adapter", audioItemArrayAdapter.getItemCount()+"  "+ audioItemList.size());
+            }
+            Log.d("sort adapter", audioItemArrayAdapter.getItemCount()+"  "+ audioItemList.size());
+            if(taskType == CREATE_DATABASE || taskType == RE_SCAN){
+                AsyncLoadCoverArt asyncLoadCoverArt = new AsyncLoadCoverArt();
+                asyncLoadCoverArt.execute();
+            }
+            SelectFolderActivity.this.fab.show();
             System.gc();
         }
 
         @Override
-        protected void onProgressUpdate(Integer... progress) {
-            super.onProgressUpdate(progress);
-            ((TextView) findViewById(R.id.retrievingMetadataInfo)).setText(getText(R.string.retrieving_metadata).toString() + progress[0] + "%");
+        protected void onProgressUpdate(AudioItem... audioItems) {
+            super.onProgressUpdate(audioItems);
+            audioItemList.add(audioItems[0]);
+            Log.d("position",audioItems[0].getPosition()+"");
+            audioItemArrayAdapter.notifyItemInserted(audioItems[0].getPosition());
+        }
+
+        @Override
+        public void onCancelled(){
+            if(this.data != null){
+                data.close();
+                data = null;
+            }
+            isGettingData = false;
+            swipeRefreshLayout.setRefreshing(false);
         }
 
     }
-
-    private class AsyncProcessTrack extends AsyncTask<Void, ResultSet, Void> implements IGnMusicIdFileEvents{
-        AudioItem currentAudioItem;
-        Set<Map.Entry<Integer,String>> entrySet;
-        ResultSet resultSet;
-        HashMap<String,String> gnStatusToDisplay;
-        AsyncProcessTrack(){
-            gnStatusToDisplay = new HashMap<>();
-            gnStatusToDisplay.put("kMusicIdFileCallbackStatusProcessingBegin",getString(R.string.begin_processing));
-            gnStatusToDisplay.put("kMusicIdFileCallbackStatusInfoQuery",getString(R.string.querying_info_));
-            gnStatusToDisplay.put("kMusicIdFileCallbackStatusProcessingComplete",getString(R.string.complete_identification));
-        }
-
-        @Override
-        protected Void doInBackground(Void... voids) {
-            entrySet = selectedTracksList.entrySet();
-            for (Map.Entry<Integer,String> entry:entrySet) {
-                if(this.isCancelled()){
-                    break;
-                }
-
-                final AudioItem audioItem = selectItemByIdOrPath(entry.getKey(), "");
-                currentAudioItem = audioItem;
-
-                final int pos = audioItem.getPosition();
-                Log.d("AUDIO ITEM NAME", audioItem.getNewAbsolutePath() + " - position: "+ pos);
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        audioItem.setProcessing(true);
-                        audioItemArrayAdapterAdapter.notifyDataSetChanged();
-                        ((ListView)findViewById(R.id.list_view_songs)).smoothScrollToPosition(pos);
-                    }
-                });
-                Log.d(AsyncProcessTrack.class.getName(), "DO IN BACKGROUND");
-                resultSet = new ResultSet();
-                String name = entry.getValue();
-                File file = new File(name);
-
-
-                String newName = "";
-                String artistName = "";
-                String albumName = "";
-                String trackNumber = "";
-                String year = "";
-                String genre = "";
-                String imageUrl = "";
-
-                GnMusicIdFile gnMusicIdFile = null;
-                GnMusicIdFileInfoManager gnMusicIdFileInfoManager = null;
-                GnMusicIdFileInfo gnMusicIdFileInfo = null;
-
-                try {
-                    gnMusicIdFile = new GnMusicIdFile(gnUser, this);
-                    gnMusicIdFile.options().lookupData(GnLookupData.kLookupDataContent, true);
-                    gnMusicIdFileInfoManager = gnMusicIdFile.fileInfos();
-                    gnMusicIdFileInfo = gnMusicIdFileInfoManager.add(file.getName());
-                    gnMusicIdFileInfo.fileName(name);
-                    gnMusicIdFileInfo.fingerprintFromSource(new GnAudioFile(file));
-                    gnMusicIdFile.doTrackId(GnMusicIdFileProcessType.kQueryReturnAll, GnMusicIdFileResponseType.kResponseMatches);
-                } catch (GnException e) {
-                    e.printStackTrace();
-                }
-
-                try {
-                    newName = gnMusicIdFileInfo.dataMatchResponse().dataMatches().at(0).next().getAsAlbum().tracksMatched().at(0).next().title().display();
-                } catch (GnException e) {
-                    e.printStackTrace();
-                    newName = "";
-                }
-
-                try {
-                    artistName = gnMusicIdFileInfo.albumResponse().albums().at(0).next().artist().name().display();
-                } catch (GnException e) {
-                    e.printStackTrace();
-                    artistName = "";
-                }
-                try {
-                    albumName = gnMusicIdFileInfo.dataMatchResponse().dataMatches().at(0).next().getAsAlbum().title().display();
-                } catch (GnException e) {
-                    e.printStackTrace();
-                    albumName = "";
-                }
-                try {
-                    imageUrl = gnMusicIdFileInfo.albumResponse().albums().getIterator().next().coverArt().asset(GnImageSize.kImageSizeMedium).url();
-                } catch (GnException e) {
-                    e.printStackTrace();
-                    imageUrl = "";
-                }
-                try {
-                    trackNumber = gnMusicIdFileInfo.albumResponse().albums().getIterator().next().trackMatched().trackNumber();
-                } catch (GnException e) {
-                    e.printStackTrace();
-                    trackNumber = "";
-                }
-                try {
-                    year = gnMusicIdFileInfo.albumResponse().albums().getIterator().next().year();
-                } catch (GnException e) {
-                    e.printStackTrace();
-                    year = "";
-                }
-                try {
-                    genre = gnMusicIdFileInfo.albumResponse().albums().getIterator().next().trackMatched().genre(GnDataLevel.kDataLevel_1);
-                } catch (GnException e) {
-                    e.printStackTrace();
-                    genre = "";
-                }
-
-                Log.d("MATCHES_TITLE_BG", newName);
-                Log.d("MATCHES_ARTIST_BG", artistName);
-                Log.d("MATCHES_ALBUM_BG", albumName);
-                Log.d("MATCHES_ALBUM_ART_BG", imageUrl);
-                Log.d("MATCHES_NUMBER_BG", trackNumber);
-                Log.d("MATCHES_YEAR_BG", year);
-                Log.d("MATCHES_genre_BG", genre);
-
-                resultSet.setName(newName);
-                resultSet.setArtist(artistName);
-                resultSet.setAlbum(albumName);
-                resultSet.setImageUrl(imageUrl);
-                resultSet.setTrack(trackNumber);
-                resultSet.setYear(year);
-                resultSet.setGenre(genre);
-                resultSet.setAudioItem(audioItem);
-
-                publishProgress(resultSet);
-            }
-            Log.d(AsyncProcessTrack.class.getName(), "DOINBACKGROUND");
-            return null;
-        }
-
-
-        @Override
-        protected void onPreExecute() {
-            startTask();
-            Log.d(AsyncProcessTrack.class.getName(), "PREEXECUTE");
-        }
-
-        @Override
-        protected void onPostExecute(Void voids){
-            finishTaskByUser(false);
-            Log.d(AsyncProcessTrack.class.getName(), "POSTEXECUTE");
-
-        }
-
-        @Override
-        protected void onProgressUpdate(ResultSet... resultSet) {
-            super.onProgressUpdate(resultSet);
-            if(this.isCancelled()){
-                return;
-            }
-
-            ResultSet data = resultSet[0];
-
-            ContentValues contentValues = new ContentValues();
-            AudioItem resultSetAudioItem = data.getAudioItem();
-            String newName = data.getName();
-            String artistName = data.getArtist();
-            String albumName = data.getAlbum();
-            String trackNumber = data.getTrack();
-            String year = data.getYear();
-            String genre = data.getGenre();
-            String imageUrl = data.getImageUrl();
-
-            boolean dataTitle = !newName.equals(""), dataArtist = !artistName.equals(""), dataAlbum = !albumName.equals(""), dataImage = !imageUrl.equals(""),
-                    dataTrackNumber = !trackNumber.equals(""), dataYear = !year.equals(""), dataGenre = !genre.equals("");
-
-            if(!dataTitle && !dataArtist && !dataAlbum && !dataImage && !dataTrackNumber && !dataYear && !dataGenre) {
-                resultSetAudioItem.setStatus(AudioItem.FILE_STATUS_BAD);
-                contentValues.put(TrackContract.TrackData.COLUMN_NAME_STATUS, AudioItem.FILE_STATUS_BAD);
-                SelectFolderActivity.this.dbHelper.setStatus(resultSetAudioItem.getId(), contentValues);
-                resultSetAudioItem.setSelected(false);
-            }
-            else {
-
-                MusicMetadataSet musicMetadataSet;
-                MyID3 myID3;
-                MusicMetadata iMusicMetadata;
-                File currentFile = null;
-                File renamedFile = null;
-                boolean existFile =  false;
-
-                myID3 = new MyID3();
-                try {
-                    musicMetadataSet = myID3.read(new File(resultSetAudioItem.getNewAbsolutePath()));
-                    if (musicMetadataSet == null) {
-                        resultSetAudioItem.setStatus(AudioItem.FILE_STATUS_INCOMPLETE);
-                        resultSetAudioItem.setSelected(false);
-                        contentValues.put(TrackContract.TrackData.COLUMN_NAME_STATUS, AudioItem.FILE_STATUS_BAD);
-                        SelectFolderActivity.this.dbHelper.setStatus(resultSetAudioItem.getId(), contentValues);
-                    } else {
-                        iMusicMetadata = (MusicMetadata) musicMetadataSet.getSimplified();
-
-                        if(dataTitle) {
-                            currentFile = new File(resultSetAudioItem.getNewAbsolutePath());
-
-                            if(SelectedOptions.AUTOMATIC_CHANGE_FILENAME) {
-                                String newPath = currentFile.getParent();
-                                String newFilename = newName + ".mp3";
-                                String newCompleteFilename= newPath + "/" + newFilename;
-                                renamedFile = new File(newCompleteFilename);
-                                if(!renamedFile.exists()) {
-                                    Log.d("No Existe","file");
-                                    currentFile.renameTo(renamedFile);
-                                }else {
-                                    newFilename = newName +"("+ (int)Math.floor((Math.random()*10)+ 1) +")"+".mp3";
-                                    newCompleteFilename = newPath + "/" + newFilename;
-                                    renamedFile = new File(newCompleteFilename);
-                                    Log.d("Ya Existe","file");
-                                    currentFile.renameTo(renamedFile);
-                                }
-
-                                contentValues.put(TrackContract.TrackData.COLUMN_NAME_CURRENT_FILENAME,newFilename);
-                                contentValues.put(TrackContract.TrackData.COLUMN_NAME_CURRENT_FULL_PATH,newCompleteFilename);
-                                resultSetAudioItem.setFileName(newFilename);
-                                resultSetAudioItem.setNewAbsolutePath(newCompleteFilename);
-                                Log.d("NEW_PATH",newCompleteFilename);
-                            }
-                            else {
-                                renamedFile = currentFile;
-                            }
-
-                            contentValues.put(TrackContract.TrackData.COLUMN_NAME_TITLE,newName);
-
-
-                            resultSetAudioItem.setTitle(newName);
-                            iMusicMetadata.setSongTitle(newName);
-                        }
-
-                        if (dataArtist) {
-                            iMusicMetadata.setArtist(artistName);
-                            resultSetAudioItem.setArtist(artistName);
-                            contentValues.put(TrackContract.TrackData.COLUMN_NAME_ARTIST,artistName);
-                        }
-
-                        if (dataAlbum) {
-                            iMusicMetadata.setAlbum(albumName);
-                            resultSetAudioItem.setAlbum(albumName);
-                            contentValues.put(TrackContract.TrackData.COLUMN_NAME_ALBUM,albumName);
-                        }
-
-                        if (dataImage) {
-                            byte[] imgData = new GnAssetFetch(gnUser, imageUrl).data();
-                            Vector<ImageData> imageDataVector = new Vector<>();
-                            ImageData imageData = new ImageData(imgData,"","",3);
-                            imageDataVector.add(imageData);
-                            iMusicMetadata.setPictureList(imageDataVector);
-                        }
-
-                        if(dataTrackNumber){
-                            iMusicMetadata.setTrackNumber(Integer.parseInt(trackNumber));
-                        }
-
-                        if(dataYear){
-                            iMusicMetadata.setYear(year);
-                        }
-
-                        if(dataGenre){
-                            iMusicMetadata.setGenre(genre);
-                        }
-
-
-                        if(!dataTitle || !dataArtist || !dataAlbum || !dataImage || !dataTrackNumber || !dataYear || !dataGenre){
-                            contentValues.put(TrackContract.TrackData.COLUMN_NAME_STATUS, AudioItem.FILE_STATUS_INCOMPLETE);
-                            resultSetAudioItem.setStatus(AudioItem.FILE_STATUS_INCOMPLETE);
-                        }
-                        else{
-                            contentValues.put(TrackContract.TrackData.COLUMN_NAME_STATUS, AudioItem.FILE_STATUS_OK);
-                            resultSetAudioItem.setStatus(AudioItem.FILE_STATUS_OK);
-                        }
-
-                        myID3.update(renamedFile, musicMetadataSet, iMusicMetadata);
-                        SelectFolderActivity.this.dbHelper.updateData(resultSetAudioItem.getId(), contentValues);
-                    }
-                }
-                catch (IOException | GnException | ID3WriteException e) {
-                    e.printStackTrace();
-                }
-
-            }
-
-            contentValues.clear();
-            contentValues = null;
-            resultSetAudioItem.setProcessing(false);
-            resultSetAudioItem.setSelected(false);
-            audioItemArrayAdapterAdapter.notifyDataSetChanged();
-            selectedTracksList.remove((int)resultSetAudioItem.getId());
-
-        }
-
-        @Override
-        protected void onCancelled(Void voids){
-            super.onCancelled(voids);
-            currentAudioItem.setProcessing(false);
-            audioItemArrayAdapterAdapter.notifyDataSetChanged();
-            finishTaskByUser(true);
-            Log.d(AsyncProcessTrack.class.getName(), "ONCANCELLED");
-        }
-
-        private void startTask(){
-            SelectFolderActivity.this.fab.setOnClickListener(null);
-            SelectFolderActivity.this.fab.setImageDrawable(getDrawable(R.drawable.ic_stop_white_24dp));
-            SelectFolderActivity.this.fab.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    final AlertDialog.Builder builder = new AlertDialog.Builder(SelectFolderActivity.this);
-                    builder.setTitle("Cancelando...").setMessage("¿Desea cancelar la corrección en curso?")
-                            .setNegativeButton("No", new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    dialog.cancel();
-                                }
-                            })
-                            .setPositiveButton("Si", new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    AsyncProcessTrack.this.cancel(true);
-                                }
-                            });
-                    final AlertDialog dialog =  builder.create();
-                    dialog.setCancelable(false);
-                    dialog.show();
-                }
-            });
-
-            if(mediaPlayer != null && mediaPlayer.isPlaying()){
-                mediaPlayer.stop();
-                mediaPlayer.reset();
-                mediaPlayer.release();
-            }
-        }
-
-        private void finishTaskByUser(boolean userCanceled){
-            String msg = "";
-
-            if(userCanceled){
-                msg = "La tarea fue cancelada por el usuario";
-            }
-            else {
-                msg = "Tarea terminada exitosamente";
-            }
-            SelectFolderActivity.this.searchView.setEnabled(true);
-            SelectFolderActivity.this.fab.setOnClickListener(null);
-            SelectFolderActivity.this.fab.setImageDrawable(getDrawable(R.drawable.ic_check_white_24dp));
-            SelectFolderActivity.this.fab.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-
-                    if(mediaPlayer != null && mediaPlayer.isPlaying()){
-                        mediaPlayer.stop();
-                        mediaPlayer.release();
-                    }
-
-                    if(!selectedTracksList.isEmpty()) {
-                        if(!apiInitialized){
-                            snackbar.setText("La API de reconocimiento se esta inicializando, espere unos instantes.");
-                            snackbar.show();
-                            return;
-                        }
-                        snackbar.setText("Procesando... espere por favor.");
-                        snackbar.show();
-
-                        AsyncProcessTrack asyncProcessTrack = new AsyncProcessTrack();
-                        asyncProcessTrack.execute();
-                    }
-                    else {
-                        snackbar.setText("No hay ninguna canción seleccionada para corregir");
-                        snackbar.show();
-                    }
-                }
-            });
-
-            ListView listView= (ListView) findViewById(R.id.list_view_songs);
-            listView.invalidateViews();
-            Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show();
-            System.gc();
-        }
-
-        @Override
-        public void musicIdFileStatusEvent(GnMusicIdFileInfo gnMusicIdFileInfo, GnMusicIdFileCallbackStatus gnMusicIdFileCallbackStatus, long l, long l1, IGnCancellable iGnCancellable) {
-            try {
-                String status = gnMusicIdFileCallbackStatus.toString();
-                if (gnStatusToDisplay.containsKey(status)) {
-                    String filename = gnMusicIdFileInfo.identifier();
-                    if (filename != null) {
-                        status = gnStatusToDisplay.get(status) + ": " + filename;
-
-                    }
-                    Log.d("FILE STATUS EVENT",status);
-                    final String finalStatus = status;
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            SelectFolderActivity.snackbar.setText(finalStatus);
-                            SelectFolderActivity.snackbar.show();
-                        }
-                    });
-
-
-                }
-
-            } catch (Exception e) {
-                e.printStackTrace();
-                Log.e(appString, "error in retrieving musidIdFileStatus");
-            }
-        }
-
-        @Override
-        public void gatherFingerprint(GnMusicIdFileInfo gnMusicIdFileInfo, long l, long l1, IGnCancellable iGnCancellable) {
-            //Callback to inform that fingerprint was retrieved from audiotgrack.
-
-        }
-
-        /**
-         * Retreieve metadata from file, not invoking if is provided by the developer
-         * @param gnMusicIdFileInfo
-         * @param l
-         * @param l1
-         * @param iGnCancellable
-         */
-        @Override
-        public void gatherMetadata(GnMusicIdFileInfo gnMusicIdFileInfo, long l, long l1, IGnCancellable iGnCancellable) {
-            // Skipping this here as metadata has been previously loaded for all files
-            // You could provide metadata "just in time" instead of before invoking Track/Album/Library ID, which
-            // means you would add it in this delegate method for the file represented by fileInfo
-        }
-
-        @Override
-        public void musicIdFileAlbumResult(GnResponseAlbums gnResponseAlbums, long l, long l1, IGnCancellable iGnCancellable) {
-
-        }
-
-        @Override
-        public void musicIdFileMatchResult(GnResponseDataMatches gnResponseDataMatches, long l, long l1, IGnCancellable iGnCancellable) {
-
-            /*try {
-                //Log.d("MATCHES_TITLE", gnResponseDataMatches.dataMatches().at(0).next().getAsAlbum().tracksMatched().at(0).next().title().display());
-                String title = gnResponseDataMatches.dataMatches().at(0).next().getAsAlbum().tracksMatched().at(0).next().title().display();
-                String artistName = gnResponseDataMatches.dataMatches().at(0).next().getAsAlbum().artist().name().display();// .albums().at(0).next().artist().name().display();
-                String albumName = gnResponseDataMatches.dataMatches().at(0).next().getAsAlbum().title().display(); //dataMatchResponse().dataMatches().at(0).next().getAsAlbum().title().display();
-                String imageUrl = gnResponseDataMatches.dataMatches().at(0).next().getAsAlbum().coverArt().asset(GnImageSize.kImageSizeMedium).url(); //albumResponse().albums().getIterator().next().coverArt().asset(GnImageSize.kImageSizeMedium).url();
-                String trackNumber = gnResponseDataMatches.dataMatches().at(0).next().getAsAlbum().trackMatched().trackNumber(); //albumResponse().albums().getIterator().next().trackMatched().trackNumber();
-                String year = gnResponseDataMatches.dataMatches().at(0).next().getAsAlbum().year(); //albumResponse().albums().getIterator().next().year();
-                String genre = gnResponseDataMatches.dataMatches().at(0).next().getAsAlbum().trackMatched().genre(GnDataLevel.kDataLevel_1); //albumResponse().albums().getIterator().next().trackMatched().genre(GnDataLevel.kDataLevel_1);
-
-                Log.d("TITLE_BG", title);
-                Log.d("ARTIST_BG", artistName);
-                Log.d("ALBUM_BG",albumName);
-                Log.d("ALBUM_ART_BG", imageUrl);
-                Log.d("NUMBER_BG", trackNumber);
-                Log.d("YEAR_BG", year);
-                Log.d("GENRE_BG", genre);
-            } catch (GnException e) {
-                e.printStackTrace();
-            }*/
-
-        }
-
-        @Override
-        public void musicIdFileResultNotFound(GnMusicIdFileInfo gnMusicIdFileInfo, long l, long l1, IGnCancellable iGnCancellable) {
-            // no match found for the audio file represented by fileInfo
-            try {
-                Log.i(appString,"GnMusicIdFile no match found for " + gnMusicIdFileInfo.identifier());
-            } catch (GnException e) {
-                this.cancel(true);
-            }
-        }
-
-        @Override
-        public void musicIdFileComplete(GnError gnError) {
-            if ( gnError.errorCode() == 0 ){
-                Log.d("musicIdFileComplete", "SUCCESS");
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        SelectFolderActivity.snackbar.setText("Completado");
-                        SelectFolderActivity.snackbar.show();
-                    }
-                });
-
-            }
-            else {
-
-                if ( gnError.isCancelled() ) {
-                    Log.d("musicIdFileComplete", "CANCELLED");
-                    this.cancel(true);
-                }
-                else {
-                    //setStatus(gnError.errorDescription(), true);
-                    //this.cancel(true);
-                    Log.e(appString, gnError.errorAPI() + ": " + gnError.errorDescription() );
-                }
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        SelectFolderActivity.snackbar.setText("Cancelado o error");
-                        SelectFolderActivity.snackbar.show();
-                    }
-                });
-
-
-
-            }
-            Log.d("musicIdFileComplete", "READY");
-        }
-
-        @Override
-        public void statusEvent(GnStatus gnStatus, long l, long l1, long l2, IGnCancellable iGnCancellable) {
-
-        }
-
-    }
-
 
     /**
      * ATTENTION: This was auto-generated to implement the App Indexing API.
@@ -1501,32 +1440,120 @@ public class SelectFolderActivity extends AppCompatActivity implements Navigatio
                 .build();
     }
 
-    @Override
-    public void onSaveInstanceState(Bundle savedInstanceState){
-        super.onSaveInstanceState(savedInstanceState);
-        //Log.d("onSaveInstanceState","onSaved");
-        savedInstanceState.putBoolean("KEEP_LIST",true);
+
+    public class ResponseReceiver extends BroadcastReceiver{
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = "";
+            action = intent.getAction();
+            switch (action){
+                case FixerTrackService.ACTION_DONE:
+                    long id = intent.getLongExtra("id",-1);
+                    boolean singleTrack = intent.getBooleanExtra("singleTrack",false);
+                    AudioItem audioItem = getItemByIdOrPath(id,null);
+                    int status = -1;
+                    if(singleTrack) {
+                        status = intent.getIntExtra("status", audioItem.getStatus());
+                        intent.removeExtra("status");
+                    }
+                    if((singleTrack && status == AudioItem.FILE_STATUS_BAD) || (singleTrack && status == AudioItem.FILE_STATUS_INCOMPLETE)){
+                        setSnackBar(ACTION_EDIT,"No se encontró toda la información para " + audioItem.getFileName(),false,id, context);
+                    }
+
+                    intent.removeExtra("id");
+                    intent.removeExtra("singleTrack");
+
+                    break;
+                case FixerTrackService.ACTION_CANCEL:
+                case FixerTrackService.ACTION_COMPLETE_TASK:
+                    finishTaskByUser();
+                    break;
+                case FixerTrackService.ACTION_FAIL:
+                    break;
+            }
 
 
-    }
-
-    @Override
-    public void onStop() {
-        super.onStop();
-        //Log.d("onStop","onStop");
-        // ATTENTION: This was auto-generated to implement the App Indexing API.
-        // See https://g.co/AppIndexing/AndroidStudio for more information.
-        AppIndex.AppIndexApi.end(client, getIndexApiAction());
-        client.disconnect();
-
-        if(mediaPlayer != null && mediaPlayer.isPlaying()){
-            mediaPlayer.stop();
         }
     }
 
-    @Override
-    public void onDestroy(){
-        super.onDestroy();
+    private class AsyncLoadCoverArt extends AsyncTask<Void, Void, Void>{
+
+        @Override
+        protected void onPreExecute(){
+            swipeRefreshLayout.setEnabled(false);
+            Log.d("preexecute",AsyncLoadCoverArt.class.getName());
+        }
+
+        @Override
+        protected Void doInBackground(Void... params) {
+
+            String[] projection = {TrackContract.TrackData._ID, TrackContract.TrackData.COLUMN_NAME_CURRENT_FULL_PATH};
+            String selection = TrackContract.TrackData.COLUMN_NAME_ADDED_RECENTLY + " = ?";
+            String[] selectionArgs = {1+""};
+
+            Cursor cursor = SelectFolderActivity.this.dbHelper.getDataFromDB(projection,selection,selectionArgs);
+            boolean hasData = cursor.moveToFirst();
+
+            Log.d("cursor",hasData+"_" +hasData + "_" + cursor.getCount());
+            if(!hasData) {
+                cursor.close();
+                cursor = null;
+                return null;
+            }
+
+            MediaMetadataRetriever mediaMetadataRetriever = null;
+            AudioItem audioItem = null;
+            byte[] coverArt = null;
+            ContentValues contentValues = null;
+
+            do{
+                long id = cursor.getLong(cursor.getColumnIndex(TrackContract.TrackData._ID));
+                String path = cursor.getString(cursor.getColumnIndex(TrackContract.TrackData.COLUMN_NAME_CURRENT_FULL_PATH));
+
+                mediaMetadataRetriever = new MediaMetadataRetriever();
+                contentValues = new ContentValues();
+                audioItem = getItemByIdOrPath(id,"");
+                assert audioItem != null;
+                Log.d("cursor",hasData+"_" +path);
+                try {
+                    mediaMetadataRetriever.setDataSource(path);
+
+                    coverArt = mediaMetadataRetriever.getEmbeddedPicture();
+                    if(coverArt != null) {
+
+                        audioItem.setCoverArt(coverArt);
+                        contentValues.put(TrackContract.TrackData.COLUMN_NAME_COVER_ART,coverArt);
+                        Log.d("COVER ART","setCoverArt " + audioItem.getId());
+                    }
+                }
+                catch (Exception e){
+                    e.printStackTrace();
+                }
+                finally {
+                    contentValues.put(TrackContract.TrackData.COLUMN_NAME_ADDED_RECENTLY,false);
+                    SelectFolderActivity.this.dbHelper.updateData(id,contentValues);
+                    contentValues.clear();
+                    contentValues = null;
+                    mediaMetadataRetriever.release();
+                    mediaMetadataRetriever = null;
+                    audioItem = null;
+                    coverArt = null;
+                }
+
+
+            }while (cursor.moveToNext());
+
+            cursor.close();
+            cursor = null;
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void voids){
+            swipeRefreshLayout.setEnabled(true);
+            audioItemArrayAdapter.notifyDataSetChanged();
+        }
     }
 
 }
