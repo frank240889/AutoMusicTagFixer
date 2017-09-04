@@ -5,6 +5,7 @@ MusicalLibraryOrganizer(temporal name) is an app with the objetive of automatica
 Title.
 Album.
 Artist.
+Genre.
 Track number.
 Disc year.
 Album art.
