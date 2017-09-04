@@ -6,11 +6,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
-import android.database.Cursor;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.ListPreference;
+import android.preference.MultiSelectListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceFragment;
@@ -20,6 +19,7 @@ import android.util.Log;
 import android.view.MenuItem;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * A {@link PreferenceActivity} that presents a set of application settings. On
@@ -40,8 +40,9 @@ public class SettingsActivity extends AppCompatPreferenceActivity{
     private static Preference.OnPreferenceChangeListener sBindPreferenceSummaryToValueListener = new Preference.OnPreferenceChangeListener() {
         @Override
         public boolean onPreferenceChange(Preference preference, Object value) {
-            String stringValue = value.toString();
-            if (preference instanceof SeekBarListPreference || preference instanceof ListPreference) {
+            String stringValue = "";
+            if (preference instanceof ListPreference) {
+                stringValue = value.toString();
                 // For list preferences, look up the correct display value in
                 // the preference's 'entries' list.
                 ListPreference listPreference = (ListPreference) preference;
@@ -50,8 +51,39 @@ public class SettingsActivity extends AppCompatPreferenceActivity{
                 preference.setSummary( index >= 0 ? listPreference.getEntries()[index] : null);
 
             }
+            else if(preference instanceof MultiSelectListPreference) {
+                MultiSelectListPreference multiSelectListPreference = (MultiSelectListPreference) preference;
+                String summary = "";
+                String separator = "";
+                //Get the current values selected, convert to string and replace braces
+                String str = value.toString().replace("[", "").replace("]", "");
+                //if no values were selected, then we have empty character so set summary to "Ninguno",
+                //otherwise split this string to string array and get every value
+                if(!str.equals("")){
+                String[] strArr = str.split(",");
+                    for (String val : strArr) {
+                        // For each value retrieve index
+                        //trim the string, because after first element, there is a space before the element
+                        //for example "value, value2", before value2 there is one space
+                        int index = multiSelectListPreference.findIndexOfValue(val.trim());
+                        // Retrieve entry from index
+                        CharSequence mEntry = index >= 0 ? multiSelectListPreference.getEntries()[index] : null;
+                        if (mEntry != null) {
+                            summary = summary + separator + mEntry;
+                            separator = ", ";
+                        }
+                    }
+                }
+                else{
+                    summary = "Ninguno";
+                }
+
+
+                multiSelectListPreference.setSummary(summary);
+            }
 
             else {
+                stringValue = value.toString();
                 // For all other preferences, set the summary to the value's
                 // simple string representation.
                 preference.setSummary(stringValue);
@@ -81,18 +113,23 @@ public class SettingsActivity extends AppCompatPreferenceActivity{
     private static void bindPreferenceSummaryToValue(Preference preference) {
         // Set the listener to watch for value changes.
         preference.setOnPreferenceChangeListener(sBindPreferenceSummaryToValueListener);
-
         // Trigger the listener immediately with the preference's
         // current value.
-        sBindPreferenceSummaryToValueListener.onPreferenceChange(preference, PreferenceManager
-                        .getDefaultSharedPreferences(preference.getContext())
-                        .getString(preference.getKey(), ""));
+
+
+        if(preference instanceof MultiSelectListPreference){
+            sBindPreferenceSummaryToValueListener.onPreferenceChange(preference, PreferenceManager.getDefaultSharedPreferences(preference.getContext()).getStringSet(preference.getKey(), null));
+        }
+        else {
+            sBindPreferenceSummaryToValueListener.onPreferenceChange(preference, PreferenceManager.getDefaultSharedPreferences(preference.getContext()).getString(preference.getKey(), ""));
+        }
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setupActionBar();
+
     }
 
     /**
@@ -100,6 +137,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity{
      */
     private void setupActionBar() {
         ActionBar actionBar = getSupportActionBar();
+        Log.d("actionbar",(actionBar == null)+"");
         if (actionBar != null) {
             // Show the Up button in the action bar.
             actionBar.setDisplayHomeAsUpEnabled(true);
@@ -135,11 +173,16 @@ public class SettingsActivity extends AppCompatPreferenceActivity{
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-        //Log.d(key,  sharedPreferences.getString(key,""));
-        switch (key){
+//        Log.d(key,  (sharedPreferences.getStringSet(key,null).size())+"");
+        switch (key) {
             case "size_album_art":
-                SelectedOptions.ALBUM_ART_SIZE = sharedPreferences.getString(key,"-1");
-                Log.d(key,  SelectedOptions.ALBUM_ART_SIZE);
+                String opt = sharedPreferences.getString(key, "-1");
+                SelectedOptions.ALBUM_ART_SIZE = SelectedOptions.setValueImageSize(opt);
+                Log.d(key, opt);
+                break;
+            case "data_to_download":
+                Set<String> set = sharedPreferences.getStringSet(key, null);
+                SelectedOptions.setValuesExtraDataToDownload(set);
                 break;
             case "title_service_change_switch":
                 SelectedOptions.AUTOMATIC_CHANGE_FILENAME = sharedPreferences.getBoolean(key,true);
@@ -148,16 +191,15 @@ public class SettingsActivity extends AppCompatPreferenceActivity{
             case "title_manual_change_switch":
                 SelectedOptions.MANUAL_CHANGE_FILE = sharedPreferences.getBoolean(key, false);
 
-                Log.d(key,  SelectedOptions.MANUAL_CHANGE_FILE+"");
+                Log.d(key,SelectedOptions.MANUAL_CHANGE_FILE+"");
                 break;
             case "title_automatically_replace_strange_chars":
                 SelectedOptions.AUTOMATICALLY_REPLACE_STRANGE_CHARACTERS = sharedPreferences.getBoolean(key,false);
                 Log.d(key, SelectedOptions.AUTOMATICALLY_REPLACE_STRANGE_CHARACTERS+"");
                 break;
-            case "time_limit":
-                int durationLimit = Integer.parseInt(sharedPreferences.getString(key,"0"));
-                new AsyncSetVisibility(durationLimit).execute();
-                //Log.d(key,  sharedPreferences.getString(key,"0"));
+            case "show_separators":
+                SelectedOptions.SHOW_SEPARATORS = sharedPreferences.getBoolean(key,false);
+                SelectFolderActivity.audioItemArrayAdapter.notifyDataSetChanged();
                 break;
         }
     }
@@ -173,14 +215,13 @@ public class SettingsActivity extends AppCompatPreferenceActivity{
             super.onCreate(savedInstanceState);
             addPreferencesFromResource(R.xml.pref_general);
             setHasOptionsMenu(true);
-
+            getActivity().setTheme(R.style.SettingsStyle_Fragment);
             // Bind the summaries of EditText/List/Dialog/Ringtone preferences
             // to their values. When their values change, their summaries are
             // updated to reflect the new value, per the Android Design
             // guidelines.
 
             //bindPreferenceSummaryToValue(findPreference("example_text"));
-            bindPreferenceSummaryToValue(findPreference("time_limit"));
         }
 
         @Override
@@ -205,12 +246,14 @@ public class SettingsActivity extends AppCompatPreferenceActivity{
             super.onCreate(savedInstanceState);
             addPreferencesFromResource(R.xml.pref_data_sync);
             setHasOptionsMenu(true);
+            getActivity().setTheme(R.style.SettingsStyle_Fragment);
 
             // Bind the summaries of EditText/List/Dialog/Ringtone preferences
             // to their values. When their values change, their summaries are
             // updated to reflect the new value, per the Android Design
             // guidelines.
             bindPreferenceSummaryToValue(findPreference("size_album_art"));
+            bindPreferenceSummaryToValue(findPreference("data_to_download"));
         }
 
         @Override
@@ -222,88 +265,5 @@ public class SettingsActivity extends AppCompatPreferenceActivity{
             }
             return super.onOptionsItemSelected(item);
         }
-    }
-
-    /**
-     * This private class update the item list shown in main activity,
-     * according to selected option "Ocultar canciones en la lista"
-     */
-
-    private class AsyncSetVisibility extends AsyncTask<Void, AudioItem, Void>{
-        DataTrackDbHelper dataTrackDbHelper = DataTrackDbHelper.getInstance(getApplicationContext());
-        int _duration;
-        AsyncSetVisibility(int duration){
-            //The duration is in millis, so we need to convert to seconds
-            _duration = duration == 0 ? duration : duration*1000;
-        }
-        @Override
-        protected void onPreExecute(){
-            //First we removed all elements from its current item list
-            SelectFolderActivity.audioItemArrayAdapterAdapter.clear();
-        }
-
-        @Override
-        protected Void doInBackground(Void... params) {
-
-                //we set invisible all records with its duration lesser than minimum duration _duration limit
-                dataTrackDbHelper.setVisibleAllItems(_duration);
-
-            //The we get all items in database an discard
-                Cursor cursor;
-                cursor = dataTrackDbHelper.getDataFromDB();
-                int dataLength = cursor.getCount(), i = 0;
-
-                if (cursor != null && cursor.getCount() > 0) {
-                    while (cursor.moveToNext()) {
-
-                        //if record is invisible, the it means that its duration is lesser than minimuin required, so we  discard it
-                        boolean isVisible = cursor.getInt(cursor.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_IS_VISIBLE)) == 1;
-                        Log.d("NEW AUDIO", isVisible +"   " + cursor.getInt(cursor.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_IS_VISIBLE)));
-                        if (isVisible){
-                            boolean isSelected = cursor.getInt(cursor.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_IS_SELECTED)) != 0;
-                            String title = cursor.getString(cursor.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_TITLE)).equals("") ?
-                                    "No disponible" : cursor.getString(cursor.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_TITLE));
-                            String artist = cursor.getString(cursor.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_ARTIST)).equals("") ?
-                                    "No disponible" : cursor.getString(cursor.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_ARTIST));
-                            String album = cursor.getString(cursor.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_ALBUM)).equals("") ?
-                                    "No disponible" : cursor.getString(cursor.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_ALBUM));
-                            String filename = cursor.getString(cursor.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_CURRENT_FILENAME)).equals("") ?
-                                    "No disponible" : cursor.getString(cursor.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_CURRENT_FILENAME));
-                            String id = cursor.getString(cursor.getColumnIndexOrThrow(TrackContract.TrackData._ID));
-                            String fullPath = cursor.getString(cursor.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_CURRENT_FULL_PATH));
-                            String path = cursor.getString(cursor.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_CURRENT_PATH));
-                            int totalSeconds = Integer.parseInt(cursor.getString(cursor.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_DURATION)));
-                            String sFilesizeInMb = cursor.getString(cursor.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_FILE_SIZE));
-                            float fFileSizeInMb = Float.parseFloat(sFilesizeInMb);
-                            String status = cursor.getString(cursor.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_STATUS));
-                            final AudioItem audioItem = new AudioItem();
-                            audioItem.setTitle(title).setArtist(artist).setAlbum(album).setDuration(totalSeconds).setHumanReadableDuration(AudioItem.getHumanReadableDuration(totalSeconds)).setId(Long.parseLong(id)).setNewAbsolutePath(fullPath).setPosition(i).setStatus(Integer.parseInt(status)).setFileName(filename).setSize(fFileSizeInMb).setVisible(true).setPath(path).setSelected(isSelected);
-                            totalSeconds = 0;
-
-                            publishProgress(audioItem);
-                            i++;
-                        }
-                    }
-                    cursor.close();
-                }
-
-            return null;
-        }
-
-        @Override
-        protected void onProgressUpdate(AudioItem... audioItems){
-            super.onProgressUpdate(audioItems);
-            Log.d("ITEM ADDED",audioItems[0].getFileName());
-            //we add the record to item list here, because this method runs on UI thread,
-            //meaning that can be changes without any error.
-            SelectFolderActivity.audioItemArrayAdapterAdapter.add(audioItems[0]);
-            SelectFolderActivity.audioItemArrayAdapterAdapter.notifyDataSetChanged();
-        }
-
-        @Override
-        protected void onPostExecute(Void voids){
-            Log.d("COUNT",SelectFolderActivity.audioItemArrayAdapterAdapter.getCount()+"");
-        }
-
     }
 }
