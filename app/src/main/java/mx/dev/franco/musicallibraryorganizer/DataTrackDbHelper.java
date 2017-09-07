@@ -44,7 +44,7 @@ public class DataTrackDbHelper extends SQLiteOpenHelper {
             TrackContract.TrackData.COLUMN_NAME_CURRENT_FILENAME + TEXT_TYPE + COMA_SEP +
             TrackContract.TrackData.COLUMN_NAME_CURRENT_PATH + TEXT_TYPE + COMA_SEP +
             TrackContract.TrackData.COLUMN_NAME_CURRENT_FULL_PATH + TEXT_TYPE + COMA_SEP +
-            TrackContract.TrackData.COLUMN_NAME_IS_VISIBLE + BOOLEAN_TYPE + COMA_SEP +
+
             TrackContract.TrackData.COLUMN_NAME_IS_SELECTED + BOOLEAN_TYPE + COMA_SEP +
             TrackContract.TrackData.COLUMN_NAME_STATUS + INTEGER_TYPE + COMA_SEP +
             TrackContract.TrackData.COLUMN_NAME_COVER_ART + COMA_SEP +
@@ -130,7 +130,6 @@ public class DataTrackDbHelper extends SQLiteOpenHelper {
                 TrackContract.TrackData.COLUMN_NAME_CURRENT_FILENAME,
                 TrackContract.TrackData.COLUMN_NAME_CURRENT_PATH,
                 TrackContract.TrackData.COLUMN_NAME_CURRENT_FULL_PATH,
-                TrackContract.TrackData.COLUMN_NAME_IS_VISIBLE,
                 TrackContract.TrackData.COLUMN_NAME_IS_SELECTED,
                 TrackContract.TrackData.COLUMN_NAME_STATUS,
                 TrackContract.TrackData.COLUMN_NAME_COVER_ART,
@@ -178,7 +177,6 @@ public class DataTrackDbHelper extends SQLiteOpenHelper {
                 TrackContract.TrackData.COLUMN_NAME_CURRENT_PATH,
                 TrackContract.TrackData.COLUMN_NAME_CURRENT_FULL_PATH,
                 TrackContract.TrackData.COLUMN_NAME_IS_SELECTED,
-                TrackContract.TrackData.COLUMN_NAME_IS_VISIBLE,
                 TrackContract.TrackData.COLUMN_NAME_STATUS
         };
 
