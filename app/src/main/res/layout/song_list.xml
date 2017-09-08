@@ -1,192 +1,181 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.v7.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/itemListView"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:layout_weight="1"
-    android:descendantFocusability="blocksDescendants"
-    android:orientation="horizontal"
-    android:weightSum="1">
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?android:attr/selectableItemBackground"
+    app:cardUseCompatPadding="true"
+    app:contentPadding="8dp">
 
-
-    <LinearLayout
-        android:id="@+id/statusProcess"
-        android:layout_width="35dp"
-        android:layout_height="35dp"
-        android:layout_gravity="center_vertical|center_horizontal"
-        android:layout_weight="0.1"
-        android:background="@drawable/ic_help_black_24dp"
+    <RelativeLayout
+        android:id="@+id/relativeLayout2"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:clickable="true"
-        android:onClick="onClickStatusIcon"
-        android:orientation="vertical"
-        android:scaleX="0.7"
-        android:scaleY="0.7"></LinearLayout>
+        android:descendantFocusability="blocksDescendants"
+        android:focusable="true"
+        android:orientation="horizontal">
 
-    <LinearLayout
-        android:id="@+id/checkBoxTrack"
-        android:layout_width="50dp"
-        android:layout_height="50dp"
-        android:layout_gravity="center_vertical|center_horizontal"
-        android:layout_weight="0.1"
-        android:background="@drawable/unchecked2"
-        android:clickable="true"
-        android:onClick="onClickCheckedItem"
-        android:orientation="vertical"
-        android:scaleX="0.5"
-        android:scaleY="0.5">
-
-        <ProgressBar
-            android:id="@+id/progressProcessingFile"
-            style="?android:attr/progressBarStyle"
-            android:layout_width="match_parent"
+        <RelativeLayout
+            android:id="@+id/relativeLayout"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:visibility="gone"
-            tools:visibility="gone" />
-    </LinearLayout>
+            android:layout_alignParentStart="true"
+            android:layout_alignParentTop="true"
+            android:background="@color/md_statusbar_translucent"
+            android:elevation="8dp"
+            android:visibility="visible">
 
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_vertical|center_horizontal"
-        android:layout_weight="0.6"
-        android:orientation="vertical">
+            <TextView
+                android:id="@+id/separator"
+                android:layout_width="match_parent"
+                android:layout_height="32dp"
+                android:layout_centerVertical="false"
+                android:background="@color/grey_600"
+                android:drawableStart="@drawable/ic_folder_white_24px"
+                android:gravity="center_vertical"
+                android:paddingStart="5dp"
+                android:text=""
+                android:textAlignment="gravity"
+                android:textColor="@color/md_text_white"
+                android:textSize="16sp"
+                android:visibility="visible" />
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:paddingBottom="0.2dp">
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/itemListView"
+            android:layout_width="wrap_content"
+            android:layout_height="84dp"
+            android:layout_alignParentStart="true"
+            android:layout_below="@+id/relativeLayout"
+            android:splitMotionEvents="false">
+
+            <View
+                android:id="@+id/selectedOverlay"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:alpha="0.5"
+                android:background="@color/md_red_800"
+                android:visibility="gone" />
+
+            <ImageView
+                android:id="@+id/coverArt"
+                android:layout_width="78dp"
+                android:layout_height="78dp"
+                android:layout_centerVertical="true"
+                android:layout_marginStart="10dp"
+                android:layout_toEndOf="@+id/contextualMenuButton"
+                android:clickable="true"
+                android:focusable="true"
+                android:scaleType="centerCrop"
+                android:visibility="visible"
+                app:srcCompat="@drawable/nocoverart" />
 
             <TextView
                 android:id="@+id/track_name"
-                android:layout_width="240dp"
+                android:layout_width="260dp"
                 android:layout_height="wrap_content"
+                android:layout_alignTop="@+id/coverArt"
+                android:layout_centerInParent="false"
+                android:layout_marginStart="8dp"
+                android:layout_toEndOf="@+id/coverArt"
+                android:drawableStart="@drawable/ic_audiotrack_black_24dp"
                 android:ellipsize="end"
+                android:gravity="center_vertical"
                 android:maxLines="1"
-                android:text=""
-                android:textAlignment="textStart"
-                android:textSize="16sp"
-                android:textStyle="italic" />
+                android:text="Track Name"
+                android:textSize="18sp" />
 
             <TextView
                 android:id="@+id/trackDuration"
                 android:layout_width="wrap_content"
-                android:layout_height="36dp"
-                android:layout_weight="1"
-                android:paddingLeft="5dp"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/artist_name"
+                android:layout_marginRight="5dp"
+                android:layout_toStartOf="@+id/checkBoxTrack"
+                android:drawableStart="@drawable/ic_access_time_black_24dp"
+                android:gravity="center_vertical"
+                android:text="00:00"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/artist_name"
+                android:layout_width="260dp"
+                android:layout_height="wrap_content"
+                android:layout_alignStart="@+id/track_name"
+                android:layout_below="@+id/track_name"
+                android:layout_toEndOf="@+id/coverArt"
+                android:drawableStart="@drawable/ic_account_circle_black_24dp"
+                android:ellipsize="end"
+                android:gravity="center_vertical"
+                android:maxLines="1"
+                android:singleLine="true"
+                android:text="Artist Name"
+                android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/album_name"
+                android:layout_width="260dp"
+                android:layout_height="wrap_content"
+                android:layout_alignStart="@+id/artist_name"
+                android:layout_below="@+id/artist_name"
+                android:layout_toEndOf="@+id/coverArt"
+                android:drawableStart="@drawable/ic_album_black_24dp"
+                android:ellipsize="end"
+                android:gravity="center_vertical"
+                android:maxLines="1"
+                android:singleLine="true"
+                android:text="Album Name"
+                android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/path"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:text=""
-                android:textAlignment="viewEnd"
-                android:textStyle="italic" />
-        </LinearLayout>
+                android:visibility="gone" />
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:paddingBottom="0.2dp"
-            android:weightSum="1">
+            <CheckBox
+                android:id="@+id/checkBoxTrack"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_centerHorizontal="false"
+                android:layout_centerInParent="true"
+                android:layout_centerVertical="false"
+                android:layout_marginEnd="8dp"
+                android:layout_marginTop="11dp"
+                android:checked="false"
+                android:clickable="true"
+                android:focusable="true" />
 
-            <LinearLayout
-                android:layout_width="140dp"
-                android:layout_height="match_parent"
-                android:layout_gravity="left"
-                android:layout_weight="0.4"
-                android:orientation="horizontal"
-                android:textAlignment="textStart">
+            <ProgressBar
+                android:id="@+id/progressProcessingFile"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignEnd="@+id/checkBoxTrack"
+                android:layout_alignStart="@+id/coverArt"
+                android:layout_below="@+id/album_name"
+                android:indeterminate="true"
+                android:visibility="visible" />
 
-                <TextView
-                    android:id="@+id/artist_name"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="left"
-                    android:layout_marginStart="0dp"
-                    android:ellipsize="end"
-                    android:maxLines="1"
-                    android:singleLine="true"
-                    android:text=""
-                    android:textAlignment="viewStart"
-                    android:textStyle="italic" />
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="31dp"
+            <ImageView
+                android:id="@+id/checkMark"
+                android:layout_width="24dp"
                 android:layout_height="24dp"
-                android:layout_weight="0.2"
-                android:orientation="horizontal">
+                android:layout_alignParentEnd="true"
+                android:layout_alignParentTop="true"
+                android:background="@drawable/ic_star_black_24dp"
+                android:visibility="visible"
+                app:srcCompat="@drawable/ic_star_black_24dp" />
 
-            </LinearLayout>
+        </RelativeLayout>
 
-            <LinearLayout
-                android:layout_width="140dp"
-                android:layout_height="match_parent"
-                android:layout_gravity="right"
-                android:layout_toEndOf="@+id/linearLayout"
-                android:layout_weight="0.4"
-                android:elevation="0dp"
-                android:orientation="horizontal"
-                android:textAlignment="textEnd">
+    </RelativeLayout>
 
-                <TextView
-                    android:id="@+id/album_name"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_alignParentStart="true"
-                    android:layout_gravity="right"
-                    android:layout_marginEnd="0dp"
-                    android:layout_weight="1"
-                    android:ellipsize="end"
-                    android:maxLines="1"
-                    android:singleLine="true"
-                    android:text=""
-                    android:textAlignment="viewEnd"
-                    android:textStyle="italic" />
-            </LinearLayout>
 
-        </LinearLayout>
-
-        <ProgressBar
-            android:id="@+id/progressBarPlaying"
-            style="@style/Widget.AppCompat.ProgressBar.Horizontal"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:scrollbarStyle="outsideOverlay"
-            android:visibility="gone"
-            tools:visibility="gone" />
-
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_vertical|center_horizontal"
-        android:layout_weight="0.2"
-        android:orientation="vertical">
-
-        <Button
-            android:id="@+id/contextualMenuButton"
-            style="@style/Widget.AppCompat.Button.Small"
-            android:layout_width="wrap_content"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:background="@android:color/transparent"
-            android:clickable="true"
-            android:onClick="onClickContextualMenu"
-            android:text="@string/vertical_ellipsis"
-            android:textAppearance="@android:style/TextAppearance.DeviceDefault.Small"
-            android:textSize="24sp" />
-    </LinearLayout>
-
-    <TextView
-        android:id="@+id/path"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_weight="0"
-        android:text="TextView"
-        android:visibility="gone" />
-
-</LinearLayout>
+</android.support.v7.widget.CardView>
