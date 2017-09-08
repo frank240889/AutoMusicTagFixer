@@ -140,10 +140,6 @@ public class SelectFolderActivity extends AppCompatActivity
         /*serviceConnection = new ServiceConnection() {
             @Override
             public void onServiceConnected(ComponentName name, IBinder service) {
-                NewFilesScannerService.BinderService binderService = (NewFilesScannerService.BinderService) service;
-                newFilesScannerService = binderService.getService();
-                newFilesScannerService.setParameters(audioItemArrayAdapter, SelectFolderActivity.this);
-                modifiedFiles = newFilesScannerService.getChangedFiles();
                 Log.d(TAG_SELECT_FOLDER,"CONNECTED");
             }
 
@@ -852,7 +848,7 @@ public class SelectFolderActivity extends AppCompatActivity
         Toast toast = Toast.makeText(this, "Buscando música", Toast.LENGTH_SHORT);
         toast.setGravity(Gravity.CENTER,0,0);
         toast.show();
-
+        setupAdapter();
         AsyncReadFile asyncReadFile = new AsyncReadFile(CREATE_DATABASE);
         asyncReadFile.execute();
 
@@ -929,12 +925,12 @@ public class SelectFolderActivity extends AppCompatActivity
 
     protected void setupAdapter(){
         Log.d("ADAPTER","SETUP_ADAPTER");
-        audioItemList = new ArrayList<>();
+        //audioItemList = new ArrayList<>();
         recyclerView = (RecyclerView) findViewById(R.id.list_view_songs);
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(linearLayoutManager);
         recyclerView.setHasFixedSize(true);
-        audioItemArrayAdapter = new TrackAdapter(getApplicationContext(), audioItemList, SelectFolderActivity.this);
+        //audioItemArrayAdapter = new TrackAdapter(getApplicationContext(), audioItemList, SelectFolderActivity.this);
         recyclerView.setAdapter(audioItemArrayAdapter);
     }
 
@@ -1152,6 +1148,7 @@ public class SelectFolderActivity extends AppCompatActivity
         private int taskType;
         private int counterPosition = 0;
         private Cursor data;
+        private ContentValues contentValues = new ContentValues();
 
         AsyncReadFile(int codeTaskType){
             this.taskType = codeTaskType;
@@ -1179,12 +1176,12 @@ public class SelectFolderActivity extends AppCompatActivity
                     MediaStore.Audio.Media.ARTIST,
                     MediaStore.Audio.AlbumColumns.ALBUM ,
                     MediaStore.Audio.Media.DURATION,
-                    MediaStore.Audio.Media.DATA, // filepath of the audio file
+                    MediaStore.Audio.Media.DATA, // absolute path to audio file
                     MediaStore.Audio.AudioColumns.DISPLAY_NAME,
                     MediaStore.Audio.Media.SIZE
             };
             //get data from content provider
-            // the last parameter sorts the data alphanumerically by the "DATA" field
+            //the last parameter sorts the data alphanumerically by the "DATA" field
             return getApplicationContext().getContentResolver().query(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
                     projection,
                     selection,
@@ -1202,7 +1199,7 @@ public class SelectFolderActivity extends AppCompatActivity
                 boolean existInTable = trackDbHelper.existInDatabase(data.getInt(0));
                 Log.d("existInTable",existInTable+"");
                 if(!existInTable){
-                    addElement();
+                    createAndAddAudioItem();
                     audioItemArrayAdapter.setSorted(false);
                 }
             }
@@ -1216,10 +1213,12 @@ public class SelectFolderActivity extends AppCompatActivity
             data = getDataFromDevice();
             if(data.moveToFirst()) {
                 do {
-                    addElement();
-                } while (data.moveToNext());
-
+                    createAndAddAudioItem();
+                }
+                while (data.moveToNext());
             }
+            contentValues.clear();
+            contentValues = null;
         }
 
         /**
@@ -1249,10 +1248,10 @@ public class SelectFolderActivity extends AppCompatActivity
                         String sFilesizeInMb = data.getString(data.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_FILE_SIZE));
                         float fFileSizeInMb = Float.parseFloat(sFilesizeInMb);
                         String status = data.getString(data.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_STATUS));
-                        byte[] cover = data.getBlob(data.getColumnIndex(TrackContract.TrackData.COLUMN_NAME_COVER_ART));
+                        //byte[] cover = data.getBlob(data.getColumnIndex(TrackContract.TrackData.COLUMN_NAME_COVER_ART));
 
                         AudioItem audioItem = new AudioItem();
-                        audioItem.setTitle(title).setArtist(artist).setAlbum(album).setDuration(totalSeconds).setHumanReadableDuration(AudioItem.getHumanReadableDuration(totalSeconds)).setId(Long.parseLong(id)).setNewAbsolutePath(fullPath).setPosition(counterPosition).setStatus(Integer.parseInt(status)).setFileName(filename).setSize(fFileSizeInMb).setPath(path).setChecked(isChecked).setCoverArt(cover);
+                        audioItem.setTitle(title).setArtist(artist).setAlbum(album).setDuration(totalSeconds).setHumanReadableDuration(AudioItem.getHumanReadableDuration(totalSeconds)).setId(Long.parseLong(id)).setNewAbsolutePath(fullPath).setPosition(counterPosition).setStatus(Integer.parseInt(status)).setFileName(filename).setSize(fFileSizeInMb).setPath(path).setChecked(isChecked);
                         totalSeconds = 0;
                         publishProgress(audioItem);
                         counterPosition++;
@@ -1267,52 +1266,48 @@ public class SelectFolderActivity extends AppCompatActivity
          * created at onCreated callback from
          * parent activity.
          */
-        void addElement(){
-            //We get the track duration to decide if adding it or not to adapter, depending on Settings app.
+        void createAndAddAudioItem(){
+            int mediaStoreId = data.getInt(0);//mediastore id
+            String title = !data.getString(1).contains("unknown") ? data.getString(1) : "No disponible";
+            String artist = !data.getString(2).contains("unknown") ? data.getString(2) : "No disponible";
+            String album = !data.getString(3).contains("unknown") ? data.getString(3) : "No disponible";
             int duration = data.getInt(4);
 
-            int mediaStoreId = data.getInt(0);
-            String title = !data.getString(1).equals("<unknown>") ? data.getString(1) : "No disponible";
-            String artist = !data.getString(2).equals("<unknown>") ? data.getString(2) : "No disponible";
-            String album = !data.getString(3).equals("<unknown>") ? data.getString(3) : "No disponible";
-
             String humanReadableDuration = AudioItem.getHumanReadableDuration(duration);
-            String fullPath = Uri.parse(data.getString(5)).toString();
-            String filename = data.getString(6);
-            String fileSize = data.getString(7);
+            String fullPath = Uri.parse(data.getString(5)).toString(); //MediaStore.Audio.Media.DATA column is the file path
+            String filename = data.getString(6); //MediaStore.Audio.AudioColumns.DISPLAY_NAME, column is file name
+            String fileSize = data.getString(7); //
             String path = new File(fullPath).getParent();
             float fileSizeInMb = Float.parseFloat(fileSize) / 1048576;
 
 
-            ContentValues values = new ContentValues();
-            values.put(TrackContract.TrackData.COLUMN_NAME_MEDIASTORE_ID,mediaStoreId);
-            values.put(TrackContract.TrackData.COLUMN_NAME_TITLE, title);
-            values.put(TrackContract.TrackData.COLUMN_NAME_ARTIST, artist);
-            values.put(TrackContract.TrackData.COLUMN_NAME_ALBUM, album);
-            values.put(TrackContract.TrackData.COLUMN_NAME_DURATION, duration);
-            values.put(TrackContract.TrackData.COLUMN_NAME_FILE_SIZE, fileSizeInMb);
-            values.put(TrackContract.TrackData.COLUMN_NAME_CURRENT_FILENAME, filename);
-            values.put(TrackContract.TrackData.COLUMN_NAME_CURRENT_PATH, path);
-            values.put(TrackContract.TrackData.COLUMN_NAME_CURRENT_FULL_PATH, fullPath);
-            values.put(TrackContract.TrackData.COLUMN_NAME_STATUS, AudioItem.FILE_STATUS_NO_PROCESSED);
-            values.put(TrackContract.TrackData.COLUMN_NAME_ADDED_RECENTLY,true);
+            //ContentValues values = new ContentValues();
+            contentValues.put(TrackContract.TrackData.COLUMN_NAME_MEDIASTORE_ID,mediaStoreId);
+            contentValues.put(TrackContract.TrackData.COLUMN_NAME_TITLE, title);
+            contentValues.put(TrackContract.TrackData.COLUMN_NAME_ARTIST, artist);
+            contentValues.put(TrackContract.TrackData.COLUMN_NAME_ALBUM, album);
+            contentValues.put(TrackContract.TrackData.COLUMN_NAME_DURATION, duration);
+            contentValues.put(TrackContract.TrackData.COLUMN_NAME_FILE_SIZE, fileSizeInMb);
+            contentValues.put(TrackContract.TrackData.COLUMN_NAME_CURRENT_FILENAME, filename);
+            contentValues.put(TrackContract.TrackData.COLUMN_NAME_CURRENT_PATH, path);
+            contentValues.put(TrackContract.TrackData.COLUMN_NAME_CURRENT_FULL_PATH, fullPath);
+            contentValues.put(TrackContract.TrackData.COLUMN_NAME_STATUS, AudioItem.FILE_STATUS_NO_PROCESSED);
+            contentValues.put(TrackContract.TrackData.COLUMN_NAME_ADDED_RECENTLY,true);
 
 
             AudioItem audioItem = new AudioItem();
 
-            values.put(TrackContract.TrackData.COLUMN_NAME_IS_VISIBLE, true);
             //we need to set id in audio item because all operations
             //we do, relay in this id,
             //so when we save row to DB
             //it returns its id as a result
-            long _id = trackDbHelper.insertRow(values, TrackContract.TrackData.TABLE_NAME);
-            audioItem.setTitle(title).setArtist(artist).setAlbum(album).setDuration(duration).setHumanReadableDuration(humanReadableDuration).setNewAbsolutePath(fullPath).setFileName(filename).setPosition(counterPosition).setSize(fileSizeInMb);
+            long _id = trackDbHelper.insertRow(contentValues, TrackContract.TrackData.TABLE_NAME);
+            audioItem.setTitle(title).setArtist(artist).setAlbum(album).setDuration(duration).setHumanReadableDuration(humanReadableDuration).setNewAbsolutePath(fullPath).setPath(path).setFileName(filename).setPosition(counterPosition).setSize(fileSizeInMb);
             audioItem.setId(_id);
 
             publishProgress(audioItem);
             counterPosition++;
-            values.clear();
-            values = null;
+            contentValues.clear();
         }
 
         @Override
@@ -1339,25 +1334,16 @@ public class SelectFolderActivity extends AppCompatActivity
         @Override
         protected void onPreExecute() {
             swipeRefreshLayout.setRefreshing(true);
-
-            Toast toast = Toast.makeText(getApplicationContext(),"Actualizando lista...",Toast.LENGTH_SHORT);
+            isGettingData = true;
+            Toast toast = Toast.makeText(getApplicationContext(),"",Toast.LENGTH_SHORT);
+            SelectFolderActivity.this.fab.hide();
 
             if(taskType == CREATE_DATABASE) {
                 toast.setText("Obteniendo información de canciones...");
-                try {
-                    //audioItemList.clear();
-                    recyclerView.invalidate();
-                    detachAdapter();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-                //setupAdapter();
-                fab.hide();
             }
 
             else if(taskType == READ_FROM_DATABASE){
                 toast.setText("Cargando lista.");
-                //setupAdapter();
             }
             else{
                 toast.setText("Actualizando lista.");
@@ -1368,10 +1354,11 @@ public class SelectFolderActivity extends AppCompatActivity
 
         @Override
         protected void onPostExecute(Void result) {
-
+            super.onPostExecute(result);
             swipeRefreshLayout.setRefreshing(false);
             isGettingData = false;
             counterPosition = 0;
+            SelectFolderActivity.this.fab.show();
 
 
             //close cursor
@@ -1385,10 +1372,8 @@ public class SelectFolderActivity extends AppCompatActivity
                 Toast toast =  Toast.makeText(getApplicationContext(),"No se encontraron canciones en MP3.",Toast.LENGTH_SHORT);
                 toast.setGravity(Gravity.CENTER,0,0);
                 toast.show();
+                return;
             }
-
-            //reset counter
-
 
             if(!audioItemArrayAdapter.isSorted()) {
                 audioItemArrayAdapter.sortByPath();
@@ -1396,11 +1381,9 @@ public class SelectFolderActivity extends AppCompatActivity
                 //Log.d("sort adapter", audioItemArrayAdapter.getItemCount()+"  "+ audioItemList.size());
             }
             Log.d("sort adapter", audioItemArrayAdapter.getItemCount()+"  "+ audioItemList.size());
-            if(taskType == CREATE_DATABASE || taskType == RE_SCAN){
-                AsyncLoadCoverArt asyncLoadCoverArt = new AsyncLoadCoverArt();
+                AsyncLoadCoverArt asyncLoadCoverArt = new AsyncLoadCoverArt(taskType);
                 asyncLoadCoverArt.execute();
-            }
-            SelectFolderActivity.this.fab.show();
+
             System.gc();
         }
 
@@ -1408,12 +1391,13 @@ public class SelectFolderActivity extends AppCompatActivity
         protected void onProgressUpdate(AudioItem... audioItems) {
             super.onProgressUpdate(audioItems);
             audioItemList.add(audioItems[0]);
-            Log.d("position",audioItems[0].getPosition()+"");
+            Log.d("position",audioItems[0].getPosition()+" , size adapter: " + audioItemArrayAdapter.getItemCount());
             audioItemArrayAdapter.notifyItemInserted(audioItems[0].getPosition());
         }
 
         @Override
         public void onCancelled(){
+            super.onCancelled();
             if(this.data != null){
                 data.close();
                 data = null;
@@ -1477,51 +1461,51 @@ public class SelectFolderActivity extends AppCompatActivity
         }
     }
 
-    private class AsyncLoadCoverArt extends AsyncTask<Void, Void, Void>{
+    private class AsyncLoadCoverArt extends AsyncTask<Void, AudioItem, Void>{
+        private ContentValues contentValues;
+        private MediaMetadataRetriever mediaMetadataRetriever;
+        private int taskType;
 
-        @Override
-        protected void onPreExecute(){
-            swipeRefreshLayout.setEnabled(false);
-            Log.d("preexecute",AsyncLoadCoverArt.class.getName());
+        AsyncLoadCoverArt(int taskType){
+            this.taskType = taskType;
+            contentValues = new ContentValues();
+            mediaMetadataRetriever = new MediaMetadataRetriever();
         }
 
-        @Override
-        protected Void doInBackground(Void... params) {
-
+        private void extractAndLoadCoverArt(){
+            //Columns to retrieve
             String[] projection = {TrackContract.TrackData._ID, TrackContract.TrackData.COLUMN_NAME_CURRENT_FULL_PATH};
             String selection = TrackContract.TrackData.COLUMN_NAME_ADDED_RECENTLY + " = ?";
+            //condition to accomplish
             String[] selectionArgs = {1+""};
 
             Cursor cursor = SelectFolderActivity.this.dbHelper.getDataFromDB(projection,selection,selectionArgs);
+            //if cursor could be move to first element, means that cursor is not empty
             boolean hasData = cursor.moveToFirst();
 
-            Log.d("cursor",hasData+"_" +hasData + "_" + cursor.getCount());
+            //Log.d("cursor",hasData+"_" +hasData + "_" + cursor.getCount());
+            //No data? then finish process
             if(!hasData) {
                 cursor.close();
                 cursor = null;
-                return null;
+                return;
             }
 
-            MediaMetadataRetriever mediaMetadataRetriever = null;
             AudioItem audioItem = null;
             byte[] coverArt = null;
-            ContentValues contentValues = null;
 
             do{
                 long id = cursor.getLong(cursor.getColumnIndex(TrackContract.TrackData._ID));
                 String path = cursor.getString(cursor.getColumnIndex(TrackContract.TrackData.COLUMN_NAME_CURRENT_FULL_PATH));
 
-                mediaMetadataRetriever = new MediaMetadataRetriever();
-                contentValues = new ContentValues();
                 audioItem = getItemByIdOrPath(id,"");
                 assert audioItem != null;
-                Log.d("cursor",hasData+"_" +path);
+
                 try {
                     mediaMetadataRetriever.setDataSource(path);
 
                     coverArt = mediaMetadataRetriever.getEmbeddedPicture();
                     if(coverArt != null) {
-
                         audioItem.setCoverArt(coverArt);
                         contentValues.put(TrackContract.TrackData.COLUMN_NAME_COVER_ART,coverArt);
                         Log.d("COVER ART","setCoverArt " + audioItem.getId());
@@ -1531,14 +1515,13 @@ public class SelectFolderActivity extends AppCompatActivity
                     e.printStackTrace();
                 }
                 finally {
+                    //once has been loaded its cover art, mark as FALSE its column and field "added recently"
                     contentValues.put(TrackContract.TrackData.COLUMN_NAME_ADDED_RECENTLY,false);
                     SelectFolderActivity.this.dbHelper.updateData(id,contentValues);
                     contentValues.clear();
-                    contentValues = null;
-                    mediaMetadataRetriever.release();
-                    mediaMetadataRetriever = null;
-                    audioItem = null;
                     coverArt = null;
+                    publishProgress(audioItem);
+                    audioItem = null;
                 }
 
 
@@ -1546,13 +1529,65 @@ public class SelectFolderActivity extends AppCompatActivity
 
             cursor.close();
             cursor = null;
+        }
+
+        private void loadCoverArt(){
+            //Columns to retrieve
+            String[] projection = {TrackContract.TrackData.COLUMN_NAME_COVER_ART};
+            String selection = TrackContract.TrackData._ID + " = ?";
+            //condition to accomplish
+            String[] selectionArgs = new String[1];
+            Cursor cursor = null;
+            for(AudioItem audioItem: audioItemList){
+                selectionArgs[0] = audioItem.getId()+"";
+                cursor = SelectFolderActivity.this.dbHelper.getDataFromDB(projection,selection,selectionArgs);
+                //if cursor could be move to first element, means that cursor is not empty
+                boolean hasData = cursor.moveToFirst();
+                //No data? then finish process
+                if(!hasData) {
+                    cursor.close();
+                    cursor = null;
+                    continue;
+                }
+                byte[] cover = cursor.getBlob(cursor.getColumnIndex(TrackContract.TrackData.COLUMN_NAME_COVER_ART));
+                audioItem.setCoverArt(cover);
+                publishProgress(audioItem);
+                cursor.close();
+                cursor = null;
+                Log.d("cover_art_loaded","true");
+            }
+        }
+
+        @Override
+        protected void onPreExecute(){
+            //don't let refresh layout till all cover art be loaded.
+            swipeRefreshLayout.setEnabled(false);
+        }
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            if(taskType == READ_FROM_DATABASE){
+                loadCoverArt();
+            }
+            else {
+                extractAndLoadCoverArt();
+            }
             return null;
         }
 
         @Override
+        protected void onProgressUpdate(AudioItem... audioItem){
+            super.onProgressUpdate(audioItem);
+            int position = audioItem[0].getPosition();
+            audioItemArrayAdapter.notifyItemChanged(position);
+        }
+
+        @Override
         protected void onPostExecute(Void voids){
+            contentValues = null;
+            mediaMetadataRetriever.release();
+            mediaMetadataRetriever = null;
             swipeRefreshLayout.setEnabled(true);
-            audioItemArrayAdapter.notifyDataSetChanged();
         }
     }
 
