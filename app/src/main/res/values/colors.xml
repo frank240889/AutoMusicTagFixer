@@ -2,7 +2,9 @@
 <resources>
     <color name="colorPrimary">#3f51b5</color>
     <color name="colorPrimaryDark">#303f9f</color>
-    <color name="colorAccent">#FF4081</color>
+    <color name="colorAccent">@color/md_yellow_600</color>
+    <color name="mainColor">#0099cc</color>
+    <color name="alphaMainColor">#330099cc</color>
 
     <color name="black_overlay">#66000000</color>
     <color name="true_black">#000000</color>
@@ -17,5 +19,17 @@
     <color name="base2">#eee8d5</color>
     <color name="base3">#fdf6e3</color>
     <color name="true_white">#ffffff</color>
+
+    <color name="fab_background_color">#FF4081</color>
+    <color name="dialog_background_color">#fafafa</color>
+    <color name="dialog_background_scrim">#99323232</color>
+
+    <color name="grey_900">#ff212121</color>
+    <color name="grey_850">#ff303030</color>
+    <color name="grey_800">#ff424242</color>
+    <color name="grey_600">#ff757575</color>
+    <color name="grey_300">#ffe0e0e0</color>
+    <color name="grey_100">#fff5f5f5</color>
+    <color name="grey_50">#fffafafa</color>
 
 </resources>

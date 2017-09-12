@@ -6,4 +6,14 @@
     <!-- Default screen margins, per the Android Design guidelines. -->
     <dimen name="nav_header_vertical_spacing">16dp</dimen>
     <dimen name="nav_header_height">160dp</dimen>
+
+
+    <dimen name="dialog_margin">32dp</dimen>
+    <dimen name="dialog_corners">0dp</dimen>
+    <dimen name="dialog_elevation">8dp</dimen>
+
+    <dimen name="button_corners">0dp</dimen>
+    <dimen name="app_bar_height">180dp</dimen>
+    <dimen name="text_margin">16dp</dimen>
+
 </resources>

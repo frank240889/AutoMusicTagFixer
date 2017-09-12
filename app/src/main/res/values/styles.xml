@@ -2,36 +2,63 @@
 
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+        <!-- Add this line -->
+        <item name="android:windowContentTransitions">true</item>
         <!-- Customize your theme here. -->
-        <item name="colorPrimary">@color/colorPrimary</item>
-        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-        <item name="colorAccent">@color/colorAccent</item>
+        <item name="colorPrimary">@color/true_white</item>
+        <item name="colorPrimaryDark">@android:color/transparent</item>
+        <item name="colorAccent">@color/md_red_800</item>
+        <item name="drawerArrowStyle">@style/DrawerArrowStyle</item>
+        <item name="colorControlActivated">@color/md_red_800</item>
     </style>
 
-    <style name="FullscreenTheme" parent="AppTheme">
-        <item name="android:actionBarStyle">@style/FullscreenActionBarStyle</item>
-        <item name="android:windowActionBarOverlay">true</item>
-        <item name="android:windowBackground">@null</item>
-        <item name="metaButtonBarStyle">?android:attr/buttonBarStyle</item>
-        <item name="metaButtonBarButtonStyle">?android:attr/buttonBarButtonStyle</item>
-    </style>
-
-    <style name="FullscreenActionBarStyle" parent="Widget.AppCompat.ActionBar">
-        <item name="android:background">@color/black_overlay</item>
-    </style>
-
+    <!--Style splash-->
     <style name="SplashTheme" parent="Theme.AppCompat.NoActionBar">
         <item name="android:windowBackground">@drawable/background_splash</item>
+    </style>
+
+    <!--Style details track dialog activity-->
+    <style name="AppTheme.Base.Dialog" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@color/dialog_background_scrim</item>
     </style>
 
     <style name="AppTheme.NoActionBar">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
+        <!--item name="windowActionModeOverlay">true</item-->
     </style>
 
+    <!--Style AppBarLayout-->
     <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
 
-    <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
+    <style name="AppTheme.PopupOverlay" parent="Theme.AppCompat.Light" />
+
+    <!-- The beef: background color for Action Bar overflow menu -->
+    <!--style name="AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
+    <style name="PopupOverlay" parent="ThemeOverlay.AppCompat.Light" /-->
+
+    <style name="DrawerArrowStyle" parent="@style/Widget.AppCompat.DrawerArrowToggle">
+        <item name="spinBars">true</item>
+        <item name="color">@color/true_black</item>
+    </style>
+
+    <style name="ToolbarStyle" parent="@style/ThemeOverlay.AppCompat.Light">
+        <item name="android:textColorPrimary">@color/true_black</item>
+    </style>
+
+    <style name="SettingsStyle" parent="@style/Theme.AppCompat.Light">
+        <item name="android:textColorPrimary">@color/grey_850</item>
+        <item name="colorControlActivated">@color/md_red_800</item>
+    </style>
+
+    <style name="FloatingActionButton" parent="Widget.Design.FloatingActionButton">
+        <item name="android:backgroundTint">@color/md_red_800</item>
+    </style>
+
+    <style name="SettingsStyle.Fragment" parent="SettingsStyle">
+        <item name="android:textColorPrimary">@color/md_red_800</item>
+    </style>
 
     <style name="AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
 
