@@ -1,50 +1,66 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/base02"
+    android:background="@color/true_white"
     android:orientation="vertical"
     android:weightSum="1">
 
     <android.support.v4.view.ViewPager
         android:id="@+id/pager"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_weight="0.91"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/tabDots"
         android:theme="@style/AppTheme.NoActionBar">
 
     </android.support.v4.view.ViewPager>
 
+    <android.support.design.widget.TabLayout
+        android:id="@+id/tabDots"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        app:tabBackground="@drawable/tab_selector"
+        app:tabGravity="center"
+        app:tabIndicatorHeight="0dp" />
+
     <RelativeLayout
+        android:id="@+id/relativeLayout3"
         android:layout_width="match_parent"
         android:layout_height="48dp"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentStart="true"
         android:orientation="horizontal">
 
         <Button
             android:id="@+id/bOmit"
+            style="@android:style/Widget.Material.Button.Borderless"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentStart="true"
             android:layout_alignParentTop="true"
-            android:background="@android:color/transparent"
+            android:elevation="0dp"
             android:text="@string/omit"
+            android:textColor="@color/grey_850"
             android:textAlignment="center"
-            android:textColor="@color/base3"
             android:textSize="16sp"
-            android:textStyle="normal|bold" />
+            android:textStyle="normal" />
 
         <Button
             android:id="@+id/bNext"
+            style="@android:style/Widget.Material.Button.Borderless"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentEnd="true"
             android:layout_alignTop="@+id/bOmit"
-            android:background="@android:color/transparent"
+            android:elevation="0dp"
             android:text="@string/nextSlide"
-            android:textColor="@color/base3"
+            android:textColor="@color/grey_850"
             android:textSize="16sp"
-            android:textStyle="normal|bold" />
+            android:textStyle="normal" />
     </RelativeLayout>
 
 
-</LinearLayout>
+</RelativeLayout>
