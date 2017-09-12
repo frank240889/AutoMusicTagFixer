@@ -32,7 +32,7 @@ public final class StringUtilities {
      * @return sanitized string
      */
     public static String sanitizeString(String dirtyString) {
-        return dirtyString.replaceAll("[^\\w\\s()&_-]", "");
+        return dirtyString.replaceAll("[^\\w\\s()&_\\-\\]\\[\'#.:$]", "");
     }
 
     /**
@@ -41,9 +41,16 @@ public final class StringUtilities {
      * @return true string contains another chararacter, false otherwise
      */
     public static boolean hasNotAllowedCharacters(EditText editText){
-        Pattern pattern = Pattern.compile("[^\\w\\s.()?¿:&_-]");
+        Pattern pattern = Pattern.compile("[^\\w\\s()&_\\-\\]\\[\'#.:$]");
         Matcher matcher = pattern.matcher(editText.getText().toString());
         return matcher.find();
+    }
+
+    public static String sanitizeFilename(String dirtyFileName){
+        if(dirtyFileName != null && !dirtyFileName.equals(""))
+            return dirtyFileName.replaceAll("[^\\w\\s()&_\\-\\]\\[\'#.:$]", "");
+
+        return "";
     }
 
     /**
