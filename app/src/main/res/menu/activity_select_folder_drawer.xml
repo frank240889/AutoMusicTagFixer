@@ -1,22 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
+        <group android:checkableBehavior="none">
+                <item
+                    android:id="@+id/settings"
+                    android:icon="@drawable/ic_settings_black_24dp"
+                    android:title="@string/options" />
+        </group>
+        <item android:title="@string/share_and_rate">
+                <menu>
+                        <item
+                            android:id="@+id/rate"
+                            android:icon="@drawable/ic_star_black_24dp"
+                            android:title="@string/rate" />
+                        <item
+                            android:id="@+id/share"
+                            android:icon="@drawable/ic_menu_share"
+                            android:title="@string/share"/>
+                </menu>
+        </item>
 
-    <group android:checkableBehavior="single">
-        <item
-            android:id="@+id/scan"
-            android:icon="@drawable/ic_search_black_24dp"
-            android:title="@string/library_scan" />
-        <item
-            android:id="@+id/settings"
-            android:icon="@drawable/ic_settings_black_24dp"
-            android:title="@string/options" />
-        <item
-            android:id="@+id/rate"
-            android:icon="@drawable/ic_star_black_24dp"
-            android:title="@string/rate" />
-        <item
-            android:id="@+id/share"
-            android:icon="@drawable/ic_menu_share"
-            android:title="@string/share"/>
-    </group>
 </menu>
