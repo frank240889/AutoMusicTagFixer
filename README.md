@@ -1,7 +1,8 @@
 # MusicalLibraryOrganizer
 
-MusicalLibraryOrganizer(temporal name) is an app with the objetive of automatically correcting metatags from audio files stored in your smartpone using a music recognition service like Shazam(currently only for MP3's files, but soon will extend its support for more audio formats). It can correct for now:
+MusicalLibraryOrganizer(temporal name) is an app with the objetive of automatically correcting metatags from audio files stored in your smartpone using a ACR (Automatic Content Recognition) service like Shazam(currently only for MP3's files, but soon will extend its support for more audio formats). It can correct for now:
 
+FileName.
 Title.
 Album.
 Artist.
