@@ -33,7 +33,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="32dp"
                 android:layout_centerVertical="false"
-                android:background="@color/grey_600"
+                android:background="@color/cardview_dark_background"
                 android:drawableStart="@drawable/ic_folder_white_24px"
                 android:gravity="center_vertical"
                 android:paddingStart="5dp"
