@@ -47,7 +47,7 @@ public class DataTrackDbHelper extends SQLiteOpenHelper {
 
             TrackContract.TrackData.COLUMN_NAME_IS_SELECTED + BOOLEAN_TYPE + COMA_SEP +
             TrackContract.TrackData.COLUMN_NAME_STATUS + INTEGER_TYPE + COMA_SEP +
-            TrackContract.TrackData.COLUMN_NAME_COVER_ART + COMA_SEP +
+            TrackContract.TrackData.COLUMN_NAME_COVER_ART + BLOB_TYPE + COMA_SEP +
             TrackContract.TrackData.COLUMN_NAME_ADDED_RECENTLY + BOOLEAN_TYPE + " )";
 
     private static final String SQL_DELETE_ENTRIES_FOR_TRACK_DATA = "DROP TABLE IF EXISTS " + TrackContract.TrackData.TABLE_NAME;
@@ -132,7 +132,6 @@ public class DataTrackDbHelper extends SQLiteOpenHelper {
                 TrackContract.TrackData.COLUMN_NAME_CURRENT_FULL_PATH,
                 TrackContract.TrackData.COLUMN_NAME_IS_SELECTED,
                 TrackContract.TrackData.COLUMN_NAME_STATUS,
-                TrackContract.TrackData.COLUMN_NAME_COVER_ART,
                 TrackContract.TrackData.COLUMN_NAME_ADDED_RECENTLY
         };
 
@@ -192,6 +191,7 @@ public class DataTrackDbHelper extends SQLiteOpenHelper {
 
         return (c != null && c.getCount() > 0)?c:null;
     }
+
 
     public boolean existInDatabase(long id){
         String[] projection = {
