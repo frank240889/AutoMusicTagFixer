@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/action_play"
+        android:icon="@drawable/ic_play_arrow_white_24px"
+        android:title="@string/play_track"
+        app:showAsAction="ifRoom|collapseActionView" />
+</menu>

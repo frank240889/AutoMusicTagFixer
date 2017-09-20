@@ -7,7 +7,7 @@
         android:icon="@drawable/ic_sort_white_24px" /-->
     <item
         android:id="@+id/action_search"
-        android:icon="@drawable/ic_search_black_24dp"
+        android:icon="@drawable/ic_search_white_24px"
         android:title="@string/search_song"
         app:showAsAction="ifRoom|collapseActionView"
         app:actionViewClass="android.support.v7.widget.SearchView"/>
@@ -15,7 +15,7 @@
         android:id="@+id/go_to_current_playback"
         app:showAsAction="ifRoom|collapseActionView"
         android:title=""
-        android:icon="@drawable/ic_track_black_24dp"/>
+        android:icon="@drawable/ic_music_note_white_24px"/>
     <item
         android:id="@+id/select_all"
         app:showAsAction="never"
@@ -28,6 +28,6 @@
     <item
         android:id="@+id/faq"
         app:showAsAction="never"
-        android:title="Preguntas frecuentes"/>
+        android:title="@string/faq"/>
 
 </menu>
