@@ -604,6 +604,13 @@ public class SelectFolderActivity extends AppCompatActivity
             return;
         }
 
+        if(isProcessingTask){
+            Toast t = Toast.makeText(getApplicationContext(),getString(R.string.processing_task),Toast.LENGTH_SHORT);
+            t.setGravity(Gravity.CENTER,0,0);
+            t.show();
+            return;
+        }
+
 
         SharedPreferences shaPreferences = getSharedPreferences("ShaPreferences", Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = shaPreferences.edit();
