@@ -26,6 +26,8 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.Gravity;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
@@ -57,14 +59,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Vector;
 
-import mx.dev.franco.musicallibraryorganizer.services.DetectorInternetConnection;
 import mx.dev.franco.musicallibraryorganizer.services.FixerTrackService;
-import mx.dev.franco.musicallibraryorganizer.services.Job;
 import mx.dev.franco.musicallibraryorganizer.utilities.StringUtilities;
 import wseemann.media.FFmpegMediaMetadataRetriever;
 
 import static android.view.View.GONE;
-import static mx.dev.franco.musicallibraryorganizer.services.GnService.apiInitialized;
 
 /**
  * Created by franco on 22/07/17.
@@ -115,9 +114,10 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
     //private ImageButton cancelButton;
     private FloatingActionButton downloadCoverButton;
     private FloatingActionButton autofixButton;
-    private FloatingActionButton playPreviewButton;
+    private FloatingActionButton removeCoverButton;
     private FloatingActionButton saveButton;
     private FloatingActionMenu floatingActionMenu;
+    private MenuItem playPreviewButton;
     private TextView trackType;
     private TextView titleLayer, subtitleLayer;
     private TextView imageSize;
@@ -164,6 +164,9 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
     private static final int DATA_IS_TOO_LONG = 12;
     private static final int HAS_NOT_ALLOWED_CHARACTERS = 13;
     private static final int FILE_IS_PROCESSING = 14;
+    private static final int REMOVE_COVER = 15;
+    private static final int UPDATE_COVER = 16;
+    private static final int UPDATE_ALL_METADATA = 17;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -204,6 +207,34 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
         window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN);
 
         init();
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_details_track_dialog, menu);
+
+        playPreviewButton = menu.findItem(R.id.action_play);
+        if(player != null && player.isPlaying() && player.getCurrentId() == this.p){
+            playPreviewButton.setIcon(R.drawable.ic_stop_white_24px);
+        }
+        else {
+            playPreviewButton.setIcon(R.drawable.ic_play_arrow_white_24px);
+        }
+
+        playPreviewButton.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                try {
+                    playPreview();
+                } catch (IOException | InterruptedException e) {
+                    e.printStackTrace();
+                }
+                return false;
+            }
+        });
+
+return true;
     }
 
 
@@ -299,7 +330,7 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
         viewDetailsTrack = null;
         editButton = null;
         //downloadCoverButton = null;
-        playPreviewButton = null;
+        removeCoverButton = null;
         player = null;
         titleListener = null;
         artistListener = null;
@@ -309,7 +340,6 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
         genreListener = null;
         progressBar = null;
         currentAudioItem = null;
-        currentCoverArt = null;
         trackIdAudioItem = null;
         intentFilter = null;
         localBroadcastManager.unregisterReceiver(receiver);
@@ -325,7 +355,6 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
         currentAudioItem.setProcessing(false);
         FixerTrackService.cancelGnMusicIdFileProcessing();
         SelectFolderActivity.shouldContinue = false;
-        Log.d("isProcessing",currentAudioItem.isProcessing()+"");
         currentAudioItem.clearContext();
         setResult(Activity.RESULT_CANCELED);
         finishAfterTransition();
@@ -350,6 +379,24 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
         yearListener = new TextListener(yearField);
         genreListener = new TextListener(genreField);
     }
+
+    private void showToast(int reason){
+        Toast t = Toast.makeText(getApplicationContext(),"",Toast.LENGTH_SHORT);
+        t.setGravity(Gravity.CENTER,0,0);
+        switch (reason){
+            case SelectFolderActivity.NO_INTERNET_CONNECTION:
+                t.setText(R.string.no_internet_connection);
+                break;
+            case SelectFolderActivity.PROCESSING_TASK:
+                t.setText(R.string.processing_task);
+                break;
+            case SelectFolderActivity.NO_INITIALIZED_API:
+                t.setText(R.string.initializing_recognition_api);
+                break;
+        }
+        t.show();
+    }
+
 
     /**
      * Here it extracts data from audio file, then stores
@@ -398,12 +445,12 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
         }
         else {
             GlideApp.with(viewDetailsTrack).
-                    load(null)
+                    load(R.drawable.ic_album_white_48px)
                     .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.NONE))
                     .apply(RequestOptions.skipMemoryCacheOf(true))
                     .transition(DrawableTransitionOptions.withCrossFade())
                     .centerCrop()
-                    .placeholder(R.drawable.nocoverart)
+                    .placeholder(R.drawable.ic_album_white_48px)
                     .into(toolbarCover);
 
         }
@@ -456,7 +503,7 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
         numberField.setText(trackIdAudioItem.getTrackNumber());
         yearField.setText(trackIdAudioItem.getTrackYear());
         genreField.setText(trackIdAudioItem.getGenre());
-        Toast toast = Toast.makeText(DetailsTrackDialogActivity.this,"Se encontró la siguiente información. Toca el boton rojo para guardar.",Toast.LENGTH_SHORT);
+        Toast toast = Toast.makeText(DetailsTrackDialogActivity.this,getString(R.string.info_found),Toast.LENGTH_SHORT);
         toast.setGravity(Gravity.CENTER,0,0);
         toast.show();
     }
@@ -487,7 +534,7 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
 
 
         downloadCoverButton = (FloatingActionButton) viewDetailsTrack.findViewById(R.id.downloadCover);
-        playPreviewButton = (FloatingActionButton) viewDetailsTrack.findViewById(R.id.playPreview);
+        removeCoverButton = (FloatingActionButton) viewDetailsTrack.findViewById(R.id.removeCover);
         editButton = (FloatingActionButton) viewDetailsTrack.findViewById(R.id.editTrackInfo);
         autofixButton = (FloatingActionButton) viewDetailsTrack.findViewById(R.id.autoFix);
         floatingActionMenu = (FloatingActionMenu) viewDetailsTrack.findViewById(R.id.floatingActionMenu);
@@ -509,14 +556,14 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
     }
 
     private void addActionListeners(){
-        playPreviewButton.setOnClickListener(new View.OnClickListener() {
+        if(currentAudioItem.getCoverArt() == null){
+            removeCoverButton.setEnabled(false);
+        }
+
+        removeCoverButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                try {
-                    playPreview();
-                } catch (IOException | InterruptedException e) {
-                    e.printStackTrace();
-                }
+            removeCover();
             }
         });
 
@@ -530,14 +577,19 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
         autofixButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(!allowExecute())
+                int canContinue = SelectFolderActivity.allowExecute(DetailsTrackDialogActivity.this);
+                if(canContinue != 0) {
+                    showToast(canContinue);
                     return;
+                }
 
                 progressBar.setVisibility(View.VISIBLE);
                 currentAudioItem.setProcessing(true);
                 floatingActionMenu.close(true);
-                autofixButton.setEnabled(false);
+                downloadCoverButton.setEnabled(false);
+                removeCoverButton.setEnabled(false);
                 editButton.setEnabled(false);
+                autofixButton.setEnabled(false);
 
                 if(trackIdAudioItem == null) {
                     SelectFolderActivity.audioItemArrayAdapter.notifyItemChanged(currentAudioItem.getPosition());
@@ -562,8 +614,11 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
         downloadCoverButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(!allowExecute())
+                int canContinue = SelectFolderActivity.allowExecute(DetailsTrackDialogActivity.this);
+                if(canContinue != 0) {
+                    showToast(canContinue);
                     return;
+                }
 
                 downloadCover();
             }
@@ -605,10 +660,7 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
             }
         });
 
-        if(player != null && player.isPlaying() && player.getCurrentId() == this.p){
-            playPreviewButton.setImageResource(R.drawable.ic_stop_white_24px);
-            playPreviewButton.setLabelText("Detener");
-        }
+
 
         toolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
@@ -618,6 +670,12 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
         });
 
         createEditTextListeners();
+    }
+
+    private void removeCover() {
+        onlyCoverArt =  true;
+        AsyncUpdateData asyncUpdateData = new AsyncUpdateData(REMOVE_COVER);
+        asyncUpdateData.execute();
     }
 
     /**
@@ -655,12 +713,10 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
     private void playPreview() throws IOException, InterruptedException {
         player.playPreview(p);
         if(player.isPlaying()){
-            playPreviewButton.setImageResource(R.drawable.ic_stop_white_24px);
-            playPreviewButton.setLabelText("Detener");
+            playPreviewButton.setIcon(R.drawable.ic_stop_white_24px);
         }
         else {
-            playPreviewButton.setImageResource(R.drawable.ic_play_arrow_white_24px);
-            playPreviewButton.setLabelText("Escuchar");
+            playPreviewButton.setIcon(R.drawable.ic_play_arrow_white_24px);
         }
     }
 
@@ -824,7 +880,7 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
      */
     private void updateData() throws IOException, ID3WriteException {
         //we update the data creating another thread because the database operation can take a long time
-        AsyncUpdateData asyncUpdateData = new AsyncUpdateData();
+        AsyncUpdateData asyncUpdateData = new AsyncUpdateData(UPDATE_ALL_METADATA);
         asyncUpdateData.execute();
     }
 
@@ -852,12 +908,12 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
         }
         else{
             GlideApp.with(viewDetailsTrack).
-                    load(null)
+                    load(R.drawable.ic_album_white_48px)
                     .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.NONE))
                     .apply(RequestOptions.skipMemoryCacheOf(true))
                     .transition(DrawableTransitionOptions.withCrossFade())
                     .centerCrop()
-                    .placeholder(R.drawable.nocoverart)
+
                     .into(toolbarCover);
             currentCoverArtLength = 0;
         }
@@ -881,8 +937,7 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
             player.stop();
             player.reset();
             CustomMediaPlayer.onCompletePlayback(p);
-            playPreviewButton.setImageResource(R.drawable.ic_play_arrow_white_24px);
-            playPreviewButton.setLabelText("Escuchar");
+            playPreviewButton.setIcon(R.drawable.ic_play_arrow_black_24dp);
         }
     }
 
@@ -1035,6 +1090,7 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
         autofixButton.setEnabled(false);
         editButton.setEnabled(false);
         downloadCoverButton.setEnabled(false);
+        removeCoverButton.setEnabled(false);
 
         if(trackIdAudioItem != null){
             currentAudioItem.setProcessing(false);
@@ -1048,14 +1104,6 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
             intent.putExtra("id", currentAudioItem.getId());
             startService(intent);
         }
-
-
-
-
-
-        /*Toast toast = Toast.makeText(getApplicationContext(),getString(R.string.snackbar_message_in_development),Toast.LENGTH_SHORT);
-        toast.setGravity(Gravity.CENTER,0,0);
-        toast.show();*/
     }
 
     /**
@@ -1068,8 +1116,7 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
         Log.d("onCompletePlayback","OnFragmnet");
         CustomMediaPlayer.onCompletePlayback(this.p);
         try {
-            playPreviewButton.setImageResource(R.drawable.ic_play_arrow_white_24px);
-            playPreviewButton.setLabelText("Escuchar");
+            playPreviewButton.setIcon(R.drawable.ic_play_arrow_black_24dp);
         }
         catch (Exception e){
             e.printStackTrace();
@@ -1146,11 +1193,16 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
 
     private class AsyncUpdateData extends AsyncTask<Void, Void, Void> {
         private final String TAG = AsyncUpdateData.class.getName();
+        private int operationType;
+
+        AsyncUpdateData(int operationType){
+            this.operationType = operationType;
+        }
         @Override
         protected void onPreExecute(){
             progressBar.setVisibility(View.VISIBLE);
             stopPlayback();
-            playPreviewButton.setEnabled(false);
+            removeCoverButton.setEnabled(false);
             editButton.setEnabled(false);
             autofixButton.setEnabled(false);
             downloadCoverButton.setEnabled(false);
@@ -1165,6 +1217,9 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
             MusicMetadataSet musicMetadataSet = null;
             ContentValues contentValues = new ContentValues();
 
+            String newGenre = genreField.getText().toString();
+
+
             boolean isSameCoverArt = currentCoverArtLength == (currentCoverArt == null? 0 : currentCoverArt.length);
 
             try {
@@ -1172,6 +1227,16 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
                 MusicMetadata iMusicMetadata = (MusicMetadata) musicMetadataSet.getSimplified();
 
                 try {
+
+                    //Always save genre because there is a bug in the library
+                    //that makes null this value
+                    //if(!isSameGenre) {
+                    iMusicMetadata.setGenre(newGenre);
+                    currentAudioItem.setGenre(newGenre);
+                    Log.d("genre", "updated");
+                    //}
+
+
                     //Here we update the data in case there have had changes
                     if(!isSameCoverArt && currentCoverArt != null && currentCoverArt.length > 0){
                         Vector<ImageData> imageDataVector = new Vector<>();
@@ -1219,6 +1284,71 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
                 resultMessage = e.getMessage();
             }
         }
+
+        private void removeCoverArt() {
+            //Is priority update the metadata first, in case there are errors when
+            //the data is set on item and database
+            MyID3 myID3 = new MyID3();
+            File tempFile = new File(trackPath);
+            MusicMetadataSet musicMetadataSet = null;
+            ContentValues contentValues = new ContentValues();
+
+            String newGenre = genreField.getText().toString();
+
+            try {
+                musicMetadataSet = myID3.read(tempFile);
+                MusicMetadata iMusicMetadata = (MusicMetadata) musicMetadataSet.getSimplified();
+
+                try {
+
+                    //Always save genre because there is a bug in the library
+                    //that makes null this value
+                    iMusicMetadata.setGenre(newGenre);
+                    currentAudioItem.setGenre(newGenre);
+                    Log.d("genre", "updated");
+
+                    //Here we update the data in case there have had changes
+                   iMusicMetadata.clearPictureList();
+
+                    myID3.update(tempFile, musicMetadataSet, iMusicMetadata);
+
+                    //update filesize because the new embed cover added to file
+                    float fileSizeInMb = (float)tempFile.length() / AudioItem.KILOBYTE;
+
+                    //Then, is necessary update the data in database,
+                    //because we obtain this info when the app starts (after first time),
+                    //besides, database operations can take a long time
+                    contentValues.put(TrackContract.TrackData.COLUMN_NAME_FILE_SIZE,fileSizeInMb);
+                    contentValues.put(TrackContract.TrackData.COLUMN_NAME_COVER_ART,new byte[0]);
+                    contentValues.put(TrackContract.TrackData.COLUMN_NAME_STATUS,AudioItem.FILE_STATUS_EDIT_BY_USER);
+                    dbHelper.updateData(DetailsTrackDialogActivity.this.p,contentValues);
+
+                    //Update the data of item from list
+                    currentAudioItem.setSize(fileSizeInMb);
+                    currentAudioItem.setCoverArt(null);
+                    currentAudioItem.setStatus(AudioItem.FILE_STATUS_EDIT_BY_USER);
+                    dataUpdated = true;
+
+
+                        Log.d("remove_cover_art", "updated");
+
+
+
+                } catch (IOException | ID3WriteException e) {
+                    dataUpdated = false;
+                    e.printStackTrace();
+                    resultMessage = e.getMessage();
+                }
+
+
+            } catch (IOException e) {
+                e.printStackTrace();
+                dataUpdated = false;
+                e.printStackTrace();
+                resultMessage = e.getMessage();
+            }
+        }
+
 
         private void updateMetadata(){
             //Is priority update the metadata first, in case there are errors when
@@ -1281,11 +1411,13 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
                     currentAudioItem.setTrackYear(newTrackYear);
                     Log.d("year", "updated");
                 }
-                if(!isSameGenre) {
+                //Always save genre because there is a bug in the library
+                //that makes null this value
+                //if(!isSameGenre) {
                     iMusicMetadata.setGenre(newGenre);
                     currentAudioItem.setGenre(newGenre);
                     Log.d("genre", "updated");
-                }
+                //}
 
                 if(!isSameCoverArt && currentCoverArt != null && currentCoverArt.length > 0){
                     Vector<ImageData> imageDataVector = new Vector<>();
@@ -1355,8 +1487,11 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
 
         @Override
         protected Void doInBackground(Void... params) {
-            if (onlyCoverArt) {
+            if (operationType == UPDATE_COVER) {
                 updateCoverArt();
+            }
+            else if(operationType == REMOVE_COVER){
+                removeCoverArt();
             }
             else {
                 updateMetadata();
@@ -1367,8 +1502,13 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
         @Override
         protected void onPostExecute(Void result){
             doAtFinal();
+            if(currentAudioItem.getCoverArt() == null){
+                removeCoverButton.setEnabled(false);
+            }
+            else {
+                removeCoverButton.setEnabled(true);
+            }
 
-            playPreviewButton.setEnabled(true);
             editButton.setEnabled(true);
             autofixButton.setEnabled(true);
             downloadCoverButton.setEnabled(true);
@@ -1380,53 +1520,71 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
             doAtFinal();
         }
 
-    }
+        private void doAtFinal(){
+            SelectFolderActivity.audioItemArrayAdapter.notifyItemChanged(currentAudioItem.getPosition());
+            Toast toast = Toast.makeText(getApplicationContext(),"", Toast.LENGTH_SHORT);
+            if(dataUpdated){
+                boolean isSameCoverArt = currentCoverArtLength == (currentCoverArt == null? 0 : currentCoverArt.length);
+                if(operationType == DetailsTrackDialogActivity.UPDATE_COVER && !isSameCoverArt && currentCoverArt != null && currentCoverArt.length > 0){//if(onlyCoverArt && !isSameCoverArt && currentCoverArt != null && currentCoverArt.length > 0) {
+                    GlideApp.with(viewDetailsTrack).
+                            load(currentAudioItem.getCoverArt())
+                            .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.NONE))
+                            .transition(DrawableTransitionOptions.withCrossFade())
+                            .apply(RequestOptions.skipMemoryCacheOf(true))
+                            .centerCrop()
+                            .into(toolbarCover);
+                    toast.setText(getString(R.string.cover_updated));
+                }
+                else if(operationType == DetailsTrackDialogActivity.REMOVE_COVER){
 
-    private void doAtFinal(){
-        SelectFolderActivity.audioItemArrayAdapter.notifyItemChanged(currentAudioItem.getPosition());
-        Toast toast;
-        if(dataUpdated){
-            toast = Toast.makeText(getApplicationContext(), getString(R.string.message_data_update), Toast.LENGTH_SHORT);
-            boolean isSameCoverArt = currentCoverArtLength == (currentCoverArt == null? 0 : currentCoverArt.length);
-            if(onlyCoverArt && !isSameCoverArt && currentCoverArt != null && currentCoverArt.length > 0) {
-                GlideApp.with(viewDetailsTrack).
-                        load(currentAudioItem.getCoverArt())
-                        .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.NONE))
-                        .transition(DrawableTransitionOptions.withCrossFade())
-                        .apply(RequestOptions.skipMemoryCacheOf(true))
-                        .centerCrop()
-                        .into(toolbarCover);
+                    GlideApp.with(viewDetailsTrack).
+                            load(R.drawable.ic_album_white_48px)
+                            .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.NONE))
+                            .apply(RequestOptions.skipMemoryCacheOf(true))
+                            .transition(DrawableTransitionOptions.withCrossFade())
+                            .centerCrop()
+                            .placeholder(R.drawable.ic_album_white_48px)
+                            .into(toolbarCover);
+
+                    toast.setText(getString(R.string.cover_removed));
+                }
+                else {
+                    toast.setText(getString(R.string.message_data_update));
+                }
             }
+            else {
+                toast = Toast.makeText(getApplicationContext(), getString(R.string.message_no_data_updated), Toast.LENGTH_SHORT);
+            }
+            toast.setGravity(Gravity.CENTER,0,0);
+            toast.show();
+
+            //Update fields in case we have replaced the strange chars
+            titleLayer.setText(currentAudioItem.getFileName());
+            status.setText(currentAudioItem.getStatusText());
+            titleField.setText(currentAudioItem.getTitle());
+            artistField.setText(currentAudioItem.getArtist());
+            albumField.setText(currentAudioItem.getAlbum());
+            genreField.setText(currentAudioItem.getGenre());
+            status.setText(currentAudioItem.getStatusText());
+            status.setCompoundDrawablesWithIntrinsicBounds(currentAudioItem.getStatusDrawable(),null,null,null);
+            fileSize.setText(currentAudioItem.getConvertedFileSize());
+            imageSize.setText(currentAudioItem.getStringImageSize());
+
+            if(cardView.getVisibility() == View.VISIBLE){
+                cardView.setVisibility(GONE);
+            }
+
+
+            cachingCurrentValues();
+
+            onlyCoverArt = false;
+            dataUpdated = false;
+
         }
-        else {
-            toast = Toast.makeText(getApplicationContext(), getString(R.string.message_no_data_updated), Toast.LENGTH_SHORT);
-        }
-        toast.setGravity(Gravity.CENTER,0,0);
-        toast.show();
-
-        //Update fields in case we have replaced the strange chars
-        titleLayer.setText(currentAudioItem.getFileName());
-        status.setText(currentAudioItem.getStatusText());
-        titleField.setText(currentAudioItem.getTitle());
-        artistField.setText(currentAudioItem.getArtist());
-        albumField.setText(currentAudioItem.getAlbum());
-        genreField.setText(currentAudioItem.getGenre());
-        status.setText(currentAudioItem.getStatusText());
-        status.setCompoundDrawablesWithIntrinsicBounds(currentAudioItem.getStatusDrawable(),null,null,null);
-        fileSize.setText(currentAudioItem.getConvertedFileSize());
-        imageSize.setText(currentAudioItem.getStringImageSize());
-
-        if(cardView.getVisibility() == View.VISIBLE){
-            cardView.setVisibility(GONE);
-        }
-
-
-        cachingCurrentValues();
-
-        onlyCoverArt = false;
-        dataUpdated = false;
 
     }
+
+
 
     @Override
     protected void onPause(){
@@ -1474,6 +1632,12 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
             editButton.setEnabled(true);
             autofixButton.setEnabled(true);
             downloadCoverButton.setEnabled(true);
+            if(currentAudioItem.getCoverArt() == null){
+                removeCoverButton.setEnabled(false);
+            }
+            else {
+                removeCoverButton.setEnabled(true);
+            }
             progressBar.setVisibility(View.INVISIBLE);
 
 
@@ -1517,7 +1681,7 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
                             onlyCoverArt =  true;
-                            AsyncUpdateData asyncUpdateData = new AsyncUpdateData();
+                            AsyncUpdateData asyncUpdateData = new AsyncUpdateData(UPDATE_COVER);
                             asyncUpdateData.execute();
                         }
                     });
@@ -1545,28 +1709,6 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
         downloadCoverButton.setEnabled(true);
         progressBar.setVisibility(View.INVISIBLE);
         t.show();
-    }
-
-    private boolean allowExecute(){
-
-        //No internet connection
-        if(!DetectorInternetConnection.isConnected(getApplicationContext())){
-            Toast toast = Toast.makeText(getApplicationContext(),getString(R.string.no_internet_connection),Toast.LENGTH_SHORT);
-            toast.setGravity(Gravity.CENTER,0,0);
-            toast.show();
-            return false;
-        }
-
-        //API not initialized
-        if(!apiInitialized){
-            Toast toast = Toast.makeText(getApplicationContext(),getString(R.string.initializing_recognition_api),Toast.LENGTH_SHORT);
-            toast.setGravity(Gravity.CENTER,0,0);
-            toast.show();
-            Job.scheduleJob(getApplicationContext());
-            return false;
-        }
-
-        return true;
     }
 
 }
