@@ -4,20 +4,17 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:mContext="mx.dev.franco.musicallibraryorganizer.SelectFolderActivity">
+    tools:Context="mx.dev.franco.musicallibraryorganizer.SelectFolderActivity">
 
     <android.support.design.widget.AppBarLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:theme="@style/AppTheme.AppBarOverlay">
+        android:layout_height="wrap_content">
 
         <android.support.v7.widget.Toolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:elevation="4dp"
-            app:popupTheme="@style/ThemeOverlay.AppCompat.Dark"
-            android:theme="@style/ToolbarStyle"/>
+            android:elevation="4dp" />
 
     </android.support.design.widget.AppBarLayout>
 
@@ -32,8 +29,8 @@
         android:scaleType="fitCenter"
         app:elevation="8dp"
         app:borderWidth="0dp"
-        app:backgroundTint="@color/md_red_800"
-        app:rippleColor="@android:color/white"
+        app:theme="@style/CustomFab"
+        android:theme="@style/CustomFab"
         app:pressedTranslationZ="12dp"
         app:srcCompat="@drawable/ic_android_white_24px" />
 </android.support.design.widget.CoordinatorLayout>

@@ -33,7 +33,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="32dp"
                 android:layout_centerVertical="false"
-                android:background="@color/cardview_dark_background"
+                android:background="@color/material_grey_850"
                 android:drawableStart="@drawable/ic_folder_white_24px"
                 android:gravity="center_vertical"
                 android:paddingStart="5dp"
@@ -48,7 +48,7 @@
         <RelativeLayout
             android:id="@+id/itemListView"
             android:layout_width="wrap_content"
-            android:layout_height="84dp"
+            android:layout_height="94dp"
             android:layout_alignParentStart="true"
             android:layout_below="@+id/relativeLayout"
             android:splitMotionEvents="false">
@@ -58,7 +58,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:alpha="0.5"
-                android:background="@color/md_red_800"
+                android:background="@color/primaryLightColor"
                 android:visibility="gone" />
 
             <ImageView
@@ -72,7 +72,7 @@
                 android:focusable="true"
                 android:scaleType="centerCrop"
                 android:visibility="visible"
-                app:srcCompat="@drawable/nocoverart" />
+                app:srcCompat="@drawable/ic_album_white_48px" />
 
             <TextView
                 android:id="@+id/track_name"
@@ -82,7 +82,7 @@
                 android:layout_centerInParent="false"
                 android:layout_marginStart="8dp"
                 android:layout_toEndOf="@+id/coverArt"
-                android:drawableStart="@drawable/ic_audiotrack_black_24dp"
+                android:drawableStart="@drawable/ic_music_note_white_24px"
                 android:ellipsize="end"
                 android:gravity="center_vertical"
                 android:maxLines="1"
@@ -108,7 +108,7 @@
                 android:layout_alignStart="@+id/track_name"
                 android:layout_below="@+id/track_name"
                 android:layout_toEndOf="@+id/coverArt"
-                android:drawableStart="@drawable/ic_account_circle_black_24dp"
+                android:drawableStart="@drawable/ic_account_circle_white_24px"
                 android:ellipsize="end"
                 android:gravity="center_vertical"
                 android:maxLines="1"
@@ -123,7 +123,7 @@
                 android:layout_alignStart="@+id/artist_name"
                 android:layout_below="@+id/artist_name"
                 android:layout_toEndOf="@+id/coverArt"
-                android:drawableStart="@drawable/ic_album_black_24dp"
+                android:drawableStart="@drawable/ic_album_white_24px"
                 android:ellipsize="end"
                 android:gravity="center_vertical"
                 android:maxLines="1"
@@ -160,6 +160,7 @@
                 android:layout_alignEnd="@+id/checkBoxTrack"
                 android:layout_alignStart="@+id/coverArt"
                 android:layout_below="@+id/album_name"
+                android:layout_marginTop="4dp"
                 android:indeterminate="true"
                 android:visibility="visible" />
 
@@ -169,9 +170,9 @@
                 android:layout_height="24dp"
                 android:layout_alignParentEnd="true"
                 android:layout_alignParentTop="true"
-                android:background="@drawable/ic_star_black_24dp"
+                android:background="@drawable/ic_star_white"
                 android:visibility="visible"
-                app:srcCompat="@drawable/ic_star_black_24dp" />
+                app:srcCompat="@drawable/ic_star_white" />
 
         </RelativeLayout>
 
