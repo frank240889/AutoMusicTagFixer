@@ -3,7 +3,6 @@ package mx.dev.franco.musicallibraryorganizer;
 import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -106,7 +105,6 @@ public class TrackAdapter extends SelectableAdapter<TrackAdapter.AudioItemHolder
         this.clickListener = clickListener;
     }
 
-
     @Override
     public AudioItemHolder onCreateViewHolder(ViewGroup parent, int viewType) {
 
@@ -206,7 +204,7 @@ public class TrackAdapter extends SelectableAdapter<TrackAdapter.AudioItemHolder
                         .into(holder.imageView);
             }
             else {
-                GlideApp.with(holder.imageView).load(R.drawable.nocoverart).fitCenter().into(holder.imageView);
+                GlideApp.with(holder.imageView).load(null).placeholder(R.drawable.ic_album_white_48px).fitCenter().into(holder.imageView);
             }
         }
 
@@ -233,20 +231,20 @@ public class TrackAdapter extends SelectableAdapter<TrackAdapter.AudioItemHolder
         switch (track.getStatus()){
             case AudioItem.FILE_STATUS_OK:
             case AudioItem.FILE_STATUS_EDIT_BY_USER:
-                holder.checkMark.setImageResource(R.drawable.ic_star_black_24dp);
-                holder.checkMark.setBackground(context.getResources().getDrawable(R.drawable.ic_star_black_24dp,null));
+                holder.checkMark.setImageResource(R.drawable.ic_star_white);
+                holder.checkMark.setBackground(context.getResources().getDrawable(R.drawable.ic_star_white,null));
                 break;
             case AudioItem.FILE_STATUS_INCOMPLETE:
-                holder.checkMark.setImageResource(R.drawable.ic_star_half_black_24dp);
-                holder.checkMark.setBackground(context.getResources().getDrawable(R.drawable.ic_star_half_black_24dp,null));
+                holder.checkMark.setImageResource(R.drawable.ic_star_half_white);
+                holder.checkMark.setBackground(context.getResources().getDrawable(R.drawable.ic_star_half_white,null));
                 break;
             case AudioItem.FILE_STATUS_BAD:
-                holder.checkMark.setImageResource(R.drawable.ic_error_outline_black_24dp);
-                holder.checkMark.setBackground(context.getResources().getDrawable(R.drawable.ic_error_outline_black_24dp,null));
+                holder.checkMark.setImageResource(R.drawable.ic_error_outline_white);
+                holder.checkMark.setBackground(context.getResources().getDrawable(R.drawable.ic_error_outline_white,null));
                 break;
             default:
-                holder.checkMark.setImageResource(R.drawable.ic_star_border_black_24dp);
-                holder.checkMark.setBackground(context.getResources().getDrawable(R.drawable.ic_star_border_black_24dp,null));
+                holder.checkMark.setImageResource(R.drawable.ic_star_border_white);
+                holder.checkMark.setBackground(context.getResources().getDrawable(R.drawable.ic_star_border_white,null));
                 break;
         }
 
@@ -309,7 +307,7 @@ public class TrackAdapter extends SelectableAdapter<TrackAdapter.AudioItemHolder
     void renewItemsPositions(){
         int count =  getItemCount();
         for (int i = 0 ; i < count ; i++){
-            Log.d("old_position",audioTracks.get(i).getPosition()+"");
+            //Log.d("old_position",audioTracks.get(i).getPosition()+"");
             audioTracks.get(i).setPosition(i);
         }
     }
