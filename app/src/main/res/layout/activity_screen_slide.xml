@@ -3,7 +3,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/true_white"
+    android:theme="@style/AppTheme"
+    app:theme="@style/AppTheme"
     android:orientation="vertical"
     android:weightSum="1">
 
@@ -12,7 +13,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_above="@+id/tabDots"
-        android:theme="@style/AppTheme.NoActionBar">
+        app:theme="@style/AppTheme"
+        android:theme="@style/AppTheme">
 
     </android.support.v4.view.ViewPager>
 
@@ -23,6 +25,8 @@
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
         app:tabBackground="@drawable/tab_selector"
+        app:theme="@style/AppTheme"
+        android:theme="@style/AppTheme"
         app:tabGravity="center"
         app:tabIndicatorHeight="0dp" />
 
@@ -43,7 +47,6 @@
             android:layout_alignParentTop="true"
             android:elevation="0dp"
             android:text="@string/omit"
-            android:textColor="@color/grey_850"
             android:textAlignment="center"
             android:textSize="16sp"
             android:textStyle="normal" />
@@ -57,7 +60,6 @@
             android:layout_alignTop="@+id/bOmit"
             android:elevation="0dp"
             android:text="@string/nextSlide"
-            android:textColor="@color/grey_850"
             android:textSize="16sp"
             android:textStyle="normal" />
     </RelativeLayout>
