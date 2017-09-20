@@ -7,6 +7,10 @@ import android.graphics.drawable.Drawable;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import com.gracenote.gnsdk.GnAudioFile;
+
+import java.io.File;
+
 /**
  * Created by franco on 14/04/17.
  */
@@ -23,7 +27,7 @@ public final class AudioItem implements Parcelable{
     private int duration = -1;
     private String newAbsolutePath = "";
     private String fileName = "";
-    private boolean isSelected = false; //Is selected is for contextual bar
+    private boolean isSelected = false;
     private boolean isChecked = false;
     private boolean isProcessing = false;
     private boolean isPlayingAudio = false;
@@ -309,7 +313,7 @@ public final class AudioItem implements Parcelable{
     }
 
     public String getStringImageSize(){
-        if(getCoverArt() != null) {
+        if(getCoverArt() != null && getCoverArt().length > 0) {
             Bitmap bitmapDrawable = BitmapFactory.decodeByteArray(getCoverArt(), 0, getCoverArt().length);
             return "h" + bitmapDrawable.getHeight() + ", w" + bitmapDrawable.getWidth() + " (px)";
         }
@@ -338,6 +342,9 @@ public final class AudioItem implements Parcelable{
         return relativePath;
     }
 
+    //Only for use when retrieved data for a single track and be sent to DetailsTrackDialogActivity;
+    //used for caching values retrieved and don't send again the query to Gracenote API,
+   /************************************************************/
     public String getTrackNumber() {
         return trackNumber;
     }
@@ -363,6 +370,48 @@ public final class AudioItem implements Parcelable{
     public AudioItem setGenre(String genre) {
         this.genre = genre;
         return this;
+    }
+/*************************************************************/
+    public String[] getExtraData(){
+        String[] extraData = new String[3];
+        try {
+            GnAudioFile gnAudioFile = new GnAudioFile(new File(getNewAbsolutePath()));
+            gnAudioFile.sourceInit();
+
+
+            float freq = ((float) gnAudioFile.samplesPerSecond() / 1000f);
+            extraData[0] = freq + " Khz";
+
+            long res = gnAudioFile.sampleSizeInBits();
+            extraData[1] = res + " bits";
+
+            long cha = gnAudioFile.numberOfChannels();
+            extraData[2] = cha == 1 ? "Mono" : (cha == 2 ? "Estéreo" : "Surround");
+
+            gnAudioFile.sourceClose();
+            gnAudioFile = null;
+        }
+        catch (Exception e){
+            e.printStackTrace();
+        }finally {
+            return extraData;
+        }
+
+    }
+
+    public static String getBitrate(String bitrate) {
+        String convertedBitrate = "Bitrate desconocido";
+        if (bitrate != null || bitrate != ""){
+            try {
+                int bitrateInt = Integer.parseInt(bitrate);
+                int bitrateInKb = bitrateInt / 1000;
+                convertedBitrate = bitrateInKb + " Kbps";
+            }
+            catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+        return convertedBitrate;
     }
 
     @Override
