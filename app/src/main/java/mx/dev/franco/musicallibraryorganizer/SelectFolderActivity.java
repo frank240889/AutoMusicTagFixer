@@ -77,45 +77,85 @@ public class SelectFolderActivity extends AppCompatActivity
         Toolbar.OnMenuItemClickListener,
         ActionMode.Callback,
     TrackAdapter.AudioItemHolder.ClickListener{
+    public static String TAG = SelectFolderActivity.class.getName();
 
-
+    //static field to indicate that task must not continue in case
+    //user cancel the operation
     public static volatile boolean shouldContinue = true;
+    //flag to deny make concurrent tasks between automatic mode
+    //and manual mode, and avoid inconsistent behaviour or data
     public static boolean isProcessingTask = false;
+
+    //flag to indicate when the app is retrieving data from Gracenote service
     public static boolean isGettingData = false;
 
+    //actions to indicate in snackbar what is happen
     public static final int ACTION_PLAY = 30;
     public static final int ACTION_EDIT = 31;
     public static final int ACTION_SHOW_INFO = 32;
 
-    public static String TAG_SELECT_FOLDER = SelectFolderActivity.class.getName();
+    //Reasons why cannot execute task
+    public static final int NO_INTERNET_CONNECTION = 40;
+    public static final int NO_INITIALIZED_API = 41;
+    public static final int PROCESSING_TASK = 42;
+
+    //media player instance, only one is allowed
     public static CustomMediaPlayer mediaPlayer;
+    //snackbar to indicate to user what is happening
     public static Snackbar snackbar;
-    public static TrackAdapter audioItemArrayAdapter; //Adapter with AudioItem objects for display in listview
+    //Adapter with AudioItem objects for display in recyclerview
+    public static TrackAdapter audioItemArrayAdapter;
+    //datasource passed to adapter
     public static List<AudioItem> audioItemList;
+    //general toast to indicate some actions happening to user.
     public static Toast statusProcessToast;
 
+    //actions to indicate to app from where to retrieve data.
     private static final int RE_SCAN = 20;
     private static final int CREATE_DATABASE = 21;
     private static final int READ_FROM_DATABASE = 22;
 
-    private int scanRequestType;
+    //message to user when permission to read files is not granted, or
+    //in case there have no music mfiles
     private TextView searchAgainMessage;
+    //search object, for search more quickly
+    //any track in recyclerview list
     private SearchView searchView;
+    //fab button, this executes main task: correct a bunch of selected tracks;
+    //this executes the automatic mode, without intervention of user,
+    //this button either can cancel the task, in case the user decide it.
     private FloatingActionButton fab;
+    //swipe refresh layout for give to user the
+    //facility to re scan his/her library, this is hold
+    //to material design patterns
     private SwipeRefreshLayout swipeRefreshLayout;
+    //recycler view used for better performance in case the
+    //user has a huge musical library
     private RecyclerView recyclerView;
+    //this action mode enables the contextual toolbar
+    //on long click on item in list.
     private ActionMode actionMode;
+    //this menu has some less useful (but important) options,
     private Menu menu;
+    //instance to connection do datadabse
     private DataTrackDbHelper dbHelper;
+    //current item that was first long clicked
     private AudioItem currentAudioItem;
+    //local broadcast to manage response from FixerTrackService.
     private LocalBroadcastManager localBroadcastManager;
+    //these filters help to separate the action to take,
+    //depending on response from FixerTrackService
     private IntentFilter intentFilter;
     private IntentFilter intentFilter1;
     private IntentFilter intentFilter2;
+    //the receiver of responses.
     private ResponseReceiver receiver;
+
     private GoogleApiClient client;
-    private MenuItem selectAllItem;
+
+    //contextual toolbar
     private Toolbar toolbar;
+    //global intent sent to FixerTrackService
     private Intent intentFixerTrackService;
 
 
@@ -181,7 +221,7 @@ public class SelectFolderActivity extends AppCompatActivity
         //Initialize recycler view, and swipe refresh layout
         swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.list_of_files);
 
-        swipeRefreshLayout.setColorSchemeColors(getResources().getColor(R.color.mainColor,null));
+        swipeRefreshLayout.setColorSchemeColors(getResources().getColor(R.color.primaryColor,null));
         //Lets implement functionality of refresh layout listener
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
@@ -234,9 +274,11 @@ public class SelectFolderActivity extends AppCompatActivity
                 }
                 else {
 
-
-                    if(!allowExecute())
+                    int canContinue = allowExecute(SelectFolderActivity.this);
+                    if(canContinue != 0) {
+                        showToast(canContinue);
                         return;
+                    }
 
                     if(getCountSelectedItems() == 0) {
                         Toast toast = Toast.makeText(getApplicationContext(),getString(R.string.no_songs_to_correct),Toast.LENGTH_SHORT);
@@ -252,6 +294,7 @@ public class SelectFolderActivity extends AppCompatActivity
                             break;
                         }
                     }
+
 
                     final Intent intent = new Intent(SelectFolderActivity.this, FixerTrackService.class);
                     intent.putExtra("singleTrack",false);
@@ -358,8 +401,10 @@ public class SelectFolderActivity extends AppCompatActivity
     @Override
     public void onSaveInstanceState(Bundle savedInstanceState){
         super.onSaveInstanceState(savedInstanceState);
-        savedInstanceState.putBoolean("createItemList",false);
-        savedInstanceState.putParcelable("stateList",recyclerView.getLayoutManager().onSaveInstanceState());
+        if(recyclerView != null) {
+            savedInstanceState.putBoolean("createItemList", false);
+            savedInstanceState.putParcelable("stateList", recyclerView.getLayoutManager().onSaveInstanceState());
+        }
         //Log.d("onSaveInstanceState","onSaved");
     }
 
@@ -369,14 +414,6 @@ public class SelectFolderActivity extends AppCompatActivity
         // Inflate the menu; this adds items to the action bar if it is present.
 
         getMenuInflater().inflate(R.menu.select_folder, menu);
-
-        selectAllItem = menu.findItem(R.id.select_all);
-
-        if(SelectedOptions.ALL_SELECTED)
-            selectAllItem.setIcon(getResources().getDrawable(R.drawable.ic_check_box_outline_blank_white_24px,null));
-        else
-            selectAllItem.setIcon(getResources().getDrawable(R.drawable.ic_check_box_white_24px,null));
-
 
         MenuItem searchItem = menu.findItem(R.id.action_search);
         searchView = (SearchView) MenuItemCompat.getActionView(searchItem);
@@ -447,12 +484,23 @@ public class SelectFolderActivity extends AppCompatActivity
                     toast.show();
                 }
                 break;
-            case R.id.faq:
+            case R.id.eraseCache:
+                removeCache();
+                break;
 
+            case R.id.faq:
+                    Intent intent = new Intent(this,QuestionsActivity.class);
+                    startActivity(intent);
                 break;
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private void removeCache() {
+        Toast t = Toast.makeText(getApplicationContext(),getString(R.string.no_cache),Toast.LENGTH_SHORT);
+        t.setGravity(Gravity.CENTER,0,0);
+        t.show();
     }
 
 
@@ -480,36 +528,25 @@ public class SelectFolderActivity extends AppCompatActivity
     }
 
 
-    boolean allowExecute(){
-
+    public static int allowExecute(Context mContext){
+        Context context = mContext.getApplicationContext();
         //No internet connection
-        if(!DetectorInternetConnection.isConnected(getApplicationContext())){
-            Toast toast = Toast.makeText(getApplicationContext(),getString(R.string.no_internet_connection),Toast.LENGTH_SHORT);
-            toast.setGravity(Gravity.CENTER,0,0);
-            toast.show();
-            return false;
+        if(!DetectorInternetConnection.isConnected(context)){
+            return NO_INTERNET_CONNECTION;
         }
 
         //API not initialized
         if(!apiInitialized){
-            Toast toast = Toast.makeText(getApplicationContext(),getString(R.string.initializing_recognition_api),Toast.LENGTH_SHORT);
-            toast.setGravity(Gravity.CENTER,0,0);
-            toast.show();
-            Job.scheduleJob(getApplicationContext());
-            return false;
+            Job.scheduleJob(context);
+            return NO_INITIALIZED_API;
         }
 
         //Task is already executing
         if(isProcessingTask){
-            Toast toast = Toast.makeText(getApplicationContext(),
-                    "Espera a que termine la corrección en curso, selecciona las canciones y toca el boton verde para corrección multiple.",
-                    Toast.LENGTH_LONG);
-            toast.setGravity(Gravity.CENTER,0,0);
-            toast.show();
-            return false;
+            return PROCESSING_TASK;
         }
 
-        return true;
+        return 0;
     }
 
     public void setSnackBar(int action, String message, boolean playing, final long id, final Context context){
@@ -560,6 +597,14 @@ public class SelectFolderActivity extends AppCompatActivity
     }
 
     private void selectAllItems(){
+        if(audioItemList.size() == 0 ){
+            Toast t = Toast.makeText(getApplicationContext(),getString(R.string.no_items),Toast.LENGTH_SHORT);
+            t.setGravity(Gravity.CENTER,0,0);
+            t.show();
+            return;
+        }
+
+
         SharedPreferences shaPreferences = getSharedPreferences("ShaPreferences", Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = shaPreferences.edit();
 
@@ -567,12 +612,10 @@ public class SelectFolderActivity extends AppCompatActivity
 
         if(areAllSelected){
             audioItemArrayAdapter.setAllSelected(false);
-            selectAllItem.setIcon(getResources().getDrawable(R.drawable.ic_check_box_white_24px,null));
             editor.putBoolean("allSelected",false);
         }
         else {
             audioItemArrayAdapter.setAllSelected(true);
-            selectAllItem.setIcon(getResources().getDrawable(R.drawable.ic_check_box_outline_blank_white_24px,null));
             editor.putBoolean("allSelected",true);
         }
         editor.apply();
@@ -636,7 +679,7 @@ public class SelectFolderActivity extends AppCompatActivity
 
         return numberOfSelectedItems;
     }
-    protected void correctSong(final View view, int position) throws IOException, InterruptedException {
+    protected void correctSong(final View view, final int position) throws IOException, InterruptedException {
         final long id = (long) view.findViewById(R.id.path).getTag();
         final AudioItem audioItem = getItemByIdOrPath(id,"");
 
@@ -665,10 +708,10 @@ public class SelectFolderActivity extends AppCompatActivity
 
         final AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle(getString(R.string.confirm_correction_title)).setMessage(getString(R.string.confirm_correction) + " " + audioItem.getTitle() + "?")
-                .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                .setNegativeButton(getString(R.string.manual_mode), new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        dialog.cancel();
+                        onClickCoverArt(view, position);
                     }
                 })
                 .setPositiveButton("Si", new DialogInterface.OnClickListener() {
@@ -686,13 +729,25 @@ public class SelectFolderActivity extends AppCompatActivity
                     }
                 });
         final AlertDialog dialog =  builder.create();
-        dialog.setCancelable(false);
         dialog.show();
 
 
     }
 
-    private boolean checkFileIntegrity(long id){
+    public void cancelProcessing(){
+        if(SelectFolderActivity.audioItemList != null && SelectFolderActivity.audioItemList.size() > 0){
+            for(int k = 0 ; k < SelectFolderActivity.audioItemList.size() ; k++) {
+                AudioItem audioItem = SelectFolderActivity.audioItemList.get(k);
+                if (audioItem.isProcessing()){
+                    audioItem.setProcessing(false);
+                    audioItemArrayAdapter.notifyItemChanged(audioItem.getPosition());
+                    Log.d("procssing_audio_file", audioItem.isProcessing() + "");
+                }
+            }
+        }
+    }
+
+    public static boolean checkFileIntegrity(long id){
         final AudioItem audioItem = getItemByIdOrPath(id,"");
         String path = audioItem.getNewAbsolutePath();
         File file = new File(path);
@@ -700,7 +755,7 @@ public class SelectFolderActivity extends AppCompatActivity
         return file.exists() && file.length() > 0 && file.canRead();
     }
 
-    private boolean checkFileIntegrity(AudioItem audioItem){
+    public static boolean checkFileIntegrity(AudioItem audioItem){
         String path = audioItem.getNewAbsolutePath();
         File file = new File(path);
 
@@ -865,8 +920,12 @@ public class SelectFolderActivity extends AppCompatActivity
                     selectItem((long) view.getTag(), view);
                     break;
                 default:
-                    if (!allowExecute())
+
+                    int canContinue = allowExecute(SelectFolderActivity.this);
+                    if(canContinue != 0) {
+                        showToast(canContinue);
                         return;
+                    }
 
                     try {
                         correctSong(view, position);
@@ -918,19 +977,17 @@ public class SelectFolderActivity extends AppCompatActivity
         if (count == 0) {
             actionMode.finish();
         } else {
-            //actionMode.setTitle(String.valueOf(count));
             actionMode.invalidate();
         }
     }
 
     protected void setupAdapter(){
         Log.d("ADAPTER","SETUP_ADAPTER");
-        //audioItemList = new ArrayList<>();
+
         recyclerView = (RecyclerView) findViewById(R.id.list_view_songs);
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(linearLayoutManager);
         recyclerView.setHasFixedSize(true);
-        //audioItemArrayAdapter = new TrackAdapter(getApplicationContext(), audioItemList, SelectFolderActivity.this);
         recyclerView.setAdapter(audioItemArrayAdapter);
     }
 
@@ -945,7 +1002,7 @@ public class SelectFolderActivity extends AppCompatActivity
             case Manifest.permission.READ_EXTERNAL_STORAGE:
                 //Sino tenemos el permiso lo pedimos
                 if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
-                    ActivityCompat.requestPermissions(this, new String[]{permission}, this.scanRequestType);
+                    ActivityCompat.requestPermissions(this, new String[]{permission}, RequiredPermissions.READ_INTERNAL_STORAGE_PERMISSION);
                 }
                 else {
                     executeScan();
@@ -986,7 +1043,7 @@ public class SelectFolderActivity extends AppCompatActivity
             @Override
             public void onClick(View v) {
                 final AlertDialog.Builder builder = new AlertDialog.Builder(SelectFolderActivity.this);
-                builder.setTitle("Cancelando...").setMessage("¿Desea cancelar la corrección en curso?")
+                builder.setTitle(R.string.cancelling).setMessage(R.string.cancel_task)
                         .setNegativeButton("No", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
@@ -996,8 +1053,15 @@ public class SelectFolderActivity extends AppCompatActivity
                         .setPositiveButton("Si", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                shouldContinue = false;
+
+                                if(receiver != null && receiver.isOrderedBroadcast()) {
+                                    receiver.abortBroadcast();
+                                    receiver.clearAbortBroadcast();
+                                }
+
                                 FixerTrackService.cancelGnMusicIdFileProcessing();
+                                cancelProcessing();
+                                shouldContinue = false;
                                 Log.d("shouldContinue",shouldContinue+"");
                                 finishTaskByUser();
                             }
@@ -1021,14 +1085,25 @@ public class SelectFolderActivity extends AppCompatActivity
                 else {
 
 
-                    if(!allowExecute())
+                    int canContinue = allowExecute(SelectFolderActivity.this);
+                    if(canContinue != 0) {
+                        showToast(canContinue);
                         return;
+                    }
 
                     if(getCountSelectedItems() == 0) {
                         Toast toast = Toast.makeText(getApplicationContext(),getString(R.string.no_songs_to_correct),Toast.LENGTH_SHORT);
                         toast.setGravity(Gravity.CENTER,0,0);
                         toast.show();
                         return;
+                    }
+
+                    for(int i = 0; i < audioItemArrayAdapter.getItemCount() ; i++){
+                        AudioItem audioItem = audioItemList.get(i);
+                        if(audioItem.isSelected()){
+                            SelectFolderActivity.this.recyclerView.smoothScrollToPosition(audioItem.getPosition());
+                            break;
+                        }
                     }
 
                     intentFixerTrackService = new Intent(SelectFolderActivity.this, FixerTrackService.class);
@@ -1039,6 +1114,23 @@ public class SelectFolderActivity extends AppCompatActivity
                 }
             }
         });
+    }
+
+    private void showToast(int reason){
+        Toast t = Toast.makeText(getApplicationContext(),"",Toast.LENGTH_SHORT);
+        t.setGravity(Gravity.CENTER,0,0);
+        switch (reason){
+            case SelectFolderActivity.NO_INTERNET_CONNECTION:
+                t.setText(R.string.no_internet_connection);
+                break;
+            case SelectFolderActivity.PROCESSING_TASK:
+                t.setText(R.string.processing_task);
+                break;
+            case SelectFolderActivity.NO_INITIALIZED_API:
+                t.setText(R.string.initializing_recognition_api);
+                break;
+        }
+        t.show();
     }
 
     private void setFilePermissionGranted(){
@@ -1380,6 +1472,8 @@ public class SelectFolderActivity extends AppCompatActivity
                 audioItemArrayAdapter.notifyDataSetChanged();
                 //Log.d("sort adapter", audioItemArrayAdapter.getItemCount()+"  "+ audioItemList.size());
             }
+
+            getSupportActionBar().setTitle(audioItemList.size() + " canciones");
             Log.d("sort adapter", audioItemArrayAdapter.getItemCount()+"  "+ audioItemList.size());
                 AsyncLoadCoverArt asyncLoadCoverArt = new AsyncLoadCoverArt(taskType);
                 asyncLoadCoverArt.execute();
@@ -1431,18 +1525,26 @@ public class SelectFolderActivity extends AppCompatActivity
         public void onReceive(Context context, Intent intent) {
             String action = "";
             action = intent.getAction();
+            long id = intent.getLongExtra("id",-1);
+            boolean singleTrack = intent.getBooleanExtra("singleTrack",false);
+            AudioItem audioItem = null;
+
+            if(id != -1 ){
+                audioItem = getItemByIdOrPath(id,null);
+                audioItem.setProcessing(false);
+                audioItemArrayAdapter.notifyItemChanged(audioItem.getPosition());
+            }
+
             switch (action){
                 case FixerTrackService.ACTION_DONE:
-                    long id = intent.getLongExtra("id",-1);
-                    boolean singleTrack = intent.getBooleanExtra("singleTrack",false);
-                    AudioItem audioItem = getItemByIdOrPath(id,null);
                     int status = -1;
+                    audioItem.setChecked(false);
                     if(singleTrack) {
                         status = intent.getIntExtra("status", audioItem.getStatus());
                         intent.removeExtra("status");
                     }
                     if((singleTrack && status == AudioItem.FILE_STATUS_BAD) || (singleTrack && status == AudioItem.FILE_STATUS_INCOMPLETE)){
-                        setSnackBar(ACTION_EDIT,"No se encontró toda la información para " + audioItem.getFileName(),false,id, context);
+                        setSnackBar(ACTION_EDIT,getString(R.string.incomplete_info_found) + audioItem.getFileName(),false,id, context);
                     }
 
                     intent.removeExtra("id");
@@ -1456,6 +1558,8 @@ public class SelectFolderActivity extends AppCompatActivity
                 case FixerTrackService.ACTION_FAIL:
                     break;
             }
+
+
 
 
         }
