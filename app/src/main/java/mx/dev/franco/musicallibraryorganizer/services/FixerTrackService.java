@@ -161,21 +161,11 @@ public class FixerTrackService extends IntentService {
 
             //verify if task was not cancelled
             if(!SelectFolderActivity.shouldContinue) {
-                currentAudioItem.setProcessing(false);
                 gnMusicIdFile.cancel();
                 broadcastResponseIntent.setAction(ACTION_CANCEL);
+                broadcastResponseIntent.putExtra("id",currentId);
                 localBroadcastManager.sendBroadcast(broadcastResponseIntent);
                 SelectFolderActivity.shouldContinue = true;
-                /*Handler handler = new Handler(getMainLooper());
-                handler.post(new Runnable() {
-                    public void run() {
-                        SelectFolderActivity.audioItemArrayAdapter.notifyItemChanged(FixerTrackService.this.currentAudioItem.getPosition());
-                    }
-                });*/
-
-                synchronized (this){
-                    SelectFolderActivity.audioItemArrayAdapter.notifyItemChanged(FixerTrackService.this.currentAudioItem.getPosition());
-                }
             }
 
             //do the recognition, kQueryReturnSingle returns only the most accurate result!!!
@@ -191,39 +181,24 @@ public class FixerTrackService extends IntentService {
     private synchronized void doTrackIdMultipleTracks(){
         for (int j = 0; j < SelectFolderActivity.audioItemArrayAdapter.getItemCount(); j++) {
             currentAudioItem = SelectFolderActivity.audioItemList.get(j);
+            currentId = currentAudioItem.getId();
 
             //Is not selected to fix, then jump it
             if (!currentAudioItem.isChecked()) {
                 currentAudioItem = null;
+                currentId = -1;
                 continue;
             }
 
             if(!SelectFolderActivity.shouldContinue){
-                currentAudioItem.setProcessing(false);
                 broadcastResponseIntent.setAction(ACTION_CANCEL);
+                broadcastResponseIntent.putExtra("id",currentId);
                 localBroadcastManager.sendBroadcast(broadcastResponseIntent);
                 SelectFolderActivity.shouldContinue = true;
-                /*Handler handler = new Handler(getMainLooper());
-                handler.post(new Runnable() {
-                    public void run() {
-                        SelectFolderActivity.audioItemArrayAdapter.notifyItemChanged(FixerTrackService.this.currentAudioItem.getPosition());
-                    }
-                });*/
-                synchronized (this){
-                    SelectFolderActivity.audioItemArrayAdapter.notifyItemChanged(FixerTrackService.this.currentAudioItem.getPosition());
-                }
-
                 break;
             }
 
             currentAudioItem.setProcessing(true);
-
-            /*Handler handler = new Handler(getMainLooper());
-            handler.post(new Runnable() {
-                public void run() {
-                    SelectFolderActivity.audioItemArrayAdapter.notifyItemChanged(FixerTrackService.this.currentAudioItem.getPosition());
-                }
-            });*/
 
             synchronized (this){
                 SelectFolderActivity.audioItemArrayAdapter.notifyItemChanged(j);
@@ -261,6 +236,7 @@ public class FixerTrackService extends IntentService {
 
     public static void cancelGnMusicIdFileProcessing(){
         Iterator<GnMusicIdFile> iterator = gnMusicIdFileList.iterator();
+
         while (iterator.hasNext()){
             iterator.next().cancel();
         }
@@ -690,24 +666,9 @@ public class FixerTrackService extends IntentService {
 
             //now yes finally, set current audio item as deselected
             contentValues.clear();
-            currentAudioItem.setProcessing(false);
-            currentAudioItem.setChecked(false);
-
-            //and inform to main activity that this item was processed
-            //to update UI
-
-            /*Handler handler = new Handler(getMainLooper());
-            handler.post(new Runnable() {
-                public void run() {
-                    SelectFolderActivity.audioItemArrayAdapter.notifyItemChanged(FixerTrackService.this.currentAudioItem.getPosition());
-                }
-            });*/
 
             if(gnMusicIdFile != null)
                 gnMusicIdFileList.remove(gnMusicIdFile);
-            synchronized (this) {
-                SelectFolderActivity.audioItemArrayAdapter.notifyItemChanged(FixerTrackService.this.currentAudioItem.getPosition());
-            }
 
             Log.d("TITLE_BG", newName);
             Log.d("ARTIST_BG", artistName);
@@ -737,27 +698,17 @@ public class FixerTrackService extends IntentService {
                 currentAudioItem.setStatus(AudioItem.FILE_STATUS_BAD);
                 contentValues.put(TrackContract.TrackData.COLUMN_NAME_STATUS, AudioItem.FILE_STATUS_BAD);
                 contentValues.put(TrackContract.TrackData.COLUMN_NAME_IS_SELECTED, false);
-                dataTrackDbHelper.updateData(currentAudioItem.getId(), contentValues);
-                currentAudioItem.setProcessing(false);
-                currentAudioItem.setChecked(false);
+                dataTrackDbHelper.updateData(currentId, contentValues);
 
                 broadcastResponseIntent.setAction(ACTION_FAIL);
-                broadcastResponseIntent.putExtra("id", currentAudioItem.getId());
+                broadcastResponseIntent.putExtra("id", currentId);
                 boolean sentNoresult = localBroadcastManager.sendBroadcast(broadcastResponseIntent);
                 Log.d("sent_no_result",sentNoresult+"");
 
-                /*Handler handler = new Handler(getMainLooper());
-                handler.post(new Runnable() {
-                    public void run() {
-                        SelectFolderActivity.audioItemArrayAdapter.notifyItemChanged(FixerTrackService.this.currentAudioItem.getPosition());
-                    }
-                });*/
 
                 if(gnMusicIdFile != null)
                     gnMusicIdFileList.remove(gnMusicIdFile);
-                synchronized (this){
-                    SelectFolderActivity.audioItemArrayAdapter.notifyItemChanged(currentAudioItem.getPosition());
-                }
+
                 contentValues.clear();
             }
         }
