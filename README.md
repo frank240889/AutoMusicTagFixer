@@ -31,3 +31,6 @@ Features:
 - Background correction, no matter if app is closed.
 
 This app use an ACR technology powered by Gracenote.
+
+
+This app and soruce code is intended for Android >= 5, so maybe doesn't work on Android <= 4.
