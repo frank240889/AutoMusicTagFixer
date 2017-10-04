@@ -27,6 +27,6 @@ Features:
 - Current correction progress indicator for every song.
 - Automatic and manual update of files list, in case that songs are added or removed from your smartphone.
 - The correction made, including the cover art, is made over the file itself, mean that changes are visible to every media player able to read ID3 tags(most actually).
-- Background correcting, no matter if app is closed.
+- Background correction, no matter if app is closed.
 
 This app use a music recognition technology powered by Gracenote.
