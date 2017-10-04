@@ -17,6 +17,7 @@ Features:
 - Semi automatic mode: Downloads track information, but requires confirmation from user to apply the found tags.
 - Manual mode: Allow to edit track for adding correct tags, including cover art.
 - Download cover mode: Downloads only the cover art and allow to user save it as cover art or image file.
+- Extraction and saved of cover art from audiofile.
 - Basic media player integrated.
 - Dsiplay of aditional data of song like: size, channels, file type (only mp3 for now), resolution, frequency and speed in Kbps.
 - Search integrated to list.
@@ -29,4 +30,4 @@ Features:
 - The correction made, including the cover art, is made over the file itself, mean that changes are visible to every media player able to read ID3 tags(most actually).
 - Background correction, no matter if app is closed.
 
-This app use a music recognition technology powered by Gracenote.
+This app use an ACR technology powered by Gracenote.
