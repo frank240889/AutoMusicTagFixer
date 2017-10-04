@@ -8,7 +8,7 @@ What does it offer?
 
 What does it correct?
 - Automatic, semi automatic and manual mode allows to correct title, artist, album, genre, track number, publication track year, cover art and filename (it will apply the same name of title, if is ON on Settings app).
-- Download cover mode only corrects the cover arts.
+- Download cover mode only corrects the cover art.
 
 Features:
 
