@@ -13,9 +13,9 @@ What does it correct?
 Features:
 
 - Material Design UI with dark theme for battery save on AMOLED displays.
-- Automatic mode: Allow select one or more songs from list and correct them without user intervention.
+- Automatic mode: Allows select one or more songs from list and correct them without user intervention.
 - Semi automatic mode: Downloads track information, but requires confirmation from user to apply the found tags.
-- Manual mode: Allow to edit track for adding correct tags, including cover art.
+- Manual mode: Allows to edit track for adding correct tags, including cover art.
 - Download cover mode: Downloads only the cover art and allow to user save it as cover art or image file.
 - Extraction and saved of cover art from audiofile.
 - Basic media player integrated.
