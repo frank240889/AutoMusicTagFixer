@@ -3,6 +3,6 @@
     android:insetLeft="65dp"
     android:insetRight="55dp">
     <shape android:shape="rectangle">
-        <solid android:color="@color/alphaMainColor" />
+        <solid android:color="@color/primaryLightColor" />
     </shape>
 </inset>

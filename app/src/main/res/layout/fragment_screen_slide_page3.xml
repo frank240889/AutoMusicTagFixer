@@ -25,6 +25,7 @@
                 android:layout_height="wrap_content"
                 android:layout_alignParentBottom="true"
                 android:layout_centerHorizontal="true"
+                android:fontFamily="sans-serif-light"
                 android:lineSpacingMultiplier="1.2"
                 android:padding="16dp"
                 android:text="@string/step_2_detail"

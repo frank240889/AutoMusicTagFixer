@@ -29,13 +29,13 @@
             android:layout_height="wrap_content"
             android:layout_alignParentStart="true"
             android:layout_below="@+id/imageView"
+            android:fontFamily="sans-serif-light"
             android:lineSpacingExtra="14sp"
             android:lineSpacingMultiplier="1.2"
             android:padding="16dp"
             android:text="@string/welcome"
             android:textAlignment="center"
-            android:textSize="36sp"
-            android:textStyle="normal|bold" />
+            android:textSize="36sp" />
 
         <ImageView
             android:id="@+id/imageView4"

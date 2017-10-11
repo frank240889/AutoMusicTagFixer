@@ -1,14 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <android.support.v4.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/contentContainer"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:tools="http://schemas.android.com/tools"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:context=".DetailsTrackDialogActivity"
     tools:showIn="@layout/details_track_activity_layout">
 
     <android.support.v7.widget.CardView
+        android:id="@+id/cardviewContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:cardUseCompatPadding="true"
@@ -16,6 +18,7 @@
 
 
         <RelativeLayout
+            android:id="@+id/editableDataContainer"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_centerInParent="false"
@@ -31,7 +34,6 @@
                 android:layout_height="wrap_content"
                 android:layout_above="@+id/artist_name_label"
                 android:layout_toEndOf="@+id/track_path"
-                android:backgroundTint="@color/md_red_800"
                 android:indeterminate="true"
                 android:visibility="invisible" />
 
@@ -51,7 +53,7 @@
                     android:enabled="false"
                     android:hint="Título"
                     android:imeOptions="actionNext"
-                    android:inputType="text"
+                    android:inputType="text|textNoSuggestions"
                     android:maxLength="50"
                     android:maxLines="1"
                     android:text="" />
@@ -71,7 +73,7 @@
                     android:enabled="false"
                     android:hint="Artista"
                     android:imeOptions="actionNext"
-                    android:inputType="text"
+                    android:inputType="text|textNoSuggestions"
                     android:maxLength="50"
                     android:maxLines="1"
                     android:text="" />
@@ -90,9 +92,9 @@
                     android:layout_height="wrap_content"
                     android:layout_alignParentEnd="true"
                     android:enabled="false"
-                    android:hint="Álbum"
+                    android:hint="@string/album"
                     android:imeOptions="actionNext"
-                    android:inputType="text"
+                    android:inputType="text|textNoSuggestions"
                     android:maxLength="50"
                     android:maxLines="1"
                     android:text="" />
@@ -112,7 +114,7 @@
                     android:enabled="false"
                     android:hint="Género"
                     android:imeOptions="actionNext"
-                    android:inputType="text"
+                    android:inputType="text|textNoSuggestions"
                     android:maxLength="40"
                     android:maxLines="1"
                     android:text="" />
@@ -158,48 +160,34 @@
                     android:text="" />
             </android.support.design.widget.TextInputLayout>
 
-            <ImageButton
-                android:id="@+id/albumArtLittle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_below="@id/track_year_layout"
-                android:layout_marginTop="10dp"
-                android:layout_toEndOf="@+id/downloadedCoverArt"
-                android:background="?android:attr/selectableItemBackground"
-                android:scaleX="1.5"
-                android:scaleY="1.5"
-                app:srcCompat="@drawable/ic_photo_library_black_24dp" />
-
             <TextView
                 android:id="@+id/imageSize"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
                 android:layout_below="@+id/track_year_layout"
-                android:layout_marginStart="10dp"
                 android:layout_marginTop="10dp"
-                android:layout_toEndOf="@+id/albumArtLittle"
+                android:drawableStart="@drawable/ic_photo_white_24px"
                 android:gravity="center_vertical"
                 android:singleLine="true"
-                android:text="Añadir carátula"
+                android:text="@string/message_no_cover"
                 android:textAlignment="viewStart"
-                android:textSize="14sp"
+                android:textSize="16sp"
                 android:visibility="visible" />
 
             <RelativeLayout
-                android:id="@+id/relativeLayout4"
+                android:id="@+id/extraDataContainer"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_alignParentStart="true"
-                android:layout_below="@+id/albumArtLittle"
-                android:layout_marginTop="10dp">
+                android:layout_below="@+id/imageSize"
+                android:layout_marginTop="32dp">
 
                 <TextView
                     android:id="@+id/fileSize"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_alignParentStart="true"
-                    android:layout_alignParentTop="true"
-                    android:drawableStart="@drawable/ic_sd_storage_black_24px"
+                    android:drawableStart="@drawable/ic_sd_storage_white_24px"
                     android:gravity="center_vertical"
                     android:singleLine="true"
                     android:text="0"
@@ -213,7 +201,7 @@
                     android:layout_alignParentTop="true"
                     android:layout_marginStart="10dp"
                     android:layout_toEndOf="@+id/fileSize"
-                    android:drawableStart="@drawable/ic_surround_sound_black_24dp"
+                    android:drawableStart="@drawable/ic_surround_sound_white_24px"
                     android:gravity="center_vertical"
                     android:singleLine="true"
                     android:text="channels"
@@ -226,7 +214,7 @@
                     android:layout_alignParentTop="true"
                     android:layout_marginStart="10dp"
                     android:layout_toEndOf="@+id/channels"
-                    android:drawableStart="@drawable/ic_description_grey_24dp"
+                    android:drawableStart="@drawable/ic_description_white"
                     android:gravity="center_vertical"
                     android:singleLine="true"
                     android:text="mp3"
@@ -240,7 +228,7 @@
                     android:layout_alignParentStart="true"
                     android:layout_below="@+id/channels"
                     android:layout_marginTop="10dp"
-                    android:drawableStart="@drawable/ic_high_quality_black_24dp"
+                    android:drawableStart="@drawable/ic_high_quality_white_24px"
                     android:gravity="center_vertical"
                     android:singleLine="true"
                     android:text="res"
@@ -254,7 +242,7 @@
                     android:layout_alignBottom="@+id/resolution"
                     android:layout_marginStart="10dp"
                     android:layout_toEndOf="@+id/resolution"
-                    android:drawableStart="@drawable/ic_av_timer_black_24dp"
+                    android:drawableStart="@drawable/ic_av_timer_white_24px"
                     android:gravity="center_vertical"
                     android:singleLine="true"
                     android:text="freq"
@@ -268,53 +256,11 @@
                     android:layout_marginStart="10dp"
                     android:layout_marginTop="10dp"
                     android:layout_toEndOf="@+id/frequency"
-                    android:drawableStart="@drawable/ic_hearing_black_24dp"
+                    android:drawableStart="@drawable/ic_hearing_white_24px"
                     android:gravity="center_vertical"
                     android:text="bitrate" />
 
             </RelativeLayout>
-
-            <android.support.v7.widget.CardView
-                android:id="@+id/downloadedCoverArt"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_alignParentStart="true"
-                android:layout_marginTop="10dp"
-                android:visibility="gone"
-                app:cardUseCompatPadding="true"
-                app:contentPadding="8dp">
-
-
-                <FrameLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_gravity="center_horizontal">
-
-                    <ImageView
-                        android:id="@+id/imageViewDownloadedCover"
-                        android:layout_width="match_parent"
-                        android:layout_height="400dp"
-                        android:layout_gravity="bottom" />
-
-                    <ImageView
-                        android:id="@+id/imageView6"
-                        android:layout_width="match_parent"
-                        android:layout_height="32dp"
-                        android:layout_gravity="bottom"
-                        android:alpha="0.8"
-                        android:background="@drawable/linear_gradient_transparent_to_black" />
-
-                    <TextView
-                        android:id="@+id/dimensions"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="bottom"
-                        android:gravity="center_horizontal"
-                        android:text="dimensions"
-                        android:textColor="@color/true_white" />
-                </FrameLayout>
-            </android.support.v7.widget.CardView>
-
 
         </RelativeLayout>
 

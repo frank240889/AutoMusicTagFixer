@@ -1,142 +1,83 @@
 <resources>
     <string name="app_name">AutoMusicTagFixer</string>
 
-    <string name="bring_to_you">Bring to you by:</string>
-
     <string name="omit">OMITIR</string>
     <string name="nextSlide">SIGUIENTE</string>
-    <bool name="firstTimeOpen">false</bool>
-    <string name="develop_by">Desarrollada por Franco Castillo</string>
-    <string name="email">francocastillo2@hotmail.com</string>
 
     <string name="welcome">¡Bienvenido!</string>
-    <string name="description">Mantén mejor organizados tus MP3\'s corrigiendo automaticamente el nombre del archivo, título, artista, album, carátula, etc.</string>
-    <string name="little_description">Corrigiendo el nombre del archivo y sus metadatos(título, artista, album, etc.)</string>
-    <string name="step_1">Paso 1</string>
-    <string name="step_1_detail">Deja a la aplicación buscar automaticamente tu música.</string>
-    <string name="step_2">Paso 2</string>
-    <string name="step_2_detail">¡Toca cualquier canción en la lista para corregirla automáticamente!</string>
-    <string name="step_3">Paso 3</string>
-    <string name="step_3_detail">¡O selecciona varias, pulsa el Android y deja a la aplicación que las corrija automaticamente por ti!.</string>
+    <string name="description"> AutoMusicTagFixer corrige las canciones por ti, incluido el nombre del archivo, título de canción, artista, álbum, etc, incluso la imagen del álbum.</string>
+    <string name="step_1_detail">No tienes que seleccionar ninguna carpeta en la que buscar canciones, la aplicación encuentra automaticamente todas tus canciones en tu smartphone.</string>
+    <string name="step_2_detail">Puedes corregir las canciones en modo manual o automatico.</string>
+    <string name="step_3_detail">O si prefieres, en la lista que se crea, selecciona las canciones que quieres corregir, pulsa el boton y deja al modo automático que haga su trabajo.</string>
     <string name="ok_button_last_slide">ENTENDIDO</string>
 
 
-    <string name="library_scan">Escaneo de biblioteca</string>
-    <string name="description_scan">Selecciona Auto si quieres que la aplicación busque las canciones por ti o Manual para que tu elijas las carpetas.</string>
-    <string name="radio_auto">Auto</string>
-    <string name="radio_manual">Manual</string>
-    <string name="auto_scan_detail">Espera un momento por favor, estamos buscando tu música</string>
-    <string name="manual_scan_detail">Selecciona las carpetas donde se encuentra tu música</string>
-    <string name="title_scantype_dialog">Busca tu música</string>
-    <string name="title_activity_choser">ChoserActivity</string>
     <string name="title_activity_folder_choser">Biblioteca de música</string>
-    <string name="title_activity_select_folder">Selecciona las carpetas que contengan música</string>
-    <string name="title_fragment_dialog">Exploración de carpetas</string>
     <string name="title_dialog_permision">Permiso requerido</string>
 
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
-    <string name="scan_library">Explorar biblioteca</string>
     <string name="options">Configuración</string>
-    <string name="donate">Donar</string>
     <string name="rate">Calificar aplicación</string>
     <string name="share">Compartir aplicación</string>
-    <string name="title_list_files">¿Qué canciones quieres corregír?</string>
     <string name="search_song">Buscar canción</string>
-    <string name="select_all_items">Seleccionar todos</string>
+    <string name="select_all_items">Seleccionar todas</string>
     <string name="share_and_rate">Comparte y califica</string>
 
-    <string name="tittle_track_detail">Editar</string>
-    <string name="track_list_title_label">Título: </string>
-    <string name="track_list_artist_label">Artista: </string>
-    <string name="track_list_album_label">Álbum: </string>
-    <string name="track_list_album_artist_label">Artista de álbum: </string>
-    <string name="track_list_composer_label">Compositor: </string>
-    <string name="track_list_number_label">Número: </string>
-    <string name="track_list_year_label">Año: </string>
-    <string name="track_list_genre_label">Genero: </string>
-    <string name="track_list_type_label">Tipo: </string>
-    <string name="track_list_duration_label">Duración: </string>
-    <string name="track_list_sampling_rate_label">Muestreo: </string>
-    <string name="track_list_resolution_label">Resolución: </string>
-    <string name="track_list_channels_label">Canales: </string>
-    <string name="track_list_speed_label">Velocidad: </string>
-    <string name="track_list_size_label">Tamaño: </string>
-    <string name="track_list_path_label">Ubicación: </string>
-    <string name="download_cover">Descargar carátula</string>
-    <string name="message_no_data_updated">No se pudieron actualizar los datos.</string>
-    <string name="message_data_update">Se actualizaron correctamente los datos.</string>
-    <string name="image_too_big">Las dimensiones de la imagen son mayores a 1080x1080 pixeles, selecciona otra o reduce sus dimensiones.</string>
-    <string name="error_load_image">Debido a un error no se pudo leer la imagen, intenta con otra por favor.</string>
+    <string name="message_no_data_updated">No se pudo actualizar la canción, inténtalo de nuevo.</string>
+    <string name="message_data_update">Actualización correcta.</string>
+    <string name="image_too_big">Imagen muy grande, reduce su tamaño.</string>
+    <string name="error_load_image">Error al leer la imagen.</string>
     <string name="title_downloaded_cover_art_dialog">Guardar carátula</string>
-    <string name="description_downloaded_cover_art_dialog">Confirme que desea guardar la carátula descargada como:</string>
+    <string name="description_downloaded_cover_art_dialog">Deseas guardar la carátula descargada como</string>
     <string name="as_cover_art">Carátula</string>
-    <string name="as_file">Archivo</string>
-    <string name="no_cover_art_found">No se encontró la carátula para esta canción, prueba a añadirla manualmente de tu galería de imagenes o tomando una foto.</string>
-    <string name="cover_art_found">Se encontró la siguiente carátula.</string>
+    <string name="as_file">Imagen</string>
+    <string name="no_cover_art_found">Carátula no encontrada.</string>
+    <string name="no_cover_art">No se encontró carátula</string>
+    <string name="cover_art_found">Carátula encontrada.</string>
+    <string name="cover_updated">Carátula actualizada.</string>
+    <string name="cover_removed">Carátula removida.</string>
 
     <string name="no_available">No disponible</string>
-    <string name="try_again_permission">Volver a buscar</string>
-    <string name="explanation_permission_access_files">Para poder buscar las canciones automaticamente, se necesita el permiso solicitado por el dialogo siguiente.</string>
-    <string name="important_tittle">¡Importante!</string>
+    <string name="explanation_permission_access_files">Para encontrar tus canciones automaticamente, es necesario conceder el permiso solicitado por el cuadro de diálogo que aparecerá después que pulses Aceptar.</string>
     <string name="ok_button">Aceptar</string>
     <string name="cancel_button">Cancelar</string>
-    <string name="nextTrack">Siguiente</string>
-    <string name="previousTrack">Anterior</string>
-    <string name="previewTrack">Reproducir</string>
-    <string name="edit_info_track">Editar</string>
-    <string name="save_info_track">Guardar</string>
-    <string name="cancel_edit_track">Cancelar</string>
-    <string name="empty_message">No puede haber campos vacíos.</string>
-    <string name="not_allowed_characters_message">Caracteres inválidos: </string>
-    <string name="data_too_long_message">Texto muy largo</string>
-    <string name="file_is_processing">No se pueden actualizar los datos mientras esta en proceso la corrección automática para este misma canción.</string>
-    <string name="task_cancelled">La corrección automática fue cancelada por el usuario.</string>
-    <string name="task_successfuly_complete">Corrección terminada correctamente.</string>
+    <string name="empty_message">Falta esta etiqueta.</string>
+    <string name="not_allowed_characters_message">Parece que hay ciertos caracteres inválidos. </string>
+    <string name="data_too_long_message">Esta etiqueta es muy larga.</string>
+    <string name="file_is_processing">Espera a que el modo automático termine de corregir esta canción.</string>
     <string name="title_dialog_file_error">Error en archivo</string>
-    <string name="file_error">"El archivo no puede ser leído por que fue movido, eliminado ó renombrado, ¿Deseas quitarlo de la lista?"</string>
+    <string name="file_error">No se puede leer la canción por que fue movida, eliminada ó renombrada, ¿Deseas quitarla de la lista?</string>
 
 
-    <string name="action_settings">Opciones</string>
-    <string name="placeholder_search">Encuentra tu canción más rápido</string>
-    <string name="retrieving_metadata">Obteniendo información de canciones...</string>
-    <string name="no_all_data_found">No se pudieron encontrar todos los datos de </string>
-    <string name="audiofile_succesfully_processed">Datos de canción obtenidos correctamente.</string>
+    <string name="no_items">No hay canciones para seleccionar.</string>
+    <string name="no_cache">No hay cache de la aplicación.</string>
+    <string name="faq">Preguntas frecuentes</string>
 
-    <string name="vertical_ellipsis">&#8942;</string>
-    <string name="stop_track">Detener reproducción</string>
     <string name="delete_cache">Borrar cache</string>
     <string name="play_track">Escuchar</string>
-    <string name="track_details">Editar</string>
-    <string name="delete_from_list">Remover</string>
-    <string name="select_to_process">Seleccionar</string>
-    <string name="deselect_to_process">Deseleccionar</string>
-    <string name="now_playing">Reproduciendo %s</string>
-    <string name="confirm_correction_title">Confirmar corrección automática</string>
-    <string name="confirm_correction">¿Corregir </string>
+    <string name="confirm_correction_title">Modo automático</string>
+    <string name="confirm_correction">¿Corregir automaticamente </string>
+    <string name="manual_mode">Modo manual</string>
 
-    <string name="snackbar_message_in_development">En desarrollo…</string>
     <string name="snackbar_message_track_preview">Presiona para detener.</string>
-    <string name="snackbar_message_track_is_processing">No puede reproducir la canción mientras se corrige.</string>
-    <string name="toast_track_added_to_fix">Canción añadida para corregir.</string>
-    <string name="toast_track_remove_from_fixlist">Canción removida de esta lista.</string>
-    <string name="toast_empty_list">Ninguna canción para corregir.</string>
-    <string name="empty_list">No se esta reproduciendo ninguna canción actualmente.</string>
+    <string name="snackbar_message_track_is_processing">No puedes reproducir la canción mientras se corrige.</string>
+    <string name="empty_list">Para saltar a una canción primero reprodúcela.</string>
     <string name="permission_denied">No se concedio el permiso de Acceso de almacenamiento.</string>
-    <string name="current_file_processing">Espera que termine la corrección en esta canción.</string>
-    <string name="initializing_recognition_api">Conectando al servidor de reconocimiento, espere unos instantes por favor...</string>
-    <string name="no_internet_connection">Conectate a internet para continuar.</string>
-    <string name="api_initialized">¡Ya puedes empezar!</string>
+    <string name="current_file_processing">Espera que el modo automático corrija en esta canción.</string>
+    <string name="initializing_recognition_api">Conectando al servicio ACR, espere por favor...</string>
+    <string name="no_internet_connection_download_cover">Para descargar la carátula conectate internet.</string>
+    <string name="no_internet_connection_automatic_mode">Para usar el modo automático conectate a internet.</string>
+    <string name="no_internet_connection_semi_automatic_mode">Para usar el modo semi automático conectate a internet.</string>
+    <string name="no_items_found">No se encontrarón canciones.</string>
 
-    <string name="file_status_ok">Se encontró toda la información y se corrigió esta canción.</string>
-    <string name="file_status_incomplete">No se encontró toda la información para esta canción, pero puedes añadirla manualmente.</string>
-    <string name="file_status_bad">¡Disculpa!, no se encontró información disponible para esta canción, pero puedes añadirla manualmente.</string>
-    <string name="file_status_no_processed">Aún no se ha corregido esta canción.</string>
-    <string name="file_status_edit_by_user">Canción corregida manualmente.</string>
-    <string name="title_activity_options">Options</string>
-    <string name="none">Ninguno</string>
+    <string name="file_status_ok">Todas las etiquetas se encontraron y aplicaron</string>
+    <string name="file_status_incomplete">Faltaron algunas etiquetas, prueba a añadirlas manualmente.</string>
+    <string name="file_status_bad">Sin etiquetas disponibles, prueba a añadirlas manualmente.</string>
+    <string name="file_status_no_processed">Aún no se han buscado etiquetas para esta canción.</string>
+    <string name="file_status_edit_by_user">Canción corregida en modo manual.</string>
 
-    <string name="no_songs_to_correct">Selecciona al menos una canción para corregir.</string>
+    <string name="no_songs_to_correct">Selecciona canciones para usar el modo automático.</string>
     <string name="begin_processing">Iniciando corrección…</string>
     <string name="querying_info_">Solicitando información de canción…</string>
     <string name="complete_identification">Identificación completa.</string>
@@ -148,89 +89,43 @@
     <!-- General settings -->
     <string name="pref_header_general">General</string>
 
-    <string name="pref_title_change">Renombrar archivo automaticamente.</string>
-    <string name="pref_title_change_description">Si el servicio de reconocimiento de música encuentra el título de la canción, tambien se utilizará como nombre del archivo; si ya existe un archivo con nombre igual, se añadira un número al final del nombre.
+    <string name="pref_title_change">Renombrar archivo en modo automático.</string>
+    <string name="pref_title_change_description">Si el servicio de reconocimiento de música encuentra el título de la canción, se utilizará como nombre del archivo; si ya existe un archivo con nombre igual, se añadira el nombre del artista (si tambien se encuentra) o un número al final del nombre.
     </string>
-    <string name="pref_manual_title_change">Renombrar archivo manualmente.</string>
-    <string name="pref_manual_title_change_description">Se utilizará el titulo como nombre de archivo cuando edites la información de la canción; si ya existe el archivo con nombre igual, se añadira un número al final del nombre.
+    <string name="pref_manual_title_change">Renombrar archivo en modo manual.</string>
+    <string name="pref_manual_title_change_description">Se utilizará el titulo como nombre de archivo cuando edites la información de la canción; si ya existe el archivo con nombre igual, se añadira el nombre del artista al final del nombre.
     </string>
-    <string name="pref_limit_little_duration_files">Ocultar canciones en la lista</string>
-    <string name="pref_automatically_replace_strange_chars">Reemplazar caracteres no válidos</string>
-    <string name="pref_automatically_replace_strange_chars_description">Cuando el usuario edite manualmente una canción, los caracteres extraños se cambiarán automaticamente por el caracter vacío cuando oprima el botón Guardar</string>
+    <string name="pref_automatically_replace_strange_chars">Mostrar alerta de caracteres raros.</string>
+    <string name="pref_automatically_replace_strange_chars_description">Si esta activa esta opción, cuando edites manualmente una canción, no se guardarán los cambios y se mostrará un mensaje; si esta inactiva se reemplazarán por el caracter vacío automaticamente.</string>
     <string name="pref_show_separator_title">Mostrar separadores</string>
-    <string name="pref_show_separator_description">Cuando esta activo, en la lista se muestran separadores de carpetas.</string>
-
-    <string-array name="timeListArray">
-        <item>No mostrar las que duren menos de 10 segundos</item>
-        <item>No mostrar las que duren menos de 20 segundos</item>
-        <item>No mostrar las que duren menos de 30 segundos</item>
-        <item>No mostrar las que duren menos de 40 segundos</item>
-        <item>No mostrar las que duren menos de 50 segundos</item>
-        <item>No mostrar las que duren menos de 1 minuto</item>
-        <item>No mostrar las que duren menos de 2 minutos</item>
-        <item>No mostrar las que duren menos de 3 minutos</item>
-        <item>No mostrar las que duren menos de 4 minutos</item>
-        <item>No mostrar las que duren menos de 5 minutos</item>
-        <item>No mostrar las que duren menos de 6 minutos</item>
-        <item>No mostrar las que duren menos de 7 minutos</item>
-        <item>No mostrar las que duren menos de 8 minutos</item>
-        <item>No mostrar las que duren menos de 9 minutos</item>
-        <item>No mostrar las que duren menos de 10 minutos</item>
-        <item>No mostrar las que duren menos de 12 minutos</item>
-        <item>Mostrar todas las canciones</item>
-    </string-array>
+    <string name="pref_show_separator_description">En la lista se muestran separadores de carpetas.</string>
 
     <!--This is going to be in seconds-->
-    <string-array name="timeListValues">
-        <item>10</item>
-        <item>20</item>
-        <item>30</item>
-        <item>40</item>
-        <item>50</item>
-        <item>60</item>
-        <item>120</item>
-        <item>180</item>
-        <item>240</item>
-        <item>300</item>
-        <item>360</item>
-        <item>420</item>
-        <item>480</item>
-        <item>540</item>
-        <item>600</item>
-        <item>720</item>
-        <item>0</item>
-    </string-array>
 
     <!-- Settings for Data save -->
-    <string name="pref_header_size_album_art">Ahorro de datos</string>
+    <string name="pref_header_size_album_art">Consumo de datos</string>
 
-    <string name="pref_title_size_album_art">Tamaño de carátula de album a descargar</string>
+    <string name="pref_title_size_album_art">Descargar carátula</string>
     <string-array name="pref_size_album_art_titles">
-        <item>No descargar carátula</item>
-        <item>Chica (75x75)</item>
-        <item>Chica (110x110)</item>
-        <item>Chica (170x170)</item>
-        <item>Mediana (220x220)</item>
-        <item>Mediana (300x300)</item>
-        <item>Mediana (450x450)</item>
-        <item>Grande (720x720)</item>
-        <item>Extragrande (1080x1080)</item>
-        <item>Cualquier tamaño disponible</item>
+        <item>No descargar</item>
+        <item>De la menor calidad disponible</item>
+        <item>De baja calidad</item>
+        <item>De media calidad</item>
+        <item>De alta calidad</item>
+        <item>De muy alta calidad</item>
+        <item>De la mejor calidad disponible</item>
     </string-array>
     <string-array name="pref_size_album_art_values">
         <item>-1</item>
-        <item>75</item>
-        <item>110</item>
-        <item>170</item>
-        <item>220</item>
-        <item>300</item>
-        <item>450</item>
-        <item>720</item>
-        <item>1080</item>
+        <item>0</item>
+        <item>1</item>
+        <item>5</item>
+        <item>7</item>
+        <item>10</item>
         <item>1000</item>
     </string-array>
 
-    <string name="pref_title_data_to_download">Datos adicionales descargar</string>
+    <string name="pref_title_data_to_download">Descargar también</string>
     <string-array name="pref_data_to_download_titles">
         <item>Número de pista</item>
         <item>Fecha de publicación</item>
@@ -242,122 +137,57 @@
         <item>genre</item>
     </string-array>
 
-    <string-array name="list_preference_entries">
-        <item>No descargar carátula</item>
-        <item>Chica (75x75)</item>
-        <item>Chica (110x110)</item>
-        <item>Chica (170x170)</item>
-        <item>Mediana (220x220)</item>
-        <item>Mediana (300x300)</item>
-        <item>Mediana (450x450)</item>
-        <item>Grande (720x720)</item>
-        <item>Extragrande (1080x1080)</item>
-        <item>Cualquier tamaño disponible</item>
-    </string-array>
+    <string name="info_found">Se encontraron las siguientes etiquetas.</string>
+    <string name="incomplete_info_found">Faltaron algunas etiquetas para </string>
+    <string name="cancel_task">¿Desea cancelar la corrección en curso?</string>
+    <string name="cancelling">Cancelando...</string>
+    <string name="processing_task">Espera a que termine la corrección en modo automático.</string>
+    <string name="api_initialized">Conectado al servicio ACR.</string>
+    <string name="remove_from_list">Remover</string>
 
-    <string-array name="list_preference_entry_values">
-        <item>-1</item>
-        <item>75</item>
-        <item>110</item>
-        <item>170</item>
-        <item>220</item>
-        <item>300</item>
-        <item>450</item>
-        <item>720</item>
-        <item>1080</item>
-        <item>1000</item>
-    </string-array>
-
-    <string name="transition_dialog">transition_dialog</string>
-    <string name="title_activity_scrolling_details_track">ScrollingDetailsTrack</string>
-    <string name="large_text">
-        "Material is the metaphor.\n\n"
-
-        "A material metaphor is the unifying theory of a rationalized space and a system of motion."
-        "The material is grounded in tactile reality, inspired by the study of paper and ink, yet "
-        "technologically advanced and open to imagination and magic.\n"
-        "Surfaces and edges of the material provide visual cues that are grounded in reality. The "
-        "use of familiar tactile attributes helps users quickly understand affordances. Yet the "
-        "flexibility of the material creates new affordances that supercede those in the physical "
-        "world, without breaking the rules of physics.\n"
-        "The fundamentals of light, surface, and movement are key to conveying how objects move, "
-        "interact, and exist in space and in relation to each other. Realistic lighting shows "
-        "seams, divides space, and indicates moving parts.\n\n"
-
-        "Bold, graphic, intentional.\n\n"
-
-        "The foundational elements of print based design typography, grids, space, scale, color, "
-        "and use of imagery guide visual treatments. These elements do far more than please the "
-        "eye. They create hierarchy, meaning, and focus. Deliberate color choices, edge to edge "
-        "imagery, large scale typography, and intentional white space create a bold and graphic "
-        "interface that immerse the user in the experience.\n"
-        "An emphasis on user actions makes core functionality immediately apparent and provides "
-        "waypoints for the user.\n\n"
-
-        "Motion provides meaning.\n\n"
-
-        "Motion respects and reinforces the user as the prime mover. Primary user actions are "
-        "inflection points that initiate motion, transforming the whole design.\n"
-        "All action takes place in a single environment. Objects are presented to the user without "
-        "breaking the continuity of experience even as they transform and reorganize.\n"
-        "Motion is meaningful and appropriate, serving to focus attention and maintain continuity. "
-        "Feedback is subtle yet clear. Transitions are efﬁcient yet coherent.\n\n"
-
-        "3D world.\n\n"
-
-        "The material environment is a 3D space, which means all objects have x, y, and z "
-        "dimensions. The z-axis is perpendicularly aligned to the plane of the display, with the "
-        "positive z-axis extending towards the viewer. Every sheet of material occupies a single "
-        "position along the z-axis and has a standard 1dp thickness.\n"
-        "On the web, the z-axis is used for layering and not for perspective. The 3D world is "
-        "emulated by manipulating the y-axis.\n\n"
-
-        "Light and shadow.\n\n"
-
-        "Within the material environment, virtual lights illuminate the scene. Key lights create "
-        "directional shadows, while ambient light creates soft shadows from all angles.\n"
-        "Shadows in the material environment are cast by these two light sources. In Android "
-        "development, shadows occur when light sources are blocked by sheets of material at "
-        "various positions along the z-axis. On the web, shadows are depicted by manipulating the "
-        "y-axis only. The following example shows the card with a height of 6dp.\n\n"
-
-        "Resting elevation.\n\n"
-
-        "All material objects, regardless of size, have a resting elevation, or default elevation "
-        "that does not change. If an object changes elevation, it should return to its resting "
-        "elevation as soon as possible.\n\n"
-
-        "Component elevations.\n\n"
-
-        "The resting elevation for a component type is consistent across apps (e.g., FAB elevation "
-        "does not vary from 6dp in one app to 16dp in another app).\n"
-        "Components may have different resting elevations across platforms, depending on the depth "
-        "of the environment (e.g., TV has a greater depth than mobile or desktop).\n\n"
-
-        "Responsive elevation and dynamic elevation offsets.\n\n"
-
-        "Some component types have responsive elevation, meaning they change elevation in response "
-        "to user input (e.g., normal, focused, and pressed) or system events. These elevation "
-        "changes are consistently implemented using dynamic elevation offsets.\n"
-        "Dynamic elevation offsets are the goal elevation that a component moves towards, relative "
-        "to the component’s resting state. They ensure that elevation changes are consistent "
-        "across actions and component types. For example, all components that lift on press have "
-        "the same elevation change relative to their resting elevation.\n"
-        "Once the input event is completed or cancelled, the component will return to its resting "
-        "elevation.\n\n"
-
-        "Avoiding elevation interference.\n\n"
-
-        "Components with responsive elevations may encounter other components as they move between "
-        "their resting elevations and dynamic elevation offsets. Because material cannot pass "
-        "through other material, components avoid interfering with one another any number of ways, "
-        "whether on a per component basis or using the entire app layout.\n"
-        "On a component level, components can move or be removed before they cause interference. "
-        "For example, a floating action button (FAB) can disappear or move off screen before a "
-        "user picks up a card, or it can move if a snackbar appears.\n"
-        "On the layout level, design your app layout to minimize opportunities for interference. "
-        "For example, position the FAB to one side of stream of a cards so the FAB won’t interfere "
-        "when a user tries to pick up one of cards.\n\n"
-    </string>
+    <string name="question_1">¿Lorem ipsum dolor sit amet?</string>
+    <string name="answer_1">Lorem ipsum dolor sit amet, consectetur adipiscing elit,
+        sed eiusmod tempor incidunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
+        quis nostrud exercitation ullamco laboris nisi ut aliquid ex ea commodi consequat.
+        Quis aute iure reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+        Excepteur sint obcaecat cupiditat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</string>
+    <string name="mp3_type">mp3</string>
+    <string name="title_remove_cover_art_dialog">Remover carátula</string>
+    <string name="message_remove_cover_art_dialog">¿Estas seguro de querer remover la carátula?</string>
+    <string name="message_removed_selected">¿Confirmas que deseas eliminar de la lista las canciones seleccionadas?</string>
+    <string name="title_removed_selected">Eliminar</string>
+    <string name="hearing">Escuchando</string>
+    <string name="updated_list">Lista actualizada.</string>
+    <string name="getting_data">Obteniendo información de canciones...</string>
+    <string name="in_development">En desarrollo.</string>
+    <string name="updating_list">Actualizando lista...</string>
+    <string name="not_songs_found">No se encontraron canciones en MP3, intenta añadir algunas a tu smartphone y vuelve a actualizar la lista.</string>
+    <string name="removed_inexistent"> cancion(es) fue(ron) removido(s) de la lista debido a que ya no esta(n) en tu smartphone.</string>
+    <string name="new_files_found"> cancion(es) nueva(s) se han encontrado y añadido al inicio de la lista.</string>
+    <string name="jump_to">Saltar rapidamente a</string>
+    <string name="add_cover">Galería</string>
+    <string name="automatic_mode">Modo automático</string>
+    <string name="edit_cover">Añadir carátula de galería</string>
+    <string name="update_list">Actualizar lista</string>
+    <string name="already_updating_list">Actualización en curso.</string>
+    <string name="not_created_list">No esta disponible la lista aún.</string>
+    <string name="downloading_tags">Buscando etiquetas...</string>
+    <string name="downloading_cover">Buscando carátula...</string>
+    <string name="album">Álbum</string>
+    <string name="genre">Género</string>
+    <string name="track_number">Número de pista</string>
+    <string name="title">Título</string>
+    <string name="artist">Artista</string>
+    <string name="track_year">Año de prublicación</string>
+    <string name="dimensions">Tamaño</string>
+    <string name="apply_tags">Etiquetas nuevas</string>
+    <string name="message_apply_found_tags">¿Deseas aplicar las etiquetas encontradas a la canción?</string>
+    <string name="message_apply_new_tags">¿Deseas aplicar los cambios a la canción?</string>
+    <string name="swipe_up_search">Desliza hacia abajo para volver a buscar.</string>
+    <string name="message_no_cover">Sin carátula</string>
+    <string name="tracks">canciones</string>
+    <string name="fixing_task">Corrigiendo canciones.</string>
+    <string name="cover_saved">Carátula guardada en</string>
+    <string name="cover_not_saved">No se pudo guardar la carátula.</string>
 
 </resources>

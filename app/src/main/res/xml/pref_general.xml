@@ -6,25 +6,19 @@
         android:summary="@string/pref_title_change_description"
         android:title="@string/pref_title_change" />
     <SwitchPreference
-        android:defaultValue="false"
+        android:defaultValue="true"
         android:key="title_manual_change_switch"
         android:summary="@string/pref_manual_title_change_description"
         android:title="@string/pref_manual_title_change" />
     <SwitchPreference
-        android:defaultValue="false"
+        android:defaultValue="true"
         android:key="title_automatically_replace_strange_chars"
         android:summary="@string/pref_automatically_replace_strange_chars_description"
         android:title="@string/pref_automatically_replace_strange_chars" />
     <SwitchPreference
-        android:defaultValue="false"
+        android:defaultValue="true"
         android:key="show_separators"
         android:summary="@string/pref_show_separator_description"
         android:title="@string/pref_show_separator_title" />
 
-    <SwitchPreference
-        android:defaultValue="false"
-        android:enabled="false"
-        android:key="show_dark_theme"
-        android:summary="Útil en pantallas AMOLED para ayudar a ahorrar batería"
-        android:title="Tema oscuro (En desarrollo)"/>
 </PreferenceScreen>
