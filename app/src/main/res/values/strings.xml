@@ -188,6 +188,9 @@
     <string name="tracks">canciones</string>
     <string name="fixing_task">Corrigiendo canciones.</string>
     <string name="cover_saved">Carátula guardada en</string>
+    <string name="cover_extracted">Carátula extraida.</string>
     <string name="cover_not_saved">No se pudo guardar la carátula.</string>
+    <string name="web_search">Buscar en Web</string>
+    <string name="view_cover">Ver</string>
 
 </resources>

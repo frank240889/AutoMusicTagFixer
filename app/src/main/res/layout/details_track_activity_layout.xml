@@ -131,7 +131,7 @@
     <include layout="@layout/item_found" />
 
     <android.support.design.widget.FloatingActionButton
-        android:id="@+id/removeCover"
+        android:id="@+id/extractCover"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
@@ -144,7 +144,7 @@
         app:theme="@style/CustomMiniFab"
         android:theme="@style/CustomMiniFab"
         app:pressedTranslationZ="12dp"
-        app:srcCompat="@drawable/ic_delete_white" />
+        app:srcCompat="@drawable/ic_photo_library_white_24px" />
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/editTrackInfo"
@@ -176,7 +176,7 @@
         app:theme="@style/CustomMiniFab"
         android:theme="@style/CustomMiniFab"
         app:pressedTranslationZ="12dp"
-        app:srcCompat="@drawable/ic_cloud_download_white_24px" />
+        app:srcCompat="@drawable/ic_photo_white" />
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/autofix"

@@ -64,6 +64,16 @@
             android:parentActivityName=".SelectFolderActivity"
             android:theme="@style/SettingsStyle" />
 
+        <provider
+            android:name="android.support.v4.content.FileProvider"
+            android:authorities="mx.dev.franco.musicallibraryorganizer.fileProvider"
+            android:grantUriPermissions="true"
+            android:exported="false">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+
 
         <!-- We need this service for checking internet connection and handling the gracenote api initialization -->
         <service

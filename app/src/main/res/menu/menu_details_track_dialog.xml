@@ -6,4 +6,14 @@
         android:icon="@drawable/ic_play_arrow_white_24px"
         android:title="@string/play_track"
         app:showAsAction="ifRoom|collapseActionView" />
+    <item
+        android:id="@+id/action_remove_cover"
+        android:icon="@drawable/ic_delete_white_24px"
+        android:title="@string/title_remove_cover_art_dialog"
+        app:showAsAction="never"/>
+    <item
+        android:id="@+id/action_web_search"
+        android:icon="@drawable/ic_public_white_24px"
+        android:title="@string/web_search"
+        app:showAsAction="never"/>
 </menu>

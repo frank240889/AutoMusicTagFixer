@@ -3,6 +3,7 @@ package mx.dev.franco.musicallibraryorganizer;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.app.ActivityManager;
+import android.content.ActivityNotFoundException;
 import android.content.BroadcastReceiver;
 import android.content.ContentValues;
 import android.content.Context;
@@ -16,6 +17,7 @@ import android.media.MediaPlayer;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.design.widget.AppBarLayout;
@@ -24,6 +26,7 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.transition.TransitionManager;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.FileProvider;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.ViewCompat;
 import android.support.v4.widget.NestedScrollView;
@@ -43,6 +46,7 @@ import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.inputmethod.InputMethodManager;
+import android.webkit.MimeTypeMap;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
@@ -89,6 +93,7 @@ import static mx.dev.franco.musicallibraryorganizer.services.GnService.apiInitia
 
 public class DetailsTrackDialogActivity extends AppCompatActivity implements MediaPlayer.OnCompletionListener {
 
+
     //Intent type
     private static int INTENT_OPEN_GALLERY = 1;
     //codes for determining the type of error when validating the fields
@@ -102,6 +107,7 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
     private static final int NO_INTERNET_CONNECTION_COVER_ART = 28;
     private static final int ACTION_NONE = 30;
     private static final int ACTION_ADD_COVER = 31 ;
+    private static final int ACTION_VIEW_COVER = 32;
     private static final int DURATION = 200;
 
 
@@ -124,7 +130,7 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
     private FloatingActionButton editButton;
     private FloatingActionButton downloadCoverButton;
     private FloatingActionButton autofixButton;
-    private FloatingActionButton removeCoverButton;
+    private FloatingActionButton extractCoverButton;
     private FloatingActionButton saveButton;
     private FloatingActionButton floatingActionMenu;
 
@@ -290,11 +296,12 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
 
     /**
      * Shows the snackbar with the params received
-     * @param action execute code depending on action
      * @param duration how long is displayed snackbar
      * @param msg message to display
+     * @param action execute code depending on action
+     * @param path
      */
-    private void showSnackBar(int duration, String msg, int action){
+    private void showSnackBar(int duration, String msg, int action, final String path){
         if(snackbar != null){
             snackbar = null;
             createSnackBar();
@@ -305,7 +312,7 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
             snackbar.setDuration(duration);
             snackbar.setAction("",null);
         }
-        else {
+        else if(action == ACTION_ADD_COVER) {
             snackbar.setText(msg);
             snackbar.setDuration(duration);
             snackbar.setAction(R.string.add_cover, new View.OnClickListener() {
@@ -317,10 +324,43 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
                 }
             });
         }
+        else{
+            snackbar.setText(msg);
+            snackbar.setDuration(duration);
+            snackbar.setAction(R.string.view_cover, new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    openInExternalApp(path);
+                }
+            });
+        }
 
 
         snackbar.show();
     }
+
+    private void openInExternalApp(String path){
+        File file = new File(path);
+        MimeTypeMap mime = MimeTypeMap.getSingleton();
+        String ext = file.getName().substring(file.getName().lastIndexOf(".") + 1);
+        String type = mime.getMimeTypeFromExtension(ext);
+        try {
+
+            Intent intent = new Intent();
+            intent.setAction(Intent.ACTION_VIEW);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                Uri contentUri = FileProvider.getUriForFile(getApplicationContext(), "mx.dev.franco.musicallibraryorganizer.fileProvider", file);
+                intent.setDataAndType(contentUri, type);
+            } else {
+                intent.setDataAndType(Uri.fromFile(file), type);
+            }
+            startActivity(intent);
+        } catch (ActivityNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
 
     private void showSnackBar(int reason){
         String msg = "";
@@ -335,7 +375,7 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
                 msg = getString(R.string.initializing_recognition_api);
                 break;
         }
-        showSnackBar(Snackbar.LENGTH_SHORT, msg, ACTION_NONE);
+        showSnackBar(Snackbar.LENGTH_SHORT, msg, ACTION_NONE, null);
     }
 
 
@@ -363,6 +403,46 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
                 return false;
             }
         });
+
+        MenuItem removeItem = menu.findItem(R.id.action_remove_cover);
+        removeItem.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                final AlertDialog.Builder builder = new AlertDialog.Builder(DetailsTrackDialogActivity.this);
+                builder.setTitle(R.string.title_remove_cover_art_dialog);
+                builder.setMessage(R.string.message_remove_cover_art_dialog);
+                builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.cancel();
+                    }
+                });
+                builder.setPositiveButton("Si", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        AsyncUpdateData asyncUpdateData = new AsyncUpdateData(REMOVE_COVER);
+                        asyncUpdateData.execute();
+                    }
+                });
+                AlertDialog alertDialog = builder.create();
+                alertDialog.show();
+                return false;
+            }
+        });
+
+        MenuItem searchInWebItem = menu.findItem(R.id.action_web_search);
+        searchInWebItem.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                String queryString = currentTitle + (!currentArtist.isEmpty() ? (" " + currentArtist) : "");
+                String query = "http://www.google.com/#q=" + queryString;
+                Uri uri = Uri.parse(query);
+                Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+                startActivity(intent);
+                return false;
+            }
+        });
+
 
         return true;
     }
@@ -473,7 +553,7 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
                 Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), imageData);
                 if(bitmap.getHeight() > 1080 || bitmap.getWidth() > 1080){
 
-                    showSnackBar(Snackbar.LENGTH_LONG,getString(R.string.image_too_big),ACTION_NONE);
+                    showSnackBar(Snackbar.LENGTH_LONG,getString(R.string.image_too_big),ACTION_NONE, null);
                     newCoverArt = currentCoverArt;
                     currentCoverArtLength = newCoverArtLength;
 
@@ -501,7 +581,7 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
                 }
             } catch (IOException e) {
                 e.printStackTrace();
-                showSnackBar(Snackbar.LENGTH_LONG,getString(R.string.error_load_image),ACTION_NONE);
+                showSnackBar(Snackbar.LENGTH_LONG,getString(R.string.error_load_image),ACTION_NONE, null);
                 newCoverArt = currentCoverArt;
                 newCoverArtLength = currentCoverArtLength;
             }
@@ -533,7 +613,7 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
 
         viewDetailsTrack = null;
         editButton = null;
-        removeCoverButton = null;
+        extractCoverButton = null;
         player = null;
         progressBar = null;
         currentAudioItem = null;
@@ -596,7 +676,7 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
 
         //Floating action buttons
         downloadCoverButton = (FloatingActionButton) viewDetailsTrack.findViewById(R.id.downloadCover);
-        removeCoverButton = (FloatingActionButton) viewDetailsTrack.findViewById(R.id.removeCover);
+        extractCoverButton = (FloatingActionButton) viewDetailsTrack.findViewById(R.id.extractCover);
         editButton = (FloatingActionButton) viewDetailsTrack.findViewById(R.id.editTrackInfo);
         autofixButton = (FloatingActionButton) viewDetailsTrack.findViewById(R.id.autofix);
         floatingActionMenu = (FloatingActionButton) viewDetailsTrack.findViewById(R.id.floatingActionMenu);
@@ -725,31 +805,28 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
 
     private void addActionListeners(){
         if(currentCoverArt == null){
-            removeCoverButton.setEnabled(false);
+            extractCoverButton.setEnabled(false);
         }
 
-        removeCoverButton.setOnClickListener(new View.OnClickListener() {
+        extractCoverButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 closeFABMenu();
-                final AlertDialog.Builder builder = new AlertDialog.Builder(DetailsTrackDialogActivity.this);
-                builder.setTitle(R.string.title_remove_cover_art_dialog);
-                builder.setMessage(R.string.message_remove_cover_art_dialog);
-                builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.cancel();
-                    }
-                });
-                builder.setPositiveButton("Si", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        AsyncUpdateData asyncUpdateData = new AsyncUpdateData(REMOVE_COVER);
-                        asyncUpdateData.execute();
-                    }
-                });
-                AlertDialog alertDialog = builder.create();
-                alertDialog.show();
+                String newImageAbsolutePath = FileSaver.saveFile(currentCoverArt, currentTitle, currentArtist, currentAlbum);
+                if(!newImageAbsolutePath.equals(FileSaver.NULL_DATA) && !newImageAbsolutePath.equals(FileSaver.NO_EXTERNAL_STORAGE_WRITABLE) && !newImageAbsolutePath.equals(FileSaver.INPUT_OUTPUT_ERROR)) {
+
+                    showSnackBar(7000, getString(R.string.cover_extracted) + " " + AudioItem.getRelativePath(newImageAbsolutePath) + ".", ACTION_VIEW_COVER, newImageAbsolutePath);
+                    //lets inform to system that one file has been created
+                    MediaScannerConnection.scanFile(
+                                                    getApplicationContext(),
+                                                    new String[]{newImageAbsolutePath},
+                                                    new String[]{MimeTypeMap.getFileExtensionFromUrl(newImageAbsolutePath)},
+                                                    null);
+                }
+                else {
+                    showSnackBar(Snackbar.LENGTH_LONG, getString(R.string.cover_not_saved), ACTION_NONE, null);
+                }
+
             }
         });
 
@@ -773,7 +850,7 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
                     return;
                 }
 
-                showSnackBar(Snackbar.LENGTH_LONG, getString(R.string.downloading_tags),ACTION_NONE);
+                showSnackBar(Snackbar.LENGTH_LONG, getString(R.string.downloading_tags),ACTION_NONE, null);
 
                 progressBar.setVisibility(View.VISIBLE);
 
@@ -806,7 +883,7 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
                     return;
                 }
 
-                showSnackBar(Snackbar.LENGTH_SHORT, getString(R.string.downloading_cover),ACTION_NONE);
+                showSnackBar(Snackbar.LENGTH_SHORT, getString(R.string.downloading_cover),ACTION_NONE, null);
 
                 progressBar.setVisibility(View.VISIBLE);
                 enableMiniFabs(false);
@@ -963,13 +1040,13 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
         //ask if we are going to enable or disable mini fabs,
         //if we are are going to disable, lets disable all,
         //else, enable it or disable it depending on if exist cover art
-        removeCoverButton.setEnabled(enable ? ( currentCoverArt != null ) : enable  );
+        extractCoverButton.setEnabled(enable ? ( currentCoverArt != null ) : enable  );
     }
 
     private void showFABMenu(){
         isFABOpen = true;
 
-        floatingActionMenu.animate().rotationBy(-400);
+        floatingActionMenu.animate().rotation(-400);
 
         autofixButton.animate().translationY(-getResources().getDimension(R.dimen.standard_55));
 
@@ -977,14 +1054,14 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
 
         downloadCoverButton.animate().translationY(-getResources().getDimension(R.dimen.standard_155));
 
-        removeCoverButton.animate().translationY(-getResources().getDimension(R.dimen.standard_205));
+        extractCoverButton.animate().translationY(-getResources().getDimension(R.dimen.standard_205));
 
     }
 
     private void closeFABMenu(){
         isFABOpen = false;
 
-        floatingActionMenu.animate().rotationBy(400);
+        floatingActionMenu.animate().rotation(0);
 
         autofixButton.animate().translationY(0);
 
@@ -992,7 +1069,7 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
 
         downloadCoverButton.animate().translationY(0);
 
-        removeCoverButton.animate().translationY(0);
+        extractCoverButton.animate().translationY(0);
 
 
     }
@@ -1168,7 +1245,7 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
         }
         else {
 
-            showSnackBar(Snackbar.LENGTH_SHORT,msg,ACTION_NONE);
+            showSnackBar(Snackbar.LENGTH_SHORT,msg,ACTION_NONE, null);
         }
 
     }
@@ -1239,7 +1316,7 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
         if(!manualMode)
             appBarLayout.setExpanded(false);
 
-        floatingActionMenu.hide();
+        //floatingActionMenu.hide();
         floatingActionMenu.setVisibility(GONE);
 
 
@@ -1774,7 +1851,7 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
             floatingActionMenu.show();
             saveButton.hide();
             trackAdapter.notifyDataSetChanged();
-            showSnackBar(Snackbar.LENGTH_SHORT, msg,ACTION_NONE);
+            showSnackBar(Snackbar.LENGTH_SHORT, msg,ACTION_NONE, null);
 
         }
 
@@ -1800,7 +1877,7 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
 
         //if there are no results, only notify to user
         if(trackIdAudioItem == null){
-            showSnackBar(Snackbar.LENGTH_SHORT,getString(R.string.file_status_bad),ACTION_NONE);
+            showSnackBar(Snackbar.LENGTH_SHORT,getString(R.string.file_status_bad),ACTION_NONE, null);
             return;
         }
 
@@ -1904,7 +1981,7 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
                         trackIdYear.setVisibility(newYear.equals("")?GONE:View.VISIBLE);
 
                         //inform to user the meta tags found
-                        showSnackBar(Snackbar.LENGTH_SHORT,getString(R.string.info_found),ACTION_NONE);
+                        showSnackBar(Snackbar.LENGTH_SHORT,getString(R.string.info_found),ACTION_NONE, null);
 
                         //let the user apply this changes
                         floatingActionMenu.hide();
@@ -1954,15 +2031,16 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
                             String newImageAbsolutePath = FileSaver.saveFile(newCoverArt, trackIdAudioItem.getTitle(), trackIdAudioItem.getArtist(), trackIdAudioItem.getAlbum());
                             if(!newImageAbsolutePath.equals(FileSaver.NULL_DATA) && !newImageAbsolutePath.equals(FileSaver.NO_EXTERNAL_STORAGE_WRITABLE) && !newImageAbsolutePath.equals(FileSaver.INPUT_OUTPUT_ERROR)) {
 
-                                showSnackBar(7000, getString(R.string.cover_saved) + " " + AudioItem.getRelativePath(newImageAbsolutePath) + ".", ACTION_NONE);
+                                showSnackBar(7000, getString(R.string.cover_saved) + " " + AudioItem.getRelativePath(newImageAbsolutePath) + ".", ACTION_VIEW_COVER, newImageAbsolutePath);
                                 //lets inform to system that one file has been created
-                                MediaScannerConnection.scanFile(getApplicationContext(),
-                                        new String[]{newImageAbsolutePath},
-                                        null,
-                                        null);
+                                MediaScannerConnection.scanFile(
+                                                                getApplicationContext(),
+                                                                new String[]{newImageAbsolutePath},
+                                                                new String[]{MimeTypeMap.getFileExtensionFromUrl(newImageAbsolutePath)},
+                                                                null);
                             }
                             else {
-                                showSnackBar(Snackbar.LENGTH_LONG, getString(R.string.cover_not_saved), ACTION_NONE);
+                                showSnackBar(Snackbar.LENGTH_LONG, getString(R.string.cover_not_saved), ACTION_NONE, null);
                             }
 
                             dialog.cancel();
@@ -1998,7 +2076,7 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
 
                             trackidCoverArtDimensions.setText(AudioItem.getStringImageSize(newCoverArt));
 
-                            showSnackBar(Snackbar.LENGTH_SHORT, finalMsg,ACTION_NONE);
+                            showSnackBar(Snackbar.LENGTH_SHORT, finalMsg,ACTION_NONE, null);
 
                             floatingActionMenu.hide();
                             floatingActionMenu.setVisibility(GONE);
@@ -2017,7 +2095,7 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
             onlyCoverArt = false;
             newCoverArt = currentCoverArt;
             newCoverArtLength = currentCoverArtLength;
-            showSnackBar(Snackbar.LENGTH_LONG, msg,ACTION_ADD_COVER);
+            showSnackBar(Snackbar.LENGTH_LONG, msg,ACTION_ADD_COVER, null);
             enableMiniFabs(true);
 
         }
@@ -2094,7 +2172,7 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            showSnackBar(Snackbar.LENGTH_SHORT,getString(R.string.file_status_bad),ACTION_NONE);
+                            showSnackBar(Snackbar.LENGTH_SHORT,getString(R.string.file_status_bad),ACTION_NONE, null);
                         }
                     });
 
