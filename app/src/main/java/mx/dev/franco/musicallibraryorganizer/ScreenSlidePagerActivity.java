@@ -2,6 +2,7 @@ package mx.dev.franco.musicallibraryorganizer;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
@@ -155,10 +156,12 @@ public class ScreenSlidePagerActivity extends FragmentActivity {
     }
 
     private void onClickLastPager(){
-        SplashActivity.sharedPreferences = getSharedPreferences(SplashActivity.APP_SHARED_PREFERENCES, Context.MODE_PRIVATE);
-        SplashActivity.editor = SplashActivity.sharedPreferences.edit();
-        SplashActivity.editor.putBoolean("first",false);
-        SplashActivity.editor.apply();
+        SharedPreferences sharedPreferences = getSharedPreferences(SplashActivity.APP_SHARED_PREFERENCES, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putBoolean("first",false);
+        editor.apply();
+        editor = null;
+        sharedPreferences = null;
     }
 
     /**

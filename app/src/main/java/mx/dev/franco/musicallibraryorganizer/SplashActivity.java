@@ -22,9 +22,7 @@ import mx.dev.franco.musicallibraryorganizer.utilities.RequiredPermissions;
  */
 
 public class SplashActivity extends AppCompatActivity{
-    //SharedPreferences we use for saving data from app, this data is only accessible for this app.
-    static SharedPreferences sharedPreferences;
-    static SharedPreferences.Editor editor;
+
     public static final String APP_SHARED_PREFERENCES = "AutoMusicTagFixer";
     public static boolean DEBUG_MODE = false;
 
@@ -64,9 +62,10 @@ public class SplashActivity extends AppCompatActivity{
         SelectedOptions.setValuesExtraDataToDownload(stringSet);
 
         //We set if is the first use of app
-        sharedPreferences = getSharedPreferences(APP_SHARED_PREFERENCES, Context.MODE_PRIVATE);
-        boolean firstTime= sharedPreferences.getBoolean("first", true);
-        SelectFolderActivity.isProcessingTask = sharedPreferences.getBoolean(SelectFolderActivity.IS_PROCESSING_TASK,false);
+        preferences = null;
+        preferences =  getSharedPreferences(APP_SHARED_PREFERENCES, Context.MODE_PRIVATE);
+        boolean firstTime= preferences.getBoolean("first", true);
+        SelectFolderActivity.isProcessingTask = preferences.getBoolean(SelectFolderActivity.IS_PROCESSING_TASK,false);
         RequiredPermissions.ACCESS_GRANTED_FILES = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
         if(!DEBUG_MODE) {
 
@@ -86,6 +85,7 @@ public class SplashActivity extends AppCompatActivity{
             Intent intent = new Intent(this, ScreenSlidePagerActivity.class);
             startActivity(intent);
         }
+        preferences = null;
         finish();
     }
 }

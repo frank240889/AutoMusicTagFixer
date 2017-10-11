@@ -73,7 +73,6 @@ import mx.dev.franco.musicallibraryorganizer.services.Job;
 import mx.dev.franco.musicallibraryorganizer.utilities.CustomMediaPlayer;
 import mx.dev.franco.musicallibraryorganizer.utilities.RequiredPermissions;
 
-import static mx.dev.franco.musicallibraryorganizer.SplashActivity.sharedPreferences;
 import static mx.dev.franco.musicallibraryorganizer.services.GnService.apiInitialized;
 
 
@@ -1134,11 +1133,14 @@ public class SelectFolderActivity extends AppCompatActivity
     }
 
     private void setFilePermissionGranted(){
-        SplashActivity.sharedPreferences = getSharedPreferences(SplashActivity.APP_SHARED_PREFERENCES, Context.MODE_PRIVATE);
-        SplashActivity.editor = sharedPreferences.edit();
-        SplashActivity.editor.putBoolean("accessFilesPermission", true);
-        SplashActivity.editor.apply();
+        SharedPreferences sharedPreferences = getSharedPreferences(SplashActivity.APP_SHARED_PREFERENCES, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putBoolean("accessFilesPermission", true);
+        editor.apply();
         RequiredPermissions.ACCESS_GRANTED_FILES = true;
+        editor = null;
+        sharedPreferences = null;
+
     }
 
     private void showReason(){
