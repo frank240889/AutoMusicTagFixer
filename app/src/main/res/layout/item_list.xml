@@ -4,6 +4,7 @@
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     app:cardUseCompatPadding="true"
+
     app:contentPadding="8dp">
 
     <RelativeLayout
@@ -13,6 +14,7 @@
         android:layout_alignParentStart="true"
         android:layout_below="@+id/relativeLayout"
         android:background="?selectableItemBackground"
+        android:transitionName="openDetails"
         android:splitMotionEvents="false">
 
         <ImageView

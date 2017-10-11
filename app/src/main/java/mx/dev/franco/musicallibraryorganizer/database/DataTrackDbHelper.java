@@ -91,7 +91,7 @@ public class DataTrackDbHelper extends SQLiteOpenHelper {
     }
 
     /**
-     * Remove an item from our database
+     * Remove an item_list from our database
      * in case already doesn't exist
      * in smartphone
      * @param id
@@ -104,7 +104,7 @@ public class DataTrackDbHelper extends SQLiteOpenHelper {
     }
 
     /**
-     * Adds new item to our database
+     * Adds new item_list to our database
      * @param data
      * @param tableName
      * @return id corresponding to current row inserted
@@ -146,7 +146,7 @@ public class DataTrackDbHelper extends SQLiteOpenHelper {
 
     /**
      * get only the absolute path stored
-     * for checking if item exists or not
+     * for checking if item_list exists or not
      * in smartphone
      * @param id
      * @return cursor object or null if no data

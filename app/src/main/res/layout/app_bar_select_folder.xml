@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
     android:id="@+id/rootContainer"
-    tools:Context="mx.dev.franco.musicallibraryorganizer.SelectFolderActivity">
+    tools:Context="mx.dev.franco.musicallibraryorganizer.MainActivity">
 
     <android.support.design.widget.AppBarLayout
         android:id="@+id/mainAppBarLayout"
@@ -24,7 +24,7 @@
 
     </android.support.design.widget.AppBarLayout>
 
-    <include layout="@layout/content_select_folder" />
+    <include layout="@layout/content_main" />
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/fab"

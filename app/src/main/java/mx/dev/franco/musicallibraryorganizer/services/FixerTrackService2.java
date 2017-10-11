@@ -96,13 +96,13 @@ public class FixerTrackService2 extends IntentService {
 
     //set this flag to TRUE if we touch an element from list, means that only one track is queued to correct
     private boolean singleTrack = false;
-    //Initial value, if exist audio item, this will override this initial value
+    //Initial value, if exist audio item_list, this will override this initial value
     private long currentId = - 1;
     //set this flag to TRUE if we send this intent from DetailsTrackDialogActitivy class
     private boolean fromEditMode = false;
     private boolean downloadCover = false;
-    //report to SelectFolderActivity next item position, to make possible
-    //automatically scrolling to that item in list
+    //report to MainActivity next item_list position, to make possible
+    //automatically scrolling to that item_list in list
     private int nextPosition = -1;
 
     private String currentPath = "";
@@ -374,7 +374,7 @@ public class FixerTrackService2 extends IntentService {
                             Log.d("sent_match",sent+"");
 
 
-                            //now yes finally, set current audio item as deselected
+                            //now yes finally, set current audio item_list as deselected
                             contentValues.clear();
 
                             if(gnMusicIdFile != null)

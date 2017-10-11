@@ -2,42 +2,42 @@
 
     <!-- Base application theme. -->
     <!--style name="AppTheme" parent="AppTheme.NoActionBar">
-        <item name="android:colorPrimary">@color/primaryColor</item>
-        <item name="android:colorAccent">@color/primaryDarkColor</item>
-        <item name="android:textColorPrimary">@android:color/primary_text_dark</item>
-        <item name="android:colorControlActivated">@color/primaryColor</item>
-        <item name="android:buttonStyle">@style/CustomButton</item>
-        <item name="android:colorControlHighlight">@color/primaryLightColor</item>
-        <item name="android:textViewStyle">@style/RobotoTextViewStyle</item>
-        <item name="android:windowContentTransitions">true</item>
+        <item_list name="android:colorPrimary">@color/primaryColor</item_list>
+        <item_list name="android:colorAccent">@color/primaryDarkColor</item_list>
+        <item_list name="android:textColorPrimary">@android:color/primary_text_dark</item_list>
+        <item_list name="android:colorControlActivated">@color/primaryColor</item_list>
+        <item_list name="android:buttonStyle">@style/CustomButton</item_list>
+        <item_list name="android:colorControlHighlight">@color/primaryLightColor</item_list>
+        <item_list name="android:textViewStyle">@style/RobotoTextViewStyle</item_list>
+        <item_list name="android:windowContentTransitions">true</item_list>
     </style-->
 
     <!--Style splash-->
     <!--style name="SplashTheme" parent="Theme.AppCompat.NoActionBar">
-        <item name="android:windowBackground">@drawable/background_splash</item>
-        <item name="android:textViewStyle">@style/RobotoTextViewStyle</item>
-        <item name="android:buttonStyle">@style/CustomButton</item>
-        <item name="android:windowTranslucentNavigation">true</item>
+        <item_list name="android:windowBackground">@drawable/background_splash</item_list>
+        <item_list name="android:textViewStyle">@style/RobotoTextViewStyle</item_list>
+        <item_list name="android:buttonStyle">@style/CustomButton</item_list>
+        <item_list name="android:windowTranslucentNavigation">true</item_list>
     </style-->
 
     <!--Style details track dialog activity-->
     <!--style name="DetailsTrackDialogTheme" parent="AppTheme">
-        <item name="android:colorAccent">@color/primaryColor</item>
-        <item name="android:textViewStyle">@style/RobotoTextViewStyle</item>
+        <item_list name="android:colorAccent">@color/primaryColor</item_list>
+        <item_list name="android:textViewStyle">@style/RobotoTextViewStyle</item_list>
     </style-->
 
     <!--Style details track dialog activity-->
     <!--style name="QuestionsTheme" parent="AppTheme">
-        <item name="android:colorAccent">@color/primaryColor</item>
-        <item name="android:textViewStyle">@style/RobotoTextViewStyle</item>
+        <item_list name="android:colorAccent">@color/primaryColor</item_list>
+        <item_list name="android:textViewStyle">@style/RobotoTextViewStyle</item_list>
     </style-->
 
     <!--style name="AppTheme.NoActionBar" parent="Theme.AppCompat.NoActionBar">
-        <item name="windowActionBar">false</item>
-        <item name="windowNoTitle">true</item>
-        <item name="android:textViewStyle">@style/RobotoTextViewStyle</item>
-        <item name="android:buttonStyle">@style/CustomButton</item>
-        <item name="android:windowTranslucentNavigation">true</item>
+        <item_list name="windowActionBar">false</item_list>
+        <item_list name="windowNoTitle">true</item_list>
+        <item_list name="android:textViewStyle">@style/RobotoTextViewStyle</item_list>
+        <item_list name="android:buttonStyle">@style/CustomButton</item_list>
+        <item_list name="android:windowTranslucentNavigation">true</item_list>
     </style-->
 
     <!-- The beef: background color for Action Bar overflow menu -->
@@ -45,49 +45,49 @@
     <style name="PopupOverlay" parent="ThemeOverlay.AppCompat.Light" /-->
 
     <!--style name="DrawerArrowStyle" parent="@style/Widget.AppCompat.DrawerArrowToggle">
-        <item name="spinBars">true</item>
-        <item name="color">@color/true_black</item>
-        <item name="android:textViewStyle">@style/RobotoTextViewStyle</item>
-        <item name="android:buttonStyle">@style/CustomButton</item>
+        <item_list name="spinBars">true</item_list>
+        <item_list name="color">@color/true_black</item_list>
+        <item_list name="android:textViewStyle">@style/RobotoTextViewStyle</item_list>
+        <item_list name="android:buttonStyle">@style/CustomButton</item_list>
     </style>
 
     <style name="ToolbarStyle" parent="@style/ThemeOverlay.AppCompat.Light">
-        <item name="android:textColorPrimary">@color/true_black</item>
-        <item name="android:colorPrimary">@color/primaryColor</item>
-        <item name="android:textViewStyle">@style/RobotoTextViewStyle</item>
-        <item name="android:buttonStyle">@style/CustomButton</item>
+        <item_list name="android:textColorPrimary">@color/true_black</item_list>
+        <item_list name="android:colorPrimary">@color/primaryColor</item_list>
+        <item_list name="android:textViewStyle">@style/RobotoTextViewStyle</item_list>
+        <item_list name="android:buttonStyle">@style/CustomButton</item_list>
     </style>
 
     <style name="SettingsStyle" parent="Theme.AppCompat">
-        <item name="android:textColorPrimary">@android:color/primary_text_dark</item>
-        <item name="android:colorControlActivated">@color/primaryColor</item>
-        <item name="android:buttonStyle">@style/CustomButton</item>
-        <item name="android:textViewStyle">@style/RobotoTextViewStyle</item>
+        <item_list name="android:textColorPrimary">@android:color/primary_text_dark</item_list>
+        <item_list name="android:colorControlActivated">@color/primaryColor</item_list>
+        <item_list name="android:buttonStyle">@style/CustomButton</item_list>
+        <item_list name="android:textViewStyle">@style/RobotoTextViewStyle</item_list>
     </style>
 
     <style name="CustomFab" parent="AppTheme">
-        <item name="android:backgroundTint">@color/primaryColor</item>
-        <item name="android:textViewStyle">@style/RobotoTextViewStyle</item>
-        <item name="android:buttonStyle">@style/CustomButton</item>
+        <item_list name="android:backgroundTint">@color/primaryColor</item_list>
+        <item_list name="android:textViewStyle">@style/RobotoTextViewStyle</item_list>
+        <item_list name="android:buttonStyle">@style/CustomButton</item_list>
     </style>
 
     <style name="CustomMiniFab" parent="AppTheme">
-        <item name="android:backgroundTint">@color/grey_900</item>
-        <item name="android:disabledAlpha">0.5</item>
+        <item_list name="android:backgroundTint">@color/grey_900</item_list>
+        <item_list name="android:disabledAlpha">0.5</item_list>
     </style>
 
     <style name="CustomButton" parent="@android:style/Widget.Button">
-        <item name="android:textColor">@color/primaryLightColor</item>
-        <item name="android:fontFamily">sans-serif-light</item>
+        <item_list name="android:textColor">@color/primaryLightColor</item_list>
+        <item_list name="android:fontFamily">sans-serif-light</item_list>
     </style>
 
     <style name="CustomProgressBar" parent="Theme.AppCompat.Light">
-        <item name="colorAccent">@color/primaryLightColor</item>
-        <item name="android:progressBackgroundTint">@color/grey_900</item>
+        <item_list name="colorAccent">@color/primaryLightColor</item_list>
+        <item_list name="android:progressBackgroundTint">@color/grey_900</item_list>
     </style>
 
     <style name="RobotoTextViewStyle" parent="android:Widget.TextView">
-        <item name="android:fontFamily">sans-serif-light</item>
+        <item_list name="android:fontFamily">sans-serif-light</item_list>
     </style-->
 
 

@@ -76,7 +76,7 @@ import mx.dev.franco.musicallibraryorganizer.utilities.RequiredPermissions;
 import static mx.dev.franco.musicallibraryorganizer.services.GnService.apiInitialized;
 
 
-public class SelectFolderActivity extends AppCompatActivity
+public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
         MediaPlayer.OnCompletionListener,
     TrackAdapter.AudioItemHolder.ClickListener {
@@ -84,7 +84,7 @@ public class SelectFolderActivity extends AppCompatActivity
     public static final int MODIFY_TRACK_DATA = 50;
     public static final String MAIN_ACTION = "main_action";
     public static final String IS_PROCESSING_TASK = "is_processing_task" ;
-    public static String TAG = SelectFolderActivity.class.getName();
+    public static String TAG = MainActivity.class.getName();
 
     //static field to indicate that task must not continue in case
     //user cancel the operation
@@ -172,7 +172,7 @@ public class SelectFolderActivity extends AppCompatActivity
         window.requestFeature(Window.FEATURE_CONTENT_TRANSITIONS);
 
 
-        setContentView(R.layout.activity_select_folder);
+        setContentView(R.layout.activity_main);
 
         //get unique instances from database connection and media player
         dbHelper = DataTrackDbHelper.getInstance(getApplicationContext());
@@ -484,14 +484,14 @@ public class SelectFolderActivity extends AppCompatActivity
             }
         };
 
-        // Assign the listener to that action item
+        // Assign the listener to that action item_list
         MenuItemCompat.setOnActionExpandListener(searchItem, expandListener);
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
+        // Handle action bar item_list clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
@@ -515,7 +515,7 @@ public class SelectFolderActivity extends AppCompatActivity
                     return false;
                 }
 
-                //jump to current item playing
+                //jump to current item_list playing
                 if(mediaPlayer != null && mediaPlayer.isPlaying() && audioItemArrayAdapter.getItemCount() > 0){
                     recyclerView.smoothScrollToPosition(mediaPlayer.getCurrentAudioItem().getPosition());
                 }
@@ -547,7 +547,7 @@ public class SelectFolderActivity extends AppCompatActivity
 
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
-        // Handle navigation swipeRefreshLayout item clicks here.
+        // Handle navigation swipeRefreshLayout item_list clicks here.
 
         int id = item.getItemId();
 
@@ -591,7 +591,7 @@ public class SelectFolderActivity extends AppCompatActivity
 
 
     /**
-     * this method handles click to every item in recycler view
+     * this method handles click to every item_list in recycler view
      * @param position
      * @param view
      */
@@ -629,7 +629,7 @@ public class SelectFolderActivity extends AppCompatActivity
 
     /**
      * This callback inform us that data has been change and we need
-     * to update the item in list
+     * to update the item_list in list
      * @param requestCode
      * @param resultCode
      * @param data
@@ -647,7 +647,7 @@ public class SelectFolderActivity extends AppCompatActivity
 
     /**
      * Handles onCompletion event fired from media player
-     * when item that is playing ends.
+     * when item_list that is playing ends.
      * @param mp
      */
     @Override
@@ -662,12 +662,12 @@ public class SelectFolderActivity extends AppCompatActivity
      */
     private void setupActionFloatingActionButton(){
         if(ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED){
-            ActivityCompat.requestPermissions(SelectFolderActivity.this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 2);
+            ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 2);
         }
         else {
 
             //Automatic mode require some conditions to execute
-            int canContinue = allowExecute(SelectFolderActivity.this);
+            int canContinue = allowExecute(MainActivity.this);
             if(canContinue != 0) {
                 showSnackBar(canContinue);
                 return;
@@ -681,7 +681,7 @@ public class SelectFolderActivity extends AppCompatActivity
 
 
             //start correction in automatic mode
-            Intent intent = new Intent(SelectFolderActivity.this, FixerTrackService.class);
+            Intent intent = new Intent(MainActivity.this, FixerTrackService.class);
             intent.putExtra(FixerTrackService.SINGLE_TRACK, false);
             intent.putExtra(FixerTrackService.FROM_EDIT_MODE, false);
             startService(intent);
@@ -730,7 +730,7 @@ public class SelectFolderActivity extends AppCompatActivity
             snackbar.setAction(R.string.manual_mode, new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Intent intent2 = new Intent(SelectFolderActivity.this, DetailsTrackDialogActivity.class);
+                    Intent intent2 = new Intent(MainActivity.this, TrackDetailsActivity.class);
                     intent2.putExtra("itemId",id);
                     intent2.putExtra("manualMode",true);
                     startActivity(intent2);
@@ -838,7 +838,7 @@ public class SelectFolderActivity extends AppCompatActivity
     }
 
     /**
-     * This method starts a correction for a single item
+     * This method starts a correction for a single item_list
      * @param view
      * @param position
      * @throws IOException
@@ -848,7 +848,7 @@ public class SelectFolderActivity extends AppCompatActivity
         final String absolutePath = (String) view.findViewById(R.id.absolute_path).getTag();
         final View getView = view.findViewById(R.id.coverArt);
 
-        //check if audio item can accessed
+        //check if audio item_list can accessed
         boolean canBeRead = AudioItem.checkFileIntegrity(absolutePath);
         if(!canBeRead){
             showConfirmationDialog(absolutePath,position);
@@ -877,7 +877,7 @@ public class SelectFolderActivity extends AppCompatActivity
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
 
-                        int canContinue = allowExecute(SelectFolderActivity.this);
+                        int canContinue = allowExecute(MainActivity.this);
                         if(canContinue != 0) {
                             showSnackBar(canContinue);
                             return;
@@ -886,7 +886,7 @@ public class SelectFolderActivity extends AppCompatActivity
 
                         audioItem.setProcessing(true);
                         audioItemArrayAdapter.notifyItemChanged(position);
-                        Intent intent = new Intent(SelectFolderActivity.this, FixerTrackService.class);
+                        Intent intent = new Intent(MainActivity.this, FixerTrackService.class);
                         intent.putExtra(FixerTrackService.FROM_EDIT_MODE,false);
                         intent.putExtra(FixerTrackService.AUDIO_ITEM, audioItem);
                         startService(intent);
@@ -944,7 +944,7 @@ public class SelectFolderActivity extends AppCompatActivity
 
 
     /**
-     * Opens new activity showing up the details from current audio item pressed
+     * Opens new activity showing up the details from current audio item_list pressed
      * @param view
      * @param position
      * @param manualMode
@@ -967,11 +967,11 @@ public class SelectFolderActivity extends AppCompatActivity
             return;
         }
 
-        Intent intent = new Intent(this, DetailsTrackDialogActivity.class);
+        Intent intent = new Intent(this, TrackDetailsActivity.class);
         intent.putExtra(FixerTrackService.MEDIASTORE_ID, audioItem.getId());
         intent.putExtra(FixerTrackService.MANUAL_MODE, manualMode);
         ActivityOptionsCompat options = ActivityOptionsCompat.makeSceneTransitionAnimation(
-                SelectFolderActivity.this,
+                MainActivity.this,
                 view,
                 ViewCompat.getTransitionName(view));
 
@@ -1078,7 +1078,7 @@ public class SelectFolderActivity extends AppCompatActivity
     }
 
     private void setStartTaskStateFab(){
-        final AlertDialog.Builder builder = new AlertDialog.Builder(SelectFolderActivity.this);
+        final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
         builder.setTitle(R.string.cancelling).setMessage(R.string.cancel_task)
                 .setNegativeButton("No", new DialogInterface.OnClickListener() {
                     @Override
@@ -1090,7 +1090,7 @@ public class SelectFolderActivity extends AppCompatActivity
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
 
-                        Intent intent = new Intent(SelectFolderActivity.this, FixerTrackService.class);
+                        Intent intent = new Intent(MainActivity.this, FixerTrackService.class);
                         intent.setAction(FixerTrackService.ACTION_CANCEL);
                         startService(intent);
                     }
@@ -1101,9 +1101,9 @@ public class SelectFolderActivity extends AppCompatActivity
     }
 
     private void finishTaskByUser(){
-        SelectFolderActivity.this.fab.setOnClickListener(null);
-        SelectFolderActivity.this.fab.setImageDrawable(getDrawable(R.drawable.ic_magic_wand_auto_fix_button));
-        SelectFolderActivity.this.fab.setOnClickListener(new View.OnClickListener() {
+        MainActivity.this.fab.setOnClickListener(null);
+        MainActivity.this.fab.setImageDrawable(getDrawable(R.drawable.ic_magic_wand_auto_fix_button));
+        MainActivity.this.fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 setupActionFloatingActionButton();
@@ -1119,13 +1119,13 @@ public class SelectFolderActivity extends AppCompatActivity
     private void showSnackBar(int reason){
         String msg = "";
         switch (reason){
-            case SelectFolderActivity.NO_INTERNET_CONNECTION:
+            case MainActivity.NO_INTERNET_CONNECTION:
                 msg = getString(R.string.no_internet_connection_automatic_mode);
                 break;
-            case SelectFolderActivity.PROCESSING_TASK:
+            case MainActivity.PROCESSING_TASK:
                 msg = getString(R.string.processing_task);
                 break;
-            case SelectFolderActivity.NO_INITIALIZED_API:
+            case MainActivity.NO_INITIALIZED_API:
                 msg = getString(R.string.initializing_recognition_api);
                 break;
         }
@@ -1204,7 +1204,7 @@ public class SelectFolderActivity extends AppCompatActivity
             this.taskType = codeTaskType;
 
             if(codeTaskType == CREATE_DATABASE){
-                SelectFolderActivity.this.dbHelper.clearDb();
+                MainActivity.this.dbHelper.clearDb();
             }
         }
 
@@ -1277,8 +1277,8 @@ public class SelectFolderActivity extends AppCompatActivity
 
             //there are not songs?
             if(audioItemList.size() == 0){
-                SelectFolderActivity.this.searchAgainMessage.setText(getString(R.string.no_items_found));
-                SelectFolderActivity.this.searchAgainMessage.setVisibility(View.VISIBLE);
+                MainActivity.this.searchAgainMessage.setText(getString(R.string.no_items_found));
+                MainActivity.this.searchAgainMessage.setVisibility(View.VISIBLE);
                 return;
             }
 
@@ -1295,7 +1295,7 @@ public class SelectFolderActivity extends AppCompatActivity
                 searchView.setVisibility(View.VISIBLE);
             }
             updateNumberItems();
-            SelectFolderActivity.this.fab.show();
+            MainActivity.this.fab.show();
 
 
             System.gc();
@@ -1349,7 +1349,7 @@ public class SelectFolderActivity extends AppCompatActivity
         private void rescanAndUpdateList(){
             data = getDataFromDevice();
             while(data.moveToNext()){
-                boolean existInTable = SelectFolderActivity.this.dbHelper.existInDatabase(data.getInt(0));
+                boolean existInTable = MainActivity.this.dbHelper.existInDatabase(data.getInt(0));
 
                 if(!existInTable){
                     createAndAddAudioItem();
@@ -1368,7 +1368,7 @@ public class SelectFolderActivity extends AppCompatActivity
                 AudioItem audioItem = audioItemList.get(0);
                 File file = new File(audioItem.getAbsolutePath());
                 if (!file.exists()) {
-                    SelectFolderActivity.this.dbHelper.removeItem(audioItem.getId(), TrackContract.TrackData.TABLE_NAME);
+                    MainActivity.this.dbHelper.removeItem(audioItem.getId(), TrackContract.TrackData.TABLE_NAME);
                     audioItemList.remove(pos);
                     audioItemArrayAdapter.notifyItemRemoved(pos);
                     removed++;
@@ -1402,7 +1402,7 @@ public class SelectFolderActivity extends AppCompatActivity
          */
         private void readFromDatabase(){
 
-            data = SelectFolderActivity.this.dbHelper.getDataFromDB();
+            data = MainActivity.this.dbHelper.getDataFromDB();
             int dataLength = data != null ? data.getCount() : 0;
             if (dataLength > 0) {
                 while (data.moveToNext()) {
@@ -1433,7 +1433,7 @@ public class SelectFolderActivity extends AppCompatActivity
 
 
         /**
-         * Here we add the audio item to adapter
+         * Here we add the audio item_list to adapter
          * created at onCreated callback from
          * parent activity.
          */
@@ -1453,11 +1453,11 @@ public class SelectFolderActivity extends AppCompatActivity
 
             AudioItem audioItem = new AudioItem();
 
-            //we need to set id in audio item because all operations
+            //we need to set id in audio item_list because all operations
             //we do, relay in this id,
             //so when we save row to DB
             //it returns its id as a result
-            long _id = SelectFolderActivity.this.dbHelper.insertItem(values, TrackContract.TrackData.TABLE_NAME);
+            long _id = MainActivity.this.dbHelper.insertItem(values, TrackContract.TrackData.TABLE_NAME);
             audioItem.setId(_id).setTitle(title).setArtist(artist).setAlbum(album).setAbsolutePath(fullPath);
 
             publishProgress(audioItem);

@@ -91,7 +91,7 @@ import static mx.dev.franco.musicallibraryorganizer.services.GnService.apiInitia
  * Created by franco on 22/07/17.
  */
 
-public class DetailsTrackDialogActivity extends AppCompatActivity implements MediaPlayer.OnCompletionListener {
+public class TrackDetailsActivity extends AppCompatActivity implements MediaPlayer.OnCompletionListener {
 
 
     //Intent type
@@ -114,7 +114,7 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
     //flag to indicate that is just required to download
     //the coverart
     private boolean onlyCoverArt = false;
-    //Id from audio item
+    //Id from audio item_list
     private long currentItemId;
     //flag when user is editing info
     private boolean editMode = false;
@@ -187,9 +187,9 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
     private CustomMediaPlayer player;
     //flag to set if data could be updated or not and inform to user
     private boolean dataUpdated = false;
-    //reference to current audio item being edited
+    //reference to current audio item_list being edited
     private AudioItem currentAudioItem = null;
-    //audio item to store response data of making a trackId inside this activity
+    //audio item_list to store response data of making a trackId inside this activity
     private AudioItem trackIdAudioItem = null;
 
     //Broadcast manager to manage the response from FixerTrackService intent service
@@ -201,10 +201,6 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
 
     //Flag for saving the result of validating the fields of layout
     private boolean isDataValid = false;
-
-
-
-
     private boolean isFABOpen = false;
     private IntentFilter intentFilter2;
 
@@ -235,11 +231,12 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
         window.requestFeature(Window.FEATURE_CONTENT_TRANSITIONS);
 
         //set the layout to this activity
-        setContentView(R.layout.details_track_activity_layout);
+        setContentView(R.layout.activity_track_details);
 
         //Create receiver and filters to handle responses from FixerTrackService
         intentFilter = new IntentFilter(FixerTrackService.ACTION_DONE);
         intentFilter2 = new IntentFilter(FixerTrackService.ACTION_COMPLETE_TASK);
+
         receiver = new ResponseReceiver();
         localBroadcastManager = LocalBroadcastManager.getInstance(getApplicationContext());
 
@@ -249,13 +246,13 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
         player = CustomMediaPlayer.getInstance(getApplicationContext());
         trackAdapter = (TrackAdapter) player.getAdapter();
 
-        //if this intent comes from dialog when it touches any element from list of SelectFolderActivity
+        //if this intent comes from dialog when it touches any element from list of MainActivity
         manualMode = getIntent().getBooleanExtra(FixerTrackService.MANUAL_MODE,false);
         //currentId of audioItem
         currentItemId = getIntent().getLongExtra(FixerTrackService.MEDIASTORE_ID,-1);
 
 
-        currentAudioItem = trackAdapter.getItemByIdOrPath(currentItemId, null); //getIntent().getParcelableExtra(FixerTrackService.AUDIO_ITEM); //SelectFolderActivity.getItemByIdOrPath(currentItemId,null);
+        currentAudioItem = trackAdapter.getItemByIdOrPath(currentItemId, null); //getIntent().getParcelableExtra(FixerTrackService.AUDIO_ITEM); //MainActivity.getItemByIdOrPath(currentItemId,null);
 
 
         //current path to file
@@ -365,13 +362,13 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
     private void showSnackBar(int reason){
         String msg = "";
         switch (reason){
-            case SelectFolderActivity.NO_INTERNET_CONNECTION:
+            case MainActivity.NO_INTERNET_CONNECTION:
                 msg = getString(R.string.no_internet_connection_semi_automatic_mode);
                 break;
             case NO_INTERNET_CONNECTION_COVER_ART:
                 msg = getString(R.string.no_internet_connection_download_cover);
                 break;
-            case SelectFolderActivity.NO_INITIALIZED_API:
+            case MainActivity.NO_INITIALIZED_API:
                 msg = getString(R.string.initializing_recognition_api);
                 break;
         }
@@ -408,7 +405,7 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
         removeItem.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
             @Override
             public boolean onMenuItemClick(MenuItem item) {
-                final AlertDialog.Builder builder = new AlertDialog.Builder(DetailsTrackDialogActivity.this);
+                final AlertDialog.Builder builder = new AlertDialog.Builder(TrackDetailsActivity.this);
                 builder.setTitle(R.string.title_remove_cover_art_dialog);
                 builder.setMessage(R.string.message_remove_cover_art_dialog);
                 builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
@@ -439,6 +436,15 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
                 Uri uri = Uri.parse(query);
                 Intent intent = new Intent(Intent.ACTION_VIEW, uri);
                 startActivity(intent);
+                return false;
+            }
+        });
+
+        MenuItem playOn = menu.findItem(R.id.action_play_on);
+        playOn.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                openInExternalApp(trackPath);
                 return false;
             }
         });
@@ -610,7 +616,7 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
         genreField = null;
 
         currentCoverArt = null;
-
+        trackAdapter = null;
         viewDetailsTrack = null;
         editButton = null;
         extractCoverButton = null;
@@ -815,7 +821,7 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
                 String newImageAbsolutePath = FileSaver.saveFile(currentCoverArt, currentTitle, currentArtist, currentAlbum);
                 if(!newImageAbsolutePath.equals(FileSaver.NULL_DATA) && !newImageAbsolutePath.equals(FileSaver.NO_EXTERNAL_STORAGE_WRITABLE) && !newImageAbsolutePath.equals(FileSaver.INPUT_OUTPUT_ERROR)) {
 
-                    showSnackBar(7000, getString(R.string.cover_extracted) + " " + AudioItem.getRelativePath(newImageAbsolutePath) + ".", ACTION_VIEW_COVER, newImageAbsolutePath);
+                    showSnackBar(7000, getString(R.string.cover_extracted), ACTION_VIEW_COVER, newImageAbsolutePath);
                     //lets inform to system that one file has been created
                     MediaScannerConnection.scanFile(
                                                     getApplicationContext(),
@@ -844,9 +850,9 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
                 closeFABMenu();
 
                 //This function requires some contidions to work, check them before
-                int canContinue = SelectFolderActivity.allowExecute(DetailsTrackDialogActivity.this);
+                int canContinue = MainActivity.allowExecute(TrackDetailsActivity.this);
                 if(canContinue != 0) {
-                    showSnackBar(SelectFolderActivity.NO_INTERNET_CONNECTION);
+                    showSnackBar(MainActivity.NO_INTERNET_CONNECTION);
                     return;
                 }
 
@@ -862,7 +868,7 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
                     setDownloadedValues();
                 }
                 else {
-                    Intent intent = new Intent(DetailsTrackDialogActivity.this, FixerTrackService.class);
+                    Intent intent = new Intent(TrackDetailsActivity.this, FixerTrackService.class);
                     intent.putExtra(FixerTrackService.SINGLE_TRACK, true);
                     intent.putExtra(FixerTrackService.FROM_EDIT_MODE, true);
                     intent.putExtra(FixerTrackService.AUDIO_ITEM, currentAudioItem);
@@ -899,7 +905,7 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
                 }
                 else{
 
-                    Intent intent = new Intent(DetailsTrackDialogActivity.this,FixerTrackService.class);
+                    Intent intent = new Intent(TrackDetailsActivity.this,FixerTrackService.class);
                     intent.putExtra(FixerTrackService.FROM_EDIT_MODE,true);
                     intent.putExtra(FixerTrackService.SINGLE_TRACK,true);
                     intent.putExtra(FixerTrackService.AUDIO_ITEM, currentAudioItem);
@@ -1332,7 +1338,7 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
 
                 if (validInputs){
 
-                        AlertDialog.Builder builder = new AlertDialog.Builder(DetailsTrackDialogActivity.this);
+                        AlertDialog.Builder builder = new AlertDialog.Builder(TrackDetailsActivity.this);
                         builder.setTitle(R.string.apply_tags);
                         builder.setMessage(R.string.message_apply_new_tags);
                         builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
@@ -1462,7 +1468,7 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
 
         private void updateCoverArt() {
             //Is priority update the metadata first, in case there are errors when
-            //the data is set on item and database
+            //the data is set on item_list and database
             MyID3 myID3 = new MyID3();
             File tempFile = new File(trackPath);
             MusicMetadataSet musicMetadataSet = null;
@@ -1497,9 +1503,9 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
                         //because we obtain this info when the app starts (after first time),
                         //besides, database operations can take a long time
                         contentValues.put(TrackContract.TrackData.STATUS,AudioItem.FILE_STATUS_EDIT_BY_USER);
-                        dbHelper.updateData(DetailsTrackDialogActivity.this.currentItemId,contentValues);
+                        dbHelper.updateData(TrackDetailsActivity.this.currentItemId,contentValues);
 
-                        //Update the data of item from list
+                        //Update the data of item_list from list
                         currentAudioItem.setStatus(AudioItem.FILE_STATUS_EDIT_BY_USER);
 
                         Log.d("only_cover_art", "updated");
@@ -1523,7 +1529,7 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
 
         private void removeCoverArt() {
             //Is priority update the metadata first, in case there are errors when
-            //the data is set on item and database
+            //the data is set on item_list and database
             MyID3 myID3 = new MyID3();
             File tempFile = new File(trackPath);
             MusicMetadataSet musicMetadataSet = null;
@@ -1553,9 +1559,9 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
                     //because we obtain this info when the app starts (after first time),
                     //besides, database operations can take a long time
                     contentValues.put(TrackContract.TrackData.STATUS,AudioItem.FILE_STATUS_EDIT_BY_USER);
-                    dbHelper.updateData(DetailsTrackDialogActivity.this.currentItemId,contentValues);
+                    dbHelper.updateData(TrackDetailsActivity.this.currentItemId,contentValues);
 
-                    //Update the data of item from list
+                    //Update the data of item_list from list
                     currentAudioItem.setStatus(AudioItem.FILE_STATUS_EDIT_BY_USER);
                     dataUpdated = true;
 
@@ -1577,7 +1583,7 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
 
         private void updateMetadata(){
             //Is priority update the metadata first, in case there are errors when
-            //the data is set on item and database
+            //the data is set on item_list and database
             MyID3 myID3 = new MyID3();
             File tempFile = new File(trackPath);
             audioFile = new File(trackPath);
@@ -1689,7 +1695,7 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
                     //because we obtain this info when the app starts (after first time),
                     //besides, database operations can take a long time
                     contentValues.put(TrackContract.TrackData.STATUS,AudioItem.FILE_STATUS_EDIT_BY_USER);
-                    //Update the data of item from list
+                    //Update the data of item_list from list
                     currentAudioItem.setStatus(AudioItem.FILE_STATUS_EDIT_BY_USER);
 
                     dbHelper.updateData(currentItemId,contentValues);
@@ -1897,7 +1903,7 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
         saveButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                AlertDialog.Builder builder = new AlertDialog.Builder(DetailsTrackDialogActivity.this);
+                AlertDialog.Builder builder = new AlertDialog.Builder(TrackDetailsActivity.this);
                 builder.setTitle(R.string.apply_tags);
                 builder.setMessage(R.string.message_apply_found_tags);
                 builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
@@ -2015,7 +2021,7 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
             saveButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    AlertDialog.Builder builder = new AlertDialog.Builder(DetailsTrackDialogActivity.this);
+                    AlertDialog.Builder builder = new AlertDialog.Builder(TrackDetailsActivity.this);
                     builder.setTitle(getString(R.string.title_downloaded_cover_art_dialog));
                     builder.setNegativeButton(getString(R.string.as_cover_art), new DialogInterface.OnClickListener() {
                         @Override
@@ -2109,13 +2115,13 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
         //API not initialized
         if(!apiInitialized){
             Job.scheduleJob(getApplicationContext());
-            return SelectFolderActivity.NO_INITIALIZED_API;
+            return MainActivity.NO_INITIALIZED_API;
         }
 
 
         //No internet connection
         if(!DetectorInternetConnection.isConnected(getApplicationContext())){
-            return SelectFolderActivity.NO_INTERNET_CONNECTION;
+            return MainActivity.NO_INTERNET_CONNECTION;
         }
 
 

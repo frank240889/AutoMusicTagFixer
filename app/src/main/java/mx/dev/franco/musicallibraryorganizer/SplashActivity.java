@@ -65,7 +65,7 @@ public class SplashActivity extends AppCompatActivity{
         preferences = null;
         preferences =  getSharedPreferences(APP_SHARED_PREFERENCES, Context.MODE_PRIVATE);
         boolean firstTime= preferences.getBoolean("first", true);
-        SelectFolderActivity.isProcessingTask = preferences.getBoolean(SelectFolderActivity.IS_PROCESSING_TASK,false);
+        MainActivity.isProcessingTask = preferences.getBoolean(MainActivity.IS_PROCESSING_TASK,false);
         RequiredPermissions.ACCESS_GRANTED_FILES = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
         if(!DEBUG_MODE) {
 
@@ -75,7 +75,7 @@ public class SplashActivity extends AppCompatActivity{
                 startActivity(intent);
             } else {
 
-                Intent intent = new Intent(this, SelectFolderActivity.class);
+                Intent intent = new Intent(this, MainActivity.class);
                 startActivity(intent);
 
             }

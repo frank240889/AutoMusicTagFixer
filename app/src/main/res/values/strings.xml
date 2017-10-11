@@ -192,5 +192,6 @@
     <string name="cover_not_saved">No se pudo guardar la carátula.</string>
     <string name="web_search">Buscar en Web</string>
     <string name="view_cover">Ver</string>
+    <string name="play_track_on">Escuchar en</string>
 
 </resources>

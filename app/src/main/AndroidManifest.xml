@@ -33,7 +33,7 @@
             android:configChanges="orientation|screenSize"
             android:theme="@style/AppTheme" />
         <activity
-            android:name=".SelectFolderActivity"
+            android:name=".MainActivity"
             android:configChanges="orientation|screenSize"
             android:label="@string/title_activity_folder_choser"
             android:launchMode="singleTop"
@@ -41,27 +41,27 @@
         <activity
             android:name=".QuestionsActivity"
             android:configChanges="orientation|screenSize"
-            android:parentActivityName=".SelectFolderActivity"
+            android:parentActivityName=".MainActivity"
             android:label="@string/faq"
             android:theme="@style/QuestionsTheme" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value=".SelectFolderActivity" />
+                android:value=".MainActivity" />
         </activity>
         <activity
-            android:name=".DetailsTrackDialogActivity"
+            android:name=".TrackDetailsActivity"
             android:configChanges="orientation|screenSize"
-            android:parentActivityName=".SelectFolderActivity"
+            android:parentActivityName=".MainActivity"
             android:theme="@style/DetailsTrackDialogTheme">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value=".SelectFolderActivity" />
+                android:value=".MainActivity" />
         </activity>
         <activity
             android:name=".SettingsActivity"
             android:configChanges="orientation|screenSize"
             android:label="@string/title_activity_settings"
-            android:parentActivityName=".SelectFolderActivity"
+            android:parentActivityName=".MainActivity"
             android:theme="@style/SettingsStyle" />
 
         <provider

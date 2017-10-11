@@ -7,6 +7,12 @@
         android:title="@string/play_track"
         app:showAsAction="ifRoom|collapseActionView" />
     <item
+        android:id="@+id/action_play_on"
+        android:icon="@drawable/ic_play_arrow_white_24px"
+        android:title="@string/play_track_on"
+        app:showAsAction="never" />
+
+    <item
         android:id="@+id/action_remove_cover"
         android:icon="@drawable/ic_delete_white_24px"
         android:title="@string/title_remove_cover_art_dialog"

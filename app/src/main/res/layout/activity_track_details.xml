@@ -7,8 +7,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    android:transitionName="openDetails"
-    tools:context="mx.dev.franco.musicallibraryorganizer.DetailsTrackDialogActivity">
+    tools:context="mx.dev.franco.musicallibraryorganizer.TrackDetailsActivity">
 
     <android.support.design.widget.AppBarLayout
         android:id="@+id/appBarLayout"
@@ -128,7 +127,7 @@
 
     <include layout="@layout/content_details_track" />
 
-    <include layout="@layout/item_found" />
+    <include layout="@layout/details_item_trackid" />
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/extractCover"

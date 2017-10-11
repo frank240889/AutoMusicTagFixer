@@ -1,11 +1,11 @@
 <resources>
 
    <!--style name="AppTheme.NoActionBar" parent="Theme.AppCompat.NoActionBar">
-       <item name="android:windowContentTransitions">true</item>
+       <item_list name="android:windowContentTransitions">true</item_list>
 
-        <item name="windowActionBar">false</item>
-        <item name="windowNoTitle">true</item>
-        <item name="windowActionModeOverlay">true</item>
+        <item_list name="windowActionBar">false</item_list>
+        <item_list name="windowNoTitle">true</item_list>
+        <item_list name="windowActionModeOverlay">true</item_list>
     </style-->
 
     <!--Style splash-->

@@ -57,8 +57,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
 
+import mx.dev.franco.musicallibraryorganizer.MainActivity;
 import mx.dev.franco.musicallibraryorganizer.R;
-import mx.dev.franco.musicallibraryorganizer.SelectFolderActivity;
 import mx.dev.franco.musicallibraryorganizer.SelectedOptions;
 import mx.dev.franco.musicallibraryorganizer.SplashActivity;
 import mx.dev.franco.musicallibraryorganizer.database.DataTrackDbHelper;
@@ -106,13 +106,13 @@ public class FixerTrackService extends Service {
 
     //set this flag to TRUE if we touch an element from list, means that only one track is queued to correct
     private boolean singleTrack = false;
-    //Initial value, if exist audio item, this will override this initial value
+    //Initial value, if exist audio item_list, this will override this initial value
     private long currentId = - 1;
     //set this flag to TRUE if we send this intent from DetailsTrackDialogActitivy class
     private boolean fromEditMode = false;
     private boolean downloadCover = false;
-    //report to SelectFolderActivity next item position, to make possible
-    //automatically scrolling to that item in list
+    //report to MainActivity next item_list position, to make possible
+    //automatically scrolling to that item_list in list
     private int nextPosition = -1;
     private Thread workerThread;
     private Runnable runnable;
@@ -186,8 +186,8 @@ public class FixerTrackService extends Service {
     }
 
     private void startNotification() {
-        Intent notificationIntent = new Intent(this,SelectFolderActivity.class);
-        notificationIntent.setAction(SelectFolderActivity.MAIN_ACTION);
+        Intent notificationIntent = new Intent(this,MainActivity.class);
+        notificationIntent.setAction(MainActivity.MAIN_ACTION);
         notificationIntent.setFlags(Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT | Intent.FLAG_ACTIVITY_NEW_TASK);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
 
@@ -211,7 +211,7 @@ public class FixerTrackService extends Service {
     private void saveStateProcessing(){
         SharedPreferences sharedPreferences = getSharedPreferences(SplashActivity.APP_SHARED_PREFERENCES, MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putBoolean(SelectFolderActivity.IS_PROCESSING_TASK,SelectFolderActivity.isProcessingTask);
+        editor.putBoolean(MainActivity.IS_PROCESSING_TASK, MainActivity.isProcessingTask);
         editor.apply();
     }
     private void onHandleIntent(Intent intent){
@@ -273,7 +273,7 @@ public class FixerTrackService extends Service {
 
         //stopSelf();
 
-        SelectFolderActivity.isProcessingTask = false;
+        MainActivity.isProcessingTask = false;
         saveStateProcessing();
     }
 
@@ -423,7 +423,7 @@ public class FixerTrackService extends Service {
             Log.d(TAG, "cancel currentAudioItem");
         }
         stopSelf();
-        SelectFolderActivity.isProcessingTask = false;
+        MainActivity.isProcessingTask = false;
         saveStateProcessing();
         Log.d(TAG, "stopped service");
     }
@@ -478,7 +478,7 @@ public class FixerTrackService extends Service {
                             Log.d("sent_match",sent+"");
 
 
-                            //now yes finally, set current audio item as deselected
+                            //now yes finally, set current audio item_list as deselected
                             contentValues.clear();
 
                             if(gnMusicIdFile != null)
@@ -804,7 +804,7 @@ public class FixerTrackService extends Service {
 
 
             }
-            //if intent was made from DetailsTrackDialogActivity
+            //if intent was made from TrackDetailsActivity
             //don't modify the track, only retrieve data and
             //send back to activity, the user has to decide
             //if the information is correct or not, besides,
@@ -943,7 +943,7 @@ public class FixerTrackService extends Service {
             //int startId = msg.arg1;
             Intent intent = (Intent) msg.obj;
 
-            SelectFolderActivity.isProcessingTask = true;
+            MainActivity.isProcessingTask = true;
             saveStateProcessing();
             onHandleIntent(intent);
 

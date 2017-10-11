@@ -199,7 +199,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity{
                 break;
             case "show_separators":
                 SelectedOptions.SHOW_SEPARATORS = sharedPreferences.getBoolean(key,false);
-                //SelectFolderActivity.audioItemArrayAdapter.notifyDataSetChanged();
+                //MainActivity.audioItemArrayAdapter.notifyDataSetChanged();
                 break;
         }
     }

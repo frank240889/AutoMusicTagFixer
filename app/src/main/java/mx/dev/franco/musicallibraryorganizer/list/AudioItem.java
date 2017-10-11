@@ -155,7 +155,7 @@ public final class AudioItem implements Parcelable{
         return this;
     }
 
-    //Only for use when retrieved data for a single track and is sent to DetailsTrackDialogActivity;
+    //Only for use when retrieved data for a single track and is sent to TrackDetailsActivity;
     //used for caching values retrieved and don't send again the query to Gracenote API,
     /************************************************************/
     public byte[] getCoverArt() {

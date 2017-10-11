@@ -72,7 +72,7 @@ public class ScreenSlidePagerActivity extends FragmentActivity {
         buttonOmit.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent(ScreenSlidePagerActivity.this, SelectFolderActivity.class);
+                Intent intent = new Intent(ScreenSlidePagerActivity.this, MainActivity.class);
                 onClickLastPager();
                 startActivity(intent);
                 finish();
@@ -88,7 +88,7 @@ public class ScreenSlidePagerActivity extends FragmentActivity {
                     buttonNext.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View view) {
-                            Intent intent = new Intent(ScreenSlidePagerActivity.this, SelectFolderActivity.class);
+                            Intent intent = new Intent(ScreenSlidePagerActivity.this, MainActivity.class);
                             onClickLastPager();
                             startActivity(intent);
                             finish();
@@ -122,7 +122,7 @@ public class ScreenSlidePagerActivity extends FragmentActivity {
                         buttonNext.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View view) {
-                                Intent intent = new Intent(ScreenSlidePagerActivity.this, SelectFolderActivity.class);
+                                Intent intent = new Intent(ScreenSlidePagerActivity.this, MainActivity.class);
                                 onClickLastPager();
                                 startActivity(intent);
                                 finish();
@@ -216,7 +216,7 @@ public class ScreenSlidePagerActivity extends FragmentActivity {
                         buttonNext.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View view) {
-                                Intent intent = new Intent(ScreenSlidePagerActivity.this,SelectFolderActivity.class);
+                                Intent intent = new Intent(ScreenSlidePagerActivity.this,MainActivity.class);
                                 startActivity(intent);
                                 onClickLastPager();
                                 finish();

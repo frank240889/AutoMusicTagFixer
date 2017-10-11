@@ -24,17 +24,17 @@ public abstract class SelectableAdapter<VH extends RecyclerView.ViewHolder> exte
     }
 
     /**
-     * Indicates if the item at position position is selected
-     * @param position Position of the item to check
-     * @return true if the item is selected, false otherwise
+     * Indicates if the item_list at position position is selected
+     * @param position Position of the item_list to check
+     * @return true if the item_list is selected, false otherwise
      */
     public boolean isSelected(int position) {
         return getSelectedItems().contains(position);
     }
 
     /**
-     * Toggle the selection status of the item at a given position
-     * @param position Position of the item to toggle the selection status for
+     * Toggle the selection status of the item_list at a given position
+     * @param position Position of the item_list to toggle the selection status for
      */
     public void toggleSelection(int position, long id) {
         Log.d("toggle_position",position+"");

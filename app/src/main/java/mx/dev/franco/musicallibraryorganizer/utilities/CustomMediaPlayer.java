@@ -60,7 +60,7 @@ public final class CustomMediaPlayer extends MediaPlayer implements MediaPlayer.
 
     /**
      * Play a preview of audiofile.
-     * @param id The current id item that was pressed in listview
+     * @param id The current id item_list that was pressed in listview
      * @throws IOException
      * @throws InterruptedException
      */
@@ -68,7 +68,7 @@ public final class CustomMediaPlayer extends MediaPlayer implements MediaPlayer.
     public void playPreview(long id) throws IOException, InterruptedException {
 
 
-        // Was pressed the same item? then stop
+        // Was pressed the same item_list? then stop
         if(currentId == id && mediaPlayer.isPlaying()) {
             mediaPlayer.stop();
             mediaPlayer.reset();
@@ -78,8 +78,8 @@ public final class CustomMediaPlayer extends MediaPlayer implements MediaPlayer.
             return;
         }
 
-        // playing any item while pressing another item? then stop previous
-        // and then play the new item pressed
+        // playing any item_list while pressing another item_list? then stop previous
+        // and then play the new item_list pressed
         if(mediaPlayer.isPlaying()){
             mediaPlayer.stop();
             mediaPlayer.reset();
@@ -113,7 +113,7 @@ public final class CustomMediaPlayer extends MediaPlayer implements MediaPlayer.
 
 
     /**
-     * Get the Id from current item playing.
+     * Get the Id from current item_list playing.
      * @return
      */
     public long getCurrentId() {
