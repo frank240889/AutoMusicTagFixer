@@ -25,8 +25,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import mx.dev.franco.musicallibraryorganizer.GlideApp;
 import mx.dev.franco.musicallibraryorganizer.R;
+import mx.dev.franco.musicallibraryorganizer.utilities.GlideApp;
 
 import static android.view.View.GONE;
 import static android.view.View.VISIBLE;
