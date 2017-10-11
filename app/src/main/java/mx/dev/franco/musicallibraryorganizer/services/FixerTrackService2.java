@@ -1,26 +1,13 @@
 package mx.dev.franco.musicallibraryorganizer.services;
 
-import android.app.Notification;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
-import android.app.Service;
+import android.app.IntentService;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.os.Handler;
-import android.os.HandlerThread;
-import android.os.IBinder;
-import android.os.Looper;
-import android.os.Message;
-import android.os.Process;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
-import android.support.v7.app.NotificationCompat;
 import android.util.Log;
 
 import com.gracenote.gnsdk.GnAssetFetch;
@@ -58,9 +45,7 @@ import java.util.List;
 import java.util.Vector;
 
 import mx.dev.franco.musicallibraryorganizer.R;
-import mx.dev.franco.musicallibraryorganizer.SelectFolderActivity;
 import mx.dev.franco.musicallibraryorganizer.SelectedOptions;
-import mx.dev.franco.musicallibraryorganizer.SplashActivity;
 import mx.dev.franco.musicallibraryorganizer.database.DataTrackDbHelper;
 import mx.dev.franco.musicallibraryorganizer.database.TrackContract;
 import mx.dev.franco.musicallibraryorganizer.list.AudioItem;
@@ -71,19 +56,24 @@ import static mx.dev.franco.musicallibraryorganizer.services.GnService.appString
  * Created by franco on 17/08/17.
  */
 
-public class FixerTrackService extends Service {
+public class FixerTrackService2 extends IntentService {
     public static final String MANUAL_MODE = "manual_mode" ;
+    public static final String UPDATE_TABLE = "update_table";
     public static final String MEDIASTORE_ID = "mediastore_id";
-    public static final String ACTION_SHOW_NOTIFICATION = "action_show_notification";
-    private static String TAG = FixerTrackService.class.getName();
+    private static String TAG = FixerTrackService2.class.getName();
     //response actions in order to receivers can distinguish the response and handle correctly
     public static final String ACTION_DONE = "action_done";
     public static final String ACTION_CANCEL = "action_cancel";
     public static final String ACTION_FAIL = "action_fail";
     public static final String ACTION_COMPLETE_TASK = "action_complete_task";
     public static final String ACTION_SET_AUDIOITEM_PROCESSING = "action_set_audioitem_processing";
+    public static final String PATH = "path";
     public static final String SINGLE_TRACK = "single_track";
+    public static final String SEMI_AUTOMATIC_MODE = "semi_automatic_mode";
+    public static final String AUTOMATIC_MODE = "automatic_mode";
+    public static final String MODE = "mode";
     public static final String FROM_EDIT_MODE = "from_edit_mode";
+    public static final String ONLY_COVER = "only_cover";
     public static final String AUDIO_ITEM = "audio_item";
     //global reference to the object being processed
     private volatile AudioItem currentAudioItem = null;
@@ -114,8 +104,6 @@ public class FixerTrackService extends Service {
     //report to SelectFolderActivity next item position, to make possible
     //automatically scrolling to that item in list
     private int nextPosition = -1;
-    private Thread workerThread;
-    private Runnable runnable;
 
     private String currentPath = "";
 
@@ -123,139 +111,67 @@ public class FixerTrackService extends Service {
     private int countSelectedItems = 0;
     private int mode = -1;
     private int numberOfItems = 0;
-    private NotificationManager mNM;
-    private HandlerThread thread;
-    private Looper looper;
-    private MyHandler handler;
 
     /**
      * Creates an IntentService.  Invoked by your subclass's constructor.
      *
      * @param name Used to name the worker thread, important only for debugging.
      */
-    public FixerTrackService() {
-        super();
+    public FixerTrackService2() {
+        super("FixerTRackService");
         Log.d(TAG, "constructor");
-
     }
 
     @Override
     public void onCreate(){
         super.onCreate();
         Log.d(TAG, "onCreate");
-        dataTrackDbHelper = DataTrackDbHelper.getInstance(getApplicationContext());
+        dataTrackDbHelper = DataTrackDbHelper.getInstance(this);
         localBroadcastManager = LocalBroadcastManager.getInstance(getApplicationContext());
-
         //Object to handle callbacks from Gracenote API
         musicIdFileEvents = new MusicIdFileEvents(this);
-        mNM = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
-
-        thread = new HandlerThread(TAG, Process.THREAD_PRIORITY_FOREGROUND);
-        thread.start();
-        looper = thread.getLooper();
-        handler = new MyHandler(looper);
 
     }
 
     @Override
-    public int onStartCommand(final Intent intent, int flags, int startId){
+    public int onStartCommand(Intent intent, int flags, int startId){
         super.onStartCommand(intent,flags,startId);
-        Log.d(TAG,"onStartCommand");
-
-        if( intent != null){
-            Log.d(TAG,(intent==null)+"");
-            Message msg = handler.obtainMessage();
-            msg.arg1 = startId;
-            msg.obj = intent;
-            handler.sendMessage(msg);
-        }
-        return START_NOT_STICKY;
-    }
-
-    @Nullable
-    @Override
-    public IBinder onBind(Intent intent) {
-        //return null if is not binded service
-        return null;
+        return START_STICKY;
     }
 
     @Override
-    public void onDestroy(){
-        stopForeground(true);
-        super.onDestroy();
-    }
+    protected void onHandleIntent(@Nullable Intent intent) {
 
-    private void startNotification() {
-        Intent notificationIntent = new Intent(this,SelectFolderActivity.class);
-        notificationIntent.setAction(SelectFolderActivity.MAIN_ACTION);
-        notificationIntent.setFlags(Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT | Intent.FLAG_ACTIVITY_NEW_TASK);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
-
-        Bitmap icon = BitmapFactory.decodeResource(getResources(),
-                R.mipmap.ic_launcher);
-        Notification notification = new NotificationCompat.Builder(this)
-                .setContentTitle(getString(R.string.app_name))
-                .setAutoCancel(true)
-                .setColor(getResources().getColor(R.color.grey_800,null))
-                .setTicker(getString(R.string.fixing_task))
-                .setContentText(getString(R.string.fixing_task))
-                .setSmallIcon(R.mipmap.ic_launcher)
-                .setLargeIcon(Bitmap.createScaledBitmap(icon, 128, 128, false))
-                .setContentIntent(pendingIntent)
-                .setOngoing(true)
-                .build();
-
-        startForeground(R.string.app_name,notification);
-
-    }
-    private void saveStateProcessing(){
-        SharedPreferences sharedPreferences = getSharedPreferences(SplashActivity.APP_SHARED_PREFERENCES, MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putBoolean(SelectFolderActivity.IS_PROCESSING_TASK,SelectFolderActivity.isProcessingTask);
-        editor.apply();
-    }
-    private void onHandleIntent(Intent intent){
-        String action = intent.getAction();
-        Log.d(TAG,((intent == null) ? 0 : action)+"");
-        if(action != null && action.equals(ACTION_SHOW_NOTIFICATION)){
-            startNotification();
-            return;
-        }
-        else if(action != null && action.equals(ACTION_CANCEL)){
-            Log.d("action",ACTION_CANCEL);
-            cancelGnMusicIdFileProcessing();
-            return;
-        }
-        else if(!intent.getBooleanExtra(FROM_EDIT_MODE, false)) {
+        if(!intent.getBooleanExtra(FROM_EDIT_MODE, false)) {
             //intent comes from list,
             selectedItems = dataTrackDbHelper.getAllSelected();
             countSelectedItems = selectedItems == null ? 0 : selectedItems.getCount();
             if(countSelectedItems > 0){
                 if(numberOfItems == 1) {
-                    //Log.d("1", "1");
+                    Log.d("1", "1");
                     singleTrack = true;
                     fromEditMode = false;
                     doTrackIdSingleTrack();
                 }
                 else {
-                    //Log.d("3","3");
+                    Log.d("3","3");
                     singleTrack = false;
                     fromEditMode = false;
                     doTrackIdMultipleTracks();
                 }
             }
             else {
-                //Log.d("2",countSelectedItems+"");
+                Log.d("2",countSelectedItems+"");
                 singleTrack = true;
                 fromEditMode = false;
                 currentAudioItem = intent.getParcelableExtra(AUDIO_ITEM);
-                //Log.d("fromEditMode && sing",currentAudioItem.getAbsolutePath()+"");
+                Log.d("fromEditMode && sing",currentAudioItem.getAbsolutePath()+"");
                 doTrackIdSingleTrack();
             }
 
         }
         else {
-            //Log.d(FROM_EDIT_MODE,SINGLE_TRACK);
+            Log.d(FROM_EDIT_MODE,SINGLE_TRACK);
             currentAudioItem = intent.getParcelableExtra(AUDIO_ITEM);
             singleTrack = true;
             fromEditMode = true;
@@ -271,10 +187,7 @@ public class FixerTrackService extends Service {
         if(musicIdFileEvents != null)
             musicIdFileEvents.clearValues();
 
-        //stopSelf();
 
-        SelectFolderActivity.isProcessingTask = false;
-        saveStateProcessing();
     }
 
     private synchronized void doTrackIdSingleTrack(){
@@ -309,7 +222,7 @@ public class FixerTrackService extends Service {
 
         try {
 
-            //Log.d("path",fullPath);
+            Log.d("path",fullPath);
             //Create the object that enables us do "trackid"
             gnMusicIdFile = new GnMusicIdFile(GnService.gnUser, musicIdFileEvents);
             //set option to get type of response
@@ -375,7 +288,7 @@ public class FixerTrackService extends Service {
             dataTrackDbHelper.updateData(currentId,contentValues);
             contentValues.clear();
             contentValues = null;
-            //Log.d(TAG, "dotrackidmultiple");
+            Log.d(TAG, "dotrackidmultiple");
 
 
             String fileName = currentAudioItem.getAbsolutePath();
@@ -403,29 +316,12 @@ public class FixerTrackService extends Service {
         }
     }
 
-    public void cancelGnMusicIdFileProcessing(){
-        Log.d(TAG, "stopping service");
+    public static void cancelGnMusicIdFileProcessing(){
         Iterator<GnMusicIdFile> iterator = gnMusicIdFileList.iterator();
 
         while (iterator.hasNext()){
             iterator.next().cancel();
         }
-
-        if(currentAudioItem != null){
-            ContentValues contentValues = new ContentValues();
-            contentValues.put(TrackContract.TrackData.IS_PROCESSING, false);
-            contentValues.put(TrackContract.TrackData.IS_SELECTED, false);
-            dataTrackDbHelper.updateData(currentAudioItem.getId(), contentValues);
-            Intent intent = new Intent();
-            intent.setAction(ACTION_CANCEL);
-            intent.putExtra(AUDIO_ITEM,currentAudioItem);
-            localBroadcastManager.sendBroadcastSync(intent);
-            Log.d(TAG, "cancel currentAudioItem");
-        }
-        stopSelf();
-        SelectFolderActivity.isProcessingTask = false;
-        saveStateProcessing();
-        Log.d(TAG, "stopped service");
     }
 
     /**
@@ -491,7 +387,7 @@ public class FixerTrackService extends Service {
 
                         }*/
 
-                        //Log.d("FILE STATUS EVENT", status);
+                        Log.d("FILE STATUS EVENT", status);
 
                     }
                 } catch (Exception e) {
@@ -503,7 +399,7 @@ public class FixerTrackService extends Service {
 
         @Override
         public void gatherFingerprint(GnMusicIdFileInfo fileInfo, long l, long l1, IGnCancellable iGnCancellable) {
-            //Log.d("gatherFingerprint", "gatherFingerprint");
+            Log.d("gatherFingerprint", "gatherFingerprint");
 
             //Callback to inform that fingerprint was retrieved from audiotgrack.
             //I tried to generate manually the fingerprint for improve results,
@@ -611,13 +507,13 @@ public class FixerTrackService extends Service {
                 genre = "";
             }
 
-/*            Log.d("TITLE_BG", newName);
+            Log.d("TITLE_BG", newName);
             Log.d("ARTIST_BG", artistName);
             Log.d("ALBUM_BG",albumName);
             Log.d("ALBUM_ART_BG", imageUrl);
             Log.d("NUMBER_BG", trackNumber);
             Log.d("YEAR_BG", year);
-            Log.d("GENRE_BG", genre);*/
+            Log.d("GENRE_BG", genre);
 
 
             //is it a request from list?
@@ -685,7 +581,7 @@ public class FixerTrackService extends Service {
                             //currentAudioItem.setAbsolutePath(newAbsolutePath);
                             currentAudioItem.setAbsolutePath(newAbsolutePath);
                             contentValues.put(TrackContract.TrackData.DATA, newAbsolutePath); //new path
-                            //Log.d("media store success", successMediaStore+"");
+                            Log.d("media store success", successMediaStore+"");
                             renamedFile = new File(newAbsolutePath);
                         }
                         //Not change automatically file name? No problem
@@ -702,7 +598,7 @@ public class FixerTrackService extends Service {
                         //to update the metadata ahead
                         renamedFile = new File(currentAudioItem.getAbsolutePath());
                     }
-                    //Log.d("NEW_PATH", currentAudioItem.getAbsolutePath());
+                    Log.d("NEW_PATH", currentAudioItem.getAbsolutePath());
 
 
 
@@ -795,7 +691,7 @@ public class FixerTrackService extends Service {
                     intent.setAction(ACTION_DONE);
                     intent.putExtra(AUDIO_ITEM,currentAudioItem);
                     localBroadcastManager.sendBroadcastSync(intent);
-                    //Log.d("updated",updated+"");
+                    Log.d("updated",updated+"");
                     contentValues.clear();
                     contentValues = null;
                 }
@@ -811,7 +707,7 @@ public class FixerTrackService extends Service {
             //for UX, is not convenient to interfere with what the user
             //is doing
             else {
-                //Log.d(TAG,"llega aqui");
+                Log.d(TAG,"llega aqui");
                     //was found song name? lets change the title and filename! =)
                     boolean dataTitle = !newName.equals("");
 
@@ -820,7 +716,7 @@ public class FixerTrackService extends Service {
                     }
                     //NOW FIX ARTIST
 
-                //Log.d(TAG,"llega aqui2");
+                Log.d(TAG,"llega aqui2");
                     //was found artist? lets fix it!!!
                     boolean dataArtist = !artistName.equals("");
                     if (dataArtist) {
@@ -828,7 +724,7 @@ public class FixerTrackService extends Service {
                     }
                     //NOW FIX ALBUM
 
-                //Log.d(TAG,"llega aqui3");
+                Log.d(TAG,"llega aqui3");
                     //was found album? lets go fix it!
                     boolean dataAlbum = !albumName.equals("");
                     if (dataAlbum) {
@@ -849,7 +745,7 @@ public class FixerTrackService extends Service {
 
                     }
 
-                //Log.d(TAG,"llega aqu4");
+                Log.d(TAG,"llega aqu4");
                     //FIX TRACK NUMBER
                     //was found track number
                     boolean dataTrackNumber = !trackNumber.equals("");
@@ -857,7 +753,7 @@ public class FixerTrackService extends Service {
                         currentAudioItem.setTrackNumber(trackNumber);
                     }
 
-                //Log.d(TAG,"llega aqui5");
+                Log.d(TAG,"llega aqui5");
                     //FIX TRACK YEAR
                     //was found track year
                     boolean dataYear = !year.equals("");
@@ -873,7 +769,7 @@ public class FixerTrackService extends Service {
                     }
 
 
-                    LocalBroadcastManager localBroadcastManager = LocalBroadcastManager.getInstance(FixerTrackService.this);
+                    LocalBroadcastManager localBroadcastManager = LocalBroadcastManager.getInstance(FixerTrackService2.this);
                     Intent intent2 = new Intent();
                     intent2.setAction(ACTION_DONE);
                     intent2.putExtra(AUDIO_ITEM,currentAudioItem);
@@ -881,7 +777,7 @@ public class FixerTrackService extends Service {
 
             }
 
-            //Log.d(TAG,"llega aqu7");
+            Log.d(TAG,"llega aqu7");
             clearValues();
 
         }
@@ -932,29 +828,6 @@ public class FixerTrackService extends Service {
             currentAudioItem = null;
         }
     }
-
-    private class MyHandler extends Handler{
-        public MyHandler(Looper looper){
-            super(looper);
-        }
-
-        @Override
-        public void handleMessage(Message msg){
-            //int startId = msg.arg1;
-            Intent intent = (Intent) msg.obj;
-
-            SelectFolderActivity.isProcessingTask = true;
-            saveStateProcessing();
-            onHandleIntent(intent);
-
-            stopSelf();
-            //Log.i(TAG, stopped+" startId: " + startId);
-        }
-
-
-    }
-
-
 }
 
 

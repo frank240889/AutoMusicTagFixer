@@ -1,6 +1,8 @@
 package mx.dev.franco.musicallibraryorganizer;
 
-import android.app.Activity;
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.app.ActivityManager;
 import android.content.BroadcastReceiver;
 import android.content.ContentValues;
 import android.content.Context;
@@ -8,6 +10,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
 import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
 import android.media.MediaScannerConnection;
@@ -17,35 +20,37 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.CollapsingToolbarLayout;
+import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.Snackbar;
+import android.support.transition.TransitionManager;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
+import android.support.v4.view.ViewCompat;
+import android.support.v4.widget.NestedScrollView;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.Toolbar;
-import android.text.Editable;
-import android.text.TextWatcher;
+import android.transition.Fade;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
 import com.bumptech.glide.request.RequestOptions;
-import com.github.clans.fab.FloatingActionButton;
-import com.github.clans.fab.FloatingActionMenu;
 
 import org.cmc.music.common.ID3WriteException;
 import org.cmc.music.metadata.ImageData;
@@ -59,11 +64,23 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Vector;
 
+import mx.dev.franco.musicallibraryorganizer.database.DataTrackDbHelper;
+import mx.dev.franco.musicallibraryorganizer.database.TrackContract;
+import mx.dev.franco.musicallibraryorganizer.list.AudioItem;
+import mx.dev.franco.musicallibraryorganizer.list.TrackAdapter;
+import mx.dev.franco.musicallibraryorganizer.services.DetectorInternetConnection;
 import mx.dev.franco.musicallibraryorganizer.services.FixerTrackService;
+import mx.dev.franco.musicallibraryorganizer.services.Job;
+import mx.dev.franco.musicallibraryorganizer.transitions.DetailsTransition;
+import mx.dev.franco.musicallibraryorganizer.utilities.CustomMediaPlayer;
+import mx.dev.franco.musicallibraryorganizer.utilities.FileSaver;
 import mx.dev.franco.musicallibraryorganizer.utilities.StringUtilities;
 import wseemann.media.FFmpegMediaMetadataRetriever;
 
 import static android.view.View.GONE;
+import static mx.dev.franco.musicallibraryorganizer.services.GnService.apiInitialized;
+
+//import com.github.clans.fab.FloatingActionButton;
 
 /**
  * Created by franco on 22/07/17.
@@ -71,11 +88,27 @@ import static android.view.View.GONE;
 
 public class DetailsTrackDialogActivity extends AppCompatActivity implements MediaPlayer.OnCompletionListener {
 
+    //Intent type
+    private static int INTENT_OPEN_GALLERY = 1;
+    //codes for determining the type of error when validating the fields
+    private static final int HAS_EMPTY_FIELDS = 11;
+    private static final int DATA_IS_TOO_LONG = 12;
+    private static final int HAS_NOT_ALLOWED_CHARACTERS = 13;
+    private static final int FILE_IS_PROCESSING = 14;
+    private static final int REMOVE_COVER = 15;
+    private static final int UPDATE_COVER = 16;
+    private static final int UPDATE_ALL_METADATA = 17;
+    private static final int NO_INTERNET_CONNECTION_COVER_ART = 28;
+    private static final int ACTION_NONE = 30;
+    private static final int ACTION_ADD_COVER = 31 ;
+    private static final int DURATION = 200;
+
+
     //flag to indicate that is just required to download
     //the coverart
     private boolean onlyCoverArt = false;
     //Id from audio item
-    private long p;
+    private long currentItemId;
     //flag when user is editing info
     private boolean editMode = false;
     //Reference to objects that make possible to edit metadata from mp3 audio files
@@ -83,14 +116,25 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
     private MediaMetadataRetriever mediaMetadataRetriever = null;
     //A reference to database connection
     private DataTrackDbHelper dbHelper;
+    private boolean manualMode = false;
+    //rootview
+    private View viewDetailsTrack;
     //References to elements inside the layout
+    private FloatingActionButton editButton;
+    private FloatingActionButton downloadCoverButton;
+    private FloatingActionButton autofixButton;
+    private FloatingActionButton removeCoverButton;
+    private FloatingActionButton saveButton;
+    private FloatingActionButton floatingActionMenu;
+
     private String newTitle;
     private String newArtist;
     private String newAlbum;
-    private int newNumber;
-    private int newYear;
+    private String newNumber;
+    private String newYear;
     private String newGenre;
     private String trackPath;
+    private String currentDuration;
     private String[] extraData;
     private EditText titleField;
     private String currentTitle;
@@ -105,20 +149,7 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
     private EditText genreField;
     private String currentGenre;
     private TextView bitrateField;
-    private ImageButton imageButtonField;
-    private byte[] currentCoverArt;
-    private int currentCoverArtLength;
-    private ContentValues newData;
-    private View viewDetailsTrack;
-    private FloatingActionButton editButton;
-    //private ImageButton cancelButton;
-    private FloatingActionButton downloadCoverButton;
-    private FloatingActionButton autofixButton;
-    private FloatingActionButton removeCoverButton;
-    private FloatingActionButton saveButton;
-    private FloatingActionMenu floatingActionMenu;
     private MenuItem playPreviewButton;
-    private TextView trackType;
     private TextView titleLayer, subtitleLayer;
     private TextView imageSize;
     private TextView fileSize;
@@ -126,6 +157,7 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
     private TextView frequency;
     private TextView resolution;
     private TextView channels;
+    private TextView trackType;
     private String bitrate;
     private TextView status;
     private ProgressBar progressBar;
@@ -133,14 +165,19 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
     private ImageView toolbarCover;
     private CollapsingToolbarLayout collapsingToolbarLayout;
     private AppBarLayout appBarLayout;
-    private ImageButton albumArtButton;
-    private CardView cardView;
+    private ActionBar actionBar;
+    private NestedScrollView content;
+    private Snackbar snackbar;
+    private File audioFile;
+
+    //temporal references to new values
+    private byte[] currentCoverArt;
+    private byte[] newCoverArt;
+    private int currentCoverArtLength;
+    private int newCoverArtLength = 0;
 
     //Reference to custom media player.
     private CustomMediaPlayer player;
-    //listeners to retrieve values from edit text
-    private TextListener titleListener, artistListener, albumListener,numberListener, yearListener, genreListener;
-    private String resultMessage = "";
     //flag to set if data could be updated or not and inform to user
     private boolean dataUpdated = false;
     //reference to current audio item being edited
@@ -157,21 +194,32 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
 
     //Flag for saving the result of validating the fields of layout
     private boolean isDataValid = false;
-    //Intent type
-    private static int INTENT_OPEN_GALLERY = 1;
-    //codes for determining the type of error when validating the fields
-    private static final int HAS_EMPTY_FIELDS = 11;
-    private static final int DATA_IS_TOO_LONG = 12;
-    private static final int HAS_NOT_ALLOWED_CHARACTERS = 13;
-    private static final int FILE_IS_PROCESSING = 14;
-    private static final int REMOVE_COVER = 15;
-    private static final int UPDATE_COVER = 16;
-    private static final int UPDATE_ALL_METADATA = 17;
+
+
+
+
+    private boolean isFABOpen = false;
+    private IntentFilter intentFilter2;
+
+    //references to visual elements of container
+    //that shows tags found when it makes trackId
+    private CardView trackIdCard;
+    private ImageView trackIdCover;
+    private TextView trackIdTitle;
+    private TextView trackIdArtist;
+    private TextView trackIdAlbum;
+    private TextView trackIdGenre;
+    private TextView trackIdNumber;
+    private TextView trackIdYear;
+    private TextView trackidCoverArtDimensions;
+    private int wasModified = 0;
+    private TrackAdapter trackAdapter;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        //set status bar tarnslucent, these calls to window object must be done before setContentView
+        //set status bar translucent, these calls to window object must be done before setContentView
         Window window = getWindow();
         window.setFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS,WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
         window.setAllowEnterTransitionOverlap(true);
@@ -184,38 +232,117 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
 
         //Create receiver and filters to handle responses from FixerTrackService
         intentFilter = new IntentFilter(FixerTrackService.ACTION_DONE);
-        intentFilter.addAction(FixerTrackService.ACTION_DONE);
+        intentFilter2 = new IntentFilter(FixerTrackService.ACTION_COMPLETE_TASK);
         receiver = new ResponseReceiver();
         localBroadcastManager = LocalBroadcastManager.getInstance(getApplicationContext());
 
+        //main layout or root view
+        viewDetailsTrack = findViewById(R.id.rootContainerDetails);
+        //We get the current instance of CustomMediaPlayer object
+        player = CustomMediaPlayer.getInstance(getApplicationContext());
+        trackAdapter = (TrackAdapter) player.getAdapter();
+
+        //if this intent comes from dialog when it touches any element from list of SelectFolderActivity
+        manualMode = getIntent().getBooleanExtra(FixerTrackService.MANUAL_MODE,false);
+        //currentId of audioItem
+        currentItemId = getIntent().getLongExtra(FixerTrackService.MEDIASTORE_ID,-1);
 
 
-        toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        collapsingToolbarLayout = (CollapsingToolbarLayout) findViewById(R.id.collapsingToolbarLayout);
-        appBarLayout = (AppBarLayout) findViewById(R.id.appBarLayout);
-        viewDetailsTrack = findViewById(R.id.container);
+        currentAudioItem = trackAdapter.getItemByIdOrPath(currentItemId, null); //getIntent().getParcelableExtra(FixerTrackService.AUDIO_ITEM); //SelectFolderActivity.getItemByIdOrPath(currentItemId,null);
 
-        p = getIntent().getLongExtra("itemId",-1);
-        currentAudioItem = SelectFolderActivity.getItemByIdOrPath(p,null);
-        currentAudioItem.setContext(getApplicationContext());
-        trackPath = currentAudioItem.getNewAbsolutePath();
-        collapsingToolbarLayout.setTitleEnabled(false);
-        getSupportActionBar().setDisplayShowTitleEnabled(false);
 
+        //current path to file
+        trackPath = currentAudioItem.getAbsolutePath();
+
+        Log.d("path inside", trackPath);
+        //get an instance of connection to DB
         dbHelper = DataTrackDbHelper.getInstance(getApplicationContext());
+
         window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN);
+
+
+        createSnackBar();
 
         init();
     }
+
+    /**
+     * Create a general snackbar for reuse
+     */
+
+    private void createSnackBar() {
+        this.snackbar = Snackbar.make(viewDetailsTrack ,"",Snackbar.LENGTH_SHORT);
+        /*final FrameLayout snackBarView = (FrameLayout) snackbar.getView();
+        final FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) snackBarView.getChildAt(0).getLayoutParams();
+        params.setMargins(params.leftMargin,
+                params.topMargin,
+                params.rightMargin,
+                (int) (params.bottomMargin + getResources().getDimension(R.dimen.margin_bottom_snackbar)));
+
+        snackBarView.getChildAt(0).setLayoutParams(params);*/
+
+        TextView tv = (TextView) this.snackbar.getView().findViewById(android.support.design.R.id.snackbar_text);
+        snackbar.getView().setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.primaryLightColor));
+        tv.setTextColor(ContextCompat.getColor(getApplicationContext(),R.color.grey_800));
+        snackbar.setActionTextColor(ContextCompat.getColor(getApplicationContext(),R.color.grey_800));
+    }
+
+    /**
+     * Shows the snackbar with the params received
+     * @param reason
+     */
+    private void showSnackBar(int duration, String msg, int action){
+        if(snackbar != null){
+            snackbar = null;
+            createSnackBar();
+        }
+
+        if(action == ACTION_NONE){
+            snackbar.setText(msg);
+            snackbar.setDuration(duration);
+            snackbar.setAction("",null);
+        }
+        else {
+            snackbar.setText(msg);
+            snackbar.setDuration(duration);
+            snackbar.setAction(R.string.add_cover, new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent selectorImageIntent = new Intent(Intent.ACTION_PICK);
+                    selectorImageIntent.setType("image/*");
+                    startActivityForResult(selectorImageIntent,INTENT_OPEN_GALLERY);
+                }
+            });
+        }
+
+
+        snackbar.show();
+    }
+
+    private void showSnackBar(int reason){
+        String msg = "";
+        switch (reason){
+            case SelectFolderActivity.NO_INTERNET_CONNECTION:
+                msg = getString(R.string.no_internet_connection_semi_automatic_mode);
+                break;
+            case NO_INTERNET_CONNECTION_COVER_ART:
+                msg = getString(R.string.no_internet_connection_download_cover);
+                break;
+            case SelectFolderActivity.NO_INITIALIZED_API:
+                msg = getString(R.string.initializing_recognition_api);
+                break;
+        }
+        showSnackBar(Snackbar.LENGTH_SHORT, msg, ACTION_NONE);
+    }
+
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_details_track_dialog, menu);
-
         playPreviewButton = menu.findItem(R.id.action_play);
-        if(player != null && player.isPlaying() && player.getCurrentId() == this.p){
+        if(player != null && player.isPlaying() && player.getCurrentId() == this.currentItemId){
             playPreviewButton.setIcon(R.drawable.ic_stop_white_24px);
         }
         else {
@@ -234,7 +361,7 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
             }
         });
 
-return true;
+        return true;
     }
 
 
@@ -245,22 +372,13 @@ return true;
             return;
         }
 
-        if(floatingActionMenu.isOpened()){
-            floatingActionMenu.close(true);
+        if(isFABOpen){
+            closeFABMenu();
             return;
         }
 
         if (editMode) {
-            setPreviousValues();
-            disableFields();
-
-            autofixButton.setEnabled(true);
-            editButton.setEnabled(true);
-            downloadCoverButton.setEnabled(true);
-            if(cardView.getVisibility() == View.VISIBLE){
-                cardView.setVisibility(GONE);
-                onlyCoverArt = false;
-            }
+            disableLayout();
             return;
         }
 
@@ -269,44 +387,127 @@ return true;
 
     }
 
+    private void disableLayout(){
+        //removeErrorLabels();
+        setPreviousValues();
+        disableFields();
+        enableMiniFabs(true);
+
+        if(trackIdCard.getVisibility() == View.VISIBLE){
+            trackIdCard.animate().setDuration(DURATION).alpha(0).setListener(new AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    trackIdCard.setVisibility(GONE);
+                    content.setVisibility(View.VISIBLE);
+                    content.animate().setDuration(DURATION).alpha(1).setListener(new AnimatorListenerAdapter() {
+                        @Override
+                        public void onAnimationEnd(Animator animation) {
+                            floatingActionMenu.show();
+                            floatingActionMenu.setVisibility(View.VISIBLE);
+                            saveButton.hide();
+                            saveButton.setVisibility(GONE);
+                        }
+                    });
+
+                }
+            });
+        }
+
+        resetValues();
+        appBarLayout.setExpanded(true);
+    }
+
+
+    private void resetValues(){
+        //reset flags and
+        editMode = false;
+        onlyCoverArt = false;
+        newCoverArt = currentCoverArt;
+        newCoverArtLength = currentCoverArtLength;
+        newTitle = "";
+        newArtist = "";
+        newAlbum = "";
+        newGenre = "";
+        newNumber = "";
+        newYear = "";
+        //make visible only fields when trackid value is available
+        trackIdTitle.setText("");
+        trackIdTitle.setVisibility(GONE);
+
+        trackIdArtist.setText("");
+        trackIdArtist.setVisibility(GONE);
+
+        trackIdAlbum.setText("");
+        trackIdAlbum.setVisibility(GONE);
+
+        trackIdGenre.setText("");
+        trackIdGenre.setVisibility(GONE);
+
+        trackIdNumber.setText("");
+        trackIdNumber.setVisibility(GONE);
+
+        trackIdYear.setText("");
+        trackIdYear.setVisibility(GONE);
+
+    }
+    private void removeErrorLabels() {
+        ArrayList<View> fields = viewDetailsTrack.getFocusables(View.FOCUS_DOWN);
+        int numElements = fields.size();
+        for (int i = 0 ; i < numElements ; i++){
+            if(fields.get(i) instanceof EditText){
+                ((EditText) fields.get(i)).setError(null);
+            }
+        }
+    }
+
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        Log.d("RESULT_ACTIVITY", requestCode + "");
+
         if (requestCode == INTENT_OPEN_GALLERY && data != null){
             Uri imageData = data.getData();
             try {
                 Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), imageData);
                 if(bitmap.getHeight() > 1080 || bitmap.getWidth() > 1080){
-                    Toast toast = Toast.makeText(this, getString(R.string.image_too_big),Toast.LENGTH_LONG);
-                    toast.setGravity(Gravity.CENTER,0,0);
-                    toast.show();
+
+                    showSnackBar(Snackbar.LENGTH_LONG,getString(R.string.image_too_big),ACTION_NONE);
+                    newCoverArt = currentCoverArt;
+                    currentCoverArtLength = newCoverArtLength;
+
                 }
                 else {
                     ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
                     bitmap.compress(Bitmap.CompressFormat.JPEG,100,byteArrayOutputStream);
-                    currentCoverArt = byteArrayOutputStream.toByteArray();
+                    newCoverArt = byteArrayOutputStream.toByteArray();
+                    newCoverArtLength = newCoverArt.length;
                     GlideApp.with(viewDetailsTrack).
-                            load(currentCoverArt)
+                            load(newCoverArt)
                             .transition(DrawableTransitionOptions.withCrossFade())
                             .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.NONE))
                             .apply(RequestOptions.skipMemoryCacheOf(true))
-                            .centerCrop()
+                            .fitCenter()
                             .into(toolbarCover);
+
+                    //show the new cover in toolbar cover
+                    if(!editMode){
+                        enableFieldsToEdit();
+                    }
+                    appBarLayout.setExpanded(true);
+
 
                 }
             } catch (IOException e) {
                 e.printStackTrace();
-                Toast toast = Toast.makeText(this, getString(R.string.error_load_image),Toast.LENGTH_LONG);
-                toast.setGravity(Gravity.CENTER,0,0);
-                toast.show();
+                showSnackBar(Snackbar.LENGTH_LONG,getString(R.string.error_load_image),ACTION_NONE);
+                newCoverArt = currentCoverArt;
+                newCoverArtLength = currentCoverArtLength;
             }
         }
     }
 
     @Override
     public void onDestroy(){
-        super.onDestroy();
+
         //Release the resources used by this objects when cancel this activity.
         if(fFmpegMediaMetadataRetriever != null){
             fFmpegMediaMetadataRetriever.release();
@@ -324,77 +525,102 @@ return true;
         numberField = null;
         yearField = null;
         genreField = null;
-        //imageButtonField = null;
+
         currentCoverArt = null;
-        newData = null;
+
         viewDetailsTrack = null;
         editButton = null;
-        //downloadCoverButton = null;
         removeCoverButton = null;
         player = null;
-        titleListener = null;
-        artistListener = null;
-        albumListener = null;
-        numberListener = null;
-        yearListener = null;
-        genreListener = null;
         progressBar = null;
         currentAudioItem = null;
         trackIdAudioItem = null;
         intentFilter = null;
+        intentFilter2 = null;
         localBroadcastManager.unregisterReceiver(receiver);
         receiver = null;
         localBroadcastManager = null;
+        super.onDestroy();
     }
 
     private void dismiss() {
-        if(receiver.isOrderedBroadcast()) {
-            receiver.abortBroadcast();
-            receiver.clearAbortBroadcast();
+        if(isServiceRunning()) {
+            Intent intent = new Intent(this, FixerTrackService.class);
+            intent.setAction(FixerTrackService.ACTION_CANCEL);
+            startService(intent);
         }
-        currentAudioItem.setProcessing(false);
-        FixerTrackService.cancelGnMusicIdFileProcessing();
-        SelectFolderActivity.shouldContinue = false;
-        currentAudioItem.clearContext();
-        setResult(Activity.RESULT_CANCELED);
+
         finishAfterTransition();
-        //System.gc();
+        super.onBackPressed();
+        System.gc();
     }
 
     private void init(){
-        //We get the current instance of CustomMediaPlayer object
-        player = CustomMediaPlayer.getInstance(this);
         player.setOnCompletionListener(this);
         setupFields();
     }
 
     /**
-     * Here we create listeners for edit text objects
+     * This method create the references to visual elements
+     * in layout
      */
-    private void createEditTextListeners(){
-        titleListener = new TextListener(titleField);
-        artistListener = new TextListener(artistField);
-        albumListener = new TextListener(albumField);
-        numberListener = new TextListener(numberField);
-        yearListener = new TextListener(yearField);
-        genreListener = new TextListener(genreField);
-    }
+    private void setupFields(){
 
-    private void showToast(int reason){
-        Toast t = Toast.makeText(getApplicationContext(),"",Toast.LENGTH_SHORT);
-        t.setGravity(Gravity.CENTER,0,0);
-        switch (reason){
-            case SelectFolderActivity.NO_INTERNET_CONNECTION:
-                t.setText(R.string.no_internet_connection);
-                break;
-            case SelectFolderActivity.PROCESSING_TASK:
-                t.setText(R.string.processing_task);
-                break;
-            case SelectFolderActivity.NO_INITIALIZED_API:
-                t.setText(R.string.initializing_recognition_api);
-                break;
-        }
-        t.show();
+        //toolbar and other properties
+        toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+
+        collapsingToolbarLayout = (CollapsingToolbarLayout) findViewById(R.id.collapsingToolbarLayout);
+        appBarLayout = (AppBarLayout) findViewById(R.id.appBarLayout);
+        collapsingToolbarLayout.setTitleEnabled(false);
+        actionBar = getSupportActionBar();
+        actionBar.setDisplayShowTitleEnabled(false);
+
+        //details track elements
+        content = (NestedScrollView) viewDetailsTrack.findViewById(R.id.contentContainer);
+        progressBar = (ProgressBar) viewDetailsTrack.findViewById(R.id.progressSavingData);
+        titleField = (EditText)viewDetailsTrack.findViewById(R.id.track_name_details);
+        artistField = (EditText)viewDetailsTrack.findViewById(R.id.artist_name_details);
+        albumField = (EditText)viewDetailsTrack.findViewById(R.id.album_name_details);
+        numberField = (EditText)viewDetailsTrack.findViewById(R.id.track_number);
+        yearField = (EditText)viewDetailsTrack.findViewById(R.id.track_year);
+        genreField = (EditText)viewDetailsTrack.findViewById(R.id.track_genre);
+        trackType = (TextView)viewDetailsTrack.findViewById(R.id.track_type);
+        frequency = (TextView) viewDetailsTrack.findViewById(R.id.frequency);
+        resolution = (TextView) viewDetailsTrack.findViewById(R.id.resolution);
+        channels = (TextView) viewDetailsTrack.findViewById(R.id.channels);
+        status = (TextView) viewDetailsTrack.findViewById(R.id.status);
+
+        //Floating action buttons
+        downloadCoverButton = (FloatingActionButton) viewDetailsTrack.findViewById(R.id.downloadCover);
+        removeCoverButton = (FloatingActionButton) viewDetailsTrack.findViewById(R.id.removeCover);
+        editButton = (FloatingActionButton) viewDetailsTrack.findViewById(R.id.editTrackInfo);
+        autofixButton = (FloatingActionButton) viewDetailsTrack.findViewById(R.id.autofix);
+        floatingActionMenu = (FloatingActionButton) viewDetailsTrack.findViewById(R.id.floatingActionMenu);
+        saveButton = (FloatingActionButton) viewDetailsTrack.findViewById(R.id.saveInfo);
+        saveButton.hide();
+
+
+        toolbarCover = (ImageView) viewDetailsTrack.findViewById(R.id.toolbarCover);
+        titleLayer = (TextView) viewDetailsTrack.findViewById(R.id.titleTransparentLayer);
+        subtitleLayer = (TextView) viewDetailsTrack.findViewById(R.id.subtitleTransparentLayer);
+        imageSize = (TextView) viewDetailsTrack.findViewById(R.id.imageSize);
+        fileSize = (TextView) viewDetailsTrack.findViewById(R.id.fileSize);
+        trackLength = (TextView) viewDetailsTrack.findViewById(R.id.trackLength);
+        bitrateField = (TextView) viewDetailsTrack.findViewById(R.id.bitrate);
+
+        //references to elements of results layout when makes trackid
+        trackIdCard = (CardView) viewDetailsTrack.findViewById(R.id.trackIdCard);
+        trackIdCover = (ImageView) viewDetailsTrack.findViewById(R.id.trackidCoverArt);
+        trackidCoverArtDimensions = (TextView) viewDetailsTrack.findViewById(R.id.trackidCoverArtDimensions);
+        trackIdTitle = (TextView) viewDetailsTrack.findViewById(R.id.trackidTitle);
+        trackIdArtist = (TextView) viewDetailsTrack.findViewById(R.id.trackidArtist);
+        trackIdAlbum = (TextView) viewDetailsTrack.findViewById(R.id.trackidAlbum);
+        trackIdGenre = (TextView) viewDetailsTrack.findViewById(R.id.trackidGenre);
+        trackIdNumber = (TextView) viewDetailsTrack.findViewById(R.id.trackidNumber);
+        trackIdYear = (TextView) viewDetailsTrack.findViewById(R.id.trackidYear);
+
+        extractAndCacheData();
     }
 
 
@@ -409,8 +635,12 @@ return true;
         mediaMetadataRetriever = new MediaMetadataRetriever();
         mediaMetadataRetriever.setDataSource(trackPath);
 
-        currentCoverArt = currentAudioItem.getCoverArt();
+        currentCoverArt = mediaMetadataRetriever.getEmbeddedPicture();
         currentCoverArtLength = currentCoverArt == null ? 0 :currentCoverArt.length;
+
+        //initial values of new cover art will be the same of current cover art
+        newCoverArt = currentCoverArt;
+        newCoverArtLength = currentCoverArtLength;
 
         currentTitle = fFmpegMediaMetadataRetriever.extractMetadata(FFmpegMediaMetadataRetriever.METADATA_KEY_TITLE) != null ? fFmpegMediaMetadataRetriever.extractMetadata(FFmpegMediaMetadataRetriever.METADATA_KEY_TITLE):"";
 
@@ -424,7 +654,11 @@ return true;
 
         currentGenre = fFmpegMediaMetadataRetriever.extractMetadata(FFmpegMediaMetadataRetriever.METADATA_KEY_GENRE) != null ? fFmpegMediaMetadataRetriever.extractMetadata(FFmpegMediaMetadataRetriever.METADATA_KEY_GENRE):"";
 
+        currentDuration = fFmpegMediaMetadataRetriever.extractMetadata(FFmpegMediaMetadataRetriever.METADATA_KEY_DURATION) != null ? fFmpegMediaMetadataRetriever.extractMetadata(FFmpegMediaMetadataRetriever.METADATA_KEY_DURATION):"0";
+
         bitrate = mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_BITRATE) != null ? mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_BITRATE):"";
+
+        audioFile = new File(trackPath);
 
         extraData = currentAudioItem.getExtraData();
 
@@ -439,17 +673,17 @@ return true;
                     .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.NONE))
                     .transition(DrawableTransitionOptions.withCrossFade())
                     .apply(RequestOptions.skipMemoryCacheOf(true))
-                    .centerCrop()
+                    .fitCenter()
                     .into(toolbarCover);
 
         }
         else {
             GlideApp.with(viewDetailsTrack).
-                    load(R.drawable.ic_album_white_48px)
+                    load(getDrawable(R.drawable.ic_album_white_48px))
                     .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.NONE))
                     .apply(RequestOptions.skipMemoryCacheOf(true))
                     .transition(DrawableTransitionOptions.withCrossFade())
-                    .centerCrop()
+                    .fitCenter()
                     .placeholder(R.drawable.ic_album_white_48px)
                     .into(toolbarCover);
 
@@ -461,14 +695,15 @@ return true;
         numberField.setText(currentNumber);
         yearField.setText(currentYear);
         genreField.setText(currentGenre);
-        trackType.setText("mp3"); //hardcoded because for now only mp3 is supported //trackType.setText(fFmpegMediaMetadataRetriever.extractMetadata(FFmpegMediaMetadataRetriever.METADATA_KEY_AUDIO_CODEC) != null ? fFmpegMediaMetadataRetriever.extractMetadata(FFmpegMediaMetadataRetriever.METADATA_KEY_AUDIO_CODEC):"");
-        titleLayer.setText(currentAudioItem.getFileName());
-        subtitleLayer.setText(AudioItem.getRelativePath(currentAudioItem.getPath()));
-        imageSize.setText(currentAudioItem.getStringImageSize());
-        fileSize.setText(currentAudioItem.getConvertedFileSize());
-        trackLength.setText(currentAudioItem.getHumanReadableDuration());
-        status.setText(currentAudioItem.getStatusText());
-        status.setCompoundDrawablesWithIntrinsicBounds(currentAudioItem.getStatusDrawable(),null,null,null);
+        trackType.setText(R.string.mp3_type);
+
+        titleLayer.setText(audioFile.getName());
+        subtitleLayer.setText(AudioItem.getRelativePath(audioFile.getParent()));
+        imageSize.setText(AudioItem.getStringImageSize(currentCoverArt));
+        fileSize.setText(AudioItem.getFileSize(audioFile.length()));
+        trackLength.setText(AudioItem.getHumanReadableDuration(currentDuration));
+        status.setText(getStatusText());
+        status.setCompoundDrawablesWithIntrinsicBounds(getStatusDrawable(currentAudioItem.getStatus()),null,null,null);
         bitrateField.setText(AudioItem.getBitrate(bitrate));
 
         if(extraData.length > 0) {
@@ -476,100 +711,49 @@ return true;
             resolution.setText(extraData[1]);
             channels.setText(extraData[2]);
         }
+
+        if(manualMode){
+            enableFieldsToEdit();
+        }
+
         addActionListeners();
     }
 
-    private void setDownloadedValues(){
-        if(trackIdAudioItem == null){
-            Toast.makeText(DetailsTrackDialogActivity.this,getText(R.string.file_status_bad),Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-
-        if(trackIdAudioItem.getCoverArt() != null) {
-            GlideApp.with(viewDetailsTrack).
-                    load(trackIdAudioItem.getCoverArt())
-                    .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.NONE))
-                    .apply(RequestOptions.skipMemoryCacheOf(true))
-                    .transition(DrawableTransitionOptions.withCrossFade())
-                    .centerCrop()
-                    .into(toolbarCover);
-
-            currentCoverArt = trackIdAudioItem.getCoverArt();
-        }
-        titleField.setText(trackIdAudioItem.getTitle());
-        artistField.setText(trackIdAudioItem.getArtist());
-        albumField.setText(trackIdAudioItem.getAlbum());
-        numberField.setText(trackIdAudioItem.getTrackNumber());
-        yearField.setText(trackIdAudioItem.getTrackYear());
-        genreField.setText(trackIdAudioItem.getGenre());
-        Toast toast = Toast.makeText(DetailsTrackDialogActivity.this,getString(R.string.info_found),Toast.LENGTH_SHORT);
-        toast.setGravity(Gravity.CENTER,0,0);
-        toast.show();
-    }
-
-
-    /**
-     * This method create the references to edit text
-     * and button elements in layout
-     */
-    private void setupFields(){
-
-        progressBar = (ProgressBar) viewDetailsTrack.findViewById(R.id.progressSavingData);
-        //imageButtonField = (ImageButton) viewDetailsTrack.findViewById(R.id.albumArt);
-        titleField = (EditText)viewDetailsTrack.findViewById(R.id.track_name_details);
-        artistField = (EditText)viewDetailsTrack.findViewById(R.id.artist_name_details);
-        albumField = (EditText)viewDetailsTrack.findViewById(R.id.album_name_details);
-        numberField = (EditText)viewDetailsTrack.findViewById(R.id.track_number);
-        yearField = (EditText)viewDetailsTrack.findViewById(R.id.track_year);
-        genreField = (EditText)viewDetailsTrack.findViewById(R.id.track_genre);
-        trackType = (TextView)viewDetailsTrack.findViewById(R.id.track_type);
-        frequency = (TextView) viewDetailsTrack.findViewById(R.id.frequency);
-        resolution = (TextView) viewDetailsTrack.findViewById(R.id.resolution);
-        channels = (TextView) viewDetailsTrack.findViewById(R.id.channels);
-        status = (TextView) viewDetailsTrack.findViewById(R.id.status);
-        cardView = (CardView) viewDetailsTrack.findViewById(R.id.downloadedCoverArt);
-
-        //cancelButton = (ImageButton) viewDetailsTrack.findViewById(R.id.cancel);
-
-
-        downloadCoverButton = (FloatingActionButton) viewDetailsTrack.findViewById(R.id.downloadCover);
-        removeCoverButton = (FloatingActionButton) viewDetailsTrack.findViewById(R.id.removeCover);
-        editButton = (FloatingActionButton) viewDetailsTrack.findViewById(R.id.editTrackInfo);
-        autofixButton = (FloatingActionButton) viewDetailsTrack.findViewById(R.id.autoFix);
-        floatingActionMenu = (FloatingActionMenu) viewDetailsTrack.findViewById(R.id.floatingActionMenu);
-        floatingActionMenu.setClosedOnTouchOutside(true);
-
-        saveButton = (FloatingActionButton) viewDetailsTrack.findViewById(R.id.saveInfo);
-
-
-        toolbarCover = (ImageView) viewDetailsTrack.findViewById(R.id.toolbarCover);
-        titleLayer = (TextView) viewDetailsTrack.findViewById(R.id.titleTransparentLayer);
-        subtitleLayer = (TextView) viewDetailsTrack.findViewById(R.id.subtitleTransparentLayer);
-        albumArtButton = (ImageButton) viewDetailsTrack.findViewById(R.id.albumArtLittle);
-        imageSize = (TextView) viewDetailsTrack.findViewById(R.id.imageSize);
-        fileSize = (TextView) viewDetailsTrack.findViewById(R.id.fileSize);
-        trackLength = (TextView) viewDetailsTrack.findViewById(R.id.trackLength);
-        bitrateField = (TextView) viewDetailsTrack.findViewById(R.id.bitrate);
-        Log.d("setupfields","true");
-        extractAndCacheData();
-    }
 
     private void addActionListeners(){
-        if(currentAudioItem.getCoverArt() == null){
+        if(currentCoverArt == null){
             removeCoverButton.setEnabled(false);
         }
 
         removeCoverButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-            removeCover();
+                closeFABMenu();
+                final AlertDialog.Builder builder = new AlertDialog.Builder(DetailsTrackDialogActivity.this);
+                builder.setTitle(R.string.title_remove_cover_art_dialog);
+                builder.setMessage(R.string.message_remove_cover_art_dialog);
+                builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.cancel();
+                    }
+                });
+                builder.setPositiveButton("Si", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        AsyncUpdateData asyncUpdateData = new AsyncUpdateData(REMOVE_COVER);
+                        asyncUpdateData.execute();
+                    }
+                });
+                AlertDialog alertDialog = builder.create();
+                alertDialog.show();
             }
         });
 
         editButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                closeFABMenu();
                 editInfoTrack();
             }
         });
@@ -577,36 +761,32 @@ return true;
         autofixButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                closeFABMenu();
+
+                //This function requires some contidions to work, check them before
                 int canContinue = SelectFolderActivity.allowExecute(DetailsTrackDialogActivity.this);
                 if(canContinue != 0) {
-                    showToast(canContinue);
+                    showSnackBar(SelectFolderActivity.NO_INTERNET_CONNECTION);
                     return;
                 }
 
+                showSnackBar(Snackbar.LENGTH_LONG, getString(R.string.downloading_tags),ACTION_NONE);
+
                 progressBar.setVisibility(View.VISIBLE);
-                currentAudioItem.setProcessing(true);
-                floatingActionMenu.close(true);
-                downloadCoverButton.setEnabled(false);
-                removeCoverButton.setEnabled(false);
-                editButton.setEnabled(false);
-                autofixButton.setEnabled(false);
 
-                if(trackIdAudioItem == null) {
-                    SelectFolderActivity.audioItemArrayAdapter.notifyItemChanged(currentAudioItem.getPosition());
-                    Intent intent = new Intent(DetailsTrackDialogActivity.this, FixerTrackService.class);
-                    intent.putExtra("singleTrack", true);
-                    intent.putExtra("fromDetailsTrackDialog", true);
-                    intent.putExtra("id", currentAudioItem.getId());
-                    startService(intent);
+                enableMiniFabs(false);
 
+                //Check if exist trackidItem cached from previous request
+                //this with the objective of saving data
+                if(trackIdAudioItem != null) {
+                    setDownloadedValues();
                 }
                 else {
-                    setDownloadedValues();
-                    progressBar.setVisibility(View.INVISIBLE);
-                    currentAudioItem.setProcessing(false);
-                    autofixButton.setEnabled(true);
-                    enableFieldsToEdit();
-                    editMode = true;
+                    Intent intent = new Intent(DetailsTrackDialogActivity.this, FixerTrackService.class);
+                    intent.putExtra(FixerTrackService.SINGLE_TRACK, true);
+                    intent.putExtra(FixerTrackService.FROM_EDIT_MODE, true);
+                    intent.putExtra(FixerTrackService.AUDIO_ITEM, currentAudioItem);
+                    startService(intent);
                 }
             }
         });
@@ -614,29 +794,57 @@ return true;
         downloadCoverButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                int canContinue = SelectFolderActivity.allowExecute(DetailsTrackDialogActivity.this);
+                closeFABMenu();
+                //This function requires some contidions to work, check them before
+                int canContinue = allowExecute();
+
                 if(canContinue != 0) {
-                    showToast(canContinue);
+                    showSnackBar(NO_INTERNET_CONNECTION_COVER_ART);
                     return;
                 }
 
-                downloadCover();
+                showSnackBar(Snackbar.LENGTH_SHORT, getString(R.string.downloading_cover),ACTION_NONE);
+
+                progressBar.setVisibility(View.VISIBLE);
+                enableMiniFabs(false);
+
+
+                //Check if exist trackidItem cached from previous request
+                //this with the objective of saving data
+
+                onlyCoverArt = true;
+
+                if(trackIdAudioItem != null){
+                    handleCoverArt();
+                }
+                else{
+
+                    Intent intent = new Intent(DetailsTrackDialogActivity.this,FixerTrackService.class);
+                    intent.putExtra(FixerTrackService.FROM_EDIT_MODE,true);
+                    intent.putExtra(FixerTrackService.SINGLE_TRACK,true);
+                    intent.putExtra(FixerTrackService.AUDIO_ITEM, currentAudioItem);
+                    startService(intent);
+                }
+
+
             }
         });
 
-        floatingActionMenu.setOnMenuToggleListener(new FloatingActionMenu.OnMenuToggleListener() {
+        floatingActionMenu.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onMenuToggle(boolean opened) {
-                if(opened)
-                    appBarLayout.setExpanded(false);
-                else
-                    appBarLayout.setExpanded(true);
+            public void onClick(View view) {
+                if(!isFABOpen){
+                    showFABMenu();
+                }else{
+                    closeFABMenu();
+                }
             }
         });
+
         toolbarCover.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                viewCover();
+                editCover();
             }
         });
 
@@ -646,22 +854,48 @@ return true;
                 toolbarCover.setAlpha(1.0f - Math.abs(verticalOffset/(float)appBarLayout.getTotalScrollRange()));
                 if(Math.abs(verticalOffset)-appBarLayout.getTotalScrollRange() == 0) {
                     collapsingToolbarLayout.setTitleEnabled(true);
-                    collapsingToolbarLayout.setTitle(currentAudioItem.getFileName());
-                    getSupportActionBar().setDisplayShowTitleEnabled(true);
-                    getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-                    getSupportActionBar().setDisplayShowHomeEnabled(true);
+                    collapsingToolbarLayout.setTitle(audioFile.getName());
+                    actionBar.setDisplayShowTitleEnabled(true);
+                    actionBar.setDisplayHomeAsUpEnabled(true);
+                    actionBar.setDisplayShowHomeEnabled(true);
                 }
                 else {
                     collapsingToolbarLayout.setTitleEnabled(false);
-                    getSupportActionBar().setDisplayShowTitleEnabled(false);
-                    getSupportActionBar().setDisplayHomeAsUpEnabled(false);
-                    getSupportActionBar().setDisplayShowHomeEnabled(false);
+                    actionBar.setDisplayShowTitleEnabled(false);
+                    actionBar.setDisplayHomeAsUpEnabled(false);
+                    actionBar.setDisplayShowHomeEnabled(false);
                 }
             }
         });
 
+        trackIdCover.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                TransitionManager.beginDelayedTransition((ViewGroup) viewDetailsTrack);
 
 
+                Bundle bundle = new Bundle();
+                bundle.putByteArray("cover",trackIdAudioItem.getCoverArt());
+                ImageViewer imageViewer = new ImageViewer();
+                imageViewer.setArguments(bundle);
+                imageViewer.setSharedElementEnterTransition(new DetailsTransition());
+                imageViewer.setEnterTransition(new Fade());
+                imageViewer.setSharedElementReturnTransition(new DetailsTransition());
+
+
+                ViewCompat.setTransitionName(toolbarCover, "transition_"+currentAudioItem.getId());
+
+                getSupportFragmentManager()
+                        .beginTransaction()
+                        .addSharedElement(toolbarCover, "transitionFragment")
+                        .add(R.id.containerFragment,imageViewer)
+                        .addToBackStack(null)
+                        .commit();
+            }
+        });
+
+
+        //pressing back from toolbar, close activity
         toolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -669,40 +903,97 @@ return true;
             }
         });
 
-        createEditTextListeners();
     }
 
-    private void removeCover() {
-        onlyCoverArt =  true;
-        AsyncUpdateData asyncUpdateData = new AsyncUpdateData(REMOVE_COVER);
-        asyncUpdateData.execute();
+    private Drawable getStatusDrawable(int s){
+        int status = s;
+        Drawable drawable = null;
+        switch (status){
+            case AudioItem.FILE_STATUS_OK:
+            case AudioItem.FILE_STATUS_EDIT_BY_USER:
+                drawable = getResources().getDrawable(R.drawable.ic_done_all_white,null);
+                break;
+            case AudioItem.FILE_STATUS_INCOMPLETE:
+                drawable = getResources().getDrawable(R.drawable.ic_done_white,null);
+                break;
+            case AudioItem.FILE_STATUS_BAD:
+                drawable = getResources().getDrawable(R.drawable.ic_error_outline_white_24px,null);
+                break;
+            default:
+                drawable = null;
+                break;
+        }
+
+        return drawable;
     }
 
-    /**
-     * This method adds listeners to edit text objects
-     * for retrieving the current values while user
-     * is typing
-     */
-    private void addEditTextListeners(){
-        titleField.addTextChangedListener(titleListener);
-        artistField.addTextChangedListener(artistListener);
-        albumField.addTextChangedListener(albumListener);
-        numberField.addTextChangedListener(numberListener);
-        yearField.addTextChangedListener(yearListener);
-        genreField.addTextChangedListener(genreListener);
+
+    private String getStatusText(){
+        int status = currentAudioItem.getStatus();
+        String msg = "";
+        switch (status){
+            case AudioItem.FILE_STATUS_OK:
+                msg = getResources().getString(R.string.file_status_ok);
+                break;
+            case AudioItem.FILE_STATUS_INCOMPLETE:
+                msg = getResources().getString(R.string.file_status_incomplete);
+                break;
+            case AudioItem.FILE_STATUS_BAD:
+                msg = getResources().getString(R.string.file_status_bad);
+                break;
+            case AudioItem.FILE_STATUS_EDIT_BY_USER:
+                msg = getResources().getString(R.string.file_status_edit_by_user);
+                break;
+            default:
+                msg = getResources().getString(R.string.file_status_no_processed);
+                break;
+        }
+
+        return msg;
     }
 
-    /**
-     * Remove text listeners when edit text objects are disabled
-     */
-    private void removeEditTextListeners(){
-        titleField.removeTextChangedListener(titleListener);
-        artistField.removeTextChangedListener(artistListener);
-        albumField.removeTextChangedListener(albumListener);
-        numberField.removeTextChangedListener(numberListener);
-        yearField.removeTextChangedListener(yearListener);
-        genreField.removeTextChangedListener(genreListener);
+    private void enableMiniFabs(boolean enable){
+
+        downloadCoverButton.setEnabled(enable);
+        editButton.setEnabled(enable);
+        autofixButton.setEnabled(enable);
+        //ask if we are going to enable or disable mini fabs,
+        //if we are are going to disable, lets disable all,
+        //else, enable it or disable it depending on if exist cover art
+        removeCoverButton.setEnabled(enable ? ( currentCoverArt != null ) : enable  );
     }
+
+    private void showFABMenu(){
+        isFABOpen = true;
+
+        floatingActionMenu.animate().rotationBy(-400);
+
+        autofixButton.animate().translationY(-getResources().getDimension(R.dimen.standard_55));
+
+        editButton.animate().translationY(-getResources().getDimension(R.dimen.standard_105));
+
+        downloadCoverButton.animate().translationY(-getResources().getDimension(R.dimen.standard_155));
+
+        removeCoverButton.animate().translationY(-getResources().getDimension(R.dimen.standard_205));
+
+    }
+
+    private void closeFABMenu(){
+        isFABOpen = false;
+
+        floatingActionMenu.animate().rotationBy(400);
+
+        autofixButton.animate().translationY(0);
+
+        editButton.animate().translationY(0);
+
+        downloadCoverButton.animate().translationY(0);
+
+        removeCoverButton.animate().translationY(0);
+
+
+    }
+
 
     /**
      * This method help us to play a preview of current song,
@@ -711,7 +1002,7 @@ return true;
      * @throws InterruptedException
      */
     private void playPreview() throws IOException, InterruptedException {
-        player.playPreview(p);
+        player.playPreview(currentItemId);
         if(player.isPlaying()){
             playPreviewButton.setIcon(R.drawable.ic_stop_white_24px);
         }
@@ -728,8 +1019,7 @@ return true;
     private void editInfoTrack(){
         if(!editMode) {
             enableFieldsToEdit();
-            editMode = true;
-        }
+         }
         else {
             disableFields();
         }
@@ -743,8 +1033,13 @@ return true;
      * the user did not modify anything
      */
     private void cachingCurrentValues(){
-        currentCoverArt = currentAudioItem.getCoverArt();
+        mediaMetadataRetriever.setDataSource(trackPath);
+
+        currentCoverArt =  mediaMetadataRetriever.getEmbeddedPicture();
         currentCoverArtLength = currentCoverArt == null ? 0 : currentCoverArt.length;
+        newCoverArt = currentCoverArt;
+        newCoverArtLength = currentCoverArtLength;
+
         currentTitle = titleField.getText().toString().trim();
         currentArtist = artistField.getText().toString().trim();
         currentAlbum = albumField.getText().toString().trim();
@@ -768,12 +1063,13 @@ return true;
 
         for (int i = 0 ; i < numElements ; i++){
             if(fields.get(i) instanceof EditText){
-                if(StringUtilities.isFieldEmpty((EditText) fields.get(i))){
+                ((EditText) fields.get(i)).setError(null);
+                if(StringUtilities.isFieldEmpty(((EditText) fields.get(i)).getText().toString())){
                     showWarning((EditText) fields.get(i), HAS_EMPTY_FIELDS);
                     isDataValid = false;
                     break;
                 }
-                if(StringUtilities.isTooLong((EditText) fields.get(i))){
+                if(StringUtilities.isTooLong(fields.get(i).getId(), ((EditText) fields.get(i)).getText().toString() )){
                     showWarning((EditText) fields.get(i), DATA_IS_TOO_LONG);
                     isDataValid = false;
                     break;
@@ -781,22 +1077,22 @@ return true;
 
                 switch (fields.get(i).getId()){
                     case R.id.track_name_details:
-                        newTitle = StringUtilities.trimString((EditText) fields.get(i));
+                        newTitle = StringUtilities.trimString(((EditText) fields.get(i)).getText().toString());
                         break;
                     case R.id.artist_name_details:
-                        newArtist = StringUtilities.trimString((EditText) fields.get(i));
+                        newArtist = StringUtilities.trimString(((EditText) fields.get(i)).getText().toString());
                         break;
                     case R.id.album_name_details:
-                        newAlbum = StringUtilities.trimString((EditText) fields.get(i));
+                        newAlbum = StringUtilities.trimString(((EditText) fields.get(i)).getText().toString());
                         break;
                     case R.id.track_genre:
-                        newGenre = StringUtilities.trimString((EditText) fields.get(i));
+                        newGenre = StringUtilities.trimString(((EditText) fields.get(i)).getText().toString());
                         break;
                     case R.id.track_number:
-                        newNumber = Integer.parseInt(StringUtilities.trimString((EditText) fields.get(i)));
+                        newNumber = StringUtilities.trimString(((EditText) fields.get(i)).getText().toString());
                         break;
                     case R.id.track_year:
-                        newYear = Integer.parseInt(StringUtilities.trimString((EditText) fields.get(i)));
+                        newYear = StringUtilities.trimString(((EditText) fields.get(i)).getText().toString());
                         break;
                 }
 
@@ -804,7 +1100,7 @@ return true;
                 isDataValid = true;
 
 
-                //If value of this option from app settings is true, run this code
+                //If value of this option from app settings is true, replace automatically strange characters
                 if(SelectedOptions.AUTOMATICALLY_REPLACE_STRANGE_CHARACTERS){
                     switch (fields.get(i).getId()){
                         case R.id.track_name_details:
@@ -822,7 +1118,8 @@ return true;
                     }
                     isDataValid = true;
                 }
-                else if(StringUtilities.hasNotAllowedCharacters(((EditText) fields.get(i)))){//Here it goes the validation of setting "Eliminar automaticamente caracteres inválidos"
+                //else, then show error label property from edit text field that has the error in data entered
+                else if(StringUtilities.hasNotAllowedCharacters( ((EditText) fields.get(i)).getText().toString() ) ){
                     showWarning((EditText) fields.get(i), HAS_NOT_ALLOWED_CHARACTERS);
                     isDataValid = false;
                     break;
@@ -860,15 +1157,16 @@ return true;
         if (editText != null){
             Animation animation = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.blink);
             editText.requestFocus();
+            editText.setError(msg);
             editText.setAnimation(animation);
             editText.startAnimation(animation);
             InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
             imm.showSoftInput(editText, InputMethodManager.SHOW_IMPLICIT);
         }
+        else {
 
-        Toast toast = Toast.makeText(getApplicationContext(),msg, Toast.LENGTH_SHORT);
-        toast.setGravity(Gravity.CENTER,0,0);
-        toast.show();
+            showSnackBar(Snackbar.LENGTH_SHORT,msg,ACTION_NONE);
+        }
 
     }
 
@@ -895,49 +1193,38 @@ return true;
         numberField.setText(currentNumber);
         yearField.setText(currentYear);
         genreField.setText(currentGenre);
-        currentCoverArt = currentAudioItem.getCoverArt();
-        if(currentCoverArt != null) {
-            GlideApp.with(viewDetailsTrack).
-                    load(currentAudioItem.getCoverArt())
-                    .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.NONE))
-                    .apply(RequestOptions.skipMemoryCacheOf(true))
-                    .transition(DrawableTransitionOptions.withCrossFade())
-                    .centerCrop()
-                    .into(toolbarCover);
-            currentCoverArtLength = currentCoverArt.length;
-        }
-        else{
-            GlideApp.with(viewDetailsTrack).
-                    load(R.drawable.ic_album_white_48px)
-                    .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.NONE))
-                    .apply(RequestOptions.skipMemoryCacheOf(true))
-                    .transition(DrawableTransitionOptions.withCrossFade())
-                    .centerCrop()
 
-                    .into(toolbarCover);
-            currentCoverArtLength = 0;
+        if(currentCoverArt != null && (currentCoverArtLength != newCoverArtLength) ) {
+                GlideApp.with(viewDetailsTrack).
+                        load(currentCoverArt)
+                        .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.NONE))
+                        .apply(RequestOptions.skipMemoryCacheOf(true))
+                        .transition(DrawableTransitionOptions.withCrossFade())
+                        .fitCenter()
+                        .into(toolbarCover);
+                currentCoverArtLength = currentCoverArt.length;
+            return;
+        }
+
+        if(currentCoverArt == null){
+                GlideApp.with(viewDetailsTrack).
+                        load(R.drawable.ic_album_white_48px)
+                        .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.NONE))
+                        .apply(RequestOptions.skipMemoryCacheOf(true))
+                        .transition(DrawableTransitionOptions.withCrossFade())
+                        .fitCenter()
+                        .placeholder(R.drawable.ic_album_white_48px)
+                        .into(toolbarCover);
+                currentCoverArtLength = 0;
         }
     }
 
 
-    /**
-     * We put the values in a ContentValues object for writing
-     * these to database
-     */
-    private void putValuesToRecord(){
-        newData = new ContentValues();
-        newData.put(TrackContract.TrackData.COLUMN_NAME_TITLE,newTitle);
-        newData.put(TrackContract.TrackData.COLUMN_NAME_ARTIST,newArtist);
-        newData.put(TrackContract.TrackData.COLUMN_NAME_ALBUM,newAlbum);
-        newData.put(TrackContract.TrackData.COLUMN_NAME_STATUS, AudioItem.FILE_STATUS_EDIT_BY_USER);
-    }
-
-    private void stopPlayback(){
-        if(player != null && player.isPlaying() && p == player.getCurrentId()){
+    private void stopPlayback() throws IOException, InterruptedException {
+        playPreviewButton.setIcon(R.drawable.ic_play_arrow_white_24px);
+        if(player != null && player.isPlaying() && this.currentItemId == player.getCurrentId()){
             player.stop();
             player.reset();
-            CustomMediaPlayer.onCompletePlayback(p);
-            playPreviewButton.setIcon(R.drawable.ic_play_arrow_black_24dp);
         }
     }
 
@@ -946,39 +1233,63 @@ return true;
      * modifying the information about the song
      */
     private void enableFieldsToEdit(){
-        floatingActionMenu.close(true);
-        appBarLayout.setExpanded(true);
+        if(!manualMode)
+            appBarLayout.setExpanded(false);
 
-        floatingActionMenu.hideMenu(true);
+        floatingActionMenu.hide();
+        floatingActionMenu.setVisibility(GONE);
+
+
         saveButton.setVisibility(View.VISIBLE);
+        saveButton.show();
+        saveButton.setOnClickListener(null);
+        saveButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                //first validate inputs
+                boolean validInputs = isDataValid();
+
+                if (validInputs){
+
+                        AlertDialog.Builder builder = new AlertDialog.Builder(DetailsTrackDialogActivity.this);
+                        builder.setTitle(R.string.apply_tags);
+                        builder.setMessage(R.string.message_apply_new_tags);
+                        builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.cancel();
+                                disableFields();
+                            }
+                        });
+                        builder.setPositiveButton("Si", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                try {
+                                updateData();
+                                } catch (IOException | ID3WriteException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        });
+                        AlertDialog alertDialog = builder.create();
+                        alertDialog.show();
+                }
+            }
+        });
+
+
+
         titleField.setEnabled(true);
         artistField.setEnabled(true);
         albumField.setEnabled(true);
         numberField.setEnabled(true);
         yearField.setEnabled(true);
         genreField.setEnabled(true);
-        saveButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if(currentAudioItem.isProcessing()){
-                    showWarning(null, FILE_IS_PROCESSING);
-                    return;
-                }
 
-                boolean validInputs = isDataValid();
-
-                if (validInputs){
-                    putValuesToRecord();
-                    try {
-                        updateData();
-                    } catch (IOException | ID3WriteException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        });
-
-        albumArtButton.setOnClickListener(new View.OnClickListener() {
+        imageSize.setText(getString(R.string.edit_cover));
+        imageSize.setCompoundDrawablesWithIntrinsicBounds(getDrawable(R.drawable.ic_add_to_photos_white_24px),null,null,null);
+        imageSize.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent selectorImageIntent = new Intent(Intent.ACTION_PICK);
@@ -986,9 +1297,13 @@ return true;
                 startActivityForResult(selectorImageIntent,INTENT_OPEN_GALLERY);
             }
         });
-        imageSize.setText("Editar Carátula");
+
+
+        editMode = true;
+
         InputMethodManager imm =(InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
         imm.showSoftInput(titleField,InputMethodManager.SHOW_IMPLICIT);
+
     }
 
     /**
@@ -998,7 +1313,6 @@ return true;
 
     private void disableFields(){
 
-        //Log.d("titleField",titleField.getText().toString());
         titleField.clearFocus();
         titleField.setEnabled(false);
         artistField.clearFocus();
@@ -1012,98 +1326,26 @@ return true;
         genreField.clearFocus();
         genreField.setEnabled(false);
 
-        removeEditTextListeners();
 
-        floatingActionMenu.showMenu(true);
         saveButton.setVisibility(GONE);
+        saveButton.hide();
         saveButton.setOnClickListener(null);
-        albumArtButton.setOnClickListener(null);
-        imageSize.setText(currentAudioItem.getStringImageSize());
+
+        floatingActionMenu.show();
+        floatingActionMenu.setVisibility(View.VISIBLE);
+        imageSize.setText(AudioItem.getStringImageSize(currentCoverArt));
+        imageSize.setCompoundDrawablesWithIntrinsicBounds(getDrawable(R.drawable.ic_photo_white_24px),null,null,null);
+        imageSize.setOnClickListener(null);
         editMode = false;
 
    }
 
-    /**
-     * This method helps to rename the file,
-     * in case is set from options in settings activity
-     * @param path
-     * @return String[]
-     */
-    private String[] renameFile(String path, String title, String artistName){
-
-        boolean couldBeRenamed = false;
-        String[] paths = new String[3];
-        File currentFile = new File(path), renamedFile;
-        String newPath = currentFile.getParent();
-
-        String newFilename = StringUtilities.sanitizeFilename(title) + ".mp3";
-        String newCompleteFilename= newPath + "/" + newFilename;
-        renamedFile = new File(newCompleteFilename);
-        if(!renamedFile.exists()) {
-            couldBeRenamed = currentFile.renameTo(renamedFile);
-        }else {
-            //newFilename = newTitle +"("+ (int)Math.floor((Math.random()*10)+ 1) +")"+".mp3";
-            newFilename = newTitle +"("+ artistName +")"+".mp3";
-            newCompleteFilename = newPath + "/" + newFilename;
-            renamedFile = new File(newCompleteFilename);
-            couldBeRenamed = currentFile.renameTo(renamedFile);
-        }
-
-        Log.d("MANUAL_RENAMED",couldBeRenamed+"");
-        paths[0] = renamedFile.getAbsolutePath();
-        paths[1] = renamedFile.getParent();
-        paths[2] = renamedFile.getName();
-        return paths;
-    }
-
-    private void viewCover(){
-        //Intent intent = new Intent();
-        //TransitionManager.beginDelayedTransition((ViewGroup) viewDetailsTrack);
 
 
-        //Bundle bundle = new Bundle();
-        ///bundle.putLong("id",currentAudioItem.getId());
-        //imageViewer.setArguments(bundle);
-        //if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-        //    imageViewer.setSharedElementEnterTransition(new DetailsTransition());
-        //    imageViewer.setSharedElementReturnTransition(new DetailsTransition());
-        //}
-
-        //ViewCompat.setTransitionName(toolbarCover, "transition_"+currentAudioItem.getId());
-
-        /*getSupportFragmentManager()
-                .beginTransaction()
-                .addSharedElement(toolbarCover, "transitionFragment")
-                .replace(R.id.containerFragment,imageViewer)
-                .addToBackStack("imageViewer")
-                .commit();*/
-    }
-
-    /**
-     * This method download the cover art only
-     */
-    private void downloadCover(){
-        progressBar.setVisibility(View.VISIBLE);
-        currentAudioItem.setProcessing(true);
-        floatingActionMenu.close(true);
-
-        autofixButton.setEnabled(false);
-        editButton.setEnabled(false);
-        downloadCoverButton.setEnabled(false);
-        removeCoverButton.setEnabled(false);
-
-        if(trackIdAudioItem != null){
-            currentAudioItem.setProcessing(false);
-            handleCoverArt();
-        }
-        else{
-            onlyCoverArt = true;
-            Intent intent = new Intent(this,FixerTrackService.class);
-            intent.putExtra("fromDetailsTrackDialog",true);
-            intent.putExtra("singleTrack",true);
-            intent.putExtra("id", currentAudioItem.getId());
-            startService(intent);
-        }
+    private void editCover(){
+        Intent selectorImageIntent = new Intent(Intent.ACTION_PICK);
+        selectorImageIntent.setType("image/*");
+        startActivityForResult(selectorImageIntent,INTENT_OPEN_GALLERY);
     }
 
     /**
@@ -1114,82 +1356,11 @@ return true;
     @Override
     public void onCompletion(MediaPlayer mp) {
         Log.d("onCompletePlayback","OnFragmnet");
-        CustomMediaPlayer.onCompletePlayback(this.p);
-        try {
-            playPreviewButton.setIcon(R.drawable.ic_play_arrow_black_24dp);
-        }
-        catch (Exception e){
-            e.printStackTrace();
-        }
+        playPreviewButton.setIcon(R.drawable.ic_play_arrow_white_24px);
+        player.onCompletePlayback();
+
+
     }
-
-    private class TextListener implements TextWatcher {
-        private EditText field;
-
-
-        TextListener(EditText field){
-            this.field = field;
-        }
-
-        @Override
-        public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
-        }
-
-        @Override
-        public void onTextChanged(CharSequence s, int start, int before, int count) {
-
-            switch(field.getId()){
-                case R.id.track_name_details:
-                    newTitle = s.toString();
-                    Log.d("newTitle",newTitle);
-                    break;
-                case R.id.artist_name_details:
-                    newArtist = s.toString();
-                    Log.d("newArtist",newArtist);
-                    break;
-                case R.id.album_name_details:
-                    newAlbum = s.toString();
-                    Log.d("newAlbum",newAlbum);
-                    break;
-                case R.id.track_genre:
-                    newGenre = s.toString();
-                    Log.d("newGenre",newGenre);
-                    break;
-                case R.id.track_number:
-                    try {
-                        newNumber = Integer.parseInt(s.toString());
-                    }
-                    catch (Exception e){
-                        e.printStackTrace();
-                    }
-                    finally {
-                        Log.d("newNumber",newNumber+"");
-                    }
-
-                    break;
-                case R.id.track_year:
-                    try {
-                        newYear = Integer.parseInt(s.toString());
-                    }
-                    catch (Exception e){
-                        e.printStackTrace();
-                    }
-                    finally {
-                        Log.d("newYear",newYear+"");
-                    }
-
-                    break;
-            }
-
-        }
-
-        @Override
-        public void afterTextChanged(Editable s) {
-
-        }
-    }
-
 
     private class AsyncUpdateData extends AsyncTask<Void, Void, Void> {
         private final String TAG = AsyncUpdateData.class.getName();
@@ -1201,12 +1372,12 @@ return true;
         @Override
         protected void onPreExecute(){
             progressBar.setVisibility(View.VISIBLE);
-            stopPlayback();
-            removeCoverButton.setEnabled(false);
-            editButton.setEnabled(false);
-            autofixButton.setEnabled(false);
-            downloadCoverButton.setEnabled(false);
-            disableFields();
+            try {
+                stopPlayback();
+            } catch (IOException | InterruptedException e) {
+                e.printStackTrace();
+            }
+            enableMiniFabs(false);
         }
 
         private void updateCoverArt() {
@@ -1217,10 +1388,7 @@ return true;
             MusicMetadataSet musicMetadataSet = null;
             ContentValues contentValues = new ContentValues();
 
-            String newGenre = genreField.getText().toString();
-
-
-            boolean isSameCoverArt = currentCoverArtLength == (currentCoverArt == null? 0 : currentCoverArt.length);
+            boolean isSameCoverArt = currentCoverArtLength == newCoverArtLength;
 
             try {
                 musicMetadataSet = myID3.read(tempFile);
@@ -1228,41 +1396,31 @@ return true;
 
                 try {
 
-                    //Always save genre because there is a bug in the library
-                    //that makes null this value
-                    //if(!isSameGenre) {
-                    iMusicMetadata.setGenre(newGenre);
-                    currentAudioItem.setGenre(newGenre);
-                    Log.d("genre", "updated");
-                    //}
-
-
                     //Here we update the data in case there have had changes
-                    if(!isSameCoverArt && currentCoverArt != null && currentCoverArt.length > 0){
+                    if(!isSameCoverArt && newCoverArt != null && newCoverArtLength > 0){
                         Vector<ImageData> imageDataVector = new Vector<>();
-                        ImageData imageData = new ImageData(currentCoverArt, "", "", 3);
+                        ImageData imageData = new ImageData(newCoverArt, "", "", 3);
                         imageDataVector.add(imageData);
                         iMusicMetadata.setPictureList(imageDataVector);
 
+                        //update genre too because
+                        //there is a bug in the library
+                        //that causes that if is not saved explicitly
+                        //it will save null value
+                        iMusicMetadata.setGenre(currentGenre);
+                        Log.d("genre", "updated");
+
                         myID3.update(tempFile, musicMetadataSet, iMusicMetadata);
 
-                        //update filesize because the new embed cover added to file
-                        float fileSizeInMb = (float)tempFile.length() / AudioItem.KILOBYTE;
 
                         //Then, is necessary update the data in database,
                         //because we obtain this info when the app starts (after first time),
                         //besides, database operations can take a long time
-                        contentValues.put(TrackContract.TrackData.COLUMN_NAME_FILE_SIZE,fileSizeInMb);
-                        contentValues.put(TrackContract.TrackData.COLUMN_NAME_COVER_ART,currentCoverArt);
-                        contentValues.put(TrackContract.TrackData.COLUMN_NAME_STATUS,AudioItem.FILE_STATUS_EDIT_BY_USER);
-                        dbHelper.updateData(DetailsTrackDialogActivity.this.p,contentValues);
+                        contentValues.put(TrackContract.TrackData.STATUS,AudioItem.FILE_STATUS_EDIT_BY_USER);
+                        dbHelper.updateData(DetailsTrackDialogActivity.this.currentItemId,contentValues);
 
                         //Update the data of item from list
-                        currentAudioItem.setSize(fileSizeInMb);
-                        currentAudioItem.setCoverArt(trackIdAudioItem.getCoverArt());
                         currentAudioItem.setStatus(AudioItem.FILE_STATUS_EDIT_BY_USER);
-
-
 
                         Log.d("only_cover_art", "updated");
                         Log.d("metadata", "updated");
@@ -1273,7 +1431,6 @@ return true;
                 } catch (IOException | ID3WriteException e) {
                     dataUpdated = false;
                     e.printStackTrace();
-                    resultMessage = e.getMessage();
                 }
 
 
@@ -1281,7 +1438,6 @@ return true;
                 e.printStackTrace();
                 dataUpdated = false;
                 e.printStackTrace();
-                resultMessage = e.getMessage();
             }
         }
 
@@ -1293,51 +1449,41 @@ return true;
             MusicMetadataSet musicMetadataSet = null;
             ContentValues contentValues = new ContentValues();
 
-            String newGenre = genreField.getText().toString();
-
             try {
                 musicMetadataSet = myID3.read(tempFile);
                 MusicMetadata iMusicMetadata = (MusicMetadata) musicMetadataSet.getSimplified();
 
                 try {
 
-                    //Always save genre because there is a bug in the library
-                    //that makes null this value
-                    iMusicMetadata.setGenre(newGenre);
-                    currentAudioItem.setGenre(newGenre);
+                    //Here we update the data in case there have had changes
+                    iMusicMetadata.remove("pictures");
+                    iMusicMetadata.clearPictureList();
+                    iMusicMetadata.setPictureList(null);
+
+                    //update genre too because
+                    //there is a bug in the library
+                    //that causes that if is not saved explicitly
+                    //it will save null value
+                    iMusicMetadata.setGenre(currentGenre);
                     Log.d("genre", "updated");
 
-                    //Here we update the data in case there have had changes
-                   iMusicMetadata.clearPictureList();
-
                     myID3.update(tempFile, musicMetadataSet, iMusicMetadata);
-
-                    //update filesize because the new embed cover added to file
-                    float fileSizeInMb = (float)tempFile.length() / AudioItem.KILOBYTE;
 
                     //Then, is necessary update the data in database,
                     //because we obtain this info when the app starts (after first time),
                     //besides, database operations can take a long time
-                    contentValues.put(TrackContract.TrackData.COLUMN_NAME_FILE_SIZE,fileSizeInMb);
-                    contentValues.put(TrackContract.TrackData.COLUMN_NAME_COVER_ART,new byte[0]);
-                    contentValues.put(TrackContract.TrackData.COLUMN_NAME_STATUS,AudioItem.FILE_STATUS_EDIT_BY_USER);
-                    dbHelper.updateData(DetailsTrackDialogActivity.this.p,contentValues);
+                    contentValues.put(TrackContract.TrackData.STATUS,AudioItem.FILE_STATUS_EDIT_BY_USER);
+                    dbHelper.updateData(DetailsTrackDialogActivity.this.currentItemId,contentValues);
 
                     //Update the data of item from list
-                    currentAudioItem.setSize(fileSizeInMb);
-                    currentAudioItem.setCoverArt(null);
                     currentAudioItem.setStatus(AudioItem.FILE_STATUS_EDIT_BY_USER);
                     dataUpdated = true;
 
-
-                        Log.d("remove_cover_art", "updated");
-
-
+                    Log.d("remove_cover_art", "updated");
 
                 } catch (IOException | ID3WriteException e) {
                     dataUpdated = false;
                     e.printStackTrace();
-                    resultMessage = e.getMessage();
                 }
 
 
@@ -1345,7 +1491,6 @@ return true;
                 e.printStackTrace();
                 dataUpdated = false;
                 e.printStackTrace();
-                resultMessage = e.getMessage();
             }
         }
 
@@ -1355,82 +1500,73 @@ return true;
             //the data is set on item and database
             MyID3 myID3 = new MyID3();
             File tempFile = new File(trackPath);
-            String currentFileName = currentAudioItem.getFileName();
+            audioFile = new File(trackPath);
+            String currentFileName = audioFile.getName();
             String currentFileNameWithoutExt = currentFileName.substring(0,currentFileName.length()-4);
 
             MusicMetadataSet musicMetadataSet = null;
 
-            String newTitle = titleField.getText().toString();
-            String newArtist = artistField.getText().toString();
-            String newAlbum = albumField.getText().toString();
-            String newGenre = genreField.getText().toString();
-            String newTrackNumber = numberField.getText().toString();
-            String newTrackYear = yearField.getText().toString();
-
             ContentValues contentValues = new ContentValues();
 
-            boolean isTitleSameThanFilename = newTitle.equals(currentFileNameWithoutExt);
+            Log.d("isTitleSameThanFilename", currentFileNameWithoutExt + "-" + newTitle);
+
+            boolean isTitleSameThanFilename = currentFileNameWithoutExt.equals(newTitle);
             boolean isSameTitle = currentTitle.equals(newTitle);
             boolean isSameArtist = currentArtist.equals(newArtist);
             boolean isSameAlbum = currentAlbum.equals(newAlbum);
             boolean isSameGenre = currentGenre.equals(newGenre);
-            boolean isSameTrackNumber = currentNumber.equals(newTrackNumber);
-            boolean isSameTrackYear = currentYear.equals(newTrackYear);
-            boolean isSameCoverArt = currentCoverArtLength == (currentCoverArt == null? 0 : currentCoverArt.length);
+            boolean isSameTrackNumber = currentNumber.equals(newNumber);
+            boolean isSameTrackYear = currentYear.equals(newYear);
+            boolean isSameCoverArt = currentCoverArtLength == newCoverArtLength;
             boolean hasChanges = !(isSameTitle && isSameArtist && isSameAlbum && isSameGenre && isSameTrackNumber && isSameTrackYear && isSameCoverArt);
 
             try {
                 musicMetadataSet = myID3.read(tempFile);
                 MusicMetadata iMusicMetadata = (MusicMetadata) musicMetadataSet.getSimplified();
 
-                if(!isSameTitle) {
+                //Verify if new values are not empties, because from trackid can come empty values
+                if(!isSameTitle && !newTitle.isEmpty()) {
                     iMusicMetadata.setSongTitle(newTitle);
-                    contentValues.put(TrackContract.TrackData.COLUMN_NAME_TITLE,newTitle);
+                    contentValues.put(TrackContract.TrackData.TITLE,newTitle);
                     currentAudioItem.setTitle(newTitle);
                     Log.d("title", "updated");
                 }
-                if(!isSameArtist) {
+                if(!isSameArtist && !newArtist.isEmpty()) {
                     iMusicMetadata.setArtist(newArtist);
-                    contentValues.put(TrackContract.TrackData.COLUMN_NAME_ARTIST,newArtist);
+                    contentValues.put(TrackContract.TrackData.ARTIST,newArtist);
                     currentAudioItem.setArtist(newArtist);
                     Log.d("artist", "updated");
                 }
-                if(!isSameAlbum) {
+                if(!isSameAlbum && !newAlbum.isEmpty()) {
                     iMusicMetadata.setAlbum(newAlbum);
-                    contentValues.put(TrackContract.TrackData.COLUMN_NAME_ALBUM,newAlbum);
+                    contentValues.put(TrackContract.TrackData.ALBUM,newAlbum);
                     currentAudioItem.setAlbum(newAlbum);
                     Log.d("album", "updated");
                 }
-                if(!isSameTrackNumber) {
-                    iMusicMetadata.setTrackNumber(Integer.parseInt(newTrackNumber));
-                    currentAudioItem.setTrackNumber(newTrackNumber);
+                if(!isSameTrackNumber && !newNumber.isEmpty()) {
+                    iMusicMetadata.setTrackNumber(Integer.parseInt(newNumber));
                     Log.d("number", "updated");
                 }
-                if(!isSameTrackYear) {
-                    iMusicMetadata.setYear(newTrackYear);
-                    currentAudioItem.setTrackYear(newTrackYear);
+                if(!isSameTrackYear && !newYear.isEmpty()) {
+                    iMusicMetadata.setYear(newYear);
                     Log.d("year", "updated");
                 }
                 //Always save genre because there is a bug in the library
-                //that makes null this value
-                //if(!isSameGenre) {
+                //that makes null this value if is not updated
+                if(!newGenre.isEmpty()) {
                     iMusicMetadata.setGenre(newGenre);
-                    currentAudioItem.setGenre(newGenre);
-                    Log.d("genre", "updated");
-                //}
+                }
+                else {
+                    iMusicMetadata.setGenre(currentGenre);
+                }
+                Log.d("genre", "updated");
 
-                if(!isSameCoverArt && currentCoverArt != null && currentCoverArt.length > 0){
+                if(!isSameCoverArt && newCoverArt != null && newCoverArt.length > 0){
                     Vector<ImageData> imageDataVector = new Vector<>();
-                    ImageData imageData = new ImageData(currentCoverArt, "", "", 3);
+                    ImageData imageData = new ImageData(newCoverArt, "", "", 3);
                     imageDataVector.add(imageData);
                     iMusicMetadata.setPictureList(imageDataVector);
-                    contentValues.put(TrackContract.TrackData.COLUMN_NAME_COVER_ART,currentCoverArt);
-                    currentAudioItem.setCoverArt(currentCoverArt);
 
-                    //update filesize because the new embed cover added to file
-                    float fileSizeInMb = (float)tempFile.length() / AudioItem.KILOBYTE;
-                    currentAudioItem.setSize(fileSizeInMb);
-                    contentValues.put(TrackContract.TrackData.COLUMN_NAME_FILE_SIZE,fileSizeInMb);
                     Log.d("coverart", "updated");
                 }
 
@@ -1445,17 +1581,25 @@ return true;
                     if(SelectedOptions.MANUAL_CHANGE_FILE){
                         //new title is not the same than old title? then rename file
                         if(!isTitleSameThanFilename) {
-                            String[] paths = renameFile(currentAudioItem.getNewAbsolutePath(), newTitle, newArtist);
-                            currentAudioItem.setNewAbsolutePath(paths[0]);
-                            currentAudioItem.setPath(paths[1]);
-                            currentAudioItem.setFileName(paths[2]);
-                            contentValues.put(TrackContract.TrackData.COLUMN_NAME_CURRENT_FULL_PATH, paths[0]);
-                            contentValues.put(TrackContract.TrackData.COLUMN_NAME_CURRENT_PATH, paths[1]);
-                            contentValues.put(TrackContract.TrackData.COLUMN_NAME_CURRENT_FILENAME, paths[2]);
-                            trackPath = paths[0];
+                            String newAbsolutePath = AudioItem.renameFile(currentAudioItem.getAbsolutePath(), newTitle, newArtist);
+                            currentAudioItem.setAbsolutePath(newAbsolutePath);
+                            contentValues.put(TrackContract.TrackData.DATA, newAbsolutePath);
 
-                            //Finally, we need to inform to media store database the file has changed
-                            MediaScannerConnection.scanFile(getApplicationContext(), new String[]{tempFile.getAbsolutePath(), new File(trackPath).getAbsolutePath()}, null, null);
+                            //lets inform to system that one file has change
+                            ContentValues values = new ContentValues();
+                            String selection = MediaStore.MediaColumns.DATA + "= ?";
+                            String selectionArgs[] = {trackPath}; //old path
+                            values.put(MediaStore.MediaColumns.DATA, newAbsolutePath); //new path
+                            boolean successMediaStore = getContentResolver().
+                                                        update(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                                                                values,
+                                                                selection,
+                                                                selectionArgs) == 1;
+
+                            currentAudioItem.setAbsolutePath(newAbsolutePath);
+                            trackPath = newAbsolutePath;
+                            audioFile = null;
+                            Log.d("media store success", successMediaStore+"");
                             Log.d("filename", "update");
                         }
 
@@ -1464,16 +1608,15 @@ return true;
                     //Then, is necessary update the data in database,
                     //because we obtain this info when the app starts (after first time),
                     //besides, database operations can take a long time
-                    contentValues.put(TrackContract.TrackData.COLUMN_NAME_STATUS,AudioItem.FILE_STATUS_EDIT_BY_USER);
+                    contentValues.put(TrackContract.TrackData.STATUS,AudioItem.FILE_STATUS_EDIT_BY_USER);
                     //Update the data of item from list
                     currentAudioItem.setStatus(AudioItem.FILE_STATUS_EDIT_BY_USER);
 
-                    dbHelper.updateData(DetailsTrackDialogActivity.this.p,contentValues);
+                    dbHelper.updateData(currentItemId,contentValues);
                     dataUpdated = true;
                 } catch (IOException | ID3WriteException e) {
                     dataUpdated = false;
                     e.printStackTrace();
-                    resultMessage = e.getMessage();
                 }
 
 
@@ -1481,7 +1624,6 @@ return true;
                 e.printStackTrace();
                 dataUpdated = false;
                 e.printStackTrace();
-                resultMessage = e.getMessage();
             }
         }
 
@@ -1502,83 +1644,134 @@ return true;
         @Override
         protected void onPostExecute(Void result){
             doAtFinal();
-            if(currentAudioItem.getCoverArt() == null){
-                removeCoverButton.setEnabled(false);
-            }
-            else {
-                removeCoverButton.setEnabled(true);
-            }
-
-            editButton.setEnabled(true);
-            autofixButton.setEnabled(true);
-            downloadCoverButton.setEnabled(true);
-            progressBar.setVisibility(View.INVISIBLE);
-            appBarLayout.setExpanded(true);
-        }
-        @Override
-        protected void onCancelled(){
-            doAtFinal();
+            enableMiniFabs(true);
         }
 
         private void doAtFinal(){
-            SelectFolderActivity.audioItemArrayAdapter.notifyItemChanged(currentAudioItem.getPosition());
-            Toast toast = Toast.makeText(getApplicationContext(),"", Toast.LENGTH_SHORT);
+            String msg = "";
+
+            audioFile = new File(trackPath);
             if(dataUpdated){
-                boolean isSameCoverArt = currentCoverArtLength == (currentCoverArt == null? 0 : currentCoverArt.length);
-                if(operationType == DetailsTrackDialogActivity.UPDATE_COVER && !isSameCoverArt && currentCoverArt != null && currentCoverArt.length > 0){//if(onlyCoverArt && !isSameCoverArt && currentCoverArt != null && currentCoverArt.length > 0) {
-                    GlideApp.with(viewDetailsTrack).
-                            load(currentAudioItem.getCoverArt())
-                            .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.NONE))
-                            .transition(DrawableTransitionOptions.withCrossFade())
-                            .apply(RequestOptions.skipMemoryCacheOf(true))
-                            .centerCrop()
-                            .into(toolbarCover);
-                    toast.setText(getString(R.string.cover_updated));
+                final boolean isSameCoverArt = currentCoverArtLength == newCoverArtLength;
+                //update toolbar cover only if UPDATE_COVER is true, and new cover is not null
+                if(operationType == UPDATE_COVER && !isSameCoverArt && newCoverArt != null && newCoverArt.length > 0){
+
+                    msg = getString(R.string.cover_updated);
+                    trackIdCard.animate().setDuration(DURATION).alpha(0).setListener(new AnimatorListenerAdapter() {
+                        @Override
+                        public void onAnimationEnd(Animator animation) {
+                            trackIdCard.setVisibility(GONE);
+                            content.animate().setDuration(DURATION).alpha(1).setListener(new AnimatorListenerAdapter() {
+                                @Override
+                                public void onAnimationEnd(Animator animation) {
+                                    GlideApp.with(viewDetailsTrack).
+                                            load(newCoverArt)
+                                            .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.NONE))
+                                            .transition(DrawableTransitionOptions.withCrossFade())
+                                            .apply(RequestOptions.skipMemoryCacheOf(true))
+                                            .fitCenter()
+                                            .into(toolbarCover);
+
+                                    content.setVisibility(View.VISIBLE);
+
+                                    trackIdCard.setVisibility(GONE);
+                                    status.setText(getStatusText());
+
+                                    status.setCompoundDrawablesWithIntrinsicBounds(getStatusDrawable(currentAudioItem.getStatus()),null,null,null);
+                                    fileSize.setText(AudioItem.getFileSize(audioFile.length()));
+                                    imageSize.setText(AudioItem.getStringImageSize(newCoverArt));
+
+                                }
+                            });
+                        }
+                    });
+
                 }
-                else if(operationType == DetailsTrackDialogActivity.REMOVE_COVER){
+                //only update toolbar cover
+                else if(operationType == REMOVE_COVER){
+
+                    msg = getString(R.string.cover_removed);
+                    status.setText(getStatusText());
+                    status.setCompoundDrawablesWithIntrinsicBounds(getStatusDrawable(currentAudioItem.getStatus()),null,null,null);
+                    fileSize.setText(AudioItem.getFileSize(audioFile.length()));
+                    imageSize.setText(AudioItem.getStringImageSize(newCoverArt));
 
                     GlideApp.with(viewDetailsTrack).
                             load(R.drawable.ic_album_white_48px)
                             .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.NONE))
                             .apply(RequestOptions.skipMemoryCacheOf(true))
                             .transition(DrawableTransitionOptions.withCrossFade())
-                            .centerCrop()
+                            .fitCenter()
                             .placeholder(R.drawable.ic_album_white_48px)
                             .into(toolbarCover);
 
-                    toast.setText(getString(R.string.cover_removed));
                 }
+                //here update all views
                 else {
-                    toast.setText(getString(R.string.message_data_update));
+                    msg = getString(R.string.message_data_update);
+
+                    //Update fields in case we have replaced the strange chars
+                    titleLayer.setText(audioFile.getName());
+                    titleField.setText(currentAudioItem.getTitle());
+                    artistField.setText(currentAudioItem.getArtist());
+                    albumField.setText(currentAudioItem.getAlbum());
+                    genreField.setText(newGenre);
+                    numberField.setText(newNumber);
+                    yearField.setText(newYear);
+
+                    status.setText(getStatusText());
+                    status.setCompoundDrawablesWithIntrinsicBounds(getStatusDrawable(currentAudioItem.getStatus()),null,null,null);
+                    fileSize.setText(AudioItem.getFileSize(audioFile.length()));
+                    imageSize.setText(AudioItem.getStringImageSize(newCoverArt));
+
+
+                    trackIdCard.animate().setDuration(DURATION).alpha(0).setListener(new AnimatorListenerAdapter() {
+                        @Override
+                        public void onAnimationEnd(Animator animation) {
+                            trackIdCard.setVisibility(GONE);
+
+                            content.animate().setDuration(DURATION).alpha(1).setListener(new AnimatorListenerAdapter() {
+                                @Override
+                                public void onAnimationEnd(Animator animation) {
+                                    content.setVisibility(View.VISIBLE);
+                                    if(!isSameCoverArt) {
+                                        GlideApp.with(viewDetailsTrack).
+                                                load(newCoverArt != null ? newCoverArt : R.drawable.ic_album_white_48px)
+                                                .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.NONE))
+                                                .apply(RequestOptions.skipMemoryCacheOf(true))
+                                                .transition(DrawableTransitionOptions.withCrossFade())
+                                                .fitCenter()
+                                                .into(toolbarCover);
+                                    }
+                                }
+                            });
+
+                        }
+                    });
+
+
                 }
+                wasModified = 1;
             }
             else {
-                toast = Toast.makeText(getApplicationContext(), getString(R.string.message_no_data_updated), Toast.LENGTH_SHORT);
+                wasModified = 0;
+                msg = getString(R.string.message_no_data_updated);
             }
-            toast.setGravity(Gravity.CENTER,0,0);
-            toast.show();
-
-            //Update fields in case we have replaced the strange chars
-            titleLayer.setText(currentAudioItem.getFileName());
-            status.setText(currentAudioItem.getStatusText());
-            titleField.setText(currentAudioItem.getTitle());
-            artistField.setText(currentAudioItem.getArtist());
-            albumField.setText(currentAudioItem.getAlbum());
-            genreField.setText(currentAudioItem.getGenre());
-            status.setText(currentAudioItem.getStatusText());
-            status.setCompoundDrawablesWithIntrinsicBounds(currentAudioItem.getStatusDrawable(),null,null,null);
-            fileSize.setText(currentAudioItem.getConvertedFileSize());
-            imageSize.setText(currentAudioItem.getStringImageSize());
-
-            if(cardView.getVisibility() == View.VISIBLE){
-                cardView.setVisibility(GONE);
-            }
-
 
             cachingCurrentValues();
+            disableFields();
+
 
             onlyCoverArt = false;
             dataUpdated = false;
+
+            progressBar.setVisibility(View.INVISIBLE);
+            appBarLayout.setExpanded(true);
+
+            floatingActionMenu.show();
+            saveButton.hide();
+            trackAdapter.notifyDataSetChanged();
+            showSnackBar(Snackbar.LENGTH_SHORT, msg,ACTION_NONE);
 
         }
 
@@ -1596,81 +1789,148 @@ return true;
     protected void onResume(){
         super.onResume();
         localBroadcastManager.registerReceiver(receiver,intentFilter);
+        localBroadcastManager.registerReceiver(receiver,intentFilter2);
     }
 
-    private class ResponseReceiver extends BroadcastReceiver {
+    private void setDownloadedValues(){
+        progressBar.setVisibility(View.INVISIBLE);
 
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            String action;
-            action = intent.getAction();
-            currentAudioItem.setProcessing(false);
-            Log.d("action_received",action);
-            switch (action){
-                case FixerTrackService.ACTION_DONE:
-                    DetailsTrackDialogActivity.this.trackIdAudioItem = intent.getParcelableExtra("audioItem");
-                    if (onlyCoverArt) {
-                        DetailsTrackDialogActivity.this.handleCoverArt();
-                    }
-                    else {
-                        DetailsTrackDialogActivity.this.enableFieldsToEdit();
-                        DetailsTrackDialogActivity.this.setDownloadedValues();
-                        DetailsTrackDialogActivity.this.editMode = true;
-                        DetailsTrackDialogActivity.this.appBarLayout.setExpanded(true);
-                    }
-                    break;
-                case FixerTrackService.ACTION_CANCEL:
-                case FixerTrackService.ACTION_COMPLETE_TASK:
-                    break;
-                case FixerTrackService.ACTION_FAIL:
-                    Toast toast = Toast.makeText(DetailsTrackDialogActivity.this,getText(R.string.file_status_bad),Toast.LENGTH_SHORT);
-                    toast.setGravity(Gravity.CENTER,0,0);
-                    toast.show();
-                    break;
-            }
-            autofixButton.setEnabled(true);
-            editButton.setEnabled(true);
-            autofixButton.setEnabled(true);
-            downloadCoverButton.setEnabled(true);
-            if(currentAudioItem.getCoverArt() == null){
-                removeCoverButton.setEnabled(false);
-            }
-            else {
-                removeCoverButton.setEnabled(true);
-            }
-            progressBar.setVisibility(View.INVISIBLE);
-
-
-
+        //if there are no results, only notify to user
+        if(trackIdAudioItem == null){
+            showSnackBar(Snackbar.LENGTH_SHORT,getString(R.string.file_status_bad),ACTION_NONE);
+            return;
         }
+
+        //get new values from trackIdItem
+        newTitle = trackIdAudioItem.getTitle();
+        newArtist = trackIdAudioItem.getArtist();
+        newAlbum = trackIdAudioItem.getAlbum();
+        newGenre = trackIdAudioItem.getGenre();
+        newNumber = trackIdAudioItem.getTrackNumber();
+        newYear = trackIdAudioItem.getTrackYear();
+
+        newCoverArt = trackIdAudioItem.getCoverArt();
+        newCoverArtLength = newCoverArt == null ? 0 : newCoverArt.length;
+
+
+
+        saveButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(DetailsTrackDialogActivity.this);
+                builder.setTitle(R.string.apply_tags);
+                builder.setMessage(R.string.message_apply_found_tags);
+                builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.cancel();
+                        disableLayout();
+                    }
+                });
+                builder.setPositiveButton("Si", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        AsyncUpdateData asyncUpdateData = new AsyncUpdateData(UPDATE_ALL_METADATA);
+                        asyncUpdateData.execute();
+                    }
+                });
+                AlertDialog alertDialog = builder.create();
+                alertDialog.show();
+            }
+        });
+
+
+        editMode = true;
+        content.animate().setDuration(DURATION).alpha(0).setListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                content.setVisibility(GONE);
+                appBarLayout.setExpanded(false);
+
+                trackIdCard.animate().setDuration(DURATION).alpha(1).setListener(new AnimatorListenerAdapter() {
+                    @Override
+                    public void onAnimationEnd(Animator animation) {
+                        trackIdCard.setVisibility(View.VISIBLE);
+
+                        //make visible the trackidcover if available
+                        trackIdCover.setVisibility(View.VISIBLE);
+                        trackidCoverArtDimensions.setVisibility(View.VISIBLE);
+
+                        if(newCoverArt != null) {
+                            GlideApp.with(viewDetailsTrack).
+                                    load(newCoverArt)
+                                    .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.NONE))
+                                    .apply(RequestOptions.skipMemoryCacheOf(true))
+                                    .transition(DrawableTransitionOptions.withCrossFade())
+                                    .fitCenter()
+                                    .into(trackIdCover);
+
+                            trackidCoverArtDimensions.setText(AudioItem.getStringImageSize(newCoverArt));
+
+                        }
+                        else{
+                            GlideApp.with(viewDetailsTrack).
+                                    load(getDrawable(R.drawable.ic_album_white_48px))
+                                    .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.NONE))
+                                    .apply(RequestOptions.skipMemoryCacheOf(true))
+                                    .transition(DrawableTransitionOptions.withCrossFade())
+                                    .placeholder(R.drawable.ic_album_white_48px)
+                                    .fitCenter()
+                                    .into(trackIdCover);
+                        }
+
+
+
+                        //make visible only fields when trackid value is available
+                        trackIdTitle.setText(newTitle);
+                        trackIdTitle.setVisibility(newTitle.equals("")?GONE:View.VISIBLE);
+
+                        trackIdArtist.setText(newArtist);
+                        trackIdArtist.setVisibility(newArtist.equals("")?GONE:View.VISIBLE);
+
+                        trackIdAlbum.setText(newAlbum);
+                        trackIdAlbum.setVisibility(newAlbum.equals("")?GONE:View.VISIBLE);
+
+                        trackIdGenre.setText(newGenre);
+                        trackIdGenre.setVisibility(newGenre.equals("")?GONE:View.VISIBLE);
+
+                        trackIdNumber.setText(newNumber);
+                        trackIdNumber.setVisibility(newNumber.equals("")?GONE:View.VISIBLE);
+
+                        trackIdYear.setText(newYear);
+                        trackIdYear.setVisibility(newYear.equals("")?GONE:View.VISIBLE);
+
+                        //inform to user the meta tags found
+                        showSnackBar(Snackbar.LENGTH_SHORT,getString(R.string.info_found),ACTION_NONE);
+
+                        //let the user apply this changes
+                        floatingActionMenu.hide();
+                        floatingActionMenu.setVisibility(GONE);
+
+                        saveButton.show();
+                        saveButton.setVisibility(View.VISIBLE);
+
+                    }
+                });
+
+            }
+        });
+
     }
+
 
     private void handleCoverArt() {
 
-        currentCoverArt = trackIdAudioItem.getCoverArt();
-        Toast t = Toast.makeText(getApplicationContext(), "",Toast.LENGTH_LONG);
-        t.setGravity(Gravity.CENTER,0,0);
-        if(currentCoverArt != null){
-            t.setText(getString(R.string.cover_art_found));
-            TextView dimen = (TextView) findViewById(R.id.dimensions);
-            String dim = trackIdAudioItem.getStringImageSize();
-            dimen.setText(dim);
+        String msg = "";
 
-            cardView.setVisibility(View.VISIBLE);
-            floatingActionMenu.hideMenu(true);
-            floatingActionMenu.close(true);
+        newCoverArt = trackIdAudioItem.getCoverArt();
+        newCoverArtLength = newCoverArt == null ? 0 : newCoverArt.length;
 
+
+        if(newCoverArt != null){
+            msg = getString(R.string.cover_art_found);
             appBarLayout.setExpanded(false);
-
-            saveButton.setVisibility(View.VISIBLE);
-
-            GlideApp.with(viewDetailsTrack).
-                    load(currentCoverArt)
-                    .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.NONE))
-                    .transition(DrawableTransitionOptions.withCrossFade())
-                    .apply(RequestOptions.skipMemoryCacheOf(true))
-                    .centerCrop()
-                    .into((ImageView) findViewById(R.id.imageViewDownloadedCover));
+            editMode = true;
 
             saveButton.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -1680,7 +1940,6 @@ return true;
                     builder.setNegativeButton(getString(R.string.as_cover_art), new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            onlyCoverArt =  true;
                             AsyncUpdateData asyncUpdateData = new AsyncUpdateData(UPDATE_COVER);
                             asyncUpdateData.execute();
                         }
@@ -1688,7 +1947,23 @@ return true;
                     builder.setPositiveButton(getString(R.string.as_file), new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
+                            //if was successful saved, then
+                            String newImageAbsolutePath = FileSaver.saveFile(newCoverArt, trackIdAudioItem.getTitle(), trackIdAudioItem.getArtist(), trackIdAudioItem.getAlbum());
+                            if(!newImageAbsolutePath.equals(FileSaver.NULL_DATA) && !newImageAbsolutePath.equals(FileSaver.NO_EXTERNAL_STORAGE_WRITABLE) && !newImageAbsolutePath.equals(FileSaver.INPUT_OUTPUT_ERROR)) {
 
+                                showSnackBar(7000, getString(R.string.cover_saved) + " " + AudioItem.getRelativePath(newImageAbsolutePath) + ".", ACTION_NONE);
+                                //lets inform to system that one file has been created
+                                MediaScannerConnection.scanFile(getApplicationContext(),
+                                        new String[]{newImageAbsolutePath},
+                                        null,
+                                        null);
+                            }
+                            else {
+                                showSnackBar(Snackbar.LENGTH_LONG, getString(R.string.cover_not_saved), ACTION_NONE);
+                            }
+
+                            dialog.cancel();
+                            disableLayout();
                         }
                     });
                     builder.setMessage(R.string.description_downloaded_cover_art_dialog);
@@ -1697,18 +1972,136 @@ return true;
                     alertDialog.show();
                 }
             });
-            editMode = true;
+
+            final String finalMsg = msg;
+            content.animate().setDuration(DURATION).alpha(0).setListener(new AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    content.setVisibility(View.GONE);
+
+                    trackIdCard.animate().setDuration(DURATION).alpha(1).setListener(new AnimatorListenerAdapter() {
+                        @Override
+                        public void onAnimationEnd(Animator animation) {
+
+                            trackIdCard.setVisibility(View.VISIBLE);
+
+                            GlideApp.with(viewDetailsTrack).
+                                    load(newCoverArt)
+                                    .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.NONE))
+                                    .apply(RequestOptions.skipMemoryCacheOf(true))
+                                    .transition(DrawableTransitionOptions.withCrossFade())
+                                    .fitCenter()
+                                    .into(trackIdCover);
+
+                            trackidCoverArtDimensions.setText(AudioItem.getStringImageSize(newCoverArt));
+
+                            showSnackBar(Snackbar.LENGTH_SHORT, finalMsg,ACTION_NONE);
+
+                            floatingActionMenu.hide();
+                            floatingActionMenu.setVisibility(GONE);
+
+                            saveButton.setVisibility(View.VISIBLE);
+                            saveButton.show();
+                        }
+                    });
+                }
+            });
+
+
         }
         else{
-            t.setText(getString(R.string.no_cover_art_found));
+            msg = getString(R.string.no_cover_art_found);
             onlyCoverArt = false;
-            currentCoverArt = currentAudioItem.getCoverArt();
+            newCoverArt = currentCoverArt;
+            newCoverArtLength = currentCoverArtLength;
+            showSnackBar(Snackbar.LENGTH_LONG, msg,ACTION_ADD_COVER);
+            enableMiniFabs(true);
+
         }
-        autofixButton.setEnabled(true);
-        editButton.setEnabled(true);
-        downloadCoverButton.setEnabled(true);
+
         progressBar.setVisibility(View.INVISIBLE);
-        t.show();
+
+    }
+
+    private int allowExecute(){
+
+        //API not initialized
+        if(!apiInitialized){
+            Job.scheduleJob(getApplicationContext());
+            return SelectFolderActivity.NO_INITIALIZED_API;
+        }
+
+
+        //No internet connection
+        if(!DetectorInternetConnection.isConnected(getApplicationContext())){
+            return SelectFolderActivity.NO_INTERNET_CONNECTION;
+        }
+
+
+
+        return 0;
+    }
+
+    private boolean isServiceRunning() {
+        ActivityManager manager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)){
+            if(FixerTrackService.class.getName().equals(service.service.getClassName())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public class ResponseReceiver extends BroadcastReceiver {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            goAsync();
+            String action;
+            action = intent.getAction();
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    enableMiniFabs(true);
+                    progressBar.setVisibility(View.INVISIBLE);
+                }
+            });
+
+
+            Log.d("action_received",action);
+            switch (action){
+                case FixerTrackService.ACTION_DONE:
+                    trackIdAudioItem = intent.getParcelableExtra(FixerTrackService.AUDIO_ITEM);
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (onlyCoverArt) {
+                                handleCoverArt();
+                            }
+                            else {
+                                setDownloadedValues();
+                            }
+                        }
+                    });
+
+                    break;
+                /*case FixerTrackService.ACTION_CANCEL:
+                case FixerTrackService.ACTION_COMPLETE_TASK:*/
+                case FixerTrackService.ACTION_FAIL:
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            showSnackBar(Snackbar.LENGTH_SHORT,getString(R.string.file_status_bad),ACTION_NONE);
+                        }
+                    });
+
+                    break;
+            }
+
+
+
+
+        }
     }
 
 }

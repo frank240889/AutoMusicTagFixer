@@ -1,10 +1,8 @@
 package mx.dev.franco.musicallibraryorganizer.services;
 
 import android.content.Context;
-import android.os.Handler;
-import android.os.Looper;
-import android.view.Gravity;
-import android.widget.Toast;
+import android.content.Intent;
+import android.support.v4.content.LocalBroadcastManager;
 
 import com.gracenote.gnsdk.GnDescriptor;
 import com.gracenote.gnsdk.GnException;
@@ -24,6 +22,7 @@ import com.gracenote.gnsdk.IGnUserStore;
  */
 
 public class GnService implements IGnUserStore{
+    public static final String API_INITIALIZED = "action_api_initialized";
     //We can set a context in static field while we call getApplicationContext() to avoid memory leak, because
     //if we use the activity context, this activity can remain in memory due is still in use its context
     private static Context context;
@@ -35,6 +34,8 @@ public class GnService implements IGnUserStore{
     static final String gnsdkClientTag = "6CB01DB21FA7F47FDBF1FD6DCDFA8E88";//"4E937B773F03BA431014169770593072";
     public static final String appString = "AutomaticMusicTagFixer";
     public static volatile boolean apiInitialized = false;
+    public static final int API_INITIALIZED_FROM_SPLASH = 100;
+    public static final int API_INITIALIZED_AFTER_CONNECTED = 101;
 
     /**
      * We don't need instances of this class
@@ -56,28 +57,26 @@ public class GnService implements IGnUserStore{
     /**
      * This method initializes the API
      */
-    public static void initializeAPI(){
+    public static void initializeAPI(final int connectedFrom){
         new Thread(new Runnable() {
             @Override
             public void run() {
 
                 //We initialize the necessary objects for using the GNSDK API in a different thread for not blocking the UI
                 try {
-                    gnManager =  new GnManager(context,gnsdkLicenseString, GnLicenseInputMode.kLicenseInputModeString);
-                    gnUser = new GnUser(new GnUserStore(context),gnsdkClientId,gnsdkClientTag,appString);
-                    gnLocale = new GnLocale(GnLocaleGroup.kLocaleGroupMusic, GnLanguage.kLanguageSpanish, GnRegion.kRegionGlobal, GnDescriptor.kDescriptorDetailed,gnUser);
+                    gnManager = new GnManager(context, gnsdkLicenseString, GnLicenseInputMode.kLicenseInputModeString);
+                    gnUser = new GnUser(new GnUserStore(context), gnsdkClientId, gnsdkClientTag, appString);
+                    gnLocale = new GnLocale(GnLocaleGroup.kLocaleGroupMusic, GnLanguage.kLanguageSpanish, GnRegion.kRegionGlobal, GnDescriptor.kDescriptorDetailed, gnUser);
                     gnLocale.setGroupDefault();
                     apiInitialized = true;
 
-                    //This handler can update UI, getting the main looper first
-                    new Handler(Looper.getMainLooper()).post(new Runnable() {
-                        @Override
-                        public void run() {
-                            Toast toast = Toast.makeText(context,"API de reconocimiento inicializada.",Toast.LENGTH_SHORT);
-                            toast.setGravity(Gravity.CENTER,0,0);
-                            toast.show();
-                        }
-                    });
+
+                    if (connectedFrom == API_INITIALIZED_AFTER_CONNECTED){
+                        Intent intent = new Intent();
+                        intent.setAction(API_INITIALIZED);
+                        LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
+                        
+                    }
 
                 } catch (GnException e) {
                     e.printStackTrace();

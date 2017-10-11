@@ -1,7 +1,5 @@
 package mx.dev.franco.musicallibraryorganizer.utilities;
 
-import android.widget.EditText;
-
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -19,8 +17,8 @@ public final class StringUtilities {
      * @param editText
      * @return true if string is empty, false otherwise
      */
-    public static boolean isFieldEmpty(EditText editText) {
-        return editText.getText().toString().isEmpty();
+    public static boolean isFieldEmpty(String str) {
+        return str.isEmpty();
     }
 
     /**
@@ -40,9 +38,9 @@ public final class StringUtilities {
      * @param editText
      * @return true string contains another chararacter, false otherwise
      */
-    public static boolean hasNotAllowedCharacters(EditText editText){
+    public static boolean hasNotAllowedCharacters(String str){
         Pattern pattern = Pattern.compile("[^\\w\\s()&_\\-\\]\\[\'#.:$]");
-        Matcher matcher = pattern.matcher(editText.getText().toString());
+        Matcher matcher = pattern.matcher(str);
         return matcher.find();
     }
 
@@ -58,8 +56,8 @@ public final class StringUtilities {
      * @param editText
      * @return trimmed string
      */
-    public static String trimString(EditText editText){
-        return editText.getText().toString().trim();
+    public static String trimString(String str){
+        return str.trim();
     }
 
     /**
@@ -67,20 +65,20 @@ public final class StringUtilities {
      * @param editText
      * @return true if string is too long, false otherwise
      */
-    public static boolean isTooLong(EditText editText){
+    public static boolean isTooLong(int id, String str){
         boolean isTooLong = false;
-        switch (editText.getId()){
+        switch (id){
             case R.id.track_name_details:
             case R.id.artist_name_details:
             case R.id.album_name_details:
-                isTooLong = editText.getText().toString().length() >= 81;
+                isTooLong = str.length() >= 81;
                 break;
             case R.id.track_number:
             case R.id.track_year:
-                isTooLong = editText.getText().toString().length() >= 5;
+                isTooLong = str.length() >= 5;
                 break;
             case R.id.track_genre:
-                isTooLong = editText.getText().toString().length() >=31;
+                isTooLong = str.length() >=31;
                 break;
         }
         return isTooLong;

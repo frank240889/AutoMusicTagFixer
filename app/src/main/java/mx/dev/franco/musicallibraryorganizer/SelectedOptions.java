@@ -38,35 +38,26 @@ public class SelectedOptions {
     static GnImageSize setValueImageSize(String preferenceSaved){
         GnImageSize size = null;
         switch (preferenceSaved){
-            case "75":
-                size = GnImageSize.kImageSize75;
+            case "-1":
+                size = null;
                 break;
-            case "110":
-                size = GnImageSize.kImageSize110;
+            case "0":
+                size = GnImageSize.kImageSizeThumbnail;
                 break;
-            case "170":
-                size = GnImageSize.kImageSize170;
+            case "1":
+                size = GnImageSize.kImageSizeSmall;
                 break;
-            case "220":
-                size = GnImageSize.kImageSize220;
+            case "5":
+                size = GnImageSize.kImageSizeMedium;
                 break;
-            case "300":
-                size= GnImageSize.kImageSize300;
+            case "7":
+                size = GnImageSize.kImageSize720;
                 break;
-            case "450":
-                size = GnImageSize.kImageSize450;
-                break;
-            case "720":
-                size= GnImageSize.kImageSize720;
-                break;
-            case "1080":
+            case "10":
                 size = GnImageSize.kImageSize1080;
                 break;
             case "1000":
-                size = null;
-                break;
-            default:
-                size = GnImageSize.kImageSizeUnknown;
+                size= GnImageSize.kImageSizeXLarge;
                 break;
         }
         return size;

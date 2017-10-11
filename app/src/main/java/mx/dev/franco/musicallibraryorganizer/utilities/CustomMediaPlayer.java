@@ -1,13 +1,15 @@
-package mx.dev.franco.musicallibraryorganizer;
+package mx.dev.franco.musicallibraryorganizer.utilities;
 
 import android.content.Context;
 import android.media.MediaPlayer;
 import android.os.PowerManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
-import android.view.Gravity;
-import android.widget.Toast;
 
 import java.io.IOException;
+
+import mx.dev.franco.musicallibraryorganizer.list.AudioItem;
+import mx.dev.franco.musicallibraryorganizer.list.TrackAdapter;
 
 /**
  * Created by franco on 29/03/17.
@@ -17,10 +19,11 @@ public final class CustomMediaPlayer extends MediaPlayer implements MediaPlayer.
 
     private static CustomMediaPlayer mediaPlayer;
     private int rangeToPlay;
-    private static AudioItem currentAudioItem;
-    private static long currentId = -1;
+    private AudioItem currentAudioItem;
+    private long currentId = -1;
     private Context context;
-    private String currentPath;
+    private String currentPath = "";
+    private TrackAdapter adapter;
 
     /**
      * Don't let instantiate this class, we need only one instance,
@@ -29,7 +32,7 @@ public final class CustomMediaPlayer extends MediaPlayer implements MediaPlayer.
      */
     private CustomMediaPlayer(Context context){
         super();
-        this.context = context.getApplicationContext();
+        this.context = context;
         this.setVolume(1f,1f);
         setOnCompletionListener(this);
     }
@@ -39,12 +42,20 @@ public final class CustomMediaPlayer extends MediaPlayer implements MediaPlayer.
      * @param context
      * @return An unique instance of CustomMediaPlayer.
      */
-    static CustomMediaPlayer getInstance(Context context){
+    public static CustomMediaPlayer getInstance(Context context){
         if(mediaPlayer == null){
             mediaPlayer = new CustomMediaPlayer(context.getApplicationContext());
         }
         mediaPlayer.setWakeMode(context.getApplicationContext(), PowerManager.PARTIAL_WAKE_LOCK);
         return mediaPlayer;
+    }
+
+    public void setAdapter(TrackAdapter adapter){
+        this.adapter = adapter;
+    }
+
+    public RecyclerView.Adapter<TrackAdapter.AudioItemHolder> getAdapter(){
+        return this.adapter;
     }
 
     /**
@@ -54,15 +65,16 @@ public final class CustomMediaPlayer extends MediaPlayer implements MediaPlayer.
      * @throws InterruptedException
      */
 
-    void playPreview(long id) throws IOException, InterruptedException {
+    public void playPreview(long id) throws IOException, InterruptedException {
+
 
         // Was pressed the same item? then stop
         if(currentId == id && mediaPlayer.isPlaying()) {
             mediaPlayer.stop();
             mediaPlayer.reset();
             currentAudioItem.setPlayingAudio(false);
+            adapter.notifyItemChanged(currentAudioItem.getPosition());
             currentPath = "";
-            SelectFolderActivity.audioItemArrayAdapter.notifyItemChanged(currentAudioItem.getPosition());
             return;
         }
 
@@ -72,38 +84,31 @@ public final class CustomMediaPlayer extends MediaPlayer implements MediaPlayer.
             mediaPlayer.stop();
             mediaPlayer.reset();
             currentAudioItem.setPlayingAudio(false);
-            SelectFolderActivity.audioItemArrayAdapter.notifyItemChanged(currentAudioItem.getPosition());
+            adapter.notifyItemChanged(currentAudioItem.getPosition());
         }
 
 
         currentId = id;
 
-        currentAudioItem = SelectFolderActivity.getItemByIdOrPath(currentId, "");
-        currentPath = currentAudioItem.getFileName();
+        currentAudioItem = adapter.getItemByIdOrPath(currentId, "");
+        currentPath = currentAudioItem.getAbsolutePath();
 
-        if(currentAudioItem.isProcessing()){
-            Toast toast = Toast.makeText(context, context.getString(R.string.snackbar_message_track_is_processing),Toast.LENGTH_SHORT);
-            toast.setGravity(Gravity.CENTER,0,0);
-            toast.show();
-            return;
-        }
         try{
-            Log.d("path", currentAudioItem.getNewAbsolutePath());
+            Log.d("path", currentAudioItem.getAbsolutePath());
         }catch (Exception e){
             e.printStackTrace();
         }
 
-        mediaPlayer.setDataSource(currentAudioItem.getNewAbsolutePath());
+        mediaPlayer.setDataSource(currentAudioItem.getAbsolutePath());
         mediaPlayer.prepare();
-        if(getDuration() > 30000) { // if audio is not too short
+        /*if(getDuration() > 30000) { // if audio is not too short
             rangeToPlay = (getDuration() / 2) - 15;
             mediaPlayer.seekTo(rangeToPlay);
-        }
+        }*/
         currentAudioItem.setPlayingAudio(true);
-        currentAudioItem.setStatusText(context.getString(R.string.snackbar_message_track_preview));
 
         mediaPlayer.start();
-        SelectFolderActivity.audioItemArrayAdapter.notifyItemChanged(currentAudioItem.getPosition());
+        adapter.notifyItemChanged(currentAudioItem.getPosition());
     }
 
 
@@ -111,15 +116,15 @@ public final class CustomMediaPlayer extends MediaPlayer implements MediaPlayer.
      * Get the Id from current item playing.
      * @return
      */
-    long getCurrentId() {
+    public long getCurrentId() {
         return currentId;
     }
 
-    String getCurrentPath(){
+    public String getCurrentPath(){
         return currentPath;
     }
 
-    AudioItem getCurrentAudioItem(){
+    public AudioItem getCurrentAudioItem(){
         return currentAudioItem;
     }
 
@@ -131,7 +136,7 @@ public final class CustomMediaPlayer extends MediaPlayer implements MediaPlayer.
     @Override
     public void onCompletion(MediaPlayer mp) {
         Log.d("OnCompletion","OnCompletion");
-        onCompletePlayback(currentId);
+        onCompletePlayback();
     }
 
     /**
@@ -141,10 +146,11 @@ public final class CustomMediaPlayer extends MediaPlayer implements MediaPlayer.
      * @param id
      */
 
-    static void onCompletePlayback(long id){
+    public void onCompletePlayback(){
+        currentAudioItem.setPlayingAudio(false);
+        adapter.notifyItemChanged(currentAudioItem.getPosition());
         mediaPlayer.stop();
         mediaPlayer.reset();
-        currentAudioItem.setPlayingAudio(false);
-        SelectFolderActivity.audioItemArrayAdapter.notifyItemChanged(currentAudioItem.getPosition());
+        currentId = -1;
     }
 }

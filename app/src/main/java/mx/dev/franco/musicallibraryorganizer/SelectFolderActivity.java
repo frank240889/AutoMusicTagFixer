@@ -2,6 +2,8 @@ package mx.dev.franco.musicallibraryorganizer;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.ActivityManager;
+import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
 import android.content.ContentValues;
 import android.content.Context;
@@ -11,7 +13,6 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
-import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -24,28 +25,26 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.view.MenuItemCompat;
+import android.support.v4.view.ViewCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.view.ActionMode;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
-import android.transition.Fade;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.webkit.MimeTypeMap;
@@ -63,9 +62,16 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import mx.dev.franco.musicallibraryorganizer.database.DataTrackDbHelper;
+import mx.dev.franco.musicallibraryorganizer.database.TrackContract;
+import mx.dev.franco.musicallibraryorganizer.list.AudioItem;
+import mx.dev.franco.musicallibraryorganizer.list.TrackAdapter;
 import mx.dev.franco.musicallibraryorganizer.services.DetectorInternetConnection;
 import mx.dev.franco.musicallibraryorganizer.services.FixerTrackService;
+import mx.dev.franco.musicallibraryorganizer.services.GnService;
 import mx.dev.franco.musicallibraryorganizer.services.Job;
+import mx.dev.franco.musicallibraryorganizer.utilities.CustomMediaPlayer;
+import mx.dev.franco.musicallibraryorganizer.utilities.RequiredPermissions;
 
 import static mx.dev.franco.musicallibraryorganizer.SplashActivity.sharedPreferences;
 import static mx.dev.franco.musicallibraryorganizer.services.GnService.apiInitialized;
@@ -74,9 +80,11 @@ import static mx.dev.franco.musicallibraryorganizer.services.GnService.apiInitia
 public class SelectFolderActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
         MediaPlayer.OnCompletionListener,
-        Toolbar.OnMenuItemClickListener,
-        ActionMode.Callback,
-    TrackAdapter.AudioItemHolder.ClickListener{
+    TrackAdapter.AudioItemHolder.ClickListener {
+    private static final int ID_LOADER = 0;
+    public static final int MODIFY_TRACK_DATA = 50;
+    public static final String MAIN_ACTION = "main_action";
+    public static final String IS_PROCESSING_TASK = "is_processing_task" ;
     public static String TAG = SelectFolderActivity.class.getName();
 
     //static field to indicate that task must not continue in case
@@ -84,15 +92,11 @@ public class SelectFolderActivity extends AppCompatActivity
     public static volatile boolean shouldContinue = true;
     //flag to deny make concurrent tasks between automatic mode
     //and manual mode, and avoid inconsistent behaviour or data
-    public static boolean isProcessingTask = false;
+    public volatile static boolean isProcessingTask = false;
+
 
     //flag to indicate when the app is retrieving data from Gracenote service
     public static boolean isGettingData = false;
-
-    //actions to indicate in snackbar what is happen
-    public static final int ACTION_PLAY = 30;
-    public static final int ACTION_EDIT = 31;
-    public static final int ACTION_SHOW_INFO = 32;
 
     //Reasons why cannot execute task
     public static final int NO_INTERNET_CONNECTION = 40;
@@ -101,14 +105,11 @@ public class SelectFolderActivity extends AppCompatActivity
 
     //media player instance, only one is allowed
     public static CustomMediaPlayer mediaPlayer;
-    //snackbar to indicate to user what is happening
-    public static Snackbar snackbar;
+
+
     //Adapter with AudioItem objects for display in recyclerview
-    public static TrackAdapter audioItemArrayAdapter;
-    //datasource passed to adapter
-    public static List<AudioItem> audioItemList;
-    //general toast to indicate some actions happening to user.
-    public static Toast statusProcessToast;
+    private TrackAdapter audioItemArrayAdapter;
+    private List<AudioItem> audioItemList;
 
     //actions to indicate to app from where to retrieve data.
     private static final int RE_SCAN = 20;
@@ -132,15 +133,10 @@ public class SelectFolderActivity extends AppCompatActivity
     //recycler view used for better performance in case the
     //user has a huge musical library
     private RecyclerView recyclerView;
-    //this action mode enables the contextual toolbar
-    //on long click on item in list.
-    private ActionMode actionMode;
     //this menu has some less useful (but important) options,
     private Menu menu;
     //instance to connection do datadabse
     private DataTrackDbHelper dbHelper;
-    //current item that was first long clicked
-    private AudioItem currentAudioItem;
     //local broadcast to manage response from FixerTrackService.
     private LocalBroadcastManager localBroadcastManager;
     //these filters help to separate the action to take,
@@ -148,6 +144,9 @@ public class SelectFolderActivity extends AppCompatActivity
     private IntentFilter intentFilter;
     private IntentFilter intentFilter1;
     private IntentFilter intentFilter2;
+    private IntentFilter intentFilter3;
+    private IntentFilter intentFilter4;
+    private IntentFilter intentFilter5;
     //the receiver of responses.
     private ResponseReceiver receiver;
 
@@ -155,156 +154,136 @@ public class SelectFolderActivity extends AppCompatActivity
 
     //contextual toolbar
     private Toolbar toolbar;
-    //global intent sent to FixerTrackService
-    private Intent intentFixerTrackService;
 
-
-
-    //ServiceConnection serviceConnection;
-    //NewFilesScannerService newFilesScannerService;
-    //DetectorChangesFiles detectorChangesFiles;
-
+    //snackbar to indicate to user what is happening
+    private Snackbar snackbar;
+    private ActionBar actionBar;
+    private static final int NO_ID = -1;
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     @SuppressLint("UseSparseArrays")
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-
+    protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        intentFilter = new IntentFilter(FixerTrackService.ACTION_DONE);
-        intentFilter1 = new IntentFilter(FixerTrackService.ACTION_CANCEL);
-        intentFilter2 = new IntentFilter(FixerTrackService.ACTION_COMPLETE_TASK);
-        receiver = new ResponseReceiver();
-        localBroadcastManager = LocalBroadcastManager.getInstance(getApplicationContext());
-
-        /*serviceConnection = new ServiceConnection() {
-            @Override
-            public void onServiceConnected(ComponentName name, IBinder service) {
-                Log.d(TAG_SELECT_FOLDER,"CONNECTED");
-            }
-
-            @Override
-            public void onServiceDisconnected(ComponentName name) {
-                Log.d(TAG_SELECT_FOLDER,"DISCONNECTED");
-            }
-        };*/
-
-        //detectorChangesFiles = new DetectorChangesFiles("/storage/emulated/0/Music/TestMusic/", this, audioItemArrayAdapter);
-        //detectorChangesFiles.startWatching();
-
-        getWindow().setFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS,WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
-        getWindow().setAllowEnterTransitionOverlap(true);
-        getWindow().setAllowReturnTransitionOverlap(true);
-        getWindow().requestFeature(Window.FEATURE_ACTION_MODE_OVERLAY);
-        getWindow().requestFeature(Window.FEATURE_CONTENT_TRANSITIONS);
-        getWindow().setSharedElementExitTransition(new Fade());
-
-
+        Window window = getWindow();
+        window.setFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS,WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+        window.setAllowEnterTransitionOverlap(true);
+        window.setAllowReturnTransitionOverlap(true);
+        window.requestFeature(Window.FEATURE_ACTION_MODE_OVERLAY);
+        window.requestFeature(Window.FEATURE_CONTENT_TRANSITIONS);
 
 
         setContentView(R.layout.activity_select_folder);
-        searchAgainMessage = (TextView) findViewById(R.id.searchAgainMessage);
 
+        //get unique instances from database connection and media player
         dbHelper = DataTrackDbHelper.getInstance(getApplicationContext());
+        mediaPlayer = CustomMediaPlayer.getInstance(getApplicationContext());
+        //register this activity to receiver onCompletion event from media player
+        mediaPlayer.setOnCompletionListener(this);
 
+        //create filters to listen for response from FixerTrackService
+        intentFilter = new IntentFilter(FixerTrackService.ACTION_DONE);
+        intentFilter1 = new IntentFilter(FixerTrackService.ACTION_CANCEL);
+        intentFilter2 = new IntentFilter(FixerTrackService.ACTION_COMPLETE_TASK);
+        intentFilter3 = new IntentFilter(FixerTrackService.ACTION_FAIL);
+        intentFilter4 = new IntentFilter(GnService.API_INITIALIZED);
+        intentFilter5 = new IntentFilter(FixerTrackService.ACTION_SET_AUDIOITEM_PROCESSING);
+        //create receiver
+        receiver = new ResponseReceiver();
+        //get instance of local broadcast manager
+        localBroadcastManager = LocalBroadcastManager.getInstance(this);
+
+        //toolbar for adding some actions
         toolbar = (Toolbar) findViewById(R.id.toolbar);
-        toolbar.setOnMenuItemClickListener(this);
+        //floating action button fo automatic mode
+        fab = (FloatingActionButton) findViewById(R.id.fab);
+        searchAgainMessage = (TextView) findViewById(R.id.genericMessage);
+        //Initialize recycler view and swipe refresh layout
+        swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.refreshLayout);
+
+
+            swipeRefreshLayout.setColorSchemeColors(ContextCompat.getColor(getApplicationContext(),R.color.primaryColor));
+            swipeRefreshLayout.setProgressBackgroundColorSchemeColor(ContextCompat.getColor(getApplicationContext(),R.color.grey_900));
+
+        recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
+        recyclerView.setLayoutManager( new LinearLayoutManager(this));
+        recyclerView.setHasFixedSize(true);
+        recyclerView.setItemViewCacheSize(10);
+        recyclerView.setDrawingCacheEnabled(true);
+        recyclerView.setDrawingCacheQuality(View.DRAWING_CACHE_QUALITY_LOW);
+
         setSupportActionBar(toolbar);
+        actionBar = getSupportActionBar();
 
-        this.fab = (FloatingActionButton) findViewById(R.id.fab);
-        this.fab.hide();
-
-        //Initialize data source and adapter
+        //hide fab and show until list has been created
+        fab.hide();
+        //create data source for adapter
         audioItemList = new ArrayList<>();
-        audioItemArrayAdapter = new TrackAdapter(getApplicationContext(), audioItemList, this);
+        audioItemArrayAdapter = new TrackAdapter(getApplicationContext(), audioItemList,this);
+        //pass a referecne to data source to media player
+        mediaPlayer.setAdapter(audioItemArrayAdapter);
+        //create snack bar for messages
+        createSnackBar();
 
-        //Initialize recycler view, and swipe refresh layout
-        swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.list_of_files);
-
-        swipeRefreshLayout.setColorSchemeColors(getResources().getColor(R.color.primaryColor,null));
+        //set adapter to our recyclerview
+        recyclerView.setAdapter(audioItemArrayAdapter);
         //Lets implement functionality of refresh layout listener
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
                 searchAgainMessage.setVisibility(View.GONE);
-                //No permission to access files ? show reason
+                //If we already had the permission granted, lets go to read data from database and pass them to audioItemArrayAdapter, to show in the ListView,
+                //otherwise we show the reason to access files
                 if(!RequiredPermissions.ACCESS_GRANTED_FILES) {
                     showReason();
-                }
-                //lets read the files from content provider, type scan is re_scan because is the second (or more) use of app,
-                //or the user make a refresh to get some files that has recently copied to SD card.
-                else{
-                    AsyncReadFile asyncReadFile = new AsyncReadFile(RE_SCAN);
-                    asyncReadFile.execute();
-                }
-            }
-
-        });
-
-        statusProcessToast = Toast.makeText(getApplicationContext(),"",Toast.LENGTH_SHORT);
-        statusProcessToast.setGravity(Gravity.CENTER,0,0);
-
-        snackbar = Snackbar.make(swipeRefreshLayout, "", Snackbar.LENGTH_INDEFINITE);
-
-        //If we already had the permission granted, lets go to read data from database and pass them to audioItemArrayAdapter, to show in the ListView,
-        //otherwise we show the reason to access files
-        if(!RequiredPermissions.ACCESS_GRANTED_FILES) {
-            showReason();
-        }
-
-        else{
-            //if we have the permission, check Bundle object to verify if the activity comes from onPause or from onCreate
-            if(savedInstanceState == null){
-                setupAdapter();
-                int taskType = DataTrackDbHelper.existDatabase(this) && dbHelper.getCount(null) > 0 ? READ_FROM_DATABASE : CREATE_DATABASE;
-                AsyncReadFile asyncReadFile = new AsyncReadFile(taskType);
-                asyncReadFile.execute();
-            }
-        }
-
-
-
-
-        this.fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-
-                if(ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED){
-                    ActivityCompat.requestPermissions(SelectFolderActivity.this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 2);
+                    return;
                 }
                 else {
 
-                    int canContinue = allowExecute(SelectFolderActivity.this);
-                    if(canContinue != 0) {
-                        showToast(canContinue);
-                        return;
+                    //if we have the permission, check Bundle object to verify if the activity comes from onPause or from onCreate
+                    if(savedInstanceState == null){
+                        //int taskType = DataTrackDbHelper.existDatabase(getApplicationContext()) && dbHelper.getCount(null) > 0 ? READ_FROM_DATABASE : CREATE_DATABASE;
+                        AsyncReadFile asyncReadFile = new AsyncReadFile(RE_SCAN);
+                        asyncReadFile.execute();
                     }
-
-                    if(getCountSelectedItems() == 0) {
-                        Toast toast = Toast.makeText(getApplicationContext(),getString(R.string.no_songs_to_correct),Toast.LENGTH_SHORT);
-                        toast.setGravity(Gravity.CENTER,0,0);
-                        toast.show();
-                        return;
-                    }
-
-                    for(int i = 0; i < audioItemArrayAdapter.getItemCount() ; i++){
-                        AudioItem audioItem = audioItemList.get(i);
-                        if(audioItem.isSelected()){
-                            SelectFolderActivity.this.recyclerView.smoothScrollToPosition(audioItem.getPosition());
-                            break;
-                        }
-                    }
-
-
-                    final Intent intent = new Intent(SelectFolderActivity.this, FixerTrackService.class);
-                    intent.putExtra("singleTrack",false);
-                    startService(intent);
-                    startTask();
 
                 }
-
             }
+
         });
+
+
+
+        //If we already had the permission granted, lets go to read data from database and pass them to audioItemArrayAdapter, to show in Recyclerview,
+        //otherwise we show the reason to access files
+
+        if(!RequiredPermissions.ACCESS_GRANTED_FILES) {
+            showReason();
+        }
+        else {
+            //if we have the permission, check Bundle object to verify if the activity comes from onPause or from onCreate
+            //if(savedInstanceState == null){
+                recyclerView.setAdapter(audioItemArrayAdapter);
+                int taskType = DataTrackDbHelper.existDatabase(this) && dbHelper.getCount(null) > 0 ? READ_FROM_DATABASE : CREATE_DATABASE;
+
+                AsyncReadFile asyncReadFile = new AsyncReadFile(taskType);
+                asyncReadFile.execute();
+            //}
+        }
+
+    Log.d(IS_PROCESSING_TASK,isProcessingTask+"");
+        //setup action to fab depending on isProcessingTask flag
+        if(isProcessingTask){
+           startTask();
+        }
+        else {
+            fab.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    setupActionFloatingActionButton();
+                }
+            });
+        }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
@@ -317,15 +296,7 @@ public class SelectFolderActivity extends AppCompatActivity
         // ATTENTION: This was auto-generated to implement the App Indexing API.
         // See https://g.co/AppIndexing/AndroidStudio for more information.
         client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
-        dbHelper = DataTrackDbHelper.getInstance(getApplicationContext());
-        mediaPlayer = CustomMediaPlayer.getInstance(this);
-        mediaPlayer.setOnCompletionListener(this);
-    }
-
-    @Override
-    public void onRestoreInstanceState(Bundle savedInstanceState){
-        super.onRestoreInstanceState(savedInstanceState);
-
+        Log.d(TAG,"onCreate");
     }
 
     /**
@@ -341,50 +312,95 @@ public class SelectFolderActivity extends AppCompatActivity
         // See https://g.co/AppIndexing/AndroidStudio for more information.
         client.connect();
         AppIndex.AppIndexApi.start(client, getIndexApiAction());
-        //Intent intent = new Intent(this, NewFilesScannerService.class);
-        //bindService(intent,serviceConnection, Context.BIND_NOT_FOREGROUND);
+
+        //cancel all notifications when activity is in foreground
+        NotificationManager nManager = ((NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE));
+        nManager.cancelAll();
+
+        //register filters to listen for response from FixerTrackService
+        localBroadcastManager.registerReceiver(receiver,intentFilter);
+        localBroadcastManager.registerReceiver(receiver,intentFilter1);
+        localBroadcastManager.registerReceiver(receiver,intentFilter2);
+        localBroadcastManager.registerReceiver(receiver,intentFilter3);
+        localBroadcastManager.registerReceiver(receiver,intentFilter4);
+        localBroadcastManager.registerReceiver(receiver,intentFilter5);
+        Log.d(TAG,"onStart");
 
     }
 
     @Override
+    public void onRestoreInstanceState(Bundle savedInstanceState){
+        super.onRestoreInstanceState(savedInstanceState);
+        //if state was previously saved, restore it
+        isProcessingTask = savedInstanceState.getBoolean("processing_task",false);
+
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startTask();
+            }
+        });
+
+        if(recyclerView.getAdapter() == null)
+            recyclerView.setAdapter(audioItemArrayAdapter);
+        Log.d(TAG,"onRestoreInstanceState");
+
+    }
+
+
+    @Override
     protected void onResume(){
         super.onResume();
-        localBroadcastManager.registerReceiver(receiver,intentFilter);
-        localBroadcastManager.registerReceiver(receiver,intentFilter1);
-        localBroadcastManager.registerReceiver(receiver,intentFilter2);
-
+        Log.d(TAG,"onResume");
     }
 
     @Override
     protected void onPause(){
         super.onPause();
-        localBroadcastManager.unregisterReceiver(receiver);
+        Log.d(TAG,"onPause");
+        //Deregister filters to listen for response from FixerTrackService
+        //and save resources, if service is not processing any task
+        if(!isProcessingTask)
+            localBroadcastManager.unregisterReceiver(receiver);
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle savedInstanceState){
+        Log.d(TAG,"onSaveInstanceState");
+        //savedInstanceState.putBoolean("createItemList", false);
+        //savedInstanceState.putParcelable("state_list", recyclerView.getLayoutManager().onSaveInstanceState());
+        //save state
+        savedInstanceState.putBoolean(IS_PROCESSING_TASK,isProcessingTask);
+        super.onSaveInstanceState(savedInstanceState);
+
     }
 
     @Override
     public void onStop() {
-
-        //Log.d("onStop","onStop");
+        Log.d(TAG,"onStop");
         // ATTENTION: This was auto-generated to implement the App Indexing API.
         // See https://g.co/AppIndexing/AndroidStudio for more information.
         AppIndex.AppIndexApi.end(client, getIndexApiAction());
         client.disconnect();
-
+        //save state in case the user closes the app
+        SharedPreferences sharedPreferences = getSharedPreferences(SplashActivity.APP_SHARED_PREFERENCES, MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putBoolean(IS_PROCESSING_TASK,isProcessingTask);
+        editor.apply();
+        //if currently is processing correction, make visible a notification
+        //and make a service a foreground service
+        if(isServiceRunning()) {
+            Intent intent = new Intent(this, FixerTrackService.class);
+            intent.setAction(FixerTrackService.ACTION_SHOW_NOTIFICATION);
+            startService(intent);
+        }
 
         super.onStop();
     }
 
     @Override
     public void onDestroy(){
-        if(mediaPlayer != null && mediaPlayer.isPlaying()){
-            try {
-                mediaPlayer.playPreview(mediaPlayer.getCurrentId());
-            }catch (Exception e){
-                e.printStackTrace();
-            }
-            mediaPlayer.release();
-            mediaPlayer = null;
-        }
+        Log.d(TAG,"onDestroy");
         super.onDestroy();
     }
 
@@ -398,16 +414,6 @@ public class SelectFolderActivity extends AppCompatActivity
         }
     }
 
-    @Override
-    public void onSaveInstanceState(Bundle savedInstanceState){
-        super.onSaveInstanceState(savedInstanceState);
-        if(recyclerView != null) {
-            savedInstanceState.putBoolean("createItemList", false);
-            savedInstanceState.putParcelable("stateList", recyclerView.getLayoutManager().onSaveInstanceState());
-        }
-        //Log.d("onSaveInstanceState","onSaved");
-    }
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -417,21 +423,46 @@ public class SelectFolderActivity extends AppCompatActivity
 
         MenuItem searchItem = menu.findItem(R.id.action_search);
         searchView = (SearchView) MenuItemCompat.getActionView(searchItem);
+        searchView.setVisibility(View.GONE);
+
 
         // Define the listener
         MenuItemCompat.OnActionExpandListener expandListener = new MenuItemCompat.OnActionExpandListener() {
             @Override
             public boolean onMenuItemActionCollapse(MenuItem item) {
-                if(audioItemArrayAdapter != null && audioItemArrayAdapter.getItemCount() > 0) {
-                    audioItemArrayAdapter.getFilter().filter("");
+
+                if(swipeRefreshLayout != null) {
+                    swipeRefreshLayout.setEnabled(true);
                 }
 
+                if(audioItemArrayAdapter != null) {
+                    audioItemArrayAdapter.getFilter().filter("");
+                }
+                if(audioItemList.size() != 0)
+                    fab.show();
                 searchView.setOnQueryTextListener(null);
                 return true;  // Return true to collapse action swipeRefreshLayout
             }
 
             @Override
             public boolean onMenuItemActionExpand(MenuItem item) {
+
+                if(audioItemList.size() <= 0){
+                    showSnackBar(Snackbar.LENGTH_LONG, getString(R.string.no_items_found),NO_ID);
+                    return false;
+                }
+
+                if (swipeRefreshLayout != null){
+                    swipeRefreshLayout.setEnabled(false);
+                }
+
+                if(isGettingData){
+                    showSnackBar(Snackbar.LENGTH_LONG,getString(R.string.getting_data),NO_ID);
+                    return false;
+                }
+
+                fab.hide();
+
                 searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener(){
 
                     @Override
@@ -441,13 +472,11 @@ public class SelectFolderActivity extends AppCompatActivity
 
                     @Override
                     public boolean onQueryTextChange(String newText) {
-                        if(audioItemArrayAdapter !=null && audioItemArrayAdapter.getItemCount() > 0) {
+                        if(audioItemArrayAdapter != null) {
                             audioItemArrayAdapter.getFilter().filter(newText);
                         }
                         else {
-                            Toast toast = Toast.makeText(getApplicationContext(),getString(R.string.empty_list),Toast.LENGTH_SHORT);
-                            toast.setGravity(Gravity.CENTER,0,0);
-                            toast.show();
+                            showSnackBar(Snackbar.LENGTH_SHORT,getString(R.string.no_items_found),-1);
                         }
                         return true;
                     }
@@ -471,54 +500,70 @@ public class SelectFolderActivity extends AppCompatActivity
 
         switch (id){
             case R.id.select_all:
-                    selectAllItems();
+                //wait until processing finish
+                if(isProcessingTask){
+                    showSnackBar(Snackbar.LENGTH_LONG,getString(R.string.processing_task),-1);
+                    return false;
+                }
+
+                selectAllItems();
                 break;
             case R.id.go_to_current_playback:
+
+                //no items found
+                if(audioItemList.size() <= 0){
+                    showSnackBar(Snackbar.LENGTH_LONG, getString(R.string.no_items_found),NO_ID);
+                    return false;
+                }
+
+                //jump to current item playing
                 if(mediaPlayer != null && mediaPlayer.isPlaying() && audioItemArrayAdapter.getItemCount() > 0){
-                    int position = getItemByIdOrPath(mediaPlayer.getCurrentId(),"").getPosition();
-                    recyclerView.smoothScrollToPosition(position);
+                    recyclerView.smoothScrollToPosition(mediaPlayer.getCurrentAudioItem().getPosition());
                 }
                 else {
-                    Toast toast = Toast.makeText(getApplicationContext(),getString(R.string.empty_list),Toast.LENGTH_SHORT);
-                    toast.setGravity(Gravity.CENTER,0,0);
-                    toast.show();
+                    showSnackBar(Snackbar.LENGTH_SHORT, getString(R.string.empty_list),-1);
                 }
-                break;
-            case R.id.eraseCache:
-                removeCache();
                 break;
 
             case R.id.faq:
-                    Intent intent = new Intent(this,QuestionsActivity.class);
-                    startActivity(intent);
+                Intent intent = new Intent(this,QuestionsActivity.class);
+                startActivity(intent);
+                break;
+
+            case R.id.action_refresh:
+                //request permission in case is necessary and update
+                //our database
+                if(RequiredPermissions.ACCESS_GRANTED_FILES) {
+                    AsyncReadFile asyncReadFile = new AsyncReadFile(RE_SCAN);
+                    asyncReadFile.execute();
+                }
+                else {
+                    showReason();
+                }
                 break;
         }
 
         return super.onOptionsItemSelected(item);
     }
 
-    private void removeCache() {
-        Toast t = Toast.makeText(getApplicationContext(),getString(R.string.no_cache),Toast.LENGTH_SHORT);
-        t.setGravity(Gravity.CENTER,0,0);
-        t.show();
-    }
-
-
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
         // Handle navigation swipeRefreshLayout item clicks here.
-        //item.setChecked(true);
+
         int id = item.getItemId();
 
         if (id == R.id.rate) {
-            Toast.makeText(this, "En desarrollo", Toast.LENGTH_SHORT).show();
+            showSnackBar(Snackbar.LENGTH_SHORT, getString(R.string.in_development),NO_ID);
         } else if (id == R.id.share) {
-            Toast.makeText(this, "En desarrollo", Toast.LENGTH_SHORT).show();
+            showSnackBar(Snackbar.LENGTH_SHORT, getString(R.string.in_development),NO_ID);
         }
         else if(id == R.id.settings){
-
+        //configure app settings
             Intent intent = new Intent(this, SettingsActivity.class);
             startActivity(intent);
+        }
+        else {
+            ;
         }
 
 
@@ -527,7 +572,214 @@ public class SelectFolderActivity extends AppCompatActivity
         return true;
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[], @NonNull int[] grantResults) {
+        //verify permission to access files and execute scan if were granted
+        if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            setFilePermissionGranted();
+            executeScan();
+        }
+        //if not, show a message to indicate to user to swipe up to refresh
+        else{
+            swipeRefreshLayout.setRefreshing(false);
+            searchAgainMessage.setText(R.string.swipe_up_search);
+            searchAgainMessage.setVisibility(View.VISIBLE);
+            fab.hide();
+        }
 
+    }
+
+
+    /**
+     * this method handles click to every item in recycler view
+     * @param position
+     * @param view
+     */
+    @Override
+    public void onItemClicked(int position, View view) {
+        switch (view.getId()) {
+            case R.id.coverArt:
+                onClickCoverArt(view, position, false);
+                break;
+            case R.id.checkBoxTrack:
+                selectItem((long)view.getTag(), view, position);
+                break;
+            case R.id.playButton:
+
+                try {
+                    AudioItem audioItem = audioItemArrayAdapter.getItemByIdOrPath((long) view.findViewById(R.id.playButton).getTag(), null);
+                    if(!AudioItem.checkFileIntegrity(audioItem.getAbsolutePath())){
+                        showConfirmationDialog(audioItem.getAbsolutePath(),position);
+                        return;
+                    }
+                    mediaPlayer.playPreview(audioItem.getId());
+                } catch (IOException | InterruptedException e) {
+                    e.printStackTrace();
+                }
+                break;
+            default:
+                try {
+                    correctSong(view, position);
+                } catch (IOException | InterruptedException e) {
+                    e.printStackTrace();
+                }
+                break;
+        }
+    }
+
+    /**
+     * This callback inform us that data has been change and we need
+     * to update the item in list
+     * @param requestCode
+     * @param resultCode
+     * @param data
+     */
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data){
+        super.onActivityResult(requestCode,resultCode,data);
+        if(requestCode == MODIFY_TRACK_DATA && data != null){
+            if(resultCode == 1) {
+                AudioItem audioItem = data.getParcelableExtra(FixerTrackService.AUDIO_ITEM);
+                setAudioItem(audioItem);
+            }
+        }
+    }
+
+    /**
+     * Handles onCompletion event fired from media player
+     * when item that is playing ends.
+     * @param mp
+     */
+    @Override
+    public void onCompletion(MediaPlayer mp) {
+        AudioItem audioItem = audioItemArrayAdapter.getItemByIdOrPath(mediaPlayer.getCurrentId(),null);
+        audioItem.setPlayingAudio(false);
+        mediaPlayer.onCompletePlayback();
+    }
+
+    /**
+     * Sets the action to floating action button (fab)
+     */
+    private void setupActionFloatingActionButton(){
+        if(ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED){
+            ActivityCompat.requestPermissions(SelectFolderActivity.this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 2);
+        }
+        else {
+
+            //Automatic mode require some conditions to execute
+            int canContinue = allowExecute(SelectFolderActivity.this);
+            if(canContinue != 0) {
+                showSnackBar(canContinue);
+                return;
+            }
+
+            if(getCountSelectedItems() == 0){
+                showSnackBar(Snackbar.LENGTH_LONG, getString(R.string.no_songs_to_correct), NO_ID);
+                return;
+            }
+
+
+
+            //start correction in automatic mode
+            Intent intent = new Intent(SelectFolderActivity.this, FixerTrackService.class);
+            intent.putExtra(FixerTrackService.SINGLE_TRACK, false);
+            intent.putExtra(FixerTrackService.FROM_EDIT_MODE, false);
+            startService(intent);
+            startTask();
+
+        }
+    }
+
+    /**
+     * This method creates a general snackbar,
+     * for recycle its use
+     */
+    private void createSnackBar() {
+
+        snackbar = Snackbar.make(swipeRefreshLayout,"",Snackbar.LENGTH_SHORT);
+        TextView tv = (TextView) this.snackbar.getView().findViewById(android.support.design.R.id.snackbar_text);
+
+            snackbar.getView().setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.primaryLightColor));
+            tv.setTextColor(ContextCompat.getColor(getApplicationContext(),R.color.grey_800));
+            snackbar.setActionTextColor(ContextCompat.getColor(getApplicationContext(),R.color.grey_800));
+
+    }
+
+    /**
+     * @param duration
+     * @param msg
+     * @param id
+     */
+    private void showSnackBar(int duration, String msg, final long id){
+
+        if(snackbar != null) {
+            snackbar = null;
+            createSnackBar();
+        }
+
+        //no action if no ID
+        if(id == -1){
+            snackbar.setText(msg);
+            snackbar.setDuration(duration);
+            snackbar.setAction("",null);
+        }
+        else {
+            //setaction if id != -1
+            snackbar.setText(msg);
+            snackbar.setDuration(duration);
+            snackbar.setAction(R.string.manual_mode, new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent intent2 = new Intent(SelectFolderActivity.this, DetailsTrackDialogActivity.class);
+                    intent2.putExtra("itemId",id);
+                    intent2.putExtra("manualMode",true);
+                    startActivity(intent2);
+                }
+            });
+        }
+
+        snackbar.show();
+    }
+
+    /**
+     * checks if FixerTrackService is running
+     * @return
+     */
+    private boolean isServiceRunning() {
+        ActivityManager manager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)){
+            if(FixerTrackService.class.getName().equals(service.service.getClassName())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     *
+     * @return the number of elements marked
+     *          as selected
+     */
+    private int getCountSelectedItems(){
+        int numberOfSelectedItems = 0;
+        if(audioItemArrayAdapter != null && audioItemArrayAdapter.getItemCount() >0) {
+            for (int t = 0; t < audioItemArrayAdapter.getItemCount(); t++) {
+                if (audioItemList.get(t).isChecked()) {
+                    numberOfSelectedItems++;
+                }
+            }
+        }
+
+        return numberOfSelectedItems;
+    }
+
+    /**
+     * Some actions require that some conditions are true
+     * this method verifies these conditions
+     * @param mContext
+     * @return
+     */
     public static int allowExecute(Context mContext){
         Context context = mContext.getApplicationContext();
         //No internet connection
@@ -549,90 +801,30 @@ public class SelectFolderActivity extends AppCompatActivity
         return 0;
     }
 
-    public void setSnackBar(int action, String message, boolean playing, final long id, final Context context){
-
-        switch (action){
-            case ACTION_PLAY:
-                snackbar.setDuration(Snackbar.LENGTH_INDEFINITE);
-                snackbar.setAction("Detener", new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        if(mediaPlayer.isPlaying()){
-                            try {
-                                mediaPlayer.playPreview(mediaPlayer.getCurrentId());
-                                snackbar.dismiss();
-                            } catch (IOException | InterruptedException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                    }
-                });
-                if(playing)
-                    snackbar.show();
-                else
-                    snackbar.dismiss();
-
-                snackbar.setText("Reproduciendo " + message);
-                break;
-            case ACTION_EDIT:
-                snackbar.setText(message);
-                snackbar.setDuration(5000);
-                snackbar.setAction("Editar", new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        Intent intent2 = new Intent(SelectFolderActivity.this, DetailsTrackDialogActivity.class);
-                        intent2.putExtra("itemId",id);
-                        context.startActivity(intent2);
-                        snackbar.dismiss();
-                    }
-                });
-                snackbar.show();
-                break;
-            case ACTION_SHOW_INFO:
-                snackbar.setText(message);
-                snackbar.setDuration(Snackbar.LENGTH_SHORT);
-                snackbar.setAction("", null);
-                break;
-        }
-    }
-
+    /**
+     * This method mark as select all
+     * items in recycler view
+     */
     private void selectAllItems(){
-        if(audioItemList.size() == 0 ){
-            Toast t = Toast.makeText(getApplicationContext(),getString(R.string.no_items),Toast.LENGTH_SHORT);
-            t.setGravity(Gravity.CENTER,0,0);
-            t.show();
-            return;
-        }
 
         if(isProcessingTask){
-            Toast t = Toast.makeText(getApplicationContext(),getString(R.string.processing_task),Toast.LENGTH_SHORT);
-            t.setGravity(Gravity.CENTER,0,0);
-            t.show();
+            showSnackBar(Snackbar.LENGTH_SHORT, getString(R.string.processing_task),-1);
             return;
         }
 
-
-        SharedPreferences shaPreferences = getSharedPreferences("ShaPreferences", Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = shaPreferences.edit();
+        if(audioItemList.size() == 0 ){
+            showSnackBar(Snackbar.LENGTH_SHORT, getString(R.string.no_items), NO_ID);
+            return;
+        }
 
         final boolean areAllSelected = audioItemArrayAdapter.areAllSelected();
 
-        if(areAllSelected){
-            audioItemArrayAdapter.setAllSelected(false);
-            editor.putBoolean("allSelected",false);
-        }
-        else {
-            audioItemArrayAdapter.setAllSelected(true);
-            editor.putBoolean("allSelected",true);
-        }
-        editor.apply();
-
-
+        //database operation can block UI if we run on Main process
         new Thread(new Runnable() {
             @Override
             public void run() {
                 ContentValues values = new ContentValues();
-                values.put(TrackContract.TrackData.COLUMN_NAME_IS_SELECTED,!areAllSelected);
+                values.put(TrackContract.TrackData.IS_SELECTED,!areAllSelected);
                 dbHelper.updateData(values);
             }
         }).start();
@@ -642,95 +834,63 @@ public class SelectFolderActivity extends AppCompatActivity
             audioItemArrayAdapter.notifyItemChanged(f);
         }
 
-    }
+        audioItemArrayAdapter.setAllSelected(!areAllSelected);
 
-    public static AudioItem getItemByIdOrPath(long id, String path){
-        AudioItem audioItem = null;
-
-        if(id != -1){
-            for(int t = 0; t < audioItemArrayAdapter.getItemCount() ; t++){
-                if(audioItemList.get(t).getId() == id ){
-                        audioItem =  audioItemList.get(t);
-                    break;
-                }
-            }
-            return audioItem;
-        }
-
-        if(path != null && !path.equals("")){
-            for(int t = 0; t < audioItemArrayAdapter.getItemCount() ; t++){
-                if(audioItemList.get(t).getNewAbsolutePath().equals(path)){
-                        audioItem = audioItemList.get(t);
-                    break;
-                }
-            }
-        }
-
-        return audioItem;
     }
 
     /**
-     *
-     * @return the number of elements marked
-     *          as selected
+     * This method starts a correction for a single item
+     * @param view
+     * @param position
+     * @throws IOException
+     * @throws InterruptedException
      */
-    int getCountSelectedItems(){
-        int numberOfSelectedItems = 0;
-        if(audioItemArrayAdapter != null && audioItemArrayAdapter.getItemCount() >0) {
-            for (int t = 0; t < audioItemArrayAdapter.getItemCount(); t++) {
-                if (audioItemList.get(t).isChecked()) {
-                    numberOfSelectedItems++;
-                }
-            }
-        }
+    private void correctSong(View view, final int position) throws IOException, InterruptedException {
+        final String absolutePath = (String) view.findViewById(R.id.absolute_path).getTag();
+        final View getView = view.findViewById(R.id.coverArt);
 
-        return numberOfSelectedItems;
-    }
-    protected void correctSong(final View view, final int position) throws IOException, InterruptedException {
-        final long id = (long) view.findViewById(R.id.path).getTag();
-        final AudioItem audioItem = getItemByIdOrPath(id,"");
-
-        Log.d("ACCESS_GRANTED_FILES",position+"");
-
-
-        if(!RequiredPermissions.ACCESS_GRANTED_FILES){
-            Toast toast = Toast.makeText(getApplicationContext(), getString(R.string.permission_denied),Toast.LENGTH_SHORT);
-            toast.setGravity(Gravity.CENTER,0,0);
-            toast.show();
+        //check if audio item can accessed
+        boolean canBeRead = AudioItem.checkFileIntegrity(absolutePath);
+        if(!canBeRead){
+            showConfirmationDialog(absolutePath,position);
             return;
         }
 
-        if(audioItem.isProcessing()){
-            Toast toast = Toast.makeText(getApplicationContext(), getString(R.string.current_file_processing),Toast.LENGTH_SHORT);
-            toast.setGravity(Gravity.CENTER,0,0);
-            toast.show();
+        final AudioItem audioItem = audioItemArrayAdapter.getItemByIdOrPath(NO_ID, absolutePath);
+
+        //wait until service finish correction to this track
+        if(isProcessingTask){
+            showSnackBar(Snackbar.LENGTH_SHORT, getString(R.string.processing_task), NO_ID);
             return;
         }
 
-        if(!checkFileIntegrity(audioItem)){
-            showConfirmationDialog(position,audioItem,null);
-            return;
-        }
 
 
         final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle(getString(R.string.confirm_correction_title)).setMessage(getString(R.string.confirm_correction) + " " + audioItem.getTitle() + "?")
+        builder.setTitle(getString(R.string.confirm_correction_title)).setMessage(getString(R.string.confirm_correction) + " " + AudioItem.getFilename(absolutePath) + "?")
                 .setNegativeButton(getString(R.string.manual_mode), new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        onClickCoverArt(view, position);
+                        onClickCoverArt(getView, position, true);
                     }
                 })
                 .setPositiveButton("Si", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        shouldContinue = true;
+
+                        int canContinue = allowExecute(SelectFolderActivity.this);
+                        if(canContinue != 0) {
+                            showSnackBar(canContinue);
+                            return;
+                        }
+
+
                         audioItem.setProcessing(true);
-                        audioItemArrayAdapter.notifyItemChanged(audioItem.getPosition());
-                        intentFixerTrackService = new Intent(SelectFolderActivity.this, FixerTrackService.class);
-                        intentFixerTrackService.putExtra("singleTrack",true);
-                        intentFixerTrackService.putExtra("id",id);
-                        startService(intentFixerTrackService);
+                        audioItemArrayAdapter.notifyItemChanged(position);
+                        Intent intent = new Intent(SelectFolderActivity.this, FixerTrackService.class);
+                        intent.putExtra(FixerTrackService.FROM_EDIT_MODE,false);
+                        intent.putExtra(FixerTrackService.AUDIO_ITEM, audioItem);
+                        startService(intent);
                         startTask();
 
                     }
@@ -742,36 +902,22 @@ public class SelectFolderActivity extends AppCompatActivity
     }
 
     public void cancelProcessing(){
-        if(SelectFolderActivity.audioItemList != null && SelectFolderActivity.audioItemList.size() > 0){
-            for(int k = 0 ; k < SelectFolderActivity.audioItemList.size() ; k++) {
-                AudioItem audioItem = SelectFolderActivity.audioItemList.get(k);
-                if (audioItem.isProcessing()){
-                    audioItem.setProcessing(false);
-                    audioItemArrayAdapter.notifyItemChanged(audioItem.getPosition());
-                    Log.d("procssing_audio_file", audioItem.isProcessing() + "");
-                }
-            }
-        }
     }
 
-    public static boolean checkFileIntegrity(long id){
-        final AudioItem audioItem = getItemByIdOrPath(id,"");
-        String path = audioItem.getNewAbsolutePath();
-        File file = new File(path);
 
-        return file.exists() && file.length() > 0 && file.canRead();
-    }
+    /**
+     * Shows a confirmation dialog when user is going to cancel current task
+     * @param absolutePath
+     * @param position
+     */
+    private void showConfirmationDialog(final String absolutePath, final int position){
+        final AudioItem audioItem = audioItemArrayAdapter.getItemByIdOrPath(NO_ID, absolutePath);
 
-    public static boolean checkFileIntegrity(AudioItem audioItem){
-        String path = audioItem.getNewAbsolutePath();
-        File file = new File(path);
-
-        return file.exists() && file.length() > 0 && file.canRead();
-    }
-
-    private void showConfirmationDialog(final int position, final AudioItem audioItem, final String[] ids){
         String msg = "";
         String title = "";
+        msg = getString(R.string.file_error);
+        title = getString(R.string.title_dialog_file_error);
+
 
         final AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
@@ -780,228 +926,129 @@ public class SelectFolderActivity extends AppCompatActivity
                 dialog.cancel();
             }
         });
+        builder.setPositiveButton("Si", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                audioItemList.remove(audioItem);
+                audioItemArrayAdapter.notifyItemRemoved(position);
+                updateNumberItems();
+            }
+        });
 
-        if(ids != null){
-            msg = "¿Confirme que desea eliminar de la lista los items seleccionados?";
-            title = "Eliminar seleccionados.";
-            builder.setPositiveButton("Si", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    try {
-                        if(mediaPlayer.isPlaying())
-                            mediaPlayer.playPreview(mediaPlayer.getCurrentId());
-                    } catch (IOException | InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    dbHelper.deleteItems(audioItemArrayAdapter.getIdsSelectedItems());
-                    audioItemArrayAdapter.removeItems(audioItemArrayAdapter.getSelectedItems());
-                    audioItemArrayAdapter.sortByPath();
-                    audioItemArrayAdapter.renewItemsPositions();
-                    actionMode.finish();
-                }
-            });
-        }
-        else{
-            msg = getString(R.string.file_error);
-            title = getString(R.string.title_dialog_file_error);
-            builder.setPositiveButton("Si", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    try {
-                        if(mediaPlayer.isPlaying())
-                            mediaPlayer.playPreview(mediaPlayer.getCurrentId());
-                    } catch (IOException | InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    audioItemArrayAdapter.removeItem(position);
-                    dbHelper.removeItem(audioItem.getId(), TrackContract.TrackData.TABLE_NAME);
-                    audioItemArrayAdapter.sortByPath();
-                    audioItemArrayAdapter.renewItemsPositions();
-                }
-            });
-        }
 
         builder.setTitle(title).setMessage(msg);
 
         final AlertDialog dialog =  builder.create();
-        dialog.setCancelable(false);
+        dialog.setCancelable(true);
         dialog.show();
     }
 
 
-    public void onClickCoverArt(View view, int position){
+    /**
+     * Opens new activity showing up the details from current audio item pressed
+     * @param view
+     * @param position
+     * @param manualMode
+     */
+    public void onClickCoverArt(View view, int position, boolean manualMode){
+        String path = "";
 
+        path = (String) ((View)view.getParent()).findViewById(R.id.absolute_path).getTag();
 
-        final long p = (long) ((ViewGroup)view.getParent()).findViewById(R.id.path).getTag();
-        final AudioItem audioItem = getItemByIdOrPath(p,"");
-
-        if(audioItem.isProcessing()){
-            Toast toast = Toast.makeText(getApplicationContext(), getString(R.string.current_file_processing),Toast.LENGTH_SHORT);
-            toast.setGravity(Gravity.CENTER,0,0);
-            toast.show();
+        if(!AudioItem.checkFileIntegrity(path)){
+            showConfirmationDialog(path,position);
             return;
         }
 
-        if(!checkFileIntegrity(audioItem.getId())){
-            showConfirmationDialog(position,audioItem,null);
+
+        AudioItem audioItem = audioItemArrayAdapter.getItemByIdOrPath(NO_ID, path);
+
+        if(audioItem.isProcessing()){
+            showSnackBar(Snackbar.LENGTH_LONG, getString(R.string.current_file_processing),NO_ID);
             return;
         }
 
         Intent intent = new Intent(this, DetailsTrackDialogActivity.class);
-        //TransitionManager.beginDelayedTransition();
-        intent.putExtra("itemId",(long)((ViewGroup)view.getParent()).findViewById(R.id.path).getTag());
+        intent.putExtra(FixerTrackService.MEDIASTORE_ID, audioItem.getId());
+        intent.putExtra(FixerTrackService.MANUAL_MODE, manualMode);
+        ActivityOptionsCompat options = ActivityOptionsCompat.makeSceneTransitionAnimation(
+                SelectFolderActivity.this,
+                view,
+                ViewCompat.getTransitionName(view));
 
-        startActivity(intent);
+        startActivity(intent, options.toBundle());
     }
 
-    protected void selectItem(long id, View view){
+    /**
+     * This method marks as true selected column in database
+     * and checks the audioitem checkbox
+     * @param id
+     * @param view
+     * @param position
+     */
+    protected void selectItem(final long id, final View view, final int position){
+        final CheckBox checkBox = (CheckBox) view;
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Cursor data = dbHelper.getDataRow(id);
+                ContentValues newValues = null;
+                if(data != null){
+                    data.moveToFirst();
 
-        Cursor data = dbHelper.getDataRow(id);
-        CheckBox checkBox = null;
+                    boolean isChecked = data.getInt(data.getColumnIndexOrThrow(TrackContract.TrackData.IS_SELECTED)) != 0;
 
-        if(data != null){
-            if(view != null) {
-                checkBox = (CheckBox) view;
-                Log.d("THE_PATH",view.getTag()+"");
+                    AudioItem audioItem = audioItemArrayAdapter.getItemByIdOrPath(id, "");
+
+                    newValues = new ContentValues();
+                    if(isChecked) {
+                        newValues.put(TrackContract.TrackData.IS_SELECTED, false);
+                        audioItem.setChecked(false);
+
+                        //only main thread can touch its views.
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                checkBox.setChecked(false);
+                            }
+                        });
+
+                    }
+                    else {
+                        newValues.put(TrackContract.TrackData.IS_SELECTED, true);
+                        audioItem.setChecked(true);
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                checkBox.setChecked(true);
+                            }
+                        });
+                    }
+                    dbHelper.updateData(id, newValues);
+                    isChecked = data.getInt(data.getColumnIndexOrThrow(TrackContract.TrackData.IS_SELECTED)) != 0;
+                    newValues.clear();
+                    data.close();
+                    data = null;
+
+                    System.gc();
+
+                }
 
             }
 
-            data.moveToFirst();
-            boolean isChecked = data.getInt(data.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_IS_SELECTED)) != 0;
-            Log.d("IS_SELECTED_FROM_DB",isChecked+"");
-            AudioItem audioItem = getItemByIdOrPath(id, "");
-            Log.d("ID_POSITION",id + "_" + audioItem.getPosition());
-            ContentValues newValues = new ContentValues();
-            if(isChecked) {
-                newValues.put(TrackContract.TrackData.COLUMN_NAME_IS_SELECTED, false);
-                audioItem.setChecked(false);
-                if(checkBox != null){
-                    checkBox.setChecked(false);
-                }
-                else {
-                    audioItemArrayAdapter.notifyItemChanged(audioItem.getPosition());
-                }
+        }).start();
 
 
-            }
-            else {
-                newValues.put(TrackContract.TrackData.COLUMN_NAME_IS_SELECTED, true);
-                audioItem.setChecked(true);
-                if(checkBox != null){
-                    checkBox.setChecked(true);
-                }
-                else {
-                    audioItemArrayAdapter.notifyItemChanged(audioItem.getPosition());
-                }
-
-
-            }
-            dbHelper.updateData(id, newValues);
-            isChecked = data.getInt(data.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_IS_SELECTED)) != 0;
-            Log.d("IS_SELECTED_NOW",isChecked+"");
-            newValues.clear();
-            data.close();
-            data = null;
-            System.gc();
-        }
     }
 
     protected void executeScan(){
-        Toast toast = Toast.makeText(this, "Buscando música", Toast.LENGTH_SHORT);
-        toast.setGravity(Gravity.CENTER,0,0);
-        toast.show();
-        setupAdapter();
+        if(recyclerView.getAdapter() == null)
+            recyclerView.setAdapter(audioItemArrayAdapter);
         AsyncReadFile asyncReadFile = new AsyncReadFile(CREATE_DATABASE);
         asyncReadFile.execute();
 
     }
 
-    @Override
-    public void onItemClicked(int position, View view) {
-        if (actionMode == null){
-            switch (view.getId()) {
-                case R.id.coverArt:
-                    onClickCoverArt(view, position);
-                    break;
-                case R.id.checkBoxTrack:
-                    selectItem((long) view.getTag(), view);
-                    break;
-                default:
-
-                    int canContinue = allowExecute(SelectFolderActivity.this);
-                    if(canContinue != 0) {
-                        showToast(canContinue);
-                        return;
-                    }
-
-                    try {
-                        correctSong(view, position);
-                    } catch (IOException | InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    break;
-            }
-        }
-        else {
-            long id;
-
-            switch (view.getId()) {
-                case R.id.coverArt:
-                    id = (long) ((ViewGroup)view.getParent()).findViewById(R.id.path).getTag();
-                    break;
-                case R.id.checkBoxTrack:
-                    id = (long)view.getTag();
-                    break;
-                default:
-                    id = (long)view.findViewById(R.id.path).getTag();
-                    break;
-            }
-            toggleSelection(position,id);
-
-        }
-    }
-
-    @Override
-    public boolean onItemLongClicked(int position, View view) {
-        Log.d("longclic",position+"");
-        if(actionMode == null) {
-            currentAudioItem = getItemByIdOrPath((long)view.findViewById(R.id.path).getTag(),null);
-            SelectFolderActivity.this.actionMode = startSupportActionMode(SelectFolderActivity.this);
-            toggleSelection(position, currentAudioItem.getId());
-        }
-        else{
-            currentAudioItem = null;
-            actionMode.finish();
-            actionMode = null;
-        }
-        return false;
-    }
-
-    private void toggleSelection(int position, long id) {
-        audioItemArrayAdapter.toggleSelection(position, id);
-        int count = audioItemArrayAdapter.getSelectedItemCount();
-
-        if (count == 0) {
-            actionMode.finish();
-        } else {
-            actionMode.invalidate();
-        }
-    }
-
-    protected void setupAdapter(){
-        Log.d("ADAPTER","SETUP_ADAPTER");
-
-        recyclerView = (RecyclerView) findViewById(R.id.list_view_songs);
-        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
-        recyclerView.setLayoutManager(linearLayoutManager);
-        recyclerView.setHasFixedSize(true);
-        recyclerView.setAdapter(audioItemArrayAdapter);
-    }
-
-    private void detachAdapter(){
-        Log.d("ADAPTER","DETACH_ADAPTER");
-        recyclerView.setAdapter(null);
-    }
 
     protected void askForPermission(String permission) {
 
@@ -1009,7 +1056,7 @@ public class SelectFolderActivity extends AppCompatActivity
             case Manifest.permission.READ_EXTERNAL_STORAGE:
                 //Sino tenemos el permiso lo pedimos
                 if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
-                    ActivityCompat.requestPermissions(this, new String[]{permission}, RequiredPermissions.READ_INTERNAL_STORAGE_PERMISSION);
+                    ActivityCompat.requestPermissions(this, new String[]{permission}, RequiredPermissions.READ_EXTERNAL_STORAGE_PERMISSION);
                 }
                 else {
                     executeScan();
@@ -1020,133 +1067,78 @@ public class SelectFolderActivity extends AppCompatActivity
 
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[], @NonNull int[] grantResults) {
-
-        if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            setFilePermissionGranted();
-            executeScan();
-        }
-        else{
-            searchAgainMessage.setVisibility(View.VISIBLE);
-            /*Intent i = new Intent();
-            i.setAction(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-            i.addCategory(Intent.CATEGORY_DEFAULT);
-            i.setData(Uri.parse("package:" + getPackageName()));
-            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            i.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
-            i.addFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
-            startActivity(i);
-            SelectFolderActivity.this.swipeRefreshLayout.setRefreshing(false);*/
-        }
-
-    }
-
     private void startTask(){
         this.fab.setOnClickListener(null);
         this.fab.setImageDrawable(getDrawable(R.drawable.ic_stop_white_24dp));
         this.fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                final AlertDialog.Builder builder = new AlertDialog.Builder(SelectFolderActivity.this);
-                builder.setTitle(R.string.cancelling).setMessage(R.string.cancel_task)
-                        .setNegativeButton("No", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                dialog.cancel();
-                            }
-                        })
-                        .setPositiveButton("Si", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-
-                                if(receiver != null && receiver.isOrderedBroadcast()) {
-                                    receiver.abortBroadcast();
-                                    receiver.clearAbortBroadcast();
-                                }
-
-                                FixerTrackService.cancelGnMusicIdFileProcessing();
-                                cancelProcessing();
-                                shouldContinue = false;
-                                Log.d("shouldContinue",shouldContinue+"");
-                                finishTaskByUser();
-                            }
-                        });
-                final AlertDialog dialog =  builder.create();
-                dialog.setCancelable(false);
-                dialog.show();
+                setStartTaskStateFab();
             }
         });
+    }
+
+    private void setStartTaskStateFab(){
+        final AlertDialog.Builder builder = new AlertDialog.Builder(SelectFolderActivity.this);
+        builder.setTitle(R.string.cancelling).setMessage(R.string.cancel_task)
+                .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.cancel();
+                    }
+                })
+                .setPositiveButton("Si", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+
+                        Intent intent = new Intent(SelectFolderActivity.this, FixerTrackService.class);
+                        intent.setAction(FixerTrackService.ACTION_CANCEL);
+                        startService(intent);
+                    }
+                });
+        final AlertDialog dialog =  builder.create();
+        dialog.setCancelable(false);
+        dialog.show();
     }
 
     private void finishTaskByUser(){
-        this.fab.setOnClickListener(null);
-        this.fab.setImageDrawable(getDrawable(R.drawable.ic_android_white_24px));
-        this.fab.setOnClickListener(new View.OnClickListener() {
+        SelectFolderActivity.this.fab.setOnClickListener(null);
+        SelectFolderActivity.this.fab.setImageDrawable(getDrawable(R.drawable.ic_magic_wand_auto_fix_button));
+        SelectFolderActivity.this.fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED){
-                    ActivityCompat.requestPermissions(SelectFolderActivity.this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 2);
-                }
-                else {
-
-
-                    int canContinue = allowExecute(SelectFolderActivity.this);
-                    if(canContinue != 0) {
-                        showToast(canContinue);
-                        return;
-                    }
-
-                    if(getCountSelectedItems() == 0) {
-                        Toast toast = Toast.makeText(getApplicationContext(),getString(R.string.no_songs_to_correct),Toast.LENGTH_SHORT);
-                        toast.setGravity(Gravity.CENTER,0,0);
-                        toast.show();
-                        return;
-                    }
-
-                    for(int i = 0; i < audioItemArrayAdapter.getItemCount() ; i++){
-                        AudioItem audioItem = audioItemList.get(i);
-                        if(audioItem.isSelected()){
-                            SelectFolderActivity.this.recyclerView.smoothScrollToPosition(audioItem.getPosition());
-                            break;
-                        }
-                    }
-
-                    intentFixerTrackService = new Intent(SelectFolderActivity.this, FixerTrackService.class);
-                    intentFixerTrackService.putExtra("singleTrack",false);
-                    startService(intentFixerTrackService);
-                    startTask();
-
-                }
+                setupActionFloatingActionButton();
             }
         });
+        isProcessingTask = false;
+        SharedPreferences sharedPreferences = getSharedPreferences(SplashActivity.APP_SHARED_PREFERENCES, MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putBoolean(IS_PROCESSING_TASK,isProcessingTask);
+        editor.apply();
     }
 
-    private void showToast(int reason){
-        Toast t = Toast.makeText(getApplicationContext(),"",Toast.LENGTH_SHORT);
-        t.setGravity(Gravity.CENTER,0,0);
+    private void showSnackBar(int reason){
+        String msg = "";
         switch (reason){
             case SelectFolderActivity.NO_INTERNET_CONNECTION:
-                t.setText(R.string.no_internet_connection);
+                msg = getString(R.string.no_internet_connection_automatic_mode);
                 break;
             case SelectFolderActivity.PROCESSING_TASK:
-                t.setText(R.string.processing_task);
+                msg = getString(R.string.processing_task);
                 break;
             case SelectFolderActivity.NO_INITIALIZED_API:
-                t.setText(R.string.initializing_recognition_api);
+                msg = getString(R.string.initializing_recognition_api);
                 break;
         }
-        t.show();
+        showSnackBar(Snackbar.LENGTH_SHORT, msg,-1);
     }
 
     private void setFilePermissionGranted(){
-        SplashActivity.sharedPreferences = getSharedPreferences("ShaPreferences", Context.MODE_PRIVATE);
+        SplashActivity.sharedPreferences = getSharedPreferences(SplashActivity.APP_SHARED_PREFERENCES, Context.MODE_PRIVATE);
         SplashActivity.editor = sharedPreferences.edit();
         SplashActivity.editor.putBoolean("accessFilesPermission", true);
         SplashActivity.editor.apply();
         RequiredPermissions.ACCESS_GRANTED_FILES = true;
-        Log.d("READ_INTERNAL",PackageManager.PERMISSION_GRANTED+"");
     }
 
     private void showReason(){
@@ -1162,7 +1154,8 @@ public class SelectFolderActivity extends AppCompatActivity
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 searchAgainMessage.setVisibility(View.VISIBLE);
-                SelectFolderActivity.this.swipeRefreshLayout.setRefreshing(false);
+                searchAgainMessage.setText(R.string.swipe_up_search);
+                swipeRefreshLayout.setRefreshing(false);
             }
         });
         final AlertDialog dialog =  builder.create();
@@ -1170,89 +1163,151 @@ public class SelectFolderActivity extends AppCompatActivity
         dialog.show();
     }
 
-
-
-    @Override
-    public void onCompletion(MediaPlayer mp) {
-        CustomMediaPlayer.onCompletePlayback(mediaPlayer.getCurrentId());
-                    SelectFolderActivity.snackbar.dismiss();
-    }
-
-    @Override
-    public boolean onCreateActionMode(ActionMode mode, Menu menu) {
-        MenuInflater inflater = mode.getMenuInflater();
-        inflater.inflate(R.menu.cab_menu, menu);
-        fab.hide();
-        swipeRefreshLayout.setEnabled(false);
-        return true;
-    }
-
-    @Override
-    public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
-        return false;
-    }
-
-    @Override
-    public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
-
-
-        if(item.getItemId() == R.id.action_play){
-            if(isProcessingTask){
-                Toast toast = Toast.makeText(getApplicationContext(),
-                        "Espera a que termine la corrección en curso para poder editar esta canción.",
-                        Toast.LENGTH_LONG);
-                toast.setGravity(Gravity.CENTER,0,0);
-                toast.show();
-            }
-
-
-            if(mediaPlayer == null){
-                mediaPlayer = CustomMediaPlayer.getInstance(SelectFolderActivity.this);
-            }
-            try {
-                mediaPlayer.playPreview(currentAudioItem.getId());
-                if(mediaPlayer.isPlaying()){
-                    //setSnackBar(mediaPlayer.getCurrentPath(), true);
-                }
-                else{
-                    snackbar.dismiss();
-                }
-            } catch (IOException | InterruptedException e) {
-                e.printStackTrace();
-            }
-            mode.finish();
+    private void setAudioItem(AudioItem audioItem){
+        AudioItem currentAudioItem = audioItemArrayAdapter.getItemByIdOrPath(audioItem.getId(), null);
+        if(currentAudioItem != null) {
+            currentAudioItem.setId(audioItem.getId());
+            currentAudioItem.setTitle(audioItem.getTitle());
+            currentAudioItem.setArtist(audioItem.getArtist());
+            currentAudioItem.setAlbum(audioItem.getAlbum());
+            currentAudioItem.setAbsolutePath(audioItem.getAbsolutePath());
+            currentAudioItem.setStatus(audioItem.getStatus());
+            currentAudioItem.setChecked(false);
+            currentAudioItem.setProcessing(false);
+            audioItemArrayAdapter.notifyItemChanged(currentAudioItem.getPosition());
+            currentAudioItem = null;
         }
-        else{
-            showConfirmationDialog(0,null, audioItemArrayAdapter.getIdsSelectedItems());
+    }
+
+    private void setProcessingAudioItem(long id){
+        AudioItem audioItem = audioItemArrayAdapter.getItemByIdOrPath(id,null);
+        audioItem.setProcessing(true);
+        recyclerView.smoothScrollToPosition(audioItem.getPosition());
+        audioItemArrayAdapter.notifyItemChanged(audioItem.getPosition());
+    }
+
+    private void updateNumberItems(){
+        if(audioItemList != null){
+            actionBar.setTitle(audioItemList.size() + " " +getString(R.string.tracks));
         }
-
-        return false;
-    }
-
-    @Override
-    public void onDestroyActionMode(ActionMode mode) {
-        this.actionMode = null;
-        fab.show();
-        audioItemArrayAdapter.clearSelection();
-        swipeRefreshLayout.setEnabled(true);
-    }
-
-    @Override
-    public boolean onMenuItemClick(MenuItem item) {
-        return false;
     }
 
     private class AsyncReadFile extends AsyncTask<Void, AudioItem, Void> {
-        private DataTrackDbHelper trackDbHelper = DataTrackDbHelper.getInstance(getApplicationContext());
         private int taskType;
-        private int counterPosition = 0;
         private Cursor data;
-        private ContentValues contentValues = new ContentValues();
+        private int added = 0;
+        private int removed = 0;
 
         AsyncReadFile(int codeTaskType){
             this.taskType = codeTaskType;
+
             if(codeTaskType == CREATE_DATABASE){
-                trackDbHelper.clearDb();
+                SelectFolderActivity.this.dbHelper.clearDb();
+            }
+        }
+
+        @Override
+        protected void onPreExecute() {
+            swipeRefreshLayout.setRefreshing(true);
+            isGettingData = true;
+            if(searchView != null){
+                searchView.setVisibility(View.GONE);
+            }
+
+            if(taskType == CREATE_DATABASE) {
+                showSnackBar(Snackbar.LENGTH_SHORT,getString(R.string.getting_data),NO_ID);
+                searchAgainMessage.setVisibility(View.GONE);
+            }
+
+        }
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+
+            switch (taskType){
+                //If we are updating for new elements added
+                case RE_SCAN:
+                    removeUnusedItems();
+                    rescanAndUpdateList();
+                    break;
+                //if database does not exist
+                case CREATE_DATABASE:
+                    createNewTable();
+                    break;
+                //if we are reading data from database
+                case READ_FROM_DATABASE:
+                    removeUnusedItems();
+                    readFromDatabase();
+                    break;
+            }
+
+            //close cursor
+            if(this.data != null) {
+                data.close();
+                data = null;
+            }
+
+            return null;
+        }
+
+        @Override
+        protected void onProgressUpdate(AudioItem... audioItems) {
+            super.onProgressUpdate(audioItems);
+            if(taskType == RE_SCAN){
+                audioItemList.add(audioItems[0]);
+                audioItemArrayAdapter.notifyItemInserted(0);
+            }
+            else {
+                audioItemList.add(audioItems[0]);
+                audioItemArrayAdapter.notifyItemInserted(audioItemList.size()-1);
+            }
+
+            updateNumberItems();
+        }
+
+        @Override
+        protected void onPostExecute(Void result) {
+            super.onPostExecute(result);
+            swipeRefreshLayout.setRefreshing(false);
+            swipeRefreshLayout.setEnabled(true);
+
+            isGettingData = false;
+
+            //there are not songs?
+            if(audioItemList.size() == 0){
+                SelectFolderActivity.this.searchAgainMessage.setText(getString(R.string.no_items_found));
+                SelectFolderActivity.this.searchAgainMessage.setVisibility(View.VISIBLE);
+                return;
+            }
+
+            if(removed > 0){
+                showSnackBar(Toast.LENGTH_SHORT,removed + " " + getString(R.string.removed_inexistent),NO_ID);
+            }
+
+            if(added > 0 ){
+                showSnackBar(Toast.LENGTH_SHORT,added + " " + getString(R.string.new_files_found),NO_ID);
+                recyclerView.smoothScrollToPosition(0);
+            }
+
+            if(searchView != null){
+                searchView.setVisibility(View.VISIBLE);
+            }
+            updateNumberItems();
+            SelectFolderActivity.this.fab.show();
+
+
+            System.gc();
+        }
+
+        @Override
+        public void onCancelled(){
+            super.onCancelled();
+            isGettingData = false;
+            swipeRefreshLayout.setEnabled(true);
+            swipeRefreshLayout.setRefreshing(false);
+            updateNumberItems();
+            if(searchView != null){
+                searchView.setVisibility(View.VISIBLE);
             }
         }
 
@@ -1261,11 +1316,11 @@ public class SelectFolderActivity extends AppCompatActivity
          * only mp3 files data is retrieved
          * @return
          */
-        Cursor getDataFromDevice() {
+        private Cursor getDataFromDevice() {
 
-            String mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension("mp3");
+            String mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(getString(R.string.mp3_type));
 
-            //Only select mp3 music files
+            //Only select mp3 music files from this content provider
             String selection = MediaStore.Audio.Media.IS_MUSIC + " != 0" + " and "
                     + MediaStore.Audio.Media.MIME_TYPE + " = " + " \'" +mimeType + "\'";
 
@@ -1274,10 +1329,7 @@ public class SelectFolderActivity extends AppCompatActivity
                     MediaStore.Audio.Media.TITLE,
                     MediaStore.Audio.Media.ARTIST,
                     MediaStore.Audio.AlbumColumns.ALBUM ,
-                    MediaStore.Audio.Media.DURATION,
-                    MediaStore.Audio.Media.DATA, // absolute path to audio file
-                    MediaStore.Audio.AudioColumns.DISPLAY_NAME,
-                    MediaStore.Audio.Media.SIZE
+                    MediaStore.Audio.Media.DATA // absolute path to audio file
             };
             //get data from content provider
             //the last parameter sorts the data alphanumerically by the "DATA" field
@@ -1292,23 +1344,46 @@ public class SelectFolderActivity extends AppCompatActivity
          * This method rescan mediastore DB, and
          * if there are new elements, add them to list
          */
-        void rescanAndUpdateList(){
+        private void rescanAndUpdateList(){
             data = getDataFromDevice();
             while(data.moveToNext()){
-                boolean existInTable = trackDbHelper.existInDatabase(data.getInt(0));
-                Log.d("existInTable",existInTable+"");
+                boolean existInTable = SelectFolderActivity.this.dbHelper.existInDatabase(data.getInt(0));
+
                 if(!existInTable){
                     createAndAddAudioItem();
-                    audioItemArrayAdapter.setSorted(false);
+                    added++;
                 }
             }
+
+            if(this.data != null) {
+                data.close();
+                data = null;
+            }
         }
+
+        private void removeUnusedItems(){
+            for(int pos = 0 ; pos < audioItemList.size() ; pos++){
+                AudioItem audioItem = audioItemList.get(0);
+                File file = new File(audioItem.getAbsolutePath());
+                if (!file.exists()) {
+                    SelectFolderActivity.this.dbHelper.removeItem(audioItem.getId(), TrackContract.TrackData.TABLE_NAME);
+                    audioItemList.remove(pos);
+                    audioItemArrayAdapter.notifyItemRemoved(pos);
+                    removed++;
+                }
+                file = null;
+            }
+
+
+
+        }
+
 
         /**
          * This method creates new table, in case is
          * the first use of app, then passes this data to adapter
          */
-        void createNewTable(){
+        private void createNewTable(){
             data = getDataFromDevice();
             if(data.moveToFirst()) {
                 do {
@@ -1316,8 +1391,6 @@ public class SelectFolderActivity extends AppCompatActivity
                 }
                 while (data.moveToNext());
             }
-            contentValues.clear();
-            contentValues = null;
         }
 
         /**
@@ -1325,35 +1398,32 @@ public class SelectFolderActivity extends AppCompatActivity
          * DB created after the first use of app,
          * then passes this data to adapter
          */
-        void readFromDatabase(){
+        private void readFromDatabase(){
 
-            data = trackDbHelper.getDataFromDB();
+            data = SelectFolderActivity.this.dbHelper.getDataFromDB();
             int dataLength = data != null ? data.getCount() : 0;
             if (dataLength > 0) {
                 while (data.moveToNext()) {
-                        boolean isChecked = data.getInt(data.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_IS_SELECTED)) != 0;
-                        String title = data.getString(data.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_TITLE)).equals("") ?
-                                "No disponible" : data.getString(data.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_TITLE));
-                        String artist = data.getString(data.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_ARTIST)).equals("") ?
-                                "No disponible" : data.getString(data.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_ARTIST));
-                        String album = data.getString(data.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_ALBUM)).equals("") ?
-                                "No disponible" : data.getString(data.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_ALBUM));
-                        String filename = data.getString(data.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_CURRENT_FILENAME)).equals("") ?
-                                "No disponible" : data.getString(data.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_CURRENT_FILENAME));
-                        String id = data.getString(data.getColumnIndexOrThrow(TrackContract.TrackData._ID));
-                        String fullPath = data.getString(data.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_CURRENT_FULL_PATH));
-                        String path = data.getString(data.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_CURRENT_PATH));
-                        int totalSeconds = Integer.parseInt(data.getString(data.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_DURATION)));
-                        String sFilesizeInMb = data.getString(data.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_FILE_SIZE));
-                        float fFileSizeInMb = Float.parseFloat(sFilesizeInMb);
-                        String status = data.getString(data.getColumnIndexOrThrow(TrackContract.TrackData.COLUMN_NAME_STATUS));
-                        //byte[] cover = data.getBlob(data.getColumnIndex(TrackContract.TrackData.COLUMN_NAME_COVER_ART));
+                    int _id = data.getInt(data.getColumnIndexOrThrow(TrackContract.TrackData.MEDIASTORE_ID));
+                    String title = data.getString(data.getColumnIndexOrThrow(TrackContract.TrackData.TITLE));
+                    String artist = data.getString(data.getColumnIndexOrThrow(TrackContract.TrackData.ARTIST));
+                    String album = data.getString(data.getColumnIndexOrThrow(TrackContract.TrackData.ALBUM));
+                    String fullpath = data.getString(data.getColumnIndexOrThrow(TrackContract.TrackData.DATA));
+                    boolean isChecked = data.getInt(data.getColumnIndexOrThrow(TrackContract.TrackData.IS_SELECTED)) != 0;
+                    int status = data.getInt(data.getColumnIndexOrThrow(TrackContract.TrackData.STATUS));
+                    boolean isProcessing = data.getInt(data.getColumnIndexOrThrow(TrackContract.TrackData.IS_PROCESSING)) != 0;
 
-                        AudioItem audioItem = new AudioItem();
-                        audioItem.setTitle(title).setArtist(artist).setAlbum(album).setDuration(totalSeconds).setHumanReadableDuration(AudioItem.getHumanReadableDuration(totalSeconds)).setId(Long.parseLong(id)).setNewAbsolutePath(fullPath).setPosition(counterPosition).setStatus(Integer.parseInt(status)).setFileName(filename).setSize(fFileSizeInMb).setPath(path).setChecked(isChecked);
-                        totalSeconds = 0;
-                        publishProgress(audioItem);
-                        counterPosition++;
+                    AudioItem audioItem = new AudioItem();
+                    audioItem.setId(_id).
+                            setTitle(title).
+                            setArtist(artist).
+                            setAlbum(album).
+                            setAbsolutePath(fullpath).
+                            setChecked(isChecked).
+                            setStatus(status).
+                            setProcessing(isProcessing);
+
+                    publishProgress(audioItem);
 
                 }//end while
             }//end if
@@ -1365,34 +1435,19 @@ public class SelectFolderActivity extends AppCompatActivity
          * created at onCreated callback from
          * parent activity.
          */
-        void createAndAddAudioItem(){
+        private void createAndAddAudioItem(){
             int mediaStoreId = data.getInt(0);//mediastore id
-            String title = !data.getString(1).contains("unknown") ? data.getString(1) : "No disponible";
-            String artist = !data.getString(2).contains("unknown") ? data.getString(2) : "No disponible";
-            String album = !data.getString(3).contains("unknown") ? data.getString(3) : "No disponible";
-            int duration = data.getInt(4);
+            String title = data.getString(1);
+            String artist = data.getString(2);
+            String album = data.getString(3);
+            String fullPath = Uri.parse(data.getString(4)).toString(); //MediaStore.Audio.Media.DATA column is the file path
 
-            String humanReadableDuration = AudioItem.getHumanReadableDuration(duration);
-            String fullPath = Uri.parse(data.getString(5)).toString(); //MediaStore.Audio.Media.DATA column is the file path
-            String filename = data.getString(6); //MediaStore.Audio.AudioColumns.DISPLAY_NAME, column is file name
-            String fileSize = data.getString(7); //
-            String path = new File(fullPath).getParent();
-            float fileSizeInMb = Float.parseFloat(fileSize) / 1048576;
-
-
-            //ContentValues values = new ContentValues();
-            contentValues.put(TrackContract.TrackData.COLUMN_NAME_MEDIASTORE_ID,mediaStoreId);
-            contentValues.put(TrackContract.TrackData.COLUMN_NAME_TITLE, title);
-            contentValues.put(TrackContract.TrackData.COLUMN_NAME_ARTIST, artist);
-            contentValues.put(TrackContract.TrackData.COLUMN_NAME_ALBUM, album);
-            contentValues.put(TrackContract.TrackData.COLUMN_NAME_DURATION, duration);
-            contentValues.put(TrackContract.TrackData.COLUMN_NAME_FILE_SIZE, fileSizeInMb);
-            contentValues.put(TrackContract.TrackData.COLUMN_NAME_CURRENT_FILENAME, filename);
-            contentValues.put(TrackContract.TrackData.COLUMN_NAME_CURRENT_PATH, path);
-            contentValues.put(TrackContract.TrackData.COLUMN_NAME_CURRENT_FULL_PATH, fullPath);
-            contentValues.put(TrackContract.TrackData.COLUMN_NAME_STATUS, AudioItem.FILE_STATUS_NO_PROCESSED);
-            contentValues.put(TrackContract.TrackData.COLUMN_NAME_ADDED_RECENTLY,true);
-
+            ContentValues values = new ContentValues();
+            values.put(TrackContract.TrackData.MEDIASTORE_ID,mediaStoreId);
+            values.put(TrackContract.TrackData.TITLE, title);
+            values.put(TrackContract.TrackData.ARTIST, artist);
+            values.put(TrackContract.TrackData.ALBUM, album);
+            values.put(TrackContract.TrackData.DATA, fullPath);
 
             AudioItem audioItem = new AudioItem();
 
@@ -1400,114 +1455,16 @@ public class SelectFolderActivity extends AppCompatActivity
             //we do, relay in this id,
             //so when we save row to DB
             //it returns its id as a result
-            long _id = trackDbHelper.insertRow(contentValues, TrackContract.TrackData.TABLE_NAME);
-            audioItem.setTitle(title).setArtist(artist).setAlbum(album).setDuration(duration).setHumanReadableDuration(humanReadableDuration).setNewAbsolutePath(fullPath).setPath(path).setFileName(filename).setPosition(counterPosition).setSize(fileSizeInMb);
-            audioItem.setId(_id);
+            long _id = SelectFolderActivity.this.dbHelper.insertItem(values, TrackContract.TrackData.TABLE_NAME);
+            audioItem.setId(_id).setTitle(title).setArtist(artist).setAlbum(album).setAbsolutePath(fullPath);
 
             publishProgress(audioItem);
-            counterPosition++;
-            contentValues.clear();
-        }
-
-        @Override
-        protected Void doInBackground(Void... voids) {
-
-            switch (taskType){
-                //If we are updating for new elements added
-                case RE_SCAN:
-                    rescanAndUpdateList();
-                    break;
-                //if database does not exist
-                case CREATE_DATABASE:
-                    createNewTable();
-                    break;
-                //if we are reading data from database
-                case READ_FROM_DATABASE:
-                    readFromDatabase();
-                    break;
-            }
-            return null;
-        }
-
-
-        @Override
-        protected void onPreExecute() {
-            swipeRefreshLayout.setRefreshing(true);
-            isGettingData = true;
-            Toast toast = Toast.makeText(getApplicationContext(),"",Toast.LENGTH_SHORT);
-            SelectFolderActivity.this.fab.hide();
-
-            if(taskType == CREATE_DATABASE) {
-                toast.setText("Obteniendo información de canciones...");
-            }
-
-            else if(taskType == READ_FROM_DATABASE){
-                toast.setText("Cargando lista.");
-            }
-            else{
-                toast.setText("Actualizando lista.");
-            }
-            toast.setGravity(Gravity.CENTER,0,0);
-            toast.show();
-        }
-
-        @Override
-        protected void onPostExecute(Void result) {
-            super.onPostExecute(result);
-            swipeRefreshLayout.setRefreshing(false);
-            isGettingData = false;
-            counterPosition = 0;
-            SelectFolderActivity.this.fab.show();
-
-
-            //close cursor
-            if(this.data != null) {
-                data.close();
-                data = null;
-            }
-
-            //there are not songs?
-            if(audioItemList.size() == 0){
-                Toast toast =  Toast.makeText(getApplicationContext(),"No se encontraron canciones en MP3.",Toast.LENGTH_SHORT);
-                toast.setGravity(Gravity.CENTER,0,0);
-                toast.show();
-                return;
-            }
-
-            if(!audioItemArrayAdapter.isSorted()) {
-                audioItemArrayAdapter.sortByPath();
-                audioItemArrayAdapter.notifyDataSetChanged();
-                //Log.d("sort adapter", audioItemArrayAdapter.getItemCount()+"  "+ audioItemList.size());
-            }
-
-            getSupportActionBar().setTitle(audioItemList.size() + " canciones");
-            Log.d("sort adapter", audioItemArrayAdapter.getItemCount()+"  "+ audioItemList.size());
-                AsyncLoadCoverArt asyncLoadCoverArt = new AsyncLoadCoverArt(taskType);
-                asyncLoadCoverArt.execute();
-
-            System.gc();
-        }
-
-        @Override
-        protected void onProgressUpdate(AudioItem... audioItems) {
-            super.onProgressUpdate(audioItems);
-            audioItemList.add(audioItems[0]);
-            Log.d("position",audioItems[0].getPosition()+" , size adapter: " + audioItemArrayAdapter.getItemCount());
-            audioItemArrayAdapter.notifyItemInserted(audioItems[0].getPosition());
-        }
-
-        @Override
-        public void onCancelled(){
-            super.onCancelled();
-            if(this.data != null){
-                data.close();
-                data = null;
-            }
-            isGettingData = false;
-            swipeRefreshLayout.setRefreshing(false);
+            values.clear();
+            values = null;
         }
 
     }
+
 
     /**
      * ATTENTION: This was auto-generated to implement the App Indexing API.
@@ -1525,180 +1482,54 @@ public class SelectFolderActivity extends AppCompatActivity
                 .build();
     }
 
-
     public class ResponseReceiver extends BroadcastReceiver{
-
+        private String TAG = ResponseReceiver.class.getName();
         @Override
-        public void onReceive(Context context, Intent intent) {
-            String action = "";
-            action = intent.getAction();
-            long id = intent.getLongExtra("id",-1);
-            boolean singleTrack = intent.getBooleanExtra("singleTrack",false);
-            AudioItem audioItem = null;
-
-            if(id != -1 ){
-                audioItem = getItemByIdOrPath(id,null);
-                audioItem.setProcessing(false);
-                audioItemArrayAdapter.notifyItemChanged(audioItem.getPosition());
-            }
-
-            switch (action){
-                case FixerTrackService.ACTION_DONE:
-                    int status = -1;
-                    audioItem.setChecked(false);
-                    if(singleTrack) {
-                        status = intent.getIntExtra("status", audioItem.getStatus());
-                        intent.removeExtra("status");
+        public void onReceive(Context context, final Intent intent) {
+            goAsync();
+            String action = intent.getAction();
+            Log.d(TAG,action);
+            if(action.equals(GnService.API_INITIALIZED)){
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        showSnackBar(Snackbar.LENGTH_SHORT, getString(R.string.api_initialized),NO_ID);
                     }
-                    if((singleTrack && status == AudioItem.FILE_STATUS_BAD) || (singleTrack && status == AudioItem.FILE_STATUS_INCOMPLETE)){
-                        setSnackBar(ACTION_EDIT,getString(R.string.incomplete_info_found) + audioItem.getFileName(),false,id, context);
-                    }
+                });
 
-                    intent.removeExtra("id");
-                    intent.removeExtra("singleTrack");
-
-                    break;
-                case FixerTrackService.ACTION_CANCEL:
-                case FixerTrackService.ACTION_COMPLETE_TASK:
-                    finishTaskByUser();
-                    break;
-                case FixerTrackService.ACTION_FAIL:
-                    break;
-            }
-
-
-
-
-        }
-    }
-
-    private class AsyncLoadCoverArt extends AsyncTask<Void, AudioItem, Void>{
-        private ContentValues contentValues;
-        private MediaMetadataRetriever mediaMetadataRetriever;
-        private int taskType;
-
-        AsyncLoadCoverArt(int taskType){
-            this.taskType = taskType;
-            contentValues = new ContentValues();
-            mediaMetadataRetriever = new MediaMetadataRetriever();
-        }
-
-        private void extractAndLoadCoverArt(){
-            //Columns to retrieve
-            String[] projection = {TrackContract.TrackData._ID, TrackContract.TrackData.COLUMN_NAME_CURRENT_FULL_PATH};
-            String selection = TrackContract.TrackData.COLUMN_NAME_ADDED_RECENTLY + " = ?";
-            //condition to accomplish
-            String[] selectionArgs = {1+""};
-
-            Cursor cursor = SelectFolderActivity.this.dbHelper.getDataFromDB(projection,selection,selectionArgs);
-            //if cursor could be move to first element, means that cursor is not empty
-            boolean hasData = cursor.moveToFirst();
-
-            //Log.d("cursor",hasData+"_" +hasData + "_" + cursor.getCount());
-            //No data? then finish process
-            if(!hasData) {
-                cursor.close();
-                cursor = null;
-                return;
-            }
-
-            AudioItem audioItem = null;
-            byte[] coverArt = null;
-
-            do{
-                long id = cursor.getLong(cursor.getColumnIndex(TrackContract.TrackData._ID));
-                String path = cursor.getString(cursor.getColumnIndex(TrackContract.TrackData.COLUMN_NAME_CURRENT_FULL_PATH));
-
-                audioItem = getItemByIdOrPath(id,"");
-                assert audioItem != null;
-
-                try {
-                    mediaMetadataRetriever.setDataSource(path);
-
-                    coverArt = mediaMetadataRetriever.getEmbeddedPicture();
-                    if(coverArt != null) {
-                        audioItem.setCoverArt(coverArt);
-                        contentValues.put(TrackContract.TrackData.COLUMN_NAME_COVER_ART,coverArt);
-                        Log.d("COVER ART","setCoverArt " + audioItem.getId());
-                    }
-                }
-                catch (Exception e){
-                    e.printStackTrace();
-                }
-                finally {
-                    //once has been loaded its cover art, mark as FALSE its column and field "added recently"
-                    contentValues.put(TrackContract.TrackData.COLUMN_NAME_ADDED_RECENTLY,false);
-                    SelectFolderActivity.this.dbHelper.updateData(id,contentValues);
-                    contentValues.clear();
-                    coverArt = null;
-                    publishProgress(audioItem);
-                    audioItem = null;
-                }
-
-
-            }while (cursor.moveToNext());
-
-            cursor.close();
-            cursor = null;
-        }
-
-        private void loadCoverArt(){
-            //Columns to retrieve
-            String[] projection = {TrackContract.TrackData.COLUMN_NAME_COVER_ART};
-            String selection = TrackContract.TrackData._ID + " = ?";
-            //condition to accomplish
-            String[] selectionArgs = new String[1];
-            Cursor cursor = null;
-            for(AudioItem audioItem: audioItemList){
-                selectionArgs[0] = audioItem.getId()+"";
-                cursor = SelectFolderActivity.this.dbHelper.getDataFromDB(projection,selection,selectionArgs);
-                //if cursor could be move to first element, means that cursor is not empty
-                boolean hasData = cursor.moveToFirst();
-                //No data? then finish process
-                if(!hasData) {
-                    cursor.close();
-                    cursor = null;
-                    continue;
-                }
-                byte[] cover = cursor.getBlob(cursor.getColumnIndex(TrackContract.TrackData.COLUMN_NAME_COVER_ART));
-                audioItem.setCoverArt(cover);
-                publishProgress(audioItem);
-                cursor.close();
-                cursor = null;
-                Log.d("cover_art_loaded","true");
-            }
-        }
-
-        @Override
-        protected void onPreExecute(){
-            //don't let refresh layout till all cover art be loaded.
-            swipeRefreshLayout.setEnabled(false);
-        }
-
-        @Override
-        protected Void doInBackground(Void... params) {
-            if(taskType == READ_FROM_DATABASE){
-                loadCoverArt();
             }
             else {
-                extractAndLoadCoverArt();
+
+                switch (action) {
+                    case FixerTrackService.ACTION_DONE:
+                        AudioItem audioItem = intent.getParcelableExtra(FixerTrackService.AUDIO_ITEM);
+                        setAudioItem(audioItem);
+                        break;
+                    case FixerTrackService.ACTION_SET_AUDIOITEM_PROCESSING:
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                setProcessingAudioItem(intent.getLongExtra(FixerTrackService.MEDIASTORE_ID,NO_ID));
+                            }
+                        });
+                        break;
+                    case FixerTrackService.ACTION_CANCEL:
+                        audioItem = intent.getParcelableExtra(FixerTrackService.AUDIO_ITEM);
+                        setAudioItem(audioItem);
+                    case FixerTrackService.ACTION_COMPLETE_TASK:
+                    case FixerTrackService.ACTION_FAIL:
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                finishTaskByUser();
+                            }
+                        });
+
+                        break;
+                }
+
+
             }
-            return null;
-        }
-
-        @Override
-        protected void onProgressUpdate(AudioItem... audioItem){
-            super.onProgressUpdate(audioItem);
-            int position = audioItem[0].getPosition();
-            audioItemArrayAdapter.notifyItemChanged(position);
-        }
-
-        @Override
-        protected void onPostExecute(Void voids){
-            contentValues = null;
-            mediaMetadataRetriever.release();
-            mediaMetadataRetriever = null;
-            swipeRefreshLayout.setEnabled(true);
         }
     }
 

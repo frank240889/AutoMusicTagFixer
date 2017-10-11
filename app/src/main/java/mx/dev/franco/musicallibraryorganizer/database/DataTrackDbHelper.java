@@ -1,4 +1,4 @@
-package mx.dev.franco.musicallibraryorganizer;
+package mx.dev.franco.musicallibraryorganizer.database;
 
 import android.annotation.SuppressLint;
 import android.content.ContentValues;
@@ -6,11 +6,9 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.text.TextUtils;
-import android.util.Log;
+import android.provider.BaseColumns;
 
 import java.io.File;
-import java.util.Arrays;
 
 /*
   Created by franco on 7/03/17.
@@ -25,30 +23,21 @@ import java.util.Arrays;
 public class DataTrackDbHelper extends SQLiteOpenHelper {
     // We define the SQL statements for create the database and one table
     @SuppressLint("StaticFieldLeak")
-    static boolean existDatabase = false;
     private static DataTrackDbHelper dbHelper;
     private static final String TEXT_TYPE = " TEXT";
-    private static final String BLOB_TYPE = " BLOB";
     private static final String BOOLEAN_TYPE = " BOOLEAN";
     private static final String INTEGER_TYPE = " INTEGER";
-    private static final String REAL_TYPE = " REAL";
     private static final String COMA_SEP = ",";
     private static final String SQL_CREATE_ENTRIES_FOR_TRACK_DATA = "CREATE TABLE " + TrackContract.TrackData.TABLE_NAME + " (" +
-            TrackContract.TrackData._ID + " INTEGER PRIMARY KEY," +
-            TrackContract.TrackData.COLUMN_NAME_MEDIASTORE_ID + INTEGER_TYPE + COMA_SEP +
-            TrackContract.TrackData.COLUMN_NAME_TITLE + TEXT_TYPE + COMA_SEP +
-            TrackContract.TrackData.COLUMN_NAME_ARTIST + TEXT_TYPE + COMA_SEP +
-            TrackContract.TrackData.COLUMN_NAME_ALBUM + TEXT_TYPE + COMA_SEP +
-            TrackContract.TrackData.COLUMN_NAME_DURATION + INTEGER_TYPE + COMA_SEP +
-            TrackContract.TrackData.COLUMN_NAME_FILE_SIZE + TEXT_TYPE + COMA_SEP +
-            TrackContract.TrackData.COLUMN_NAME_CURRENT_FILENAME + TEXT_TYPE + COMA_SEP +
-            TrackContract.TrackData.COLUMN_NAME_CURRENT_PATH + TEXT_TYPE + COMA_SEP +
-            TrackContract.TrackData.COLUMN_NAME_CURRENT_FULL_PATH + TEXT_TYPE + COMA_SEP +
-
-            TrackContract.TrackData.COLUMN_NAME_IS_SELECTED + BOOLEAN_TYPE + COMA_SEP +
-            TrackContract.TrackData.COLUMN_NAME_STATUS + INTEGER_TYPE + COMA_SEP +
-            TrackContract.TrackData.COLUMN_NAME_COVER_ART + BLOB_TYPE + COMA_SEP +
-            TrackContract.TrackData.COLUMN_NAME_ADDED_RECENTLY + BOOLEAN_TYPE + " )";
+            BaseColumns._ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
+            TrackContract.TrackData.MEDIASTORE_ID + INTEGER_TYPE + COMA_SEP +
+            TrackContract.TrackData.TITLE + TEXT_TYPE+ COMA_SEP +
+            TrackContract.TrackData.ARTIST + TEXT_TYPE + COMA_SEP +
+            TrackContract.TrackData.ALBUM + TEXT_TYPE + COMA_SEP +
+            TrackContract.TrackData.DATA + TEXT_TYPE + COMA_SEP +
+            TrackContract.TrackData.STATUS + INTEGER_TYPE + " DEFAULT 0" + COMA_SEP +
+            TrackContract.TrackData.IS_SELECTED + BOOLEAN_TYPE + " DEFAULT false"+COMA_SEP +
+            TrackContract.TrackData.IS_PROCESSING + BOOLEAN_TYPE + " DEFAULT false" + " )";
 
     private static final String SQL_DELETE_ENTRIES_FOR_TRACK_DATA = "DROP TABLE IF EXISTS " + TrackContract.TrackData.TABLE_NAME;
     //Initial version of DB,
@@ -101,38 +90,46 @@ public class DataTrackDbHelper extends SQLiteOpenHelper {
         onUpgrade(db,oldVersion,newVersion);
     }
 
+    /**
+     * Remove an item from our database
+     * in case already doesn't exist
+     * in smartphone
+     * @param id
+     * @param tableName
+     */
     public void removeItem(long id, String tableName){
-        String selection = TrackContract.TrackData._ID + " = ?";
-        Log.d("REMOVE_ITEM",id+"");
-
+        String selection = TrackContract.TrackData.MEDIASTORE_ID + " = ?";
         String[] selectionArgs = {id+""};
-        int result = getWritableDatabase().delete(tableName, selection, selectionArgs);
-        Log.d("RESULT_REMOVE",result+"");
-        this.close();
+        getWritableDatabase().delete(tableName, selection, selectionArgs);
     }
 
-    public long insertRow(ContentValues data, String tableName){
-        // Inserta nuevo registro y devuelve el id del registro
+    /**
+     * Adds new item to our database
+     * @param data
+     * @param tableName
+     * @return id corresponding to current row inserted
+     */
+    public long insertItem(ContentValues data, String tableName){
         long id = getWritableDatabase().insert(tableName, null,data);
         this.close();
         return id;
     }
 
-
+    /**
+     * get all data for populating
+     * our recycler view adapter
+     * @return cursor object or null if no data
+     */
     public Cursor getDataFromDB(){
         String[] projection = {
-                TrackContract.TrackData._ID,
-                TrackContract.TrackData.COLUMN_NAME_TITLE,
-                TrackContract.TrackData.COLUMN_NAME_ARTIST,
-                TrackContract.TrackData.COLUMN_NAME_ALBUM,
-                TrackContract.TrackData.COLUMN_NAME_DURATION,
-                TrackContract.TrackData.COLUMN_NAME_FILE_SIZE,
-                TrackContract.TrackData.COLUMN_NAME_CURRENT_FILENAME,
-                TrackContract.TrackData.COLUMN_NAME_CURRENT_PATH,
-                TrackContract.TrackData.COLUMN_NAME_CURRENT_FULL_PATH,
-                TrackContract.TrackData.COLUMN_NAME_IS_SELECTED,
-                TrackContract.TrackData.COLUMN_NAME_STATUS,
-                TrackContract.TrackData.COLUMN_NAME_ADDED_RECENTLY
+                TrackContract.TrackData.MEDIASTORE_ID,
+                TrackContract.TrackData.TITLE,
+                TrackContract.TrackData.ARTIST,
+                TrackContract.TrackData.ALBUM,
+                TrackContract.TrackData.DATA,
+                TrackContract.TrackData.IS_SELECTED,
+                TrackContract.TrackData.STATUS,
+                TrackContract.TrackData.IS_PROCESSING
         };
 
 
@@ -147,36 +144,21 @@ public class DataTrackDbHelper extends SQLiteOpenHelper {
         );
     }
 
-    public Cursor getDataFromDB(String[] projection, String selection, String[] selectionArgs){
-        return getReadableDatabase().query(
-                TrackContract.TrackData.TABLE_NAME,                     // Tabla a consultar
-                projection,                               // Qué columnas se obtendran
-                selection,                                // Las columnas a consultar en el WHERE
-                selectionArgs,                            // El valor buscado en el WHERE
-                null,                                     // null para no agrupar
-                null,                                     // null para no filtrar
-                null                                 // null para no ordenar
-        );
-
-    }
-
+    /**
+     * get only the absolute path stored
+     * for checking if item exists or not
+     * in smartphone
+     * @param id
+     * @return cursor object or null if no data
+     */
     public Cursor getDataRow(long id){
-        String selection = TrackContract.TrackData._ID + " = ?";
+        String selection = TrackContract.TrackData.MEDIASTORE_ID + " = ?";
 
         String[] selectionArgs = {String.valueOf(id)};
 
         String[] projection = {
-                TrackContract.TrackData._ID,
-                TrackContract.TrackData.COLUMN_NAME_TITLE,
-                TrackContract.TrackData.COLUMN_NAME_ARTIST,
-                TrackContract.TrackData.COLUMN_NAME_ALBUM,
-                TrackContract.TrackData.COLUMN_NAME_DURATION,
-                TrackContract.TrackData.COLUMN_NAME_FILE_SIZE,
-                TrackContract.TrackData.COLUMN_NAME_CURRENT_FILENAME,
-                TrackContract.TrackData.COLUMN_NAME_CURRENT_PATH,
-                TrackContract.TrackData.COLUMN_NAME_CURRENT_FULL_PATH,
-                TrackContract.TrackData.COLUMN_NAME_IS_SELECTED,
-                TrackContract.TrackData.COLUMN_NAME_STATUS
+                TrackContract.TrackData.MEDIASTORE_ID,
+                TrackContract.TrackData.IS_SELECTED
         };
 
         Cursor c = getReadableDatabase().query(
@@ -192,13 +174,19 @@ public class DataTrackDbHelper extends SQLiteOpenHelper {
         return (c != null && c.getCount() > 0)?c:null;
     }
 
-
-    public boolean existInDatabase(long id){
+    /**
+     * if there are any recent audio file
+     * added to smartphone, it verifies
+     * that already has been added to database
+     * @param id
+     * @return false in case doesn't exist in our database
+     */
+    public boolean existInDatabase(int id){
         String[] projection = {
-                TrackContract.TrackData.COLUMN_NAME_MEDIASTORE_ID,
+                TrackContract.TrackData.MEDIASTORE_ID,
         };
 
-        String selection = TrackContract.TrackData.COLUMN_NAME_MEDIASTORE_ID + " = ?";
+        String selection = TrackContract.TrackData.MEDIASTORE_ID + " = ?";
         String[] selectionArgs = {id+""};
 
         Cursor c = getReadableDatabase().query(
@@ -212,7 +200,7 @@ public class DataTrackDbHelper extends SQLiteOpenHelper {
         );
         if(c != null) {
             c.moveToFirst();
-            if(c.getCount() > 0 && c.getInt(c.getColumnIndex(TrackContract.TrackData.COLUMN_NAME_MEDIASTORE_ID)) == id){
+            if(c.getCount() > 0 && c.getInt(c.getColumnIndex(TrackContract.TrackData.MEDIASTORE_ID)) == id){
                 c.close();
                 return true;
             }
@@ -222,11 +210,11 @@ public class DataTrackDbHelper extends SQLiteOpenHelper {
 
     public boolean existInDatabase(String path){
         String[] projection = {
-                TrackContract.TrackData._ID,
-                TrackContract.TrackData.COLUMN_NAME_CURRENT_FULL_PATH,
+                TrackContract.TrackData.MEDIASTORE_ID,
+                TrackContract.TrackData.DATA,
         };
 
-        String selection = TrackContract.TrackData.COLUMN_NAME_CURRENT_FULL_PATH + " = ?";
+        String selection = TrackContract.TrackData.DATA + " = ?";
         String[] selectionArgs = {path};
 
         Cursor c = getReadableDatabase().query(
@@ -240,7 +228,7 @@ public class DataTrackDbHelper extends SQLiteOpenHelper {
         );
         if(c != null) {
             c.moveToFirst();
-            if(c.getCount() > 0 && c.getString(c.getColumnIndex(TrackContract.TrackData.COLUMN_NAME_CURRENT_FULL_PATH)).equals(path)){
+            if(c.getCount() > 0 && c.getString(c.getColumnIndex(TrackContract.TrackData.DATA)).equals(path)){
                 c.close();
                 return true;
             }
@@ -248,41 +236,41 @@ public class DataTrackDbHelper extends SQLiteOpenHelper {
         return false;
     }
 
-    public int setStatus(long id, ContentValues contentValues){
-        String selection = TrackContract.TrackData._ID + " = ?";
-        String[] selectionArgs = {id+""};
-        int updatedRow = getWritableDatabase().update(TrackContract.TrackData.TABLE_NAME, contentValues, selection, selectionArgs);
-        this.close();
-        //Log.d("ID", String.valueOf(updatedRow));
-        return updatedRow;
-    }
-
+    /**
+     * update row from provided
+     * content values object
+     * @param id
+     * @param contentValues
+     * @return how many rows were updated
+     */
     public int updateData(long id, ContentValues contentValues){
 
-        String selection = TrackContract.TrackData._ID + " = ?";
+        String selection = TrackContract.TrackData.MEDIASTORE_ID + " = ?";
         String selectionArgs[] = {id+""};
         return getWritableDatabase().update(TrackContract.TrackData.TABLE_NAME, contentValues, selection, selectionArgs);
     }
 
+    /**
+     * update any column data for all items
+     * @param contentValues
+     * @return how many rows were updated
+     */
     public int updateData(ContentValues contentValues){
         int updatedRow = getWritableDatabase().update(TrackContract.TrackData.TABLE_NAME, contentValues, null, null );
-        //this.close();
-        //Log.d("ROWS AFFECTED", String.valueOf(updatedRow));
         return updatedRow;
     }
 
+    /**
+     * clears db if any previous construction failed
+     * @return number of items deleted
+     */
     public int clearDb(){
-        int res;
-        int result1 = getWritableDatabase().delete(TrackContract.TrackData.TABLE_NAME, null, null);
-        res = result1;
-        Log.d("RESULT_REMOVE",result1+"");
-        this.close();
-        return res;
+        return getWritableDatabase().delete(TrackContract.TrackData.TABLE_NAME, null, null);
     }
 
     /**
-     * This method returns total elements is table
-     * @return
+     * Returns total elements in table
+     * @return number of elements
      */
     public int getCount(String tableName){
         String name;
@@ -302,22 +290,45 @@ public class DataTrackDbHelper extends SQLiteOpenHelper {
         ).getCount();
     }
 
-    public void closeConnection(){
-        this.close();
-    }
-
+    /**
+     * verifies if database exist in smartphone
+     * @param context
+     * @return true if exists
+     */
     public static boolean existDatabase(Context context){
         File db = context.getApplicationContext().getDatabasePath(DATABASE_NAME);
         return db.exists();
     }
 
-    public int deleteItems(String[] ids) { //ids is an array
-        String idsCSV = TextUtils.join(",", ids);
-        String placeholders = new String(new char[ids.length-1]).replace("\0", "?,") + "?";
-        Log.d("ids",idsCSV + "placeholders "+ placeholders + "_" + Arrays.toString(ids));
-        int rowsAffected = getWritableDatabase().delete(TrackContract.TrackData.TABLE_NAME, "CAST(" + TrackContract.TrackData._ID+" AS TEXT) IN (" + placeholders + ")", ids);
-        close();
-        Log.d("items_deleted",rowsAffected+"");
-        return rowsAffected;
+    /**
+     * get all items marked as true in its selected column
+     * @return cursor object or null if no selected items
+     */
+    public Cursor getAllSelected(){
+        String selection = TrackContract.TrackData.IS_SELECTED + " = ?";
+
+        String[] selectionArgs = {1+""}; //we cannot pass "true", because is store as integer
+
+        String[] projection = {
+                TrackContract.TrackData.MEDIASTORE_ID,
+                TrackContract.TrackData.TITLE,
+                TrackContract.TrackData.ARTIST,
+                TrackContract.TrackData.ALBUM,
+                TrackContract.TrackData.DATA,
+                TrackContract.TrackData.IS_SELECTED,
+                TrackContract.TrackData.STATUS
+        };
+
+        Cursor c = getReadableDatabase().query(
+                TrackContract.TrackData.TABLE_NAME,                     // table to query
+                projection,                               // Columns to get
+                selection,                                // columns to query
+                selectionArgs,                            // value of WHERE
+                null,                                     // null for no grouping
+                null,                                     // null for no filtering
+                null                                 // null for no ordering
+        );
+        return c;
     }
+
 }

@@ -1,4 +1,4 @@
-package mx.dev.franco.musicallibraryorganizer;
+package mx.dev.franco.musicallibraryorganizer.list;
 
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;

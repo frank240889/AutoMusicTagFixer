@@ -155,7 +155,7 @@ public class ScreenSlidePagerActivity extends FragmentActivity {
     }
 
     private void onClickLastPager(){
-        SplashActivity.sharedPreferences = getSharedPreferences("ShaPreferences", Context.MODE_PRIVATE);
+        SplashActivity.sharedPreferences = getSharedPreferences(SplashActivity.APP_SHARED_PREFERENCES, Context.MODE_PRIVATE);
         SplashActivity.editor = SplashActivity.sharedPreferences.edit();
         SplashActivity.editor.putBoolean("first",false);
         SplashActivity.editor.apply();

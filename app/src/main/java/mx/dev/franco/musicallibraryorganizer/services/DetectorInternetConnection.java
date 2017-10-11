@@ -51,7 +51,7 @@ public class DetectorInternetConnection extends JobService {
         //We set context and initialize the GNSDK API if it was not.
         if(isConnected && !GnService.apiInitialized) {
             GnService.setAppContext(getApplicationContext());
-            GnService.initializeAPI();
+            GnService.initializeAPI(GnService.API_INITIALIZED_AFTER_CONNECTED);
         }
 
         //if is connected, we finalize this job
