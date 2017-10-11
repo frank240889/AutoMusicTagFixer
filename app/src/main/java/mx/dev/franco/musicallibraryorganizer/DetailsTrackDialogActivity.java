@@ -74,6 +74,7 @@ import mx.dev.franco.musicallibraryorganizer.services.Job;
 import mx.dev.franco.musicallibraryorganizer.transitions.DetailsTransition;
 import mx.dev.franco.musicallibraryorganizer.utilities.CustomMediaPlayer;
 import mx.dev.franco.musicallibraryorganizer.utilities.FileSaver;
+import mx.dev.franco.musicallibraryorganizer.utilities.GlideApp;
 import mx.dev.franco.musicallibraryorganizer.utilities.StringUtilities;
 import wseemann.media.FFmpegMediaMetadataRetriever;
 
@@ -289,7 +290,9 @@ public class DetailsTrackDialogActivity extends AppCompatActivity implements Med
 
     /**
      * Shows the snackbar with the params received
-     * @param reason
+     * @param action execute code depending on action
+     * @param duration how long is displayed snackbar
+     * @param msg message to display
      */
     private void showSnackBar(int duration, String msg, int action){
         if(snackbar != null){
