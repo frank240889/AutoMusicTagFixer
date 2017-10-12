@@ -628,24 +628,6 @@ public class MainActivity extends AppCompatActivity
     }
 
     /**
-     * This callback inform us that data has been change and we need
-     * to update the item_list in list
-     * @param requestCode
-     * @param resultCode
-     * @param data
-     */
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data){
-        super.onActivityResult(requestCode,resultCode,data);
-        if(requestCode == MODIFY_TRACK_DATA && data != null){
-            if(resultCode == 1) {
-                AudioItem audioItem = data.getParcelableExtra(FixerTrackService.AUDIO_ITEM);
-                setAudioItem(audioItem);
-            }
-        }
-    }
-
-    /**
      * Handles onCompletion event fired from media player
      * when item_list that is playing ends.
      * @param mp
@@ -986,6 +968,13 @@ public class MainActivity extends AppCompatActivity
      * @param position
      */
     protected void selectItem(final long id, final View view, final int position){
+        AudioItem audioItem = audioItemArrayAdapter.getItemByIdOrPath(id, null);
+        Log.d("path", audioItem.getAbsolutePath());
+        if(!AudioItem.checkFileIntegrity(audioItem.getAbsolutePath())){
+            showConfirmationDialog(audioItem.getAbsolutePath(),position);
+            return;
+        }
+
         final CheckBox checkBox = (CheckBox) view;
         new Thread(new Runnable() {
             @Override
@@ -1053,7 +1042,7 @@ public class MainActivity extends AppCompatActivity
 
         switch (permission){
             case Manifest.permission.READ_EXTERNAL_STORAGE:
-                //Sino tenemos el permiso lo pedimos
+                //No permission? then ask it
                 if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
                     ActivityCompat.requestPermissions(this, new String[]{permission}, RequiredPermissions.READ_EXTERNAL_STORAGE_PERMISSION);
                 }
@@ -1365,7 +1354,7 @@ public class MainActivity extends AppCompatActivity
 
         private void removeUnusedItems(){
             for(int pos = 0 ; pos < audioItemList.size() ; pos++){
-                AudioItem audioItem = audioItemList.get(0);
+                AudioItem audioItem = audioItemList.get(pos);
                 File file = new File(audioItem.getAbsolutePath());
                 if (!file.exists()) {
                     MainActivity.this.dbHelper.removeItem(audioItem.getId(), TrackContract.TrackData.TABLE_NAME);
