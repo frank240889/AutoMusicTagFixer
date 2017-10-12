@@ -74,6 +74,7 @@ import mx.dev.franco.musicallibraryorganizer.list.AudioItem;
 import mx.dev.franco.musicallibraryorganizer.list.TrackAdapter;
 import mx.dev.franco.musicallibraryorganizer.services.DetectorInternetConnection;
 import mx.dev.franco.musicallibraryorganizer.services.FixerTrackService;
+import mx.dev.franco.musicallibraryorganizer.services.GnService;
 import mx.dev.franco.musicallibraryorganizer.services.Job;
 import mx.dev.franco.musicallibraryorganizer.transitions.DetailsTransition;
 import mx.dev.franco.musicallibraryorganizer.utilities.CustomMediaPlayer;
@@ -83,9 +84,8 @@ import mx.dev.franco.musicallibraryorganizer.utilities.StringUtilities;
 import wseemann.media.FFmpegMediaMetadataRetriever;
 
 import static android.view.View.GONE;
+import static mx.dev.franco.musicallibraryorganizer.services.GnService.API_INITIALIZED;
 import static mx.dev.franco.musicallibraryorganizer.services.GnService.apiInitialized;
-
-//import com.github.clans.fab.FloatingActionButton;
 
 /**
  * Created by franco on 22/07/17.
@@ -203,6 +203,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
     private boolean isDataValid = false;
     private boolean isFABOpen = false;
     private IntentFilter intentFilter2;
+    private IntentFilter intentFilter3;
 
     //references to visual elements of container
     //that shows tags found when it makes trackId
@@ -236,6 +237,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
         //Create receiver and filters to handle responses from FixerTrackService
         intentFilter = new IntentFilter(FixerTrackService.ACTION_DONE);
         intentFilter2 = new IntentFilter(FixerTrackService.ACTION_COMPLETE_TASK);
+        intentFilter3 = new IntentFilter(GnService.API_INITIALIZED);
 
         receiver = new ResponseReceiver();
         localBroadcastManager = LocalBroadcastManager.getInstance(getApplicationContext());
@@ -488,15 +490,11 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                 public void onAnimationEnd(Animator animation) {
                     trackIdCard.setVisibility(GONE);
                     content.setVisibility(View.VISIBLE);
-                    content.animate().setDuration(DURATION).alpha(1).setListener(new AnimatorListenerAdapter() {
-                        @Override
-                        public void onAnimationEnd(Animator animation) {
-                            floatingActionMenu.show();
-                            floatingActionMenu.setVisibility(View.VISIBLE);
-                            saveButton.hide();
-                            saveButton.setVisibility(GONE);
-                        }
-                    });
+                    floatingActionMenu.show();
+                    floatingActionMenu.setVisibility(View.VISIBLE);
+                    saveButton.hide();
+                    saveButton.setVisibility(GONE);
+                    content.animate().setDuration(DURATION).alpha(1);
 
                 }
             });
@@ -538,15 +536,6 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
         trackIdYear.setText("");
         trackIdYear.setVisibility(GONE);
 
-    }
-    private void removeErrorLabels() {
-        ArrayList<View> fields = viewDetailsTrack.getFocusables(View.FOCUS_DOWN);
-        int numElements = fields.size();
-        for (int i = 0 ; i < numElements ; i++){
-            if(fields.get(i) instanceof EditText){
-                ((EditText) fields.get(i)).setError(null);
-            }
-        }
     }
 
     @Override
@@ -850,9 +839,9 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                 closeFABMenu();
 
                 //This function requires some contidions to work, check them before
-                int canContinue = MainActivity.allowExecute(TrackDetailsActivity.this);
+                int canContinue = allowExecute();
                 if(canContinue != 0) {
-                    showSnackBar(MainActivity.NO_INTERNET_CONNECTION);
+                    showSnackBar(canContinue);
                     return;
                 }
 
@@ -885,7 +874,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                 int canContinue = allowExecute();
 
                 if(canContinue != 0) {
-                    showSnackBar(NO_INTERNET_CONNECTION_COVER_ART);
+                    showSnackBar(canContinue);
                     return;
                 }
 
@@ -930,6 +919,9 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
         toolbarCover.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                if(isFABOpen)
+                    closeFABMenu();
+
                 editCover();
             }
         });
@@ -1876,6 +1868,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
         super.onResume();
         localBroadcastManager.registerReceiver(receiver,intentFilter);
         localBroadcastManager.registerReceiver(receiver,intentFilter2);
+        localBroadcastManager.registerReceiver(receiver,intentFilter3);
     }
 
     private void setDownloadedValues(){
@@ -2171,6 +2164,9 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                         }
                     });
 
+                    break;
+                case API_INITIALIZED:
+                    showSnackBar(Snackbar.LENGTH_LONG,getString(R.string.api_initialized),ACTION_NONE,null);
                     break;
                 /*case FixerTrackService.ACTION_CANCEL:
                 case FixerTrackService.ACTION_COMPLETE_TASK:*/
