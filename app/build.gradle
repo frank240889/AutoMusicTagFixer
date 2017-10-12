@@ -17,16 +17,16 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
-    productFlavors {
+    /*productFlavors {
     }
-    /*splits {
+    splits {
         abi {
             enable
             reset()
-            include 'x86', 'armeabi', 'armeabi-v7a', 'mips'
+            //include 'x86', 'armeabi', 'armeabi-v7a', 'mips'
             /*exclude 'x86', 'mips', 'armeabi-v7a'
             include 'armeabi'
-            universalApk true
+            //universalApk true
      }
     }*/
 }

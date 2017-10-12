@@ -278,15 +278,6 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
 
     private void createSnackBar() {
         this.snackbar = Snackbar.make(viewDetailsTrack ,"",Snackbar.LENGTH_SHORT);
-        /*final FrameLayout snackBarView = (FrameLayout) snackbar.getView();
-        final FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) snackBarView.getChildAt(0).getLayoutParams();
-        params.setMargins(params.leftMargin,
-                params.topMargin,
-                params.rightMargin,
-                (int) (params.bottomMargin + getResources().getDimension(R.dimen.margin_bottom_snackbar)));
-
-        snackBarView.getChildAt(0).setLayoutParams(params);*/
-
         TextView tv = (TextView) this.snackbar.getView().findViewById(android.support.design.R.id.snackbar_text);
         snackbar.getView().setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.primaryLightColor));
         tv.setTextColor(ContextCompat.getColor(getApplicationContext(),R.color.grey_800));
@@ -295,10 +286,10 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
 
     /**
      * Shows the snackbar with the params received
-     * @param duration how long is displayed snackbar
+     * @param duration how long is displayed the snackbar
      * @param msg message to display
-     * @param action execute code depending on action
-     * @param path
+     * @param action action to execute
+     * @param path absolute path of file
      */
     private void showSnackBar(int duration, String msg, int action, final String path){
         if(snackbar != null){
@@ -458,6 +449,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
 
     @Override
     public void onBackPressed() {
+
         if(getSupportFragmentManager().getBackStackEntryCount() > 0) {
             getSupportFragmentManager().popBackStackImmediate();
             return;
@@ -475,11 +467,11 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
 
 
         dismiss();
-
+        super.onBackPressed();
     }
 
     private void disableLayout(){
-        //removeErrorLabels();
+
         setPreviousValues();
         disableFields();
         enableMiniFabs(true);
@@ -489,16 +481,26 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                 @Override
                 public void onAnimationEnd(Animator animation) {
                     trackIdCard.setVisibility(GONE);
-                    content.setVisibility(View.VISIBLE);
-                    floatingActionMenu.show();
-                    floatingActionMenu.setVisibility(View.VISIBLE);
-                    saveButton.hide();
-                    saveButton.setVisibility(GONE);
-                    content.animate().setDuration(DURATION).alpha(1);
+
+                    content.animate().setDuration(DURATION).alpha(1).setListener(new AnimatorListenerAdapter() {
+                        @Override
+                        public void onAnimationEnd(Animator animation) {
+                            content.setVisibility(View.VISIBLE);
+                            floatingActionMenu.show();
+                            floatingActionMenu.setVisibility(View.VISIBLE);
+                            saveButton.hide();
+                            saveButton.setVisibility(GONE);
+
+                        }
+                    });
 
                 }
             });
         }
+
+
+
+
 
         resetValues();
         appBarLayout.setExpanded(true);
@@ -629,7 +631,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
         }
 
         finishAfterTransition();
-        super.onBackPressed();
+
         System.gc();
     }
 

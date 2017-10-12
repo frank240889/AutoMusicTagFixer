@@ -19,6 +19,7 @@ import android.os.Message;
 import android.os.Process;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.NotificationCompat;
 import android.util.Log;
@@ -111,11 +112,6 @@ public class FixerTrackService extends Service {
     //set this flag to TRUE if we send this intent from DetailsTrackDialogActitivy class
     private boolean fromEditMode = false;
     private boolean downloadCover = false;
-    //report to MainActivity next item_list position, to make possible
-    //automatically scrolling to that item_list in list
-    private int nextPosition = -1;
-    private Thread workerThread;
-    private Runnable runnable;
 
     private String currentPath = "";
 
@@ -130,8 +126,6 @@ public class FixerTrackService extends Service {
 
     /**
      * Creates an IntentService.  Invoked by your subclass's constructor.
-     *
-     * @param name Used to name the worker thread, important only for debugging.
      */
     public FixerTrackService() {
         super();
@@ -196,7 +190,7 @@ public class FixerTrackService extends Service {
         Notification notification = new NotificationCompat.Builder(this)
                 .setContentTitle(getString(R.string.app_name))
                 .setAutoCancel(true)
-                .setColor(getResources().getColor(R.color.grey_800,null))
+                .setColor(ContextCompat.getColor(getApplicationContext(),R.color.grey_800))
                 .setTicker(getString(R.string.fixing_task))
                 .setContentText(getString(R.string.fixing_task))
                 .setSmallIcon(R.mipmap.ic_launcher)
@@ -326,7 +320,8 @@ public class FixerTrackService extends Service {
             gnMusicIdFileInfo.trackTitle(title);
             gnMusicIdFileInfo.fileName(fullPath);
 
-            gnMusicIdFile.waitForComplete(10000);
+            gnMusicIdFile.waitForComplete();
+            //gnMusicIdFile.waitForComplete(10000);
 
             //do the recognition, kQueryReturnSingle returns only the most accurate result!!!
             gnMusicIdFile.doTrackId(GnMusicIdFileProcessType.kQueryReturnSingle, GnMusicIdFileResponseType.kResponseAlbums);
@@ -393,8 +388,8 @@ public class FixerTrackService extends Service {
                 gnMusicIdFileInfo.fileName(source.getAbsolutePath());
 
 
-
-                gnMusicIdFile.waitForComplete(10000);
+                gnMusicIdFile.waitForComplete();
+                //gnMusicIdFile.waitForComplete(10000);
                 gnMusicIdFile.doTrackId(GnMusicIdFileProcessType.kQueryReturnSingle, GnMusicIdFileResponseType.kResponseAlbums);
 
             } catch (GnException e) {

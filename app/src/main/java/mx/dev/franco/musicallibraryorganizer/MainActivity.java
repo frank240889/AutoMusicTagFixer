@@ -1032,7 +1032,10 @@ public class MainActivity extends AppCompatActivity
     protected void executeScan(){
         if(recyclerView.getAdapter() == null)
             recyclerView.setAdapter(audioItemArrayAdapter);
-        AsyncReadFile asyncReadFile = new AsyncReadFile(CREATE_DATABASE);
+        //if previously was granted the permission and our database has data
+        //dont' clear that data, only read it instead.
+        int taskType = DataTrackDbHelper.existDatabase(getApplicationContext()) && dbHelper.getCount(null) > 0 ? READ_FROM_DATABASE : CREATE_DATABASE;
+        AsyncReadFile asyncReadFile = new AsyncReadFile(taskType);
         asyncReadFile.execute();
 
     }
