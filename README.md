@@ -3,7 +3,7 @@ what does it do?
 - From every file you have in your smartphone, it generates an audio fingerprint, then connects to a ACR server and donwloads the correct data for current song, later allows to correct the song with this downloaded information, in other words, it allows to make a Shazam-like recognition but not from audio recorded, over the audiofiles you have instead and correct them.
 
 What does it offer?
-- Automatic correction to your audio files (mp3 files only for now).
+- Automatic, semiautomatic and manual correction for your audio files (mp3 files only for now).
 - It will be totally free(if license of ACR service allows me), open source and ad free. You can fork it and modified. Just give me the credits for the base code.
 
 What does it correct?
@@ -33,4 +33,4 @@ Features:
 This app use an ACR technology powered by Gracenote.
 
 
-This app and soruce code is intended for Android >= 5, so maybe doesn't work on Android <= 4.
+This app and source code is made for Android >= 5, so maybe doesn't work on Android <= 4.
