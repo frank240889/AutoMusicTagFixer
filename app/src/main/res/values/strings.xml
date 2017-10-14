@@ -29,7 +29,7 @@
     <string name="image_too_big">Imagen muy grande, reduce su tamaño.</string>
     <string name="error_load_image">Error al leer la imagen.</string>
     <string name="title_downloaded_cover_art_dialog">Guardar carátula</string>
-    <string name="description_downloaded_cover_art_dialog">Deseas guardar la carátula descargada como</string>
+    <string name="description_downloaded_cover_art_dialog">¿Deseas guardar la carátula como?</string>
     <string name="as_cover_art">Carátula</string>
     <string name="as_file">Imagen</string>
     <string name="no_cover_art_found">Carátula no encontrada.</string>
@@ -89,16 +89,15 @@
     <!-- General settings -->
     <string name="pref_header_general">General</string>
 
-    <string name="pref_title_change">Renombrar archivo en modo automático.</string>
-    <string name="pref_title_change_description">Si el servicio de reconocimiento de música encuentra el título de la canción, se utilizará como nombre del archivo; si ya existe un archivo con nombre igual, se añadira el nombre del artista (si tambien se encuentra) o un número al final del nombre.
+    <string name="pref_title_change">Renombrar archivo.</string>
+    <string name="pref_title_change_description">El título encontrado se aplicará como nombre del archivo; se añadirá el nombre del artista más/ó un número aleatorio, en caso que un archivo con nombre igual ya exista.
     </string>
-    <string name="pref_manual_title_change">Renombrar archivo en modo manual.</string>
-    <string name="pref_manual_title_change_description">Se utilizará el titulo como nombre de archivo cuando edites la información de la canción; si ya existe el archivo con nombre igual, se añadira el nombre del artista al final del nombre.
+    <string name="pref_manual_title_change">Renombrar archivo.</string>
+    <string name="pref_manual_title_change_description">El título que hayas escrito se aplicará como nombre del archivo; se añadirá el nombre del artista más/ó un número aleatorio, en caso que un archivo con nombre igual ya exista.
     </string>
-    <string name="pref_automatically_replace_strange_chars">Mostrar alerta de caracteres raros.</string>
-    <string name="pref_automatically_replace_strange_chars_description">Si esta activa esta opción, cuando edites manualmente una canción, no se guardarán los cambios y se mostrará un mensaje; si esta inactiva se reemplazarán por el caracter vacío automaticamente.</string>
-    <string name="pref_show_separator_title">Mostrar separadores</string>
-    <string name="pref_show_separator_description">En la lista se muestran separadores de carpetas.</string>
+    <string name="pref_automatically_replace_strange_chars">Reemplazar caracteres inválidos.</string>
+    <string name="pref_automatically_replace_strange_chars_description">Los caracteres inválidos se eliminan automaticamente al guardar los cambios.</string>
+
 
     <!--This is going to be in seconds-->
 
@@ -137,6 +136,21 @@
         <item>genre</item>
     </string-array>
 
+    <string name="default_sort">Ordenar por</string>
+    <string-array name="pref_sort_titles">
+        <item>Ubicación de archivo</item>
+        <item>Título</item>
+        <item>Artista</item>
+        <item>Álbum</item>
+    </string-array>
+    <string-array name="pref_sort_values">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+    </string-array>
+
+
     <string name="info_found">Se encontraron las siguientes etiquetas.</string>
     <string name="incomplete_info_found">Faltaron algunas etiquetas para </string>
     <string name="cancel_task">¿Desea cancelar la corrección en curso?</string>
@@ -164,7 +178,7 @@
     <string name="not_songs_found">No se encontraron canciones en MP3, intenta añadir algunas a tu smartphone y vuelve a actualizar la lista.</string>
     <string name="removed_inexistent"> cancion(es) fue(ron) removido(s) de la lista debido a que ya no esta(n) en tu smartphone.</string>
     <string name="new_files_found"> cancion(es) nueva(s) se han encontrado y añadido al inicio de la lista.</string>
-    <string name="jump_to">Saltar rapidamente a</string>
+    <string name="jump_to">Saltar a</string>
     <string name="add_cover">Galería</string>
     <string name="automatic_mode">Modo automático</string>
     <string name="edit_cover">Añadir carátula de galería</string>
@@ -193,5 +207,15 @@
     <string name="web_search">Buscar en Internet</string>
     <string name="view_cover">Ver</string>
     <string name="play_track_on">Escuchar en</string>
+    <string name="pref_title_background">Correción en segundo plano.</string>
+    <string name="pref_title_background_description">Una corrección de varias canciones no se cancelerá aún cuando cierres la aplicación, sino hasta que termine o la detengas. Nota: esta opción puede tener un ligero impacto negativo en el consumo batería.</string>
+    <string name="enable_embed_player">Multimedia</string>
+    <string name="pref_enable_embed_player_description">Reproducir canciones en el reproductor integrado.</string>
+    <string name="pref_title_enable_embed_player">Reproductor integrado.</string>
+    <string name="pref_replace_all_tags_description">Si esta activa, se reemplazaran todas las etiquetas por las encontradas, sino, solo se añadiran las etiquetas faltantes.</string>
+    <string name="pref_title_replace_all_tags">Sobreescribir etiquetas.</string>
+    <string name="default_order_sort">Orden predeterminado de lista.</string>
+    <string name="pref_title_default_sort">Ordenar por</string>
+    <string name="semi_automatic_mode">Modo semiautomático</string>
 
 </resources>

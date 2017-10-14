@@ -119,8 +119,10 @@ public class DataTrackDbHelper extends SQLiteOpenHelper {
      * get all data for populating
      * our recycler view adapter
      * @return cursor object or null if no data
+     * @param orderBy
      */
-    public Cursor getDataFromDB(){
+    public Cursor getDataFromDB(String orderBy){
+
         String[] projection = {
                 TrackContract.TrackData.MEDIASTORE_ID,
                 TrackContract.TrackData.TITLE,
@@ -140,7 +142,7 @@ public class DataTrackDbHelper extends SQLiteOpenHelper {
                 null,                            // El valor buscado en el WHERE
                 null,                                     // null para no agrupar
                 null,                                     // null para no filtrar
-                null                                 // null para no ordenar
+                orderBy                                 // null para no ordenar
         );
     }
 

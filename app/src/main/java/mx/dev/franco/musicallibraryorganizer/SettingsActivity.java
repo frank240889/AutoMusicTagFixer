@@ -37,10 +37,31 @@ public class SettingsActivity extends AppCompatPreferenceActivity{
      * A preference value change listener that updates the preference's summary
      * to reflect its new value.
      */
+
+    private boolean updateUI = false;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setupActionBar();
+    }
+
+    /**
+     * Set up the {@link android.app.ActionBar}, if the API is available.
+     */
+    private void setupActionBar() {
+        ActionBar actionBar = getSupportActionBar();
+        if (actionBar != null) {
+            // Show the Up button in the action bar.
+            actionBar.setDisplayHomeAsUpEnabled(true);
+        }
+    }
+
     private static Preference.OnPreferenceChangeListener sBindPreferenceSummaryToValueListener = new Preference.OnPreferenceChangeListener() {
         @Override
         public boolean onPreferenceChange(Preference preference, Object value) {
             String stringValue = "";
+
             if (preference instanceof ListPreference) {
                 stringValue = value.toString();
                 // For list preferences, look up the correct display value in
@@ -49,7 +70,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity{
                 int index = listPreference.findIndexOfValue(stringValue);
                 // Set the summary to reflect the new value.
                 preference.setSummary( index >= 0 ? listPreference.getEntries()[index] : null);
-
             }
             else if(preference instanceof MultiSelectListPreference) {
                 MultiSelectListPreference multiSelectListPreference = (MultiSelectListPreference) preference;
@@ -125,25 +145,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity{
         }
     }
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setupActionBar();
-
-    }
-
-    /**
-     * Set up the {@link android.app.ActionBar}, if the API is available.
-     */
-    private void setupActionBar() {
-        ActionBar actionBar = getSupportActionBar();
-        Log.d("actionbar",(actionBar == null)+"");
-        if (actionBar != null) {
-            // Show the Up button in the action bar.
-            actionBar.setDisplayHomeAsUpEnabled(true);
-        }
-    }
-
     /**
      * {@inheritDoc}
      */
@@ -173,7 +174,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity{
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-//        Log.d(key,  (sharedPreferences.getStringSet(key,null).size())+"");
         switch (key) {
             case "size_album_art":
                 String opt = sharedPreferences.getString(key, "-1");
@@ -197,11 +197,33 @@ public class SettingsActivity extends AppCompatPreferenceActivity{
                 SelectedOptions.AUTOMATICALLY_REPLACE_STRANGE_CHARACTERS = sharedPreferences.getBoolean(key,false);
                 Log.d(key, SelectedOptions.AUTOMATICALLY_REPLACE_STRANGE_CHARACTERS+"");
                 break;
-            case "show_separators":
-                SelectedOptions.SHOW_SEPARATORS = sharedPreferences.getBoolean(key,false);
-                //MainActivity.audioItemArrayAdapter.notifyDataSetChanged();
+            case "default_sort":
+                SelectedOptions.DEFAULT_SORT = Integer.parseInt(sharedPreferences.getString(key,"0"));
+                break;
+            case "enable_embed_player":
+                //SelectedOptions.USE_EMBED_PLAYER = sharedPreferences.getBoolean(key,true);
+                //updateUI = true;
+                //if(!SelectedOptions.USE_EMBED_PLAYER)
+                //    CustomMediaPlayer.getInstance(getApplicationContext()).onCompletePlayback();
+                //Log.d(key,SelectedOptions.USE_EMBED_PLAYER+"");
+                break;
+
+            case "automatic_mode_overwrite_all_tags":
+                SelectedOptions.AUTOMATIC_MODE_OVERWRITE_ALL_TAGS = sharedPreferences.getBoolean(key, false);
+                break;
+
+            case "semiautomatic_mode_overwrite_all_tags":
+                SelectedOptions.SEMIAUTOMATIC_MODE_OVERWRITE_ALL_TAGS = sharedPreferences.getBoolean(key, false);
                 break;
         }
+    }
+
+    @Override
+    public void finish(){
+        //Intent intent = new Intent();
+        //intent.putExtra("UPDATE_UI",updateUI);
+        //setResult(RESULT_OK,intent);
+        super.finish();
     }
 
     /**
@@ -220,7 +242,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity{
             // updated to reflect the new value, per the Android Design
             // guidelines.
 
-            //bindPreferenceSummaryToValue(findPreference("example_text"));
+            bindPreferenceSummaryToValue(findPreference("default_sort"));
         }
 
         @Override

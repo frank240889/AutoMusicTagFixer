@@ -1,13 +1,5 @@
 <resources>
 
-   <!--style name="AppTheme.NoActionBar" parent="Theme.AppCompat.NoActionBar">
-       <item_list name="android:windowContentTransitions">true</item_list>
-
-        <item_list name="windowActionBar">false</item_list>
-        <item_list name="windowNoTitle">true</item_list>
-        <item_list name="windowActionModeOverlay">true</item_list>
-    </style-->
-
     <!--Style splash-->
     <style name="SplashTheme" parent="Theme.AppCompat.NoActionBar">
         <item name="android:windowBackground">@drawable/background_splash</item>
@@ -64,6 +56,9 @@
         <item name="android:colorControlActivated">@color/primaryColor</item>
         <item name="android:buttonStyle">@style/CustomButton</item>
         <item name="android:textViewStyle">@style/RobotoTextViewStyle</item>
+        <item name="android:colorPrimary">@color/primaryColor</item>
+        <item name="android:colorAccent">@color/primaryColor</item>
+        <item name="android:colorControlHighlight">@color/primaryLightColor</item>
     </style>
 
     <style name="CustomFab" parent="AppTheme">

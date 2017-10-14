@@ -410,7 +410,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                 builder.setPositiveButton("Si", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        AsyncUpdateData asyncUpdateData = new AsyncUpdateData(REMOVE_COVER);
+                        AsyncUpdateData asyncUpdateData = new AsyncUpdateData(REMOVE_COVER, false);
                         asyncUpdateData.execute();
                     }
                 });
@@ -481,11 +481,10 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                 @Override
                 public void onAnimationEnd(Animator animation) {
                     trackIdCard.setVisibility(GONE);
-
+                    content.setVisibility(View.VISIBLE);
                     content.animate().setDuration(DURATION).alpha(1).setListener(new AnimatorListenerAdapter() {
                         @Override
                         public void onAnimationEnd(Animator animation) {
-                            content.setVisibility(View.VISIBLE);
                             floatingActionMenu.show();
                             floatingActionMenu.setVisibility(View.VISIBLE);
                             saveButton.hide();
@@ -873,6 +872,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
             public void onClick(View v) {
                 closeFABMenu();
                 //This function requires some contidions to work, check them before
+                //continue
                 int canContinue = allowExecute();
 
                 if(canContinue != 0) {
@@ -884,13 +884,9 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
 
                 progressBar.setVisibility(View.VISIBLE);
                 enableMiniFabs(false);
-
-
-                //Check if exist trackidItem cached from previous request
-                //this with the objective of saving data
-
                 onlyCoverArt = true;
-
+                //Check if exist trackidItem cached from previous request
+                //before making a request
                 if(trackIdAudioItem != null){
                     handleCoverArt();
                 }
@@ -951,6 +947,10 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
         trackIdCover.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                //no cover art was found?
+                if(trackIdAudioItem.getCoverArt() == null)
+                    return;
+
                 TransitionManager.beginDelayedTransition((ViewGroup) viewDetailsTrack);
 
 
@@ -1258,7 +1258,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
      */
     private void updateData() throws IOException, ID3WriteException {
         //we update the data creating another thread because the database operation can take a long time
-        AsyncUpdateData asyncUpdateData = new AsyncUpdateData(UPDATE_ALL_METADATA);
+        AsyncUpdateData asyncUpdateData = new AsyncUpdateData(UPDATE_ALL_METADATA, false);
         asyncUpdateData.execute();
     }
 
@@ -1303,8 +1303,9 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
     private void stopPlayback() throws IOException, InterruptedException {
         playPreviewButton.setIcon(R.drawable.ic_play_arrow_white_24px);
         if(player != null && player.isPlaying() && this.currentItemId == player.getCurrentId()){
-            player.stop();
-            player.reset();
+            player.onCompletePlayback();
+            //player.stop();
+            //player.reset();
         }
     }
 
@@ -1338,8 +1339,9 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                         builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                dialog.cancel();
+                                dialog.dismiss();
                                 disableFields();
+                                appBarLayout.setExpanded(true);
                             }
                         });
                         builder.setPositiveButton("Si", new DialogInterface.OnClickListener() {
@@ -1445,9 +1447,12 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
     private class AsyncUpdateData extends AsyncTask<Void, Void, Void> {
         private final String TAG = AsyncUpdateData.class.getName();
         private int operationType;
+        private boolean overwriteAllTags = false;
 
-        AsyncUpdateData(int operationType){
+
+        AsyncUpdateData(int operationType, boolean overwriteAllTags){
             this.operationType = operationType;
+            this.overwriteAllTags = overwriteAllTags;
         }
         @Override
         protected void onPreExecute(){
@@ -1809,11 +1814,11 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                         @Override
                         public void onAnimationEnd(Animator animation) {
                             trackIdCard.setVisibility(GONE);
-
+                            content.setVisibility(View.VISIBLE);
                             content.animate().setDuration(DURATION).alpha(1).setListener(new AnimatorListenerAdapter() {
                                 @Override
                                 public void onAnimationEnd(Animator animation) {
-                                    content.setVisibility(View.VISIBLE);
+
                                     if(!isSameCoverArt) {
                                         GlideApp.with(viewDetailsTrack).
                                                 load(newCoverArt != null ? newCoverArt : R.drawable.ic_album_white_48px)
@@ -1911,7 +1916,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                 builder.setPositiveButton("Si", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        AsyncUpdateData asyncUpdateData = new AsyncUpdateData(UPDATE_ALL_METADATA);
+                        AsyncUpdateData asyncUpdateData = new AsyncUpdateData(UPDATE_ALL_METADATA, false);
                         asyncUpdateData.execute();
                     }
                 });
@@ -2018,14 +2023,14 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                 public void onClick(View v) {
                     AlertDialog.Builder builder = new AlertDialog.Builder(TrackDetailsActivity.this);
                     builder.setTitle(getString(R.string.title_downloaded_cover_art_dialog));
-                    builder.setNegativeButton(getString(R.string.as_cover_art), new DialogInterface.OnClickListener() {
+                    builder.setPositiveButton(getString(R.string.as_cover_art), new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            AsyncUpdateData asyncUpdateData = new AsyncUpdateData(UPDATE_COVER);
+                            AsyncUpdateData asyncUpdateData = new AsyncUpdateData(UPDATE_COVER, false);
                             asyncUpdateData.execute();
                         }
                     });
-                    builder.setPositiveButton(getString(R.string.as_file), new DialogInterface.OnClickListener() {
+                    builder.setNegativeButton(getString(R.string.as_file), new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
                             //if was successful saved, then

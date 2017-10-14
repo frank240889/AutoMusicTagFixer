@@ -18,24 +18,27 @@ public class SelectedOptions {
     public static boolean AUTOMATIC_CHANGE_FILENAME = true;
     //If is true, when user edit the metadata of audio file,
     //the title the user types, will be the same for the file name, default value false
-    static boolean MANUAL_CHANGE_FILE = false;
+    public static boolean MANUAL_CHANGE_FILE = false;
     //Determine when user edit manually an audio file, if he types strange
     //characters like "$" or "#", these automatically will be replace by empty character if this setting
     //is true, otherwise it will be shown an alert indicating that data entered by user is not valid
-    static boolean AUTOMATICALLY_REPLACE_STRANGE_CHARACTERS = false;
-    //Hide items from list that their duration are lesser than this time, in milliseconds, default value show all
-    //static int DURATION = 300000;
-    static boolean SHOW_SEPARATORS = false;
+    public static boolean AUTOMATICALLY_REPLACE_STRANGE_CHARACTERS = false;
+
+    public static int DEFAULT_SORT = 0;
+    public static boolean USE_EMBED_PLAYER = true;
     //Determine the size of downloaded cover art, default value is not download cover art.
     public static GnImageSize ALBUM_ART_SIZE = GnImageSize.kImageSizeUnknown;
 
-    static boolean TRACK_NUMBER = true;
-    static boolean TRACK_YEAR = true;
-    static boolean TRACK_GENRE = true;
+    public static boolean AUTOMATIC_MODE_OVERWRITE_ALL_TAGS= false;
+    public static boolean SEMIAUTOMATIC_MODE_OVERWRITE_ALL_TAGS= false;
 
-    static boolean ALL_SELECTED = false;
+    public static boolean TRACK_NUMBER = true;
+    public static boolean TRACK_YEAR = true;
+    public static boolean TRACK_GENRE = true;
 
-    static GnImageSize setValueImageSize(String preferenceSaved){
+    public static boolean ALL_SELECTED = false;
+
+    public static GnImageSize setValueImageSize(String preferenceSaved){
         GnImageSize size = null;
         switch (preferenceSaved){
             case "-1":
@@ -63,7 +66,7 @@ public class SelectedOptions {
         return size;
     }
 
-    static void setValuesExtraDataToDownload(Set<String> set){
+    public static void setValuesExtraDataToDownload(Set<String> set){
         //Default values
         if(set == null){
             SelectedOptions.TRACK_NUMBER = true;

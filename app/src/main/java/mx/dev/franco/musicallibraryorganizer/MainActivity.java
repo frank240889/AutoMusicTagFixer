@@ -1200,6 +1200,31 @@ public class MainActivity extends AppCompatActivity
             }
         }
 
+        private String setDefaultOrder(){
+            String order = null;
+
+            switch (SelectedOptions.DEFAULT_SORT){
+                case 0:
+                    order = MediaStore.Audio.AudioColumns.DATA;
+                    break;
+                case 1:
+                    order = MediaStore.Audio.AudioColumns.TITLE;
+                    break;
+                case 2:
+                    order = MediaStore.Audio.AudioColumns.ARTIST;
+                    break;
+                case 3:
+                    order = MediaStore.Audio.AudioColumns.ALBUM;
+                    break;
+                default:
+                    order = MediaStore.Audio.AudioColumns.DATA;
+                    break;
+
+            }
+
+            return order;
+        }
+
         @Override
         protected void onPreExecute() {
             swipeRefreshLayout.setRefreshing(true);
@@ -1313,7 +1338,6 @@ public class MainActivity extends AppCompatActivity
         private Cursor getDataFromDevice() {
 
             String mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(getString(R.string.mp3_type));
-
             //Only select mp3 music files from this content provider
             String selection = MediaStore.Audio.Media.IS_MUSIC + " != 0" + " and "
                     + MediaStore.Audio.Media.MIME_TYPE + " = " + " \'" +mimeType + "\'";
@@ -1331,7 +1355,7 @@ public class MainActivity extends AppCompatActivity
                     projection,
                     selection,
                     null,
-                    MediaStore.Audio.Media.DATA);
+                    setDefaultOrder());
         }
 
         /**
@@ -1394,7 +1418,7 @@ public class MainActivity extends AppCompatActivity
          */
         private void readFromDatabase(){
 
-            data = MainActivity.this.dbHelper.getDataFromDB();
+            data = MainActivity.this.dbHelper.getDataFromDB(setDefaultOrder());
             int dataLength = data != null ? data.getCount() : 0;
             if (dataLength > 0) {
                 while (data.moveToNext()) {

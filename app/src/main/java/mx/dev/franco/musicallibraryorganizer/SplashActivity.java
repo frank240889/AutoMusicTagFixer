@@ -52,7 +52,11 @@ public class SplashActivity extends AppCompatActivity{
         SelectedOptions.MANUAL_CHANGE_FILE = preferences.getBoolean("title_manual_change_switch", true);
         SelectedOptions.AUTOMATICALLY_REPLACE_STRANGE_CHARACTERS = preferences.getBoolean("title_automatically_replace_strange_chars",true);
         SelectedOptions.ALL_SELECTED = preferences.getBoolean("allSelected",false);
-        SelectedOptions.SHOW_SEPARATORS = preferences.getBoolean("show_separators",true);
+        //get default(order by location of file) order for list
+        SelectedOptions.DEFAULT_SORT = Integer.parseInt(preferences.getString("default_sort","0"));
+        SelectedOptions.SEMIAUTOMATIC_MODE_OVERWRITE_ALL_TAGS = preferences.getBoolean("semiautomatic_mode_overwrite_all_tags", false);
+        SelectedOptions.AUTOMATIC_MODE_OVERWRITE_ALL_TAGS = preferences.getBoolean("automatic_mode_overwrite_all_tags", false);
+        //SelectedOptions.USE_EMBED_PLAYER = preferences.getBoolean("enable_embed_player",true);
 
         //Retrieve the string value saved in shared preferences first
         String imageSizeSaved = preferences.getString("size_album_art","1000");

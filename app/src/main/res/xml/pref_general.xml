@@ -1,24 +1,65 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <PreferenceCategory
+        android:title="@string/automatic_mode">
 
-    <SwitchPreference
-        android:defaultValue="true"
-        android:key="title_service_change_switch"
-        android:summary="@string/pref_title_change_description"
-        android:title="@string/pref_title_change" />
-    <SwitchPreference
-        android:defaultValue="true"
-        android:key="title_manual_change_switch"
-        android:summary="@string/pref_manual_title_change_description"
-        android:title="@string/pref_manual_title_change" />
-    <SwitchPreference
-        android:defaultValue="true"
-        android:key="title_automatically_replace_strange_chars"
-        android:summary="@string/pref_automatically_replace_strange_chars_description"
-        android:title="@string/pref_automatically_replace_strange_chars" />
-    <SwitchPreference
-        android:defaultValue="true"
-        android:key="show_separators"
-        android:summary="@string/pref_show_separator_description"
-        android:title="@string/pref_show_separator_title" />
+        <SwitchPreference
+            android:defaultValue="true"
+            android:key="title_service_change_switch"
+            android:summary="@string/pref_title_change_description"
+            android:title="@string/pref_title_change" />
+        <SwitchPreference
+            android:defaultValue="false"
+            android:key="automatic_mode_overwrite_all_tags"
+            android:summary="@string/pref_replace_all_tags_description"
+            android:title="@string/pref_title_replace_all_tags"/>
+        <SwitchPreference
+            android:defaultValue="false"
+            android:key="title_background_service"
+            android:summary="@string/pref_title_background_description"
+            android:title="@string/pref_title_background" />
+    </PreferenceCategory>
 
+    <PreferenceCategory
+        android:title="@string/semi_automatic_mode">
+
+        <SwitchPreference
+            android:defaultValue="false"
+            android:key="semiautomatic_mode_overwrite_all_tags"
+            android:summary="@string/pref_replace_all_tags_description"
+            android:title="@string/pref_title_replace_all_tags"/>
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:title="@string/manual_mode">
+        <SwitchPreference
+            android:defaultValue="true"
+            android:key="title_manual_change_switch"
+            android:summary="@string/pref_manual_title_change_description"
+            android:title="@string/pref_manual_title_change" />
+        <SwitchPreference
+            android:defaultValue="true"
+            android:key="title_automatically_replace_strange_chars"
+            android:summary="@string/pref_automatically_replace_strange_chars_description"
+            android:title="@string/pref_automatically_replace_strange_chars" />
+    </PreferenceCategory>
+    <!--PreferenceCategory
+        android:title="@string/enable_embed_player">
+        <SwitchPreference
+            android:defaultValue="true"
+            android:key="enable_embed_player"
+            android:summary="@string/pref_enable_embed_player_description"
+            android:title="@string/pref_title_enable_embed_player" />
+    </PreferenceCategory-->
+    <PreferenceCategory
+        android:title="@string/default_order_sort">
+        <ListPreference
+            android:defaultValue="0"
+            android:entries="@array/pref_sort_titles"
+            android:entryValues="@array/pref_sort_values"
+            android:key="default_sort"
+            android:negativeButtonText="@null"
+            android:positiveButtonText="@null"
+            android:title="@string/pref_title_default_sort" />
+
+    </PreferenceCategory>
 </PreferenceScreen>
