@@ -108,28 +108,29 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
                 }
             }.execute(audioItem.getAbsolutePath());
 
-        if (audioItem.isPlayingAudio()) {
-            GlideApp.with(holder.imageView).load(R.drawable.playing).centerInside().into(holder.checkMark);
-            holder.playButton.setImageResource(R.drawable.ic_stop_white_24px);
-        } else {
-            holder.playButton.setImageResource(R.drawable.ic_play_arrow_white_24px);
+            if (audioItem.isPlayingAudio()) {
+                GlideApp.with(holder.imageView).load(R.drawable.playing).centerInside().into(holder.checkMark);
+                holder.playButton.setImageResource(R.drawable.ic_stop_white_24px);
+            } else {
+                holder.playButton.setImageResource(R.drawable.ic_play_arrow_white_24px);
 
-            switch (audioItem.getStatus()){
-                case AudioItem.FILE_STATUS_OK:
-                case AudioItem.FILE_STATUS_EDIT_BY_USER:
-                    holder.checkMark.setImageResource(R.drawable.ic_done_all_white);
-                    break;
-                case AudioItem.FILE_STATUS_INCOMPLETE:
-                    holder.checkMark.setImageResource(R.drawable.ic_done_white);
-                    break;
-                case AudioItem.FILE_STATUS_BAD:
-                    holder.checkMark.setImageResource(R.drawable.ic_error_outline_white);
-                    break;
-                default:
-                    holder.checkMark.setImageResource(0);
-                    break;
+                switch (audioItem.getStatus()) {
+                    case AudioItem.FILE_STATUS_OK:
+                    case AudioItem.FILE_STATUS_EDIT_BY_USER:
+                        holder.checkMark.setImageResource(R.drawable.ic_done_all_white);
+                        break;
+                    case AudioItem.FILE_STATUS_INCOMPLETE:
+                        holder.checkMark.setImageResource(R.drawable.ic_done_white);
+                        break;
+                    case AudioItem.FILE_STATUS_BAD:
+                        holder.checkMark.setImageResource(R.drawable.ic_error_outline_white);
+                        break;
+                    default:
+                        holder.checkMark.setImageResource(0);
+                        break;
+                }
             }
-        }
+
 
         holder.trackName.setText(audioItem.getTitle());
         holder.artistName.setText(audioItem.getArtist());
