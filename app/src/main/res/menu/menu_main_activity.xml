@@ -33,11 +33,34 @@
         android:title="@string/select_all_items"
         android:orderInCategory="2"
         android:icon="@drawable/ic_check_box_white_24px" />
-
     <item
-        android:id="@+id/faq"
+        android:id="@+id/sortBy"
         app:showAsAction="never"
         android:orderInCategory="3"
-        android:title="@string/faq"/>
+        android:title="@string/sort_by">
+        <menu>
+            <item
+                android:id="@+id/path_order"
+                app:showAsAction="never"
+                android:title="@string/location"
+                android:orderInCategory="1"/>
 
+            <item
+                android:id="@+id/title_order"
+                app:showAsAction="never"
+                android:title="@string/title"
+                android:orderInCategory="2" />
+            <item
+                android:id="@+id/artist_order"
+                app:showAsAction="never"
+                android:orderInCategory="3"
+                android:title="@string/artist"/>
+
+            <item
+                android:id="@+id/album_order"
+                app:showAsAction="never"
+                android:orderInCategory="4"
+                android:title="@string/album"/>
+        </menu>
+    </item>
 </menu>

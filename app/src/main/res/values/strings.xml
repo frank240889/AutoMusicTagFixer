@@ -217,5 +217,7 @@
     <string name="default_order_sort">Orden predeterminado de lista.</string>
     <string name="pref_title_default_sort">Ordenar por</string>
     <string name="semi_automatic_mode">Modo semiautomático</string>
+    <string name="sort_by">Ordenar por</string>
+    <string name="location">Ubicación</string>
 
 </resources>

@@ -60,6 +60,7 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import mx.dev.franco.musicallibraryorganizer.database.DataTrackDbHelper;
@@ -158,6 +159,7 @@ public class MainActivity extends AppCompatActivity
     private Snackbar snackbar;
     private ActionBar actionBar;
     private static final int NO_ID = -1;
+    private static TrackAdapter.Sorter sorter;
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     @SuppressLint("UseSparseArrays")
@@ -200,9 +202,8 @@ public class MainActivity extends AppCompatActivity
         //Initialize recycler view and swipe refresh layout
         swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.refreshLayout);
 
-
-            swipeRefreshLayout.setColorSchemeColors(ContextCompat.getColor(getApplicationContext(),R.color.primaryColor));
-            swipeRefreshLayout.setProgressBackgroundColorSchemeColor(ContextCompat.getColor(getApplicationContext(),R.color.grey_900));
+        swipeRefreshLayout.setColorSchemeColors(ContextCompat.getColor(getApplicationContext(),R.color.primaryColor));
+        swipeRefreshLayout.setProgressBackgroundColorSchemeColor(ContextCompat.getColor(getApplicationContext(),R.color.grey_900));
 
         recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
         recyclerView.setLayoutManager( new LinearLayoutManager(this));
@@ -219,6 +220,8 @@ public class MainActivity extends AppCompatActivity
         //create data source for adapter
         audioItemList = new ArrayList<>();
         audioItemArrayAdapter = new TrackAdapter(getApplicationContext(), audioItemList,this);
+        sorter = TrackAdapter.Sorter.getInstance();
+
         //pass a referecne to data source to media player
         mediaPlayer.setAdapter(audioItemArrayAdapter);
         //create snack bar for messages
@@ -418,7 +421,7 @@ public class MainActivity extends AppCompatActivity
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
 
-        getMenuInflater().inflate(R.menu.select_folder, menu);
+        getMenuInflater().inflate(R.menu.menu_main_activity, menu);
 
         MenuItem searchItem = menu.findItem(R.id.action_search);
         searchView = (SearchView) MenuItemCompat.getActionView(searchItem);
@@ -524,11 +527,6 @@ public class MainActivity extends AppCompatActivity
                 }
                 break;
 
-            case R.id.faq:
-                Intent intent = new Intent(this,QuestionsActivity.class);
-                startActivity(intent);
-                break;
-
             case R.id.action_refresh:
                 //request permission in case is necessary and update
                 //our database
@@ -540,10 +538,31 @@ public class MainActivity extends AppCompatActivity
                     showReason();
                 }
                 break;
+            case R.id.path_order:
+                sorter.setSortParams(TrackContract.TrackData.DATA, 0);
+                Collections.sort(audioItemList,sorter);
+                audioItemArrayAdapter.notifyDataSetChanged();
+                break;
+            case R.id.title_order:
+                sorter.setSortParams(TrackContract.TrackData.TITLE, 0);
+                Collections.sort(audioItemList,sorter);
+                audioItemArrayAdapter.notifyDataSetChanged();
+                break;
+            case R.id.artist_order:
+                sorter.setSortParams(TrackContract.TrackData.ARTIST, 0);
+                Collections.sort(audioItemList,sorter);
+                audioItemArrayAdapter.notifyDataSetChanged();
+                break;
+            case R.id.album_order:
+                sorter.setSortParams(TrackContract.TrackData.ALBUM, 0);
+                Collections.sort(audioItemList,sorter);
+                audioItemArrayAdapter.notifyDataSetChanged();
+                break;
         }
 
         return super.onOptionsItemSelected(item);
     }
+
 
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
@@ -560,6 +579,10 @@ public class MainActivity extends AppCompatActivity
         //configure app settings
             Intent intent = new Intent(this, SettingsActivity.class);
             startActivity(intent);
+        }
+        else if(id == R.id.faq){
+                Intent intent = new Intent(this,QuestionsActivity.class);
+                startActivity(intent);
         }
         else {
             ;
@@ -967,7 +990,7 @@ public class MainActivity extends AppCompatActivity
      * @param view
      * @param position
      */
-    protected void selectItem(final long id, final View view, final int position){
+    private void selectItem(final long id, final View view, final int position){
         AudioItem audioItem = audioItemArrayAdapter.getItemByIdOrPath(id, null);
         Log.d("path", audioItem.getAbsolutePath());
         if(!AudioItem.checkFileIntegrity(audioItem.getAbsolutePath())){
@@ -1029,7 +1052,7 @@ public class MainActivity extends AppCompatActivity
 
     }
 
-    protected void executeScan(){
+    private void executeScan(){
         if(recyclerView.getAdapter() == null)
             recyclerView.setAdapter(audioItemArrayAdapter);
         //if previously was granted the permission and our database has data
@@ -1041,7 +1064,7 @@ public class MainActivity extends AppCompatActivity
     }
 
 
-    protected void askForPermission(String permission) {
+    private void askForPermission(String permission) {
 
         switch (permission){
             case Manifest.permission.READ_EXTERNAL_STORAGE:
