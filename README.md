@@ -1,5 +1,5 @@
 # AutomusicTagFixer
-what does it do?
+What does it do?
 - From every file you have in your smartphone, it generates an audio fingerprint, then connects to a ACR server and donwloads the correct data for current song, later allows to correct the song with this downloaded information, in other words, it allows to make a Shazam-like recognition but not from audio recorded, over the audiofiles you have instead and correct them.
 
 What does it offer?
@@ -29,6 +29,14 @@ Features:
 - Automatic and manual update of files list, in case that songs are added or removed from your smartphone.
 - The correction made, including the cover art, is made over the file itself, mean that changes are visible to every media player able to read ID3 tags(most actually).
 - Background correction, no matter if app is closed.
+
+How to compile?(instructions in progress)
+
+1. Download zip and import project from Android Studio, or import directly from Android Studio using the URL repo.
+2. Download MyID3 library(https://sites.google.com/site/eternalsandbox/myid3-for-android/MyID3_for_Android.jar?attredirects=0) and put the JAR file in "MusicalLibraryOrganizer\app\libs", if "libs".
+3. Download GNDK from https://developer.gracenote.com/gnsdk, you need to create an account, then register another API Key here https://developer.gracenote.com/user/25835/apps/add.
+4. Extract the GNDK files from zip  
+ folder doesn't exist, create
 
 This app use an ACR technology powered by Gracenote.
 
