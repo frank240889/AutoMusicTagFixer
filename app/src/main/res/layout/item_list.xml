@@ -24,7 +24,6 @@
             android:layout_height="78dp"
             android:layout_centerVertical="true"
             android:layout_marginStart="10dp"
-            android:layout_toEndOf="@+id/contextualMenuButton"
             android:transitionName="transitionFragment"
             android:clickable="true"
             android:focusable="true"
@@ -34,7 +33,7 @@
 
         <TextView
             android:id="@+id/track_name"
-            android:layout_width="260dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignTop="@+id/coverArt"
             android:layout_centerInParent="false"

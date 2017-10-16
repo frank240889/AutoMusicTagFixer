@@ -213,10 +213,16 @@ public final class AudioItem implements Parcelable{
             return "0 mb";
 
         float s = size / KILOBYTE;
-        String str = String.valueOf(s).substring(0,4);
-        str += "mb";
+        String str = String.valueOf(s);
+        int l = str.length();
+        String readableSize = "";
+        if(l > 4)
+            readableSize = str.substring(0,4);
+        else
+            readableSize =str.substring(0,3);
+        readableSize += " mb";
 
-        return str;
+        return readableSize;
     }
 
     public static String getStringImageSize(byte[] cover){
