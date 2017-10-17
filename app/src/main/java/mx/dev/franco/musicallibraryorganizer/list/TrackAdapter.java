@@ -5,7 +5,6 @@ import android.media.MediaMetadataRetriever;
 import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -34,24 +33,44 @@ import static android.view.View.GONE;
 import static android.view.View.VISIBLE;
 
 public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHolder> implements Filterable {//extends SelectableAdapter<TrackAdapter.AudioItemHolder> implements Filterable{
+    //constants for indacate the sort order
     public static final int ASC = 0;
     public static final int DESC = 1;
+    //listener attached to every item in listview
     private final AudioItemHolder.ClickListener clickListener;
+    //we need the context to access some features like R class
     private Context context;
-    private List<AudioItem> currentList, currentfilteredList;
+    //List of audioitems, we need to references: one for the filtered one
+    //and the other one to original list
+    private List<AudioItem> currentList, currentFilteredList;
+    //this property indicate us if all items were selected
+    //not used, for now
     private boolean allSelected = false;
+    //filter for filteriing search results
     private CustomFilter customFilter;
-    private static Sorter sortBy;
+    //Comparator for ordering the items in list
+    private static Sorter sorter;
 
     @SuppressWarnings("unchecked")
     public TrackAdapter(Context context, List<AudioItem> list, TrackAdapter.AudioItemHolder.ClickListener clickListener){
         this.context = context;
         this.currentList = list;
-        this.currentfilteredList =  currentList;
+        this.currentFilteredList =  currentList;
         this.clickListener = clickListener;
 
     }
 
+    /**
+     * Called when RecyclerView needs a new RecyclerView.ViewHolder of the given type to represent an item
+     * This new ViewHolder should be constructed with a new View that can represent the items of the given type.
+     * You can either create a new View manually or inflate it from an XML layout file.
+     * The new ViewHolder will be used to display items of the adapter using onBindViewHolder(ViewHolder, int, List).
+     * Since it will be re-used to display different items in the data set,
+     * it is a good idea to cache references to sub views of the View to avoid unnecessary findViewById(int) calls.
+     * @param parent
+     * @param viewType
+     * @return
+     */
     @Override
     public AudioItemHolder onCreateViewHolder(ViewGroup parent, int viewType) {
 
@@ -60,17 +79,30 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
         return new AudioItemHolder(itemView, this.clickListener);
     }
 
+    /**
+     * Called by RecyclerView to display the data at the specified position.
+     * This method should update the contents of the itemView to reflect the item at the given position.
+     * Note that unlike ListView, RecyclerView will not call this method again if the position of
+     * the item changes in the data set unless the item itself is invalidated or
+     * the new position cannot be determined. For this reason, you should only use
+     * the position parameter while acquiring the related data item inside
+     * this method and should not keep a copy of it. If you need the position of an
+     * item later on (e.g. in a click listener), use getAdapterPosition()
+     * which will have the updated adapter position. Override onBindViewHolder(ViewHolder, int, List)
+     * instead if Adapter can handle efficient partial bind.
+     * @param holder
+     * @param position
+     */
     @Override
     public void onBindViewHolder(final AudioItemHolder holder, final int position) {
         AudioItem audioItem = currentList.get(position);
         holder.checkBox.setChecked(audioItem.isChecked());
 
-
         holder.progressBar.setVisibility(audioItem.isProcessing()?VISIBLE:GONE);
 
             //We need to load covers arts in other thread,
-            //because this operation can reduce performance
-            //in main thread
+            //because this operation is going reduce performance
+            //in main thread, making the scroll very laggy
             new AsyncTask<String,byte[],Void>(){
 
                 @Override
@@ -146,16 +178,27 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
 
     }
 
+    /**
+     * Getter for allSelected property
+     * @return true if are all selected, false otherwise
+     */
     public boolean areAllSelected(){
         return this.allSelected;
     }
 
+    /**
+     * Setter for allSelected property
+     * @return this object adapter.
+     */
     public TrackAdapter setAllSelected(boolean allSelected){
         this.allSelected = allSelected;
         return this;
     }
 
-
+    /**
+     * Get size of data source
+     * @return zero if data source is null, otherwise size of data source
+     */
     @Override
     public int getItemCount() {
         if(currentList != null)
@@ -163,12 +206,23 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
         return 0;
     }
 
-
+    /**
+     * Indicates whether each item in the data set
+     * can be represented with a unique identifier of type Long.
+     * @param hasStableIds
+     */
     @Override
     public void setHasStableIds(boolean hasStableIds) {
         super.setHasStableIds(true);
     }
 
+    /**
+     * Return the corresponding audio item
+     * that has the id or path passed as parameter
+     * @param id
+     * @param path
+     * @return
+     */
     public AudioItem getItemByIdOrPath(long id, String path){
         AudioItem audioItem = null;
 
@@ -197,6 +251,12 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
     }
 
 
+    /**
+     * This class helps to maintain the reference to
+     * every element of item, avoiding call findViewById()
+     * in every element for data source, making a considerable
+     * improvement in performance of list
+     */
         public static class AudioItemHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         CheckBox checkBox ;
         TextView trackName ;
@@ -228,6 +288,11 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
             itemView.setOnClickListener(this);
         }
 
+        /**
+         * This method of listener is implemented in
+         * activity that creates the adapter and data source
+         * @param v
+         */
         @Override
         public void onClick(View v) {
             if (listener != null) {
@@ -235,11 +300,21 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
             }
         }
 
+        /**
+         * This method is implemented
+         * in activity that needs to handle
+         * clicks
+         */
+
         public interface ClickListener {
             void onItemClicked(int position, View v);
         }
     }
 
+    /**
+     * The instance of this class handles the sort
+     * of the list
+     */
     public static class Sorter implements Comparator<AudioItem> {
         //default sort if no provided
         private int sortType = ASC;
@@ -250,10 +325,10 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
         private Sorter(){}
 
         public static Sorter getInstance(){
-            if(sortBy == null){
-                sortBy = new Sorter();
+            if(sorter == null){
+                sorter = new Sorter();
             }
-            return sortBy;
+            return sorter;
         }
 
         /**
@@ -306,6 +381,11 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
     }
 
 
+    /**
+     * This method creates a filter for filtering results when
+     * an item y searched in search widget
+     * @return a unique instance of filter
+     */
     @NonNull
     @Override
     public Filter getFilter(){
@@ -315,6 +395,9 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
         return this.customFilter;
     }
 
+    /**
+     * class that filters a results of search widget
+     */
     private class CustomFilter extends Filter {
 
         @SuppressWarnings("unchecked")
@@ -323,20 +406,25 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
 
             String charString = constraint.toString();
 
-            Log.d("filtering", currentList.size() + "-");
+            //is empty then is not needed to search
+            //so we reference to the original list a return all results
             if (charString.isEmpty()) {
-                currentList = currentfilteredList;
+                currentList = currentFilteredList;
             }
             else {
+                //creates a temporal filtered list
                 List<AudioItem> filteredList = new ArrayList<>();
 
-                for (AudioItem audioItem : currentfilteredList) {
+                //here we define the parameter in which the results are based
+                for (AudioItem audioItem : currentFilteredList) {
                     if (audioItem.getTitle().toLowerCase().contains(charString.toLowerCase())) {
-
+                        //if this item satisfy the criteria of search then add to temporal list
                         filteredList.add(audioItem);
                     }
                 }
-
+                //now our current list references to filtered list
+                //but we don't lose the orinal reference, because when the search
+                //finish we need the original list.
                 currentList = filteredList;
 
             }
@@ -347,11 +435,18 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
 
             return filterResults;
         }
+
+        /**
+         * Callback to publish results
+         * @param constraint
+         * @param results
+         */
         @SuppressWarnings("unchecked")
         @Override
         protected void publishResults(CharSequence constraint, FilterResults results) {
 
             currentList = (ArrayList<AudioItem>) results.values;
+            //inform to recycler view to update the views.
             notifyDataSetChanged();
         }
     }
