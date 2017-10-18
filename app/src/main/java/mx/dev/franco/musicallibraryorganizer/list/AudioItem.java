@@ -1,6 +1,5 @@
 package mx.dev.franco.musicallibraryorganizer.list;
 
-import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Parcel;
@@ -24,8 +23,6 @@ public final class AudioItem implements Parcelable{
     public static final int FILE_STATUS_BAD = -1;
     public static final int FILE_STATUS_EDIT_BY_USER = 3;
     public static final float KILOBYTE = 1048576;
-
-    private Context context;
 
     private long id = -1;
     private String title = "";
@@ -326,13 +323,13 @@ public final class AudioItem implements Parcelable{
     }
 
     public static String getBitrate(String bitrate) {
-        String convertedBitrate = "Bitrate desconocido";
+
         if (bitrate != null && !bitrate.equals("") && !bitrate.equals("0") ){
             int bitrateInt = Integer.parseInt(bitrate);
             int bitrateInKb = bitrateInt / 1000;
-            convertedBitrate = bitrateInKb + " Kbps";
+            return bitrateInKb + " Kbps";
         }
-        return convertedBitrate;
+        return "Bitrate desconocido";
     }
 
     /**

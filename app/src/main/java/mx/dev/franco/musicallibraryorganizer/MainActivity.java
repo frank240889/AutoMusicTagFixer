@@ -1296,7 +1296,7 @@ public class MainActivity extends AppCompatActivity
         protected void onProgressUpdate(AudioItem... audioItems) {
             super.onProgressUpdate(audioItems);
             if(taskType == RE_SCAN){
-                audioItemList.add(audioItems[0]);
+                audioItemList.add(0,audioItems[0]);
                 audioItemArrayAdapter.notifyItemInserted(0);
             }
             else {
