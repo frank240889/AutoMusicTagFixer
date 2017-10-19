@@ -196,15 +196,17 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
     //Broadcast manager to manage the response from FixerTrackService intent service
     private LocalBroadcastManager localBroadcastManager;
     //Filter only certain responses from FixerTrackService
-    private IntentFilter intentFilter;
+    private IntentFilter filterActionCompleteTask;
+    private IntentFilter filterActionApiInitialized;
+    private IntentFilter filterActionNotFound;
+    private IntentFilter filterActionDoneDetails;
     //Receiver to handle responses
     private ResponseReceiver receiver;
 
     //Flag for saving the result of validating the fields of layout
     private boolean isDataValid = false;
     private boolean isFABOpen = false;
-    private IntentFilter intentFilter2;
-    private IntentFilter intentFilter3;
+    private boolean isLookingUpInfo = false;
 
     //references to visual elements of container
     //that shows tags found when it makes trackId
@@ -242,10 +244,10 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
         setContentView(R.layout.activity_track_details);
 
         //Create receiver and filters to handle responses from FixerTrackService
-        intentFilter = new IntentFilter(FixerTrackService.ACTION_DONE);
-        intentFilter2 = new IntentFilter(FixerTrackService.ACTION_COMPLETE_TASK);
-        intentFilter3 = new IntentFilter(GnService.API_INITIALIZED);
-
+        filterActionDoneDetails = new IntentFilter(FixerTrackService.ACTION_DONE_DETAILS);
+        filterActionCompleteTask = new IntentFilter(FixerTrackService.ACTION_COMPLETE_TASK);
+        filterActionApiInitialized = new IntentFilter(GnService.API_INITIALIZED);
+        filterActionNotFound = new IntentFilter(FixerTrackService.ACTION_NOT_FOUND);
         receiver = new ResponseReceiver();
         localBroadcastManager = LocalBroadcastManager.getInstance(getApplicationContext());
 
@@ -405,6 +407,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
         removeItem.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
             @Override
             public boolean onMenuItemClick(MenuItem item) {
+
                 if(currentCoverArt == null){
                     showSnackBar(Snackbar.LENGTH_SHORT,getString(R.string.does_not_exist_cover),ACTION_NONE, null);
                     return false;
@@ -616,8 +619,8 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
         progressBar = null;
         currentAudioItem = null;
         trackIdAudioItem = null;
-        intentFilter = null;
-        intentFilter2 = null;
+        filterActionDoneDetails = null;
+        filterActionCompleteTask = null;
         localBroadcastManager.unregisterReceiver(receiver);
         receiver = null;
         localBroadcastManager = null;
@@ -804,11 +807,12 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
         extractCoverButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                closeFABMenu();
                 if(currentCoverArt == null){
                     showSnackBar(Snackbar.LENGTH_SHORT,getString(R.string.can_not_extract_null_cover),ACTION_NONE,null);
                     return;
                 }
-                closeFABMenu();
+
                 String newImageAbsolutePath = FileSaver.saveFile(currentCoverArt, currentTitle, currentArtist, currentAlbum);
                 if(!newImageAbsolutePath.equals(FileSaver.NULL_DATA) && !newImageAbsolutePath.equals(FileSaver.NO_EXTERNAL_STORAGE_WRITABLE) && !newImageAbsolutePath.equals(FileSaver.INPUT_OUTPUT_ERROR)) {
 
@@ -859,6 +863,8 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                     setDownloadedValues();
                 }
                 else {
+                    toolbarCover.setEnabled(false);
+                    isLookingUpInfo = true;
                     Intent intent = new Intent(TrackDetailsActivity.this, FixerTrackService.class);
                     intent.putExtra(FixerTrackService.SINGLE_TRACK, true);
                     intent.putExtra(FixerTrackService.FROM_EDIT_MODE, true);
@@ -892,7 +898,8 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                     handleCoverArt();
                 }
                 else{
-
+                    toolbarCover.setEnabled(false);
+                    isLookingUpInfo = true;
                     Intent intent = new Intent(TrackDetailsActivity.this,FixerTrackService.class);
                     intent.putExtra(FixerTrackService.FROM_EDIT_MODE,true);
                     intent.putExtra(FixerTrackService.SINGLE_TRACK,true);
@@ -1462,6 +1469,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                 e.printStackTrace();
             }
             enableMiniFabs(false);
+            toolbarCover.setEnabled(false);
         }
 
         private void updateCoverArt() {
@@ -1786,6 +1794,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
 
             floatingActionMenu.show();
             saveButton.hide();
+            toolbarCover.setEnabled(true);
             trackAdapter.notifyDataSetChanged();
             showSnackBar(Snackbar.LENGTH_SHORT, msg,ACTION_NONE, null);
 
@@ -1804,17 +1813,21 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
     @Override
     protected void onResume(){
         super.onResume();
-        localBroadcastManager.registerReceiver(receiver,intentFilter);
-        localBroadcastManager.registerReceiver(receiver,intentFilter2);
-        localBroadcastManager.registerReceiver(receiver,intentFilter3);
+        localBroadcastManager.registerReceiver(receiver, filterActionDoneDetails);
+        localBroadcastManager.registerReceiver(receiver, filterActionCompleteTask);
+        localBroadcastManager.registerReceiver(receiver, filterActionApiInitialized);
+        localBroadcastManager.registerReceiver(receiver, filterActionNotFound);
     }
 
     private void setDownloadedValues(){
         progressBar.setVisibility(View.INVISIBLE);
-
+        isLookingUpInfo = false;
+        toolbarCover.setEnabled(true);
+        if(isFABOpen)
+            closeFABMenu();
         //if there are no results, only notify to user
         if(trackIdAudioItem == null){
-            showSnackBar(Snackbar.LENGTH_SHORT,getString(R.string.file_status_bad),ACTION_NONE, null);
+            showSnackBar(Snackbar.LENGTH_LONG,getString(R.string.file_status_bad),ACTION_NONE, null);
             return;
         }
 
@@ -1937,7 +1950,10 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
 
 
     private void handleCoverArt() {
-
+        toolbarCover.setEnabled(true);
+        isLookingUpInfo = false;
+        if(isFABOpen)
+            closeFABMenu();
         String msg = "";
 
         newCoverArt = trackIdAudioItem.getCoverArt();
@@ -2085,10 +2101,11 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                 }
             });
 
-
+            isLookingUpInfo = false;
             Log.d("action_received",action);
             switch (action){
-                case FixerTrackService.ACTION_DONE:
+                case FixerTrackService.ACTION_COMPLETE_TASK:
+                case FixerTrackService.ACTION_DONE_DETAILS:
                     trackIdAudioItem = intent.getParcelableExtra(FixerTrackService.AUDIO_ITEM);
                     runOnUiThread(new Runnable() {
                         @Override
@@ -2104,18 +2121,24 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
 
                     break;
                 case API_INITIALIZED:
-                    showSnackBar(Snackbar.LENGTH_LONG,getString(R.string.api_initialized),ACTION_NONE,null);
+                    showSnackBar(Snackbar.LENGTH_SHORT,getString(R.string.api_initialized),ACTION_NONE,null);
                     break;
-                /*case FixerTrackService.ACTION_CANCEL:
-                case FixerTrackService.ACTION_COMPLETE_TASK:*/
-                case FixerTrackService.ACTION_FAIL:
+                case FixerTrackService.ACTION_NOT_FOUND:
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            showSnackBar(Snackbar.LENGTH_SHORT,getString(R.string.file_status_bad),ACTION_NONE, null);
+                            showSnackBar(Snackbar.LENGTH_LONG,getString(R.string.file_status_bad),ACTION_NONE, null);
                         }
                     });
 
+                    break;
+                default:
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            showSnackBar(Snackbar.LENGTH_SHORT,getString(R.string.error),ACTION_NONE, null);
+                        }
+                    });
                     break;
             }
 
