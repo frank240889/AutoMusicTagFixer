@@ -219,5 +219,8 @@
     <string name="semi_automatic_mode">Modo semiautomático</string>
     <string name="sort_by">Ordenar por</string>
     <string name="location">Ubicación</string>
+    <string name="could_not_read_file">No se pudo leer la información.</string>
+    <string name="does_not_exist_cover">La canción no tiene carátula.</string>
+    <string name="can_not_extract_null_cover">No se puede extraer una carátula inexistente.</string>
 
 </resources>
