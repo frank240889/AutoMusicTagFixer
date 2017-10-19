@@ -1,10 +1,41 @@
+/**
+ * The first line in the build configuration applies the Android plugin for
+ * Gradle to this build and makes the android {} block available to specify
+ * Android-specific build options.
+ */
+
 apply plugin: 'com.android.application'
 
+/**
+ * The android {} block is where you configure all your Android-specific
+ * build options.
+ */
 
 android {
+    /**
+     * compileSdkVersion specifies the Android API level Gradle should use to
+     * compile your app. This means your app can use the API features included in
+     * this API level and lower.
+     *
+     * buildToolsVersion specifies the version of the SDK build tools, command-line
+     * utilities, and compiler that Gradle should use to build your app. You need to
+     * download the build tools using the SDK Manager.
+     */
     compileSdkVersion 25
     buildToolsVersion '25.0.3'
+    /**
+     * The defaultConfig {} block encapsulates default settings and entries for all
+     * build variants, and can override some attributes in main/AndroidManifest.xml
+     * dynamically from the build system. You can configure product flavors to override
+     * these values for different versions of your app.
+     */
+
     defaultConfig {
+        /**
+         * applicationId uniquely identifies the package for publishing.
+         * However, your source code should still reference the package name
+         * defined by the package attribute in the main/AndroidManifest.xml file.
+         */
         applicationId "mx.dev.franco.musicallibraryorganizer"
         minSdkVersion 21
         targetSdkVersion 25
@@ -12,15 +43,42 @@ android {
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
+    /**
+     * The buildTypes {} block is where you can configure multiple build types.
+     * By default, the build system defines two build types: debug and release. The
+     * debug build type is not explicitly shown in the default build configuration,
+     * but it includes debugging tools and is signed with the debug key. The release
+     * build type applies Proguard settings and is not signed by default.
+     */
     buildTypes {
+        /**
+         * By default, Android Studio configures the release build type to enable code
+         * shrinking, using minifyEnabled, and specifies the Proguard settings file.
+         */
         release {
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
-    /*productFlavors {
+
+    /**
+     * The productFlavors {} block is where you can configure multiple product
+     * flavors. This allows you to create different versions of your app that can
+     * override defaultConfig {} with their own settings. Product flavors are
+     * optional, and the build system does not create them by default. This example
+     * creates a free and paid product flavor. Each product flavor then specifies
+     * its own application ID, so that they can exist on the Google Play Store, or
+     * an Android device, simultaneously.
+     */
+    productFlavors {
     }
-    splits {
+    /**
+     * The splits {} block is where you can configure different APK builds that
+     * each contain only code and resources for a supported screen density or
+     * ABI. You'll also need to configure your build so that each APK has a
+     * different versionCode.
+     */
+    /*splits {
         abi {
             enable
             reset()
@@ -32,6 +90,10 @@ android {
     }*/
 }
 
+/**
+ * The dependencies {} block in the module-level build configuration file
+ * only specifies dependencies required to build the module itself.
+ */
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
@@ -41,6 +103,7 @@ dependencies {
     compile files('libs/gnsdk.jar')
     compile files('libs/gnsdk_helpers.jar')
     compile files('libs/MyID3_for_Android.jar')
+    compile files('libs/jaudiotagger-2.2.4.jar')
 
     compile 'com.android.support:appcompat-v7:25.3.1'
     compile 'com.android.support:design:25.3.1'
@@ -50,10 +113,10 @@ dependencies {
     compile 'com.github.wseemann:FFmpegMediaMetadataRetriever:1.0.14'
     compile 'com.google.android.gms:play-services-appindexing:9.8.0'
     compile 'com.android.support.constraint:constraint-layout:1.0.2'
-    compile 'net.jthink:jaudiotagger:2.2.3'
-    //compile group: 'org', name: 'jaudiotagger', version: '2.2.3'
-    /*compile 'com.google.firebase:firebase-crash:10.0.1'
-    compile 'com.google.firebase:firebase-messaging:10.0.1'*/
+
+    /*
+    compile 'com.google.firebase:firebase-crash:10.0.1'*/
+    /*compile 'com.google.firebase:firebase-messaging:10.0.1'*/
     testCompile 'junit:junit:4.12'
     annotationProcessor 'com.github.bumptech.glide:compiler:4.0.0-RC1'
 }
