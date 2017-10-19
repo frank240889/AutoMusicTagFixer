@@ -222,5 +222,6 @@
     <string name="could_not_read_file">No se pudo leer la información.</string>
     <string name="does_not_exist_cover">La canción no tiene carátula.</string>
     <string name="can_not_extract_null_cover">No se puede extraer una carátula inexistente.</string>
+    <string name="error">Ha ocurrido un error, inténtalo de nuevo.</string>
 
 </resources>

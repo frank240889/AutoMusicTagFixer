@@ -195,7 +195,7 @@ public final class AudioItem implements Parcelable{
 
     public static String getHumanReadableDuration(String duration){
         int d = Integer.parseInt(duration);
-        int totalSeconds = d/1000;
+        int totalSeconds = d;
         int minutes = 0;
         int seconds = 0;
         String readableDuration = "\'" + "00" +  "\"" + "00";
@@ -322,12 +322,21 @@ public final class AudioItem implements Parcelable{
 
     }
 
+    public static String getFrequency(String freq){
+        float f = Float.parseFloat(freq);
+        float f2 = f / 1000f;
+        return f2+ " Khz";
+    }
+
+    public static String getResolution(int res){
+        return res + " bits";
+    }
+
     public static String getBitrate(String bitrate) {
 
         if (bitrate != null && !bitrate.equals("") && !bitrate.equals("0") ){
-            int bitrateInt = Integer.parseInt(bitrate);
-            int bitrateInKb = bitrateInt / 1000;
-            return bitrateInKb + " Kbps";
+           // int bitrateInt = Integer.parseInt(bitrate);
+            return bitrate + " Kbps";
         }
         return "Bitrate desconocido";
     }
