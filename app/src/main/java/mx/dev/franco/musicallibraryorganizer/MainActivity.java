@@ -47,7 +47,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
-import android.webkit.MimeTypeMap;
 import android.widget.CheckBox;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -1360,10 +1359,8 @@ public class MainActivity extends AppCompatActivity
          */
         private Cursor getDataFromDevice() {
 
-            String mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(getString(R.string.mp3_type));
-            //Only select mp3 music files from this content provider
-            String selection = MediaStore.Audio.Media.IS_MUSIC + " != 0" + " and "
-                    + MediaStore.Audio.Media.MIME_TYPE + " = " + " \'" +mimeType + "\'";
+            //Select all music
+            String selection = MediaStore.Audio.Media.IS_MUSIC + " != 0";
 
             String[] projection = { //Columns to retrieve
                     MediaStore.Audio.Media._ID,
