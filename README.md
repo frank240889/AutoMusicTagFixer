@@ -4,7 +4,7 @@ What does it do?
 
 What does it offer?
 - Automatic, semiautomatic and manual correction for your audio files.
-- It will be totally free(if license of ACR service allows me), open source and ad free. You can fork it and modified. Just give me the credits for the base code.
+- It will be totally free(if license of ACR service allows me), open source and ad free.
 
 What does it correct?
 - Automatic, semi automatic and manual mode allows to correct title, artist, album, genre, track number, publication track year, cover art and filename (it will apply the same name of title, if is ON on Settings app).
