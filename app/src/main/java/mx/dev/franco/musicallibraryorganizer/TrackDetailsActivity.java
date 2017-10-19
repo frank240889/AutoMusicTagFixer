@@ -12,7 +12,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
-import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
@@ -56,17 +55,24 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
 import com.bumptech.glide.request.RequestOptions;
 
-import org.cmc.music.common.ID3WriteException;
-import org.cmc.music.metadata.ImageData;
-import org.cmc.music.metadata.MusicMetadata;
-import org.cmc.music.metadata.MusicMetadataSet;
-import org.cmc.music.myid3.MyID3;
+import org.jaudiotagger.audio.AudioFile;
+import org.jaudiotagger.audio.AudioFileIO;
+import org.jaudiotagger.audio.AudioHeader;
+import org.jaudiotagger.audio.exceptions.CannotReadException;
+import org.jaudiotagger.audio.exceptions.CannotWriteException;
+import org.jaudiotagger.audio.exceptions.InvalidAudioFrameException;
+import org.jaudiotagger.audio.exceptions.ReadOnlyFileException;
+import org.jaudiotagger.tag.FieldKey;
+import org.jaudiotagger.tag.Tag;
+import org.jaudiotagger.tag.TagException;
+import org.jaudiotagger.tag.TagOptionSingleton;
+import org.jaudiotagger.tag.images.AndroidArtwork;
+import org.jaudiotagger.tag.images.Artwork;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Vector;
 
 import mx.dev.franco.musicallibraryorganizer.database.DataTrackDbHelper;
 import mx.dev.franco.musicallibraryorganizer.database.TrackContract;
@@ -81,7 +87,6 @@ import mx.dev.franco.musicallibraryorganizer.utilities.CustomMediaPlayer;
 import mx.dev.franco.musicallibraryorganizer.utilities.FileSaver;
 import mx.dev.franco.musicallibraryorganizer.utilities.GlideApp;
 import mx.dev.franco.musicallibraryorganizer.utilities.StringUtilities;
-import wseemann.media.FFmpegMediaMetadataRetriever;
 
 import static android.view.View.GONE;
 import static mx.dev.franco.musicallibraryorganizer.services.GnService.API_INITIALIZED;
@@ -118,9 +123,6 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
     private long currentItemId;
     //flag when user is editing info
     private boolean editMode = false;
-    //Reference to objects that make possible to edit metadata from mp3 audio files
-    private FFmpegMediaMetadataRetriever fFmpegMediaMetadataRetriever = null;
-    private MediaMetadataRetriever mediaMetadataRetriever = null;
     //A reference to database connection
     private DataTrackDbHelper dbHelper;
     private boolean manualMode = false;
@@ -129,7 +131,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
     //References to elements inside the layout
     private FloatingActionButton editButton;
     private FloatingActionButton downloadCoverButton;
-    private FloatingActionButton autofixButton;
+    private FloatingActionButton autoFixButton;
     private FloatingActionButton extractCoverButton;
     private FloatingActionButton saveButton;
     private FloatingActionButton floatingActionMenu;
@@ -142,7 +144,6 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
     private String newGenre;
     private String trackPath;
     private String currentDuration;
-    private String[] extraData;
     private EditText titleField;
     private String currentTitle;
     private EditText artistField;
@@ -215,9 +216,15 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
     private TextView trackIdGenre;
     private TextView trackIdNumber;
     private TextView trackIdYear;
-    private TextView trackidCoverArtDimensions;
-    private int wasModified = 0;
+    private TextView trackIdCoverArtDimensions;
     private TrackAdapter trackAdapter;
+    private String frequencyVal;
+    private int resolutionVal;
+    private String channelsVal;
+    private String fileType;
+    private AudioFile audioTaggerFile;
+    private Tag tag;
+    private AudioHeader audioHeader;
 
 
     @Override
@@ -398,6 +405,10 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
         removeItem.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
             @Override
             public boolean onMenuItemClick(MenuItem item) {
+                if(currentCoverArt == null){
+                    showSnackBar(Snackbar.LENGTH_SHORT,getString(R.string.does_not_exist_cover),ACTION_NONE, null);
+                    return false;
+                }
                 final AlertDialog.Builder builder = new AlertDialog.Builder(TrackDetailsActivity.this);
                 builder.setTitle(R.string.title_remove_cover_art_dialog);
                 builder.setMessage(R.string.message_remove_cover_art_dialog);
@@ -586,17 +597,6 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
 
     @Override
     public void onDestroy(){
-
-        //Release the resources used by this objects when cancel this activity.
-        if(fFmpegMediaMetadataRetriever != null){
-            fFmpegMediaMetadataRetriever.release();
-            fFmpegMediaMetadataRetriever = null;
-        }
-
-        if(mediaMetadataRetriever != null){
-            mediaMetadataRetriever.release();
-            mediaMetadataRetriever = null;
-        }
         dbHelper = null;
         titleField = null;
         artistField = null;
@@ -604,7 +604,9 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
         numberField = null;
         yearField = null;
         genreField = null;
-
+        audioTaggerFile = null;
+        tag = null;
+        audioHeader = null;
         currentCoverArt = null;
         trackAdapter = null;
         viewDetailsTrack = null;
@@ -674,7 +676,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
         downloadCoverButton = (FloatingActionButton) viewDetailsTrack.findViewById(R.id.downloadCover);
         extractCoverButton = (FloatingActionButton) viewDetailsTrack.findViewById(R.id.extractCover);
         editButton = (FloatingActionButton) viewDetailsTrack.findViewById(R.id.editTrackInfo);
-        autofixButton = (FloatingActionButton) viewDetailsTrack.findViewById(R.id.autofix);
+        autoFixButton = (FloatingActionButton) viewDetailsTrack.findViewById(R.id.autofix);
         floatingActionMenu = (FloatingActionButton) viewDetailsTrack.findViewById(R.id.floatingActionMenu);
         saveButton = (FloatingActionButton) viewDetailsTrack.findViewById(R.id.saveInfo);
         saveButton.hide();
@@ -691,7 +693,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
         //references to elements of results layout when makes trackid
         trackIdCard = (CardView) viewDetailsTrack.findViewById(R.id.trackIdCard);
         trackIdCover = (ImageView) viewDetailsTrack.findViewById(R.id.trackidCoverArt);
-        trackidCoverArtDimensions = (TextView) viewDetailsTrack.findViewById(R.id.trackidCoverArtDimensions);
+        trackIdCoverArtDimensions = (TextView) viewDetailsTrack.findViewById(R.id.trackidCoverArtDimensions);
         trackIdTitle = (TextView) viewDetailsTrack.findViewById(R.id.trackidTitle);
         trackIdArtist = (TextView) viewDetailsTrack.findViewById(R.id.trackidArtist);
         trackIdAlbum = (TextView) viewDetailsTrack.findViewById(R.id.trackidAlbum);
@@ -709,39 +711,40 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
      * and sets these values into no editable text fields
      */
     private void extractAndCacheData(){
-        fFmpegMediaMetadataRetriever = new FFmpegMediaMetadataRetriever();
-        fFmpegMediaMetadataRetriever.setDataSource(trackPath);
-        mediaMetadataRetriever = new MediaMetadataRetriever();
-        mediaMetadataRetriever.setDataSource(trackPath);
 
-        currentCoverArt = mediaMetadataRetriever.getEmbeddedPicture();
+        TagOptionSingleton.getInstance().setAndroid(true);
+        try {
+            audioTaggerFile = AudioFileIO.read(new File(trackPath));
+            tag = audioTaggerFile.getTag();
+            audioHeader = audioTaggerFile.getAudioHeader();
+
+
+        currentCoverArt = tag.getFirstArtwork() == null ? null : tag.getFirstArtwork().getBinaryData();//mediaMetadataRetriever.getEmbeddedPicture();
         currentCoverArtLength = currentCoverArt == null ? 0 :currentCoverArt.length;
 
         //initial values of new cover art will be the same of current cover art
         newCoverArt = currentCoverArt;
         newCoverArtLength = currentCoverArtLength;
 
-        currentTitle = fFmpegMediaMetadataRetriever.extractMetadata(FFmpegMediaMetadataRetriever.METADATA_KEY_TITLE) != null ? fFmpegMediaMetadataRetriever.extractMetadata(FFmpegMediaMetadataRetriever.METADATA_KEY_TITLE):"";
-
-        currentArtist = fFmpegMediaMetadataRetriever.extractMetadata(FFmpegMediaMetadataRetriever.METADATA_KEY_ARTIST) != null ? fFmpegMediaMetadataRetriever.extractMetadata(FFmpegMediaMetadataRetriever.METADATA_KEY_ARTIST):"";
-
-        currentAlbum = fFmpegMediaMetadataRetriever.extractMetadata(FFmpegMediaMetadataRetriever.METADATA_KEY_ALBUM) != null ? fFmpegMediaMetadataRetriever.extractMetadata(FFmpegMediaMetadataRetriever.METADATA_KEY_ALBUM):"";
-
-        currentNumber = fFmpegMediaMetadataRetriever.extractMetadata(FFmpegMediaMetadataRetriever.METADATA_KEY_TRACK) != null ? fFmpegMediaMetadataRetriever.extractMetadata(FFmpegMediaMetadataRetriever.METADATA_KEY_TRACK):"";
-
-        currentYear = fFmpegMediaMetadataRetriever.extractMetadata(FFmpegMediaMetadataRetriever.METADATA_KEY_DATE) != null ? fFmpegMediaMetadataRetriever.extractMetadata(FFmpegMediaMetadataRetriever.METADATA_KEY_DATE):"";
-
-        currentGenre = fFmpegMediaMetadataRetriever.extractMetadata(FFmpegMediaMetadataRetriever.METADATA_KEY_GENRE) != null ? fFmpegMediaMetadataRetriever.extractMetadata(FFmpegMediaMetadataRetriever.METADATA_KEY_GENRE):"";
-
-        currentDuration = fFmpegMediaMetadataRetriever.extractMetadata(FFmpegMediaMetadataRetriever.METADATA_KEY_DURATION) != null ? fFmpegMediaMetadataRetriever.extractMetadata(FFmpegMediaMetadataRetriever.METADATA_KEY_DURATION):"0";
-
-        bitrate = mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_BITRATE) != null ? mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_BITRATE):"";
-
+        currentTitle = tag.getFirst(FieldKey.TITLE);
+        currentArtist = tag.getFirst(FieldKey.ARTIST);
+        currentAlbum = tag.getFirst(FieldKey.ALBUM);
+        currentNumber = tag.getFirst(FieldKey.TRACK);
+        currentYear = tag.getFirst(FieldKey.YEAR);
+        currentGenre = tag.getFirst(FieldKey.GENRE);
+        currentDuration = audioHeader.getTrackLength()+"";
+        bitrate = audioHeader.getBitRate();
+        frequencyVal = audioHeader.getSampleRate();
+        resolutionVal = audioHeader.getBitsPerSample();
+        channelsVal = audioHeader.getChannels();
+        fileType = audioHeader.getFormat();
         audioFile = new File(trackPath);
-
-        extraData = currentAudioItem.getExtraData();
-
         setCurrentValues();
+        } catch (CannotReadException | IOException | ReadOnlyFileException | InvalidAudioFrameException | TagException e) {
+            e.printStackTrace();
+            showSnackBar(Snackbar.LENGTH_LONG,getString(R.string.could_not_read_file),ACTION_NONE,null);
+        }
+
     }
 
     private void setCurrentValues(){
@@ -774,7 +777,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
         numberField.setText(currentNumber);
         yearField.setText(currentYear);
         genreField.setText(currentGenre);
-        trackType.setText(R.string.mp3_type);
+        trackType.setText(fileType);
 
         titleLayer.setText(audioFile.getName());
         subtitleLayer.setText(AudioItem.getRelativePath(audioFile.getParent()));
@@ -784,12 +787,9 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
         status.setText(getStatusText());
         status.setCompoundDrawablesWithIntrinsicBounds(getStatusDrawable(currentAudioItem.getStatus()),null,null,null);
         bitrateField.setText(AudioItem.getBitrate(bitrate));
-
-        if(extraData.length > 0) {
-            frequency.setText(extraData[0]);
-            resolution.setText(extraData[1]);
-            channels.setText(extraData[2]);
-        }
+        frequency.setText(AudioItem.getFrequency(frequencyVal));
+        resolution.setText(AudioItem.getResolution(resolutionVal));
+        channels.setText(channelsVal);
 
         if(manualMode){
             enableFieldsToEdit();
@@ -800,13 +800,14 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
 
 
     private void addActionListeners(){
-        if(currentCoverArt == null){
-            extractCoverButton.setEnabled(false);
-        }
 
         extractCoverButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                if(currentCoverArt == null){
+                    showSnackBar(Snackbar.LENGTH_SHORT,getString(R.string.can_not_extract_null_cover),ACTION_NONE,null);
+                    return;
+                }
                 closeFABMenu();
                 String newImageAbsolutePath = FileSaver.saveFile(currentCoverArt, currentTitle, currentArtist, currentAlbum);
                 if(!newImageAbsolutePath.equals(FileSaver.NULL_DATA) && !newImageAbsolutePath.equals(FileSaver.NO_EXTERNAL_STORAGE_WRITABLE) && !newImageAbsolutePath.equals(FileSaver.INPUT_OUTPUT_ERROR)) {
@@ -834,7 +835,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
             }
         });
 
-        autofixButton.setOnClickListener(new View.OnClickListener() {
+        autoFixButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 closeFABMenu();
@@ -1036,11 +1037,11 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
 
         downloadCoverButton.setEnabled(enable);
         editButton.setEnabled(enable);
-        autofixButton.setEnabled(enable);
+        autoFixButton.setEnabled(enable);
         //ask if we are going to enable or disable mini fabs,
         //if we are are going to disable, lets disable all,
         //else, enable it or disable it depending on if exist cover art
-        extractCoverButton.setEnabled(enable ? ( currentCoverArt != null ) : enable  );
+        extractCoverButton.setEnabled(enable);
     }
 
     private void showFABMenu(){
@@ -1048,7 +1049,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
 
         floatingActionMenu.animate().rotation(-400);
 
-        autofixButton.animate().translationY(-getResources().getDimension(R.dimen.standard_55));
+        autoFixButton.animate().translationY(-getResources().getDimension(R.dimen.standard_55));
 
         editButton.animate().translationY(-getResources().getDimension(R.dimen.standard_105));
 
@@ -1063,7 +1064,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
 
         floatingActionMenu.animate().rotation(0);
 
-        autofixButton.animate().translationY(0);
+        autoFixButton.animate().translationY(0);
 
         editButton.animate().translationY(0);
 
@@ -1113,9 +1114,8 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
      * the user did not modify anything
      */
     private void cachingCurrentValues(){
-        mediaMetadataRetriever.setDataSource(trackPath);
 
-        currentCoverArt =  mediaMetadataRetriever.getEmbeddedPicture();
+        currentCoverArt =  tag.getFirstArtwork() == null ? null :tag.getFirstArtwork().getBinaryData();
         currentCoverArtLength = currentCoverArt == null ? 0 : currentCoverArt.length;
         newCoverArt = currentCoverArt;
         newCoverArtLength = currentCoverArtLength;
@@ -1254,9 +1254,8 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
     /**
      * This method updates metadata song.
      * @throws IOException
-     * @throws ID3WriteException
      */
-    private void updateData() throws IOException, ID3WriteException {
+    private void updateData() throws IOException {
         //we update the data creating another thread because the database operation can take a long time
         AsyncUpdateData asyncUpdateData = new AsyncUpdateData(UPDATE_ALL_METADATA, false);
         asyncUpdateData.execute();
@@ -1349,7 +1348,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                             public void onClick(DialogInterface dialog, int which) {
                                 try {
                                 updateData();
-                                } catch (IOException | ID3WriteException e) {
+                                } catch (IOException e) {
                                     e.printStackTrace();
                                 }
                             }
@@ -1468,112 +1467,62 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
         private void updateCoverArt() {
             //Is priority update the metadata first, in case there are errors when
             //the data is set on item_list and database
-            MyID3 myID3 = new MyID3();
-            File tempFile = new File(trackPath);
-            MusicMetadataSet musicMetadataSet = null;
-            ContentValues contentValues = new ContentValues();
-
-            boolean isSameCoverArt = currentCoverArtLength == newCoverArtLength;
-
             try {
-                musicMetadataSet = myID3.read(tempFile);
-                MusicMetadata iMusicMetadata = (MusicMetadata) musicMetadataSet.getSimplified();
+                ContentValues contentValues = new ContentValues();
 
-                try {
-
-                    //Here we update the data in case there have had changes
-                    if(!isSameCoverArt && newCoverArt != null && newCoverArtLength > 0){
-                        Vector<ImageData> imageDataVector = new Vector<>();
-                        ImageData imageData = new ImageData(newCoverArt, "", "", 3);
-                        imageDataVector.add(imageData);
-                        iMusicMetadata.setPictureList(imageDataVector);
-
-                        //update genre too because
-                        //there is a bug in the library
-                        //that causes that if is not saved explicitly
-                        //it will save null value
-                        iMusicMetadata.setGenre(currentGenre);
-                        Log.d("genre", "updated");
-
-                        myID3.update(tempFile, musicMetadataSet, iMusicMetadata);
+                boolean isSameCoverArt = currentCoverArtLength == newCoverArtLength;
 
 
-                        //Then, is necessary update the data in database,
-                        //because we obtain this info when the app starts (after first time),
-                        //besides, database operations can take a long time
-                        contentValues.put(TrackContract.TrackData.STATUS,AudioItem.FILE_STATUS_EDIT_BY_USER);
-                        dbHelper.updateData(TrackDetailsActivity.this.currentItemId,contentValues);
+                //Here we update the data in case there have had changes
+                if (!isSameCoverArt && newCoverArt != null && newCoverArtLength > 0) {
+                    Artwork artwork = new AndroidArtwork();
+                    artwork.setBinaryData(newCoverArt);
+                    tag.setField(artwork);
+                    audioTaggerFile.commit();
+                    //Then, is necessary update the data in database,
+                    //because we obtain this info when the app starts (after first time),
+                    //besides, database operations can take a long time
+                    contentValues.put(TrackContract.TrackData.STATUS, AudioItem.FILE_STATUS_EDIT_BY_USER);
+                    dbHelper.updateData(TrackDetailsActivity.this.currentItemId, contentValues);
 
-                        //Update the data of item_list from list
-                        currentAudioItem.setStatus(AudioItem.FILE_STATUS_EDIT_BY_USER);
+                    //Update the data of item_list from list
+                    currentAudioItem.setStatus(AudioItem.FILE_STATUS_EDIT_BY_USER);
 
-                        Log.d("only_cover_art", "updated");
-                        Log.d("metadata", "updated");
-                    }
-                    dataUpdated = true;
-
-
-                } catch (IOException | ID3WriteException e) {
-                    dataUpdated = false;
-                    e.printStackTrace();
+                    Log.d("only_cover_art", "updated");
                 }
-
-
-            } catch (IOException e) {
-                e.printStackTrace();
+                dataUpdated = true;
+            }
+            catch (CannotWriteException | TagException e){
                 dataUpdated = false;
                 e.printStackTrace();
             }
+
         }
 
         private void removeCoverArt() {
             //Is priority update the metadata first, in case there are errors when
             //the data is set on item_list and database
-            MyID3 myID3 = new MyID3();
-            File tempFile = new File(trackPath);
-            MusicMetadataSet musicMetadataSet = null;
-            ContentValues contentValues = new ContentValues();
-
             try {
-                musicMetadataSet = myID3.read(tempFile);
-                MusicMetadata iMusicMetadata = (MusicMetadata) musicMetadataSet.getSimplified();
 
-                try {
+                ContentValues contentValues = new ContentValues();
+                tag.deleteArtworkField();
+                audioTaggerFile.commit();
 
-                    //Here we update the data in case there have had changes
-                    iMusicMetadata.remove("pictures");
-                    iMusicMetadata.clearPictureList();
-                    iMusicMetadata.setPictureList(null);
+                //Then, is necessary update the data in database,
+                //because we obtain this info when the app starts (after first time),
+                //besides, database operations can take a long time
+                contentValues.put(TrackContract.TrackData.STATUS,AudioItem.FILE_STATUS_EDIT_BY_USER);
+                dbHelper.updateData(TrackDetailsActivity.this.currentItemId,contentValues);
 
-                    //update genre too because
-                    //there is a bug in the library
-                    //that causes that if is not saved explicitly
-                    //it will save null value
-                    iMusicMetadata.setGenre(currentGenre);
-                    Log.d("genre", "updated");
+                //Update the data of item_list from list
+                currentAudioItem.setStatus(AudioItem.FILE_STATUS_EDIT_BY_USER);
+                dataUpdated = true;
 
-                    myID3.update(tempFile, musicMetadataSet, iMusicMetadata);
-
-                    //Then, is necessary update the data in database,
-                    //because we obtain this info when the app starts (after first time),
-                    //besides, database operations can take a long time
-                    contentValues.put(TrackContract.TrackData.STATUS,AudioItem.FILE_STATUS_EDIT_BY_USER);
-                    dbHelper.updateData(TrackDetailsActivity.this.currentItemId,contentValues);
-
-                    //Update the data of item_list from list
-                    currentAudioItem.setStatus(AudioItem.FILE_STATUS_EDIT_BY_USER);
-                    dataUpdated = true;
-
-                    Log.d("remove_cover_art", "updated");
-
-                } catch (IOException | ID3WriteException e) {
-                    dataUpdated = false;
-                    e.printStackTrace();
-                }
+                Log.d("remove_cover_art", "updated");
 
 
-            } catch (IOException e) {
-                e.printStackTrace();
+
+            } catch (CannotWriteException e) {
                 dataUpdated = false;
                 e.printStackTrace();
             }
@@ -1583,132 +1532,116 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
         private void updateMetadata(){
             //Is priority update the metadata first, in case there are errors when
             //the data is set on item_list and database
-            MyID3 myID3 = new MyID3();
-            File tempFile = new File(trackPath);
-            audioFile = new File(trackPath);
-            String currentFileName = audioFile.getName();
-            String currentFileNameWithoutExt = currentFileName.substring(0,currentFileName.length()-4);
-
-            MusicMetadataSet musicMetadataSet = null;
-
-            ContentValues contentValues = new ContentValues();
-
-            Log.d("isTitleSameThanFilename", currentFileNameWithoutExt + "-" + newTitle);
-
-            boolean isTitleSameThanFilename = currentFileNameWithoutExt.equals(newTitle);
-            boolean isSameTitle = currentTitle.equals(newTitle);
-            boolean isSameArtist = currentArtist.equals(newArtist);
-            boolean isSameAlbum = currentAlbum.equals(newAlbum);
-            boolean isSameGenre = currentGenre.equals(newGenre);
-            boolean isSameTrackNumber = currentNumber.equals(newNumber);
-            boolean isSameTrackYear = currentYear.equals(newYear);
-            boolean isSameCoverArt = currentCoverArtLength == newCoverArtLength;
-            boolean hasChanges = !(isSameTitle && isSameArtist && isSameAlbum && isSameGenre && isSameTrackNumber && isSameTrackYear && isSameCoverArt);
-
             try {
-                musicMetadataSet = myID3.read(tempFile);
-                MusicMetadata iMusicMetadata = (MusicMetadata) musicMetadataSet.getSimplified();
+
+                audioFile = new File(trackPath);
+                String currentFileName = audioFile.getName();
+                String currentFileNameWithoutExt = currentFileName.substring(0,currentFileName.length()-4);
+
+                ContentValues contentValues = new ContentValues();
+
+                Log.d("isTitleSameThanFilename", currentFileNameWithoutExt + "-" + newTitle);
+
+                boolean isTitleSameThanFilename = currentFileNameWithoutExt.equals(newTitle);
+                boolean isSameTitle = currentTitle.equals(newTitle);
+                boolean isSameArtist = currentArtist.equals(newArtist);
+                boolean isSameAlbum = currentAlbum.equals(newAlbum);
+                boolean isSameGenre = currentGenre.equals(newGenre);
+                boolean isSameTrackNumber = currentNumber.equals(newNumber);
+                boolean isSameTrackYear = currentYear.equals(newYear);
+                boolean isSameCoverArt = currentCoverArtLength == newCoverArtLength;
+                boolean hasChanges = !(isSameTitle && isSameArtist && isSameAlbum && isSameGenre && isSameTrackNumber && isSameTrackYear && isSameCoverArt);
 
                 //Verify if new values are not empties, because from trackid can come empty values
                 if(!isSameTitle && !newTitle.isEmpty()) {
-                    iMusicMetadata.setSongTitle(newTitle);
+                    tag.setField(FieldKey.TITLE, newTitle);
                     contentValues.put(TrackContract.TrackData.TITLE,newTitle);
                     currentAudioItem.setTitle(newTitle);
                     Log.d("title", "updated");
                 }
                 if(!isSameArtist && !newArtist.isEmpty()) {
-                    iMusicMetadata.setArtist(newArtist);
+                    tag.setField(FieldKey.ARTIST, newArtist);
                     contentValues.put(TrackContract.TrackData.ARTIST,newArtist);
                     currentAudioItem.setArtist(newArtist);
                     Log.d("artist", "updated");
                 }
                 if(!isSameAlbum && !newAlbum.isEmpty()) {
-                    iMusicMetadata.setAlbum(newAlbum);
+                    tag.setField(FieldKey.ALBUM, newAlbum);
                     contentValues.put(TrackContract.TrackData.ALBUM,newAlbum);
                     currentAudioItem.setAlbum(newAlbum);
                     Log.d("album", "updated");
                 }
                 if(!isSameTrackNumber && !newNumber.isEmpty()) {
-                    iMusicMetadata.setTrackNumber(Integer.parseInt(newNumber));
+                    tag.setField(FieldKey.TRACK, newNumber);
                     Log.d("number", "updated");
                 }
                 if(!isSameTrackYear && !newYear.isEmpty()) {
-                    iMusicMetadata.setYear(newYear);
+                    tag.setField(FieldKey.YEAR, newYear);
                     Log.d("year", "updated");
                 }
-                //Always save genre because there is a bug in the library
-                //that makes null this value if is not updated
-                if(!newGenre.isEmpty()) {
-                    iMusicMetadata.setGenre(newGenre);
+
+                if(!isSameGenre && !newGenre.isEmpty()) {
+                    tag.setField(FieldKey.GENRE, newGenre);
+                    Log.d("genre", "updated");
                 }
-                else {
-                    iMusicMetadata.setGenre(currentGenre);
-                }
-                Log.d("genre", "updated");
 
                 if(!isSameCoverArt && newCoverArt != null && newCoverArt.length > 0){
-                    Vector<ImageData> imageDataVector = new Vector<>();
-                    ImageData imageData = new ImageData(newCoverArt, "", "", 3);
-                    imageDataVector.add(imageData);
-                    iMusicMetadata.setPictureList(imageDataVector);
+                    Artwork artwork = new AndroidArtwork();
+                    artwork.setBinaryData(newCoverArt);
+                    tag.setField(artwork);
 
                     Log.d("coverart", "updated");
                 }
 
-                try {
-                    //Here we update the data in case there have had changes
-                    if(hasChanges) {
-                        myID3.update(tempFile, musicMetadataSet, iMusicMetadata);
-                        Log.d("all_metadata", "updated");
-                    }
-                    //We check if this option is selected in settings,
-                    //before writing to database
-                    if(SelectedOptions.MANUAL_CHANGE_FILE){
-                        //new title is not the same than old title? then rename file
-                        if(!isTitleSameThanFilename) {
-                            String newAbsolutePath = AudioItem.renameFile(currentAudioItem.getAbsolutePath(), newTitle, newArtist);
-                            currentAudioItem.setAbsolutePath(newAbsolutePath);
-                            contentValues.put(TrackContract.TrackData.DATA, newAbsolutePath);
+                //Here we update the data in case there have had changes
+                if(hasChanges) {
+                    audioTaggerFile.commit();
+                    Log.d("all_metadata", "updated");
+                }
+                //We check if this option is selected in settings,
+                //before writing to database
+                if(SelectedOptions.MANUAL_CHANGE_FILE){
+                    //new title is not the same than old title? then rename file
+                    if(!isTitleSameThanFilename) {
+                        String newAbsolutePath = AudioItem.renameFile(currentAudioItem.getAbsolutePath(), newTitle, newArtist);
+                        currentAudioItem.setAbsolutePath(newAbsolutePath);
+                        contentValues.put(TrackContract.TrackData.DATA, newAbsolutePath);
 
-                            //lets inform to system that one file has change
-                            ContentValues values = new ContentValues();
-                            String selection = MediaStore.MediaColumns.DATA + "= ?";
-                            String selectionArgs[] = {trackPath}; //old path
-                            values.put(MediaStore.MediaColumns.DATA, newAbsolutePath); //new path
-                            boolean successMediaStore = getContentResolver().
-                                                        update(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-                                                                values,
-                                                                selection,
-                                                                selectionArgs) == 1;
+                        //lets inform to system that one file has change
+                        ContentValues values = new ContentValues();
+                        String selection = MediaStore.MediaColumns.DATA + "= ?";
+                        String selectionArgs[] = {trackPath}; //old path
+                        values.put(MediaStore.MediaColumns.DATA, newAbsolutePath); //new path
+                        boolean successMediaStore = getContentResolver().
+                                                    update(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                                                            values,
+                                                            selection,
+                                                            selectionArgs) == 1;
 
-                            currentAudioItem.setAbsolutePath(newAbsolutePath);
-                            trackPath = newAbsolutePath;
-                            audioFile = null;
-                            Log.d("media store success", successMediaStore+"");
-                            Log.d("filename", "update");
-                        }
-
+                        currentAudioItem.setAbsolutePath(newAbsolutePath);
+                        trackPath = newAbsolutePath;
+                        audioFile = null;
+                        Log.d("media store success", successMediaStore+"");
+                        Log.d("filename", "update");
                     }
 
-                    //Then, is necessary update the data in database,
-                    //because we obtain this info when the app starts (after first time),
-                    //besides, database operations can take a long time
-                    contentValues.put(TrackContract.TrackData.STATUS,AudioItem.FILE_STATUS_EDIT_BY_USER);
-                    //Update the data of item_list from list
-                    currentAudioItem.setStatus(AudioItem.FILE_STATUS_EDIT_BY_USER);
-
-                    dbHelper.updateData(currentItemId,contentValues);
-                    dataUpdated = true;
-                } catch (IOException | ID3WriteException e) {
-                    dataUpdated = false;
-                    e.printStackTrace();
                 }
 
+                //Then, is necessary update the data in database,
+                //because we obtain this info when the app starts (after first time),
+                //besides, database operations can take a long time
+                contentValues.put(TrackContract.TrackData.STATUS,AudioItem.FILE_STATUS_EDIT_BY_USER);
+                //Update the data of item_list from list
+                currentAudioItem.setStatus(AudioItem.FILE_STATUS_EDIT_BY_USER);
 
-            } catch (IOException e) {
+                dbHelper.updateData(currentItemId,contentValues);
+                dataUpdated = true;
+
+
+            }
+            catch ( CannotWriteException | TagException e) {
                 e.printStackTrace();
                 dataUpdated = false;
-                e.printStackTrace();
             }
         }
 
@@ -1836,10 +1769,8 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
 
 
                 }
-                wasModified = 1;
             }
             else {
-                wasModified = 0;
                 msg = getString(R.string.message_no_data_updated);
             }
 
@@ -1940,7 +1871,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
 
                         //make visible the trackidcover if available
                         trackIdCover.setVisibility(View.VISIBLE);
-                        trackidCoverArtDimensions.setVisibility(View.VISIBLE);
+                        trackIdCoverArtDimensions.setVisibility(View.VISIBLE);
 
                         if(newCoverArt != null) {
                             GlideApp.with(viewDetailsTrack).
@@ -1951,7 +1882,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                                     .fitCenter()
                                     .into(trackIdCover);
 
-                            trackidCoverArtDimensions.setText(AudioItem.getStringImageSize(newCoverArt));
+                            trackIdCoverArtDimensions.setText(AudioItem.getStringImageSize(newCoverArt));
 
                         }
                         else{
@@ -2080,7 +2011,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                                     .fitCenter()
                                     .into(trackIdCover);
 
-                            trackidCoverArtDimensions.setText(AudioItem.getStringImageSize(newCoverArt));
+                            trackIdCoverArtDimensions.setText(AudioItem.getStringImageSize(newCoverArt));
 
                             showSnackBar(Snackbar.LENGTH_SHORT, finalMsg,ACTION_NONE, null);
 
