@@ -35,9 +35,9 @@ How to build it?
 
 1. Download zip and import project from Android Studio, or import directly from Android Studio using the URL repo.
 2. Enter here and register an account https://developer.gracenote.com/gnsdk.
-3. Once you hace registered, go to MyAccount -> My Apps in top menu.
+3. Once you have registered, go to MyAccount -> My Apps in top menu.
 4. Create a new app, follow the instructions to create a new app and obtain the required info:
-5. Once you have created the app, use the info provided from it and put the corresponding values to these fields:
+5. Once you have created the app, use the info provided from it and put the corresponding values to these fields in GnService class:
           
           public static final String gnsdkLicenseString;
           public static final String gnsdkClientId;
