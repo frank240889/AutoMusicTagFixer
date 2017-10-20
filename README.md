@@ -1,4 +1,11 @@
 # AutomusicTagFixer
+-VERY IMPORTANT:
+1. This app is Beta version yet. 
+2. This app use an ACR technology powered by Gracenote, visit https://developer.gracenote.com/gnsdk for more information.
+3. This app uses the awesome jAudioTagger library, visit http://www.jthink.net/jaudiotagger/ for more information.
+4. This app uses the amazing Glide library, visit https://github.com/bumptech/glide for more information.
+5- This app and source code is made for Android >= 5, so maybe doesn't work on Android <= 4.
+
 What does it do?
 - From every file you have in your smartphone, it generates an audio fingerprint, then connects to a ACR server and donwloads the correct data for current song, later allows to correct the song with this downloaded information, in other words, it allows to make a Shazam-like recognition but not from audio recorded, over the audiofiles you have instead and correct them.
 
@@ -45,11 +52,4 @@ How to build it?
           
 6. Then, in Android Studio go to Build -> Build APK.
 7. When apk is generated, copy it to your device and install it.
-8. That's all!!!, I hope enjoy correcting your songs in a easier way, and specially FREE.
-
--VERY IMPORTANT:
-1. This app is Beta version yet. 
-2. This app use an ACR technology powered by Gracenote, visit https://developer.gracenote.com/gnsdk for more information.
-3. This app uses the awesome jAudioTagger library, visit http://www.jthink.net/jaudiotagger/ for more information.
-4. This app uses the amazing Glide library, visit https://github.com/bumptech/glide for more information.
-5- This app and source code is made for Android >= 5, so maybe doesn't work on Android <= 4.
+8. That's all!!!, I hope you enjoy correcting your songs in an easier way, and specially FREE.
