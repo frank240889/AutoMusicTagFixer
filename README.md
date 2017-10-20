@@ -8,7 +8,10 @@
 5- This app and source code is made for Android >= 5, so maybe doesn't work on Android <= 4.
 ********************************************************************************************************************************
 What does it do?
-- From every file you have in your smartphone, it generates an audio fingerprint, then connects to a ACR server and donwloads the correct data for current song, later allows to correct the song with this downloaded information, in other words, it allows to make a Shazam-like recognition but not from audio recorded, over the audiofiles you have instead and correct them.
+- For every audio file you have in your smartphone (all types compatibles with Androoid), it will generate an audio fingerprint, then will connect to an ACR server and will download the correct data for every song, later will allow you to correct the song with this downloaded information; in other words, it will make a Shazam-like recognition but not from audio recorded, but over audiofiles you have and will correct its tags and filename.
+
+For what?
+- The objective if this app is help you to correct your audio files to maintain your musical library more organized. 
 
 What does it offer?
 - Automatic, semiautomatic and manual correction for your audio files.
