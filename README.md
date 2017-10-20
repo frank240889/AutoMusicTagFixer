@@ -1,7 +1,7 @@
 # AutomusicTagFixer
 -VERY IMPORTANT:
 1. This app is Beta version yet. 
-2. This app use an ACR technology powered by Gracenote, visit https://developer.gracenote.com/gnsdk for more information.
+2. This app uses an ACR technology powered by Gracenote, visit https://developer.gracenote.com/gnsdk for more information.
 3. This app uses the awesome jAudioTagger library, visit http://www.jthink.net/jaudiotagger/ for more information.
 4. This app uses the amazing Glide library, visit https://github.com/bumptech/glide for more information.
 5- This app and source code is made for Android >= 5, so maybe doesn't work on Android <= 4.
