@@ -37,18 +37,19 @@ How to build it?
 2. Enter here and register an account https://developer.gracenote.com/gnsdk.
 3. Once you hace registered, go to MyAccount -> My Apps in top menu.
 4. Create a new app, follow the instructions to create a new app and obtain the required info:
-5. Once you have created the app, modify the class project class GnService and change the next fields:
+5. Once you have created the app, use the info provided from it and put the corresponding values to these fields:
           
-          public static final String gnsdkLicenseString = "";
-          public static final String gnsdkClientId = "";
-          public static final String gnsdkClientTag = "";
+          public static final String gnsdkLicenseString;
+          public static final String gnsdkClientId;
+          public static final String gnsdkClientTag;
           
 6. Then, in Android Studio go to Build -> Build APK.
 7. When apk is generated, copy it to your device and install it.
 8. That's all!!!, I hope enjoy correcting your songs in a easier way, and specially FREE.
 
 -VERY IMPORTANT:
-1. This app use an ACR technology powered by Gracenote, visit https://developer.gracenote.com/gnsdk for more information.
-2. This app uses the awesome jAudioTagger library, visit http://www.jthink.net/jaudiotagger/ for more information.
-3. This app uses the amazing Glide library, visit https://github.com/bumptech/glide for more information.
-4- This app and source code is made for Android >= 5, so maybe doesn't work on Android <= 4.
+1. This app is Beta version yet. 
+2. This app use an ACR technology powered by Gracenote, visit https://developer.gracenote.com/gnsdk for more information.
+3. This app uses the awesome jAudioTagger library, visit http://www.jthink.net/jaudiotagger/ for more information.
+4. This app uses the amazing Glide library, visit https://github.com/bumptech/glide for more information.
+5- This app and source code is made for Android >= 5, so maybe doesn't work on Android <= 4.
