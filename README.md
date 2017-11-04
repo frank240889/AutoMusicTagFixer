@@ -32,10 +32,9 @@ Features:
 - Basic media player integrated.
 - Display of aditional data song like: size, channels, file type, resolution, frequency and speed in Kbps.
 - Search integrated to list.
-- Fast jump to current played song.
 - One-button select all tracks for correcting.
 - First app use tutorial.
-- Different sort types.
+- Different sort types for list in main activity.
 - Correction indicator (for knowing what songs are corrected, what song is missing of data and what songs are no corrected yet).
 - Current correction progress indicator for every song.
 - Automatic and manual update of files list, in case that songs are added or removed from your smartphone.
@@ -47,7 +46,7 @@ How to build it?
 1. Download zip and import project from Android Studio, or import directly from Android Studio using the URL repo.
 2. Enter here and register an account https://developer.gracenote.com/gnsdk.
 3. Once you have registered, go to MyAccount -> My Apps in top menu.
-4. Create a new app, follow the instructions to create a new app and obtain the required info:
+4. Create a new app, follow the instructions to create it.
 5. Once you have created the app, use the info provided from it and put the corresponding values to these fields in GnService class:
           
           public static final String gnsdkLicenseString;
