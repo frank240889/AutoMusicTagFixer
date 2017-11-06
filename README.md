@@ -39,6 +39,7 @@ Features:
 - Current correction progress indicator for every song.
 - Automatic and manual update of files list, in case that songs are added or removed from your smartphone.
 - The correction made, including the cover art, is made over the file itself, mean that changes are visible to every media player able to read ID3 tags(most nowadays).
+- For MP3 files, in any mode of correction, ID3 tags version 1 will be automatically converted to ID3 version 2, this conversion will allow to write covers over the file itself(and other tags) to mp3 files, because ID3 version 1 does not support it.
 - Background correction, no matter if app is closed.
 
 How to build it?
