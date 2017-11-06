@@ -7,16 +7,9 @@
         android:defaultValue="1000"
         android:entries="@array/pref_size_album_art_titles"
         android:entryValues="@array/pref_size_album_art_values"
-        android:key="size_album_art"
+        android:key="key_size_album_art"
         android:negativeButtonText="@null"
         android:positiveButtonText="@null"
         android:title="@string/pref_title_size_album_art" />
-
-    <MultiSelectListPreference
-        android:defaultValue="@array/pref_data_to_download_values"
-        android:entries="@array/pref_data_to_download_titles"
-        android:entryValues="@array/pref_data_to_download_values"
-        android:key="data_to_download"
-        android:title="@string/pref_title_data_to_download" />
 
 </PreferenceScreen>

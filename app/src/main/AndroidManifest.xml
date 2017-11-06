@@ -37,7 +37,7 @@
             android:configChanges="orientation|screenSize"
             android:label="@string/title_activity_folder_choser"
             android:launchMode="singleTop"
-            android:theme="@style/AppTheme" />
+            android:theme="@style/MainActivityTheme" />
         <activity
             android:name=".QuestionsActivity"
             android:configChanges="orientation|screenSize"

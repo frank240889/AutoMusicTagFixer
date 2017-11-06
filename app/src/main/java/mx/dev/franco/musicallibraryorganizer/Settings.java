@@ -6,35 +6,33 @@ package mx.dev.franco.musicallibraryorganizer;
 
 import com.gracenote.gnsdk.GnImageSize;
 
-import java.util.Set;
-
 /**
  * This class help us to store the values from settings in order to
  * do not call SharedPreferences every time we need to check the value
  */
-public class SelectedOptions {
+public class Settings {
+    public static boolean BACKGROUND_CORRECTION = false;
     //If true, the automatized process of correction
     //will change the file name with the same name of title song, default value true
-    public static boolean AUTOMATIC_CHANGE_FILENAME = true;
+    public static boolean SETTING_RENAME_FILE_AUTOMATIC_MODE = true;
+    //if true, the trackId title, will be applied as file, this implies
+    //that file will be renamed
+    public static boolean SETTING_RENAME_FILE_SEMI_AUTOMATIC_MODE = true;
     //If is true, when user edit the metadata of audio file,
     //the title the user types, will be the same for the file name, default value false
-    public static boolean MANUAL_CHANGE_FILE = false;
+    public static boolean SETTING_RENAME_FILE_MANUAL_MODE = true;
     //Determine when user edit manually an audio file, if he types strange
     //characters like "$" or "#", these automatically will be replace by empty character if this setting
     //is true, otherwise it will be shown an alert indicating that data entered by user is not valid
-    public static boolean AUTOMATICALLY_REPLACE_STRANGE_CHARACTERS = false;
-
-    public static int DEFAULT_SORT = 0;
-    public static boolean USE_EMBED_PLAYER = true;
+    public static boolean SETTING_REPLACE_STRANGE_CHARS_MANUAL_MODE = true;
+    //default sort is by location
+    public static String SETTING_DEFAULT_SORT = "0";
+    public static boolean SETTING_USE_EMBED_PLAYER = true;
     //Determine the size of downloaded cover art, default value is not download cover art.
-    public static GnImageSize ALBUM_ART_SIZE = GnImageSize.kImageSizeUnknown;
-
-    public static boolean AUTOMATIC_MODE_OVERWRITE_ALL_TAGS= false;
-    public static boolean SEMIAUTOMATIC_MODE_OVERWRITE_ALL_TAGS= false;
-
-    public static boolean TRACK_NUMBER = true;
-    public static boolean TRACK_YEAR = true;
-    public static boolean TRACK_GENRE = true;
+    public static GnImageSize SETTING_SIZE_ALBUM_ART = GnImageSize.kImageSizeUnknown;
+    //if true, will be overwritten all tags found by service in automatic mode
+    //else, only missing tags will be written
+    public static boolean SETTING_OVERWRITE_ALL_TAGS_AUTOMATIC_MODE = false;
 
     public static boolean ALL_SELECTED = false;
 
@@ -64,26 +62,5 @@ public class SelectedOptions {
                 break;
         }
         return size;
-    }
-
-    public static void setValuesExtraDataToDownload(Set<String> set){
-        //Default values
-        if(set == null){
-            SelectedOptions.TRACK_NUMBER = true;
-            SelectedOptions.TRACK_YEAR = true;
-            SelectedOptions.TRACK_GENRE = true;
-        }
-        //User selected options
-        else if (set.size() > 0){
-            SelectedOptions.TRACK_NUMBER = set.contains("number");
-            SelectedOptions.TRACK_GENRE = set.contains("genre");
-            SelectedOptions.TRACK_YEAR = set.contains("date");
-        }
-        //None
-        else {
-            SelectedOptions.TRACK_NUMBER = false;
-            SelectedOptions.TRACK_YEAR = false;
-            SelectedOptions.TRACK_GENRE = false;
-        }
     }
 }

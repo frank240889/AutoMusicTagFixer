@@ -198,7 +198,7 @@
                     android:drawableStart="@drawable/ic_sd_storage_white_24px"
                     android:gravity="center_vertical"
                     android:singleLine="true"
-                    android:text="0"
+                    android:text="0 mb"
                     android:textAlignment="viewStart"
                     android:visibility="visible" />
 
@@ -212,7 +212,7 @@
                     android:drawableStart="@drawable/ic_surround_sound_white_24px"
                     android:gravity="center_vertical"
                     android:singleLine="true"
-                    android:text="channels"
+                    android:text="0 Canales"
                     android:visibility="visible" />
 
                 <TextView
@@ -225,7 +225,7 @@
                     android:drawableStart="@drawable/ic_description_white"
                     android:gravity="center_vertical"
                     android:singleLine="true"
-                    android:text="mp3"
+                    android:text="Tipo desconocido"
                     android:textAlignment="viewStart"
                     android:visibility="visible" />
 
@@ -239,7 +239,7 @@
                     android:drawableStart="@drawable/ic_high_quality_white_24px"
                     android:gravity="center_vertical"
                     android:singleLine="true"
-                    android:text="res"
+                    android:text="0 bits"
                     android:visibility="visible" />
 
                 <TextView
@@ -253,7 +253,7 @@
                     android:drawableStart="@drawable/ic_av_timer_white_24px"
                     android:gravity="center_vertical"
                     android:singleLine="true"
-                    android:text="freq"
+                    android:text="0 Hz"
                     android:visibility="visible" />
 
                 <TextView
@@ -266,7 +266,7 @@
                     android:layout_toEndOf="@+id/frequency"
                     android:drawableStart="@drawable/ic_hearing_white_24px"
                     android:gravity="center_vertical"
-                    android:text="bitrate" />
+                    android:text="0 kbps" />
 
             </RelativeLayout>
 

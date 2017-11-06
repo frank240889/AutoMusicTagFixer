@@ -19,7 +19,6 @@ import android.util.Log;
 import android.view.MenuItem;
 
 import java.util.List;
-import java.util.Set;
 
 /**
  * A {@link PreferenceActivity} that presents a set of application settings. On
@@ -135,14 +134,8 @@ public class SettingsActivity extends AppCompatPreferenceActivity{
         preference.setOnPreferenceChangeListener(sBindPreferenceSummaryToValueListener);
         // Trigger the listener immediately with the preference's
         // current value.
+        sBindPreferenceSummaryToValueListener.onPreferenceChange(preference, PreferenceManager.getDefaultSharedPreferences(preference.getContext()).getString(preference.getKey(), ""));
 
-
-        if(preference instanceof MultiSelectListPreference){
-            sBindPreferenceSummaryToValueListener.onPreferenceChange(preference, PreferenceManager.getDefaultSharedPreferences(preference.getContext()).getStringSet(preference.getKey(), null));
-        }
-        else {
-            sBindPreferenceSummaryToValueListener.onPreferenceChange(preference, PreferenceManager.getDefaultSharedPreferences(preference.getContext()).getString(preference.getKey(), ""));
-        }
     }
 
     /**
@@ -175,55 +168,40 @@ public class SettingsActivity extends AppCompatPreferenceActivity{
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
         switch (key) {
-            case "size_album_art":
+            case "key_size_album_art":
                 String opt = sharedPreferences.getString(key, "-1");
-                SelectedOptions.ALBUM_ART_SIZE = SelectedOptions.setValueImageSize(opt);
+                Settings.SETTING_SIZE_ALBUM_ART = Settings.setValueImageSize(opt);
                 Log.d(key, opt);
                 break;
-            case "data_to_download":
-                Set<String> set = sharedPreferences.getStringSet(key, null);
-                SelectedOptions.setValuesExtraDataToDownload(set);
+            case "key_rename_file_automatic_mode":
+                Settings.SETTING_RENAME_FILE_AUTOMATIC_MODE = sharedPreferences.getBoolean(key,true);
+                Log.d(key,  Settings.SETTING_RENAME_FILE_AUTOMATIC_MODE +"");
                 break;
-            case "title_service_change_switch":
-                SelectedOptions.AUTOMATIC_CHANGE_FILENAME = sharedPreferences.getBoolean(key,true);
-                Log.d(key,  SelectedOptions.AUTOMATIC_CHANGE_FILENAME+"");
+            case "key_rename_file_manual_mode":
+                Settings.SETTING_RENAME_FILE_MANUAL_MODE = sharedPreferences.getBoolean(key, true);
+                Log.d(key, Settings.SETTING_RENAME_FILE_MANUAL_MODE +"");
                 break;
-            case "title_manual_change_switch":
-                SelectedOptions.MANUAL_CHANGE_FILE = sharedPreferences.getBoolean(key, false);
-
-                Log.d(key,SelectedOptions.MANUAL_CHANGE_FILE+"");
+            case "key_rename_file_semi_automatic_mode":
+                Settings.SETTING_RENAME_FILE_SEMI_AUTOMATIC_MODE = sharedPreferences.getBoolean(key, true);
+                Log.d(key, Settings.SETTING_RENAME_FILE_SEMI_AUTOMATIC_MODE +"");
                 break;
-            case "title_automatically_replace_strange_chars":
-                SelectedOptions.AUTOMATICALLY_REPLACE_STRANGE_CHARACTERS = sharedPreferences.getBoolean(key,false);
-                Log.d(key, SelectedOptions.AUTOMATICALLY_REPLACE_STRANGE_CHARACTERS+"");
+            case "key_replace_strange_chars_manual_mode":
+                Settings.SETTING_REPLACE_STRANGE_CHARS_MANUAL_MODE = sharedPreferences.getBoolean(key,true);
+                Log.d(key, Settings.SETTING_REPLACE_STRANGE_CHARS_MANUAL_MODE +"");
                 break;
-            case "default_sort":
-                SelectedOptions.DEFAULT_SORT = Integer.parseInt(sharedPreferences.getString(key,"0"));
+            case "key_default_sort":
+                Settings.SETTING_DEFAULT_SORT = sharedPreferences.getString(key, "0");
                 break;
-            case "enable_embed_player":
-                //SelectedOptions.USE_EMBED_PLAYER = sharedPreferences.getBoolean(key,true);
-                //updateUI = true;
-                //if(!SelectedOptions.USE_EMBED_PLAYER)
-                //    CustomMediaPlayer.getInstance(getApplicationContext()).onCompletePlayback();
-                //Log.d(key,SelectedOptions.USE_EMBED_PLAYER+"");
+            case "key_use_embed_player":
+                Settings.SETTING_USE_EMBED_PLAYER = sharedPreferences.getBoolean(key,true);
                 break;
-
-            case "automatic_mode_overwrite_all_tags":
-                SelectedOptions.AUTOMATIC_MODE_OVERWRITE_ALL_TAGS = sharedPreferences.getBoolean(key, false);
+            case "key_overwrite_all_tags_automatic_mode":
+                Settings.SETTING_OVERWRITE_ALL_TAGS_AUTOMATIC_MODE = sharedPreferences.getBoolean(key, true);
                 break;
-
-            case "semiautomatic_mode_overwrite_all_tags":
-                SelectedOptions.SEMIAUTOMATIC_MODE_OVERWRITE_ALL_TAGS = sharedPreferences.getBoolean(key, false);
+            case "key_background_service":
+                Settings.BACKGROUND_CORRECTION = sharedPreferences.getBoolean(key, false);
                 break;
         }
-    }
-
-    @Override
-    public void finish(){
-        //Intent intent = new Intent();
-        //intent.putExtra("UPDATE_UI",updateUI);
-        //setResult(RESULT_OK,intent);
-        super.finish();
     }
 
     /**
@@ -242,7 +220,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity{
             // updated to reflect the new value, per the Android Design
             // guidelines.
 
-            bindPreferenceSummaryToValue(findPreference("default_sort"));
+            bindPreferenceSummaryToValue(findPreference("key_default_sort"));
         }
 
         @Override
@@ -272,8 +250,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity{
             // to their values. When their values change, their summaries are
             // updated to reflect the new value, per the Android Design
             // guidelines.
-            bindPreferenceSummaryToValue(findPreference("size_album_art"));
-            bindPreferenceSummaryToValue(findPreference("data_to_download"));
+            bindPreferenceSummaryToValue(findPreference("key_size_album_art"));
         }
 
         @Override

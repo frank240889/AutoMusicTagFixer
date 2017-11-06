@@ -10,8 +10,6 @@ import android.preference.PreferenceManager;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 
-import java.util.Set;
-
 import mx.dev.franco.musicallibraryorganizer.services.DetectorInternetConnection;
 import mx.dev.franco.musicallibraryorganizer.services.GnService;
 import mx.dev.franco.musicallibraryorganizer.services.Job;
@@ -47,30 +45,29 @@ public class SplashActivity extends AppCompatActivity{
 
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 
-        //We set the default values of settings in case the user had not modified them or first use
-        SelectedOptions.AUTOMATIC_CHANGE_FILENAME = preferences.getBoolean("title_service_change_switch", true);
-        SelectedOptions.MANUAL_CHANGE_FILE = preferences.getBoolean("title_manual_change_switch", true);
-        SelectedOptions.AUTOMATICALLY_REPLACE_STRANGE_CHARACTERS = preferences.getBoolean("title_automatically_replace_strange_chars",true);
-        SelectedOptions.ALL_SELECTED = preferences.getBoolean("allSelected",false);
-        //get default(order by location of file) order for list
-        SelectedOptions.DEFAULT_SORT = Integer.parseInt(preferences.getString("default_sort","0"));
-        SelectedOptions.SEMIAUTOMATIC_MODE_OVERWRITE_ALL_TAGS = preferences.getBoolean("semiautomatic_mode_overwrite_all_tags", false);
-        SelectedOptions.AUTOMATIC_MODE_OVERWRITE_ALL_TAGS = preferences.getBoolean("automatic_mode_overwrite_all_tags", false);
-        //SelectedOptions.USE_EMBED_PLAYER = preferences.getBoolean("enable_embed_player",true);
+        //Get default or saved values of settings
+        Settings.SETTING_RENAME_FILE_AUTOMATIC_MODE = preferences.getBoolean("key_rename_file_automatic_mode", true);
+        Settings.SETTING_RENAME_FILE_MANUAL_MODE = preferences.getBoolean("key_rename_file_manual_mode", true);
+        Settings.SETTING_REPLACE_STRANGE_CHARS_MANUAL_MODE = preferences.getBoolean("key_replace_strange_chars_manual_mode",true);
+        Settings.ALL_SELECTED = preferences.getBoolean("allSelected",false);
+        Settings.SETTING_DEFAULT_SORT = preferences.getString("key_default_sort", "0");
+        Settings.SETTING_OVERWRITE_ALL_TAGS_AUTOMATIC_MODE = preferences.getBoolean("key_overwrite_all_tags_automatic_mode", true);
+        Settings.SETTING_RENAME_FILE_SEMI_AUTOMATIC_MODE = preferences.getBoolean("key_rename_file_semi_automatic_mode", true);
+        Settings.SETTING_USE_EMBED_PLAYER = preferences.getBoolean("key_use_embed_player",true);
+        Settings.BACKGROUND_CORRECTION = preferences.getBoolean("key_background_service", false);
+        String imageSizeSaved = preferences.getString("key_size_album_art","1000");
+        Settings.SETTING_SIZE_ALBUM_ART = Settings.setValueImageSize(imageSizeSaved);
+        Settings.BACKGROUND_CORRECTION = preferences.getBoolean("key_background_service",false);
 
-        //Retrieve the string value saved in shared preferences first
-        String imageSizeSaved = preferences.getString("size_album_art","1000");
-        SelectedOptions.ALBUM_ART_SIZE = SelectedOptions.setValueImageSize(imageSizeSaved);
 
-        Set<String> stringSet = preferences.getStringSet("data_to_download",null);
-        SelectedOptions.setValuesExtraDataToDownload(stringSet);
-
-        //We set if is the first use of app
         preferences = null;
+
+        //Is first use of app?
         preferences =  getSharedPreferences(APP_SHARED_PREFERENCES, Context.MODE_PRIVATE);
         boolean firstTime= preferences.getBoolean("first", true);
-        MainActivity.isProcessingTask = preferences.getBoolean(MainActivity.IS_PROCESSING_TASK,false);
+        //do we have permission to access files?
         RequiredPermissions.ACCESS_GRANTED_FILES = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
+
         if(!DEBUG_MODE) {
 
             if (firstTime) {

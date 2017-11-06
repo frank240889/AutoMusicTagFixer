@@ -7,8 +7,8 @@
     <string name="welcome">¡Bienvenido!</string>
     <string name="description"> AutoMusicTagFixer corrige las canciones por ti, incluido el nombre del archivo, título de canción, artista, álbum, etc, incluso la imagen del álbum.</string>
     <string name="step_1_detail">No tienes que seleccionar ninguna carpeta en la que buscar canciones, la aplicación encuentra automaticamente todas tus canciones en tu smartphone.</string>
-    <string name="step_2_detail">Puedes corregir las canciones en modo manual o automatico.</string>
-    <string name="step_3_detail">O si prefieres, en la lista que se crea, selecciona las canciones que quieres corregir, pulsa el boton y deja al modo automático que haga su trabajo.</string>
+    <string name="step_2_detail">Puedes corregir las canciones en modo manual, semiautomático o automático.</string>
+    <string name="step_3_detail">O si prefieres, en la pantalla principal, selecciona varias canciones y pulsa el botón amarillo para que la aplicación las corrija automaticamente, una tras otra sin que hagas nada más que esperar.</string>
     <string name="ok_button_last_slide">ENTENDIDO</string>
 
 
@@ -32,9 +32,9 @@
     <string name="description_downloaded_cover_art_dialog">¿Deseas guardar la carátula como?</string>
     <string name="as_cover_art">Carátula</string>
     <string name="as_file">Imagen</string>
-    <string name="no_cover_art_found">Carátula no encontrada.</string>
+    <string name="no_cover_art_found">No se encontró carátula.</string>
     <string name="no_cover_art">No se encontró carátula</string>
-    <string name="cover_art_found">Carátula encontrada.</string>
+    <string name="cover_art_found">Se encontró la siguiente carátula.</string>
     <string name="cover_updated">Carátula actualizada.</string>
     <string name="cover_removed">Carátula removida.</string>
 
@@ -50,11 +50,9 @@
     <string name="file_error">No se puede leer la canción por que fue movida, eliminada ó renombrada, ¿Deseas quitarla de la lista?</string>
 
 
-    <string name="no_items">No hay canciones para seleccionar.</string>
-    <string name="no_cache">No hay cache de la aplicación.</string>
+    <string name="no_items">No hay canciones en la lista.</string>
     <string name="faq">Preguntas frecuentes</string>
 
-    <string name="delete_cache">Borrar cache</string>
     <string name="play_track">Escuchar</string>
     <string name="confirm_correction_title">Modo automático</string>
     <string name="confirm_correction">¿Corregir automaticamente </string>
@@ -62,16 +60,15 @@
 
     <string name="snackbar_message_track_preview">Presiona para detener.</string>
     <string name="snackbar_message_track_is_processing">No puedes reproducir la canción mientras se corrige.</string>
-    <string name="empty_list">Para saltar a una canción primero reprodúcela.</string>
-    <string name="permission_denied">No se concedio el permiso de Acceso de almacenamiento.</string>
-    <string name="current_file_processing">Espera que el modo automático corrija en esta canción.</string>
-    <string name="initializing_recognition_api">Conectando al servicio ACR, espere por favor...</string>
+    <string name="permission_denied">No se obtuvo el permiso requerido.</string>
+    <string name="current_file_processing">Espera que el modo automático corrija esta canción.</string>
+    <string name="initializing_recognition_api">Conectando al servicio de búsqueda, espera por favor...</string>
     <string name="no_internet_connection_download_cover">Para descargar la carátula conectate internet.</string>
     <string name="no_internet_connection_automatic_mode">Para usar el modo automático conectate a internet.</string>
     <string name="no_internet_connection_semi_automatic_mode">Para usar el modo semi automático conectate a internet.</string>
     <string name="no_items_found">No se encontrarón canciones.</string>
 
-    <string name="file_status_ok">Todas las etiquetas se encontraron y aplicaron</string>
+    <string name="file_status_ok">Todas las etiquetas se encontraron y aplicaron.</string>
     <string name="file_status_incomplete">Faltaron algunas etiquetas, prueba a añadirlas manualmente.</string>
     <string name="file_status_bad">Sin etiquetas disponibles, prueba a añadirlas manualmente.</string>
     <string name="file_status_no_processed">Aún no se han buscado etiquetas para esta canción.</string>
@@ -89,15 +86,30 @@
     <!-- General settings -->
     <string name="pref_header_general">General</string>
 
-    <string name="pref_title_change">Renombrar archivo.</string>
-    <string name="pref_title_change_description">El título encontrado se aplicará como nombre del archivo; se añadirá el nombre del artista más/ó un número aleatorio, en caso que un archivo con nombre igual ya exista.
+    <string name="pref_title_change">Renombrar archivo</string>
+    <string name="pref_title_change_description">El título (si se encuentra) se aplicará como nombre del archivo; se añadirá el nombre del artista más/ó un número aleatorio, en caso que un archivo con nombre igual ya exista.
     </string>
-    <string name="pref_manual_title_change">Renombrar archivo.</string>
+    <string name="pref_manual_title_change">Renombrar archivo</string>
     <string name="pref_manual_title_change_description">El título que hayas escrito se aplicará como nombre del archivo; se añadirá el nombre del artista más/ó un número aleatorio, en caso que un archivo con nombre igual ya exista.
     </string>
-    <string name="pref_automatically_replace_strange_chars">Reemplazar caracteres inválidos.</string>
-    <string name="pref_automatically_replace_strange_chars_description">Los caracteres inválidos se eliminan automaticamente al guardar los cambios.</string>
+    <string name="pref_semi_automatic_title_change">Renombrar archivo</string>
+    <string name="pref_semi_automatic_title_change_description">El título (si se encuentra) se aplicará como nombre del archivo cuando guardes los cambios; se añadirá el nombre del artista más/ó un número aleatorio, en caso que un archivo con nombre igual ya exista.
 
+    </string>
+    <string name="pref_automatically_replace_strange_chars">Remover caracteres inválidos</string>
+    <string name="pref_automatically_replace_strange_chars_description">Se eliminan automaticamente al guardar los cambios.</string>
+    <string name="pref_title_background">Servicio en segundo plano</string>
+    <string name="pref_title_background_description">Una corrección de varias canciones no se cancelerá aún cuando cierres la aplicación, sino hasta que termine o la detengas.</string>
+
+    <string name="enable_embed_player">Multimedia</string>
+    <string name="pref_title_enable_embed_player">Reproductor integrado</string>
+    <string name="pref_enable_embed_player_description">Escuchar canción en el reproductor integrado.</string>
+
+    <string name="pref_title_replace_all_tags">Sobreescribir etiquetas</string>
+    <string name="pref_replace_auto_all_tags_description">Si esta activa esta opción se reemplazarán todas las etiquetas por las encontradas, sino, solo se añadiran las faltantes.</string>
+
+    <string name="default_order_sort">Orden predeterminado de lista</string>
+    <string name="pref_title_default_sort">Ordenar por</string>
 
     <!--This is going to be in seconds-->
 
@@ -124,18 +136,6 @@
         <item>1000</item>
     </string-array>
 
-    <string name="pref_title_data_to_download">Descargar también</string>
-    <string-array name="pref_data_to_download_titles">
-        <item>Número de pista</item>
-        <item>Fecha de publicación</item>
-        <item>Género</item>
-    </string-array>
-    <string-array name="pref_data_to_download_values">
-        <item>number</item>
-        <item>date</item>
-        <item>genre</item>
-    </string-array>
-
     <string name="default_sort">Ordenar por</string>
     <string-array name="pref_sort_titles">
         <item>Ubicación de archivo</item>
@@ -156,7 +156,7 @@
     <string name="cancel_task">¿Desea cancelar la corrección en curso?</string>
     <string name="cancelling">Cancelando...</string>
     <string name="processing_task">Espera a que termine la corrección en modo automático.</string>
-    <string name="api_initialized">Conectado al servicio ACR.</string>
+    <string name="api_initialized">Conectado al servicio de búsqueda.</string>
     <string name="remove_from_list">Remover</string>
 
     <string name="question_1">¿Lorem ipsum dolor sit amet?</string>
@@ -175,10 +175,8 @@
     <string name="getting_data">Obteniendo información de canciones...</string>
     <string name="in_development">En desarrollo.</string>
     <string name="updating_list">Actualizando lista...</string>
-    <string name="not_songs_found">No se encontraron canciones en MP3, intenta añadir algunas a tu smartphone y vuelve a actualizar la lista.</string>
     <string name="removed_inexistent"> cancion(es) fue(ron) removido(s) de la lista debido a que ya no esta(n) en tu smartphone.</string>
     <string name="new_files_found"> cancion(es) nueva(s) se han encontrado y añadido al inicio de la lista.</string>
-    <string name="jump_to">Saltar a</string>
     <string name="add_cover">Galería</string>
     <string name="automatic_mode">Modo automático</string>
     <string name="edit_cover">Añadir carátula de galería</string>
@@ -192,10 +190,10 @@
     <string name="track_number">Número de pista</string>
     <string name="title">Título</string>
     <string name="artist">Artista</string>
-    <string name="track_year">Año de prublicación</string>
+    <string name="track_year">Año de publicación</string>
     <string name="dimensions">Tamaño</string>
     <string name="apply_tags">Etiquetas nuevas</string>
-    <string name="message_apply_found_tags">¿Deseas aplicar las etiquetas encontradas a la canción?</string>
+    <string name="message_apply_found_tags">¿Qué etiquetas deseas aplicar a la canción?</string>
     <string name="message_apply_new_tags">¿Deseas aplicar los cambios a la canción?</string>
     <string name="swipe_up_search">Desliza hacia abajo para volver a buscar.</string>
     <string name="message_no_cover">Sin carátula</string>
@@ -207,21 +205,20 @@
     <string name="web_search">Buscar en Internet</string>
     <string name="view_cover">Ver</string>
     <string name="play_track_on">Escuchar en</string>
-    <string name="pref_title_background">Correción en segundo plano.</string>
-    <string name="pref_title_background_description">Una corrección de varias canciones no se cancelerá aún cuando cierres la aplicación, sino hasta que termine o la detengas. Nota: esta opción puede tener un ligero impacto negativo en el consumo batería.</string>
-    <string name="enable_embed_player">Multimedia</string>
-    <string name="pref_enable_embed_player_description">Reproducir canciones en el reproductor integrado.</string>
-    <string name="pref_title_enable_embed_player">Reproductor integrado.</string>
-    <string name="pref_replace_all_tags_description">Si esta activa, se reemplazaran todas las etiquetas por las encontradas, sino, solo se añadiran las etiquetas faltantes.</string>
-    <string name="pref_title_replace_all_tags">Sobreescribir etiquetas.</string>
-    <string name="default_order_sort">Orden predeterminado de lista.</string>
-    <string name="pref_title_default_sort">Ordenar por</string>
     <string name="semi_automatic_mode">Modo semiautomático</string>
     <string name="sort_by">Ordenar por</string>
     <string name="location">Ubicación</string>
-    <string name="could_not_read_file">No se pudo leer la información.</string>
+    <string name="could_not_read_file">No se pueden leer las etiquetas de este archivo:</string>
     <string name="does_not_exist_cover">La canción no tiene carátula.</string>
     <string name="can_not_extract_null_cover">No se puede extraer una carátula inexistente.</string>
     <string name="error">Ha ocurrido un error, inténtalo de nuevo.</string>
+    <string name="update_missing">Se añadieron las etiquetas faltantes.</string>
+    <string name="share_message">corrigio mis canciones de manera rápida y automática!</string>
+    <string name="correction_mode">Modo de corrección</string>
+    <string name="select_correction_mode">Selecciona modo de corrección para</string>
+    <string name="manual">Manual</string>
+    <string name="automatic">Automático</string>
+    <string name="semiautomatic">Semiautomático</string>
+    <string name="file_status_error_read">No se pueden leer las etiquetas del archivo.</string>
 
 </resources>

@@ -4,10 +4,14 @@
     <item
         android:drawable="@color/grey_900"/>
 
-    <item>
+    <item android:width="256dp"
+        android:height="256dp"
+        android:gravity="center">
         <bitmap
-            android:gravity="center"
-            android:src="@mipmap/ic_launcher"/>
+            android:dither="true"
+            android:mipMap="true"
+            android:antialias="true"
+            android:src="@drawable/splash"/>
     </item>
 
 </layer-list>

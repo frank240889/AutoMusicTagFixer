@@ -5,6 +5,7 @@ import android.graphics.BitmapFactory;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.util.Log;
+import android.webkit.MimeTypeMap;
 
 import com.gracenote.gnsdk.GnAudioFile;
 
@@ -22,6 +23,7 @@ public final class AudioItem implements Parcelable{
     public static final int FILE_STATUS_INCOMPLETE = 2;
     public static final int FILE_STATUS_BAD = -1;
     public static final int FILE_STATUS_EDIT_BY_USER = 3;
+    public static final int FILE_ERROR_READ = 4;
     public static final float KILOBYTE = 1048576;
 
     private long id = -1;
@@ -194,6 +196,8 @@ public final class AudioItem implements Parcelable{
 
 
     public static String getHumanReadableDuration(String duration){
+        if(duration == null || duration.isEmpty())
+            return "0";
         int d = Integer.parseInt(duration);
         int totalSeconds = d;
         int minutes = 0;
@@ -223,9 +227,18 @@ public final class AudioItem implements Parcelable{
     }
 
     public static String getStringImageSize(byte[] cover){
+        Log.d("cover art is null",(cover == null)+"");
+        String msg;
         if(cover != null && cover.length > 0) {
-            Bitmap bitmapDrawable = BitmapFactory.decodeByteArray(cover, 0, cover.length);
-            return bitmapDrawable.getHeight() + " * " + bitmapDrawable.getWidth() + " pixeles";
+            Log.d("cover art is null",(cover == null)+"_ " + cover.length);
+            try {
+                Bitmap bitmapDrawable = BitmapFactory.decodeByteArray(cover, 0, cover.length);
+                msg = bitmapDrawable.getHeight() + " * " + bitmapDrawable.getWidth() + " pixeles";
+                return msg;
+            }
+            catch (Exception e){
+                msg = "Sin carátula";
+            }
         }
         return "Sin carátula";
     }
@@ -323,6 +336,9 @@ public final class AudioItem implements Parcelable{
     }
 
     public static String getFrequency(String freq){
+        if(freq == null || freq.isEmpty())
+            return "0 Khz";
+
         float f = Float.parseFloat(freq);
         float f2 = f / 1000f;
         return f2+ " Khz";
@@ -338,7 +354,7 @@ public final class AudioItem implements Parcelable{
            // int bitrateInt = Integer.parseInt(bitrate);
             return bitrate + " Kbps";
         }
-        return "Bitrate desconocido";
+        return "0 Kbps";
     }
 
     /**
@@ -352,6 +368,24 @@ public final class AudioItem implements Parcelable{
         File file = new File(absolutePath);
         return file.exists() && file.length() > 0 && file.canRead();
     }
+
+    public static String getMimeType(String absolutePath){
+        String ext = getExtension(absolutePath);
+        if(ext == null)
+            return null;
+        //get type depending on extension
+        return MimeTypeMap.getSingleton().getMimeTypeFromExtension(ext);
+    }
+
+    public static String getExtension(String absolutePath){
+        if(absolutePath == null || absolutePath.isEmpty())
+            return null;
+
+        File file = new File(absolutePath);
+        //get file extension
+        return file.getName().substring(file.getName().lastIndexOf(".") + 1);
+    }
+
 
 
     @Override

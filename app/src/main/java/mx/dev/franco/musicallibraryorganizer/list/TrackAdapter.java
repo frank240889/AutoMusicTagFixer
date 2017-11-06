@@ -11,7 +11,6 @@ import android.view.ViewGroup;
 import android.widget.CheckBox;
 import android.widget.Filter;
 import android.widget.Filterable;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -36,27 +35,27 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
     //constants for indacate the sort order
     public static final int ASC = 0;
     public static final int DESC = 1;
-    //listener attached to every item in listview
-    private final AudioItemHolder.ClickListener clickListener;
+    //mListener attached to every item in listview
+    private final AudioItemHolder.ClickListener mClickListener;
     //we need the context to access some features like R class
-    private Context context;
+    private Context mContext;
     //List of audioitems, we need to references: one for the filtered one
     //and the other one to original list
-    private List<AudioItem> currentList, currentFilteredList;
+    private List<AudioItem> mCurrentList, mCurrentFilteredList;
     //this property indicate us if all items were selected
     //not used, for now
-    private boolean allSelected = false;
-    //filter for filteriing search results
-    private CustomFilter customFilter;
+    private boolean mAllSelected = false;
+    //filter object for filteriing search results
+    private CustomFilter mCustomFilter;
     //Comparator for ordering the items in list
-    private static Sorter sorter;
+    private static Sorter mSorter;
 
     @SuppressWarnings("unchecked")
     public TrackAdapter(Context context, List<AudioItem> list, TrackAdapter.AudioItemHolder.ClickListener clickListener){
-        this.context = context;
-        this.currentList = list;
-        this.currentFilteredList =  currentList;
-        this.clickListener = clickListener;
+        this.mContext = context;
+        this.mCurrentList = list;
+        this.mCurrentFilteredList = mCurrentList;
+        this.mClickListener = clickListener;
 
     }
 
@@ -76,7 +75,7 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
 
         View itemView = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_list, parent, false);
 
-        return new AudioItemHolder(itemView, this.clickListener);
+        return new AudioItemHolder(itemView, this.mClickListener);
     }
 
     /**
@@ -87,7 +86,7 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
      * the new position cannot be determined. For this reason, you should only use
      * the position parameter while acquiring the related data item inside
      * this method and should not keep a copy of it. If you need the position of an
-     * item later on (e.g. in a click listener), use getAdapterPosition()
+     * item later on (e.g. in a click mListener), use getAdapterPosition()
      * which will have the updated adapter position. Override onBindViewHolder(ViewHolder, int, List)
      * instead if Adapter can handle efficient partial bind.
      * @param holder
@@ -95,13 +94,20 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
      */
     @Override
     public void onBindViewHolder(final AudioItemHolder holder, final int position) {
-        AudioItem audioItem = currentList.get(position);
-        holder.checkBox.setChecked(audioItem.isChecked());
+        AudioItem audioItem = mCurrentList.get(position);
+        holder.mCheckBox.setChecked(audioItem.isChecked());
 
-        holder.progressBar.setVisibility(audioItem.isProcessing()?VISIBLE:GONE);
+        if(audioItem.isProcessing()){
+            holder.itemView.setEnabled(false);
+            holder.mProgressBar.setVisibility(VISIBLE);
+        }
+        else {
+            holder.itemView.setEnabled(true);
+            holder.mProgressBar.setVisibility(GONE);
+        }
 
             //We need to load covers arts in other thread,
-            //because this operation is going reduce performance
+            //because this operation is going to reduce performance
             //in main thread, making the scroll very laggy
             new AsyncTask<String,byte[],Void>(){
 
@@ -132,66 +138,62 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
 
                 @Override
                 protected void onProgressUpdate(byte[]... cover){
-                    GlideApp.with(context).
-                            load(cover == null ? context.getResources().getDrawable(R.drawable.ic_album_white_48px,null) : cover[0] )
+                    GlideApp.with(mContext).
+                            load(cover == null ? mContext.getResources().getDrawable(R.drawable.ic_album_white_48px,null) : cover[0] )
                             .placeholder(R.drawable.ic_album_white_48px)
                             .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.NONE))
                             .apply(RequestOptions.skipMemoryCacheOf(true))
                             .transition(DrawableTransitionOptions.withCrossFade())
                             .fitCenter()
-                            .into(holder.imageView);
+                            .into(holder.mImageView);
 
                 }
             }.execute(audioItem.getAbsolutePath());
 
-            if (audioItem.isPlayingAudio()) {
-                GlideApp.with(holder.imageView).load(R.drawable.playing).centerInside().into(holder.checkMark);
-                holder.playButton.setImageResource(R.drawable.ic_stop_white_24px);
-            } else {
-                holder.playButton.setImageResource(R.drawable.ic_play_arrow_white_24px);
-
-                switch (audioItem.getStatus()) {
-                    case AudioItem.FILE_STATUS_OK:
-                    case AudioItem.FILE_STATUS_EDIT_BY_USER:
-                        holder.checkMark.setImageResource(R.drawable.ic_done_all_white);
-                        break;
-                    case AudioItem.FILE_STATUS_INCOMPLETE:
-                        holder.checkMark.setImageResource(R.drawable.ic_done_white);
-                        break;
-                    case AudioItem.FILE_STATUS_BAD:
-                        holder.checkMark.setImageResource(R.drawable.ic_error_outline_white);
-                        break;
-                    default:
-                        holder.checkMark.setImageResource(0);
-                        break;
-                }
+            switch (audioItem.getStatus()) {
+                case AudioItem.FILE_STATUS_OK:
+                case AudioItem.FILE_STATUS_EDIT_BY_USER:
+                    holder.mCheckMark.setImageResource(R.drawable.ic_done_all_white);
+                    break;
+                case AudioItem.FILE_STATUS_INCOMPLETE:
+                    holder.mCheckMark.setImageResource(R.drawable.ic_done_white);
+                    break;
+                case AudioItem.FILE_STATUS_BAD:
+                    holder.mCheckMark.setImageResource(R.drawable.ic_error_outline_white);
+                    break;
+                case AudioItem.FILE_ERROR_READ:
+                    holder.mCheckMark.setImageResource(R.drawable.ic_highlight_off_white_material);
+                    break;
+                default:
+                    holder.mCheckMark.setImageResource(0);
+                    break;
             }
 
 
-        holder.trackName.setText(audioItem.getTitle());
-        holder.artistName.setText(audioItem.getArtist());
-        holder.albumName.setText(audioItem.getAlbum());
 
-        holder.checkBox.setTag(audioItem.getId());
-        holder.playButton.setTag(audioItem.getId());
-        holder.absolutePath.setTag(audioItem.getAbsolutePath());
+        holder.mTrackName.setText(audioItem.getTitle());
+        holder.mArtistName.setText(audioItem.getArtist());
+        holder.mAlbumName.setText(audioItem.getAlbum());
+
+        holder.mCheckBox.setTag(audioItem.getId());
+        holder.mAbsolutePath.setTag(audioItem.getAbsolutePath());
 
     }
 
     /**
-     * Getter for allSelected property
+     * Getter for mAllSelected property
      * @return true if are all selected, false otherwise
      */
     public boolean areAllSelected(){
-        return this.allSelected;
+        return this.mAllSelected;
     }
 
     /**
-     * Setter for allSelected property
+     * Setter for mAllSelected property
      * @return this object adapter.
      */
     public TrackAdapter setAllSelected(boolean allSelected){
-        this.allSelected = allSelected;
+        this.mAllSelected = allSelected;
         return this;
     }
 
@@ -201,8 +203,8 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
      */
     @Override
     public int getItemCount() {
-        if(currentList != null)
-            return currentList.size();
+        if(mCurrentList != null)
+            return mCurrentList.size();
         return 0;
     }
 
@@ -228,8 +230,8 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
 
         if(id != -1){
             for(int t = 0; t < getItemCount() ; t++){
-                if(currentList.get(t).getId() == id ){
-                    audioItem =  currentList.get(t);
+                if(mCurrentList.get(t).getId() == id ){
+                    audioItem =  mCurrentList.get(t);
                     audioItem.setPosition(t);
                     break;
                 }
@@ -239,8 +241,8 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
 
         if(path != null && !path.equals("")){
             for(int t = 0; t < getItemCount() ; t++){
-                if(currentList.get(t).getAbsolutePath().equals(path)){
-                    audioItem = currentList.get(t);
+                if(mCurrentList.get(t).getAbsolutePath().equals(path)){
+                    audioItem = mCurrentList.get(t);
                     audioItem.setPosition(t);
                     break;
                 }
@@ -250,53 +252,83 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
         return audioItem;
     }
 
+    public AudioItem getAudioItemByPosition(int position){
+        AudioItem audioItem = null;
+        for(int t = 0; t < getItemCount() ; t++){
+            if(position == t ){
+                audioItem =  mCurrentList.get(t);
+                break;
+            }
+        }
+        return audioItem;
+    }
+
+    public void cancelProcessing(){
+        for (int t = 0; t < mCurrentList.size(); t++) {
+            if (mCurrentList.get(t).isProcessing()) {
+                mCurrentList.get(t).setProcessing(false);
+                notifyItemChanged(t);
+            }
+        }
+
+    }
+
+    public int getCountSelectedItems(){
+        int numberOfSelectedItems = 0;
+        if(mCurrentList != null) {
+            for (int t = 0; t < mCurrentList.size(); t++) {
+                if (mCurrentList.get(t).isChecked()) {
+                    numberOfSelectedItems++;
+                }
+            }
+        }
+
+        return numberOfSelectedItems;
+    }
 
     /**
      * This class helps to maintain the reference to
      * every element of item, avoiding call findViewById()
      * in every element for data source, making a considerable
      * improvement in performance of list
-     */
-        public static class AudioItemHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
-        CheckBox checkBox ;
-        TextView trackName ;
-        TextView artistName ;
-        TextView albumName ;
-        TextView absolutePath;
-        ProgressBar progressBar;
-        ImageView imageView, checkMark;
-        ImageButton playButton;
-        ClickListener listener;
+     */public static class AudioItemHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+        public CheckBox mCheckBox;
+        public TextView mTrackName;
+        public TextView mArtistName;
+        public TextView mAlbumName;
+        public TextView mAbsolutePath;
+        public ProgressBar mProgressBar;
+        public ImageView mImageView;
+        public ImageView mCheckMark;
+        public ClickListener mListener;
 
         public AudioItemHolder(View itemView, ClickListener clickListener) {
             super(itemView);
-            checkBox = (CheckBox) itemView.findViewById(R.id.checkBoxTrack);
-            checkBox.setChecked(false);
-            trackName = (TextView) itemView.findViewById(R.id.track_name);
-            artistName = (TextView) itemView.findViewById(R.id.artist_name);
-            albumName = (TextView) itemView.findViewById(R.id.album_name);
-            progressBar = (ProgressBar) itemView.findViewById(R.id.progressProcessingFile);
+            mCheckBox = (CheckBox) itemView.findViewById(R.id.checkBoxTrack);
+            mCheckBox.setChecked(false);
+            mTrackName = (TextView) itemView.findViewById(R.id.track_name);
+            mArtistName = (TextView) itemView.findViewById(R.id.artist_name);
+            mAlbumName = (TextView) itemView.findViewById(R.id.album_name);
+            mProgressBar = (ProgressBar) itemView.findViewById(R.id.progressProcessingFile);
 
-            absolutePath = (TextView) itemView.findViewById(R.id.absolute_path);
-            imageView = (ImageView) itemView.findViewById(R.id.coverArt);
-            checkMark = (ImageView) itemView.findViewById(R.id.checkMark);
-            playButton = (ImageButton) itemView.findViewById(R.id.playButton);
-            listener = clickListener;
-            playButton.setOnClickListener(this);
-            checkBox.setOnClickListener(this);
-            imageView.setOnClickListener(this);
+            mAbsolutePath = (TextView) itemView.findViewById(R.id.absolute_path);
+            mImageView = (ImageView) itemView.findViewById(R.id.coverArt);
+            mCheckMark = (ImageView) itemView.findViewById(R.id.checkMark);
+            mListener = clickListener;
+            mCheckBox.setOnClickListener(this);
+            mImageView.setOnClickListener(this);
             itemView.setOnClickListener(this);
         }
 
         /**
-         * This method of listener is implemented in
+         * This method of mListener is implemented in
          * activity that creates the adapter and data source
          * @param v
          */
         @Override
         public void onClick(View v) {
-            if (listener != null) {
-                listener.onItemClicked(getLayoutPosition(),v);
+            if (mListener != null) {
+                mListener.onItemClicked(getLayoutPosition(),v);
             }
         }
 
@@ -317,29 +349,29 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
      */
     public static class Sorter implements Comparator<AudioItem> {
         //default sort if no provided
-        private int sortType = ASC;
+        private int mSortType = ASC;
         //default sort field if no provided
-        private String sortByField = TrackContract.TrackData.DATA;
+        private String mSortByField = TrackContract.TrackData.DATA;
 
         //don't instantiate objects, we only need one
         private Sorter(){}
 
         public static Sorter getInstance(){
-            if(sorter == null){
-                sorter = new Sorter();
+            if(mSorter == null){
+                mSorter = new Sorter();
             }
-            return sorter;
+            return mSorter;
         }
 
         /**
-         * Seta sort params: order by field and ascendent 0
+         * Set sort params: order by field and ascendent 0
          * or descendant 1
          * @param sortByField
          * @param sortType
          */
         public void setSortParams(String sortByField, int sortType){
-            this.sortType = sortType;
-            this.sortByField = sortByField;
+            this.mSortType = sortType;
+            this.mSortByField = sortByField;
         }
 
         @Override
@@ -349,7 +381,7 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
             String str1ToCompare = null;
             String str2ToCompare = null;
 
-            switch (sortByField) {
+            switch (mSortByField) {
                 case TrackContract.TrackData.TITLE:
                     str1 = audioItem1.getTitle();
                     str2 = audioItem2.getTitle();
@@ -368,7 +400,7 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
                     break;
             }
 
-            if(sortType == DESC) {
+            if(mSortType == ASC) {
                 str1ToCompare = str1;
                 str2ToCompare = str2;
             }
@@ -389,10 +421,10 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
     @NonNull
     @Override
     public Filter getFilter(){
-        if(this.customFilter == null){
-            this.customFilter = new CustomFilter();
+        if(this.mCustomFilter == null){
+            this.mCustomFilter = new CustomFilter();
         }
-        return this.customFilter;
+        return this.mCustomFilter;
     }
 
     /**
@@ -409,14 +441,14 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
             //is empty then is not needed to search
             //so we reference to the original list a return all results
             if (charString.isEmpty()) {
-                currentList = currentFilteredList;
+                mCurrentList = mCurrentFilteredList;
             }
             else {
                 //creates a temporal filtered list
                 List<AudioItem> filteredList = new ArrayList<>();
 
                 //here we define the parameter in which the results are based
-                for (AudioItem audioItem : currentFilteredList) {
+                for (AudioItem audioItem : mCurrentFilteredList) {
                     if (audioItem.getTitle().toLowerCase().contains(charString.toLowerCase())) {
                         //if this item satisfy the criteria of search then add to temporal list
                         filteredList.add(audioItem);
@@ -425,13 +457,13 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
                 //now our current list references to filtered list
                 //but we don't lose the orinal reference, because when the search
                 //finish we need the original list.
-                currentList = filteredList;
+                mCurrentList = filteredList;
 
             }
 
             FilterResults  filterResults = new FilterResults();
-            filterResults.values = currentList;
-            filterResults.count = currentList.size();
+            filterResults.values = mCurrentList;
+            filterResults.count = mCurrentList.size();
 
             return filterResults;
         }
@@ -445,7 +477,7 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
         @Override
         protected void publishResults(CharSequence constraint, FilterResults results) {
 
-            currentList = (ArrayList<AudioItem>) results.values;
+            mCurrentList = (ArrayList<AudioItem>) results.values;
             //inform to recycler view to update the views.
             notifyDataSetChanged();
         }

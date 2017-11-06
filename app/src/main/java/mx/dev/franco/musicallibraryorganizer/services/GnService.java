@@ -17,6 +17,8 @@ import com.gracenote.gnsdk.GnUser;
 import com.gracenote.gnsdk.GnUserStore;
 import com.gracenote.gnsdk.IGnUserStore;
 
+import mx.dev.franco.musicallibraryorganizer.utilities.Constants;
+
 /**
  * Created by franco on 5/07/17.
  */
@@ -73,7 +75,7 @@ public class GnService implements IGnUserStore{
 
                     if (connectedFrom == API_INITIALIZED_AFTER_CONNECTED){
                         Intent intent = new Intent();
-                        intent.setAction(API_INITIALIZED);
+                        intent.setAction(Constants.GnServiceActions.ACTION_API_INITIALIZED);
                         LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
                         
                     }

@@ -60,6 +60,7 @@ public class DataTrackDbHelper extends SQLiteOpenHelper {
     public static DataTrackDbHelper getInstance(Context context){
         if(dbHelper == null){
             dbHelper =  new DataTrackDbHelper(context);
+            dbHelper.getWritableDatabase();
         }
         return dbHelper;
     }
@@ -83,7 +84,6 @@ public class DataTrackDbHelper extends SQLiteOpenHelper {
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         db.execSQL(SQL_DELETE_ENTRIES_FOR_TRACK_DATA);
-        db.execSQL(SQL_CREATE_ENTRIES_FOR_TRACK_DATA);
     }
 
     public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion){
@@ -306,10 +306,20 @@ public class DataTrackDbHelper extends SQLiteOpenHelper {
      * get all items marked as true in its selected column
      * @return cursor object or null if no selected items
      */
-    public Cursor getAllSelected(){
-        String selection = TrackContract.TrackData.IS_SELECTED + " = ?";
+    public Cursor getAllSelected(long id){
+        String selection = null;
+        String[] selectionArgs;
+        if(id == -1){
+            selection = TrackContract.TrackData.IS_SELECTED + " = ?";
+            selectionArgs = new String[]{1 + ""}; //we cannot pass "true", because is store as integer
+        }
+        else {
+            selection = TrackContract.TrackData.MEDIASTORE_ID + " = ?";
+            selectionArgs = new String[]{id+""}; //we cannot pass "true", because is store as integer
+        }
 
-        String[] selectionArgs = {1+""}; //we cannot pass "true", because is store as integer
+
+
 
         String[] projection = {
                 TrackContract.TrackData.MEDIASTORE_ID,

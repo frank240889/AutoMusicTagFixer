@@ -76,15 +76,6 @@
             android:text="Album Name"
             android:textSize="14sp" />
 
-        <ImageButton
-            android:id="@+id/playButton"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:layout_alignBottom="@+id/coverArt"
-            android:layout_alignParentEnd="true"
-            android:background="?selectableItemBackgroundBorderless"
-            app:srcCompat="@drawable/ic_play_arrow_white_24px" />
-
         <TextView
             android:id="@+id/absolute_path"
             android:layout_width="wrap_content"
