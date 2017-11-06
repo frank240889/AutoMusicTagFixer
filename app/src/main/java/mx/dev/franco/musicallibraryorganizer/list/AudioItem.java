@@ -268,6 +268,9 @@ public final class AudioItem implements Parcelable{
      * @return
      */
     public static String getFilename(String absolutePath){
+        if(absolutePath == null || absolutePath.isEmpty())
+            return "";
+
         String[] parts = absolutePath.split("/");
         return parts[parts.length-1];
     }
@@ -284,7 +287,7 @@ public final class AudioItem implements Parcelable{
         File currentFile = new File(currentPath), renamedFile;
         String newParentPath = currentFile.getParent();
 
-        String newFilename = StringUtilities.sanitizeFilename(title) + ".mp3";
+        String newFilename = StringUtilities.sanitizeFilename(title) + "." + getExtension(currentPath);
         String newAbsolutePath= newParentPath + "/" + newFilename;
         renamedFile = new File(newAbsolutePath);
         if(!renamedFile.exists()) {
@@ -292,10 +295,10 @@ public final class AudioItem implements Parcelable{
         }else {
             //if artist tag was found
             if(!artistName.equals("")) {
-                newFilename = title + "(" + artistName + ")" + ".mp3";
+                newFilename = title + "(" + artistName + ")" + "." + getExtension(currentPath);
             }
             else{
-                newFilename = title +"("+ (int)Math.floor((Math.random()*10)+ 1) +")"+".mp3";
+                newFilename = title +"("+ (int)Math.floor((Math.random()*10)+ 1) +")"+ "." + getExtension(currentPath);
             }
             newAbsolutePath = newParentPath + "/" + newFilename;
             renamedFile = new File(newAbsolutePath);
@@ -382,8 +385,15 @@ public final class AudioItem implements Parcelable{
             return null;
 
         File file = new File(absolutePath);
-        //get file extension
-        return file.getName().substring(file.getName().lastIndexOf(".") + 1);
+        //get file extension, extension must be in lowercase
+        return file.getName().substring(file.getName().lastIndexOf(".") + 1).toLowerCase();
+    }
+
+    public static String getExtension(File file){
+        if(file == null)
+            return null;
+        //get file extension, extension must be in lowercase
+        return file.getName().substring(file.getName().lastIndexOf(".") + 1).toLowerCase();
     }
 
 

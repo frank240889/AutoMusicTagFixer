@@ -22,13 +22,11 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v4.app.ShareCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.view.MenuItemCompat;
-import android.support.v4.view.ViewCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBar;
@@ -787,7 +785,7 @@ public class MainActivity extends AppCompatActivity
             return;
         }
 
-        final AudioItem audioItem = mAudioItemArrayAdapter.getAudioItemByPosition(position); //mAudioItemArrayAdapter.getItemByIdOrPath(NO_ID, absolutePath);
+        final AudioItem audioItem = mAudioItemArrayAdapter.getAudioItemByPosition(position); //mAudioItemArrayAdapter.getAudioItemByIdOrPath(NO_ID, absolutePath);
 
         //wait until service finish correction to this track
         if(ServiceHelper.isServiceRunning(getApplicationContext(), FixerTrackService.CLASS_NAME)){
@@ -848,7 +846,7 @@ public class MainActivity extends AppCompatActivity
      * @param position
      */
     private void showConfirmationDialog(final String absolutePath, final int position){
-        final AudioItem audioItem = mAudioItemArrayAdapter.getAudioItemByPosition(position); //mAudioItemArrayAdapter.getItemByIdOrPath(NO_ID, absolutePath);
+        final AudioItem audioItem = mAudioItemArrayAdapter.getAudioItemByPosition(position); //mAudioItemArrayAdapter.getAudioItemByIdOrPath(NO_ID, absolutePath);
 
         String msg = "";
         String title = "";
@@ -906,12 +904,12 @@ public class MainActivity extends AppCompatActivity
         intent.putExtra(Constants.POSITION, position);
         intent.putExtra(Constants.MEDIASTORE_ID, audioItem.getId());
         intent.putExtra(Constants.CorrectionModes.MODE, mode);
-        ActivityOptionsCompat options = ActivityOptionsCompat.makeSceneTransitionAnimation(
+        /*ActivityOptionsCompat options = ActivityOptionsCompat.makeSceneTransitionAnimation(
                 MainActivity.this,
                 view,
-                ViewCompat.getTransitionName(view));
+                ViewCompat.getTransitionName(view));*/
 
-        startActivity(intent, options.toBundle());
+        startActivity(intent);
     }
 
     /**
@@ -922,7 +920,7 @@ public class MainActivity extends AppCompatActivity
      * @param position
      */
     private void selectItem(final long id, final View view, final int position){
-        AudioItem audioItem = mAudioItemArrayAdapter.getAudioItemByPosition(position); //mAudioItemArrayAdapter.getItemByIdOrPath(id, null);
+        AudioItem audioItem = mAudioItemArrayAdapter.getAudioItemByPosition(position); //mAudioItemArrayAdapter.getAudioItemByIdOrPath(id, null);
         Log.d("path", audioItem.getAbsolutePath());
         if(!AudioItem.checkFileIntegrity(audioItem.getAbsolutePath())){
             showConfirmationDialog(audioItem.getAbsolutePath(),position);
@@ -940,7 +938,7 @@ public class MainActivity extends AppCompatActivity
 
                     boolean isChecked = data.getInt(data.getColumnIndexOrThrow(TrackContract.TrackData.IS_SELECTED)) != 0;
 
-                    AudioItem audioItem = mAudioItemArrayAdapter.getAudioItemByPosition(position); //mAudioItemArrayAdapter.getItemByIdOrPath(id, "");
+                    AudioItem audioItem = mAudioItemArrayAdapter.getAudioItemByPosition(position); //mAudioItemArrayAdapter.getAudioItemByIdOrPath(id, "");
 
                     newValues = new ContentValues();
                     if(isChecked) {
@@ -1120,7 +1118,7 @@ public class MainActivity extends AppCompatActivity
 
     private void setAudioItemFound(AudioItem audioItem, int position){
         Log.d("setAudioItemFound", (audioItem == null) + " " + position);
-        AudioItem currentAudioItem = mAudioItemArrayAdapter.getItemByIdOrPath(audioItem.getId(),null);
+        AudioItem currentAudioItem = mAudioItemArrayAdapter.getAudioItemByIdOrPath(audioItem.getId(),null);
 
         if(currentAudioItem != null) {
             if(!audioItem.getTitle().isEmpty())
@@ -1143,7 +1141,7 @@ public class MainActivity extends AppCompatActivity
 
     private void setAudioItemNotFound(long id){
         Log.d("setAudioItemNOtFound", id+"");
-        AudioItem currentAudioItem = mAudioItemArrayAdapter.getItemByIdOrPath(id,null);
+        AudioItem currentAudioItem = mAudioItemArrayAdapter.getAudioItemByIdOrPath(id,null);
 
         if(currentAudioItem != null) {
             currentAudioItem.setStatus(AudioItem.FILE_STATUS_BAD);
@@ -1157,7 +1155,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void setProcessingAudioItem(long id){
-        AudioItem audioItem = mAudioItemArrayAdapter.getItemByIdOrPath(id,null);
+        AudioItem audioItem = mAudioItemArrayAdapter.getAudioItemByIdOrPath(id,null);
         audioItem.setProcessing(true);
         mRecyclerView.scrollToPosition(audioItem.getPosition());
         mAudioItemArrayAdapter.notifyItemChanged(audioItem.getPosition());
@@ -1166,7 +1164,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void setCancelProcessingAudioItem(long id){
-        AudioItem audioItem = mAudioItemArrayAdapter.getItemByIdOrPath(id,null);
+        AudioItem audioItem = mAudioItemArrayAdapter.getAudioItemByIdOrPath(id,null);
         audioItem.setProcessing(false);
         mAudioItemArrayAdapter.notifyItemChanged(audioItem.getPosition());
         audioItem.setPosition(-1);

@@ -66,6 +66,7 @@ import org.jaudiotagger.tag.FieldKey;
 import org.jaudiotagger.tag.Tag;
 import org.jaudiotagger.tag.TagException;
 import org.jaudiotagger.tag.TagOptionSingleton;
+import org.jaudiotagger.tag.id3.ID3v24Frames;
 import org.jaudiotagger.tag.images.AndroidArtwork;
 import org.jaudiotagger.tag.images.Artwork;
 
@@ -269,12 +270,14 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
         mCurrentItemId = getIntent().getLongExtra(Constants.MEDIASTORE_ID,-1);
 
         mCurrentPosition = getIntent().getIntExtra(Constants.POSITION,0);
-        mCurrentAudioItem = mTrackAdapter.getItemByIdOrPath(mCurrentItemId, null); //getIntent().getParcelableExtra(FixerTrackService.AUDIO_ITEM); //MainActivity.getItemByIdOrPath(mCurrentItemId,null);
+        mCurrentAudioItem = mTrackAdapter.getAudioItemByIdOrPath(mCurrentItemId, null); //getIntent().getParcelableExtra(FixerTrackService.AUDIO_ITEM); //MainActivity.getAudioItemByIdOrPath(mCurrentItemId,null);
 
         //current path to file
         mTrackPath = mCurrentAudioItem.getAbsolutePath();
-        mMimeType = AudioItem.getMimeType(mTrackPath);
+
         mExtension = AudioItem.getExtension(mTrackPath);
+        mMimeType = AudioItem.getMimeType(mTrackPath);
+
         //get an instance of connection to DB
         mDbHelper = DataTrackDbHelper.getInstance(getApplicationContext());
 
@@ -707,6 +710,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
         TagOptionSingleton.getInstance().setAndroid(true);
         TagOptionSingleton.getInstance().setWriteMp3GenresAsText(true);
         TagOptionSingleton.getInstance().setWriteMp4GenresAsText(true);
+        String title, artist, album, number, year, genre;
         mAudioFile = new File(mTrackPath);
             try {
                 if(mMimeType.equals("audio/mpeg") && mExtension.toLowerCase().equals("mp3")){
@@ -714,36 +718,60 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                     Log.d("hasID3v1Tag",((MP3File)mAudioTaggerFile).hasID3v1Tag() + "");
                     Log.d("hasID3v2Tag",((MP3File)mAudioTaggerFile).hasID3v2Tag() + "");
                     mTag = mAudioTaggerFile.getTagAndConvertOrCreateAndSetDefault();
+                    mAudioHeader = ((MP3File)mAudioTaggerFile).getMP3AudioHeader();
+                    title = mTag.getFirst(ID3v24Frames.FRAME_ID_TITLE);
+                    artist = mTag.getFirst(ID3v24Frames.FRAME_ID_ARTIST);
+                    album = mTag.getFirst(ID3v24Frames.FRAME_ID_ALBUM);
+                    number = mTag.getFirst(ID3v24Frames.FRAME_ID_TRACK);
+                    year = mTag.getFirst(ID3v24Frames.FRAME_ID_YEAR);
+                    genre = mTag.getFirst(ID3v24Frames.FRAME_ID_GENRE);
+
 
                 }
                 else {
                     mAudioTaggerFile = AudioFileIO.read(new File(mTrackPath));
                     mTag = mAudioTaggerFile.getTag() == null ? mAudioTaggerFile.createDefaultTag() : mAudioTaggerFile.getTag();
+                    mAudioHeader = mAudioTaggerFile.getAudioHeader();
+                    title= mTag.getFirst(FieldKey.TITLE);
+                    artist = mTag.getFirst(FieldKey.ARTIST);
+                    album = mTag.getFirst(FieldKey.ALBUM);
+                    number = mTag.getFirst(FieldKey.TRACK);
+                    year = mTag.getFirst(FieldKey.YEAR);
+                    genre = mTag.getFirst(FieldKey.GENRE);
                 }
 
-                mAudioHeader = mAudioTaggerFile.getAudioHeader();
-
+                //get cover art and save reference to it
                 mCurrentCoverArt = mTag.getFirstArtwork() == null ? null : mTag.getFirstArtwork().getBinaryData();
                 mCurrentCoverArtLength = mCurrentCoverArt == null ? 0 : mCurrentCoverArt.length;
                 //initial values of new cover art will be the same of current cover art
                 mNewCoverArt = mCurrentCoverArt;
                 mNewCoverArtLength = mCurrentCoverArtLength;
 
-                mCurrentTitle = mTag.getFirst(FieldKey.TITLE);
-                mCurrentArtist = mTag.getFirst(FieldKey.ARTIST);
-                mCurrentAlbum = mTag.getFirst(FieldKey.ALBUM);
-                mCurrentNumber = mTag.getFirst(FieldKey.TRACK);
-                mCurrentYear = mTag.getFirst(FieldKey.YEAR);
-                mCurrentGenre = mTag.getFirst(FieldKey.GENRE);
+                //set global references to metadata;
+                //this is useful for avoid reading tags every time
+                //we need, besides, we use when we are above
+                //to commit changes to file tags, saving only those
+                //that have changed and not every tag, or in case
+                //no one have change, don't commit anything, saving access
+                //to file system
+                mCurrentTitle = title;
+                mCurrentArtist = artist;
+                mCurrentAlbum = album;
+                mCurrentNumber = number;
+                mCurrentYear = year;
+                mCurrentGenre = genre;
+
                 mCurrentDuration = mAudioHeader.getTrackLength() + "";
                 mBitrate = mAudioHeader.getBitRate();
                 mFrequencyVal = mAudioHeader.getSampleRate();
                 mResolutionVal = mAudioHeader.getBitsPerSample();
                 mChannelsVal = mAudioHeader.getChannels();
                 mFileType = mAudioHeader.getFormat();
+
                 setCurrentValues();
             } catch (CannotReadException | IOException | ReadOnlyFileException | InvalidAudioFrameException | TagException e) {
                 e.printStackTrace();
+
                 mCurrentAudioItem.setStatus(AudioItem.FILE_ERROR_READ);
                 showSnackBar(Snackbar.LENGTH_LONG, getString(R.string.could_not_read_file) + " " + e.getMessage(), ACTION_NONE, null);
                 mTitleLayer.setText(mAudioFile.getName());
@@ -764,41 +792,37 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
 
     }
 
+    /**
+     * Sets the extracted values in the corresponding
+     * View objects
+     */
     private void setCurrentValues(){
 
+        //file name over cover
         mTitleLayer.setText(mAudioFile.getName());
+        //path to file over cover
         mSubtitleLayer.setText(AudioItem.getRelativePath(mAudioFile.getParent()));
 
-        if(mCurrentCoverArt != null) {
-            GlideApp.with(mViewDetailsTrack).
-                    load(mCurrentCoverArt)
-                    .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.NONE))
-                    .transition(DrawableTransitionOptions.withCrossFade())
-                    .apply(RequestOptions.skipMemoryCacheOf(true))
-                    .fitCenter()
-                    .into(mToolbarCover);
+        //load a placeholder in case cover is not present
+        GlideApp.with(mViewDetailsTrack).
+                load(mCurrentCoverArt != null ? mCurrentCoverArt : getDrawable(R.drawable.ic_album_white_48px))
+                .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.NONE))
+                .apply(RequestOptions.skipMemoryCacheOf(true))
+                .transition(DrawableTransitionOptions.withCrossFade())
+                .fitCenter()
+                .placeholder(R.drawable.ic_album_white_48px)
+                .into(mToolbarCover);
 
-        }
-        else {
-            GlideApp.with(mViewDetailsTrack).
-                    load(getDrawable(R.drawable.ic_album_white_48px))
-                    .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.NONE))
-                    .apply(RequestOptions.skipMemoryCacheOf(true))
-                    .transition(DrawableTransitionOptions.withCrossFade())
-                    .fitCenter()
-                    .placeholder(R.drawable.ic_album_white_48px)
-                    .into(mToolbarCover);
-
-        }
-
+        //set values on edit text objects
         mTitleField.setText(mCurrentTitle);
         mArtistField.setText(mCurrentArtist);
         mAlbumField.setText(mCurrentAlbum);
         mNumberField.setText(mCurrentNumber);
         mYearField.setText(mCurrentYear);
         mGenreField.setText(mCurrentGenre);
-        mTrackType.setText(mFileType);
 
+        //set values of additional info about song
+        mTrackType.setText(mFileType);
         mImageSize.setText(AudioItem.getStringImageSize(mCurrentCoverArt));
         mFileSize.setText(AudioItem.getFileSize(mAudioFile.length()));
         mTrackLength.setText(AudioItem.getHumanReadableDuration(mCurrentDuration));
@@ -809,6 +833,8 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
         mResolution.setText(AudioItem.getResolution(mResolutionVal));
         mChannels.setText(mChannelsVal);
 
+        //when intent brings correction mode  == MANUAL, enable fields
+        //to start immediately editing it
         if (mCorrectionMode == Constants.CorrectionModes.MANUAL) {
             enableFieldsToEdit();
         }
@@ -816,6 +842,10 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
         addActionListeners();
     }
 
+    /**
+     * Add listeners for corresponding objects to
+     * respond to user interactions
+     */
 
     private void addActionListeners(){
 
@@ -880,7 +910,8 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                 enableMiniFabs(false);
                 mOnlyCoverArt = true;
                 //Check if exist trackidItem cached from previous request
-                //before making a request
+                //before making a request for saving data,
+                //this object only persist while the activity is open
                 if(mTrackIdAudioItem != null){
                     handleCoverArt();
                 }
@@ -1416,12 +1447,25 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
         });
     }
 
+    private void removeErrorTags(){
+        ArrayList<View> fields = mViewDetailsTrack.getFocusables(View.FOCUS_DOWN);
+        int numElements = fields.size();
+
+        for (int i = 0 ; i < numElements ; i++) {
+            if (fields.get(i) instanceof EditText) {
+                ((EditText) fields.get(i)).setError(null);
+            }
+        }
+    }
+
     /**
      * This method disable the fields and
      * leaves from edit mode
      */
 
     private void disableFields(){
+
+        removeErrorTags();
 
         mTitleField.clearFocus();
         mTitleField.setEnabled(false);
@@ -1947,8 +1991,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                                     mStatus.setCompoundDrawablesWithIntrinsicBounds(getStatusDrawable(),null,null,null);
                                 }
                                 //notify to adapter that one item has changed
-                                mTrackAdapter.notifyDataSetChanged();
-                                //mTrackAdapter.notifyItemChanged(mCurrentAudioItem.getPosition());
+                                mTrackAdapter.notifyItemChanged(mCurrentAudioItem.getPosition());
 
                             }
                             //If data was not updated
@@ -1993,8 +2036,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                     .placeholder(R.drawable.ic_album_white_48px)
                     .into(mToolbarCover);
             showSnackBar(Snackbar.LENGTH_SHORT, getString(R.string.cover_removed),ACTION_NONE, null);
-            mTrackAdapter.notifyDataSetChanged();
-            //mTrackAdapter.notifyItemChanged(mCurrentAudioItem.getPosition());
+            mTrackAdapter.notifyItemChanged(mCurrentAudioItem.getPosition());
             cachingCurrentValues();
         }
 

@@ -225,7 +225,7 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
      * @param path
      * @return
      */
-    public AudioItem getItemByIdOrPath(long id, String path){
+    public AudioItem getAudioItemByIdOrPath(long id, String path){
         AudioItem audioItem = null;
 
         if(id != -1){

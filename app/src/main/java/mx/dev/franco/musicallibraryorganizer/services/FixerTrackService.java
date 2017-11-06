@@ -43,11 +43,11 @@ import com.gracenote.gnsdk.IGnMusicIdFileEvents;
 
 import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.audio.AudioFileIO;
-import org.jaudiotagger.audio.AudioHeader;
 import org.jaudiotagger.audio.exceptions.CannotReadException;
 import org.jaudiotagger.audio.exceptions.CannotWriteException;
 import org.jaudiotagger.audio.exceptions.InvalidAudioFrameException;
 import org.jaudiotagger.audio.exceptions.ReadOnlyFileException;
+import org.jaudiotagger.audio.mp3.MP3File;
 import org.jaudiotagger.tag.FieldKey;
 import org.jaudiotagger.tag.KeyNotFoundException;
 import org.jaudiotagger.tag.Tag;
@@ -176,7 +176,7 @@ public class FixerTrackService extends Service {
         super.onDestroy();
     }
 
-    private void startNotification(String msg) {
+    private void startNotification(String msg, String filename) {
         Intent notificationIntent = new Intent(this,MainActivity.class);
         notificationIntent.setAction(MainActivity.ACTION_OPEN_MAIN_ACTIVITY);
         notificationIntent.setFlags(Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT | Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -189,10 +189,10 @@ public class FixerTrackService extends Service {
         Bitmap icon = BitmapFactory.decodeResource(getResources(),
                 R.mipmap.ic_launcher);
         notification = new NotificationCompat.Builder(this)
-                .setContentTitle(getString(R.string.app_name))
+                .setContentTitle("Corrigiendo " + (filename != null ? filename : "canciones"))
                 .setAutoCancel(true)
                 .setColor(ContextCompat.getColor(getApplicationContext(),R.color.grey_800))
-                .setTicker(getString(R.string.fixing_task))
+                .setTicker(getString(R.string.app_name))
                 .setContentText(msg != null ? msg : getString(R.string.fixing_task))
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setLargeIcon(Bitmap.createScaledBitmap(icon, 128, 128, false))
@@ -213,23 +213,27 @@ public class FixerTrackService extends Service {
             return;
         }*/
 
-        //if intent comes from touch an item, or from TrackDetailsActivity
-        //if not, default value is -1
+        //if intent comes from touching an item, or from TrackDetailsActivity
+        //get the ID received, if not, default value is -1
         mCurrentId = intent.getLongExtra(Constants.MEDIASTORE_ID, -1);
-        //get selected items directly from DB, if item is not equal than -1,
+        //get selected items directly from DB, if ID is not -1,
         //it means that cursor returned of this query will contain only
-        //one row, if mCurrentId is equal than -1, so will get
+        //one row, if mCurrentId is equal than -1, means that will get
         //a cursor with more than one row
         mSelectedItems = mDataTrackDbHelper.getAllSelected(mCurrentId);
         mNumberSelected = mSelectedItems == null ? 0 : mSelectedItems.getCount();
         //if intent comes from TrackDetailsActivity means that
         //mFromEditMode will be true, default value is false
         mFromEditMode = intent.getBooleanExtra(Constants.Activities.FROM_EDIT_MODE, false);
+        //if value is true, then the service will be able to run in background,
+        //and a correction won't stop when app close, but when you explicitly
+        //stop the task by pressing stop button
         mShowNotification = intent.getBooleanExtra(Constants.Actions.ACTION_SHOW_NOTIFICATION,false);
+
         mStartOrUpdateForegroundNotification = !mFromEditMode && mShowNotification;
 
         if(mStartOrUpdateForegroundNotification){
-            startNotification(null);
+            startNotification(null, null);
         }
         createGnFiles();
     }
@@ -245,15 +249,19 @@ public class FixerTrackService extends Service {
         try {
             mGnMusicIdFile = new GnMusicIdFile(GnService.gnUser, mMusicIdFileEvents);
             mGnMusicIdFile.options().lookupData(GnLookupData.kLookupDataContent, true);
+            //queue will be processed one by one
             mGnMusicIdFile.options().batchSize(1);
+            //get the fileInfoManager
             mGnMusicIdFileInfoManager = mGnMusicIdFile.fileInfos();
+            //hold reference to queue in case we need cancel the
+            //identification
             sGnMusicIdFileList.add(mGnMusicIdFile);
 
         } catch (GnException e) {
             e.printStackTrace();
         }
 
-        //create and add files to a queue for processing them
+        //create and add files to a queue for process them
         while (mSelectedItems.moveToNext()){
             id = mSelectedItems.getLong(mSelectedItems.getColumnIndexOrThrow(TrackContract.TrackData.MEDIASTORE_ID));
             title = mSelectedItems.getString(mSelectedItems.getColumnIndexOrThrow(TrackContract.TrackData.TITLE));
@@ -262,7 +270,7 @@ public class FixerTrackService extends Service {
             fullPath = mSelectedItems.getString(mSelectedItems.getColumnIndexOrThrow(TrackContract.TrackData.DATA));
 
             try {
-                //Log.d("file",fullPath);
+                //add all info available for more accurate results
                 GnMusicIdFileInfo gnMusicIdFileInfo = mGnMusicIdFileInfoManager.add(fullPath);
                 gnMusicIdFileInfo.fileName(fullPath);
                 gnMusicIdFileInfo.mediaId(String.valueOf(id));
@@ -274,6 +282,7 @@ public class FixerTrackService extends Service {
                 e.printStackTrace();
             }
             finally {
+                //reset values in every iteration
                 id = -1;
                 title = "";
                 artist = "";
@@ -282,6 +291,7 @@ public class FixerTrackService extends Service {
             }
 
         }
+        //release cursor
         mSelectedItems.close();
         mSelectedItems = null;
 
@@ -289,7 +299,7 @@ public class FixerTrackService extends Service {
     }
 
     public void startTrackId(){
-        //Log.d("starting track id", "staring");
+        //Log.d("starting track id", "starting");
         try {
             mGnMusicIdFile.doTrackId(GnMusicIdFileProcessType.kQueryReturnSingle,GnMusicIdFileResponseType.kResponseAlbums);
         } catch (GnException e) {
@@ -299,10 +309,10 @@ public class FixerTrackService extends Service {
 
     public void stopTrackId(){
         //check if task were cancelled by user,
-        //default value is true, in case that
-        //ACTION_COMPLETE_TASK be reached, this value will
-        //be false, meaning that is not
-        //necessary cancel anything.
+        //default value is true; in case that
+        //ACTION_COMPLETE_TASK be reached,
+        //finishTaskByUser will be false,
+        //meaning that is not necessary call cancel method for every GnMusicIdFile.
         if(finishTaskByUser){
             if(sGnMusicIdFileList != null) {
                 Iterator<GnMusicIdFile> iterator = sGnMusicIdFileList.iterator();
@@ -325,10 +335,7 @@ public class FixerTrackService extends Service {
         private HashMap<String,String> mGnStatusToDisplay;
         private String mPath = "";
         private long mId = -1;
-        private AudioFile mAudioFile = null;
-        private Tag mTag = null;
         private boolean mLastFile = false;
-        private AudioHeader mAudioHeader = null;
 
         public MusicIdFileEvents(){
             //Put the status of downloaded info
@@ -344,10 +351,18 @@ public class FixerTrackService extends Service {
         public void musicIdFileStatusEvent(GnMusicIdFileInfo gnMusicIdFileInfo, GnMusicIdFileCallbackStatus gnMusicIdFileCallbackStatus, long currentFile, long totalFiles, IGnCancellable iGnCancellable) {
             String status = gnMusicIdFileCallbackStatus.toString();
             mLastFile = currentFile == totalFiles;
+            //if "Servicio en segundo plano" is activated on settings app,
+            //show a notification
             if(mStartOrUpdateForegroundNotification) {
-                startNotification("Corrigiendo " + currentFile + " canción de " + totalFiles);
+                try {
+                    startNotification("Corrigiendo " + currentFile + " de " + totalFiles, AudioItem.getFilename(gnMusicIdFileInfo.fileName()));
+                }
+                catch (GnException e){
+                    e.printStackTrace();
+                }
             }
-            Log.d("CallbackStatus", status);
+            //for every callback check first is user
+            //did not cancel the task
             if(iGnCancellable.isCancelled()){
                 onCancelTask(gnMusicIdFileInfo);
                 return;
@@ -416,6 +431,7 @@ public class FixerTrackService extends Service {
             String year = "";
             String genre = "";
 
+            //retrieve results found
             try {
                 title = gnResponseAlbums.albums().at(0).next().trackMatched().title().display();
             } catch (GnException e) {
@@ -424,6 +440,8 @@ public class FixerTrackService extends Service {
             }
 
             try {
+                //get artist name of song if exist
+                //otherwise get artist album
                 if(!gnResponseAlbums.albums().at(0).next().trackMatched().artist().name().display().isEmpty())
                     artist = gnResponseAlbums.albums().at(0).next().trackMatched().artist().name().display();
                 else
@@ -500,7 +518,27 @@ public class FixerTrackService extends Service {
                 year = "";
             }
             try {
-                //search for first genre of or related for current song
+                //Get the first level found of genre, first from track matched if exist, if not, then from album found.
+
+                //The Gracenote Genre System contains more than 2200 genres from around the world.
+                //To make this list easier to manage and give more display options for client applications,
+                //the Gracenote Genre System groups these genres into a relationship hierarchy.
+                //Most hierarchies consists of three levels: level-1. level-2, and level-3. For example:
+                //Level-1
+                /*Rock
+                    //Level-2
+                    Heavy Metal
+                        //Level-3
+                        Grindcore
+                        Black Metal
+                        Death Metal
+                    //Level-2
+                    50's Rock
+                        //Level-3
+                        Doo Wop
+                        Rockabilly
+                        Early Rock & Roll
+                 */
                 if(!gnResponseAlbums.albums().at(0).next().trackMatched().genre(GnDataLevel.kDataLevel_3).isEmpty())
                     genre = gnResponseAlbums.albums().at(0).next().trackMatched().genre(GnDataLevel.kDataLevel_3);
                 else if(!gnResponseAlbums.albums().at(0).next().trackMatched().genre(GnDataLevel.kDataLevel_2).isEmpty())
@@ -518,13 +556,13 @@ public class FixerTrackService extends Service {
                 genre = "";
             }
 
-            Log.d("TITLE_BG", title);
+            /*Log.d("TITLE_BG", title);
             Log.d("ARTIST_BG", artist);
             Log.d("ALBUM_BG", album);
             Log.d("ALBUM_ART_BG", cover);
             Log.d("NUMBER_BG", number);
             Log.d("YEAR_BG", year);
-            Log.d("GENRE_BG", genre);
+            Log.d("GENRE_BG", genre);*/
 
             setNewAudioTags(title, artist, album, cover, number, year, genre);
         }
@@ -547,46 +585,57 @@ public class FixerTrackService extends Service {
             boolean dataGenre = !tags[6].equals("");
 
             //Is it a request from MainActivity?
-
             if(!mFromEditMode) {
                 ContentValues newTags = new ContentValues();
                 AudioItem audioItem = new AudioItem();
+                Tag tag = null;
+                AudioFile audioTaggerFile = null;
                 //lets try to open the file to edit meta tags.
                 try {
-                    mAudioFile = AudioFileIO.read(new File(mPath));
+                    //we check the mime type and extension because if file is MP3, it can contain
+                    //ID3v1, ID3v2 or both tags, and there are considerable differences between versions,
+                    //for example v1 doesn't have cover art, so it cannot call deleteArtworkField nor setField(artwork)
+                    //because this would cause an error and the app would close,
+                    //so is necessary convert the v1 to v2 first for standardize tags for MP3
+                    if(AudioItem.getMimeType(mPath).equals("audio/mpeg") && AudioItem.getExtension(mPath).equals("mp3")){
+                        audioTaggerFile = new MP3File(new File(mPath));
+                        tag = audioTaggerFile.getTagAndConvertOrCreateAndSetDefault();
+                    }
+                    else {
+                        audioTaggerFile = AudioFileIO.read(new File(mPath));
+                        tag = audioTaggerFile.getTag() == null ? audioTaggerFile.createDefaultTag() : audioTaggerFile.getTag();
+                    }
 
+                    //because this audioitem is sent to main activity
+                    //set firstly id and path(in case the file be renamed, we get the path from this audioitem)
+                    //and wrap the found new tags(if are availables) in an AudioItem object.
                     audioItem.setAbsolutePath(mPath);
-                    audioItem.setTitle(tags[0]);
-                    audioItem.setArtist(tags[1]);
-                    audioItem.setAlbum(tags[2]);
                     audioItem.setId(mId);
-                    mAudioHeader = mAudioFile.getAudioHeader();
-                    mTag = mAudioFile.getTag();
 
-                    //SET THE VALUE FOR EVERY CLASS_NAME
-
+                    //For every tag set value if were found
                     if (dataTitle) {
-                        //set the value to update our DB
+                        //set value to update our DB
                         newTags.put(TrackContract.TrackData.TITLE, tags[0]);
-                        //set the value to update the item list
+                        //set value to update the item list
                         audioItem.setTitle(tags[0]);
-                        //set the value to update the audio file
-                        mTag.setField(FieldKey.TITLE, tags[0]);
+                        //set value to update the file
+                        tag.setField(FieldKey.TITLE, tags[0]);
                     }
 
                     if (dataArtist) {
                         newTags.put(TrackContract.TrackData.ARTIST, tags[1]);
                         audioItem.setArtist(tags[1]);
-                        mTag.setField(FieldKey.ARTIST, tags[1]);
+                        tag.setField(FieldKey.ARTIST, tags[1]);
                     }
 
                     if (dataAlbum) {
                         newTags.put(TrackContract.TrackData.ALBUM, tags[2]);
                         audioItem.setAlbum(tags[2]);
-                        mTag.setField(FieldKey.ALBUM, tags[2]);
+                        tag.setField(FieldKey.ALBUM, tags[2]);
                     }
-                    Log.d("fromeditmode",tags[3]);
-                    //FOR NEXT TAGS ONLY UPDATE THE AUDIO FILE, NOT ITEM LIST NEITHER OUR DATABASE
+
+                    //FOR NEXT TAGS ONLY UPDATE THE AUDIO FILE,
+                    //NOT ITEM LIST NOR OUR DATABASE
                     //BECAUSE WE DON'T STORE THOSE VALUES
 
                     if (dataImage) {
@@ -594,9 +643,8 @@ public class FixerTrackService extends Service {
                             byte[] imgData = new GnAssetFetch(GnService.gnUser, tags[3]).data();
                             Artwork artwork = new AndroidArtwork();
                             artwork.setBinaryData(imgData);
-                            //if(mTag.getFirstArtwork() != null)
-                                //mTag.deleteArtworkField();
-                            //mTag.setField(artwork);
+                            tag.deleteArtworkField();
+                            tag.setField(artwork);
                         }
                         catch (GnException | KeyNotFoundException e){
                             e.printStackTrace();
@@ -604,26 +652,28 @@ public class FixerTrackService extends Service {
                     }
 
                     if (dataTrackNumber) {
-                        mTag.setField(FieldKey.TRACK, tags[4]);
+                        tag.setField(FieldKey.TRACK, tags[4]);
                     }
 
                     if (dataYear) {
-                        mTag.setField(FieldKey.YEAR, tags[5]);
+                        tag.setField(FieldKey.YEAR, tags[5]);
                     }
 
                     if (dataGenre) {
-                        mTag.setField(FieldKey.GENRE, tags[6]);
+                        tag.setField(FieldKey.GENRE, tags[6]);
                     }
 
-                    //Update the audio file meta tags
-                    mAudioFile.commit();
+                    //Update the file meta tags, this changes to tags
+                    //are visible to all players that are able to read
+                    //ID3 tags (almost nowadays)
+                    audioTaggerFile.commit();
 
-                    //If some info is missed, mark as INCOMPLETE this song
+                    //If some info was not found, mark as INCOMPLETE the state of this song
                     if (!dataTitle || !dataArtist || !dataAlbum || !dataImage || !dataTrackNumber || !dataYear || !dataGenre) {
                         newTags.put(TrackContract.TrackData.STATUS, AudioItem.FILE_STATUS_INCOMPLETE);
                         audioItem.setStatus(AudioItem.FILE_STATUS_INCOMPLETE);
                     }
-                    //All info for this song was found!!!
+                    //All info for this song was found, mark as complete!!!
                     else {
                         newTags.put(TrackContract.TrackData.STATUS, AudioItem.FILE_STATUS_OK);
                         audioItem.setStatus(AudioItem.FILE_STATUS_OK);
@@ -650,13 +700,15 @@ public class FixerTrackService extends Service {
                         newTags.put(TrackContract.TrackData.DATA, newAbsolutePath); //new path
                         Log.d("success renaming", successMediaStore+" and renaming");
                     }
-                    Log.d("mDataTrackDbHelper",(mDataTrackDbHelper == null)+"");
-                    //Finally update our database
+
+
+                    //Update our database
                     newTags.put(TrackContract.TrackData.IS_SELECTED, false);
                     newTags.put(TrackContract.TrackData.IS_PROCESSING, false);
                     mDataTrackDbHelper.updateData(audioItem.getId(), newTags);
 
-                    //Report to receivers the status
+                    //and finally report to receivers the status
+                    //of this file, for updating the UI
                     Intent intentActionDone = new Intent();
                     intentActionDone.setAction(Constants.Actions.ACTION_DONE);
                     intentActionDone.putExtra(Constants.AUDIO_ITEM, audioItem);
@@ -665,13 +717,15 @@ public class FixerTrackService extends Service {
                 }
                 catch (CannotWriteException | IOException | InvalidAudioFrameException | TagException | ReadOnlyFileException | CannotReadException e) {
                     e.printStackTrace();
+                    //if an error has ocurred, mark this file as bad
+                    //update our database
                     audioItem.setStatus(AudioItem.FILE_ERROR_READ);
                     newTags.put(TrackContract.TrackData.STATUS, AudioItem.FILE_ERROR_READ);
                     newTags.put(TrackContract.TrackData.IS_SELECTED, false);
                     newTags.put(TrackContract.TrackData.IS_PROCESSING, false);
-
                     mDataTrackDbHelper.updateData(audioItem.getId(), newTags);
 
+                    //and report to receivers the status
                     Intent intentActionDone = new Intent();
                     intentActionDone.setAction(Constants.Actions.ACTION_FAIL);
                     intentActionDone.putExtra(Constants.AUDIO_ITEM, audioItem);
@@ -682,10 +736,8 @@ public class FixerTrackService extends Service {
             }
             //if intent was made from TrackDetailsActivity
             //don't modify the track, only retrieve data and
-            //send back to activity, the user has to decide
-            //if apply the found tags, besides,
-            //for UX, is not convenient to interfere with what the user
-            //is doing
+            //send back to activity to show to user, he/she has to decide
+            //if apply found tags, this is the SEMIAUTOMATIC MODE
             else {
                 AudioItem audioItem = new AudioItem();
                 audioItem.setId(mId);
@@ -733,14 +785,15 @@ public class FixerTrackService extends Service {
             }
             //if is the last file stop the service
             if(mLastFile){
-                //Inform only to UI of MainActivity that task has completed;
-                //if intent was made from TrackDetailsActivity is not necessary inform this action
+                //Inform to update the UI only to MainActivity if task has completed;
+                //if task was started from TrackDetailsActivity is not necessary inform this action
                 if(!mFromEditMode){
                     Intent intentCompleteTask = new Intent();
                     intentCompleteTask.setAction(Constants.Actions.ACTION_COMPLETE_TASK);
                     mLocalBroadcastManager.sendBroadcastSync(intentCompleteTask);
-                    Log.d("action_sent",intentCompleteTask.getAction());
                 }
+                //if this was the last file, lets assume that
+                //user did not cancel the task
                 finishTaskByUser = false;
                 stopSelf();
             }
@@ -752,104 +805,6 @@ public class FixerTrackService extends Service {
         public void musicIdFileMatchResult(GnResponseDataMatches gnResponseDataMatches, long l, long l1, IGnCancellable iGnCancellable) {
             //Not used because we selected GnMusicIdFileResponseType.kResponseAlbums as response type
             Log.d("musicIdFileMatchResult", "musicIdFileMatchResult");
-
-            String title;
-            String artist;
-            String album;
-            String cover = "";
-            String number;
-            String year;
-            String genre;
-
-            try {
-                title = gnResponseDataMatches.dataMatches().at(0).next().getAsAlbum().trackMatched().title().display();
-            } catch (GnException e) {
-                e.printStackTrace();
-                title = "";
-            }
-
-            try {
-                artist = gnResponseDataMatches.dataMatches().at(0).next().getAsAlbum().trackMatched().artist().name().display();
-            } catch (GnException e) {
-                e.printStackTrace();
-                artist = "";
-            }
-            try {
-                album = gnResponseDataMatches.dataMatches().at(0).next().getAsAlbum().title().display();
-            } catch (GnException e) {
-                e.printStackTrace();
-                album = "";
-            }
-
-            try {
-                //If is selected "No descargar imagen"
-                if (Settings.SETTING_SIZE_ALBUM_ART == null) {
-                    cover = "";
-                }
-                //If is selected "De mejor calidad disponible"
-                else if (Settings.SETTING_SIZE_ALBUM_ART == GnImageSize.kImageSizeXLarge) {
-                    GnContent gnContent = gnResponseDataMatches.dataMatches().at(0).next().getAsAlbum().coverArt();
-                    GnImageSize[] values = GnImageSize.values();
-                    for (int sizes = values.length - 1; sizes >= 0; --sizes) {
-                        String url = gnContent.asset(values[sizes]).url();
-                        if (!gnContent.asset(values[sizes]).url().equals("")) {
-                            cover = url;
-                            break;
-                        }
-                    }
-                }
-                //If is selected "De menor calidad disponible"
-                else if (Settings.SETTING_SIZE_ALBUM_ART == GnImageSize.kImageSizeThumbnail) {
-                    GnContent gnContent = gnResponseDataMatches.dataMatches().at(0).next().getAsAlbum().coverArt();
-                    GnImageSize[] values = GnImageSize.values();
-                    for (int sizes = 0; sizes < values.length ; sizes++) {
-                        String url = gnContent.asset(values[sizes]).url();
-                        if (!gnContent.asset(values[sizes]).url().equals("")) {
-                            cover = url;
-                            break;
-                        }
-                    }
-                }
-                //get "de baja calidad, de media calidad", "de alta calidad" or "de la mejor calidad"
-                else {
-                    cover = gnResponseDataMatches.dataMatches().at(0).next().getAsAlbum().coverArt().asset(Settings.SETTING_SIZE_ALBUM_ART).url();
-                }
-
-            } catch (GnException e) {
-                e.printStackTrace();
-                cover = "";
-            }
-
-            try {
-                number = gnResponseDataMatches.dataMatches().at(0).next().getAsAlbum().trackMatched().trackNumber();
-            } catch (GnException e) {
-                e.printStackTrace();
-                number = "";
-            }
-            try {
-                year = gnResponseDataMatches.dataMatches().at(0).next().getAsAlbum().trackMatched().year();
-            } catch (GnException e) {
-                e.printStackTrace();
-                year = "";
-            }
-            try {
-                genre = gnResponseDataMatches.dataMatches().at(0).next().getAsAlbum().genre(GnDataLevel.kDataLevel_3);
-            } catch (GnException e) {
-                e.printStackTrace();
-                genre = "";
-            }
-
-            /*Log.d("TITLE_BG", mNewTitle);
-            Log.d("ARTIST_BG", mNewArtist);
-            Log.d("ALBUM_BG", mNewAlbum);
-            Log.d("ALBUM_ART_BG", mNewCover);
-            Log.d("NUMBER_BG", mNewTrackNumber);
-            Log.d("YEAR_BG", mNewYear);
-            Log.d("GENRE_BG", mNewGenre);*/
-
-            setNewAudioTags(title, artist, album, cover, number, year, genre);
-
-
         }
 
         @Override
@@ -868,29 +823,33 @@ public class FixerTrackService extends Service {
                 return;
             }
 
-
+            //when no results found, if task was started by
+            //TrackDetailsActivity, only notify with action ACTION_NOT_FOUND
             if(mFromEditMode){
                 Intent intentActionNotFound = new Intent();
                 intentActionNotFound.setAction(Constants.Actions.ACTION_NOT_FOUND);
                 mLocalBroadcastManager.sendBroadcastSync(intentActionNotFound);
             }
+            //if task was started by MainActivity, notify the same but
+            //besides, update the UI and save the state to our database
             else {
                 ContentValues contentValues = new ContentValues();
                 contentValues.put(TrackContract.TrackData.STATUS, AudioItem.FILE_STATUS_BAD);
                 contentValues.put(TrackContract.TrackData.IS_PROCESSING, false);
                 contentValues.put(TrackContract.TrackData.IS_SELECTED, false);
+                mDataTrackDbHelper.updateData(mId, contentValues);
+
                 Intent intentActionNotFound = new Intent();
                 intentActionNotFound.setAction(Constants.Actions.ACTION_NOT_FOUND);
                 intentActionNotFound.putExtra(Constants.MEDIASTORE_ID, mId);
                 Log.d("media store not found",mId+"");
-                mDataTrackDbHelper.updateData(mId, contentValues);
                 mLocalBroadcastManager.sendBroadcastSync(intentActionNotFound);
             }
 
-
-            Log.d("mLastFile mFromEditMode",mLastFile + "_" + mFromEditMode );
+            //if is the last file stop the service
             if(mLastFile){
-                //is last file? inform it to UI when user is on MainActivity only
+                //Inform to update the UI only to MainActivity if task has completed;
+                //if task was started from TrackDetailsActivity is not necessary inform this action
                 if(!mFromEditMode) {
                     finishTaskByUser = false;
                     Intent intentCompleteTask = new Intent();
@@ -906,6 +865,7 @@ public class FixerTrackService extends Service {
 
         @Override
         public void musicIdFileComplete(GnError gnError) {
+            //triggered when all files were processed by doTrackId method,
             Log.d("musicIdFileComplete","complete");
         }
 
@@ -915,17 +875,23 @@ public class FixerTrackService extends Service {
         }
 
         private void onCancelTask(GnMusicIdFileInfo fileInfo){
-            //if(!mFromEditMode) {
                 try {
+                    long currentId = Long.parseLong(fileInfo.mediaId());
+                    if(!mFromEditMode) {
+                        ContentValues values = new ContentValues();
+                        values.put(TrackContract.TrackData.IS_PROCESSING, false);
+                        mDataTrackDbHelper.updateData(currentId, values);
+                        values.clear();
+                        values = null;
+                    }
                     Intent intentActionDone = new Intent();
-                    intentActionDone.putExtra(Constants.MEDIASTORE_ID, Long.parseLong(fileInfo.mediaId()));
+                    intentActionDone.putExtra(Constants.MEDIASTORE_ID, currentId);
                     intentActionDone.setAction(Constants.Actions.ACTION_CANCEL_TASK);
                     boolean sent = mLocalBroadcastManager.sendBroadcast(intentActionDone);
                     Log.d("was_Sent",sent+"");
                 } catch (GnException e1) {
                     e1.printStackTrace();
                 }
-            //}
             stopSelf();
         }
 
@@ -934,9 +900,7 @@ public class FixerTrackService extends Service {
 
         public void clearValues(){
             mId= -1;
-            mAudioFile = null;
-            mTag = null;
-            mAudioHeader = null;
+            mPath = null;
         }
     }
 
