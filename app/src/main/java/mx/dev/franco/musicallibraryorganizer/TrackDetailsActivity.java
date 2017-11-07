@@ -66,7 +66,7 @@ import org.jaudiotagger.tag.FieldKey;
 import org.jaudiotagger.tag.Tag;
 import org.jaudiotagger.tag.TagException;
 import org.jaudiotagger.tag.TagOptionSingleton;
-import org.jaudiotagger.tag.id3.ID3v24Frames;
+import org.jaudiotagger.tag.id3.ID3v24Tag;
 import org.jaudiotagger.tag.images.AndroidArtwork;
 import org.jaudiotagger.tag.images.Artwork;
 
@@ -713,31 +713,39 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
         String title, artist, album, number, year, genre;
         mAudioFile = new File(mTrackPath);
             try {
-                if(mMimeType.equals("audio/mpeg") && mExtension.toLowerCase().equals("mp3")){
-                    mAudioTaggerFile = new MP3File(new File(mTrackPath));
+
+                if((mMimeType.equals("audio/mpeg_mp3") || mMimeType.equals("audio/mpeg") ) && mExtension.toLowerCase().equals("mp3")){
+                    mAudioTaggerFile = AudioFileIO.read(new File(mTrackPath));
                     Log.d("hasID3v1Tag",((MP3File)mAudioTaggerFile).hasID3v1Tag() + "");
                     Log.d("hasID3v2Tag",((MP3File)mAudioTaggerFile).hasID3v2Tag() + "");
-                    mTag = mAudioTaggerFile.getTagAndConvertOrCreateAndSetDefault();
+                    if(((MP3File)mAudioTaggerFile).hasID3v1Tag() && !((MP3File) mAudioTaggerFile).hasID3v2Tag()){
+                        //create new version of ID3v2
+                        ID3v24Tag id3v24Tag = new ID3v24Tag( ((MP3File)mAudioTaggerFile).getID3v1Tag() );
+                        mAudioTaggerFile.setTag(id3v24Tag);
+                        mTag = ((MP3File) mAudioTaggerFile).getID3v2TagAsv24();
+                        Log.d("converted_tag","converted_tag");
+                    }
+                    else {
+                        if(((MP3File) mAudioTaggerFile).hasID3v2Tag()) {
+                            mTag = ((MP3File) mAudioTaggerFile).getID3v2Tag();
+                            Log.d("get_v24_tag","get_v24_tag");
+                        }
+                        //Has no tags? create a new one, but no save until
+                        //user apply changes
+                        else {
+                            ID3v24Tag id3v24Tag = new ID3v24Tag();
+                            ((MP3File) mAudioTaggerFile).setID3v2Tag(id3v24Tag);
+                            mTag = ((MP3File) mAudioTaggerFile).getID3v2Tag();
+                            Log.d("create_v24_tag","create_v24_tag");
+                        }
+                    }
+
                     mAudioHeader = ((MP3File)mAudioTaggerFile).getMP3AudioHeader();
-                    title = mTag.getFirst(ID3v24Frames.FRAME_ID_TITLE);
-                    artist = mTag.getFirst(ID3v24Frames.FRAME_ID_ARTIST);
-                    album = mTag.getFirst(ID3v24Frames.FRAME_ID_ALBUM);
-                    number = mTag.getFirst(ID3v24Frames.FRAME_ID_TRACK);
-                    year = mTag.getFirst(ID3v24Frames.FRAME_ID_YEAR);
-                    genre = mTag.getFirst(ID3v24Frames.FRAME_ID_GENRE);
-
-
                 }
                 else {
                     mAudioTaggerFile = AudioFileIO.read(new File(mTrackPath));
                     mTag = mAudioTaggerFile.getTag() == null ? mAudioTaggerFile.createDefaultTag() : mAudioTaggerFile.getTag();
                     mAudioHeader = mAudioTaggerFile.getAudioHeader();
-                    title= mTag.getFirst(FieldKey.TITLE);
-                    artist = mTag.getFirst(FieldKey.ARTIST);
-                    album = mTag.getFirst(FieldKey.ALBUM);
-                    number = mTag.getFirst(FieldKey.TRACK);
-                    year = mTag.getFirst(FieldKey.YEAR);
-                    genre = mTag.getFirst(FieldKey.GENRE);
                 }
 
                 //get cover art and save reference to it
@@ -749,17 +757,17 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
 
                 //set global references to metadata;
                 //this is useful for avoid reading tags every time
-                //we need, besides, we use when we are above
+                //we need them, besides, we use them when we are about
                 //to commit changes to file tags, saving only those
                 //that have changed and not every tag, or in case
-                //no one have change, don't commit anything, saving access
+                //no one have changed, don't commit anything, saving access
                 //to file system
-                mCurrentTitle = title;
-                mCurrentArtist = artist;
-                mCurrentAlbum = album;
-                mCurrentNumber = number;
-                mCurrentYear = year;
-                mCurrentGenre = genre;
+                mCurrentTitle = mTag.getFirst(FieldKey.TITLE);
+                mCurrentArtist = mTag.getFirst(FieldKey.ARTIST);
+                mCurrentAlbum = mTag.getFirst(FieldKey.ALBUM);
+                mCurrentNumber = mTag.getFirst(FieldKey.TRACK);
+                mCurrentYear = mTag.getFirst(FieldKey.YEAR);
+                mCurrentGenre = mTag.getFirst(FieldKey.GENRE);
 
                 mCurrentDuration = mAudioHeader.getTrackLength() + "";
                 mBitrate = mAudioHeader.getBitRate();
@@ -1718,7 +1726,13 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                     //Here we update the data in case there have had changes
                     //if not, no case to write any mTag
                     if (hasToUpdate) {
+                        if(mMimeType.equals("audio/mpeg_mp3") && mExtension.equals("mp3") && ((MP3File)mAudioTaggerFile).hasID3v1Tag()){
+                            //remove old version of ID3 tags
+                            Log.d("removed ID3v1","remove ID3v1");
+                            ((MP3File) mAudioTaggerFile).delete( ((MP3File)mAudioTaggerFile).getID3v1Tag() );
+                        }
                         mAudioTaggerFile.commit();
+
                         Log.d("missing", "updated_missing");
                     }
                 }
@@ -1748,7 +1762,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                         //if file was renamed, we need a new reference to renamed file
                         //in case the user needs to make additional corrections
                         mAudioTaggerFile = AudioFileIO.read(new File(mTrackPath));
-                        mTag = mAudioTaggerFile.getTag() == null ? mAudioTaggerFile.createDefaultTag() : mAudioTaggerFile.getTag();
+                        mTag = ((MP3File)mAudioTaggerFile).getID3v2Tag();
                         mAudioHeader = mAudioTaggerFile.getAudioHeader();
 
                         Log.d("media store success", successMediaStore+" path: " + mTrackPath);
@@ -1841,8 +1855,16 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                     //Here we update the data in case there have had changes
                     //if not, no case to write any mTag
                     if (hasChanges) {
+                        if(mMimeType.equals("audio/mpeg_mp3") && mExtension.equals("mp3") && ((MP3File)mAudioTaggerFile).hasID3v1Tag()){
+                            //remove old version of ID3 tags
+                            Log.d("removed ID3v1","remove ID3v1");
+                            ((MP3File) mAudioTaggerFile).delete( ((MP3File)mAudioTaggerFile).getID3v1Tag() );
+                        }
+
+
+                        //AudioFileIO.write(mAudioTaggerFile);
                         mAudioTaggerFile.commit();
-                        Log.d("all_metadata", "updated");
+                        Log.d("all_edited_metadata", "updated");
                     }
 
 
@@ -1872,7 +1894,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                         //in case the user needs to make additional corrections
                         mTrackPath = newAbsolutePath;
                         mAudioTaggerFile = AudioFileIO.read(new File(mTrackPath));
-                        mTag = mAudioTaggerFile.getTag() == null ? mAudioTaggerFile.createDefaultTag() : mAudioTaggerFile.getTag();
+                        mTag = ((MP3File)mAudioTaggerFile).getID3v2Tag();
                         mAudioHeader = mAudioTaggerFile.getAudioHeader();
 
                         values.clear();

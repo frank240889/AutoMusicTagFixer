@@ -52,6 +52,7 @@ import org.jaudiotagger.tag.FieldKey;
 import org.jaudiotagger.tag.KeyNotFoundException;
 import org.jaudiotagger.tag.Tag;
 import org.jaudiotagger.tag.TagException;
+import org.jaudiotagger.tag.id3.ID3v24Tag;
 import org.jaudiotagger.tag.images.AndroidArtwork;
 import org.jaudiotagger.tag.images.Artwork;
 
@@ -590,6 +591,8 @@ public class FixerTrackService extends Service {
                 AudioItem audioItem = new AudioItem();
                 Tag tag = null;
                 AudioFile audioTaggerFile = null;
+                String mimeType = AudioItem.getMimeType(mPath);
+                boolean isMp3 = (mimeType.equals("audio/mpeg_mp3") || mimeType.equals("audio/mpeg")) && AudioItem.getExtension(mPath).equals("mp3");
                 //lets try to open the file to edit meta tags.
                 try {
                     //we check the mime type and extension because if file is MP3, it can contain
@@ -597,9 +600,33 @@ public class FixerTrackService extends Service {
                     //for example v1 doesn't have cover art, so it cannot call deleteArtworkField nor setField(artwork)
                     //because this would cause an error and the app would close,
                     //so is necessary convert the v1 to v2 first for standardize tags for MP3
-                    if(AudioItem.getMimeType(mPath).equals("audio/mpeg") && AudioItem.getExtension(mPath).equals("mp3")){
-                        audioTaggerFile = new MP3File(new File(mPath));
-                        tag = audioTaggerFile.getTagAndConvertOrCreateAndSetDefault();
+
+                    if(isMp3){
+                        audioTaggerFile = AudioFileIO.read(new File(mPath));
+                        //Log.d("hasID3v1Tag",((MP3File)audioTaggerFile).hasID3v1Tag() + "");
+                        //Log.d("hasID3v2Tag",((MP3File)audioTaggerFile).hasID3v2Tag() + "");
+                        if(((MP3File)audioTaggerFile).hasID3v1Tag() && !((MP3File) audioTaggerFile).hasID3v2Tag()){
+                            //create new version of ID3v2
+                            ID3v24Tag id3v24Tag = new ID3v24Tag( ((MP3File)audioTaggerFile).getID3v1Tag() );
+                            audioTaggerFile.setTag(id3v24Tag);
+                            tag = ((MP3File) audioTaggerFile).getID3v2TagAsv24();
+                            Log.d("converted_tag","converted_tag");
+                        }
+                        else {
+                            if(((MP3File) audioTaggerFile).hasID3v2Tag()) {
+                                tag = ((MP3File) audioTaggerFile).getID3v2Tag();
+                                Log.d("get_v24_tag","get_v24_tag");
+                            }
+                            //Has no tags? create a new one, but no save until
+                            //user apply changes
+                            else {
+                                ID3v24Tag id3v24Tag = new ID3v24Tag();
+                                ((MP3File) audioTaggerFile).setID3v2Tag(id3v24Tag);
+                                tag = ((MP3File) audioTaggerFile).getID3v2TagAsv24();
+                                Log.d("create_v24_tag","create_v24_tag");
+                            }
+                        }
+
                     }
                     else {
                         audioTaggerFile = AudioFileIO.read(new File(mPath));
@@ -663,8 +690,15 @@ public class FixerTrackService extends Service {
                         tag.setField(FieldKey.GENRE, tags[6]);
                     }
 
-                    //Update the file meta tags, this changes to tags
-                    //are visible to all players that are able to read
+                    if(isMp3){
+                        //remove old version of ID3 tags
+                        Log.d("removed ID3v1","remove ID3v1");
+                        if(((MP3File) audioTaggerFile).hasID3v1Tag())
+                            ((MP3File) audioTaggerFile).delete( ((MP3File)audioTaggerFile).getID3v1Tag() );
+                    }
+
+                    //Update the file meta tags, this changes in tags
+                    //are visible to all media players that are able to read
                     //ID3 tags (almost nowadays)
                     audioTaggerFile.commit();
 
