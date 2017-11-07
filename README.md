@@ -22,7 +22,7 @@ For what?
 - The objective of this app is to correct the tags from your audio files to help you maintain your musical library more organized.
 
 Features:
-- Correction tags for  Mp3, Mp4 (Mp4 audio, M4a and M4p audio), Ogg Vorbis, Flac and Wma, there is limited support for Wav and Real formats.(http://www.jthink.net/jaudiotagger/index.jsp) 
+- Correction tags for your audio files. It currently fully supports Mp3, Mp4 (Mp4 audio, M4a and M4p audio) Ogg Vorbis, Flac and Wma, there is limited support for Wav and Real formats.(http://www.jthink.net/jaudiotagger/index.jsp) 
 - Material Design UI with dark theme for battery save on AMOLED displays.
 - Automatic mode: Allows select one or more songs from list and correct them without user intervention.
 - Semi automatic mode: Downloads track information, but requires confirmation from user to apply found tags.
