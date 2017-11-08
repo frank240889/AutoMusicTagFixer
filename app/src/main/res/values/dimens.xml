@@ -12,5 +12,7 @@
     <dimen name="standard_155">155dp</dimen>
     <dimen name="standard_205">205dp</dimen>
     <dimen name="margin_bottom_snackbar">48dp</dimen>
+    <dimen name="app_bar_height">180dp</dimen>
+    <dimen name="text_margin">16dp</dimen>
 
 </resources>

@@ -15,6 +15,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
@@ -38,6 +39,7 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.util.SparseIntArray;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -135,6 +137,12 @@ public class MainActivity extends AppCompatActivity
     //the receiver for responses.
     private ResponseReceiver mReceiver;
 
+    private MenuItem mMenuItemPath, mMenuItemTitle, mMenuItemArtist, mMenuItemAlbum;
+    private MenuItem lastCheckedItem;
+    private Menu mMenu;
+
+    private SparseIntArray mCheckedItems;
+
     private GoogleApiClient client;
 
     //contextual mToolbar
@@ -208,6 +216,9 @@ public class MainActivity extends AppCompatActivity
         mAudioItemArrayAdapter = new TrackAdapter(getApplicationContext(), mAudioItemList,this);
         sSorter = TrackAdapter.Sorter.getInstance();
 
+        mCheckedItems = new SparseIntArray();
+
+
         //pass a referecne to data source to media player
         sMediaPlayer.setAdapter(mAudioItemArrayAdapter);
         //create snack bar for messages
@@ -258,7 +269,7 @@ public class MainActivity extends AppCompatActivity
                 asyncReadFile.execute();
             //}
         }
-        if(ServiceHelper.isServiceRunning(getApplicationContext(), FixerTrackService.CLASS_NAME)) {
+        if(ServiceHelper.withContext(getApplicationContext()).withService(FixerTrackService.CLASS_NAME).isServiceRunning()) {
             registerReceivers();
             startTask();
         }
@@ -327,7 +338,6 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onResume(){
         super.onResume();
-
         Log.d(TAG,"onResume");
     }
 
@@ -338,7 +348,7 @@ public class MainActivity extends AppCompatActivity
         //Deregister filters to listen for response from FixerTrackService
         //and save resources, if service is not processing any task
 
-        if(ServiceHelper.isServiceRunning(getApplicationContext(), FixerTrackService.CLASS_NAME))
+        if(!ServiceHelper.withContext(getApplicationContext()).withService(FixerTrackService.CLASS_NAME).isServiceRunning())
             mLocalBroadcastManager.unregisterReceiver(mReceiver);
     }
 
@@ -362,7 +372,8 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onDestroy(){
         Log.d(TAG,"onDestroy");
-        if(ServiceHelper.isServiceRunning(getApplicationContext(), FixerTrackService.CLASS_NAME) && !Settings.BACKGROUND_CORRECTION){
+        if(ServiceHelper.withContext(getApplicationContext()).withService(FixerTrackService.CLASS_NAME).isServiceRunning()
+                && !Settings.BACKGROUND_CORRECTION){
             Intent intentStopService = new Intent(this, FixerTrackService.class);
             stopService(intentStopService);
             if(mDataTrackDbHelper != null) {
@@ -397,11 +408,17 @@ public class MainActivity extends AppCompatActivity
         // Inflate the menu; this adds items to the action bar if it is present.
 
         getMenuInflater().inflate(R.menu.menu_main_activity, menu);
+        mMenu = menu;
 
         MenuItem searchItem = menu.findItem(R.id.action_search);
         mSearchViewWidget = (SearchView) MenuItemCompat.getActionView(searchItem);
         mSearchViewWidget.setVisibility(View.GONE);
 
+        mMenuItemPath = menu.findItem(R.id.action_sort_by_path);
+        mMenuItemTitle = menu.findItem(R.id.action_sort_by_title);
+        mMenuItemArtist = menu.findItem(R.id.action_sort_by_artist);
+        mMenuItemAlbum = menu.findItem(R.id.action_sort_by_album);
+        setCheckedItem(null);
 
         // Define the listener
         MenuItemCompat.OnActionExpandListener expandListener = new MenuItemCompat.OnActionExpandListener() {
@@ -474,6 +491,8 @@ public class MainActivity extends AppCompatActivity
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
+        //setCheckedState(item);
+
         switch (id){
             case R.id.action_select_all:
                 actionSelectAll();
@@ -483,26 +502,105 @@ public class MainActivity extends AppCompatActivity
                 actionRefresh();
                 break;
 
-            case R.id.action_sort_by_path:
+            case R.id.path_asc:
                 actionSortBy(TrackContract.TrackData.DATA, TrackAdapter.ASC);
+                setCheckedItem(item);
+                break;
+            case R.id.path_desc:
+                actionSortBy(TrackContract.TrackData.DATA, TrackAdapter.DESC);
+                setCheckedItem(item);
                 break;
 
-            case R.id.action_sort_by_title:
+            case R.id.title_asc:
                 actionSortBy(TrackContract.TrackData.TITLE, TrackAdapter.ASC);
+                setCheckedItem(item);
+                break;
+            case R.id.title_desc:
+                actionSortBy(TrackContract.TrackData.TITLE, TrackAdapter.DESC);
+                setCheckedItem(item);
                 break;
 
-            case R.id.action_sort_by_artist:
+            case R.id.artist_asc:
                 actionSortBy(TrackContract.TrackData.ARTIST, TrackAdapter.ASC);
+                setCheckedItem(item);
+                break;
+            case R.id.artist_desc:
+                actionSortBy(TrackContract.TrackData.ARTIST, TrackAdapter.DESC);
+                setCheckedItem(item);
                 break;
 
-            case R.id.action_sort_by_album:
+            case R.id.album_asc:
                 actionSortBy(TrackContract.TrackData.ALBUM, TrackAdapter.ASC);
+                setCheckedItem(item);
+                break;
+            case R.id.album_desc:
+                actionSortBy(TrackContract.TrackData.ALBUM, TrackAdapter.DESC);
+                setCheckedItem(item);
                 break;
         }
 
         return super.onOptionsItemSelected(item);
     }
 
+    private void setCheckedItem(MenuItem item){
+        int id;
+        if(item != null) {
+            id = item.getItemId();
+            lastCheckedItem.setIcon(null);
+            lastCheckedItem = item;
+            lastCheckedItem.setIcon(ContextCompat.getDrawable(getApplicationContext(), R.drawable.ic_done_white));
+            SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+            SharedPreferences.Editor editor = preferences.edit();
+            Log.d("id_sort_item",id+"");
+            editor.putInt("key_default_sort",id);
+            editor.apply();
+            preferences = null;
+            editor = null;
+        }
+        else {
+            id = Settings.SETTING_SORT;
+            Log.d("el id", id + "");
+            lastCheckedItem = mMenu.findItem(id == 0  ? R.id.path_asc : id);
+            lastCheckedItem.setIcon(ContextCompat.getDrawable(getApplicationContext(), R.drawable.ic_done_white));
+        }
+
+        switch (id){
+            case R.id.path_asc:
+            case R.id.path_desc:
+            case 0:
+            case 1:
+                mMenuItemTitle.setIcon(null);
+                mMenuItemArtist.setIcon(null);
+                mMenuItemAlbum.setIcon(null);
+                mMenuItemPath.setIcon(ContextCompat.getDrawable(getApplicationContext(), R.drawable.ic_done_white));
+                break;
+
+            case R.id.title_asc:
+            case R.id.title_desc:
+                mMenuItemArtist.setIcon(null);
+                mMenuItemAlbum.setIcon(null);
+                mMenuItemPath.setIcon(null);
+                mMenuItemTitle.setIcon(ContextCompat.getDrawable(getApplicationContext(), R.drawable.ic_done_white));
+                break;
+
+            case R.id.artist_asc:
+            case R.id.artist_desc:
+                mMenuItemTitle.setIcon(null);
+                mMenuItemAlbum.setIcon(null);
+                mMenuItemPath.setIcon(null);
+                mMenuItemArtist.setIcon(ContextCompat.getDrawable(getApplicationContext(), R.drawable.ic_done_white));
+                break;
+
+            case R.id.album_asc:
+            case R.id.album_desc:
+                mMenuItemTitle.setIcon(null);
+                mMenuItemArtist.setIcon(null);
+                mMenuItemPath.setIcon(null);
+                mMenuItemAlbum.setIcon(ContextCompat.getDrawable(getApplicationContext(), R.drawable.ic_done_white));
+                break;
+        }
+
+    }
 
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
@@ -527,6 +625,10 @@ public class MainActivity extends AppCompatActivity
         else if(id == R.id.faq){
                 Intent intent = new Intent(this,QuestionsActivity.class);
                 startActivity(intent);
+        }
+        else if(id == R.id.about){
+            Intent intent = new Intent(this,ScrollingAboutActivity.class);
+            startActivity(intent);
         }
         else {
             ;
@@ -698,7 +800,7 @@ public class MainActivity extends AppCompatActivity
         }
 
         //Task is already executing
-        if(ServiceHelper.isServiceRunning(context.getApplicationContext(), FixerTrackService.CLASS_NAME)){
+        if(ServiceHelper.withContext(appContext).withService(FixerTrackService.CLASS_NAME).isServiceRunning()){
             return PROCESSING_TASK;
         }
 
@@ -717,7 +819,7 @@ public class MainActivity extends AppCompatActivity
         }
 
         //wait until processing finish
-        if(ServiceHelper.isServiceRunning(this,FixerTrackService.CLASS_NAME)){
+        if(ServiceHelper.withContext(getApplicationContext()).withService(FixerTrackService.CLASS_NAME).isServiceRunning()){
             showSnackBar(Snackbar.LENGTH_LONG,getString(R.string.processing_task),-1);
             return;
         }
@@ -757,7 +859,7 @@ public class MainActivity extends AppCompatActivity
         }
 
 
-        if(ServiceHelper.isServiceRunning(this,FixerTrackService.CLASS_NAME)){
+        if(ServiceHelper.withContext(getApplicationContext()).withService(FixerTrackService.CLASS_NAME).isServiceRunning()){
             showSnackBar(Snackbar.LENGTH_LONG,getString(R.string.processing_task),-1);
             return;
         }
@@ -766,6 +868,8 @@ public class MainActivity extends AppCompatActivity
         Collections.sort(mAudioItemList, sSorter);
         mAudioItemArrayAdapter.notifyDataSetChanged();
     }
+
+
 
     /**
      * This method starts a correction for a single item_list
@@ -788,7 +892,7 @@ public class MainActivity extends AppCompatActivity
         final AudioItem audioItem = mAudioItemArrayAdapter.getAudioItemByPosition(position); //mAudioItemArrayAdapter.getAudioItemByIdOrPath(NO_ID, absolutePath);
 
         //wait until service finish correction to this track
-        if(ServiceHelper.isServiceRunning(getApplicationContext(), FixerTrackService.CLASS_NAME)){
+        if(ServiceHelper.withContext(getApplicationContext()).withService(FixerTrackService.CLASS_NAME).isServiceRunning()){
             showSnackBar(Snackbar.LENGTH_SHORT, getString(R.string.processing_task), NO_ID);
             return;
         }
@@ -921,7 +1025,7 @@ public class MainActivity extends AppCompatActivity
      */
     private void selectItem(final long id, final View view, final int position){
         AudioItem audioItem = mAudioItemArrayAdapter.getAudioItemByPosition(position); //mAudioItemArrayAdapter.getAudioItemByIdOrPath(id, null);
-        Log.d("path", audioItem.getAbsolutePath());
+        Log.d("mMenuItemPath", audioItem.getAbsolutePath());
         if(!AudioItem.checkFileIntegrity(audioItem.getAbsolutePath())){
             showConfirmationDialog(audioItem.getAbsolutePath(),position);
             return;
@@ -1193,15 +1297,36 @@ public class MainActivity extends AppCompatActivity
 
         private String setDefaultOrder(){
 
-            switch (Settings.SETTING_DEFAULT_SORT){
-                case "1":
-                    return MediaStore.Audio.AudioColumns.TITLE + " ASC";
-                case "2":
-                    return MediaStore.Audio.AudioColumns.ARTIST + " ASC";
-                case "3":
-                    return MediaStore.Audio.AudioColumns.ALBUM + " ASC";
+            switch (Settings.SETTING_SORT){
+                case R.id.path_asc:
+                case 0:
+
+                    return MediaStore.Audio.AudioColumns.DATA + " COLLATE NOCASE ASC";
+                case R.id.path_desc:
+                case 1:
+
+                    return MediaStore.Audio.AudioColumns.DATA + " COLLATE NOCASE DESC";
+                case R.id.title_asc:
+
+                    return MediaStore.Audio.AudioColumns.TITLE + " COLLATE NOCASE ASC";
+                case R.id.title_desc:
+
+                    return MediaStore.Audio.AudioColumns.TITLE + " COLLATE NOCASE DESC";
+                case R.id.artist_asc:
+
+                    return MediaStore.Audio.AudioColumns.ARTIST + " COLLATE NOCASE ASC";
+                case R.id.artist_desc:
+
+                    return MediaStore.Audio.AudioColumns.ARTIST + " COLLATE NOCASE DESC";
+                case R.id.album_asc:
+
+                    return MediaStore.Audio.AudioColumns.ALBUM + " COLLATE NOCASE ASC";
+                case R.id.album_desc:
+
+                    return MediaStore.Audio.AudioColumns.ALBUM + " COLLATE NOCASE DESC";
                 default:
-                    return MediaStore.Audio.AudioColumns.DATA + " ASC";
+
+                    return MediaStore.Audio.AudioColumns.DATA + " COLLATE NOCASE ASC";
 
             }
         }
@@ -1328,6 +1453,7 @@ public class MainActivity extends AppCompatActivity
                     MediaStore.Audio.AlbumColumns.ALBUM ,
                     MediaStore.Audio.Media.DATA // absolute path to audio file
             };
+
             //get data from content provider
             //the last parameter sorts the data alphanumerically by the "DATA" field
             return getApplicationContext().getContentResolver().query(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
@@ -1437,7 +1563,7 @@ public class MainActivity extends AppCompatActivity
             String title = data.getString(1);
             String artist = data.getString(2);
             String album = data.getString(3);
-            String fullPath = Uri.parse(data.getString(4)).toString(); //MediaStore.Audio.Media.DATA column is the file path
+            String fullPath = Uri.parse(data.getString(4)).toString(); //MediaStore.Audio.Media.DATA column is the file mMenuItemPath
 
             ContentValues values = new ContentValues();
             values.put(TrackContract.TrackData.MEDIASTORE_ID,mediaStoreId);
@@ -1469,7 +1595,7 @@ public class MainActivity extends AppCompatActivity
      */
     public Action getIndexApiAction() {
         Thing object = new Thing.Builder()
-                .setName("SelectFolder Page") // TODO: Define a title for the content shown.
+                .setName("SelectFolder Page") // TODO: Define a mMenuItemTitle for the content shown.
                 // TODO: Make sure this auto-generated URL is correct.
                 .setUrl(Uri.parse("http://[ENTER-YOUR-URL-HERE]"))
                 .build();

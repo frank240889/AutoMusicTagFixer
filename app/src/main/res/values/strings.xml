@@ -220,5 +220,55 @@
     <string name="automatic">Automático</string>
     <string name="semiautomatic">Semiautomático</string>
     <string name="file_status_error_read">No se pueden leer las etiquetas del archivo.</string>
+    <string name="descendent">Descendente</string>
+    <string name="ascendent">Ascendente</string>
+    <string name="about">Sobre la app</string>
+    <string name="title_activity_about">Sobre la app</string>
+    <string name="developed_by">Desarrollada por</string>
+    <string name="developer">Dark Yellow Studios</string>
+    <string name="technologies_used">Esta aplicación hace uso de las siguientes librerías, tecnologías y recursos:</string>
+
+    <string-array name="questions">
+        <item>1. ¿Cómo funciona la aplicación?</item>
+        <item>2. ¿Por qué me pide acceder a mis fotos y demás contenido de mi smartphone?</item>
+        <item>3. ¿Cómo se usa?</item>
+        <item>4. ¿Qué es el modo automático?</item>
+        <item>5. ¿Qué es el modo semi automático?</item>
+        <item>6. ¿Qué es el modo manual?</item>
+        <item>7. ¿Qué tipos de archivo de audio puedo corregír?</item>
+        <item>8. ¿Qué costo tiene la aplicación?</item>
+        <item>9. ¿Por qué la información de la lista no coincide con la del detalle de cada canción?</item>
+        <item>10. ¿Cuántas canciones puedo corregir?</item>
+        <item>11. ¿Por qué solo puedo editar 8 etiquetas(incluyendo la carátula)?</item>
+        <item>12. La aplicación no detecta mis canciones</item>
+        <item>13. La aplicación no encuentra los datos de mi canción o los encontrados probablemente no son correctos.</item>
+        <item>14. La aplicación no encuentra la carátula de mi canción.</item>
+        <item>15. ¿Cuánto tarda en identificar una canción?</item>
+        <item>16. ¿Qué pasa si cierro la aplicación mientras estoy corrigiendo varias canciones?</item>
+    </string-array>
+    <string-array name="answers">
+        <item>Para cada canción que tienes en tu smartphone, genera una huella digital del audio, posteriormente, consulta en un base de datos esa huella y obtiene la información correspondiente de la canción.</item>
+        <item>Debido a que las canciones se almacenan en la memoria, ya sea interna o externa de tu smartphone, es necesario el permiso para poder leerlas; es el único permiso requerido, de lo contrario, la aplicación no tendrá funcionalidad útil.</item>
+        <item>Solo toca un elemento de la lista y elige el modo de corrección, o si prefieres, puedes chequear los que quieras corregir y posteriormente oprimir el botón amarillo de la esquina inferior derecha para corregir esas canciones en modo automático.</item>
+        <item>Es el modo en el cual tu chequeas las canciones que quieres corregir, oprimes el botón amarillo, y al aplicación corrige por ti cada canción, incluido el nombre del archivo(si lo seleccionaste en las opciones de configuración), no tienes que hacer nada mas que esperar a que termine. Ten en cuenta que este modo no requiere tu intervención, por lo que si seleccionaste accidentalmente el renombrado de archivos, se aplicará para todos los que se esten corrigiendo en ese momento.</item>
+        <item>Este modo obtendrá la información de la canción, pero no modificará nada hasta que tu apliques los cambios. También te permite buscar solo la carátula de la canción. Toca la caratula en cada elemento de la lista para más opciones.</item>
+        <item>El modo manual te permite corregir por ti mismo las etiquetas de las canciones, incluida la caŕatula, si es que tienes la información a la mano.</item>
+        <item>Actualmente Mp3, Mp4 (Mp4 audio, M4a y M4p audio) Ogg Vorbis, Flac, Wma y limitado soporte a Wav y Real audio, que son los que soporta la librería JAudioTagger. Aunque podrían ser menos formatos ya que Android no soporta algunos tipos de audio de manera nativa, por ejemplo Wma; en futuras actualizaciones se soportará la totalidad de tipos de archivo.</item>
+        <item>Ninguno, pero esta sujeto a a un limite de corrección de archivos.</item>
+        <item>Por rendimiento y velocidad de apertura, la aplicación lee la información de cada archivo de la MediaStore, por lo tanto, la información mostrada de cada elemento en la lista es la que se obtiene de esta base de
+        datos, y debido al mencanismo de obtención de información entre Android y el la pantalla que muestra información detallada de cada canción, la información podria variar un poco, pero al final la información que editas en la aplicación es la correcta.</item>
+        <item>Debido a que la app utiliza una licencia gratis del servicio de reconocimiento, la cantidad de canciones que puedes corregir es variable, desde unas cuantas hasta probablemente miles.</item>
+        <item>Son más de 35 etiquetas estándar, una cantidad considerable y fuera del alcance de esta aplicación, por lo que se ofrece corrección a las más importantes.</item>
+        <item>Puede deberse a que no se concedio el permiso de acceso al almcenamiento ó el tipo de audio no es uno soportado por Android y/ó la librería ó el archivo no tiene una extension en el nombre.</item>
+        <item>La aplicación consulta una base de datos con información de 200 millones de canciones (http://www.gracenote.com/music/music-recognition/), por lo que es probable
+        que la canción que estas tratando de corregir, haya sido descargada de una fuente de archivos de baja calidad y la huella digital generada no es la correcta, intenta descargar con mayor
+        calidad tus canciones o editala manualmente.</item>
+        <item>Revisa en las opciones de Configuración, en Consumo de datos y selecciona otro tamaño de carátula, no todos los tamaños están disponibles para cada canción.</item>
+        <item>Depende de la conexión a la red, si es buena, tardará entre unos 5 a 10 segundos; si la conexión es lenta puede demorar más.</item>
+        <item>La aplicación puede funcionar en segundo plano, pero tienes que activar esta opcion en la configuración, y asi la corrección seguirá hasta que termine o la detengas.
+        Si esta opción no esta activa se cancelará el proceso de corrección cuando la cierres.</item>
+    </string-array>
+    <string name="title_activity_scrolling_about">ScrollingAboutActivity</string>
+
 
 </resources>

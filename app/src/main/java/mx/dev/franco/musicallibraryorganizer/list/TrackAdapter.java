@@ -435,7 +435,7 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
                     break;
             }
 
-            if(mSortType == ASC) {
+            if(mSortType == DESC) {
                 str1ToCompare = str1;
                 str2ToCompare = str2;
             }

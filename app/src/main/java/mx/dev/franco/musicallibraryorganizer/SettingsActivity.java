@@ -189,9 +189,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity{
                 Settings.SETTING_REPLACE_STRANGE_CHARS_MANUAL_MODE = sharedPreferences.getBoolean(key,true);
                 Log.d(key, Settings.SETTING_REPLACE_STRANGE_CHARS_MANUAL_MODE +"");
                 break;
-            case "key_default_sort":
-                Settings.SETTING_DEFAULT_SORT = sharedPreferences.getString(key, "0");
-                break;
             case "key_use_embed_player":
                 Settings.SETTING_USE_EMBED_PLAYER = sharedPreferences.getBoolean(key,true);
                 break;
@@ -219,8 +216,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity{
             // to their values. When their values change, their summaries are
             // updated to reflect the new value, per the Android Design
             // guidelines.
-
-            bindPreferenceSummaryToValue(findPreference("key_default_sort"));
         }
 
         @Override

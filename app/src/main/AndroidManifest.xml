@@ -19,8 +19,8 @@
         android:theme="@style/AppTheme">
         <activity
             android:name=".SplashActivity"
-            android:screenOrientation="portrait"
             android:configChanges="orientation|screenSize"
+            android:screenOrientation="portrait"
             android:theme="@style/SplashTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -41,9 +41,9 @@
         <activity
             android:name=".QuestionsActivity"
             android:configChanges="orientation|screenSize"
-            android:parentActivityName=".MainActivity"
             android:label="@string/faq"
-            android:theme="@style/QuestionsTheme" >
+            android:parentActivityName=".MainActivity"
+            android:theme="@style/QuestionsTheme">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".MainActivity" />
@@ -57,6 +57,16 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".MainActivity" />
         </activity>
+
+        <activity
+            android:name=".ScrollingAboutActivity"
+            android:label="@string/title_activity_scrolling_about"
+            android:parentActivityName=".MainActivity"
+            android:theme="@style/AboutTheme">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="mx.dev.franco.musicallibraryorganizer.MainActivity" />
+        </activity>
         <activity
             android:name=".SettingsActivity"
             android:configChanges="orientation|screenSize"
@@ -67,13 +77,12 @@
         <provider
             android:name="android.support.v4.content.FileProvider"
             android:authorities="mx.dev.franco.musicallibraryorganizer.fileProvider"
-            android:grantUriPermissions="true"
-            android:exported="false">
+            android:exported="false"
+            android:grantUriPermissions="true">
             <meta-data
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
-
 
         <!-- We need this service for checking internet connection and handling the gracenote api initialization -->
         <service

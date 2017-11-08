@@ -390,7 +390,16 @@ public class FixerTrackService extends Service {
                 }
                 else if(status.equals("kMusicIdFileCallbackStatusError") || status.equals("kMusicIdFileCallbackStatusProcessingError")){
                     Log.d("error while processing","try again");
-                    onCancelTask(gnMusicIdFileInfo);
+                    if (!mFromEditMode){
+                        Intent intentUpdateUI = new Intent();
+                        intentUpdateUI.setAction(Constants.Actions.ACTION_SET_AUDIOITEM_PROCESSING);
+                        intentUpdateUI.putExtra(Constants.MEDIASTORE_ID, mId);
+                        mLocalBroadcastManager.sendBroadcastSync(intentUpdateUI);
+                        ContentValues processingValue = new ContentValues();
+                        processingValue.put(TrackContract.TrackData.IS_PROCESSING, true);
+                        processingValue.put(TrackContract.TrackData.IS_SELECTED,false);
+                        mDataTrackDbHelper.updateData(mId, processingValue);
+                    }
                 }
 
 

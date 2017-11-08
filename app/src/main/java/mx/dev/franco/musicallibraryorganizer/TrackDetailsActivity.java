@@ -290,7 +290,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
     }
 
     /**
-     * Create a general mSnackbar for reuse
+     * Create a general snackbar for reuse
      */
 
     private void createSnackBar() {
@@ -303,7 +303,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
 
     /**
      * Shows the mSnackbar with the params received
-     * @param duration how long is displayed the mSnackbar
+     * @param duration how long is displayed the snackbar
      * @param msg message to display
      * @param action action to execute
      * @param path absolute path of file
@@ -616,7 +616,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
     }
 
     private void dismiss() {
-        if(ServiceHelper.isServiceRunning(getApplicationContext(), FixerTrackService.CLASS_NAME)) {
+        if(ServiceHelper.withContext(getApplicationContext()).withService(FixerTrackService.CLASS_NAME).isServiceRunning()) {
             Intent intent = new Intent(this, FixerTrackService.class);
             stopService(intent);
         }
@@ -1726,7 +1726,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                     //Here we update the data in case there have had changes
                     //if not, no case to write any mTag
                     if (hasToUpdate) {
-                        if(mMimeType.equals("audio/mpeg_mp3") && mExtension.equals("mp3") && ((MP3File)mAudioTaggerFile).hasID3v1Tag()){
+                        if((mMimeType.equals("audio/mpeg_mp3") || mMimeType.equals("audio/mpeg")) && mExtension.equals("mp3") && ((MP3File)mAudioTaggerFile).hasID3v1Tag()){
                             //remove old version of ID3 tags
                             Log.d("removed ID3v1","remove ID3v1");
                             ((MP3File) mAudioTaggerFile).delete( ((MP3File)mAudioTaggerFile).getID3v1Tag() );
@@ -1855,7 +1855,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                     //Here we update the data in case there have had changes
                     //if not, no case to write any mTag
                     if (hasChanges) {
-                        if(mMimeType.equals("audio/mpeg_mp3") && mExtension.equals("mp3") && ((MP3File)mAudioTaggerFile).hasID3v1Tag()){
+                        if((mMimeType.equals("audio/mpeg_mp3") || mMimeType.equals("audio/mpeg")) && mExtension.equals("mp3") && ((MP3File)mAudioTaggerFile).hasID3v1Tag()){
                             //remove old version of ID3 tags
                             Log.d("removed ID3v1","remove ID3v1");
                             ((MP3File) mAudioTaggerFile).delete( ((MP3File)mAudioTaggerFile).getID3v1Tag() );
@@ -2071,7 +2071,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
     @Override
     protected void onPause(){
         super.onPause();
-        if(!ServiceHelper.isServiceRunning(getApplicationContext(), FixerTrackService.CLASS_NAME))
+        if(!ServiceHelper.withContext(getApplicationContext()).withService(FixerTrackService.CLASS_NAME).isServiceRunning())
             mLocalBroadcastManager.unregisterReceiver(mReceiver);
     }
 

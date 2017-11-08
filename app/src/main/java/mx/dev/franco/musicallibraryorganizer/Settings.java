@@ -25,8 +25,8 @@ public class Settings {
     //characters like "$" or "#", these automatically will be replace by empty character if this setting
     //is true, otherwise it will be shown an alert indicating that data entered by user is not valid
     public static boolean SETTING_REPLACE_STRANGE_CHARS_MANUAL_MODE = true;
-    //default sort is by location
-    public static String SETTING_DEFAULT_SORT = "0";
+    //default sort is by ascendant location
+    public static int SETTING_SORT = 0;
     public static boolean SETTING_USE_EMBED_PLAYER = true;
     //Determine the size of downloaded cover art, default value is not download cover art.
     public static GnImageSize SETTING_SIZE_ALBUM_ART = GnImageSize.kImageSizeUnknown;

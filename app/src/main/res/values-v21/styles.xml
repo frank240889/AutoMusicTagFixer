@@ -24,16 +24,23 @@
         <item name="android:windowTranslucentNavigation">true</item>
     </style>
 
-    <!--Style details track dialog activity-->
+    <!--Style details track details activity-->
     <style name="DetailsTrackDialogTheme" parent="AppTheme">
         <item name="android:windowTranslucentNavigation">false</item>
     </style>
 
     <!--Style details track dialog activity-->
+    <style name="AboutTheme" parent="AppTheme">
+        <item name="android:windowTranslucentNavigation">false</item>
+    </style>
+
+    <!--Style details questions activity-->
     <style name="QuestionsTheme" parent="AppTheme">
         <item name="android:colorAccent">@color/primaryColor</item>
         <item name="android:textViewStyle">@style/RobotoTextViewStyle</item>
     </style>
+
+
 
     <!--style name="AppTheme.NoActionBar" parent="Theme.AppCompat.NoActionBar">
         <item name="windowActionBar">false</item>
@@ -46,6 +53,10 @@
         <item name="color">@color/true_black</item>
     </style-->
 
+    <style name="MyApp.ActionBarTheme" parent="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
+        <item name="android:colorControlHighlight">@color/primaryLightColor</item>
+    </style>
+
     <style name="SettingsStyle" parent="Theme.AppCompat">
         <item name="android:textColorPrimary">@android:color/primary_text_dark</item>
         <item name="android:colorControlActivated">@color/primaryColor</item>
@@ -54,6 +65,7 @@
         <item name="android:textViewStyle">@style/RobotoTextViewStyle</item>
         <item name="android:colorPrimary">@color/primaryColor</item>
         <item name="android:colorControlHighlight">@color/primaryLightColor</item>
+        <item name="actionBarTheme">@style/MyApp.ActionBarTheme</item>
     </style>
 
     <style name="ToolbarStyle" parent="@style/ThemeOverlay.AppCompat.Light">

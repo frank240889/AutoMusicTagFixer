@@ -10,10 +10,28 @@ import static android.content.Context.ACTIVITY_SERVICE;
  */
 
 public class ServiceHelper {
-    public static boolean isServiceRunning(Context context, String serviceName) {
-        ActivityManager manager = (ActivityManager) context.getSystemService(ACTIVITY_SERVICE);
+    private static ServiceHelper sServiceHelper;
+    private String mService;
+    private Context mContext;
+    private ServiceHelper(Context context){
+        mContext = context;
+    }
+
+    public static ServiceHelper withContext(Context context){
+        if(sServiceHelper == null)
+            sServiceHelper = new ServiceHelper(context);
+        return sServiceHelper;
+    }
+
+    public ServiceHelper withService(String service){
+        mService = service;
+        return this;
+    }
+
+    public boolean isServiceRunning() {
+        ActivityManager manager = (ActivityManager) mContext.getSystemService(ACTIVITY_SERVICE);
         for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)){
-            if(serviceName.equals(service.service.getClassName())) {
+            if(mService.equals(service.service.getClassName())) {
                 return true;
             }
         }

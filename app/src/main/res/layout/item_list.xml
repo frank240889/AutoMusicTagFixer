@@ -39,6 +39,7 @@
             android:layout_centerInParent="false"
             android:layout_marginStart="8dp"
             android:layout_toEndOf="@+id/coverArt"
+            android:layout_toStartOf="@+id/checkBoxTrack"
             android:drawableStart="@drawable/ic_music_note_white_24px"
             android:ellipsize="end"
             android:gravity="center_vertical"
@@ -48,11 +49,12 @@
 
         <TextView
             android:id="@+id/artist_name"
-            android:layout_width="260dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignStart="@+id/track_name"
             android:layout_below="@+id/track_name"
             android:layout_toEndOf="@+id/coverArt"
+            android:layout_toStartOf="@+id/checkBoxTrack"
             android:drawableStart="@drawable/ic_account_circle_white_24px"
             android:ellipsize="end"
             android:gravity="center_vertical"
@@ -68,6 +70,7 @@
             android:layout_alignStart="@+id/artist_name"
             android:layout_below="@+id/artist_name"
             android:layout_toEndOf="@+id/coverArt"
+            android:layout_toStartOf="@+id/checkBoxTrack"
             android:drawableStart="@drawable/ic_album_white_24px"
             android:ellipsize="end"
             android:gravity="center_vertical"
@@ -92,7 +95,6 @@
             android:layout_centerInParent="true"
             android:layout_centerVertical="false"
             android:layout_marginEnd="8dp"
-            android:layout_marginTop="11dp"
             android:checked="false"
             android:clickable="true"
             android:focusable="true" />
