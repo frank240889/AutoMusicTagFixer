@@ -2,7 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     style="?android:windowNoTitle"
-    android:id="@+id/content4"
+    android:id="@+id/content5"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
         <RelativeLayout
@@ -14,11 +14,11 @@
                 android:id="@+id/imageView5"
                 android:layout_width="144dp"
                 android:layout_height="144dp"
-                android:layout_alignParentTop="true"
-                android:layout_centerHorizontal="true"
                 android:layout_marginTop="50dp"
-                android:src="@drawable/ic_touch_app_white_24px"
-                app:srcCompat="@drawable/ic_touch_app_white_24px" />
+                android:src="@drawable/ic_check_box_white_24px"
+                app:srcCompat="@drawable/ic_check_box_white_24px"
+                android:layout_alignParentTop="true"
+                android:layout_centerHorizontal="true" />
 
             <TextView
                 style="?android:textAppearanceMedium"
@@ -29,7 +29,7 @@
                 android:fontFamily="sans-serif-light"
                 android:lineSpacingMultiplier="1.2"
                 android:padding="16dp"
-                android:text="@string/step_4"
+                android:text="@string/step_5"
                 android:textAlignment="center"
                 android:textAllCaps="false" />
 

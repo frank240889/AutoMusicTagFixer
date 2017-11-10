@@ -1042,7 +1042,7 @@ public class MainActivity extends AppCompatActivity
 
                     boolean isChecked = data.getInt(data.getColumnIndexOrThrow(TrackContract.TrackData.IS_SELECTED)) != 0;
 
-                    AudioItem audioItem = mAudioItemArrayAdapter.getAudioItemByPosition(position); //mAudioItemArrayAdapter.getAudioItemByIdOrPath(id, "");
+                    AudioItem audioItem = mAudioItemArrayAdapter.getAudioItemByIdOrPath(id, "");
 
                     newValues = new ContentValues();
                     if(isChecked) {

@@ -16,8 +16,8 @@
                 android:layout_height="144dp"
                 android:layout_centerHorizontal="true"
                 android:layout_marginTop="50sp"
-                android:src="@drawable/ic_edit_white_24px"
-                app:srcCompat="@drawable/ic_edit_white_24px" />
+                android:src="@drawable/ic_search_white_24px"
+                app:srcCompat="@drawable/ic_search_white_24px" />
 
             <TextView
                 style="?android:textAppearanceMedium"
@@ -28,7 +28,7 @@
                 android:fontFamily="sans-serif-light"
                 android:lineSpacingMultiplier="1.2"
                 android:padding="16dp"
-                android:text="@string/step_2_detail"
+                android:text="@string/step_3"
                 android:textAlignment="center"
                 android:textAllCaps="false" />
         </RelativeLayout>

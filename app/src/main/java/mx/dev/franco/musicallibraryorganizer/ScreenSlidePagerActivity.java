@@ -27,7 +27,7 @@ public class ScreenSlidePagerActivity extends FragmentActivity {
     /**
      * The number of pages (wizard steps) to show.
      */
-    private static final int NUM_PAGES = 4;
+    private static final int NUM_PAGES = 5;
 
     /**
      * The pager widget, which handles animation and allows swiping horizontally to access previous
@@ -143,16 +143,6 @@ public class ScreenSlidePagerActivity extends FragmentActivity {
     @Override
     public void onStart(){
         super.onStart();
-        //View decorView = getWindow().getDecorView();
-// Hide both the navigation bar and the status bar.
-// SYSTEM_UI_FLAG_FULLSCREEN is only available on Android 4.1 and higher, but as
-// a general rule, you should design your app to hide the status bar whenever you
-// hide the navigation bar.
-        //int uiOptions = View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_LAYOUT_STABLE | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
-        //decorView.setSystemUiVisibility(uiOptions);
-        //getWindow().setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS, Win);
-
-
     }
 
     private void onClickLastPager(){
@@ -189,8 +179,8 @@ public class ScreenSlidePagerActivity extends FragmentActivity {
             else if(position == 3) {
                 return new ScreenSlidePageFragment4();
             }
-            else{
-                return new ScreenSlidePageFragment();
+            else {
+                return new ScreenSlidePageFragment5();
             }
 
         }

@@ -250,7 +250,7 @@
                     android:layout_alignBottom="@+id/resolution"
                     android:layout_marginStart="10dp"
                     android:layout_toEndOf="@+id/resolution"
-                    android:drawableStart="@drawable/ic_av_timer_white_24px"
+                    android:drawableStart="@drawable/ic_equalizer_white_24px"
                     android:gravity="center_vertical"
                     android:singleLine="true"
                     android:text="0 Hz"

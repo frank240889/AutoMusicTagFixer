@@ -33,7 +33,6 @@ import com.gracenote.gnsdk.GnMusicIdFile;
 import com.gracenote.gnsdk.GnMusicIdFileCallbackStatus;
 import com.gracenote.gnsdk.GnMusicIdFileInfo;
 import com.gracenote.gnsdk.GnMusicIdFileInfoManager;
-import com.gracenote.gnsdk.GnMusicIdFileProcessType;
 import com.gracenote.gnsdk.GnMusicIdFileResponseType;
 import com.gracenote.gnsdk.GnResponseAlbums;
 import com.gracenote.gnsdk.GnResponseDataMatches;
@@ -195,11 +194,11 @@ public class FixerTrackService extends Service {
                 .setColor(ContextCompat.getColor(getApplicationContext(),R.color.grey_800))
                 .setTicker(getString(R.string.app_name))
                 .setContentText(msg != null ? msg : getString(R.string.fixing_task))
-                .setSmallIcon(R.mipmap.ic_launcher)
+                .setSmallIcon(R.drawable.ic_stat_name)
                 .setLargeIcon(Bitmap.createScaledBitmap(icon, 128, 128, false))
                 .setContentIntent(pendingIntent)
                 .setOngoing(true)
-                .addAction(R.drawable.ic_help_black_24dp,"Detener", pendingStopIntent)
+                .addAction(R.drawable.ic_stat_name,"Detener", pendingStopIntent)
                 .build();
 
         startForeground(R.string.app_name,notification);
@@ -302,7 +301,13 @@ public class FixerTrackService extends Service {
     public void startTrackId(){
         //Log.d("starting track id", "starting");
         try {
-            mGnMusicIdFile.doTrackId(GnMusicIdFileProcessType.kQueryReturnSingle,GnMusicIdFileResponseType.kResponseAlbums);
+            //if(mNumberSelected <= 1){
+            //    mGnMusicIdFile.doTrackId(GnMusicIdFileProcessType.kQueryReturnSingle, GnMusicIdFileResponseType.kResponseAlbums);
+            //}
+            //else {
+                mGnMusicIdFile.doLibraryId(GnMusicIdFileResponseType.kResponseAlbums);
+            //}
+
         } catch (GnException e) {
             e.printStackTrace();
         }
@@ -314,13 +319,13 @@ public class FixerTrackService extends Service {
         //ACTION_COMPLETE_TASK be reached,
         //finishTaskByUser will be false,
         //meaning that is not necessary call cancel method for every GnMusicIdFile.
+
         if(finishTaskByUser){
             if(sGnMusicIdFileList != null) {
                 Iterator<GnMusicIdFile> iterator = sGnMusicIdFileList.iterator();
                 while (iterator.hasNext()) {
                     Log.d("cancel gn", "cancelling...");
                     iterator.next().cancel();
-                    iterator.remove();
                 }
             }
         }
@@ -364,14 +369,15 @@ public class FixerTrackService extends Service {
             }
             //for every callback check first is user
             //did not cancel the task
-            if(iGnCancellable.isCancelled()){
-                onCancelTask(gnMusicIdFileInfo);
-                return;
-            }
+
 
             if (mGnStatusToDisplay.containsKey(status)) {
                 if(status.equals("kMusicIdFileCallbackStatusProcessingBegin")){
                     try {
+                        if(iGnCancellable.isCancelled() ){
+                            onCancelTask(gnMusicIdFileInfo);
+                            return;
+                        }
                         mPath = gnMusicIdFileInfo.fileName();
                         mId = Long.parseLong(gnMusicIdFileInfo.mediaId());
                         //update UI to show progress bar in current item list only in Main activity
@@ -399,6 +405,10 @@ public class FixerTrackService extends Service {
                         processingValue.put(TrackContract.TrackData.IS_PROCESSING, true);
                         processingValue.put(TrackContract.TrackData.IS_SELECTED,false);
                         mDataTrackDbHelper.updateData(mId, processingValue);
+                        if(iGnCancellable.isCancelled()){
+                            onCancelTask(gnMusicIdFileInfo);
+                            return;
+                        }
                     }
                 }
 
@@ -410,6 +420,11 @@ public class FixerTrackService extends Service {
             @Override
         public void gatherFingerprint(GnMusicIdFileInfo fileInfo, long l, long l1, IGnCancellable iGnCancellable) {
             Log.d("gatherFingerprint", "gatherFingerprint");
+                if(iGnCancellable.isCancelled()){
+                    onCancelTask(fileInfo);
+                    return;
+                }
+
             //Callback to inform that fingerprint was retrieved from audiotrack.
                 try {
                     if (GnAudioFile.isFileFormatSupported(fileInfo.fileName())) {
@@ -428,11 +443,18 @@ public class FixerTrackService extends Service {
         //This method is not need because we provide some metadata before
         @Override
         public void gatherMetadata(GnMusicIdFileInfo gnMusicIdFileInfo, long currentFile, long totalFiles, IGnCancellable iGnCancellable) {
+            Log.d("cancelled8",iGnCancellable.isCancelled()+"");
             Log.d("gatherMetadata", "gatherMetadata");
         }
 
         @Override
         public void musicIdFileAlbumResult(GnResponseAlbums gnResponseAlbums, long currentAlbum, long totalAlbums, IGnCancellable iGnCancellable) {
+            Log.d("cancelled1",iGnCancellable.isCancelled()+"");
+            if(iGnCancellable.isCancelled()){
+                Log.d("oncanceltask1", "oncanceltask");
+                onCancelTask(mCurrentId);
+                return;
+            }
             String title = "";
             String artist = "";
             String album = "";
@@ -573,12 +595,22 @@ public class FixerTrackService extends Service {
             Log.d("NUMBER_BG", number);
             Log.d("YEAR_BG", year);
             Log.d("GENRE_BG", genre);*/
-
-            setNewAudioTags(title, artist, album, cover, number, year, genre);
+            Log.d("cancelled2",iGnCancellable.isCancelled()+"");
+            if(iGnCancellable.isCancelled()){
+                Log.d("oncanceltask2", "oncanceltask2");
+                onCancelTask(mId);
+                return;
+            }
+            setNewAudioTags(iGnCancellable, title, artist, album, cover, number, year, genre);
         }
 
-        private void setNewAudioTags(String... tags){
-
+        private void setNewAudioTags(IGnCancellable iGnCancellable, String... tags){
+            Log.d("cancelled3",iGnCancellable.isCancelled()+"");
+            if(iGnCancellable.isCancelled()){
+                Log.d("oncanceltask3", "oncanceltask3");
+                onCancelTask(mId);
+                return;
+            }
             //was found song name?
             boolean dataTitle = !tags[0].equals("");
             //was found artist?
@@ -593,7 +625,12 @@ public class FixerTrackService extends Service {
             boolean dataYear = !tags[5].equals("");
             //was found mNewGenre?
             boolean dataGenre = !tags[6].equals("");
-
+            Log.d("cancelled4",iGnCancellable.isCancelled()+"");
+            if(iGnCancellable.isCancelled()){
+                Log.d("oncanceltask4", "oncanceltask4");
+                onCancelTask(mId);
+                return;
+            }
             //Is it a request from MainActivity?
             if(!mFromEditMode) {
                 ContentValues newTags = new ContentValues();
@@ -704,6 +741,12 @@ public class FixerTrackService extends Service {
                         Log.d("removed ID3v1","remove ID3v1");
                         if(((MP3File) audioTaggerFile).hasID3v1Tag())
                             ((MP3File) audioTaggerFile).delete( ((MP3File)audioTaggerFile).getID3v1Tag() );
+                    }
+                    Log.d("cancelled5",iGnCancellable.isCancelled()+"");
+                    if(iGnCancellable.isCancelled()){
+                        Log.d("oncanceltask5", "oncanceltask5");
+                        onCancelTask(mId);
+                        return;
                     }
 
                     //Update the file meta tags, this changes in tags
@@ -902,7 +945,12 @@ public class FixerTrackService extends Service {
 
                 stopSelf();
             }
-
+            Log.d("cancelled6",iGnCancellable.isCancelled()+"");
+            if(iGnCancellable.isCancelled()) {
+                Log.d("oncanceltask6", "oncanceltask6");
+                onCancelTask(mCurrentId);
+                return;
+            }
             clearValues();
         }
 
@@ -918,23 +966,34 @@ public class FixerTrackService extends Service {
         }
 
         private void onCancelTask(GnMusicIdFileInfo fileInfo){
+            Log.d("oncanceltask", "oncanceltask");
                 try {
                     long currentId = Long.parseLong(fileInfo.mediaId());
-                    if(!mFromEditMode) {
-                        ContentValues values = new ContentValues();
-                        values.put(TrackContract.TrackData.IS_PROCESSING, false);
-                        mDataTrackDbHelper.updateData(currentId, values);
-                        values.clear();
-                        values = null;
-                    }
-                    Intent intentActionDone = new Intent();
-                    intentActionDone.putExtra(Constants.MEDIASTORE_ID, currentId);
-                    intentActionDone.setAction(Constants.Actions.ACTION_CANCEL_TASK);
-                    boolean sent = mLocalBroadcastManager.sendBroadcast(intentActionDone);
-                    Log.d("was_Sent",sent+"");
+                    onCancelTask(currentId);
+                    Log.d("oncanceltask7", "oncanceltask7");
                 } catch (GnException e1) {
                     e1.printStackTrace();
                 }
+                finally {
+                    stopSelf();
+                }
+
+        }
+
+        private void onCancelTask(long currentId){
+
+            if(!mFromEditMode) {
+                ContentValues values = new ContentValues();
+                values.put(TrackContract.TrackData.IS_PROCESSING, false);
+                mDataTrackDbHelper.updateData(currentId, values);
+                values.clear();
+                values = null;
+            }
+            Intent intentActionDone = new Intent();
+            intentActionDone.putExtra(Constants.MEDIASTORE_ID, currentId);
+            intentActionDone.setAction(Constants.Actions.ACTION_CANCEL_TASK);
+            mLocalBroadcastManager.sendBroadcastSync(intentActionDone);
+
             stopSelf();
         }
 

@@ -5,10 +5,11 @@
     <string name="nextSlide">SIGUIENTE</string>
 
     <string name="welcome">¡Bienvenido!</string>
-    <string name="description"> AutoMusicTagFixer corrige las canciones por ti, incluido el nombre del archivo, título de canción, artista, álbum, etc, incluso la imagen del álbum.</string>
-    <string name="step_1_detail">No tienes que seleccionar ninguna carpeta en la que buscar canciones, la aplicación encuentra automaticamente todas tus canciones en tu smartphone.</string>
-    <string name="step_2_detail">Puedes corregir las canciones en modo manual, semiautomático o automático.</string>
-    <string name="step_3_detail">O si prefieres, en la pantalla principal, selecciona varias canciones y pulsa el botón amarillo para que la aplicación las corrija automaticamente, una tras otra sin que hagas nada más que esperar.</string>
+    <string name="step_1">AutoMusicTagFixer te ayuda a mantener más organizada tu biblioteca musical.</string>>
+    <string name="step_2">¿Cómo te ayuda? Corrigiendo el nombre del archivo, título de canción, artista, álbum, etc, incluso la imagen del álbum.</string>
+    <string name="step_3">Solo déjala buscar y enlistar las canciones de tu smartphone.</string>
+    <string name="step_4">Luego toca una cancion para corregirla en modo manual, semiautomático o automático.</string>
+    <string name="step_5">O selecciona varias canciones y pulsa el botón amarillo para corregirlas automaticamente, una tras otra sin que hagas algo más, solo esperar.</string>
     <string name="ok_button_last_slide">ENTENDIDO</string>
 
 
