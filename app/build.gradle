@@ -5,6 +5,10 @@
  */
 
 apply plugin: 'com.android.application'
+apply plugin: 'io.fabric'
+repositories {
+    maven { url 'https://maven.fabric.io/public' }
+}
 
 /**
  * The android {} block is where you configure all your Android-specific
@@ -59,6 +63,10 @@ android {
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
+
+        debug {
+            ext.enableCrashlytics = false
+        }
     }
 
     /**
@@ -104,8 +112,6 @@ dependencies {
     compile files('libs/gnsdk_helpers.jar')
     compile files('libs/jaudiotagger-2.2.4.jar')
 
-    /*compile 'com.google.firebase:firebase-crash:10.0.1'*/
-
     /*compile 'com.google.firebase:firebase-messaging:10.0.1'*/
     compile 'com.android.support:appcompat-v7:25.3.1'
     compile 'com.android.support:design:25.3.1'
@@ -114,6 +120,10 @@ dependencies {
     compile 'com.android.support:support-v4:25.3.1'
     compile 'com.google.android.gms:play-services-appindexing:9.8.0'
     compile 'com.android.support.constraint:constraint-layout:1.0.2'
+    compile('com.crashlytics.sdk.android:crashlytics:2.7.1@aar') {
+        transitive = true;
+    }
+
     testCompile 'junit:junit:4.12'
     annotationProcessor 'com.github.bumptech.glide:compiler:4.0.0-RC1'
 }

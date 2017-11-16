@@ -55,14 +55,16 @@ public class Constants {
     }
 
     public static class State{
-        public static final String BEGIN_PROCESSING = "begin_processing";
-        public static final String QUERYING_INFO = "begin_processing";
-        public static final String COMPLETE_IDENTIFICATION = "begin_processing";
+        public static final String BEGIN_PROCESSING = "kMusicIdFileCallbackStatusProcessingBegin";
+        public static final String QUERYING_INFO = "kMusicIdFileCallbackStatusFileInfoQuery";
+        public static final String COMPLETE_IDENTIFICATION = "kMusicIdFileCallbackStatusProcessingComplete";
+        public static final String STATUS_ERROR = "kMusicIdFileCallbackStatusError";
+        public static final String STATUS_PROCESSING_ERROR = "kMusicIdFileCallbackStatusProcessingError";
 
-        public static final String BEGIN_PROCESSING_MSG = "Iniciando corrección…";
-        public static final String QUERYING_INFO_MSG = "Solicitando información de canción…";
-        public static final String COMPLETE_IDENTIFICATION_MSG = "Identificación completa.";
+        public static final String BEGIN_PROCESSING_MSG = "Iniciando corrección";
+        public static final String QUERYING_INFO_MSG = "Solicitando información";
+        public static final String COMPLETE_IDENTIFICATION_MSG = "Identificación completa";
         public static final String STATUS_ERROR_MSG = "Error";
-        public static final String STATUS_PROCESSING_ERROR_MSG = "Error al procesar archivvo";
+        public static final String STATUS_PROCESSING_ERROR_MSG = "Error al procesar ";
     }
 }

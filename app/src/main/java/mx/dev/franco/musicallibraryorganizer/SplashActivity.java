@@ -54,7 +54,7 @@ public class SplashActivity extends AppCompatActivity{
         Settings.SETTING_OVERWRITE_ALL_TAGS_AUTOMATIC_MODE = preferences.getBoolean("key_overwrite_all_tags_automatic_mode", true);
         Settings.SETTING_RENAME_FILE_SEMI_AUTOMATIC_MODE = preferences.getBoolean("key_rename_file_semi_automatic_mode", true);
         Settings.SETTING_USE_EMBED_PLAYER = preferences.getBoolean("key_use_embed_player",true);
-        Settings.BACKGROUND_CORRECTION = preferences.getBoolean("key_background_service", false);
+        Settings.BACKGROUND_CORRECTION = preferences.getBoolean("key_background_service", true);
         String imageSizeSaved = preferences.getString("key_size_album_art","1000");
         Settings.SETTING_SIZE_ALBUM_ART = Settings.setValueImageSize(imageSizeSaved);
         Settings.BACKGROUND_CORRECTION = preferences.getBoolean("key_background_service",false);

@@ -29,12 +29,6 @@ public final class FileSaver {
         if(data == null)
             return NULL_DATA;
 
-        //External storage is not readable
-        /*if(!isExternalStorageReadable()){
-            Log.e("error", "no external storage readable");
-            return NO_EXTERNAL_STORAGE_WRITABLE;
-        }*/
-
         //External storage es not writable
         if(!isExternalStorageWritable()){
             Log.e("error", "no external storage writable");
@@ -48,8 +42,6 @@ public final class FileSaver {
         //File object representing the new image file
         File fileGenerated = generateFileName(pathToFile, fileName, artist, album);
 
-        Log.d("name",fileGenerated.getAbsolutePath());
-
         //Stream to write
         FileOutputStream fos = null;
         try {
@@ -58,7 +50,6 @@ public final class FileSaver {
             fos.flush();
             fos.close();
         } catch (IOException e) {
-            Log.e("error",e.getMessage());
             e.printStackTrace();
             return INPUT_OUTPUT_ERROR;
         }
@@ -66,10 +57,19 @@ public final class FileSaver {
 
     }
 
+    /**
+     * Generates filename, checking if file
+     * already exist, if yes, then call itself again
+     * until a filename non existing be created
+     * @param pathToFile
+     * @param fileName
+     * @param artist
+     * @param album
+     * @return
+     */
     private static File generateFileName(File pathToFile, String fileName, String artist, String album){
         File newImage = null;
         String name = "";
-        Log.d("generateFilename","generating name...");
         if(!fileName.equals("")) {
             newImage = new File(pathToFile.getAbsolutePath() + SLASH + fileName + DOT + EXTENSION);
             name = fileName;

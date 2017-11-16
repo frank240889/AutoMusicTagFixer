@@ -338,6 +338,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onResume(){
         super.onResume();
+        mLocalBroadcastManager.registerReceiver(mReceiver, mFilterApiInitialized);
         Log.d(TAG,"onResume");
     }
 
@@ -491,8 +492,6 @@ public class MainActivity extends AppCompatActivity
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        //setCheckedState(item);
-
         switch (id){
             case R.id.action_select_all:
                 actionSelectAll();
@@ -543,11 +542,21 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void setCheckedItem(MenuItem item){
+        if(mAudioItemList.size() == 0 ){
+            showSnackBar(Snackbar.LENGTH_SHORT, getString(R.string.no_items), NO_ID);
+            return;
+        }
+
+        //wait until processing finish
+        if(ServiceHelper.withContext(getApplicationContext()).withService(FixerTrackService.CLASS_NAME).isServiceRunning()){
+            showSnackBar(Snackbar.LENGTH_LONG,getString(R.string.processing_task),-1);
+            return;
+        }
         int id;
         if(item != null) {
             id = item.getItemId();
-            lastCheckedItem.setIcon(null);
             lastCheckedItem = item;
+            lastCheckedItem.setIcon(null);
             lastCheckedItem.setIcon(ContextCompat.getDrawable(getApplicationContext(), R.drawable.ic_done_white));
             SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
             SharedPreferences.Editor editor = preferences.edit();
@@ -1125,6 +1134,8 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void setStartTaskStateFab(){
+
+
         final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
         builder.setTitle(R.string.cancelling).setMessage(R.string.cancel_task)
                 .setNegativeButton("No", new DialogInterface.OnClickListener() {
@@ -1139,7 +1150,6 @@ public class MainActivity extends AppCompatActivity
 
                         Intent requestStopService = new Intent(MainActivity.this, FixerTrackService.class);
                         stopService(requestStopService);
-                        mAudioItemArrayAdapter.cancelProcessing();
                         finishTaskByUser();
                     }
                 });
@@ -1154,13 +1164,13 @@ public class MainActivity extends AppCompatActivity
         mLocalBroadcastManager.registerReceiver(mReceiver, mFilterActionCancel);
         mLocalBroadcastManager.registerReceiver(mReceiver, mFilterActionCompleteTask);
         mLocalBroadcastManager.registerReceiver(mReceiver, mFilterActionFail);
-        mLocalBroadcastManager.registerReceiver(mReceiver, mFilterApiInitialized);
         mLocalBroadcastManager.registerReceiver(mReceiver, mFilterActionSetAudioProcessing);
         mLocalBroadcastManager.registerReceiver(mReceiver, mFilterActionNotFound);
     }
 
     private void finishTaskByUser(){
-
+        mAudioItemArrayAdapter.cancelProcessing();
+        mLocalBroadcastManager.unregisterReceiver(mReceiver);
         MainActivity.this.mFloatingActionButton.setOnClickListener(null);
         MainActivity.this.mFloatingActionButton.setImageDrawable(getDrawable(R.drawable.ic_magic_wand_auto_fix_button));
         MainActivity.this.mFloatingActionButton.setOnClickListener(new View.OnClickListener() {
@@ -1295,42 +1305,6 @@ public class MainActivity extends AppCompatActivity
             }
         }
 
-        private String setDefaultOrder(){
-
-            switch (Settings.SETTING_SORT){
-                case R.id.path_asc:
-                case 0:
-
-                    return MediaStore.Audio.AudioColumns.DATA + " COLLATE NOCASE ASC";
-                case R.id.path_desc:
-                case 1:
-
-                    return MediaStore.Audio.AudioColumns.DATA + " COLLATE NOCASE DESC";
-                case R.id.title_asc:
-
-                    return MediaStore.Audio.AudioColumns.TITLE + " COLLATE NOCASE ASC";
-                case R.id.title_desc:
-
-                    return MediaStore.Audio.AudioColumns.TITLE + " COLLATE NOCASE DESC";
-                case R.id.artist_asc:
-
-                    return MediaStore.Audio.AudioColumns.ARTIST + " COLLATE NOCASE ASC";
-                case R.id.artist_desc:
-
-                    return MediaStore.Audio.AudioColumns.ARTIST + " COLLATE NOCASE DESC";
-                case R.id.album_asc:
-
-                    return MediaStore.Audio.AudioColumns.ALBUM + " COLLATE NOCASE ASC";
-                case R.id.album_desc:
-
-                    return MediaStore.Audio.AudioColumns.ALBUM + " COLLATE NOCASE DESC";
-                default:
-
-                    return MediaStore.Audio.AudioColumns.DATA + " COLLATE NOCASE ASC";
-
-            }
-        }
-
         @Override
         protected void onPreExecute() {
             mSwipeRefreshLayout.setRefreshing(true);
@@ -1460,7 +1434,7 @@ public class MainActivity extends AppCompatActivity
                     projection,
                     selection,
                     null,
-                    setDefaultOrder());
+                    Sort.setDefaultOrder());
         }
 
         /**
@@ -1523,7 +1497,7 @@ public class MainActivity extends AppCompatActivity
          */
         private void readFromDatabase(){
 
-            data = MainActivity.this.mDataTrackDbHelper.getDataFromDB(setDefaultOrder());
+            data = MainActivity.this.mDataTrackDbHelper.getDataFromDB(Sort.setDefaultOrder());
             int dataLength = data != null ? data.getCount() : 0;
             if (dataLength > 0) {
                 while (data.moveToNext()) {
@@ -1651,7 +1625,8 @@ public class MainActivity extends AppCompatActivity
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            setCancelProcessingAudioItem(intent.getLongExtra(Constants.MEDIASTORE_ID,NO_ID));
+                            finishTaskByUser();
+                            //setCancelProcessingAudioItem(intent.getLongExtra(Constants.MEDIASTORE_ID,NO_ID));
                         }
                     });
                 case Constants.Actions.ACTION_COMPLETE_TASK:
@@ -1663,6 +1638,44 @@ public class MainActivity extends AppCompatActivity
                     });
                     mLocalBroadcastManager.unregisterReceiver(mReceiver);
                     break;
+            }
+        }
+    }
+
+    public static class Sort{
+        public static String setDefaultOrder(){
+
+            switch (Settings.SETTING_SORT){
+                case R.id.path_asc:
+                case 0:
+
+                    return MediaStore.Audio.AudioColumns.DATA + " COLLATE NOCASE ASC";
+                case R.id.path_desc:
+                case 1:
+
+                    return MediaStore.Audio.AudioColumns.DATA + " COLLATE NOCASE DESC";
+                case R.id.title_asc:
+
+                    return MediaStore.Audio.AudioColumns.TITLE + " COLLATE NOCASE ASC";
+                case R.id.title_desc:
+
+                    return MediaStore.Audio.AudioColumns.TITLE + " COLLATE NOCASE DESC";
+                case R.id.artist_asc:
+
+                    return MediaStore.Audio.AudioColumns.ARTIST + " COLLATE NOCASE ASC";
+                case R.id.artist_desc:
+
+                    return MediaStore.Audio.AudioColumns.ARTIST + " COLLATE NOCASE DESC";
+                case R.id.album_asc:
+
+                    return MediaStore.Audio.AudioColumns.ALBUM + " COLLATE NOCASE ASC";
+                case R.id.album_desc:
+
+                    return MediaStore.Audio.AudioColumns.ALBUM + " COLLATE NOCASE DESC";
+                default:
+
+                    return MediaStore.Audio.AudioColumns.DATA + " COLLATE NOCASE ASC";
+
             }
         }
     }

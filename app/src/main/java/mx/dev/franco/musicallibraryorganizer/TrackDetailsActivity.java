@@ -1059,16 +1059,16 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
         switch (status){
             case AudioItem.FILE_STATUS_OK:
             case AudioItem.FILE_STATUS_EDIT_BY_USER:
-                drawable = getResources().getDrawable(R.drawable.ic_done_all_white,null);
+                drawable = getResources().getDrawable(R.drawable.ic_done_all_white_24px,null);
                 break;
             case AudioItem.FILE_STATUS_INCOMPLETE:
-                drawable = getResources().getDrawable(R.drawable.ic_done_white,null);
+                drawable = getResources().getDrawable(R.drawable.ic_done_white_24px,null);
                 break;
             case AudioItem.FILE_STATUS_BAD:
                 drawable = getResources().getDrawable(R.drawable.ic_error_outline_white_24px,null);
                 break;
             case AudioItem.FILE_ERROR_READ:
-                drawable = getResources().getDrawable(R.drawable.ic_highlight_off_white_material,null);
+                drawable = getResources().getDrawable(R.drawable.ic_highlight_off_white_24px,null);
                 break;
             default:
                 drawable = null;

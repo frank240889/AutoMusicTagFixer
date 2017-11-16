@@ -262,6 +262,24 @@ public class DataTrackDbHelper extends SQLiteOpenHelper {
         return updatedRow;
     }
 
+    public int updateData(ContentValues contentValues, String columnToUpdate, boolean condition){
+        String whereClause = columnToUpdate + " = ?";
+        String[] whereArgs = {(condition?1:0)+""};
+        return getWritableDatabase().update(TrackContract.TrackData.TABLE_NAME, contentValues, whereClause, whereArgs );
+    }
+
+    public int updateData(ContentValues contentValues, String columnToUpdate, String condition){
+        String whereClause = columnToUpdate + " = ?";
+        String[] whereArgs = {condition+""};
+        return getWritableDatabase().update(TrackContract.TrackData.TABLE_NAME, contentValues, whereClause, whereArgs );
+    }
+
+    public int updateData(ContentValues contentValues, String columnToUpdate, int condition){
+        String whereClause = columnToUpdate + " = ?";
+        String[] whereArgs = {condition+""};
+        return getWritableDatabase().update(TrackContract.TrackData.TABLE_NAME, contentValues, whereClause, whereArgs );
+    }
+
     /**
      * clears db if any previous construction failed
      * @return number of items deleted
@@ -306,7 +324,7 @@ public class DataTrackDbHelper extends SQLiteOpenHelper {
      * get all items marked as true in its selected column
      * @return cursor object or null if no selected items
      */
-    public Cursor getAllSelected(long id){
+    public Cursor getAllSelected(long id, String sort){
         String selection = null;
         String[] selectionArgs;
         if(id == -1){
@@ -338,7 +356,7 @@ public class DataTrackDbHelper extends SQLiteOpenHelper {
                 selectionArgs,                            // value of WHERE
                 null,                                     // null for no grouping
                 null,                                     // null for no filtering
-                null                                 // null for no ordering
+                sort                                 // null for no ordering
         );
         return c;
     }

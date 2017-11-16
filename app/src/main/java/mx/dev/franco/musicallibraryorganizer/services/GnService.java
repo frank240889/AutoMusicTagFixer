@@ -12,10 +12,9 @@ import com.gracenote.gnsdk.GnLocale;
 import com.gracenote.gnsdk.GnLocaleGroup;
 import com.gracenote.gnsdk.GnManager;
 import com.gracenote.gnsdk.GnRegion;
-import com.gracenote.gnsdk.GnString;
+import com.gracenote.gnsdk.GnStorageSqlite;
 import com.gracenote.gnsdk.GnUser;
 import com.gracenote.gnsdk.GnUserStore;
-import com.gracenote.gnsdk.IGnUserStore;
 
 import mx.dev.franco.musicallibraryorganizer.utilities.Constants;
 
@@ -23,8 +22,7 @@ import mx.dev.franco.musicallibraryorganizer.utilities.Constants;
  * Created by franco on 5/07/17.
  */
 
-public class GnService implements IGnUserStore{
-    public static final String API_INITIALIZED = "action_api_initialized";
+public class GnService{
     //We can set a context in static field while we call getApplicationContext() to avoid memory leak, because
     //if we use the activity context, this activity can remain in memory due is still in use its context
     private static Context context;
@@ -70,6 +68,7 @@ public class GnService implements IGnUserStore{
                     gnUser = new GnUser(new GnUserStore(context), gnsdkClientId, gnsdkClientTag, appString);
                     gnLocale = new GnLocale(GnLocaleGroup.kLocaleGroupMusic, GnLanguage.kLanguageSpanish, GnRegion.kRegionGlobal, GnDescriptor.kDescriptorDetailed, gnUser);
                     gnLocale.setGroupDefault();
+                    GnStorageSqlite.enable();
                     apiInitialized = true;
 
 
@@ -85,29 +84,5 @@ public class GnService implements IGnUserStore{
                 }
             }
         }).start();
-    }
-
-    @Override
-    protected void finalize() throws Throwable {
-        super.finalize();
-        apiInitialized = false;
-        context = null;
-        gnLocale.delete();
-        gnLocale = null;
-        gnManager.delete();
-        gnManager = null;
-        gnUser.delete();
-        gnUser = null;
-
-    }
-
-    @Override
-    public GnString loadSerializedUser(String s) {
-        return null;
-    }
-
-    @Override
-    public boolean storeSerializedUser(String s, String s1) {
-        return false;
     }
 }

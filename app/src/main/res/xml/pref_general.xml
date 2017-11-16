@@ -13,7 +13,7 @@
             android:summary="@string/pref_replace_auto_all_tags_description"
             android:title="@string/pref_title_replace_all_tags"/>
         <SwitchPreference
-            android:defaultValue="false"
+            android:defaultValue="true"
             android:key="key_background_service"
             android:summary="@string/pref_title_background_description"
             android:title="@string/pref_title_background" />

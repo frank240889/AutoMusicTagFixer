@@ -15,8 +15,8 @@
         android:layout_height="416dp"
         android:background="@color/grey_900"
         android:elevation="4dp"
-        app:elevation="4dp"
-        android:fitsSystemWindows="true">
+        android:fitsSystemWindows="true"
+        app:elevation="4dp">
 
         <android.support.design.widget.CollapsingToolbarLayout
             android:id="@+id/collapsingToolbarLayout"
@@ -49,29 +49,6 @@
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:background="@drawable/linear_gradient_black_to_transparent" />
-
-                <TextView
-                    android:id="@+id/subtitleTransparentLayer"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="bottom"
-                    android:layout_marginStart="10dp"
-                    android:drawableStart="@drawable/ic_folder_white_24px"
-                    android:gravity="center_vertical"
-                    android:text="Path"
-                    android:textColor="@color/true_white" />
-
-                <TextView
-                    android:id="@+id/titleTransparentLayer"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="top"
-                    android:layout_marginStart="10dp"
-                    android:drawableStart="@drawable/ic_description_white"
-                    android:gravity="center_vertical"
-                    android:text="File Name"
-                    android:textColor="@color/true_white" />
-
             </FrameLayout>
 
             <FrameLayout
@@ -88,28 +65,17 @@
                     android:background="@drawable/linear_gradient_transparent_to_black" />
 
                 <TextView
-                    android:id="@+id/status"
-                    android:layout_width="wrap_content"
+                    android:id="@+id/titleTransparentLayer"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="top|center_vertical"
+                    android:layout_gravity="center_vertical"
                     android:layout_marginStart="10dp"
+                    android:drawableStart="@drawable/ic_insert_drive_file_white_24px"
                     android:gravity="center_vertical"
-                    android:text="status"
-                    android:textColor="@color/true_white" />
-
-                <TextView
-                    android:id="@+id/trackLength"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="bottom|left|right"
-                    android:layout_marginStart="10dp"
-                    android:drawableStart="@drawable/ic_access_time_white_24px"
-                    android:gravity="center_vertical"
-                    android:singleLine="true"
-                    android:text="0'00''"
-                    android:textAlignment="viewStart"
+                    android:text="File Name"
                     android:textColor="@color/true_white"
-                    android:visibility="visible" />
+                    android:textSize="18sp" />
+
 
             </FrameLayout>
 
@@ -162,7 +128,7 @@
         android:theme="@style/CustomMiniFab"
         app:useCompatPadding="true"
         app:pressedTranslationZ="12dp"
-        app:srcCompat="@drawable/ic_edit_white_24px" />
+        app:srcCompat="@drawable/ic_edit_white" />
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/downloadCover"

@@ -40,7 +40,7 @@ import mx.dev.franco.musicallibraryorganizer.utilities.GlideApp;
 import static android.view.View.GONE;
 import static android.view.View.VISIBLE;
 
-public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHolder> implements Filterable {//extends SelectableAdapter<TrackAdapter.AudioItemHolder> implements Filterable{
+public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHolder> implements Filterable {
     //constants for indacate the sort order
     public static final int ASC = 0;
     public static final int DESC = 1;
@@ -300,9 +300,11 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
 
     public void cancelProcessing(){
         for (int t = 0; t < mCurrentList.size(); t++) {
-            if (mCurrentList.get(t).isProcessing()) {
-                mCurrentList.get(t).setProcessing(false);
+            AudioItem audioItem = mCurrentList.get(t);
+            if (audioItem.isProcessing()) {
+                audioItem.setProcessing(false);
                 notifyItemChanged(t);
+                Log.d("setprocessing", t+"");
             }
         }
 
