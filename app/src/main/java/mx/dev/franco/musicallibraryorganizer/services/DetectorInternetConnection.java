@@ -12,23 +12,28 @@ import android.util.Log;
  */
 
 public class DetectorInternetConnection extends JobService {
+    private static boolean isInitializing = false;
     /**
      * Callback when service start, here we execute our
-     * task in background
+     * task in background, but if is an intensive task
+     * we need to create another thread because
+     * this callback it executes on UI Thread
      * @param params
-     * @return
+     * @return true for execute the code
      */
 
     @Override
-    public boolean onStartJob(JobParameters params) {
+    public boolean onStartJob(final JobParameters params) {
         Log.d("ONSTART","onstart");
         startCheckingConnection(params);
+
         return true;
     }
 
     /**
-     * If JOb stops abruptly, we can handle here, if we
+     * If case Job stops abruptly, we can handle here, if we
      * want to restart, we need to return true, false if not.
+     * This callback it executes on UI Thread too
      * @param params
      * @return
      */
@@ -45,17 +50,23 @@ public class DetectorInternetConnection extends JobService {
      * in case if is not initialized.
      * @param parameters
      */
-    private void startCheckingConnection(JobParameters parameters){
+    private void startCheckingConnection(final JobParameters parameters){
         boolean isConnected = isConnected(getApplicationContext());
-
         //We set context and initialize the GNSDK API if it was not before.
-        if(isConnected && !GnService.apiInitialized) {
+        if(isConnected && !GnService.apiInitialized && !isInitializing) {
+            //only request initialize GNSDK API one time
+            isInitializing = true;
             GnService.setAppContext(getApplicationContext());
+            //GnService.API_INITIALIZED_AFTER_CONNECTED) flag indicates
+            //that service was not initialized from Splash.
+            //is useful to inform to user in MainActivity
+            //that API of GNSDK has been initialized
             GnService.initializeAPI(GnService.API_INITIALIZED_AFTER_CONNECTED);
         }
 
         //if is connected, we finalize this job
         jobFinished(parameters, !isConnected);
+
     }
 
     /**
@@ -65,32 +76,27 @@ public class DetectorInternetConnection extends JobService {
      * @return
      */
     public static boolean isConnected(Context context){
+        boolean isConnected = false;
         ConnectivityManager cm = (ConnectivityManager)context.getSystemService(CONNECTIVITY_SERVICE);
         NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+
         //activeNetwork could be NULL if for example, airplane mode is activated.
-        boolean isConnected = activeNetwork != null && activeNetwork.isConnected() && hasInternetConnection();
-        Log.d("isConnected",isConnected+"");
-        return isConnected;
-    }
 
-
-    /**
-     * This method checks
-     * if really there is connection
-     * to internet, since isConnected() method
-     * only checks if there is connectivity
-     * @return
-     */
-    private static boolean hasInternetConnection(){
         Runtime runtime = Runtime.getRuntime();
         int termination = 1;
         try {
             //send only 1 ping to Google DNS's.
             Process process = runtime.exec("system/bin/ping -c 1 8.8.8.8");
+            //anormal termination will be different than 0,
             termination = process.waitFor();
         }
         finally {
-            return (termination == 0);//all has gone ok, 0 means normal termnation
+            isConnected = activeNetwork != null && activeNetwork.isConnected() && (termination == 0);
+            Log.d("isConnected",isConnected+"");
+            return isConnected;
         }
+
+
     }
+
 }

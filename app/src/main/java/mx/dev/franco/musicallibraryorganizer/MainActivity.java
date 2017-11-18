@@ -717,27 +717,43 @@ public class MainActivity extends AppCompatActivity
         else {
 
             //Automatic mode require some conditions to execute
-            int canContinue = allowExecute(getApplicationContext());
-            if(canContinue != 0) {
-                setSnackBarMessage(canContinue);
-                return;
-            }
+            //we put this in AsyncTask because the isConnected method
+            //makes a network operation which blocks UI if we execute
+            //from UI Thread
+            new AsyncTask<Context,Void, Integer>(){
+                @Override
+                protected Integer doInBackground(Context contexts[]){
+                    int canContinue = allowExecute(contexts[0].getApplicationContext());
 
-            if(mAudioItemArrayAdapter.getCountSelectedItems() == 0){
-                showSnackBar(Snackbar.LENGTH_LONG, getString(R.string.no_songs_to_correct), NO_ID);
-                return;
-            }
+                    return canContinue;
+                }
+                @Override
+                protected void onPostExecute(Integer canContinue){
+                    if(canContinue != 0) {
+                        setSnackBarMessage(canContinue);
+                        return;
+                    }
 
-            //start correction in automatic mode
-            registerReceivers();
-            Intent intent = new Intent(MainActivity.this, FixerTrackService.class);
-            intent.putExtra(Constants.Activities.FROM_EDIT_MODE, false);
+                    if(mAudioItemArrayAdapter.getCountSelectedItems() == 0){
+                        showSnackBar(Snackbar.LENGTH_LONG, getString(R.string.no_songs_to_correct), NO_ID);
+                        return;
+                    }
 
-            if(Settings.BACKGROUND_CORRECTION)
-                intent.putExtra(Constants.Actions.ACTION_SHOW_NOTIFICATION, true);
+                    //start correction in automatic mode
+                    registerReceivers();
+                    Intent intent = new Intent(MainActivity.this, FixerTrackService.class);
+                    intent.putExtra(Constants.Activities.FROM_EDIT_MODE, false);
 
-            startService(intent);
-            startTask();
+                    if(Settings.BACKGROUND_CORRECTION)
+                        intent.putExtra(Constants.Actions.ACTION_SHOW_NOTIFICATION, true);
+
+                    startService(intent);
+                    startTask();
+                }
+            }.execute(this);
+
+
+
 
         }
     }
@@ -929,21 +945,36 @@ public class MainActivity extends AppCompatActivity
                 .setPositiveButton(getString(R.string.automatic), new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
+                        //we put this in AsyncTask because the isConnected method
+                        //makes a network operation which blocks UI if we execute
+                        //from UI Thread
+                        new AsyncTask<Context,Void, Integer>(){
+                            @Override
+                            protected Integer doInBackground(Context contexts[]){
+                                int canContinue = allowExecute(contexts[0].getApplicationContext());
+                                return canContinue;
+                            }
+                            @Override
+                            protected void onPostExecute(Integer canContinue){
+                                if(canContinue != 0) {
+                                    setSnackBarMessage(canContinue);
+                                    return;
+                                }
 
-                        int canContinue = allowExecute(getApplicationContext());
-                        if(canContinue != 0) {
-                            setSnackBarMessage(canContinue);
-                            return;
-                        }
-                        registerReceivers();
-                        Intent intent = new Intent(MainActivity.this, FixerTrackService.class);
-                        if(Settings.BACKGROUND_CORRECTION)
-                            intent.putExtra(Constants.Actions.ACTION_SHOW_NOTIFICATION, true);
-                        intent.putExtra(Constants.Activities.FROM_EDIT_MODE, false);
-                        intent.putExtra(Constants.MEDIASTORE_ID, audioItem.getId());
-                        startService(intent);
-                        startTask();
-
+                                if(mAudioItemArrayAdapter.getCountSelectedItems() == 0){
+                                    showSnackBar(Snackbar.LENGTH_LONG, getString(R.string.no_songs_to_correct), NO_ID);
+                                    return;
+                                }
+                                registerReceivers();
+                                Intent intent = new Intent(MainActivity.this, FixerTrackService.class);
+                                if(Settings.BACKGROUND_CORRECTION)
+                                    intent.putExtra(Constants.Actions.ACTION_SHOW_NOTIFICATION, true);
+                                intent.putExtra(Constants.Activities.FROM_EDIT_MODE, false);
+                                intent.putExtra(Constants.MEDIASTORE_ID, audioItem.getId());
+                                startService(intent);
+                                startTask();
+                            }
+                        }.execute(MainActivity.this);
                     }
                 });
         final AlertDialog dialog =  builder.create();
@@ -1627,7 +1658,6 @@ public class MainActivity extends AppCompatActivity
                         @Override
                         public void run() {
                             showSnackBar(Snackbar.LENGTH_LONG, getString(R.string.connection_lost), NO_ID);
-                            //setCancelProcessingAudioItem(intent.getLongExtra(Constants.MEDIASTORE_ID,NO_ID));
                         }
                     });
                 case Constants.Actions.ACTION_CANCEL_TASK:
@@ -1635,7 +1665,6 @@ public class MainActivity extends AppCompatActivity
                         @Override
                         public void run() {
                             finishTaskByUser();
-                            //setCancelProcessingAudioItem(intent.getLongExtra(Constants.MEDIASTORE_ID,NO_ID));
                         }
                     });
                 case Constants.Actions.ACTION_COMPLETE_TASK:
@@ -1646,6 +1675,7 @@ public class MainActivity extends AppCompatActivity
                         }
                     });
                     mLocalBroadcastManager.unregisterReceiver(mReceiver);
+                    unregisterReceiver(mReceiver);
                     break;
             }
         }

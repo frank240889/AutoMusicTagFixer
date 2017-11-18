@@ -223,7 +223,7 @@
     <string name="file_status_error_read">No se pueden leer las etiquetas del archivo.</string>
     <string name="descendent">Descendente</string>
     <string name="ascendent">Ascendente</string>
-    <string name="about">Sobre la app</string>
+    <string name="about">Sobre</string>
     <string name="title_activity_about">Sobre la app</string>
     <string name="developed_by">Desarrollada por</string>
     <string name="developer">Dark Yellow Studios</string>
@@ -272,7 +272,7 @@
     <string name="title_activity_scrolling_about">ScrollingAboutActivity</string>
     <string name="not_supported">Tipo no soportado</string>
     <string name="file_status_corrected_by_semiautomatic_mode">Etiquestas corregidas por el modo semiautomatico.</string>
-    <string name="connection_lost">La conexión a Internet se ha perdido.</string>
+    <string name="connection_lost">No hay conexión a Internet o se ha perdido.</string>
 
 
 </resources>

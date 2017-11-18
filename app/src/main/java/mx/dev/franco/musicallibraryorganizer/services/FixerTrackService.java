@@ -269,6 +269,7 @@ public class FixerTrackService extends Service {
             //hold reference to queue in case we need cancel the
             //identification
             mGnMusicIdFileList.add(mGnMusicIdFile);
+            mGnMusicIdFile.waitForComplete();
 
         } catch (GnException e) {
             e.printStackTrace();
@@ -290,7 +291,6 @@ public class FixerTrackService extends Service {
                 gnMusicIdFileInfo.trackTitle(title);
                 gnMusicIdFileInfo.trackArtist(artist);
                 gnMusicIdFileInfo.albumTitle(album);
-                gnMusicIdFileInfo.albumArtist(artist);
 
             } catch (GnException e) {
                 e.printStackTrace();
@@ -357,7 +357,7 @@ public class FixerTrackService extends Service {
             intentActionDone.setAction(Constants.Actions.ACTION_CANCEL_TASK);
             mLocalBroadcastManager.sendBroadcastSync(intentActionDone);
         }
-        else {
+        else if (!mIsConnected){
             if(mGnMusicIdFileList != null) {
                 Iterator<GnMusicIdFile> iterator = mGnMusicIdFileList.iterator();
                 while (iterator.hasNext()) {

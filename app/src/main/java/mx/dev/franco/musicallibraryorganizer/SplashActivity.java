@@ -29,18 +29,24 @@ public class SplashActivity extends AppCompatActivity{
         super.onCreate(savedInstanceState);
 
         //We check first if there is internet connection for initialize api
-        boolean isConnected = DetectorInternetConnection.isConnected(getApplicationContext());
-        if(isConnected) {
-            //We set context and initialize the GNSDK API.
-            GnService.setAppContext(this);
-            GnService.initializeAPI(GnService.API_INITIALIZED_FROM_SPLASH);
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                boolean isConnected = DetectorInternetConnection.isConnected(getApplicationContext());
+                if(isConnected) {
+                    //We set context and initialize the GNSDK API.
+                    GnService.setAppContext(getApplicationContext());
+                    GnService.initializeAPI(GnService.API_INITIALIZED_FROM_SPLASH);
+                }
+                //No internet connection, then we schedule the job for initialize API
+                //when internet connection restores it
+                else {
+                    Job.scheduleJob(getApplicationContext());
+                }
+                Thread.interrupted();
+            }
+        }).start();
 
-        }
-        //No internet connection, then we schedule the job for initialize API
-        //when internet connection restores it
-        else {
-            Job.scheduleJob(getApplicationContext());
-        }
 
 
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());

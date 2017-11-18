@@ -203,6 +203,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
     private IntentFilter mFilterActionApiInitialized;
     private IntentFilter mFilterActionNotFound;
     private IntentFilter mFilterActionDoneDetails;
+    private IntentFilter mFilterActionConnectionLost;
     //Receiver to handle responses
     private ResponseReceiver mReceiver;
 
@@ -255,6 +256,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
         mFilterActionCompleteTask = new IntentFilter(Constants.Actions.ACTION_COMPLETE_TASK);
         mFilterActionApiInitialized = new IntentFilter(Constants.GnServiceActions.ACTION_API_INITIALIZED);
         mFilterActionNotFound = new IntentFilter(Constants.Actions.ACTION_NOT_FOUND);
+        mFilterActionConnectionLost = new IntentFilter(Constants.Actions.ACTION_CONNECTION_LOST);
         mReceiver = new ResponseReceiver();
         mLocalBroadcastManager = LocalBroadcastManager.getInstance(getApplicationContext());
 
@@ -374,7 +376,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
      * @param reason
      */
 
-    private void setMessageSnackBar(int reason){
+    private void setSnackBarMessage(int reason){
         String msg = "";
         switch (reason){
             case Constants.Conditions.NO_INTERNET_CONNECTION:
@@ -930,34 +932,47 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
             @Override
             public void onClick(View v) {
                 closeFABMenu();
-                //This function requires some contidions to work, check them before
-                //continue
-                int canContinue = allowExecute();
 
-                if(canContinue != 0) {
-                    setMessageSnackBar(canContinue);
-                    return;
-                }
-
-                showSnackBar(Snackbar.LENGTH_SHORT, getString(R.string.downloading_cover),ACTION_NONE, null);
-
-                mProgressBar.setVisibility(View.VISIBLE);
-                enableMiniFabs(false);
                 mOnlyCoverArt = true;
+
                 //Check if exist trackidItem cached from previous request
                 //before making a request for saving data,
                 //this object only persist while the activity is open
                 if(mTrackIdAudioItem != null){
                     handleCoverArt();
-                }
-                else{
-                    mToolbarCover.setEnabled(false);
-                    Intent intent = new Intent(TrackDetailsActivity.this,FixerTrackService.class);
-                    intent.putExtra(Constants.Activities.FROM_EDIT_MODE, Constants.Activities.DETAILS_ACTIVITY);
-                    intent.putExtra(Constants.MEDIASTORE_ID, mCurrentItemId);
-                    startService(intent);
+                    return;
                 }
 
+                //This function requires some contidions to work, check them before
+                //continue
+
+                //we put this in AsyncTask because the isConnected method
+                //makes a network operation which blocks UI if we execute
+                //from UI Thread
+                new AsyncTask<Void,Void, Integer>(){
+                    @Override
+                    protected Integer doInBackground(Void... voids){
+                        int canContinue = allowExecute();
+                        return canContinue;
+                    }
+                    @Override
+                    protected void onPostExecute(Integer canContinue){
+                        if(canContinue != 0) {
+                            setSnackBarMessage(canContinue);
+                            return;
+                        }
+
+                        showSnackBar(Snackbar.LENGTH_SHORT, getString(R.string.downloading_cover),ACTION_NONE, null);
+                        mProgressBar.setVisibility(View.VISIBLE);
+
+                        enableMiniFabs(false);
+                        mToolbarCover.setEnabled(false);
+                        Intent intent = new Intent(TrackDetailsActivity.this,FixerTrackService.class);
+                        intent.putExtra(Constants.Activities.FROM_EDIT_MODE, Constants.Activities.DETAILS_ACTIVITY);
+                        intent.putExtra(Constants.MEDIASTORE_ID, mCurrentItemId);
+                        startService(intent);
+                    }
+                }.execute();
 
             }
         });
@@ -1053,31 +1068,47 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
     private void performTrackId(){
         closeFABMenu();
 
-        //This function requires some contidions to work, check them before
-        int canContinue = allowExecute();
-        if(canContinue != 0) {
-            setMessageSnackBar(canContinue);
-            return;
-        }
-        if(mCorrectionMode != Constants.CorrectionModes.SEMI_AUTOMATIC)
-            showSnackBar(Snackbar.LENGTH_LONG, getString(R.string.downloading_tags),ACTION_NONE, null);
-
-        mProgressBar.setVisibility(View.VISIBLE);
-
-        enableMiniFabs(false);
 
         //Check if exist trackidItem cached from previous request
         //this with the objective of saving data
         if(mTrackIdAudioItem != null) {
             setDownloadedValues();
+            return;
         }
-        else {
-            mToolbarCover.setEnabled(false);
-            Intent intent = new Intent(TrackDetailsActivity.this, FixerTrackService.class);
-            intent.putExtra(Constants.Activities.FROM_EDIT_MODE, Constants.Activities.DETAILS_ACTIVITY);
-            intent.putExtra(Constants.MEDIASTORE_ID, mCurrentItemId);
-            startService(intent);
-        }
+
+
+        //This functionality requires some conditions to work, check them before
+
+        //we put this in AsyncTask because the isConnected method
+        //makes a network operation which blocks UI if we execute
+        //from UI Thread
+        new AsyncTask<Void,Void, Integer>(){
+            @Override
+            protected Integer doInBackground(Void... voids){
+                int canContinue = allowExecute();
+                return canContinue;
+            }
+            @Override
+            protected void onPostExecute(Integer canContinue){
+                if(canContinue != 0) {
+                    setSnackBarMessage(canContinue);
+                    return;
+                }
+
+                if(mCorrectionMode != Constants.CorrectionModes.SEMI_AUTOMATIC)
+                    showSnackBar(Snackbar.LENGTH_LONG, getString(R.string.downloading_tags),ACTION_NONE, null);
+
+                mProgressBar.setVisibility(View.VISIBLE);
+
+                enableMiniFabs(false);
+
+                mToolbarCover.setEnabled(false);
+                Intent intent = new Intent(TrackDetailsActivity.this, FixerTrackService.class);
+                intent.putExtra(Constants.Activities.FROM_EDIT_MODE, Constants.Activities.DETAILS_ACTIVITY);
+                intent.putExtra(Constants.MEDIASTORE_ID, mCurrentItemId);
+                startService(intent);
+            }
+        }.execute();
     }
 
     private Drawable getStatusDrawable(){
@@ -2125,6 +2156,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
         mLocalBroadcastManager.registerReceiver(mReceiver, mFilterActionCompleteTask);
         mLocalBroadcastManager.registerReceiver(mReceiver, mFilterActionApiInitialized);
         mLocalBroadcastManager.registerReceiver(mReceiver, mFilterActionNotFound);
+        mLocalBroadcastManager.registerReceiver(mReceiver, mFilterActionConnectionLost );
     }
 
     private void setDownloadedValues(){
@@ -2422,8 +2454,13 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                     });
 
                     break;
-                case Constants.Actions.ACTION_COMPLETE_TASK:
-                    //Do nothing
+                case Constants.Actions.ACTION_CONNECTION_LOST:
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            showSnackBar(Snackbar.LENGTH_SHORT,getString(R.string.connection_lost),ACTION_NONE, null);
+                        }
+                    });
                     break;
                 default:
                     //Any other response, maybe an error

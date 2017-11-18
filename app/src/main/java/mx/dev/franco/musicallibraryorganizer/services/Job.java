@@ -19,20 +19,27 @@ public class Job {
      */
     public static void scheduleJob(Context context){
         //Component we want to execute
+        //we need to pass context and name of our extended JobService class
+        //that will execute the task
         ComponentName serviceComponent = new ComponentName(context.getApplicationContext(), DetectorInternetConnection.class);
+        //the component is passed to the builder of job,
+        //this builder object are the requirements
+        //needed to execute our task, in this case, we need
+        //that our task executes every 5 seconds
         JobInfo.Builder builder = new JobInfo.Builder(0, serviceComponent);
 
         //Minimum time for being periodic job in Nougat are 15 minutes,
         //so here we use the minimum latency instead
-
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N){
             builder.setMinimumLatency(5000);
         }
-        //Before Nougat, we stablished a periodic job
+        //Before Nougat, we established a periodic job
         else {
             builder.setPeriodic(5000);
         }
 
+        //now that our builder object has the parameters set
+        //get
         JobScheduler jobScheduler = (JobScheduler) context.getApplicationContext().getSystemService(Context.JOB_SCHEDULER_SERVICE);
         jobScheduler.schedule(builder.build());
     }
