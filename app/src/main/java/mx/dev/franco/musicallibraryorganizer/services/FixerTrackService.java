@@ -4,11 +4,15 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.BroadcastReceiver;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.ConnectivityManager;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
@@ -72,7 +76,6 @@ import mx.dev.franco.musicallibraryorganizer.database.TrackContract;
 import mx.dev.franco.musicallibraryorganizer.list.AudioItem;
 import mx.dev.franco.musicallibraryorganizer.utilities.Constants;
 
-import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
 import static mx.dev.franco.musicallibraryorganizer.services.GnService.appString;
 
 /**
@@ -108,10 +111,13 @@ public class FixerTrackService extends Service {
     private boolean finishTaskByUser = true;
     private boolean mStartOrUpdateForegroundNotification = false;
     private boolean mShowNotification = false;
+    private boolean mIsConnected = false;
+    private IntentFilter mIntentFilterConnectionChanges;
+    private DetectorChangesConnection mDetectorChangesConnection;
 
 
     /**
-     * Creates an IntentService.  Invoked by your subclass's constructor.
+     * Creates a Service.  Invoked by your subclass's constructor.
      */
     public FixerTrackService() {
         super();
@@ -124,17 +130,19 @@ public class FixerTrackService extends Service {
         super.onCreate();
         //Log.d(CLASS_NAME, "onCreate");
         mDataTrackDbHelper = DataTrackDbHelper.getInstance(getApplicationContext());
-        mLocalBroadcastManager = LocalBroadcastManager.getInstance(this);
+        mLocalBroadcastManager = LocalBroadcastManager.getInstance(getApplicationContext());
 
         //Object to handle callbacks from Gracenote API
         mMusicIdFileEvents = new MusicIdFileEvents();
         mNM = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         mGnMusicIdFileList = new ArrayList<>();
-
-        mThread = new HandlerThread(CLASS_NAME, THREAD_PRIORITY_BACKGROUND);
-        mThread.start();
-        mLooper = mThread.getLooper();
-        mHandler = new MyHandler(mLooper);
+        mIntentFilterConnectionChanges = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
+        mDetectorChangesConnection = new DetectorChangesConnection();
+        registerReceiver(mDetectorChangesConnection,mIntentFilterConnectionChanges);
+        //mThread = new HandlerThread(CLASS_NAME, THREAD_PRIORITY_BACKGROUND);
+        //mThread.start();
+        //mLooper = mThread.getLooper();
+        //mHandler = new MyHandler(mLooper);
     }
 
 
@@ -174,6 +182,7 @@ public class FixerTrackService extends Service {
             mGnMusicIdFileList = null;
         }
 
+        unregisterReceiver(mDetectorChangesConnection);
         Log.d("onDestroy","releasing resources...");
         super.onDestroy();
     }
@@ -306,17 +315,21 @@ public class FixerTrackService extends Service {
 
     public void startTrackId(){
         //Log.d("starting track id", "starting");
-        try {
-            if(mNumberSelected == 1){
-                mGnMusicIdFile.doTrackId(GnMusicIdFileProcessType.kQueryReturnSingle, GnMusicIdFileResponseType.kResponseAlbums);
-            }
-            else if (mNumberSelected >= 2){
-                mGnMusicIdFile.doLibraryId(GnMusicIdFileResponseType.kResponseAlbums);
-            }
-
-        } catch (GnException e) {
-            e.printStackTrace();
+        mIsConnected = DetectorInternetConnection.isConnected(getApplicationContext());
+        if(!mIsConnected){
+            stopSelf();
+            return;
         }
+            try {
+                if (mNumberSelected == 1) {
+                    mGnMusicIdFile.doTrackId(GnMusicIdFileProcessType.kQueryReturnSingle, GnMusicIdFileResponseType.kResponseAlbums);
+                } else if (mNumberSelected >= 2) {
+                    mGnMusicIdFile.doLibraryId(GnMusicIdFileResponseType.kResponseAlbums);
+                }
+
+            } catch (GnException e) {
+                e.printStackTrace();
+            }
     }
 
     public void stopTrackId(){
@@ -344,6 +357,25 @@ public class FixerTrackService extends Service {
             intentActionDone.setAction(Constants.Actions.ACTION_CANCEL_TASK);
             mLocalBroadcastManager.sendBroadcastSync(intentActionDone);
         }
+        else {
+            if(mGnMusicIdFileList != null) {
+                Iterator<GnMusicIdFile> iterator = mGnMusicIdFileList.iterator();
+                while (iterator.hasNext()) {
+                    Log.d("cancel gn", "cancelling...lost connection");
+                    iterator.next().cancel();
+                }
+            }
+
+            ContentValues contentValues = new ContentValues();
+            contentValues.put(TrackContract.TrackData.IS_PROCESSING, false);
+            int items = mDataTrackDbHelper.updateData(contentValues, TrackContract.TrackData.IS_PROCESSING, true);
+            Log.d("items updayed", items+"");
+
+            Intent intentActionDone = new Intent();
+            intentActionDone.setAction(Constants.Actions.ACTION_CONNECTION_LOST);
+            mLocalBroadcastManager.sendBroadcastSync(intentActionDone);
+        }
+
     }
 
     /**
@@ -732,13 +764,13 @@ public class FixerTrackService extends Service {
 
                     //If some info was not found, mark as INCOMPLETE the state of this song
                     if (!dataTitle || !dataArtist || !dataAlbum || !dataImage || !dataTrackNumber || !dataYear || !dataGenre) {
-                        newTags.put(TrackContract.TrackData.STATUS, AudioItem.FILE_STATUS_INCOMPLETE);
-                        audioItem.setStatus(AudioItem.FILE_STATUS_INCOMPLETE);
+                        newTags.put(TrackContract.TrackData.STATUS, AudioItem.STATUS_ALL_TAGS_NOT_FOUND);
+                        audioItem.setStatus(AudioItem.STATUS_ALL_TAGS_NOT_FOUND);
                     }
                     //All info for this song was found, mark as complete!!!
                     else {
-                        newTags.put(TrackContract.TrackData.STATUS, AudioItem.FILE_STATUS_OK);
-                        audioItem.setStatus(AudioItem.FILE_STATUS_OK);
+                        newTags.put(TrackContract.TrackData.STATUS, AudioItem.STATUS_ALL_TAGS_FOUND);
+                        audioItem.setStatus(AudioItem.STATUS_ALL_TAGS_FOUND);
                     }
 
                     //Rename file if is activated in settings
@@ -890,7 +922,7 @@ public class FixerTrackService extends Service {
             //besides, update the UI and save the state to our database
             else {
                 ContentValues contentValues = new ContentValues();
-                contentValues.put(TrackContract.TrackData.STATUS, AudioItem.FILE_STATUS_BAD);
+                contentValues.put(TrackContract.TrackData.STATUS, AudioItem.STATUS_NO_TAGS_FOUND);
                 contentValues.put(TrackContract.TrackData.IS_PROCESSING, false);
                 contentValues.put(TrackContract.TrackData.IS_SELECTED, false);
                 mDataTrackDbHelper.updateData(mId, contentValues);
@@ -967,6 +999,21 @@ public class FixerTrackService extends Service {
         public void clearValues(){
             mId= -1;
             mPath = null;
+        }
+    }
+
+    public class DetectorChangesConnection extends BroadcastReceiver{
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            if(action != null && action.equals(ConnectivityManager.CONNECTIVITY_ACTION)){
+                mIsConnected = DetectorInternetConnection.isConnected(getApplicationContext());
+                if(!mIsConnected){
+                    finishTaskByUser = false;
+                    stopSelf();
+                }
+            }
         }
     }
 

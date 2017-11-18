@@ -24,6 +24,7 @@ public class Job {
 
         //Minimum time for being periodic job in Nougat are 15 minutes,
         //so here we use the minimum latency instead
+
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N){
             builder.setMinimumLatency(5000);
         }

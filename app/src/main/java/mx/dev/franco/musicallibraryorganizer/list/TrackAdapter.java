@@ -186,14 +186,15 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
             }.execute(audioItem.getAbsolutePath());
 
             switch (audioItem.getStatus()) {
-                case AudioItem.FILE_STATUS_OK:
-                case AudioItem.FILE_STATUS_EDIT_BY_USER:
+                case AudioItem.STATUS_TAGS_CORRECTED_BY_SEMIAUTOMATIC_MODE:
+                case AudioItem.STATUS_ALL_TAGS_FOUND:
+                case AudioItem.STATUS_TAGS_EDITED_BY_USER:
                     holder.mCheckMark.setImageResource(R.drawable.ic_done_all_white);
                     break;
-                case AudioItem.FILE_STATUS_INCOMPLETE:
+                case AudioItem.STATUS_ALL_TAGS_NOT_FOUND:
                     holder.mCheckMark.setImageResource(R.drawable.ic_done_white);
                     break;
-                case AudioItem.FILE_STATUS_BAD:
+                case AudioItem.STATUS_NO_TAGS_FOUND:
                     holder.mCheckMark.setImageResource(R.drawable.ic_error_outline_white);
                     break;
                 case AudioItem.FILE_ERROR_READ:

@@ -306,7 +306,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
      * @param duration how long is displayed the snackbar
      * @param msg message to display
      * @param action action to execute
-     * @param path absolute path of file
+     * @param path absolute path to file
      */
     private void showSnackBar(int duration, String msg, int action, final String path){
         if(mSnackbar != null){
@@ -344,6 +344,10 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
         mSnackbar.show();
     }
 
+    /**
+     * Open files in external app
+     * @param path
+     */
     private void openInExternalApp(String path){
         File file = new File(path);
         String type = AudioItem.getMimeType(path);
@@ -365,8 +369,12 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
         }
     }
 
+    /**
+     *
+     * @param reason
+     */
 
-    private void showSnackBar(int reason){
+    private void setMessageSnackBar(int reason){
         String msg = "";
         switch (reason){
             case Constants.Conditions.NO_INTERNET_CONNECTION:
@@ -486,6 +494,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
             mTrackIdCard.animate().setDuration(DURATION).alpha(0).setListener(new AnimatorListenerAdapter() {
                 @Override
                 public void onAnimationEnd(Animator animation) {
+                    mContent.setEnabled(true);
                     mTrackIdCard.setVisibility(GONE);
                     mContent.setVisibility(View.VISIBLE);
                     mFloatingActionMenu.show();
@@ -706,29 +715,37 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
      * and sets these values into no editable text fields
      */
     private void extractAndCacheData(){
-
+        boolean error = false;
         TagOptionSingleton.getInstance().setAndroid(true);
         TagOptionSingleton.getInstance().setWriteMp3GenresAsText(true);
         TagOptionSingleton.getInstance().setWriteMp4GenresAsText(true);
         String title, artist, album, number, year, genre;
         mAudioFile = new File(mTrackPath);
             try {
+                mAudioTaggerFile = AudioFileIO.read(new File(mTrackPath));
 
                 if((mMimeType.equals("audio/mpeg_mp3") || mMimeType.equals("audio/mpeg") ) && mExtension.toLowerCase().equals("mp3")){
-                    mAudioTaggerFile = AudioFileIO.read(new File(mTrackPath));
-                    Log.d("hasID3v1Tag",((MP3File)mAudioTaggerFile).hasID3v1Tag() + "");
-                    Log.d("hasID3v2Tag",((MP3File)mAudioTaggerFile).hasID3v2Tag() + "");
+                    mAudioHeader = ((MP3File)mAudioTaggerFile).getMP3AudioHeader();
+                    //get info from header before trying to read tags
+                    mCurrentDuration = mAudioHeader.getTrackLength() + "";
+                    mBitrate = mAudioHeader.getBitRate();
+                    mFrequencyVal = mAudioHeader.getSampleRate();
+                    mResolutionVal = mAudioHeader.getBitsPerSample();
+                    mChannelsVal = mAudioHeader.getChannels();
+                    mFileType = mAudioHeader.getFormat();
+                    //Log.d("hasID3v1Tag",((MP3File)mAudioTaggerFile).hasID3v1Tag() + "");
+                    //Log.d("hasID3v2Tag",((MP3File)mAudioTaggerFile).hasID3v2Tag() + "");
                     if(((MP3File)mAudioTaggerFile).hasID3v1Tag() && !((MP3File) mAudioTaggerFile).hasID3v2Tag()){
                         //create new version of ID3v2
                         ID3v24Tag id3v24Tag = new ID3v24Tag( ((MP3File)mAudioTaggerFile).getID3v1Tag() );
                         mAudioTaggerFile.setTag(id3v24Tag);
                         mTag = ((MP3File) mAudioTaggerFile).getID3v2TagAsv24();
-                        Log.d("converted_tag","converted_tag");
+                        //Log.d("converted_tag","converted_tag");
                     }
                     else {
                         if(((MP3File) mAudioTaggerFile).hasID3v2Tag()) {
                             mTag = ((MP3File) mAudioTaggerFile).getID3v2Tag();
-                            Log.d("get_v24_tag","get_v24_tag");
+                            //Log.d("get_v24_tag","get_v24_tag");
                         }
                         //Has no tags? create a new one, but no save until
                         //user apply changes
@@ -736,17 +753,25 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                             ID3v24Tag id3v24Tag = new ID3v24Tag();
                             ((MP3File) mAudioTaggerFile).setID3v2Tag(id3v24Tag);
                             mTag = ((MP3File) mAudioTaggerFile).getID3v2Tag();
-                            Log.d("create_v24_tag","create_v24_tag");
+                            //Log.d("create_v24_tag","create_v24_tag");
                         }
                     }
 
-                    mAudioHeader = ((MP3File)mAudioTaggerFile).getMP3AudioHeader();
+
                 }
                 else {
-                    mAudioTaggerFile = AudioFileIO.read(new File(mTrackPath));
-                    mTag = mAudioTaggerFile.getTag() == null ? mAudioTaggerFile.createDefaultTag() : mAudioTaggerFile.getTag();
                     mAudioHeader = mAudioTaggerFile.getAudioHeader();
+                    //get info from header before trying to read tags
+                    mCurrentDuration = mAudioHeader.getTrackLength() + "";
+                    mBitrate = mAudioHeader.getBitRate();
+                    mFrequencyVal = mAudioHeader.getSampleRate();
+                    mResolutionVal = mAudioHeader.getBitsPerSample();
+                    mChannelsVal = mAudioHeader.getChannels();
+                    mFileType = mAudioHeader.getFormat();
+
+                    mTag = mAudioTaggerFile.getTag() == null ? mAudioTaggerFile.createDefaultTag() : mAudioTaggerFile.getTag();
                 }
+
 
                 //get cover art and save reference to it
                 mCurrentCoverArt = mTag.getFirstArtwork() == null ? null : mTag.getFirstArtwork().getBinaryData();
@@ -769,14 +794,8 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                 mCurrentYear = mTag.getFirst(FieldKey.YEAR);
                 mCurrentGenre = mTag.getFirst(FieldKey.GENRE);
 
-                mCurrentDuration = mAudioHeader.getTrackLength() + "";
-                mBitrate = mAudioHeader.getBitRate();
-                mFrequencyVal = mAudioHeader.getSampleRate();
-                mResolutionVal = mAudioHeader.getBitsPerSample();
-                mChannelsVal = mAudioHeader.getChannels();
-                mFileType = mAudioHeader.getFormat();
 
-                setCurrentValues();
+                error = false;
             } catch (CannotReadException | IOException | ReadOnlyFileException | InvalidAudioFrameException | TagException e) {
                 e.printStackTrace();
 
@@ -793,8 +812,12 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                 mFloatingActionMenu.hide();
                 mSaveButton.hide();
                 mSaveButton.hide();
+                error = true;
 
+            }
+            finally {
 
+                setCurrentValues(error);
             }
 
 
@@ -804,12 +827,27 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
      * Sets the extracted values in the corresponding
      * View objects
      */
-    private void setCurrentValues(){
+    private void setCurrentValues(boolean error){
 
         //file name over cover
         mTitleLayer.setText(mAudioFile.getName());
         //path to file over cover
         mSubtitleLayer.setText(AudioItem.getRelativePath(mAudioFile.getParent()));
+
+        //set values of additional info about song
+        mTrackType.setText(mFileType);
+        mImageSize.setText(AudioItem.getStringImageSize(mCurrentCoverArt));
+        mFileSize.setText(AudioItem.getFileSize(mAudioFile.length()));
+        mTrackLength.setText(AudioItem.getHumanReadableDuration(mCurrentDuration));
+        mStatus.setText(getStatusText());
+        mStatus.setCompoundDrawablesWithIntrinsicBounds(getStatusDrawable(),null,null,null);
+        mBitrateField.setText(AudioItem.getBitrate(mBitrate));
+        mFrequency.setText(AudioItem.getFrequency(mFrequencyVal));
+        mResolution.setText(AudioItem.getResolution(mResolutionVal));
+        mChannels.setText(mChannelsVal);
+
+        if(error)
+            return;
 
         //load a placeholder in case cover is not present
         GlideApp.with(mViewDetailsTrack).
@@ -829,17 +867,6 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
         mYearField.setText(mCurrentYear);
         mGenreField.setText(mCurrentGenre);
 
-        //set values of additional info about song
-        mTrackType.setText(mFileType);
-        mImageSize.setText(AudioItem.getStringImageSize(mCurrentCoverArt));
-        mFileSize.setText(AudioItem.getFileSize(mAudioFile.length()));
-        mTrackLength.setText(AudioItem.getHumanReadableDuration(mCurrentDuration));
-        mStatus.setText(getStatusText());
-        mStatus.setCompoundDrawablesWithIntrinsicBounds(getStatusDrawable(),null,null,null);
-        mBitrateField.setText(AudioItem.getBitrate(mBitrate));
-        mFrequency.setText(AudioItem.getFrequency(mFrequencyVal));
-        mResolution.setText(AudioItem.getResolution(mResolutionVal));
-        mChannels.setText(mChannelsVal);
 
         //when intent brings correction mode  == MANUAL, enable fields
         //to start immediately editing it
@@ -908,7 +935,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                 int canContinue = allowExecute();
 
                 if(canContinue != 0) {
-                    showSnackBar(canContinue);
+                    setMessageSnackBar(canContinue);
                     return;
                 }
 
@@ -1029,7 +1056,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
         //This function requires some contidions to work, check them before
         int canContinue = allowExecute();
         if(canContinue != 0) {
-            showSnackBar(canContinue);
+            setMessageSnackBar(canContinue);
             return;
         }
         if(mCorrectionMode != Constants.CorrectionModes.SEMI_AUTOMATIC)
@@ -1057,14 +1084,14 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
         int status = mCurrentAudioItem.getStatus();
         Drawable drawable = null;
         switch (status){
-            case AudioItem.FILE_STATUS_OK:
-            case AudioItem.FILE_STATUS_EDIT_BY_USER:
+            case AudioItem.STATUS_ALL_TAGS_FOUND:
+            case AudioItem.STATUS_TAGS_EDITED_BY_USER:
                 drawable = getResources().getDrawable(R.drawable.ic_done_all_white_24px,null);
                 break;
-            case AudioItem.FILE_STATUS_INCOMPLETE:
+            case AudioItem.STATUS_ALL_TAGS_NOT_FOUND:
                 drawable = getResources().getDrawable(R.drawable.ic_done_white_24px,null);
                 break;
-            case AudioItem.FILE_STATUS_BAD:
+            case AudioItem.STATUS_NO_TAGS_FOUND:
                 drawable = getResources().getDrawable(R.drawable.ic_error_outline_white_24px,null);
                 break;
             case AudioItem.FILE_ERROR_READ:
@@ -1083,20 +1110,23 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
         int status = mCurrentAudioItem.getStatus();
         String msg = "";
         switch (status){
-            case AudioItem.FILE_STATUS_OK:
+            case AudioItem.STATUS_ALL_TAGS_FOUND:
                 msg = getResources().getString(R.string.file_status_ok);
                 break;
-            case AudioItem.FILE_STATUS_INCOMPLETE:
+            case AudioItem.STATUS_ALL_TAGS_NOT_FOUND:
                 msg = getResources().getString(R.string.file_status_incomplete);
                 break;
-            case AudioItem.FILE_STATUS_BAD:
+            case AudioItem.STATUS_NO_TAGS_FOUND:
                 msg = getResources().getString(R.string.file_status_bad);
                 break;
-            case AudioItem.FILE_STATUS_EDIT_BY_USER:
+            case AudioItem.STATUS_TAGS_EDITED_BY_USER:
                 msg = getResources().getString(R.string.file_status_edit_by_user);
                 break;
             case AudioItem.FILE_ERROR_READ:
                 msg = getString(R.string.file_status_error_read);
+                break;
+            case AudioItem.STATUS_TAGS_CORRECTED_BY_SEMIAUTOMATIC_MODE:
+                msg = getString(R.string.file_status_corrected_by_semiautomatic_mode);
                 break;
             default:
                 msg = getResources().getString(R.string.file_status_no_processed);
@@ -1190,8 +1220,12 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
 
         mCurrentCoverArt =  mTag.getFirstArtwork() == null ? null : mTag.getFirstArtwork().getBinaryData();
         mCurrentCoverArtLength = mCurrentCoverArt == null ? 0 : mCurrentCoverArt.length;
-        mNewCoverArt = mCurrentCoverArt;
-        mNewCoverArtLength = mCurrentCoverArtLength;
+        //check if new cover art has value assigned
+        //from previous trackid operation or updated cover
+        if(mNewCoverArt == null) {
+            mNewCoverArt = mCurrentCoverArt;
+            mNewCoverArtLength = mCurrentCoverArtLength;
+        }
 
         mCurrentTitle = mTitleField.getText().toString().trim();
         mCurrentArtist = mArtistField.getText().toString().trim();
@@ -1447,10 +1481,12 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                 });
 
 
-                mEditMode = true;
+
                 mToolbarCover.setEnabled(false);
+                mTitleField.requestFocus();
                 InputMethodManager imm =(InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
                 imm.showSoftInput(mTitleField,InputMethodManager.SHOW_IMPLICIT);
+                mEditMode = true;
             }
         });
     }
@@ -1560,11 +1596,11 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                         //Then, is necessary update the data in database,
                         //because we obtain this info when the app starts (after first time),
                         //besides, database operations can take a long time
-                        contentValues.put(TrackContract.TrackData.STATUS, AudioItem.FILE_STATUS_EDIT_BY_USER);
+                        contentValues.put(TrackContract.TrackData.STATUS, AudioItem.STATUS_TAGS_EDITED_BY_USER);
                         mDbHelper.updateData(TrackDetailsActivity.this.mCurrentItemId, contentValues);
 
                         //Update mStatus item_list from list
-                        mCurrentAudioItem.setStatus(AudioItem.FILE_STATUS_EDIT_BY_USER);
+                        mCurrentAudioItem.setStatus(AudioItem.STATUS_TAGS_EDITED_BY_USER);
 
                         Log.d("only_cover_art", "updated");
                     }
@@ -1772,10 +1808,10 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
 
                 //Then, is necessary update the data in database,
                 //because we obtain this info when the app starts (after first time),
-                contentValues.put(TrackContract.TrackData.STATUS,AudioItem.FILE_STATUS_EDIT_BY_USER);
+                contentValues.put(TrackContract.TrackData.STATUS,AudioItem.STATUS_TAGS_CORRECTED_BY_SEMIAUTOMATIC_MODE);
 
                 //Update the data of item_list from list
-                mCurrentAudioItem.setStatus(AudioItem.FILE_STATUS_EDIT_BY_USER);
+                mCurrentAudioItem.setStatus(AudioItem.STATUS_TAGS_CORRECTED_BY_SEMIAUTOMATIC_MODE);
 
                 mDbHelper.updateData(mCurrentItemId,contentValues);
                 //all has gone fine? then update this flag value
@@ -1906,9 +1942,9 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
 
                 //Then, is necessary update the data in database,
                 //because we obtain this info when the app starts (after first time)
-                contentValues.put(TrackContract.TrackData.STATUS,AudioItem.FILE_STATUS_EDIT_BY_USER);
+                contentValues.put(TrackContract.TrackData.STATUS,AudioItem.STATUS_TAGS_EDITED_BY_USER);
                 //Update the data of item_list from list
-                mCurrentAudioItem.setStatus(AudioItem.FILE_STATUS_EDIT_BY_USER);
+                mCurrentAudioItem.setStatus(AudioItem.STATUS_TAGS_EDITED_BY_USER);
                 mDbHelper.updateData(mCurrentItemId,contentValues);
                 // all has gone fine? then change this flag value
                 mDataUpdated = true;
@@ -1938,14 +1974,16 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
         @Override
         protected void onPostExecute(Void result){
             mProgressBar.setVisibility(View.INVISIBLE);
-            disableFields();
             if(mOperationType != REMOVE_COVER){
                 hideLayoutTrackIdResults();
             }
             else {
                 redrawCover();
             }
-            enableMiniFabs(true);
+            if(mTrackIdCard.getVisibility() != View.VISIBLE) {
+                disableFields();
+                enableMiniFabs(true);
+            }
         }
 
         private void hideLayoutTrackIdResults(){
@@ -1955,6 +1993,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
             mTrackIdCard.animate().setDuration(DURATION).alpha(0).setListener(new AnimatorListenerAdapter() {
                 @Override
                 public void onAnimationEnd(Animator animation) {
+                    mContent.setEnabled(true);
                     mTrackIdCard.setVisibility(GONE);
                     mContent.setVisibility(View.VISIBLE);
                     mContent.animate().setDuration(DURATION).alpha(1).setListener(new AnimatorListenerAdapter() {
@@ -2134,13 +2173,13 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
         });
 
 
-        mEditMode = true;
+
         mContent.animate().setDuration(DURATION).alpha(0).setListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationEnd(Animator animation) {
                 mContent.setVisibility(GONE);
                 mAppBarLayout.setExpanded(false);
-
+                mContent.setEnabled(false);
                 mTrackIdCard.animate().setDuration(DURATION).alpha(1).setListener(new AnimatorListenerAdapter() {
                     @Override
                     public void onAnimationEnd(Animator animation) {
@@ -2204,7 +2243,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                         mSaveButton.show();
                         //mSaveButton.setVisibility(View.VISIBLE);
                         mActionBar.show();
-
+                        mEditMode = true;
                     }
                 });
 
@@ -2227,7 +2266,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
         if(mNewCoverArt != null){
             msg = getString(R.string.cover_art_found);
             mAppBarLayout.setExpanded(false);
-            mEditMode = true;
+
 
             mSaveButton.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -2276,7 +2315,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                 @Override
                 public void onAnimationEnd(Animator animation) {
                     mContent.setVisibility(View.GONE);
-
+                    mContent.setEnabled(false);
                     mTrackIdCard.animate().setDuration(DURATION).alpha(1).setListener(new AnimatorListenerAdapter() {
                         @Override
                         public void onAnimationEnd(Animator animation) {
@@ -2297,6 +2336,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
 
                             mFloatingActionMenu.hide();
                             mSaveButton.show();
+                            mEditMode = true;
                         }
                     });
                 }
@@ -2320,19 +2360,16 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
 
     private int allowExecute(){
 
-        //API not initialized
-        if(!apiInitialized){
-            Job.scheduleJob(getApplicationContext());
-            return Constants.Conditions.NO_INITIALIZED_API;
-        }
-
-
         //No internet connection
         if(!DetectorInternetConnection.isConnected(getApplicationContext())){
             return Constants.Conditions.NO_INTERNET_CONNECTION;
         }
 
-
+        //API not initialized
+        if(!apiInitialized){
+            Job.scheduleJob(getApplicationContext());
+            return Constants.Conditions.NO_INITIALIZED_API;
+        }
 
         return 0;
     }

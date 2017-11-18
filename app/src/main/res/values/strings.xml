@@ -209,7 +209,7 @@
     <string name="semi_automatic_mode">Modo semiautomático</string>
     <string name="sort_by">Ordenar por</string>
     <string name="location">Ubicación</string>
-    <string name="could_not_read_file">No se pueden leer las etiquetas de este archivo:</string>
+    <string name="could_not_read_file">No se pueden leer las etiquetas de este archivo. </string>
     <string name="does_not_exist_cover">La canción no tiene carátula.</string>
     <string name="can_not_extract_null_cover">No se puede extraer una carátula inexistente.</string>
     <string name="error">Ha ocurrido un error, inténtalo de nuevo.</string>
@@ -270,6 +270,9 @@
         Si esta opción no esta activa se cancelará el proceso de corrección cuando la cierres. Para los demás modos, la corrección se interrumpira si cierras la aplicación.</item>
     </string-array>
     <string name="title_activity_scrolling_about">ScrollingAboutActivity</string>
+    <string name="not_supported">Tipo no soportado</string>
+    <string name="file_status_corrected_by_semiautomatic_mode">Etiquestas corregidas por el modo semiautomatico.</string>
+    <string name="connection_lost">La conexión a Internet se ha perdido.</string>
 
 
 </resources>

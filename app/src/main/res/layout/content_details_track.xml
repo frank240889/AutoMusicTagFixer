@@ -26,6 +26,8 @@
             android:layout_centerInParent="false"
             android:layout_centerVertical="false"
             android:elevation="@dimen/dialog_elevation"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
             android:splitMotionEvents="false">
 
 
@@ -48,18 +50,19 @@
                 android:layout_marginStart="5dp"
                 android:layout_marginTop="10dp"
                 android:gravity="center_vertical"
-                android:text="status"
+                android:text="@string/could_not_read_file"
                 android:textColor="@color/true_white" />
 
 
             <android.support.design.widget.TextInputLayout
                 android:id="@+id/track_name_details_layout"
+                android:theme="@style/CustomEditTextHint"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/status"
                 android:layout_marginTop="10dp">
 
-                <EditText
+                <android.support.design.widget.TextInputEditText
                     android:id="@+id/track_name_details"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -76,12 +79,13 @@
 
             <android.support.design.widget.TextInputLayout
                 android:id="@+id/artist_name_details_layout"
+                android:theme="@style/CustomEditTextHint"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_alignParentStart="true"
                 android:layout_below="@+id/track_name_details_layout">
 
-                <EditText
+                <android.support.design.widget.TextInputEditText
                     android:id="@+id/artist_name_details"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -97,12 +101,13 @@
 
             <android.support.design.widget.TextInputLayout
                 android:id="@+id/album_name_details_layout"
+                android:theme="@style/CustomEditTextHint"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_alignParentStart="true"
                 android:layout_below="@+id/artist_name_details_layout">
 
-                <EditText
+                <android.support.design.widget.TextInputEditText
                     android:id="@+id/album_name_details"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -119,12 +124,13 @@
 
             <android.support.design.widget.TextInputLayout
                 android:id="@+id/track_genre_layout"
+                android:theme="@style/CustomEditTextHint"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_alignParentStart="true"
                 android:layout_below="@+id/album_name_details_layout">
 
-                <EditText
+                <android.support.design.widget.TextInputEditText
                     android:id="@+id/track_genre"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -140,12 +146,13 @@
 
             <android.support.design.widget.TextInputLayout
                 android:id="@+id/track_number_layout"
+                android:theme="@style/CustomEditTextHint"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_alignParentEnd="false"
                 android:layout_below="@+id/track_genre_layout">
 
-                <EditText
+                <android.support.design.widget.TextInputEditText
                     android:id="@+id/track_number"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -161,12 +168,13 @@
 
             <android.support.design.widget.TextInputLayout
                 android:id="@+id/track_year_layout"
+                android:theme="@style/CustomEditTextHint"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_alignParentStart="false"
                 android:layout_below="@+id/track_number_layout">
 
-                <EditText
+                <android.support.design.widget.TextInputEditText
                     android:id="@+id/track_year"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -237,7 +245,7 @@
                     android:drawableStart="@drawable/ic_description_white"
                     android:gravity="center_vertical"
                     android:singleLine="true"
-                    android:text="Tipo desconocido"
+                    android:text="@string/not_supported"
                     android:textAlignment="viewStart"
                     android:visibility="visible" />
 

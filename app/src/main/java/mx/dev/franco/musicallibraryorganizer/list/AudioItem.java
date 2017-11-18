@@ -7,8 +7,6 @@ import android.os.Parcelable;
 import android.util.Log;
 import android.webkit.MimeTypeMap;
 
-import com.gracenote.gnsdk.GnAudioFile;
-
 import java.io.File;
 
 import mx.dev.franco.musicallibraryorganizer.utilities.StringUtilities;
@@ -18,12 +16,13 @@ import mx.dev.franco.musicallibraryorganizer.utilities.StringUtilities;
  */
 
 public final class AudioItem implements Parcelable{
-    public static final int FILE_STATUS_NO_PROCESSED = 0;
-    public static final int FILE_STATUS_OK = 1;
-    public static final int FILE_STATUS_INCOMPLETE = 2;
-    public static final int FILE_STATUS_BAD = -1;
-    public static final int FILE_STATUS_EDIT_BY_USER = 3;
+    public static final int STATUS_NO_TAGS_SEARCHED_YET = 0;
+    public static final int STATUS_ALL_TAGS_FOUND = 1;
+    public static final int STATUS_ALL_TAGS_NOT_FOUND = 2;
+    public static final int STATUS_NO_TAGS_FOUND = -1;
+    public static final int STATUS_TAGS_EDITED_BY_USER = 3;
     public static final int FILE_ERROR_READ = 4;
+    public static final int STATUS_TAGS_CORRECTED_BY_SEMIAUTOMATIC_MODE = 5;
     public static final float KILOBYTE = 1048576;
 
     private long id = -1;
@@ -31,10 +30,9 @@ public final class AudioItem implements Parcelable{
     private String artist = "";
     private String album = "";
     private String absolutePath = "";
-    private int status = FILE_STATUS_NO_PROCESSED;
+    private int status = STATUS_NO_TAGS_SEARCHED_YET;
     private int position = -1;
 
-    private boolean isSelected = false;
     private boolean isChecked = false;
     private boolean isProcessing = false;
     private boolean isPlayingAudio = false;
@@ -115,15 +113,6 @@ public final class AudioItem implements Parcelable{
 
     public AudioItem setPosition(int position) {
         this.position = position;
-        return this;
-    }
-
-    public boolean isSelected() {
-        return isSelected;
-    }
-
-    public AudioItem setSelected(boolean selected) {
-        isSelected = selected;
         return this;
     }
 
@@ -310,33 +299,6 @@ public final class AudioItem implements Parcelable{
         return newAbsolutePath;
     }
 
-
-    public String[] getExtraData(){
-        String[] extraData = new String[3];
-        try {
-            GnAudioFile gnAudioFile = new GnAudioFile(new File(getAbsolutePath()));
-            gnAudioFile.sourceInit();
-
-
-            float freq = ((float) gnAudioFile.samplesPerSecond() / 1000f);
-            extraData[0] = freq + " Khz";
-
-            long res = gnAudioFile.sampleSizeInBits();
-            extraData[1] = res + " bits";
-
-            long cha = gnAudioFile.numberOfChannels();
-            extraData[2] = cha == 1 ? "Mono" : (cha == 2 ? "Estéreo" : "Surround");
-
-            gnAudioFile.sourceClose();
-            gnAudioFile = null;
-        }
-        catch (Exception e){
-            e.printStackTrace();
-        }finally {
-            return extraData;
-        }
-
-    }
 
     public static String getFrequency(String freq){
         if(freq == null || freq.isEmpty())

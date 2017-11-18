@@ -134,6 +134,7 @@ public class MainActivity extends AppCompatActivity
     private IntentFilter mFilterApiInitialized;
     private IntentFilter mFilterActionSetAudioProcessing;
     private IntentFilter mFilterActionNotFound;
+    private IntentFilter mFilterActionConnectionLost;
     //the receiver for responses.
     private ResponseReceiver mReceiver;
 
@@ -181,6 +182,8 @@ public class MainActivity extends AppCompatActivity
         mFilterActionFail = new IntentFilter(Constants.Actions.ACTION_FAIL);
         mFilterApiInitialized = new IntentFilter(Constants.GnServiceActions.ACTION_API_INITIALIZED);
         mFilterActionSetAudioProcessing = new IntentFilter(Constants.Actions.ACTION_SET_AUDIOITEM_PROCESSING);
+        mFilterActionConnectionLost = new IntentFilter(Constants.Actions.ACTION_CONNECTION_LOST);
+
         //create mReceiver
         mReceiver = new ResponseReceiver();
         //get instance of local broadcast manager
@@ -716,7 +719,7 @@ public class MainActivity extends AppCompatActivity
             //Automatic mode require some conditions to execute
             int canContinue = allowExecute(getApplicationContext());
             if(canContinue != 0) {
-                showSnackBar(canContinue);
+                setSnackBarMessage(canContinue);
                 return;
             }
 
@@ -917,11 +920,7 @@ public class MainActivity extends AppCompatActivity
                 .setNegativeButton(getString(R.string.semiautomatic), new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        int canContinue = allowExecute(getApplicationContext());
-                        if(canContinue != 0) {
-                            showSnackBar(canContinue);
-                            return;
-                        }
+
 
                         onClickCoverArt(getView, position, Constants.CorrectionModes.SEMI_AUTOMATIC);
 
@@ -933,7 +932,7 @@ public class MainActivity extends AppCompatActivity
 
                         int canContinue = allowExecute(getApplicationContext());
                         if(canContinue != 0) {
-                            showSnackBar(canContinue);
+                            setSnackBarMessage(canContinue);
                             return;
                         }
                         registerReceivers();
@@ -1166,6 +1165,8 @@ public class MainActivity extends AppCompatActivity
         mLocalBroadcastManager.registerReceiver(mReceiver, mFilterActionFail);
         mLocalBroadcastManager.registerReceiver(mReceiver, mFilterActionSetAudioProcessing);
         mLocalBroadcastManager.registerReceiver(mReceiver, mFilterActionNotFound);
+        mLocalBroadcastManager.registerReceiver(mReceiver, mFilterActionConnectionLost);
+
     }
 
     private void finishTaskByUser(){
@@ -1181,7 +1182,7 @@ public class MainActivity extends AppCompatActivity
         });
     }
 
-    private void showSnackBar(int reason){
+    private void setSnackBarMessage(int reason){
         String msg = "";
         switch (reason){
             case Constants.Conditions.NO_INTERNET_CONNECTION:
@@ -1258,7 +1259,7 @@ public class MainActivity extends AppCompatActivity
         AudioItem currentAudioItem = mAudioItemArrayAdapter.getAudioItemByIdOrPath(id,null);
 
         if(currentAudioItem != null) {
-            currentAudioItem.setStatus(AudioItem.FILE_STATUS_BAD);
+            currentAudioItem.setStatus(AudioItem.STATUS_NO_TAGS_FOUND);
             currentAudioItem.setChecked(false);
             currentAudioItem.setProcessing(false);
             mAudioItemArrayAdapter.notifyItemChanged(currentAudioItem.getPosition());
@@ -1621,6 +1622,14 @@ public class MainActivity extends AppCompatActivity
                             }
                         });
                     break;
+                case Constants.Actions.ACTION_CONNECTION_LOST:
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            showSnackBar(Snackbar.LENGTH_LONG, getString(R.string.connection_lost), NO_ID);
+                            //setCancelProcessingAudioItem(intent.getLongExtra(Constants.MEDIASTORE_ID,NO_ID));
+                        }
+                    });
                 case Constants.Actions.ACTION_CANCEL_TASK:
                     runOnUiThread(new Runnable() {
                         @Override

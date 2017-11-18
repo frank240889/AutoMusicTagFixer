@@ -114,4 +114,9 @@
         <item name="android:fontFamily">sans-serif-light</item>
     </style>
 
+    <!-- TextInputLayout style-->
+    <style name="CustomEditTextHint" parent="AppTheme">
+        <item name="colorAccent">@color/primaryLightColor</item>
+    </style>
+
 </resources>
