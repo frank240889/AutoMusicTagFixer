@@ -961,10 +961,6 @@ public class MainActivity extends AppCompatActivity
                                     return;
                                 }
 
-                                if(mAudioItemArrayAdapter.getCountSelectedItems() == 0){
-                                    showSnackBar(Snackbar.LENGTH_LONG, getString(R.string.no_songs_to_correct), NO_ID);
-                                    return;
-                                }
                                 registerReceivers();
                                 Intent intent = new Intent(MainActivity.this, FixerTrackService.class);
                                 if(Settings.BACKGROUND_CORRECTION)
@@ -1263,7 +1259,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void setAudioItemFound(AudioItem audioItem, int position){
-        Log.d("setAudioItemFound", (audioItem == null) + " " + position);
+        Log.d("setAudioItemFound", (audioItem == null) + " " + audioItem.getId());
         AudioItem currentAudioItem = mAudioItemArrayAdapter.getAudioItemByIdOrPath(audioItem.getId(),null);
 
         if(currentAudioItem != null) {
@@ -1675,7 +1671,6 @@ public class MainActivity extends AppCompatActivity
                         }
                     });
                     mLocalBroadcastManager.unregisterReceiver(mReceiver);
-                    unregisterReceiver(mReceiver);
                     break;
             }
         }

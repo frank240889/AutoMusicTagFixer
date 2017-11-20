@@ -58,7 +58,7 @@ public class ScrollingAboutActivity extends AppCompatActivity {
             }
         });
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setTitle(getString(R.string.about) + " " + getString(R.string.app_name));
+        getSupportActionBar().setTitle(getString(R.string.about));
     }
 
     private void openInExternalApp(String action, String msg){

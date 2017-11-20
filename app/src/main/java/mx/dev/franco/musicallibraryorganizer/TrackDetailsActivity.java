@@ -479,6 +479,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
             return;
         }
 
+        Log.d("mEditMode",mEditMode+"");
         if (mEditMode) {
             hideTrackedIdResultsLayout();
             disableFields();
@@ -2101,6 +2102,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                             cachingCurrentValues();
                             mOnlyCoverArt = false;
                             mDataUpdated = false;
+                            mEditMode = false;
 
                         }
                     });
