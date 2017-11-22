@@ -229,7 +229,7 @@
                     android:layout_alignParentTop="true"
                     android:layout_marginStart="10dp"
                     android:layout_toEndOf="@+id/fileSize"
-                    android:drawableStart="@drawable/ic_surround_sound_white_24px"
+                    android:drawableStart="@drawable/ic_speaker_white_24px"
                     android:gravity="center_vertical"
                     android:singleLine="true"
                     android:text="0 Canales"

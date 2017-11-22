@@ -235,6 +235,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
     private MenuItem searchInWebItem;
     private String mMimeType = "";
     private String mExtension = "";
+    private boolean mIsMp3 = false;
 
 
     @Override
@@ -723,11 +724,12 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
         TagOptionSingleton.getInstance().setWriteMp3GenresAsText(true);
         TagOptionSingleton.getInstance().setWriteMp4GenresAsText(true);
         String title, artist, album, number, year, genre;
+        mIsMp3 = (mMimeType.equals("audio/mpeg_mp3") || mMimeType.equals("audio/mpeg") ) && mExtension.toLowerCase().equals("mp3");
         mAudioFile = new File(mTrackPath);
             try {
                 mAudioTaggerFile = AudioFileIO.read(new File(mTrackPath));
 
-                if((mMimeType.equals("audio/mpeg_mp3") || mMimeType.equals("audio/mpeg") ) && mExtension.toLowerCase().equals("mp3")){
+                if(mIsMp3){
                     mAudioHeader = ((MP3File)mAudioTaggerFile).getMP3AudioHeader();
                     //get info from header before trying to read tags
                     mCurrentDuration = mAudioHeader.getTrackLength() + "";
@@ -1594,6 +1596,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
         private final String TAG = AsyncUpdateData.class.getName();
         private int mOperationType;
         private boolean mOverwriteAllTags = false;
+        private String causeError = "";
 
 
         AsyncUpdateData(int operationType, boolean overwriteAllTags){
@@ -1646,6 +1649,8 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
             }
             catch (CannotWriteException | TagException e){
                 mDataUpdated = false;
+                causeError = e.getMessage();
+
                 e.printStackTrace();
             }
 
@@ -1829,9 +1834,18 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                         mTrackPath = newAbsolutePath;
                         //if file was renamed, we need a new reference to renamed file
                         //in case the user needs to make additional corrections
+                        //re read file and tags written
                         mAudioTaggerFile = AudioFileIO.read(new File(mTrackPath));
-                        mTag = ((MP3File)mAudioTaggerFile).getID3v2Tag();
-                        mAudioHeader = mAudioTaggerFile.getAudioHeader();
+                        //get an empty tag or its current values
+                        if(mIsMp3){
+                            mAudioHeader = ((MP3File)mAudioTaggerFile).getMP3AudioHeader();
+                            mTag = ((MP3File) mAudioTaggerFile).getID3v2Tag();
+                        }
+                        else {
+                            //get info from header before trying to read tags
+                            mAudioHeader = mAudioTaggerFile.getAudioHeader();
+                            mTag = mAudioTaggerFile.getTag() == null ? mAudioTaggerFile.createDefaultTag() : mAudioTaggerFile.getTag();
+                        }
 
                         Log.d("media store success", successMediaStore+" path: " + mTrackPath);
                     }
@@ -1852,6 +1866,8 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
             catch ( CannotWriteException | TagException | ReadOnlyFileException | CannotReadException | IOException | InvalidAudioFrameException e)  {
                 e.printStackTrace();
                 mDataUpdated = false;
+                //get an empty tag or its current values
+                causeError = e.getMessage();
             }
         }
 
@@ -1921,7 +1937,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                     }
 
                     //Here we update the data in case there have had changes
-                    //if not, no case to write any mTag
+                    //if not, no case to write any Tag
                     if (hasChanges) {
                         if((mMimeType.equals("audio/mpeg_mp3") || mMimeType.equals("audio/mpeg")) && mExtension.equals("mp3") && ((MP3File)mAudioTaggerFile).hasID3v1Tag()){
                             //remove old version of ID3 tags
@@ -1930,7 +1946,6 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                         }
 
 
-                        //AudioFileIO.write(mAudioTaggerFile);
                         mAudioTaggerFile.commit();
                         Log.d("all_edited_metadata", "updated");
                     }
@@ -1961,9 +1976,18 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                         //if file was renamed, we need a new reference to renamed file
                         //in case the user needs to make additional corrections
                         mTrackPath = newAbsolutePath;
+                        //re read file and tags written
                         mAudioTaggerFile = AudioFileIO.read(new File(mTrackPath));
-                        mTag = ((MP3File)mAudioTaggerFile).getID3v2Tag();
-                        mAudioHeader = mAudioTaggerFile.getAudioHeader();
+                        //get an empty tag or its current values
+                        if(mIsMp3){
+                            mAudioHeader = ((MP3File)mAudioTaggerFile).getMP3AudioHeader();
+                            mTag = ((MP3File) mAudioTaggerFile).getID3v2Tag();
+                        }
+                        else {
+                            //get info from header before trying to read tags
+                            mAudioHeader = mAudioTaggerFile.getAudioHeader();
+                            mTag = mAudioTaggerFile.getTag() == null ? mAudioTaggerFile.createDefaultTag() : mAudioTaggerFile.getTag();
+                        }
 
                         values.clear();
                         values = null;
@@ -1986,6 +2010,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
             catch ( CannotWriteException | TagException | ReadOnlyFileException | CannotReadException | IOException | InvalidAudioFrameException e) {
                 e.printStackTrace();
                 mDataUpdated = false;
+                causeError = e.getMessage();
             }
         }
 
@@ -2089,11 +2114,12 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                             }
                             //If data was not updated
                             else {
-                                msg = getString(R.string.message_no_data_updated);
+                                msg = getString(R.string.message_no_data_updated) + ": " + causeError + ".";
+                                setPreviousValues();
                             }
 
 
-                            showSnackBar(Snackbar.LENGTH_SHORT, msg,ACTION_NONE, null);
+                            showSnackBar(7000, msg,ACTION_NONE, null);
                             mFloatingActionMenu.show();
                             mSaveButton.hide();
                             mToolbarCover.setEnabled(true);

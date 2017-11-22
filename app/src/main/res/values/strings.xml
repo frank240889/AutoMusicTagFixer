@@ -25,7 +25,7 @@
     <string name="select_all_items">Seleccionar todas</string>
     <string name="share_and_rate">Comparte y califica</string>
 
-    <string name="message_no_data_updated">No se pudo actualizar la canción, inténtalo de nuevo.</string>
+    <string name="message_no_data_updated">No se pudo actualizar la canción: </string>
     <string name="message_data_update">Actualización correcta.</string>
     <string name="image_too_big">Imagen muy grande, reduce su tamaño.</string>
     <string name="error_load_image">Error al leer la imagen.</string>
