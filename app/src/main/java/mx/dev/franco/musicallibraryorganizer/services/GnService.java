@@ -3,6 +3,7 @@ package mx.dev.franco.musicallibraryorganizer.services;
 import android.content.Context;
 import android.content.Intent;
 import android.support.v4.content.LocalBroadcastManager;
+import android.util.Log;
 
 import com.gracenote.gnsdk.GnDescriptor;
 import com.gracenote.gnsdk.GnException;
@@ -23,9 +24,10 @@ import mx.dev.franco.musicallibraryorganizer.utilities.Constants;
  */
 
 public class GnService{
-    //We can set a context in static field while we call getApplicationContext() to avoid memory leak, because
-    //if we use the activity context, this activity can remain in memory due is still in use its context
-    private static Context context;
+    //We can set a sContext in static field while we call getApplicationContext() to avoid memory leak, because
+    //if we use the activity sContext, this activity can remain in memory due is still in use its sContext
+    private static Context sContext;
+    private static GnService sGnService;
     static GnManager gnManager;
     public static GnUser gnUser;
     private static GnLocale gnLocale;
@@ -40,32 +42,35 @@ public class GnService{
     /**
      * We don't need instances of this class
      */
-    private GnService(){
-
+    private GnService(Context context){
+        if(sContext == null)
+            sContext = context.getApplicationContext();
     }
 
 
     /**
-     * Set context for use in GNSDK methods
+     * Set sContext for use in GNSDK methods
      * @param appContext
      */
-    public static void setAppContext(Context appContext){
-        if(context == null)
-            context = appContext.getApplicationContext();
+    public static GnService withContext(Context appContext){
+        if(sGnService == null){
+            sGnService = new GnService(appContext);
+        }
+        return sGnService;
     }
 
     /**
      * This method initializes the API
      */
-    public static void initializeAPI(final int connectedFrom){
+    public void initializeAPI(final int connectedFrom){
         new Thread(new Runnable() {
             @Override
             public void run() {
-
+                Log.d("GNSDK","starting GNSDK");
                 //We initialize the necessary objects for using the GNSDK API in a different thread for not blocking the UI
                 try {
-                    gnManager = new GnManager(context, gnsdkLicenseString, GnLicenseInputMode.kLicenseInputModeString);
-                    gnUser = new GnUser(new GnUserStore(context), gnsdkClientId, gnsdkClientTag, appString);
+                    gnManager = new GnManager(sContext, gnsdkLicenseString, GnLicenseInputMode.kLicenseInputModeString);
+                    gnUser = new GnUser(new GnUserStore(sContext), gnsdkClientId, gnsdkClientTag, appString);
                     gnLocale = new GnLocale(GnLocaleGroup.kLocaleGroupMusic, GnLanguage.kLanguageSpanish, GnRegion.kRegionGlobal, GnDescriptor.kDescriptorDetailed, gnUser);
                     gnLocale.setGroupDefault();
                     GnStorageSqlite.enable();
@@ -75,12 +80,13 @@ public class GnService{
                     if (connectedFrom == API_INITIALIZED_AFTER_CONNECTED){
                         Intent intent = new Intent();
                         intent.setAction(Constants.GnServiceActions.ACTION_API_INITIALIZED);
-                        LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
+                        LocalBroadcastManager.getInstance(sContext).sendBroadcast(intent);
                         
                     }
 
                 } catch (GnException e) {
                     e.printStackTrace();
+                    Job.scheduleJob(sContext);
                 }
             }
         }).start();

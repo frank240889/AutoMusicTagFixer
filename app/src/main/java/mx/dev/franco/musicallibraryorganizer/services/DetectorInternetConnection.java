@@ -14,9 +14,9 @@ import android.util.Log;
 public class DetectorInternetConnection extends JobService {
     private static boolean isInitializing = false;
     /**
-     * Callback when service start, here we execute our
-     * task in background, but if is an intensive task
-     * we need to create another thread because
+     * Callback when service start, here is when we execute our
+     * task in background, so an intensive task
+     * needs to run in another thread because
      * this callback it executes on UI Thread
      * @param params
      * @return true for execute the code
@@ -56,12 +56,12 @@ public class DetectorInternetConnection extends JobService {
         if(isConnected && !GnService.apiInitialized && !isInitializing) {
             //only request initialize GNSDK API one time
             isInitializing = true;
-            GnService.setAppContext(getApplicationContext());
-            //GnService.API_INITIALIZED_AFTER_CONNECTED) flag indicates
+            //GnService.API_INITIALIZED_AFTER_CONNECTED flag indicates
             //that service was not initialized from Splash.
             //is useful to inform to user in MainActivity
             //that API of GNSDK has been initialized
-            GnService.initializeAPI(GnService.API_INITIALIZED_AFTER_CONNECTED);
+            GnService.withContext(getApplicationContext()).initializeAPI(GnService.API_INITIALIZED_AFTER_CONNECTED);
+
         }
 
         //if is connected, we finalize this job

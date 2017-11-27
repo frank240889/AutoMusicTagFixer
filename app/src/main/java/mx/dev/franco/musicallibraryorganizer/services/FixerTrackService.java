@@ -288,9 +288,9 @@ public class FixerTrackService extends Service {
                 GnMusicIdFileInfo gnMusicIdFileInfo = mGnMusicIdFileInfoManager.add(fullPath);
                 gnMusicIdFileInfo.fileName(fullPath);
                 gnMusicIdFileInfo.mediaId(String.valueOf(id));
-                gnMusicIdFileInfo.trackTitle(title);
-                gnMusicIdFileInfo.trackArtist(artist);
-                gnMusicIdFileInfo.albumTitle(album);
+                //gnMusicIdFileInfo.trackTitle(title);
+                //gnMusicIdFileInfo.trackArtist(artist);
+                //gnMusicIdFileInfo.albumTitle(album);
 
             } catch (GnException e) {
                 e.printStackTrace();

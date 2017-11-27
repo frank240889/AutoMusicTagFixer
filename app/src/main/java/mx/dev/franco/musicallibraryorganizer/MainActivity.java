@@ -18,6 +18,7 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
@@ -39,7 +40,6 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.util.SparseIntArray;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -107,26 +107,25 @@ public class MainActivity extends AppCompatActivity
     //in case there have no music files
     private TextView mSearchAgainMessageTextView;
     //search widget object, for search more quickly
-    //any track in recyclerview list
+    //any track by title in recyclerview list
     private SearchView mSearchViewWidget;
-    //mFloatingActionButton button, this executes main task: correct a bunch of selected tracks;
+    //FloatingActionButton button, this executes main task: correct a bunch of selected tracks;
     //this executes the automatic mode, without intervention of user,
-    //this button also can cancel the task, in case the user decide it.
+    //it can also cancel the task, in case the user decide it.
     private FloatingActionButton mFloatingActionButton;
     //swipe refresh layout for give to user the
-    //facility to re scan his/her library making a swipe down gesture,
+    //ability to re scan his/her library making a swipe down gesture,
     //this is a material design pattern
     private SwipeRefreshLayout mSwipeRefreshLayout;
-    //recycler view used for better performance in case the
-    //user has a huge musical library
+    //recycler view is a component that delivers
+    //better performance with huge data sources
     private RecyclerView mRecyclerView;
-    //instance to connection do datadabse
+    //instance to connection to datadabse
     private DataTrackDbHelper mDataTrackDbHelper;
-    //local broadcast to manage response from FixerTrackService.
+    //local broadcast for handling responses from FixerTrackService.
     private LocalBroadcastManager mLocalBroadcastManager;
-    //these filters help to separate the action received from
-    //service and to handling every different action,
-    //depending on response from FixerTrackService
+    //these filters help to indicate which intents can be
+    //received and handled from FixerTrackService.
     private IntentFilter mFilterActionDone;
     private IntentFilter mFilterActionCancel;
     private IntentFilter mFilterActionCompleteTask;
@@ -135,24 +134,24 @@ public class MainActivity extends AppCompatActivity
     private IntentFilter mFilterActionSetAudioProcessing;
     private IntentFilter mFilterActionNotFound;
     private IntentFilter mFilterActionConnectionLost;
-    //the receiver for responses.
+    //the receiver that handles the intents from FixerTrackService
     private ResponseReceiver mReceiver;
 
+    //global references to menu items
     private MenuItem mMenuItemPath, mMenuItemTitle, mMenuItemArtist, mMenuItemAlbum;
     private MenuItem lastCheckedItem;
     private Menu mMenu;
 
-    private SparseIntArray mCheckedItems;
-
     private GoogleApiClient client;
 
-    //contextual mToolbar
+    //contextual Toolbar
     private Toolbar mToolbar;
 
-    //snackbar to indicate to user what is happening
+    //snackbar is a bottom UI component
+    //to indicate to user what is happening
     private Snackbar mSnackbar;
     //a reference to action bar to making use
-    //of something useful methods of this object
+    //of something useful methods from this object
     private ActionBar mActionBar;
 
     @RequiresApi(api = Build.VERSION_CODES.M)
@@ -160,6 +159,9 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        //windows is the top level in the view hierarchy,
+        //it has a single Surface in which the contents of the window is rendered
+        //A Surface is an object holding pixels that are being composited to the screen.
         Window window = getWindow();
         window.setFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS,WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
         window.setAllowEnterTransitionOverlap(true);
@@ -201,48 +203,50 @@ public class MainActivity extends AppCompatActivity
         mSwipeRefreshLayout.setProgressBackgroundColorSchemeColor(ContextCompat.getColor(getApplicationContext(),R.color.grey_900));
 
         mRecyclerView = (RecyclerView) findViewById(R.id.recyclerView);
+        //layout manager gives the ability to show elements in differents
+        //ways, for example, LinearLayoutManager, shows as a list, but we can use
+        //GridLayoutManager and our elements will be shown as mosaics.
         mRecyclerView.setLayoutManager( new LinearLayoutManager(this));
+        //this options gives us more improvements
         mRecyclerView.setHasFixedSize(true);
         mRecyclerView.setItemViewCacheSize(10);
-        mRecyclerView.setHapticFeedbackEnabled(true);
-        mRecyclerView.setSoundEffectsEnabled(true);
         mRecyclerView.setDrawingCacheEnabled(true);
         mRecyclerView.setDrawingCacheQuality(View.DRAWING_CACHE_QUALITY_LOW);
+        //enable sound and vibration when touch an element
+        mRecyclerView.setHapticFeedbackEnabled(true);
+        mRecyclerView.setSoundEffectsEnabled(true);
 
+        //get action bar
         setSupportActionBar(mToolbar);
         mActionBar = getSupportActionBar();
 
-        //hide mFloatingActionButton and show until list has been created
+        //hide FloatingActionButton, then show if and only if list has been created
         mFloatingActionButton.hide();
         //create data source for adapter
         mAudioItemList = new ArrayList<>();
         mAudioItemArrayAdapter = new TrackAdapter(getApplicationContext(), mAudioItemList,this);
         sSorter = TrackAdapter.Sorter.getInstance();
 
-        mCheckedItems = new SparseIntArray();
-
-
-        //pass a referecne to data source to media player
+        //pass a reference to data source to media player
         sMediaPlayer.setAdapter(mAudioItemArrayAdapter);
-        //create snack bar for messages
+        //we create a snack bar for messages
         createSnackBar();
 
         //set adapter to our recyclerview
         mRecyclerView.setAdapter(mAudioItemArrayAdapter);
-        //Lets implement functionality of refresh layout listener
+        //Lets implement functionality for refresh layout listener
         mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
                 mSearchAgainMessageTextView.setVisibility(View.GONE);
                 //If we already had the permission granted, lets go to read data from database and pass them to mAudioItemArrayAdapter, to show in the ListView,
-                //otherwise we show the reason to access files
+                //otherwise we show the reason to access files one and another time until user grant permission
                 if(!RequiredPermissions.ACCESS_GRANTED_FILES) {
-                    showReason();
-                    return;
+                    showRequestPermissionReason();
                 }
                 else {
 
-                    //if we have the permission, check Bundle object to verify if the activity comes from onPause or from onCreate
+                    //if we have the permission, check Bundle object to verify if the activity comes from onPause or from onCreate event
                     if(savedInstanceState == null){
                         //int taskType = DataTrackDbHelper.existDatabase(getApplicationContext()) && mDataTrackDbHelper.getCount(null) > 0 ? READ_FROM_DATABASE : CREATE_DATABASE;
                         AsyncReadFile asyncReadFile = new AsyncReadFile(RE_SCAN);
@@ -257,10 +261,10 @@ public class MainActivity extends AppCompatActivity
 
 
         //If we already had the permission granted, lets go to read data from database and pass them to mAudioItemArrayAdapter, to show in Recyclerview,
-        //otherwise we show the reason to access files
+        //otherwise we show the reason to access files one and another time until user grant permission
 
         if(!RequiredPermissions.ACCESS_GRANTED_FILES) {
-            showReason();
+            showRequestPermissionReason();
         }
         else {
             //if we have the permission, check Bundle object to verify if the activity comes from onPause or from onCreate
@@ -349,8 +353,8 @@ public class MainActivity extends AppCompatActivity
     protected void onPause(){
         super.onPause();
         Log.d(TAG,"onPause");
-        //Deregister filters to listen for response from FixerTrackService
-        //and save resources, if service is not processing any task
+        //Deregister filters if FixerTrackService is not processing any task
+        //and save resources
 
         if(!ServiceHelper.withContext(getApplicationContext()).withService(FixerTrackService.CLASS_NAME).isServiceRunning())
             mLocalBroadcastManager.unregisterReceiver(mReceiver);
@@ -376,6 +380,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onDestroy(){
         Log.d(TAG,"onDestroy");
+        //Correction task will not be cancelled if option "Corrección en segundo plano" from Settings is active and service is running.
         if(ServiceHelper.withContext(getApplicationContext()).withService(FixerTrackService.CLASS_NAME).isServiceRunning()
                 && !Settings.BACKGROUND_CORRECTION){
             Intent intentStopService = new Intent(this, FixerTrackService.class);
@@ -385,6 +390,9 @@ public class MainActivity extends AppCompatActivity
                 mDataTrackDbHelper = null;
             }
         }
+        //release resources before exit app.
+        //db is not close because is service is going to be
+        //running in background, close it will cause an error.
         mLocalBroadcastManager.unregisterReceiver(mReceiver);
         if(sMediaPlayer.isPlaying()){
             sMediaPlayer.stop();
@@ -550,7 +558,7 @@ public class MainActivity extends AppCompatActivity
             return;
         }
 
-        //wait until processing finish
+        //can't check an item while service is running and correcting songs, so wait until processing finish
         if(ServiceHelper.withContext(getApplicationContext()).withService(FixerTrackService.CLASS_NAME).isServiceRunning()){
             showSnackBar(Snackbar.LENGTH_LONG,getString(R.string.processing_task),-1);
             return;
@@ -575,6 +583,8 @@ public class MainActivity extends AppCompatActivity
             lastCheckedItem = mMenu.findItem(id == 0  ? R.id.path_asc : id);
             lastCheckedItem.setIcon(ContextCompat.getDrawable(getApplicationContext(), R.drawable.ic_done_white));
         }
+
+        //mark sort type and reset other UI sort elements
 
         switch (id){
             case R.id.path_asc:
@@ -703,7 +713,7 @@ public class MainActivity extends AppCompatActivity
             asyncReadFile.execute();
         }
         else {
-            showReason();
+            showRequestPermissionReason();
         }
     }
 
@@ -719,7 +729,7 @@ public class MainActivity extends AppCompatActivity
             //Automatic mode require some conditions to execute
             //we put this in AsyncTask because the isConnected method
             //makes a network operation which blocks UI if we execute
-            //from UI Thread
+            //in UI Thread
             new AsyncTask<Context,Void, Integer>(){
                 @Override
                 protected Integer doInBackground(Context contexts[]){
@@ -1059,7 +1069,7 @@ public class MainActivity extends AppCompatActivity
      * @param position
      */
     private void selectItem(final long id, final View view, final int position){
-        AudioItem audioItem = mAudioItemArrayAdapter.getAudioItemByPosition(position); //mAudioItemArrayAdapter.getAudioItemByIdOrPath(id, null);
+        AudioItem audioItem = mAudioItemArrayAdapter.getAudioItemByIdOrPath(id, null);
         Log.d("mMenuItemPath", audioItem.getAbsolutePath());
         if(!AudioItem.checkFileIntegrity(audioItem.getAbsolutePath())){
             showConfirmationDialog(audioItem.getAbsolutePath(),position);
@@ -1119,6 +1129,11 @@ public class MainActivity extends AppCompatActivity
 
     }
 
+    /**
+     * Executes the scan task
+     * to seek supported audio files
+     * inside smartphone memory
+     */
     private void executeScan(){
         if(mRecyclerView.getAdapter() == null)
             mRecyclerView.setAdapter(mAudioItemArrayAdapter);
@@ -1131,23 +1146,28 @@ public class MainActivity extends AppCompatActivity
     }
 
 
-    private void askForPermission(String permission) {
+    /**
+     * Request permission indicate in input parameter
+     * @param permission
+     */
+    private void requestPermission(String permission) {
 
-        switch (permission){
-            case Manifest.permission.READ_EXTERNAL_STORAGE:
-                //No permission? then ask it
-                if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
-                    ActivityCompat.requestPermissions(this, new String[]{permission}, RequiredPermissions.READ_EXTERNAL_STORAGE_PERMISSION);
-                }
-                else {
-                    executeScan();
-                }
-            break;
+        if(permission.equals(Manifest.permission.READ_EXTERNAL_STORAGE)){
+            //No permission? then request it
+            if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, new String[]{permission}, RequiredPermissions.READ_EXTERNAL_STORAGE_PERMISSION);
+            }
+            else {
+                executeScan();
+            }
         }
-
-
     }
 
+    /**
+     * Sets the running state to floating action button
+     * and change drawable to indicate that indicate
+     * to user that it can stop this task
+     */
     private void startTask(){
         this.mFloatingActionButton.setOnClickListener(null);
         this.mFloatingActionButton.setImageDrawable(getDrawable(R.drawable.ic_stop_white_24dp));
@@ -1159,8 +1179,12 @@ public class MainActivity extends AppCompatActivity
         });
     }
 
+    /**
+     * Shows a dialog to user and
+     * it needs to decide whether
+     * cancel task or not
+     */
     private void setStartTaskStateFab(){
-
 
         final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
         builder.setTitle(R.string.cancelling).setMessage(R.string.cancel_task)
@@ -1173,7 +1197,7 @@ public class MainActivity extends AppCompatActivity
                 .setPositiveButton("Si", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-
+                        //stops service, and sets starting state to FAB
                         Intent requestStopService = new Intent(MainActivity.this, FixerTrackService.class);
                         stopService(requestStopService);
                         finishTaskByUser();
@@ -1184,6 +1208,10 @@ public class MainActivity extends AppCompatActivity
         dialog.show();
     }
 
+    /**
+     * Allows to register filters to handle
+     * only certain actions sent by FixerTrackService
+     */
     private void registerReceivers(){
         //register filters to listen for response from FixerTrackService
         mLocalBroadcastManager.registerReceiver(mReceiver, mFilterActionDone);
@@ -1196,8 +1224,15 @@ public class MainActivity extends AppCompatActivity
 
     }
 
+    /**
+     * Stops service, and sets starting state to FAB
+     */
     private void finishTaskByUser(){
+        //if correction task is cancelled by user
+        //set processing state to false of every item
         mAudioItemArrayAdapter.cancelProcessing();
+        //once FixerTrackService has finished, we need to deregister
+        //receiver to save battery
         mLocalBroadcastManager.unregisterReceiver(mReceiver);
         MainActivity.this.mFloatingActionButton.setOnClickListener(null);
         MainActivity.this.mFloatingActionButton.setImageDrawable(getDrawable(R.drawable.ic_magic_wand_auto_fix_button));
@@ -1209,6 +1244,10 @@ public class MainActivity extends AppCompatActivity
         });
     }
 
+    /**
+     * Sets a message to show in snackbar
+     * @param reason
+     */
     private void setSnackBarMessage(int reason){
         String msg = "";
         switch (reason){
@@ -1225,6 +1264,9 @@ public class MainActivity extends AppCompatActivity
         showSnackBar(Snackbar.LENGTH_SHORT, msg,-1);
     }
 
+    /**
+     * Save to shared preferences the access files permission
+     */
     private void setFilePermissionGranted(){
         SharedPreferences sharedPreferences = getSharedPreferences(SplashActivity.APP_SHARED_PREFERENCES, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
@@ -1236,18 +1278,23 @@ public class MainActivity extends AppCompatActivity
 
     }
 
-    private void showReason(){
+    /**
+     * Indicates to user why is necessary this permission
+     */
+    private void showRequestPermissionReason(){
         final AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle(R.string.title_dialog_permision).setMessage(R.string.explanation_permission_access_files);
         builder.setPositiveButton(R.string.ok_button, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                askForPermission(Manifest.permission.READ_EXTERNAL_STORAGE);
+                requestPermission(Manifest.permission.READ_EXTERNAL_STORAGE);
             }
         });
         builder.setNegativeButton(R.string.cancel_button, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
+                //if user cancelled permission request,
+                //show a message indicating that no songs were found
                 mSearchAgainMessageTextView.setVisibility(View.VISIBLE);
                 mSearchAgainMessageTextView.setText(R.string.swipe_up_search);
                 mSwipeRefreshLayout.setRefreshing(false);
@@ -1258,44 +1305,55 @@ public class MainActivity extends AppCompatActivity
         dialog.show();
     }
 
-    private void setAudioItemFound(AudioItem audioItem, int position){
-        Log.d("setAudioItemFound", (audioItem == null) + " " + audioItem.getId());
-        AudioItem currentAudioItem = mAudioItemArrayAdapter.getAudioItemByIdOrPath(audioItem.getId(),null);
+    /**
+     * Sets new tags (if were found) to current audio item
+     * processed and update UI
+     * @param newAudioItem
+     * @param processedId
+     */
+    private void setNewItemValues(@Nullable AudioItem newAudioItem, long processedId) {
+        //no results were found if newAudioItem is null
+        boolean newAudioItemFound = (newAudioItem != null);
+        long id = newAudioItemFound ? newAudioItem.getId() : processedId;
+        //get current item by id received and set its processing and check state to false
+        AudioItem actualAudioItem = mAudioItemArrayAdapter.getAudioItemByIdOrPath(id,null);
 
-        if(currentAudioItem != null) {
-            if(!audioItem.getTitle().isEmpty())
-                currentAudioItem.setTitle(audioItem.getTitle());
-            if(!audioItem.getArtist().isEmpty())
-                currentAudioItem.setArtist(audioItem.getArtist());
-            if(!currentAudioItem.getAlbum().isEmpty())
-                currentAudioItem.setAlbum(audioItem.getAlbum());
+        //check if actual audio item is exist still in list
+        if(actualAudioItem != null) {
+            //if new tags were found, extract them values from audio item received from service
+            //and sets to actual audio item
+            if(newAudioItemFound){
+                if(!newAudioItem.getTitle().isEmpty())
+                    actualAudioItem.setTitle(newAudioItem.getTitle());
+                if(!newAudioItem.getArtist().isEmpty())
+                    actualAudioItem.setArtist(newAudioItem.getArtist());
+                if(!actualAudioItem.getAlbum().isEmpty())
+                    actualAudioItem.setAlbum(newAudioItem.getAlbum());
 
-            currentAudioItem.setAbsolutePath(audioItem.getAbsolutePath());
-            currentAudioItem.setStatus(audioItem.getStatus());
-            currentAudioItem.setChecked(false);
-            currentAudioItem.setProcessing(false);
-            mAudioItemArrayAdapter.notifyItemChanged(currentAudioItem.getPosition());
+                actualAudioItem.setAbsolutePath(newAudioItem.getAbsolutePath());
+                actualAudioItem.setStatus(newAudioItem.getStatus());
+            }
+            //if not only set status to show an icon to indicate
+            //that no tags were found
+            else {
+                actualAudioItem.setStatus(AudioItem.STATUS_NO_TAGS_FOUND);
+            }
+
+            //update UI status of audio item
+            actualAudioItem.setChecked(false);
+            actualAudioItem.setProcessing(false);
+            mAudioItemArrayAdapter.notifyItemChanged(actualAudioItem.getPosition());
             //reset position because can change when we reorder the list
-            currentAudioItem.setPosition(-1);
-            currentAudioItem = null;
+            actualAudioItem.setPosition(-1);
+            actualAudioItem = null;
         }
     }
 
-    private void setAudioItemNotFound(long id){
-        Log.d("setAudioItemNOtFound", id+"");
-        AudioItem currentAudioItem = mAudioItemArrayAdapter.getAudioItemByIdOrPath(id,null);
-
-        if(currentAudioItem != null) {
-            currentAudioItem.setStatus(AudioItem.STATUS_NO_TAGS_FOUND);
-            currentAudioItem.setChecked(false);
-            currentAudioItem.setProcessing(false);
-            mAudioItemArrayAdapter.notifyItemChanged(currentAudioItem.getPosition());
-            //reset position because can change when we reorder the list
-            currentAudioItem.setPosition(-1);
-            currentAudioItem = null;
-        }
-    }
-
+    /**
+     * Set its processing state to true and update UI
+     * to indicate which audio item is currently processing
+     * @param id
+     */
     private void setProcessingAudioItem(long id){
         AudioItem audioItem = mAudioItemArrayAdapter.getAudioItemByIdOrPath(id,null);
         audioItem.setProcessing(true);
@@ -1305,51 +1363,67 @@ public class MainActivity extends AppCompatActivity
         audioItem = null;
     }
 
-    private void setCancelProcessingAudioItem(long id){
-        AudioItem audioItem = mAudioItemArrayAdapter.getAudioItemByIdOrPath(id,null);
-        audioItem.setProcessing(false);
-        mAudioItemArrayAdapter.notifyItemChanged(audioItem.getPosition());
-        audioItem.setPosition(-1);
-        audioItem = null;
-    }
-
+    /**
+     * Updates number items shown in action bar
+     * when are detected
+     */
     private void updateNumberItems(){
         if(mAudioItemList != null){
             mActionBar.setTitle(mAudioItemList.size() + " " +getString(R.string.tracks));
         }
     }
 
+    /**
+     * This class request reads information of audio files from MediaStore,
+     * then creates the initial DB when app
+     * is used by first time; next openings of app it
+     * reads the songs from this database instead of MediaStore
+     */
     private class AsyncReadFile extends AsyncTask<Void, AudioItem, Void> {
+        //Are we reading from our DB or MediaStore?
         private int taskType;
+        //reference to data retrieved from DB
         private Cursor data;
+        //how many audio files were added or removed
+        //from your smartphone
         private int added = 0;
         private int removed = 0;
 
         AsyncReadFile(int codeTaskType){
             this.taskType = codeTaskType;
-
-            if(codeTaskType == CREATE_DATABASE){
-                MainActivity.this.mDataTrackDbHelper.clearDb();
-            }
         }
 
         @Override
         protected void onPreExecute() {
+            //this method is invoked before
+            //our background task begins, often
+            //here is where we show for example
+            //a progress bar.
             mSwipeRefreshLayout.setRefreshing(true);
             sIsGettingData = true;
             if(mSearchViewWidget != null){
                 mSearchViewWidget.setVisibility(View.GONE);
             }
 
-            if(taskType == CREATE_DATABASE) {
-                showSnackBar(Snackbar.LENGTH_SHORT,getString(R.string.getting_data),NO_ID);
-                mSearchAgainMessageTextView.setVisibility(View.GONE);
-            }
-
         }
 
         @Override
         protected Void doInBackground(Void... voids) {
+            //make sure when is first use, clearing
+            //database to avoid any problem, in case
+            //there have had a unsuccessful previous
+            //creation of DB
+            if(this.taskType == CREATE_DATABASE){
+                MainActivity.this.mDataTrackDbHelper.clearDb();
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        showSnackBar(Snackbar.LENGTH_SHORT,getString(R.string.getting_data),NO_ID);
+                        mSearchAgainMessageTextView.setVisibility(View.GONE);
+                    }
+                });
+            }
+
 
             switch (taskType){
                 //If we are updating for new elements added
@@ -1357,18 +1431,20 @@ public class MainActivity extends AppCompatActivity
                     removeUnusedItems();
                     rescanAndUpdateList();
                     break;
-                //if database does not exist
+                //if database does not exist or is first use of app
                 case CREATE_DATABASE:
                     createNewTable();
                     break;
-                //if we are reading data from database
+                //if we are reading data from database (this means later app openings)
                 case READ_FROM_DATABASE:
                     removeUnusedItems();
                     readFromDatabase();
                     break;
             }
 
-            //close cursor
+            //close cursor to release this resource
+            //there are a limit of cursors open at the same time
+            //so make sure to release them.
             if(this.data != null) {
                 data.close();
                 data = null;
@@ -1379,7 +1455,12 @@ public class MainActivity extends AppCompatActivity
 
         @Override
         protected void onProgressUpdate(AudioItem... audioItems) {
-            super.onProgressUpdate(audioItems);
+            //this method runs on UI thread,
+            //here we are updating the UI.
+            //is not necessary call its super method
+            //because is an emtpy method
+
+            //adds the item to top of list
             if(taskType == RE_SCAN){
                 mAudioItemList.add(0,audioItems[0]);
                 mAudioItemArrayAdapter.notifyItemInserted(0);
@@ -1389,12 +1470,19 @@ public class MainActivity extends AppCompatActivity
                 mAudioItemArrayAdapter.notifyItemInserted(mAudioItemList.size()-1);
             }
 
+            //updates title of action bar
             updateNumberItems();
         }
 
         @Override
         protected void onPostExecute(Void result) {
-            super.onPostExecute(result);
+            //when doInBackground finishes, this callback
+            //is executed. Here is where we hide, for example,
+            //a progress bar.
+
+            //is not necessary call its super method
+            //because is an emtpy method
+
             mSwipeRefreshLayout.setRefreshing(false);
             mSwipeRefreshLayout.setEnabled(true);
 
@@ -1420,6 +1508,12 @@ public class MainActivity extends AppCompatActivity
                 mSearchViewWidget.setVisibility(View.VISIBLE);
             }
             updateNumberItems();
+
+            //if audio files were found, then show
+            //float action button that executes main task.
+            //if no audio files were found, there is no case
+            //to show this button because there will not have
+            //anything to process.
             MainActivity.this.mFloatingActionButton.show();
 
 
@@ -1429,6 +1523,8 @@ public class MainActivity extends AppCompatActivity
         @Override
         public void onCancelled(){
             super.onCancelled();
+            //this method will be invoked instead of
+            //onPostExecute if AsyncTask is cancelled
             sIsGettingData = false;
             mSwipeRefreshLayout.setEnabled(true);
             mSwipeRefreshLayout.setRefreshing(false);
@@ -1448,7 +1544,8 @@ public class MainActivity extends AppCompatActivity
             //Select all music
             String selection = MediaStore.Audio.Media.IS_MUSIC + " != 0";
 
-            String[] projection = { //Columns to retrieve
+            //Columns to retrieve
+            String[] projection = {
                     MediaStore.Audio.Media._ID,
                     MediaStore.Audio.Media.TITLE,
                     MediaStore.Audio.Media.ARTIST,
@@ -1457,7 +1554,7 @@ public class MainActivity extends AppCompatActivity
             };
 
             //get data from content provider
-            //the last parameter sorts the data alphanumerically by the "DATA" field
+            //the last parameter sorts the data alphanumerically by the "DATA" column in ascendant mode
             return getApplicationContext().getContentResolver().query(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
                     projection,
                     selection,
@@ -1486,6 +1583,10 @@ public class MainActivity extends AppCompatActivity
             }
         }
 
+        /**
+         * Verifies if audio file exist in
+         * smartphone storage
+         */
         private void removeUnusedItems(){
             for(int pos = 0; pos < mAudioItemList.size() ; pos++){
                 AudioItem audioItem = mAudioItemList.get(pos);
@@ -1498,9 +1599,6 @@ public class MainActivity extends AppCompatActivity
                 }
                 file = null;
             }
-
-
-
         }
 
 
@@ -1519,13 +1617,15 @@ public class MainActivity extends AppCompatActivity
         }
 
         /**
-         * This method read data from our
+         * This method reads data from our
          * DB created after the first use of app,
          * then passes this data to adapter
          */
         private void readFromDatabase(){
 
             data = MainActivity.this.mDataTrackDbHelper.getDataFromDB(Sort.setDefaultOrder());
+            //retrieved null data or 0 elements, so our database
+            //does not contain anything, means that no audio files were found
             int dataLength = data != null ? data.getCount() : 0;
             if (dataLength > 0) {
                 while (data.moveToNext()) {
@@ -1557,8 +1657,6 @@ public class MainActivity extends AppCompatActivity
 
         /**
          * Here we add the audio item_list to adapter
-         * created at onCreated callback from
-         * parent activity.
          */
         private void createAndAddAudioItem(){
             int mediaStoreId = data.getInt(0);//mediastore id
@@ -1607,11 +1705,23 @@ public class MainActivity extends AppCompatActivity
                 .build();
     }
 
+    /**
+     * Instance of this class handles the response from FixerTrackService
+     */
     public class ResponseReceiver extends BroadcastReceiver{
         private String TAG = ResponseReceiver.class.getName();
         @Override
         public void onReceive(Context context, final Intent intent) {
+            /* This can be called by an application in {@link #onReceive} to allow
+             * it to keep the broadcast active after returning from that function.
+             * This does <em>not</em> change the expectation of being relatively
+             * responsive to the broadcast (finishing it within 10s), but does allow
+             * the implementation to move work related to it over to another thread
+             * to avoid glitching the main UI thread due to disk IO.
+            * */
             goAsync();
+
+            //get action and handle it
             String action = intent.getAction();
             Log.d(TAG, action);
             switch (action) {
@@ -1627,7 +1737,7 @@ public class MainActivity extends AppCompatActivity
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            setAudioItemNotFound(intent.getLongExtra(Constants.MEDIASTORE_ID,-1));
+                            setNewItemValues(null, intent.getLongExtra(Constants.MEDIASTORE_ID,-1));
                         }
                     });
                     break;
@@ -1636,7 +1746,7 @@ public class MainActivity extends AppCompatActivity
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            setAudioItemFound((AudioItem) intent.getParcelableExtra(Constants.AUDIO_ITEM), intent.getIntExtra(Constants.MEDIASTORE_ID,-1));
+                            setNewItemValues((AudioItem) intent.getParcelableExtra(Constants.AUDIO_ITEM), intent.getIntExtra(Constants.MEDIASTORE_ID,-1));
                         }
                     });
 
@@ -1660,7 +1770,7 @@ public class MainActivity extends AppCompatActivity
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            finishTaskByUser();
+                            showSnackBar(Snackbar.LENGTH_LONG, getString(R.string.task_cancelled), NO_ID);
                         }
                     });
                 case Constants.Actions.ACTION_COMPLETE_TASK:
@@ -1675,6 +1785,8 @@ public class MainActivity extends AppCompatActivity
             }
         }
     }
+
+
 
     public static class Sort{
         public static String setDefaultOrder(){

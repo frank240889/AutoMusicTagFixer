@@ -28,12 +28,18 @@ public class Job {
         //that our task executes every 5 seconds
         JobInfo.Builder builder = new JobInfo.Builder(0, serviceComponent);
 
-        //Minimum time for being periodic job in Nougat are 15 minutes,
-        //so here we use the minimum latency instead
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N){
+        //Using setMinimumLatency with setOverrideDeadline together,
+        //it makes something like minimum and maximum limit to execute the code, is useful
+        //because minimum time for setPeriodic in Nougat are 15 minutes, so if you require
+        //to execute your task in lower range of time is not going to work.
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            //minimum latency means the min limit in milliseconds JobScheduler has to wait to execute the code
             builder.setMinimumLatency(5000);
+            //setOverrideDeadline means the max limit in milliseconds in which your code is
+            //going to execute.
+            builder.setOverrideDeadline(5000);
         }
-        //Before Nougat, we established a periodic job
+        //For android <= M there is no problem in use setPeriodic (instead of two before), with less than 15 minutes
         else {
             builder.setPeriodic(5000);
         }

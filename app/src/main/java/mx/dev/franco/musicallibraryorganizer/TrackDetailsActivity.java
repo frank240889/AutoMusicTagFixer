@@ -1618,8 +1618,8 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
         private void updateCoverArt() {
             //Is priority update the metadata first, in case there are errors when
             //the data is set on item_list and database
+            ContentValues contentValues = new ContentValues();
             try {
-                ContentValues contentValues = new ContentValues();
                 if(mOperationType == ADD_COVER){
                     boolean isSameCoverArt = mCurrentCoverArt == mNewCoverArt;
                     //Here we update the data in case there have had changes
@@ -1632,7 +1632,6 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                         //because we obtain this info when the app starts (after first time),
                         //besides, database operations can take a long time
                         contentValues.put(TrackContract.TrackData.STATUS, AudioItem.STATUS_TAGS_EDITED_BY_USER);
-                        mDbHelper.updateData(TrackDetailsActivity.this.mCurrentItemId, contentValues);
 
                         //Update mStatus item_list from list
                         mCurrentAudioItem.setStatus(AudioItem.STATUS_TAGS_EDITED_BY_USER);
@@ -1645,13 +1644,16 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                 }
 
                 mAudioTaggerFile.commit();
+                //update state of item in our track after save changes to audio file
+                //to ensure that will not have inconsistence between info in our DB
+                //and the audio file itself
+                mDbHelper.updateData(TrackDetailsActivity.this.mCurrentItemId, contentValues);
                 mDataUpdated = true;
             }
             catch (CannotWriteException | TagException e){
+                e.printStackTrace();
                 mDataUpdated = false;
                 causeError = e.getMessage();
-
-                e.printStackTrace();
             }
 
         }
@@ -1866,8 +1868,11 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
             catch ( CannotWriteException | TagException | ReadOnlyFileException | CannotReadException | IOException | InvalidAudioFrameException e)  {
                 e.printStackTrace();
                 mDataUpdated = false;
-                //get an empty tag or its current values
                 causeError = e.getMessage();
+                //restore previous values to item
+                mCurrentAudioItem.setTitle(mCurrentTitle);
+                mCurrentAudioItem.setArtist(mCurrentArtist);
+                mCurrentAudioItem.setAlbum(mCurrentAlbum);
             }
         }
 
@@ -2011,6 +2016,10 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                 e.printStackTrace();
                 mDataUpdated = false;
                 causeError = e.getMessage();
+                //restore previous values to item
+                mCurrentAudioItem.setTitle(mCurrentTitle);
+                mCurrentAudioItem.setArtist(mCurrentArtist);
+                mCurrentAudioItem.setAlbum(mCurrentAlbum);
             }
         }
 
