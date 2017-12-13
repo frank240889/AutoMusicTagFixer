@@ -82,10 +82,12 @@ import mx.dev.franco.musicallibraryorganizer.list.TrackAdapter;
 import mx.dev.franco.musicallibraryorganizer.services.DetectorInternetConnection;
 import mx.dev.franco.musicallibraryorganizer.services.FixerTrackService;
 import mx.dev.franco.musicallibraryorganizer.services.Job;
+import mx.dev.franco.musicallibraryorganizer.services.ServiceHelper;
 import mx.dev.franco.musicallibraryorganizer.transitions.DetailsTransition;
 import mx.dev.franco.musicallibraryorganizer.utilities.Constants;
 import mx.dev.franco.musicallibraryorganizer.utilities.FileSaver;
 import mx.dev.franco.musicallibraryorganizer.utilities.GlideApp;
+import mx.dev.franco.musicallibraryorganizer.utilities.Settings;
 import mx.dev.franco.musicallibraryorganizer.utilities.SimpleMediaPlayer;
 import mx.dev.franco.musicallibraryorganizer.utilities.StringUtilities;
 
@@ -1640,26 +1642,22 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                         artwork.setBinaryData(mNewCoverArt);
                         mTag.deleteArtworkField();
                         mTag.setField(artwork);
-                        //Then, is necessary update the data in database,
-                        //because we obtain this info when the app starts (after first time),
-                        //besides, database operations can take a long time
+
                         contentValues.put(TrackContract.TrackData.STATUS, AudioItem.STATUS_TAGS_EDITED_BY_USER);
 
-                        //Update mStatus item_list from list
+                        //Update status for item list
                         mCurrentAudioItem.setStatus(AudioItem.STATUS_TAGS_EDITED_BY_USER);
-
+                        //Then, is necessary update the data in our
+                        //to hold the state of current song
+                        mDbHelper.updateData(TrackDetailsActivity.this.mCurrentItemId, contentValues);
                         Log.d("only_cover_art", "updated");
                     }
                 }
                 else if(mOperationType == REMOVE_COVER){
                     mTag.deleteArtworkField();
                 }
-
+                //Apply changes to audio file itself
                 mAudioTaggerFile.commit();
-                //update state of item in our track after save changes to audio file
-                //to ensure that will not have inconsistence between info in our DB
-                //and the audio file itself
-                mDbHelper.updateData(TrackDetailsActivity.this.mCurrentItemId, contentValues);
                 mDataUpdated = true;
             }
             catch (CannotWriteException | TagException e){

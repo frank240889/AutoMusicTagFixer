@@ -67,8 +67,10 @@ import mx.dev.franco.musicallibraryorganizer.list.TrackAdapter;
 import mx.dev.franco.musicallibraryorganizer.services.DetectorInternetConnection;
 import mx.dev.franco.musicallibraryorganizer.services.FixerTrackService;
 import mx.dev.franco.musicallibraryorganizer.services.Job;
+import mx.dev.franco.musicallibraryorganizer.services.ServiceHelper;
 import mx.dev.franco.musicallibraryorganizer.utilities.Constants;
 import mx.dev.franco.musicallibraryorganizer.utilities.RequiredPermissions;
+import mx.dev.franco.musicallibraryorganizer.utilities.Settings;
 import mx.dev.franco.musicallibraryorganizer.utilities.SimpleMediaPlayer;
 
 import static mx.dev.franco.musicallibraryorganizer.services.GnService.sApiInitialized;
@@ -1334,17 +1336,20 @@ public class MainActivity extends AppCompatActivity
         //get current item by id received and set its processing and check state to false
         AudioItem actualAudioItem = mAudioItemArrayAdapter.getAudioItemByIdOrPath(id,null);
 
-        //check if actual audio item is exist still in list
+        //check if actual audio item exist in list yet
         if(actualAudioItem != null) {
-            //if new tags were found, extract them values from audio item received from service
+            //if new tags were found, extract their values from audio item received from service
             //and sets to actual audio item
             if(newAudioItemFound){
-                if(!newAudioItem.getTitle().isEmpty())
+                if(!newAudioItem.getTitle().isEmpty()) {
                     actualAudioItem.setTitle(newAudioItem.getTitle());
-                if(!newAudioItem.getArtist().isEmpty())
+                }
+                if(!newAudioItem.getArtist().isEmpty()) {
                     actualAudioItem.setArtist(newAudioItem.getArtist());
-                if(!actualAudioItem.getAlbum().isEmpty())
+                }
+                if(!newAudioItem.getAlbum().isEmpty()) {
                     actualAudioItem.setAlbum(newAudioItem.getAlbum());
+                }
 
                 actualAudioItem.setAbsolutePath(newAudioItem.getAbsolutePath());
                 actualAudioItem.setStatus(newAudioItem.getStatus());
@@ -1791,7 +1796,8 @@ public class MainActivity extends AppCompatActivity
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            setNewItemValues((AudioItem) intent.getParcelableExtra(Constants.AUDIO_ITEM), intent.getIntExtra(Constants.MEDIASTORE_ID,-1));
+                            AudioItem audioItem = intent.getParcelableExtra(Constants.AUDIO_ITEM);
+                            setNewItemValues(audioItem, audioItem.getId());
                         }
                     });
 

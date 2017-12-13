@@ -14,6 +14,7 @@ import mx.dev.franco.musicallibraryorganizer.services.DetectorInternetConnection
 import mx.dev.franco.musicallibraryorganizer.services.GnService;
 import mx.dev.franco.musicallibraryorganizer.services.Job;
 import mx.dev.franco.musicallibraryorganizer.utilities.RequiredPermissions;
+import mx.dev.franco.musicallibraryorganizer.utilities.Settings;
 
 /**
  * Created by franco on 6/11/16.
@@ -62,7 +63,6 @@ public class SplashActivity extends AppCompatActivity{
         Settings.BACKGROUND_CORRECTION = preferences.getBoolean("key_background_service", true);
         String imageSizeSaved = preferences.getString("key_size_album_art","1000");
         Settings.SETTING_SIZE_ALBUM_ART = Settings.setValueImageSize(imageSizeSaved);
-        Settings.BACKGROUND_CORRECTION = preferences.getBoolean("key_background_service",false);
 
 
         preferences = null;

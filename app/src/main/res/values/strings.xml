@@ -63,7 +63,7 @@
     <string name="snackbar_message_track_is_processing">No puedes reproducir la canción mientras se corrige.</string>
     <string name="permission_denied">No se obtuvo el permiso requerido.</string>
     <string name="current_file_processing">Espera que el modo automático corrija esta canción.</string>
-    <string name="initializing_recognition_api">Conectando al servicio de búsqueda, espera por favor...</string>
+    <string name="initializing_recognition_api">Conectando al servicio de reconocimiento, espera por favor...</string>
     <string name="no_internet_connection_download_cover">Para descargar la carátula conectate internet.</string>
     <string name="no_internet_connection_automatic_mode">Para usar el modo automático conectate a internet.</string>
     <string name="no_internet_connection_semi_automatic_mode">Para usar el modo semi automático conectate a internet.</string>
@@ -157,7 +157,7 @@
     <string name="cancel_task">¿Desea cancelar la corrección en curso?</string>
     <string name="cancelling">Cancelando...</string>
     <string name="processing_task">Espera a que termine la corrección en modo automático.</string>
-    <string name="api_initialized">Conectado al servicio de búsqueda.</string>
+    <string name="api_initialized">Conectado. Toca cualquier canción para corregirla.</string>
     <string name="remove_from_list">Remover</string>
 
     <string name="question_1">¿Lorem ipsum dolor sit amet?</string>
@@ -238,7 +238,7 @@
         <item>6. ¿Qué es el modo manual?</item>
         <item>7. ¿Qué tipos de archivo de audio puedo corregír?</item>
         <item>8. ¿Qué costo tiene la aplicación?</item>
-        <item>9. ¿Por qué la información de la lista no coincide con la del detalle de cada canción?</item>
+        <item>9. ¿Por qué la información de algunas canciones en la lista no coincide con la del detalle?</item>
         <item>10. ¿Cuántas canciones puedo corregir?</item>
         <item>11. ¿Por qué solo puedo editar 8 etiquetas(incluyendo la carátula)?</item>
         <item>12. La aplicación no detecta mis canciones</item>
@@ -246,28 +246,30 @@
         <item>14. La aplicación no encuentra la carátula de mi canción.</item>
         <item>15. ¿Cuánto tarda en identificar una canción?</item>
         <item>16. ¿Qué pasa si cierro la aplicación mientras estoy corrigiendo varias canciones?</item>
+        <item>17. ¿Que pasa si me quedo sin internet?</item>
     </string-array>
     <string-array name="answers">
         <item>Para cada canción que tienes en tu smartphone, genera una huella digital del audio, posteriormente, consulta en un base de datos esa huella y obtiene la información correspondiente de la canción.</item>
         <item>Debido a que las canciones se almacenan en la memoria, ya sea interna o externa de tu smartphone, es necesario el permiso para poder leerlas; es el único permiso requerido, de lo contrario, la aplicación no tendrá funcionalidad útil.</item>
-        <item>Solo toca una canción de la lista y elige el modo de corrección, o si prefieres, puedes chequear las que quieras corregir y posteriormente oprimir el botón amarillo de la esquina inferior derecha para corregir esas canciones en modo automático.</item>
-        <item>Es el modo en el cual tu chequeas las canciones que quieres corregir, oprimes el botón amarillo, y al aplicación corrige por ti cada canción, incluido el nombre del archivo (verifica en la opciones de configuración si esta activa esta opción), no tienes que hacer nada, solo que esperar a que termine. Ten en cuenta que este modo no requiere tu intervención. NOTA: El renombrado de archivos se aplicará para todos los que se estén corrigiendo en ese momento.</item>
-        <item>Este modo obtendrá la información de la canción, pero no aplicará ningún cambio hasta que tu lo apliques.</item>
+        <item>Solo toca una canción de la lista y elige el modo de corrección, o si prefieres, puedes chequear las que quieras corregir y posteriormente oprimir el floating action button amarillo de la esquina inferior derecha para corregir esas canciones en modo automático.</item>
+        <item>Es el modo en el cual tu chequeas las canciones que quieres corregir, oprimes el botón amarillo, y la aplicación corrige por ti cada canción, incluido el nombre del archivo (puedes desactivar esta opción en la Configuración), no tienes que hacer nada, solo esperar a que termine. Ten en cuenta que este modo no requiere tu intervención.</item>
+        <item>Este modo obtendrá la información de la canción, pero no modificará la canción hasta que tu la apliques.</item>
         <item>El modo manual te permite corregir por ti mismo las etiquetas de cada canción, incluida la caŕatula, si es que tienes la información a la mano. Toca la carátula de cada canción de la lista para más opciones.</item>
-        <item>Actualmente Mp3, Mp4 (Mp4 audio, M4a y M4p audio) Ogg Vorbis, Flac, Wma y limitado soporte a Wav y Real audio, que son los que soporta la librería JAudioTagger. Aunque podrían ser menos formatos ya que Android no soporta algunos tipos de audio de manera nativa, por ejemplo Wma; en futuras actualizaciones se soportará la totalidad de tipos de archivo.</item>
+        <item>Actualmente Mp3, Mp4 (Mp4 audio, M4a y M4p audio) Ogg Vorbis, Flac, Wma y limitado soporte a Wav y Real audio, que son los que soporta la librería JAudioTagger. Aunque podrían ser menos formatos ya que Android no soporta algunos tipos de audio de manera nativa, por ejemplo Wma; en futuras actualizaciones de la aplicación se soportará la totalidad de tipos de archivo.</item>
         <item>Ninguno, pero esta sujeto a a un limite de corrección de archivos.</item>
-        <item>Por rendimiento y velocidad de apertura, AutoMusicTagFixer lee la información de cada archivo de la MediaStore (DB interna de Android), por lo tanto, la información mostrada de cada canción en la lista es la que se obtiene de esta base de
-        datos, y debido al mecanismo de obtención de información entre Android y AutoMusicTagFixer cuando muestra la información detallada de cada canción, esta podría variar un poco, pero al final la información que se corrige en cualquier modo es la correcta.</item>
-        <item>Debido a que la aplicación utiliza una licencia gratis del servicio de reconocimiento, la cantidad de canciones que puedes corregir es variable, desde unas cuantas hasta probablemente miles.</item>
-        <item>Son más de 35 etiquetas estándar, una cantidad considerable y fuera del alcance de esta aplicación, por lo que se ofrece corrección a las más importantes.</item>
-        <item>Puede deberse a que no se concedio el permiso de acceso al almcenamiento ó, el tipo de audio no es uno soportado por Android y/ó la librería ó, el archivo no tiene una extension en el nombre.</item>
+        <item>Por rendimiento y velocidad de apertura, AutoMusicTagFixer para generar la lista por primera vez(la lista es informativa y punto de partida para las operaciones), lee la información de cada archivo de audio de la MediaStore (una BD interna de Android), por lo tanto, la información obtenida de aquí no siempre es muy precisa. AutoMusicTagFixer cuando muestra la información detallada de cada canción, lee directamente el archivo de audio, lo cual esta información leida si es precisa; no te preocupes, AutoMusicTagFixer hace las correcciones sobre el archivo en sí, por lo que tus canciones serán corregidas de manera correcta.</item>
+        <item>Debido a que la aplicación utiliza una licencia gratis del servicio de reconocimiento de audio, la cantidad de canciones que puedes corregir es variable, desde unas cuantas hasta probablemente miles.</item>
+        <item>Son más de 35 etiquetas estándar, una cantidad considerable y fuera del alcance de esta aplicación, por lo que se ofrece corrección a las más comunes.</item>
+        <item>Puede deberse a que concediste el permiso de acceso al almacenamiento interno/externo ó, el tipo de audio no es uno soportado por Android y/ó la librería ó, el archivo no tiene una extension en el nombre.</item>
         <item>La aplicación consulta una base de datos con información de 200 millones de canciones (http://www.gracenote.com/music/music-recognition/), por lo que es probable
-        que la canción que estas tratando de corregir, haya sido descargada/convertida de una fuente de audio de baja calidad y la huella digital generada es inexistente, intenta descargar/convertir con mayor
+        que la canción que estas tratando de corregir, haya sido descargada/convertida de una fuente de audio de baja calidad y la huella digital generada es inexistente, por favor intenta descargar/convertir con mayor
         calidad tus canciones o corrígela manualmente.</item>
-        <item>Revisa en las opciones de Configuración, en Consumo de datos y selecciona otro tamaño de carátula, no todos los tamaños están disponibles para cada canción.</item>
+        <item>Revisa en las opciones de Configuración->Consumo de datos y selecciona otro tamaño de carátula, no todos los tamaños están disponibles para cada canción.</item>
         <item>Depende de la conexión a la red, si es buena, tardará entre unos 5 a 10 segundos; si la conexión es lenta puede demorar más.</item>
-        <item>La aplicación puede funcionar en segundo plano en el modo automático (tienes que activar esta opción en la Configuración), y asi la corrección seguirá hasta que termine o la detengas.
+        <item>La corrección de canciones puede funcionar en segundo plano en el modo automático (puedes desactivar esta opción en Configuración), y asi la corrección seguirá hasta que termine o la detengas.
         Si esta opción no esta activa se cancelará el proceso de corrección cuando la cierres. Para los demás modos, la corrección se interrumpirá si cierras la aplicación.</item>
+        <item>AutoMusicTagFixer comprueba el estado de la red y la conexión a internet, por lo que si no detecta una conexión no funcionará el modo automático, semiautomático y descarga de carátula; si esta en curso una corrección
+        simplemente se cancelará la corrección. El modo manual no requiere internet.</item>
     </string-array>
     <string name="title_activity_scrolling_about">ScrollingAboutActivity</string>
     <string name="not_supported">Tipo no soportado</string>
