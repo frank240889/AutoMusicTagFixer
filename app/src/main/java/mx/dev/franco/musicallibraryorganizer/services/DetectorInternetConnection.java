@@ -7,12 +7,14 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.util.Log;
 
+import java.io.IOException;
+
 /**
  * Created by franco on 6/07/17.
  */
 
 public class DetectorInternetConnection extends JobService {
-    private static boolean isInitializing = false;
+    public static volatile boolean sIsConnected = false;
     /**
      * Callback when service start, here is when we execute our
      * task in background, so an intensive task
@@ -51,22 +53,50 @@ public class DetectorInternetConnection extends JobService {
      * @param parameters
      */
     private void startCheckingConnection(final JobParameters parameters){
-        boolean isConnected = isConnected(getApplicationContext());
-        //We set context and initialize the GNSDK API if it was not before.
-        if(isConnected && !GnService.apiInitialized && !isInitializing) {
-            //only request initialize GNSDK API one time
-            isInitializing = true;
-            //GnService.API_INITIALIZED_AFTER_CONNECTED flag indicates
-            //that service was not initialized from Splash.
-            //is useful to inform to user in MainActivity
-            //that API of GNSDK has been initialized
-            GnService.withContext(getApplicationContext()).initializeAPI(GnService.API_INITIALIZED_AFTER_CONNECTED);
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                DetectorInternetConnection.startCheckingConnection(DetectorInternetConnection.this);
+                //We set context and initialize the GNSDK API if it was not before.
+                if(sIsConnected && !GnService.sApiInitialized && !GnService.sIsInitializing) {
+                    //only request initialize GNSDK API one time
+                    GnService.sIsInitializing = true;
+                    //GnService.API_INITIALIZED_AFTER_CONNECTED flag indicates
+                    //that service was not initialized from Splash.
+                    //is useful to inform to user in MainActivity
+                    //that API of GNSDK has been initialized
+                    GnService.withContext(getApplicationContext()).initializeAPI(GnService.API_INITIALIZED_AFTER_CONNECTED);
 
+                }
+
+                //if is connected, we finalize this job
+                jobFinished(parameters, !sIsConnected);
+            }
+        }).start();
+
+
+
+    }
+
+    public static void startCheckingConnection(Context context){
+        ConnectivityManager cm = (ConnectivityManager)context.getSystemService(CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+
+        //activeNetwork could be NULL if for example, airplane mode is activated.
+
+        Runtime runtime = Runtime.getRuntime();
+        int termination = 1;
+        try {
+            //send only 1 ping to Google DNS's.
+            Process process = runtime.exec("system/bin/ping -c 1 8.8.8.8");
+            //abnormal termination will be different than 0,
+            termination = process.waitFor();
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+        } finally {
+            sIsConnected = activeNetwork != null && activeNetwork.isConnected() && (termination == 0);
+            Log.d("sIsConnected"," -  "+ sIsConnected );
         }
-
-        //if is connected, we finalize this job
-        jobFinished(parameters, !isConnected);
-
     }
 
     /**
@@ -85,14 +115,15 @@ public class DetectorInternetConnection extends JobService {
         Runtime runtime = Runtime.getRuntime();
         int termination = 1;
         try {
-            //send only 1 ping to Google DNS's.
+            //send only 1 ping to Google DNS's to check internet connection
             Process process = runtime.exec("system/bin/ping -c 1 8.8.8.8");
-            //anormal termination will be different than 0,
+            //abnormal termination will be different than 0,
             termination = process.waitFor();
         }
         finally {
-            isConnected = activeNetwork != null && activeNetwork.isConnected() && (termination == 0);
-            Log.d("isConnected",isConnected+"");
+            sIsConnected = isConnected = activeNetwork != null && activeNetwork.isConnected() && (termination == 0);
+            Log.d("isConnected",isConnected+" -  "+ termination);
+
             return isConnected;
         }
 

@@ -35,7 +35,7 @@
             android:textAlignment="center"
             android:textSize="24sp" />
 
-        <TextView
+        <!--TextView
             android:id="@+id/develop_by"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -60,7 +60,7 @@
             android:fontFamily="sans-serif"
             android:text="@string/developer"
             android:textAlignment="center"
-            android:textSize="18sp" />
+            android:textSize="18sp" /-->
 
         <TextView
             android:id="@+id/tech_used"
@@ -70,7 +70,7 @@
             android:layout_marginStart="10dp"
             android:layout_marginTop="10dp"
             android:text="@string/technologies_used"
-            android:textAlignment="textStart"
+            android:textAlignment="center"
             android:textSize="18sp" />
 
         <TextView

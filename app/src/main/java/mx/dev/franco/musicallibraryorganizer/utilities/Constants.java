@@ -10,6 +10,7 @@ public class Constants {
     public static final String MEDIASTORE_ID = "mediastore_id";
     public static final String AUDIO_ITEM = "audio_item";
     public static final String POSITION = "position";
+    public static final String COMPLETE_READ = "complete_read";
 
     public static class Application{
         public static String FULL_QUALIFIED_NAME = BuildConfig.APPLICATION_ID;
@@ -42,8 +43,10 @@ public class Constants {
         public static final String ACTION_START_TASK = BuildConfig.APPLICATION_ID + "." +"action_start_task";
 
         public static final String ACTION_SHOULD_CONTINUE = BuildConfig.APPLICATION_ID + "." + "action_should_continue";
-        public static final String ACTION_NO_INTERNET_CONNECTION = BuildConfig.APPLICATION_ID + "." + "action_no_internet_connection";
+        public static final String ACTION_INTERNET_CONNECTION = BuildConfig.APPLICATION_ID + "." + "action_internet_connection";
         public static final String ACTION_CONNECTION_LOST = BuildConfig.APPLICATION_ID + "." + "action_connection_lost" ;
+        public static final String HAS_CONNECTION = BuildConfig.APPLICATION_ID + "." + "has_connection" ;
+
     }
 
     public static class Activities {

@@ -24,18 +24,19 @@ import mx.dev.franco.musicallibraryorganizer.utilities.Constants;
  */
 
 public class GnService{
-    //We can set a sContext in static field while we call getApplicationContext() to avoid memory leak, because
-    //if we use the activity sContext, this activity can remain in memory due is still in use its sContext
+    //We can set a Context in static field while we call getApplicationContext() to avoid memory leaks, because
+    //if we use the activity Context, this activity can remain in memory due is still in use its Context
     private static Context sContext;
-    private static GnService sGnService;
-    static GnManager gnManager;
-    public static GnUser gnUser;
-    private static GnLocale gnLocale;
-    public static final String gnsdkLicenseString = "-- BEGIN LICENSE v1.0 0B64261A --\\r\\nname: \\r\\nnotes: Gracenote Open Developer Program\\r\\nstart_date: 0000-00-00\\r\\nclient_id: 297011532\\r\\nmusicid_file: enabled\\r\\nmusicid_text: enabled\\r\\nmusicid_stream: enabled\\r\\nmusicid_cd: enabled\\r\\nplaylist: enabled\\r\\nvideoid: enabled\\r\\nvideo_explore: enabled\\r\\nlocal_images: enabled\\r\\nlocal_mood: enabled\\r\\nvideoid_explore: enabled\\r\\nacr: enabled\\r\\nepg: enabled\\r\\n-- SIGNATURE 0B64261A --\\r\\nlAADAgAeLXKgVttVCmTzGU8Lixv2VY0nKZECLARnmGWPPmpdAB8Bgp+dp5HRX8tQLJh1OvmV1ipXLqr6oy6Ds3ClSOE8\\r\\n-- END LICENSE 0B64261A --\\r\\n";//"-- BEGIN LICENSE v1.0 A75228BC --\\r\\nname: \\r\\nnotes: Gracenote Open Developer Program\\r\\nstart_date: 0000-00-00\\r\\nclient_id: 843162123\\r\\nmusicid_file: enabled\\r\\nmusicid_text: enabled\\r\\nmusicid_stream: enabled\\r\\nmusicid_cd: enabled\\r\\nplaylist: enabled\\r\\nvideoid: enabled\\r\\nvideo_explore: enabled\\r\\nlocal_images: enabled\\r\\nlocal_mood: enabled\\r\\nvideoid_explore: enabled\\r\\nacr: enabled\\r\\nepg: enabled\\r\\n-- SIGNATURE A75228BC --\\r\\nlAADAgAe/WEZPZ5IaetmxgKEpZm7EjG1SLm/yLvyhTwzlr8cAB4R2GcEuN/6PovFycqgCmnnmr3ioB/KXt3EDTz8yYk=\\r\\n-- END LICENSE A75228BC --\\r\\n";
-    public static final String gnsdkClientId = "297011532";//"843162123";
-    public static final String gnsdkClientTag = "6CB01DB21FA7F47FDBF1FD6DCDFA8E88";//"4E937B773F03BA431014169770593072";
-    public static final String appString = "AutomaticMusicTagFixer";
-    public static volatile boolean apiInitialized = false;
+    private static volatile GnService sGnService;
+    private static volatile GnManager sGnManager;
+    public static volatile GnUser sGnUser;
+    private static volatile GnLocale sGnLocale;
+    public static final String sGnsdkLicenseString = "-- BEGIN LICENSE v1.0 0B64261A --\\r\\nname: \\r\\nnotes: Gracenote Open Developer Program\\r\\nstart_date: 0000-00-00\\r\\nclient_id: 297011532\\r\\nmusicid_file: enabled\\r\\nmusicid_text: enabled\\r\\nmusicid_stream: enabled\\r\\nmusicid_cd: enabled\\r\\nplaylist: enabled\\r\\nvideoid: enabled\\r\\nvideo_explore: enabled\\r\\nlocal_images: enabled\\r\\nlocal_mood: enabled\\r\\nvideoid_explore: enabled\\r\\nacr: enabled\\r\\nepg: enabled\\r\\n-- SIGNATURE 0B64261A --\\r\\nlAADAgAeLXKgVttVCmTzGU8Lixv2VY0nKZECLARnmGWPPmpdAB8Bgp+dp5HRX8tQLJh1OvmV1ipXLqr6oy6Ds3ClSOE8\\r\\n-- END LICENSE 0B64261A --\\r\\n";//"-- BEGIN LICENSE v1.0 A75228BC --\\r\\nname: \\r\\nnotes: Gracenote Open Developer Program\\r\\nstart_date: 0000-00-00\\r\\nclient_id: 843162123\\r\\nmusicid_file: enabled\\r\\nmusicid_text: enabled\\r\\nmusicid_stream: enabled\\r\\nmusicid_cd: enabled\\r\\nplaylist: enabled\\r\\nvideoid: enabled\\r\\nvideo_explore: enabled\\r\\nlocal_images: enabled\\r\\nlocal_mood: enabled\\r\\nvideoid_explore: enabled\\r\\nacr: enabled\\r\\nepg: enabled\\r\\n-- SIGNATURE A75228BC --\\r\\nlAADAgAe/WEZPZ5IaetmxgKEpZm7EjG1SLm/yLvyhTwzlr8cAB4R2GcEuN/6PovFycqgCmnnmr3ioB/KXt3EDTz8yYk=\\r\\n-- END LICENSE A75228BC --\\r\\n";
+    public static final String sGnsdkClientId = "297011532";//"843162123";
+    public static final String sGnsdkClientTag = "6CB01DB21FA7F47FDBF1FD6DCDFA8E88";//"4E937B773F03BA431014169770593072";
+    public static final String sAppString = "AutomaticMusicTagFixer";
+    public static volatile boolean sApiInitialized = false;
+    public static volatile boolean sIsInitializing = false;
     public static final int API_INITIALIZED_FROM_SPLASH = 100;
     public static final int API_INITIALIZED_AFTER_CONNECTED = 101;
 
@@ -62,22 +63,25 @@ public class GnService{
     /**
      * This method initializes the API
      */
-    public void initializeAPI(final int connectedFrom){
+    public synchronized void initializeAPI(final int connectedFrom){
         new Thread(new Runnable() {
             @Override
             public void run() {
                 Log.d("GNSDK","starting GNSDK");
                 //We initialize the necessary objects for using the GNSDK API in a different thread for not blocking the UI
                 try {
-                    gnManager = new GnManager(sContext, gnsdkLicenseString, GnLicenseInputMode.kLicenseInputModeString);
-                    gnUser = new GnUser(new GnUserStore(sContext), gnsdkClientId, gnsdkClientTag, appString);
-                    gnLocale = new GnLocale(GnLocaleGroup.kLocaleGroupMusic, GnLanguage.kLanguageSpanish, GnRegion.kRegionGlobal, GnDescriptor.kDescriptorDetailed, gnUser);
-                    gnLocale.setGroupDefault();
+                    sGnManager = new GnManager(sContext, sGnsdkLicenseString, GnLicenseInputMode.kLicenseInputModeString);
+                    sGnUser = new GnUser(new GnUserStore(sContext), sGnsdkClientId, sGnsdkClientTag, sAppString);
+                    sGnLocale = new GnLocale(GnLocaleGroup.kLocaleGroupMusic, GnLanguage.kLanguageSpanish, GnRegion.kRegionGlobal, GnDescriptor.kDescriptorDetailed, sGnUser);
+                    sGnLocale.setGroupDefault();
                     GnStorageSqlite.enable();
-                    apiInitialized = true;
+                    sApiInitialized = true;
 
 
+                    //When api could not be initialized since SplashActivity,
+                    //inform to user after MainActivity starts
                     if (connectedFrom == API_INITIALIZED_AFTER_CONNECTED){
+
                         Intent intent = new Intent();
                         intent.setAction(Constants.GnServiceActions.ACTION_API_INITIALIZED);
                         LocalBroadcastManager.getInstance(sContext).sendBroadcast(intent);
@@ -86,6 +90,8 @@ public class GnService{
 
                 } catch (GnException e) {
                     e.printStackTrace();
+                    //If could not be established the initialization of Gracenote API, try again
+                    sIsInitializing = false;
                     Job.scheduleJob(sContext);
                 }
             }

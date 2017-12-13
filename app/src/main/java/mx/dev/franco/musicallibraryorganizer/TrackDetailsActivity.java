@@ -90,7 +90,7 @@ import mx.dev.franco.musicallibraryorganizer.utilities.SimpleMediaPlayer;
 import mx.dev.franco.musicallibraryorganizer.utilities.StringUtilities;
 
 import static android.view.View.GONE;
-import static mx.dev.franco.musicallibraryorganizer.services.GnService.apiInitialized;
+import static mx.dev.franco.musicallibraryorganizer.services.GnService.sApiInitialized;
 
 /**
  * Created by franco on 22/07/17.
@@ -953,6 +953,13 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                 //makes a network operation which blocks UI if we execute
                 //from UI Thread
                 new AsyncTask<Void,Void, Integer>(){
+
+                    @Override
+                    protected void onPreExecute(){
+                        if(!DetectorInternetConnection.sIsConnected)
+                            showSnackBar(Snackbar.LENGTH_SHORT, getString(R.string.checking_internet_connection),ACTION_NONE, null);
+                    }
+
                     @Override
                     protected Integer doInBackground(Void... voids){
                         int canContinue = allowExecute();
@@ -1086,6 +1093,11 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
         //makes a network operation which blocks UI if we execute
         //from UI Thread
         new AsyncTask<Void,Void, Integer>(){
+            @Override
+            protected void onPreExecute(){
+                if(!DetectorInternetConnection.sIsConnected)
+                    showSnackBar(Snackbar.LENGTH_SHORT, getString(R.string.checking_internet_connection),ACTION_NONE, null);
+            }
             @Override
             protected Integer doInBackground(Void... voids){
                 int canContinue = allowExecute();
@@ -2430,12 +2442,13 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
     private int allowExecute(){
 
         //No internet connection
-        if(!DetectorInternetConnection.isConnected(getApplicationContext())){
+        if(!DetectorInternetConnection.sIsConnected){
+            DetectorInternetConnection.startCheckingConnection(getApplicationContext());
             return Constants.Conditions.NO_INTERNET_CONNECTION;
         }
 
         //API not initialized
-        if(!apiInitialized){
+        if(!sApiInitialized){
             Job.scheduleJob(getApplicationContext());
             return Constants.Conditions.NO_INITIALIZED_API;
         }
@@ -2447,7 +2460,6 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
 
         @Override
         public void onReceive(Context context, Intent intent) {
-            goAsync();
             String action;
             action = intent.getAction();
 

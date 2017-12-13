@@ -76,7 +76,7 @@ import mx.dev.franco.musicallibraryorganizer.database.TrackContract;
 import mx.dev.franco.musicallibraryorganizer.list.AudioItem;
 import mx.dev.franco.musicallibraryorganizer.utilities.Constants;
 
-import static mx.dev.franco.musicallibraryorganizer.services.GnService.appString;
+import static mx.dev.franco.musicallibraryorganizer.services.GnService.sAppString;
 
 /**
  * Created by franco on 17/08/17.
@@ -221,6 +221,7 @@ public class FixerTrackService extends Service {
 
 
         if(intent.getAction() != null && intent.getAction().equals(Constants.Actions.ACTION_CANCEL_TASK)){
+            finishTaskByUser = true;
             stopSelf();
             return;
         }
@@ -259,7 +260,7 @@ public class FixerTrackService extends Service {
 
         //track id objects provide identification services
         try {
-            mGnMusicIdFile = new GnMusicIdFile(GnService.gnUser, mMusicIdFileEvents);
+            mGnMusicIdFile = new GnMusicIdFile(GnService.sGnUser, mMusicIdFileEvents);
             mGnMusicIdFile.options().lookupData(GnLookupData.kLookupDataContent, true);
             mGnMusicIdFile.options().preferResultLanguage(GnLanguage.kLanguageSpanish);
             //queue will be processed one by one
@@ -288,9 +289,9 @@ public class FixerTrackService extends Service {
                 GnMusicIdFileInfo gnMusicIdFileInfo = mGnMusicIdFileInfoManager.add(fullPath);
                 gnMusicIdFileInfo.fileName(fullPath);
                 gnMusicIdFileInfo.mediaId(String.valueOf(id));
-                //gnMusicIdFileInfo.trackTitle(title);
-                //gnMusicIdFileInfo.trackArtist(artist);
-                //gnMusicIdFileInfo.albumTitle(album);
+                gnMusicIdFileInfo.trackTitle(title);
+                gnMusicIdFileInfo.trackArtist(artist);
+                gnMusicIdFileInfo.albumTitle(album);
 
             } catch (GnException e) {
                 e.printStackTrace();
@@ -306,6 +307,7 @@ public class FixerTrackService extends Service {
 
         }
 
+        //close cursor to release resources
         mSelectedItems.close();
         mSelectedItems = null;
 
@@ -313,9 +315,13 @@ public class FixerTrackService extends Service {
         startTrackId();
     }
 
+    /**
+     * Starts the correction task
+     */
     public void startTrackId(){
         //Log.d("starting track id", "starting");
-        mIsConnected = DetectorInternetConnection.isConnected(getApplicationContext());
+        //Before start check if there is internet connection yet
+        mIsConnected = DetectorInternetConnection.sIsConnected;
         if(!mIsConnected){
             stopSelf();
             return;
@@ -335,9 +341,10 @@ public class FixerTrackService extends Service {
     public void stopTrackId(){
         //check if task were cancelled by user,
         //default value is true; in case that
-        //ACTION_COMPLETE_TASK be reached,
+        //correction task finishes and
+        //ACTION_COMPLETE_TASK is broadcasted,
         //finishTaskByUser will be false,
-        //meaning that is not necessary call cancel method for every GnMusicIdFile.
+        //meaning that is not necessary call cancel method.
 
         if(finishTaskByUser){
             if(mGnMusicIdFileList != null) {
@@ -348,15 +355,18 @@ public class FixerTrackService extends Service {
                 }
             }
 
+            //Save state to database
             ContentValues contentValues = new ContentValues();
             contentValues.put(TrackContract.TrackData.IS_PROCESSING, false);
             int items = mDataTrackDbHelper.updateData(contentValues, TrackContract.TrackData.IS_PROCESSING, true);
             Log.d("items updayed", items+"");
 
+            //broadcast action to interested receivers
             Intent intentActionDone = new Intent();
             intentActionDone.setAction(Constants.Actions.ACTION_CANCEL_TASK);
             mLocalBroadcastManager.sendBroadcastSync(intentActionDone);
         }
+        //when connection lost, cancel correction task
         else if (!mIsConnected){
             if(mGnMusicIdFileList != null) {
                 Iterator<GnMusicIdFile> iterator = mGnMusicIdFileList.iterator();
@@ -365,15 +375,16 @@ public class FixerTrackService extends Service {
                     iterator.next().cancel();
                 }
             }
-
+            //Save state to database
             ContentValues contentValues = new ContentValues();
             contentValues.put(TrackContract.TrackData.IS_PROCESSING, false);
             int items = mDataTrackDbHelper.updateData(contentValues, TrackContract.TrackData.IS_PROCESSING, true);
             Log.d("items updayed", items+"");
 
-            Intent intentActionDone = new Intent();
-            intentActionDone.setAction(Constants.Actions.ACTION_CONNECTION_LOST);
-            mLocalBroadcastManager.sendBroadcastSync(intentActionDone);
+            //broadcast action to interested receivers
+            Intent intentActionConnectionLost= new Intent();
+            intentActionConnectionLost.setAction(Constants.Actions.ACTION_CONNECTION_LOST);
+            mLocalBroadcastManager.sendBroadcastSync(intentActionConnectionLost);
         }
 
     }
@@ -391,7 +402,8 @@ public class FixerTrackService extends Service {
         private boolean mLastFile = false;
 
         public MusicIdFileEvents(){
-            //Put the status of downloaded info
+            //These status are name events received from Gracenote server to
+            //report status of track id task
             mGnStatusToDisplay = new HashMap<>();
             mGnStatusToDisplay.put(Constants.State.BEGIN_PROCESSING,Constants.State.BEGIN_PROCESSING_MSG);
             mGnStatusToDisplay.put(Constants.State.QUERYING_INFO,Constants.State.QUERYING_INFO_MSG);
@@ -467,7 +479,7 @@ public class FixerTrackService extends Service {
                 }
                 catch (GnException e) {
                     if (!GnError.isErrorEqual(e.errorCode(), GnError.GNSDKERR_Aborted)) {
-                        Log.e(appString, "error in fingerprinting file: " + e.errorAPI() + ", " + e.errorModule() + ", " + e.errorDescription());
+                        Log.e(sAppString, "error in fingerprinting file: " + e.errorAPI() + ", " + e.errorModule() + ", " + e.errorDescription());
 
                     }
                 }
@@ -726,7 +738,7 @@ public class FixerTrackService extends Service {
 
                     if (dataImage) {
                         try {
-                            byte[] imgData = new GnAssetFetch(GnService.gnUser, tags[3]).data();
+                            byte[] imgData = new GnAssetFetch(GnService.sGnUser, tags[3]).data();
                             Artwork artwork = new AndroidArtwork();
                             artwork.setBinaryData(imgData);
                             tag.deleteArtworkField();
@@ -850,7 +862,7 @@ public class FixerTrackService extends Service {
 
                 if (dataImage) {
                     try {
-                        byte[] imgData = new GnAssetFetch(GnService.gnUser, tags[3]).data();
+                        byte[] imgData = new GnAssetFetch(GnService.sGnUser, tags[3]).data();
                         audioItem.setCoverArt(imgData);
                     } catch (GnException e) {
                         e.printStackTrace();

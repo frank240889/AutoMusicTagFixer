@@ -274,6 +274,7 @@
     <string name="file_status_corrected_by_semiautomatic_mode">Etiquetas corregidas por el modo semiautomatico.</string>
     <string name="connection_lost">No hay conexión a Internet o se ha perdido.</string>
     <string name="task_cancelled">Corrección cancelada.</string>
+    <string name="checking_internet_connection">Verificando conexión a internet</string>
 
 
 </resources>

@@ -11,10 +11,10 @@ import android.os.Build;
  */
 
 public class Job {
+    public static final int ID_JOB = 1;
     /**
-     * Here we schedule our task to execute and constraints to execute,
-     * in this case certain time period, and pass what job we want to execute
-     * in our case internet connection, placed in DetectorInternetConnection class
+     * Here we schedule our task and constraints to execute,
+     * in this case a periodic task, for checking internet connection
      * @param context
      */
     public static void scheduleJob(Context context){
@@ -26,7 +26,7 @@ public class Job {
         //this builder object are the requirements
         //needed to execute our task, in this case, we need
         //that our task executes every 5 seconds
-        JobInfo.Builder builder = new JobInfo.Builder(0, serviceComponent);
+        JobInfo.Builder builder = new JobInfo.Builder(ID_JOB, serviceComponent);
 
         //Using setMinimumLatency with setOverrideDeadline together,
         //it makes something like minimum and maximum limit to execute the code, is useful
@@ -44,8 +44,7 @@ public class Job {
             builder.setPeriodic(5000);
         }
 
-        //now that our builder object has the parameters set
-        //get
+        //time to schedule task
         JobScheduler jobScheduler = (JobScheduler) context.getApplicationContext().getSystemService(Context.JOB_SCHEDULER_SERVICE);
         jobScheduler.schedule(builder.build());
     }
