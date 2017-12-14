@@ -8,7 +8,7 @@
             android:summary="@string/pref_title_change_description"
             android:title="@string/pref_title_change" />
         <SwitchPreference
-            android:defaultValue="true"
+            android:defaultValue="false"
             android:key="key_overwrite_all_tags_automatic_mode"
             android:summary="@string/pref_replace_auto_all_tags_description"
             android:title="@string/pref_title_replace_all_tags"/>

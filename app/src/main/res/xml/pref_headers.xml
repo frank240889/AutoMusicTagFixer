@@ -3,12 +3,12 @@
     <!-- These settings headers are only used on tablets. -->
 
     <header
-        android:fragment="mx.dev.franco.musicallibraryorganizer.SettingsActivity$GeneralPreferenceFragment"
+        android:fragment="mx.dev.franco.automusictagfixer.SettingsActivity$GeneralPreferenceFragment"
         android:icon="@drawable/ic_build_white_24px"
         android:title="@string/pref_header_general" />
 
     <header
-        android:fragment="mx.dev.franco.musicallibraryorganizer.SettingsActivity$DataSyncPreferenceFragment"
+        android:fragment="mx.dev.franco.automusictagfixer.SettingsActivity$DataSyncPreferenceFragment"
         android:icon="@drawable/ic_data_usage_white_24px"
         android:title="@string/pref_header_size_album_art" />
 

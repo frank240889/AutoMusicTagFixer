@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="mx.dev.franco.musicallibraryorganizer">
+    package="mx.dev.franco.automusictagfixer">
 
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
@@ -19,7 +19,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".SplashActivity"
+            android:name="mx.dev.franco.automusictagfixer.SplashActivity"
             android:configChanges="orientation|screenSize"
             android:screenOrientation="portrait"
             android:theme="@style/SplashTheme">
@@ -30,54 +30,54 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".ScreenSlidePagerActivity"
+            android:name="mx.dev.franco.automusictagfixer.ScreenSlidePagerActivity"
             android:configChanges="orientation|screenSize"
             android:theme="@style/AppTheme" />
         <activity
-            android:name=".MainActivity"
+            android:name="mx.dev.franco.automusictagfixer.MainActivity"
             android:configChanges="orientation|screenSize"
             android:label="@string/title_activity_folder_choser"
             android:launchMode="singleTop"
             android:theme="@style/MainActivityTheme" />
         <activity
-            android:name=".QuestionsActivity"
+            android:name="mx.dev.franco.automusictagfixer.QuestionsActivity"
             android:configChanges="orientation|screenSize"
             android:label="@string/faq"
-            android:parentActivityName=".MainActivity"
+            android:parentActivityName="mx.dev.franco.automusictagfixer.MainActivity"
             android:theme="@style/QuestionsTheme">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value=".MainActivity" />
+                android:value="mx.dev.franco.automusictagfixer.MainActivity" />
         </activity>
         <activity
-            android:name=".TrackDetailsActivity"
+            android:name="mx.dev.franco.automusictagfixer.TrackDetailsActivity"
             android:configChanges="orientation|screenSize"
-            android:parentActivityName=".MainActivity"
+            android:parentActivityName="mx.dev.franco.automusictagfixer.MainActivity"
             android:theme="@style/DetailsTrackDialogTheme">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value=".MainActivity" />
+                android:value="mx.dev.franco.automusictagfixer.MainActivity" />
         </activity>
 
         <activity
-            android:name=".ScrollingAboutActivity"
+            android:name="mx.dev.franco.automusictagfixer.ScrollingAboutActivity"
             android:label="@string/title_activity_scrolling_about"
-            android:parentActivityName=".MainActivity"
+            android:parentActivityName="mx.dev.franco.automusictagfixer.MainActivity"
             android:theme="@style/AboutTheme">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="mx.dev.franco.musicallibraryorganizer.MainActivity" />
+                android:value="mx.dev.franco.automusictagfixer.MainActivity" />
         </activity>
         <activity
-            android:name=".SettingsActivity"
+            android:name="mx.dev.franco.automusictagfixer.SettingsActivity"
             android:configChanges="orientation|screenSize"
             android:label="@string/title_activity_settings"
-            android:parentActivityName=".MainActivity"
+            android:parentActivityName="mx.dev.franco.automusictagfixer.MainActivity"
             android:theme="@style/SettingsStyle" />
 
         <provider
             android:name="android.support.v4.content.FileProvider"
-            android:authorities="mx.dev.franco.musicallibraryorganizer.fileProvider"
+            android:authorities="mx.dev.franco.automusictagfixer.fileProvider"
             android:exported="false"
             android:grantUriPermissions="true">
             <meta-data
@@ -87,11 +87,11 @@
 
         <!-- We need this service for checking internet connection and handling the gracenote api initialization -->
         <service
-            android:name=".services.DetectorInternetConnection"
+            android:name="mx.dev.franco.automusictagfixer.services.DetectorInternetConnection"
             android:label="DetectionService"
             android:permission="android.permission.BIND_JOB_SERVICE" />
         <service
-            android:name=".services.FixerTrackService"
+            android:name="mx.dev.franco.automusictagfixer.services.FixerTrackService"
             android:label="FixerTrackService">
 
         </service>

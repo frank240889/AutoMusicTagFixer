@@ -40,7 +40,7 @@ android {
          * However, your source code should still reference the package name
          * defined by the package attribute in the main/AndroidManifest.xml file.
          */
-        applicationId "mx.dev.franco.musicallibraryorganizer"
+        applicationId 'mx.dev.franco.automusictagfixer'
         minSdkVersion 21
         targetSdkVersion 25
         versionCode 1
@@ -107,11 +107,9 @@ dependencies {
     androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
-
     compile files('libs/gnsdk.jar')
     compile files('libs/gnsdk_helpers.jar')
     compile files('libs/jaudiotagger-2.2.4.jar')
-
     /*compile 'com.google.firebase:firebase-messaging:10.0.1'*/
     compile 'com.android.support:appcompat-v7:25.3.1'
     compile 'com.android.support:design:25.3.1'
@@ -123,7 +121,6 @@ dependencies {
     compile('com.crashlytics.sdk.android:crashlytics:2.7.1@aar') {
         transitive = true;
     }
-
     testCompile 'junit:junit:4.12'
     annotationProcessor 'com.github.bumptech.glide:compiler:4.0.0-RC1'
 }
