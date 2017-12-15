@@ -9,10 +9,12 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 
 import mx.dev.franco.automusictagfixer.services.DetectorInternetConnection;
 import mx.dev.franco.automusictagfixer.services.GnService;
 import mx.dev.franco.automusictagfixer.services.Job;
+import mx.dev.franco.automusictagfixer.utilities.Constants;
 import mx.dev.franco.automusictagfixer.utilities.RequiredPermissions;
 import mx.dev.franco.automusictagfixer.utilities.Settings;
 
@@ -43,7 +45,6 @@ public class SplashActivity extends AppCompatActivity{
                 else {
                     Job.scheduleJob(getApplicationContext());
                 }
-                Thread.interrupted();
             }
         }).start();
 
@@ -56,7 +57,6 @@ public class SplashActivity extends AppCompatActivity{
         Settings.SETTING_RENAME_FILE_MANUAL_MODE = preferences.getBoolean("key_rename_file_manual_mode", true);
         Settings.SETTING_REPLACE_STRANGE_CHARS_MANUAL_MODE = preferences.getBoolean("key_replace_strange_chars_manual_mode",true);
         Settings.ALL_SELECTED = preferences.getBoolean("allSelected",false);
-        Settings.SETTING_SORT = preferences.getInt("key_default_sort", 0);
         Settings.SETTING_OVERWRITE_ALL_TAGS_AUTOMATIC_MODE = preferences.getBoolean("key_overwrite_all_tags_automatic_mode", true);
         Settings.SETTING_RENAME_FILE_SEMI_AUTOMATIC_MODE = preferences.getBoolean("key_rename_file_semi_automatic_mode", true);
         Settings.SETTING_USE_EMBED_PLAYER = preferences.getBoolean("key_use_embed_player",true);
@@ -70,10 +70,12 @@ public class SplashActivity extends AppCompatActivity{
         //Is first use of app?
         preferences =  getSharedPreferences(APP_SHARED_PREFERENCES, Context.MODE_PRIVATE);
         boolean firstTime= preferences.getBoolean("first", true);
+        Settings.SETTING_SORT = preferences.getInt(Constants.SORT_KEY, 0);
+        Log.d("sort",Settings.SETTING_SORT+"");
         //do we have permission to access files?
-        RequiredPermissions.ACCESS_GRANTED_FILES = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
+        RequiredPermissions.ACCESS_GRANTED_FILES = ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
 
-        if(!DEBUG_MODE) {
+        //if(!DEBUG_MODE) {
 
             if (firstTime) {
                 //Is first app use
@@ -86,11 +88,11 @@ public class SplashActivity extends AppCompatActivity{
 
             }
 
-        }
-        else {
-            Intent intent = new Intent(this, ScreenSlidePagerActivity.class);
-            startActivity(intent);
-        }
+        //}
+        //else {
+        //    Intent intent = new Intent(this, ScreenSlidePagerActivity.class);
+        //    startActivity(intent);
+        //}
         preferences = null;
         finish();
     }

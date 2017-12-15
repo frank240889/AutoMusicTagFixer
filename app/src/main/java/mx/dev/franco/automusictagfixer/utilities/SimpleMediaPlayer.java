@@ -17,10 +17,10 @@ import mx.dev.franco.automusictagfixer.list.TrackAdapter;
 
 public final class SimpleMediaPlayer extends MediaPlayer implements MediaPlayer.OnCompletionListener {
 
-    private static SimpleMediaPlayer mediaPlayer;
-    private AudioItem currentAudioItem;
-    private long currentPos = -1;
-    private TrackAdapter adapter;
+    private static SimpleMediaPlayer sMediaPlayer;
+    private AudioItem mCurrentAudioItem;
+    private long mCurrentPosition = -1;
+    private TrackAdapter mAdapter;
 
     /**
      * Don't let instantiate this class, we need only one instance,
@@ -38,20 +38,20 @@ public final class SimpleMediaPlayer extends MediaPlayer implements MediaPlayer.
      * @return An unique instance of SimpleMediaPlayer.
      */
     public static SimpleMediaPlayer getInstance(Context context){
-        if(mediaPlayer == null){
-            mediaPlayer = new SimpleMediaPlayer();
-            mediaPlayer.setWakeMode(context.getApplicationContext(), PowerManager.PARTIAL_WAKE_LOCK);
+        if(sMediaPlayer == null){
+            sMediaPlayer = new SimpleMediaPlayer();
+            sMediaPlayer.setWakeMode(context.getApplicationContext(), PowerManager.PARTIAL_WAKE_LOCK);
         }
 
-        return mediaPlayer;
+        return sMediaPlayer;
     }
 
-    public void setAdapter(TrackAdapter adapter){
-        this.adapter = adapter;
+    public void setAdapter(TrackAdapter mAdapter){
+        this.mAdapter = mAdapter;
     }
 
     public RecyclerView.Adapter<TrackAdapter.AudioItemHolder> getAdapter(){
-        return this.adapter;
+        return this.mAdapter;
     }
 
     /**
@@ -62,23 +62,27 @@ public final class SimpleMediaPlayer extends MediaPlayer implements MediaPlayer.
      */
 
     public void playPreview(int position) throws IOException, InterruptedException {
-        // Was pressed the same item_list? then stop
-        if(currentPos == position && mediaPlayer.isPlaying()) {
-            mediaPlayer.stop();
-            mediaPlayer.reset();
-            currentAudioItem.setPlayingAudio(false);
+        //Stops current audio
+        if(mCurrentPosition == position && sMediaPlayer.isPlaying()) {
+            sMediaPlayer.stop();
+            sMediaPlayer.reset();
+            mCurrentAudioItem.setPlayingAudio(false);
             return;
         }
 
-        currentPos = position;
+        //If user plays different audio file
+        //search in adapter, if not, take the current mCurrentAudioItem
+        if(mCurrentPosition != position){
+            mCurrentAudioItem = mAdapter.getAudioItemByPosition(position);
+            mCurrentPosition = position;
+        }
+        sMediaPlayer.setDataSource(mCurrentAudioItem.getAbsolutePath());
+        sMediaPlayer.prepare();
 
-        currentAudioItem = adapter.getAudioItemByPosition(position);
 
-        mediaPlayer.setDataSource(currentAudioItem.getAbsolutePath());
-        mediaPlayer.prepare();
-        currentAudioItem.setPlayingAudio(true);
+        mCurrentAudioItem.setPlayingAudio(true);
 
-        mediaPlayer.start();
+        sMediaPlayer.start();
     }
 
 
@@ -86,8 +90,8 @@ public final class SimpleMediaPlayer extends MediaPlayer implements MediaPlayer.
      * Get the position from current item_list playing.
      * @return
      */
-    public long getCurrentPos() {
-        return currentPos;
+    public long getCurrentPosition2() {
+        return mCurrentPosition;
     }
     /**
      * Implementation of completion interface for
@@ -101,16 +105,15 @@ public final class SimpleMediaPlayer extends MediaPlayer implements MediaPlayer.
     }
 
     /**
-     * If song reachs its end, then we stop and reset player
+     * If song reaches its end, then we stop and reset player
      * for having it ready for next playback, and doesn't throw
      * any error.
      */
 
     public void onCompletePlayback(){
-        currentAudioItem.setPlayingAudio(false);
-        adapter.notifyItemChanged(getCurrentPosition());
-        mediaPlayer.stop();
-        mediaPlayer.reset();
-        currentPos = -1;
+        mCurrentAudioItem.setPlayingAudio(false);
+        mAdapter.notifyItemChanged(getCurrentPosition());
+        sMediaPlayer.stop();
+        sMediaPlayer.reset();
     }
 }

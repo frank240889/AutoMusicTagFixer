@@ -15,7 +15,6 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -73,6 +72,7 @@ import mx.dev.franco.automusictagfixer.utilities.RequiredPermissions;
 import mx.dev.franco.automusictagfixer.utilities.Settings;
 import mx.dev.franco.automusictagfixer.utilities.SimpleMediaPlayer;
 
+import static mx.dev.franco.automusictagfixer.SplashActivity.APP_SHARED_PREFERENCES;
 import static mx.dev.franco.automusictagfixer.services.GnService.sApiInitialized;
 
 
@@ -193,7 +193,7 @@ public class MainActivity extends AppCompatActivity
         //create receiver
         mReceiver = new ResponseReceiver();
         //get instance of local broadcast manager
-        mLocalBroadcastManager = LocalBroadcastManager.getInstance(this);
+        mLocalBroadcastManager = LocalBroadcastManager.getInstance(getApplicationContext());
 
         mToolbar = (Toolbar) findViewById(R.id.toolbar);
         mFloatingActionButtonStart = (FloatingActionButton) findViewById(R.id.fab_start);
@@ -275,7 +275,7 @@ public class MainActivity extends AppCompatActivity
             //if we have the permission, check Bundle object to verify if the activity comes from onPause or from onCreate
             //if(savedInstanceState == null){
                 mRecyclerView.setAdapter(mAudioItemArrayAdapter);
-                int taskType = DataTrackDbHelper.existDatabase(this) && mDataTrackDbHelper.getCount(null) > 0 ? READ_FROM_DATABASE : CREATE_DATABASE;
+                int taskType = DataTrackDbHelper.existDatabase(this) && mDataTrackDbHelper.getCount() > 0 ? READ_FROM_DATABASE : CREATE_DATABASE;
 
                 AsyncReadFile asyncReadFile = new AsyncReadFile(taskType);
                 asyncReadFile.execute();
@@ -466,8 +466,8 @@ public class MainActivity extends AppCompatActivity
         mMenuItemTitle = menu.findItem(R.id.action_sort_by_title);
         mMenuItemArtist = menu.findItem(R.id.action_sort_by_artist);
         mMenuItemAlbum = menu.findItem(R.id.action_sort_by_album);
-        setCheckedItem(null);
 
+        setCheckedItem(null);
         // Define an expand listener for search widget
         MenuItemCompat.OnActionExpandListener expandListener = new MenuItemCompat.OnActionExpandListener() {
             @Override
@@ -544,6 +544,12 @@ public class MainActivity extends AppCompatActivity
         // Handle action bar item_list clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
+
+        if(sIsGettingData){
+            showSnackBar(Snackbar.LENGTH_LONG,getString(R.string.getting_data),NO_ID);
+            return false;
+        }
+
         int id = item.getItemId();
 
         switch (id){
@@ -596,7 +602,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void setCheckedItem(MenuItem item){
-        if(mAudioItemList.size() == 0 ){
+        if(null == item && mAudioItemList.size() == 0){
             showSnackBar(Snackbar.LENGTH_SHORT, getString(R.string.no_items), NO_ID);
             return;
         }
@@ -615,10 +621,10 @@ public class MainActivity extends AppCompatActivity
 
             lastCheckedItem = item;
             lastCheckedItem.setIcon(ContextCompat.getDrawable(getApplicationContext(), R.drawable.ic_done_white));
-            SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+            SharedPreferences preferences = getSharedPreferences(APP_SHARED_PREFERENCES, Context.MODE_PRIVATE);
             SharedPreferences.Editor editor = preferences.edit();
             Log.d("id_sort_item",id+"");
-            editor.putInt("key_default_sort",id);
+            editor.putInt(Constants.SORT_KEY,id);
             editor.apply();
             preferences = null;
             editor = null;
@@ -667,7 +673,7 @@ public class MainActivity extends AppCompatActivity
                 mMenuItemAlbum.setIcon(ContextCompat.getDrawable(getApplicationContext(), R.drawable.ic_done_white));
                 break;
         }
-
+        Settings.SETTING_SORT = id;
     }
 
     @Override
@@ -937,14 +943,20 @@ public class MainActivity extends AppCompatActivity
 
     }
 
+    /**
+     * Sort list in desired order
+     * @param sortBy the field/column to sort by
+     * @param sortType the sort type, may be ascendant or descendant
+     */
     private void actionSortBy(String sortBy, int sortType){
 
+        //if no songs, no case sort anything
         if(mAudioItemList.size() == 0 ){
             showSnackBar(Snackbar.LENGTH_SHORT, getString(R.string.no_items), NO_ID);
             return;
         }
 
-
+        //wait for sorting while correction task is running
         if(ServiceHelper.withContext(getApplicationContext()).withService(FixerTrackService.CLASS_NAME).isServiceRunning()){
             showSnackBar(Snackbar.LENGTH_LONG,getString(R.string.processing_task),-1);
             return;
@@ -959,8 +971,8 @@ public class MainActivity extends AppCompatActivity
 
     /**
      * This method starts a correction for a single item_list
-     * @param view
-     * @param position
+     * @param view the root view pressed, in this card view the root
+     * @param position the position of item in list
      * @throws IOException
      * @throws InterruptedException
      */
@@ -1041,8 +1053,8 @@ public class MainActivity extends AppCompatActivity
     /**
      * Shows dialog that file can be accessed
      * and message of possible cause
-     * @param position
-     * @param audioItem
+     * @param position the position of item in list
+     * @param audioItem audio item corresponding to this view
      */
     private void showConfirmationDialog(final int position, final AudioItem audioItem){
 
@@ -1076,9 +1088,9 @@ public class MainActivity extends AppCompatActivity
 
     /**
      * Opens new activity showing up the details from current audio item_list pressed
-     * @param view
-     * @param position
-     * @param mode
+     * @param view the view pressed, maybe the root view or any child
+     * @param position the position of item in list
+     * @param mode indicates what mode of correction execute when enters to TrackDetailsActivity
      */
     public void onClickCoverArt(View view, int position, int mode){
 
@@ -1112,9 +1124,9 @@ public class MainActivity extends AppCompatActivity
     /**
      * This method marks as true selected column in database
      * and checks the audioitem checkbox
-     * @param id
-     * @param view
-     * @param position
+     * @param id the id generated for this item when DB was created
+     * @param view checkbox that was checked or unchecked
+     * @param position the position of item in list
      */
     private void selectItem(final long id, final View view, final int position){
         AudioItem audioItem = mAudioItemArrayAdapter.getAudioItemByIdOrPath(id, null);
@@ -1187,7 +1199,7 @@ public class MainActivity extends AppCompatActivity
             mRecyclerView.setAdapter(mAudioItemArrayAdapter);
         //if previously was granted the permission and our database has data
         //dont' clear that data, only read it instead.
-        int taskType = DataTrackDbHelper.existDatabase(getApplicationContext()) && mDataTrackDbHelper.getCount(null) > 0 ? READ_FROM_DATABASE : CREATE_DATABASE;
+        int taskType = DataTrackDbHelper.existDatabase(getApplicationContext()) && mDataTrackDbHelper.getCount() > 0 ? READ_FROM_DATABASE : CREATE_DATABASE;
         AsyncReadFile asyncReadFile = new AsyncReadFile(taskType);
         asyncReadFile.execute();
 
@@ -1202,7 +1214,7 @@ public class MainActivity extends AppCompatActivity
 
         if(permission.equals(Manifest.permission.READ_EXTERNAL_STORAGE)){
             //No permission? then request it
-            if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
+            if (ContextCompat.checkSelfPermission(getApplicationContext(), permission) != PackageManager.PERMISSION_GRANTED) {
                 ActivityCompat.requestPermissions(this, new String[]{permission}, RequiredPermissions.READ_EXTERNAL_STORAGE_PERMISSION);
             }
             else {
@@ -1212,9 +1224,8 @@ public class MainActivity extends AppCompatActivity
     }
 
     /**
-     * Shows a dialog to user and
-     * it needs to decide whether
-     * cancel task or not
+     * Shows a dialog to user
+     * to confirm cancelling task
      */
     private void stopTask(){
 
@@ -1268,14 +1279,6 @@ public class MainActivity extends AppCompatActivity
         //once FixerTrackService has finished, we need to deregister
         //receiver to save battery
         mLocalBroadcastManager.unregisterReceiver(mReceiver);
-        MainActivity.this.mFloatingActionButtonStart.setOnClickListener(null);
-        MainActivity.this.mFloatingActionButtonStart.setImageDrawable(getDrawable(R.drawable.ic_magic_wand_auto_fix_button));
-        MainActivity.this.mFloatingActionButtonStart.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                startTask();
-            }
-        });
 
         MainActivity.this.mFloatingActionButtonStop.hide();
         MainActivity.this.mFloatingActionButtonStart.show();
@@ -1283,7 +1286,7 @@ public class MainActivity extends AppCompatActivity
 
     /**
      * Sets a message to show in snackbar
-     * @param reason
+     * @param reason numeric code of cause
      */
     private void setSnackBarMessage(int reason){
         String msg = "";
@@ -1305,7 +1308,7 @@ public class MainActivity extends AppCompatActivity
      * Save to shared preferences the access files permission
      */
     private void setFilePermissionGranted(){
-        SharedPreferences sharedPreferences = getSharedPreferences(SplashActivity.APP_SHARED_PREFERENCES, Context.MODE_PRIVATE);
+        SharedPreferences sharedPreferences = getSharedPreferences(APP_SHARED_PREFERENCES, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putBoolean("accessFilesPermission", true);
         editor.apply();
@@ -1345,8 +1348,8 @@ public class MainActivity extends AppCompatActivity
     /**
      * Sets new tags (if were found) to current audio item
      * processed and update UI
-     * @param newAudioItem
-     * @param processedId
+     * @param newAudioItem AudioItem object sent by FixerTrackService, maybe null
+     * @param processedId the id sent by FixerTrackService, default value is -1 if no id was sent
      */
     private void setNewItemValues(@Nullable AudioItem newAudioItem, long processedId) {
         //no results were found if newAudioItem is null
@@ -1392,7 +1395,7 @@ public class MainActivity extends AppCompatActivity
     /**
      * Set its processing state to true and update UI
      * to indicate which audio item is currently processing
-     * @param id
+     * @param id the id sent by FixerTrackService
      */
     private void setProcessingAudioItem(long id){
         AudioItem audioItem = mAudioItemArrayAdapter.getAudioItemByIdOrPath(id,null);
@@ -1440,7 +1443,7 @@ public class MainActivity extends AppCompatActivity
             //could not be completed, in this case
             //clear DB and re read data from Media Store
 
-            SharedPreferences sharedPreferences = getSharedPreferences(SplashActivity.APP_SHARED_PREFERENCES, Context.MODE_PRIVATE);
+            SharedPreferences sharedPreferences = getSharedPreferences(APP_SHARED_PREFERENCES, Context.MODE_PRIVATE);
             mMediaScanCompleted = sharedPreferences.getBoolean(Constants.COMPLETE_READ,false);
             if(!mMediaScanCompleted){
                 taskType = CREATE_DATABASE;
@@ -1543,7 +1546,7 @@ public class MainActivity extends AppCompatActivity
             //next time app starts will try to create again the database
             //until success
             if(this.taskType == CREATE_DATABASE) {
-                SharedPreferences sharedPreferences = getSharedPreferences(SplashActivity.APP_SHARED_PREFERENCES, Context.MODE_PRIVATE);
+                SharedPreferences sharedPreferences = getSharedPreferences(APP_SHARED_PREFERENCES, Context.MODE_PRIVATE);
                 SharedPreferences.Editor editor = sharedPreferences.edit();
                 editor.putBoolean(Constants.COMPLETE_READ, true);
                 editor.apply();
@@ -1595,7 +1598,7 @@ public class MainActivity extends AppCompatActivity
                 mSearchViewWidget.setVisibility(View.VISIBLE);
             }
             //save state that could not be completed the data loading from songs
-            SharedPreferences sharedPreferences = getSharedPreferences(SplashActivity.APP_SHARED_PREFERENCES, Context.MODE_PRIVATE);
+            SharedPreferences sharedPreferences = getSharedPreferences(APP_SHARED_PREFERENCES, Context.MODE_PRIVATE);
             SharedPreferences.Editor editor =  sharedPreferences.edit();
             MainActivity.this.mSearchAgainMessageTextView.setText(getString(R.string.no_items_found));
             MainActivity.this.mSearchAgainMessageTextView.setVisibility(View.VISIBLE);
@@ -1606,9 +1609,9 @@ public class MainActivity extends AppCompatActivity
         }
 
         /**
-         * This method gets data from media store,
-         * only mp3 files data is retrieved
-         * @return
+         * This method gets data of every song
+         * from media store,
+         * @return A cursor with data retrieved
          */
         private Cursor getDataFromDevice() {
 
@@ -1634,8 +1637,8 @@ public class MainActivity extends AppCompatActivity
         }
 
         /**
-         * This method rescan mediastore DB, and
-         * if there are new elements, add them to list
+         * Updates list by adding any new audio file
+         * detected in smartphone
          */
         private void rescanAndUpdateList(){
             data = getDataFromDevice();
@@ -1655,8 +1658,9 @@ public class MainActivity extends AppCompatActivity
         }
 
         /**
-         * Verifies if audio file exist in
-         * smartphone storage
+         * Updates list by removing those items
+         * that have changed its path, removed
+         * or deleted.
          */
         private void removeUnusedItems(){
             for(int pos = 0; pos < mAudioItemList.size() ; pos++){
@@ -1674,8 +1678,11 @@ public class MainActivity extends AppCompatActivity
 
 
         /**
-         * This method creates new table, in case is
-         * the first use of app, then passes this data to adapter
+         * Creates the DB that app uses
+         * to store the state of every song,
+         * generally it only runs the first time
+         * the app is executed, or when DB
+         * could be created at any previous app open.
          */
         private void createNewTable(){
             data = getDataFromDevice();
@@ -1688,15 +1695,13 @@ public class MainActivity extends AppCompatActivity
         }
 
         /**
-         * This method reads data from our
-         * DB created after the first use of app,
-         * then passes this data to adapter
+         * When app DB is generated, now it reads
+         * info about songs from here, not from MediaStore
          */
         private void readFromDatabase(){
 
             data = MainActivity.this.mDataTrackDbHelper.getDataFromDB(Sort.setDefaultOrder());
-            //retrieved null data or 0 elements, so our database
-            //does not contain anything, means that no audio files were found
+            //retrieved null data means there are no elements, so our database
             int dataLength = data != null ? data.getCount() : 0;
             if (dataLength > 0) {
                 while (data.moveToNext()) {
@@ -1727,7 +1732,9 @@ public class MainActivity extends AppCompatActivity
 
 
         /**
-         * Here we add the audio item_list to adapter
+         * Creates the AudioItem object with the info
+         * song, then calls publish progress passing
+         * this object and adding to list
          */
         private void createAndAddAudioItem(){
             int mediaStoreId = data.getInt(0);//mediastore id
@@ -1797,12 +1804,14 @@ public class MainActivity extends AppCompatActivity
             Log.d(TAG, action);
             switch (action) {
                 case Constants.GnServiceActions.ACTION_API_INITIALIZED:
+                    if(mAudioItemList.size() > 0 ) {
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                showSnackBar(Snackbar.LENGTH_SHORT, getString(R.string.api_initialized),NO_ID);
+                                showSnackBar(Snackbar.LENGTH_SHORT, getString(R.string.api_initialized), NO_ID);
                             }
                         });
+                    }
                     break;
                 case Constants.Actions.ACTION_NOT_FOUND:
                     runOnUiThread(new Runnable() {

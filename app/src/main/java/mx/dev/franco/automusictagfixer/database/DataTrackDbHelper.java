@@ -17,8 +17,8 @@ import java.io.File;
 
 /**
  * Class that extends from a helper database class,
- * it helps us, overriding certain methods, to create, update, drop
- * and define the sql statements and querys for operations over the DB.
+ * it helps us to create, update, drop
+ * and define the sql statements and queries for operations over the DB.
  */
 public class DataTrackDbHelper extends SQLiteOpenHelper {
     // We define the SQL statements for create the database and one table
@@ -43,12 +43,18 @@ public class DataTrackDbHelper extends SQLiteOpenHelper {
     //Initial version of DB,
     private static final int DATABASE_VERSION = 1;
     static final String DATABASE_NAME = "DataTrack.db";
-    private Context _context;
+    //Remember to use getApplicationContext() to avoid memory leaks;
+    private Context mContext;
 
 
+    /**
+     * Private constructor, we only need one connection to DB
+     * @param context
+     */
     private DataTrackDbHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
-        _context =  context;
+        if(mContext == null)
+            mContext =  context;
     }
 
     /**
@@ -59,14 +65,14 @@ public class DataTrackDbHelper extends SQLiteOpenHelper {
      */
     public static DataTrackDbHelper getInstance(Context context){
         if(dbHelper == null){
-            dbHelper =  new DataTrackDbHelper(context);
+            dbHelper =  new DataTrackDbHelper(context.getApplicationContext());
             dbHelper.getWritableDatabase();
         }
         return dbHelper;
     }
 
     /**
-     * It executes only one time, to create the database.
+     * Callback that executes only one time, when DB is created.
      * @param db
      */
     @Override
@@ -75,8 +81,9 @@ public class DataTrackDbHelper extends SQLiteOpenHelper {
     }
 
     /**
-     * In case we upgrade the DB, first delete the current BD,
-     * and then recreate it.
+     * Implements the logic when DB
+     * changes,  for example, adding a new column
+     * to any table
      * @param db
      * @param oldVersion
      * @param newVersion
@@ -86,14 +93,19 @@ public class DataTrackDbHelper extends SQLiteOpenHelper {
         db.execSQL(SQL_DELETE_ENTRIES_FOR_TRACK_DATA);
     }
 
+    /**
+     * Not implemented, used when a DB downgrade is
+     * executed
+     * @param db
+     * @param oldVersion
+     * @param newVersion
+     */
     public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion){
         onUpgrade(db,oldVersion,newVersion);
     }
 
     /**
-     * Remove an item_list from our database
-     * in case already doesn't exist
-     * in smartphone
+     * Remove a row from App DB
      * @param id
      * @param tableName
      */
@@ -104,7 +116,7 @@ public class DataTrackDbHelper extends SQLiteOpenHelper {
     }
 
     /**
-     * Adds new item_list to our database
+     * Insert new row to App DB
      * @param data
      * @param tableName
      * @return id corresponding to current row inserted
@@ -116,8 +128,7 @@ public class DataTrackDbHelper extends SQLiteOpenHelper {
     }
 
     /**
-     * get all data for populating
-     * our recycler view adapter
+     * Gets all data from table TrackContract.TrackData.TABLE_NAME
      * @return cursor object or null if no data
      * @param orderBy
      */
@@ -147,9 +158,8 @@ public class DataTrackDbHelper extends SQLiteOpenHelper {
     }
 
     /**
-     * get only the absolute path stored
-     * for checking if item_list exists or not
-     * in smartphone
+     * get value of "is_selected" column for
+     * every id passed
      * @param id
      * @return cursor object or null if no data
      */
@@ -164,23 +174,22 @@ public class DataTrackDbHelper extends SQLiteOpenHelper {
         };
 
         Cursor c = getReadableDatabase().query(
-                TrackContract.TrackData.TABLE_NAME,                     // Tabla a consultar
-                projection,                               // Qué columnas se obtendran
-                selection,                                // Las columnas a consultar en el WHERE
-                selectionArgs,                            // El valor buscado en el WHERE
-                null,                                     // null para no agrupar
-                null,                                     // null para no filtrar
-                null                                 // null para no ordenar
+                TrackContract.TrackData.TABLE_NAME,     // Table to query
+                projection,                             // Which columns are going to retrieve, is the "SELECT columns FROM" part
+                selection,                              // The columns against is going to be the "WHERE"
+                selectionArgs,                          // Values to match, "WHERE = value"
+                null,                                   // Group by, pass null for not grouping
+                null,                                   // Filter, pass null for not filtering
+                null                                    // Sort, pass null for not sorting
         );
 
         return (c != null && c.getCount() > 0)?c:null;
     }
 
     /**
-     * if there are any recent audio file
-     * added to smartphone, it verifies
-     * that already has been added to database
-     * @param id
+     * Makes a match between audio files in MediaStore
+     * and App DB
+     * @param id the id from MediaStore to search in App DB
      * @return false in case doesn't exist in our database
      */
     public boolean existInDatabase(int id){
@@ -192,13 +201,13 @@ public class DataTrackDbHelper extends SQLiteOpenHelper {
         String[] selectionArgs = {id+""};
 
         Cursor c = getReadableDatabase().query(
-                TrackContract.TrackData.TABLE_NAME,                     // Tabla a consultar
-                projection,                               // Qué columnas se obtendran
-                selection,                                // Las columnas a consultar en el WHERE
-                selectionArgs,                            // El valor buscado en el WHERE
-                null,                                     // null para no agrupar
-                null,                                     // null para no filtrar
-                null                                 // null para no ordenar
+                TrackContract.TrackData.TABLE_NAME,     // Table to query
+                projection,                             // Which columns are going to retrieve, is the "SELECT columns FROM" part
+                selection,                              // The columns against is going to be the "WHERE"
+                selectionArgs,                          // Values to match, "WHERE = value"
+                null,                                   // Group by, pass null for not grouping
+                null,                                   // Filter, pass null for not filtering
+                null                                    // Sort, pass null for not sorting
         );
         if(c != null) {
             c.moveToFirst();
@@ -210,37 +219,8 @@ public class DataTrackDbHelper extends SQLiteOpenHelper {
         return false;
     }
 
-    public boolean existInDatabase(String path){
-        String[] projection = {
-                TrackContract.TrackData.MEDIASTORE_ID,
-                TrackContract.TrackData.DATA,
-        };
-
-        String selection = TrackContract.TrackData.DATA + " = ?";
-        String[] selectionArgs = {path};
-
-        Cursor c = getReadableDatabase().query(
-                TrackContract.TrackData.TABLE_NAME,                     // Tabla a consultar
-                projection,                               // Qué columnas se obtendran
-                selection,                                // Las columnas a consultar en el WHERE
-                selectionArgs,                            // El valor buscado en el WHERE
-                null,                                     // null para no agrupar
-                null,                                     // null para no filtrar
-                null                                 // null para no ordenar
-        );
-        if(c != null) {
-            c.moveToFirst();
-            if(c.getCount() > 0 && c.getString(c.getColumnIndex(TrackContract.TrackData.DATA)).equals(path)){
-                c.close();
-                return true;
-            }
-        }
-        return false;
-    }
-
     /**
-     * update row from provided
-     * content values object
+     * Updates one row
      * @param id
      * @param contentValues
      * @return how many rows were updated
@@ -253,8 +233,8 @@ public class DataTrackDbHelper extends SQLiteOpenHelper {
     }
 
     /**
-     * update any column data for all items
-     * @param contentValues
+     * Updates data for all items
+     * @param contentValues object that wraps columns and new values to apply
      * @return how many rows were updated
      */
     public int updateData(ContentValues contentValues){
@@ -262,27 +242,22 @@ public class DataTrackDbHelper extends SQLiteOpenHelper {
         return updatedRow;
     }
 
+    /**
+     * Updates "is_processing" column to
+     * true or false
+     * @param contentValues New value to set
+     * @param columnToUpdate represents the "where columnname" condition
+     * @param condition represent the " = somevalue" part of where condition
+     * @return
+     */
     public int updateData(ContentValues contentValues, String columnToUpdate, boolean condition){
         String whereClause = columnToUpdate + " = ?";
         String[] whereArgs = {(condition?1:0)+""};
         return getWritableDatabase().update(TrackContract.TrackData.TABLE_NAME, contentValues, whereClause, whereArgs );
     }
-
-    public int updateData(ContentValues contentValues, String columnToUpdate, String condition){
-        String whereClause = columnToUpdate + " = ?";
-        String[] whereArgs = {condition+""};
-        return getWritableDatabase().update(TrackContract.TrackData.TABLE_NAME, contentValues, whereClause, whereArgs );
-    }
-
-    public int updateData(ContentValues contentValues, String columnToUpdate, int condition){
-        String whereClause = columnToUpdate + " = ?";
-        String[] whereArgs = {condition+""};
-        return getWritableDatabase().update(TrackContract.TrackData.TABLE_NAME, contentValues, whereClause, whereArgs );
-    }
-
     /**
-     * clears db if any previous construction failed
-     * @return number of items deleted
+     * Remove all tables from DB
+     * @return number of tables deleted
      */
     public int clearDb(){
         return getWritableDatabase().delete(TrackContract.TrackData.TABLE_NAME, null, null);
@@ -292,26 +267,20 @@ public class DataTrackDbHelper extends SQLiteOpenHelper {
      * Returns total elements in table
      * @return number of elements
      */
-    public int getCount(String tableName){
-        String name;
-        if(tableName == null || tableName.equals(""))
-            name = TrackContract.TrackData.TABLE_NAME;
-        else
-            name = tableName;
-
+    public int getCount(){
         return getReadableDatabase().query(
-                name,                     // Tabla a consultar
-                null,                               // Qué columnas se obtendran
-                null,                                // Las columnas a consultar en el WHERE
-                null,                            // El valor buscado en el WHERE
-                null,                                     // null para no agrupar
-                null,                                     // null para no filtrar
-                null                                 // null para no ordenar
+                TrackContract.TrackData.TABLE_NAME,     // Table to query
+                null,                             // Which columns are going to retrieve, is the "SELECT columns FROM" part
+                null,                              // The columns against is going to be the "WHERE"
+                null,                          // Values to match, "WHERE = value"
+                null,                                   // Group by, pass null for not grouping
+                null,                                   // Filter, pass null for not filtering
+                null                                    // Sort, pass null for not sorting
         ).getCount();
     }
 
     /**
-     * verifies if database exist in smartphone
+     * Checks if DB file exist in smartphone
      * @param context
      * @return true if exists
      */
@@ -321,12 +290,15 @@ public class DataTrackDbHelper extends SQLiteOpenHelper {
     }
 
     /**
-     * get all items marked as true in its selected column
+     * Get all items marked as 1 in its "selected" column
      * @return cursor object or null if no selected items
      */
     public Cursor getAllSelected(long id, String sort){
         String selection = null;
         String[] selectionArgs;
+        //when id is -1 means that we are querying
+        //all "selected" items, because when id is different that -1
+        //we are querying only to one id
         if(id == -1){
             selection = TrackContract.TrackData.IS_SELECTED + " = ?";
             selectionArgs = new String[]{1 + ""}; //we cannot pass "true", because is store as integer
@@ -335,9 +307,6 @@ public class DataTrackDbHelper extends SQLiteOpenHelper {
             selection = TrackContract.TrackData.MEDIASTORE_ID + " = ?";
             selectionArgs = new String[]{id+""}; //we cannot pass "true", because is store as integer
         }
-
-
-
 
         String[] projection = {
                 TrackContract.TrackData.MEDIASTORE_ID,

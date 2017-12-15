@@ -14,7 +14,7 @@ public class ServiceHelper {
     private String mService;
     private Context mContext;
     private ServiceHelper(Context context){
-        mContext = context;
+        mContext = context.getApplicationContext();
     }
 
     public static ServiceHelper withContext(Context context){

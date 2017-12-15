@@ -12,10 +12,7 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.ConnectivityManager;
-import android.os.Handler;
 import android.os.IBinder;
-import android.os.Looper;
-import android.os.Message;
 import android.preference.PreferenceManager;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
@@ -298,10 +295,11 @@ public class FixerTrackService extends Service {
             mGnMusicIdFile.options().batchSize(1);
             //get the fileInfoManager
             mGnMusicIdFileInfoManager = mGnMusicIdFile.fileInfos();
+            mGnMusicIdFile.waitForComplete();
             //hold reference to queue in case we need cancel the
             //identification
             mGnMusicIdFileList.add(mGnMusicIdFile);
-            mGnMusicIdFile.waitForComplete();
+
 
         } catch (GnException e) {
             e.printStackTrace();
@@ -1097,9 +1095,6 @@ public class FixerTrackService extends Service {
             stopSelf();
         }
 
-
-
-
         public void clearValues(){
             mId= -1;
             mPath = null;
@@ -1120,22 +1115,6 @@ public class FixerTrackService extends Service {
             }
         }
     }
-
-    private class MyHandler extends Handler{
-        public MyHandler(Looper looper){
-            super(looper);
-        }
-
-        @Override
-        public void handleMessage(Message msg){
-            //Log.d("message_received","received");
-            int startId = msg.arg1;
-            Intent intent = (Intent) msg.obj;
-            onHandleIntent(intent);
-            Log.i(CLASS_NAME, "startId: " + startId);
-        }
-    }
-
 
 }
 

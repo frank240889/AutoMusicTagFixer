@@ -1573,7 +1573,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
      */
     private void stopPlayback() throws IOException, InterruptedException {
         mPlayPreviewButton.setIcon(R.drawable.ic_play_arrow_white_24px);
-        if(mPlayer != null && mPlayer.isPlaying() && this.mCurrentPosition == mPlayer.getCurrentPos()){
+        if(mPlayer != null && mPlayer.isPlaying() && this.mCurrentPosition == mPlayer.getCurrentPosition2()){
             mPlayer.onCompletePlayback();
         }
     }
