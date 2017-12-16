@@ -15,6 +15,7 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
 import com.bumptech.glide.request.RequestOptions;
@@ -29,6 +30,7 @@ import org.jaudiotagger.tag.TagException;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -54,10 +56,13 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
     //this property indicate us if all items were selected
     //not used, for now
     private boolean mAllSelected = false;
-    //filter object for filteriing search results
+    //filters search results
     private CustomFilter mCustomFilter;
-    //Comparator for ordering the items in list
+    //Comparator for ordering list
     private static Sorter mSorter;
+
+    private static AsyncLoadCover asyncLoadCover;
+    private int mVerticalScrollSpeed = 0;
 
     @SuppressWarnings("unchecked")
     public TrackAdapter(Context context, List<AudioItem> list, TrackAdapter.AudioItemHolder.ClickListener clickListener){
@@ -104,86 +109,29 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
     @Override
     public void onBindViewHolder(final AudioItemHolder holder, int position) {
         AudioItem audioItem = mCurrentList.get(position);
+        GlideApp.with(mContext).
+                load(null)
+                .placeholder(R.drawable.ic_album_white_48px)
+                .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.NONE))
+                .apply(RequestOptions.skipMemoryCacheOf(true))
+                .transition(DrawableTransitionOptions.withCrossFade(100))
+                .fitCenter()
+                .into(holder.mImageView);
         holder.mCheckBox.setChecked(audioItem.isChecked());
 
-        if(audioItem.isProcessing()){
+        if (audioItem.isProcessing()) {
             holder.itemView.setEnabled(false);
             holder.mProgressBar.setVisibility(VISIBLE);
-        }
-        else {
+        } else {
             holder.itemView.setEnabled(true);
             holder.mProgressBar.setVisibility(GONE);
         }
 
-            //We need to load covers arts in other thread,
-            //because this operation is going to reduce performance
-            //in main thread, making the scroll very laggy
-            new AsyncTask<String,byte[],Void>(){
-
-                @Override
-                protected Void doInBackground(String... params) {
-                    String path = params[0];
-                    File file = new File(path);
-                    if(!file.exists()) {
-                        publishProgress(null);
-                        file = null;
-                        return null;
-                    }
-
-                    try {
-                        AudioFile audioTaggerFile = AudioFileIO.read(new File(path));
-                        Tag tag = null;
-                        byte[] cover = null;
-                        if (audioTaggerFile.getTag() == null) {
-                            publishProgress(null);
-                            return null;
-
-                        }
-
-                        tag = audioTaggerFile.getTag();
-
-                        if (tag.getFirstArtwork() == null) {
-                            publishProgress(null);
-                            return null;
-                        }
-
-                        if(tag.getFirstArtwork().getBinaryData() == null){
-                            publishProgress(null);
-                            return null;
-                        }
-
-                        //Log.d("cover", (cover == null) + " - " + path);
-                        cover = tag.getFirstArtwork().getBinaryData();
-                        publishProgress(cover);
-                        return null;
-
-                    }
-                    catch(IOException | CannotReadException | ReadOnlyFileException | InvalidAudioFrameException | TagException e){
-                        e.printStackTrace();
-                        publishProgress(null);
-                        System.gc();
-                        return null;
-                    }
-                }
-                @Override
-                protected void onPostExecute(Void voids){
-                    
-                }
-
-                @Override
-                protected void onProgressUpdate(byte[]... cover){
-
-                    GlideApp.with(mContext).
-                            load(cover == null ? mContext.getResources().getDrawable(R.drawable.ic_album_white_48px,null) : cover[0] )
-                            .placeholder(R.drawable.ic_album_white_48px)
-                            .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.NONE))
-                            .apply(RequestOptions.skipMemoryCacheOf(true))
-                            .transition(DrawableTransitionOptions.withCrossFade(100))
-                            .fitCenter()
-                            .into(holder.mImageView);
-
-                }
-            }.execute(audioItem.getAbsolutePath());
+        //We need to load covers arts in other thread,
+        //because this operation is going to reduce performance
+        //in main thread, making the scroll very laggy
+        asyncLoadCover = new AsyncLoadCover(holder, mContext);
+        asyncLoadCover.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR , audioItem.getAbsolutePath());
 
             switch (audioItem.getStatus()) {
                 case AudioItem.STATUS_TAGS_CORRECTED_BY_SEMIAUTOMATIC_MODE:
@@ -215,6 +163,17 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
         holder.mAbsolutePath.setTag(audioItem.getAbsolutePath());
 
     }
+
+    @Override
+    public void onViewRecycled(TrackAdapter.AudioItemHolder holder) {
+        super.onViewRecycled(holder);
+        Glide.with(mContext).clear(holder.mImageView);
+    }
+
+    public void setVerticalSpeedScroll(int dy){
+        mVerticalScrollSpeed = dy;
+    }
+
 
     /**
      * Getter for mAllSelected property
@@ -329,7 +288,8 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
      * every element of item, avoiding call findViewById()
      * in every element for data source, making a considerable
      * improvement in performance of list
-     */public static class AudioItemHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+     */
+    public static class AudioItemHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         public CheckBox mCheckBox;
         public TextView mTrackName;
         public TextView mArtistName;
@@ -378,6 +338,96 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
 
         public interface ClickListener {
             void onItemClicked(int position, View v);
+        }
+    }
+
+    /**
+     * This class should be static for avoiding memory leaks,
+     * then we use weak references to resources needed inside
+     */
+    private static class AsyncLoadCover extends AsyncTask<String, byte[], Void> {
+
+        private WeakReference<AudioItemHolder> mHolder;
+        private WeakReference<Context> mContext;
+
+        private AsyncLoadCover(AudioItemHolder holder, Context context) {
+            this.mHolder = new WeakReference<>(holder);
+            this.mContext = new WeakReference<>(context);
+        }
+
+        @Override
+        protected Void doInBackground(String... params) {
+            String path = params[0];
+            File file = new File(path);
+            if(!file.exists()) {
+                publishProgress(null);
+                file = null;
+                return null;
+            }
+
+            try {
+                AudioFile audioTaggerFile = AudioFileIO.read(new File(path));
+                Tag tag = null;
+                byte[] cover = null;
+                if (audioTaggerFile.getTag() == null) {
+                    publishProgress(null);
+                    return null;
+
+                }
+
+                tag = audioTaggerFile.getTag();
+
+                if (tag.getFirstArtwork() == null) {
+                    publishProgress(null);
+                    return null;
+                }
+
+                if(tag.getFirstArtwork().getBinaryData() == null){
+                    publishProgress(null);
+                    return null;
+                }
+
+                //Log.d("cover", (cover == null) + " - " + path);
+                cover = tag.getFirstArtwork().getBinaryData();
+                publishProgress(cover);
+                return null;
+
+            }
+            catch(IOException | CannotReadException | ReadOnlyFileException | InvalidAudioFrameException | TagException e){
+                e.printStackTrace();
+                publishProgress(null);
+                System.gc();
+                return null;
+            }
+        }
+        @Override
+        protected void onPostExecute(Void voids){
+            this.mHolder = null;
+            this.mContext = null;
+            asyncLoadCover = null;
+            System.gc();
+        }
+
+        @Override
+        public void onCancelled(Void voids){
+            this.mHolder = null;
+            this.mContext = null;
+            asyncLoadCover = null;
+            System.gc();
+        }
+
+        @Override
+        protected void onProgressUpdate(byte[]... cover){
+
+            GlideApp.with(mContext.get()).
+                    load(cover == null ? this.mContext.get().getResources().getDrawable(R.drawable.ic_album_white_48px,null) : cover[0] )
+                    .placeholder(R.drawable.ic_album_white_48px)
+                    .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.NONE))
+                    .apply(RequestOptions.skipMemoryCacheOf(true))
+                    .transition(DrawableTransitionOptions.withCrossFade(100))
+                    .fitCenter()
+                    .into(mHolder.get().mImageView);
+
         }
     }
 

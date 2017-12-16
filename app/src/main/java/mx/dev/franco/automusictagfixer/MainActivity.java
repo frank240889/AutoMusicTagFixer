@@ -55,6 +55,7 @@ import com.google.android.gms.common.api.GoogleApiClient;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -158,6 +159,8 @@ public class MainActivity extends AppCompatActivity
     //of something useful methods from this object
     private ActionBar mActionBar;
 
+    private AsyncReadFile asyncReadFile;
+
     @RequiresApi(api = Build.VERSION_CODES.M)
     @SuppressLint("UseSparseArrays")
     @Override
@@ -219,6 +222,15 @@ public class MainActivity extends AppCompatActivity
         mRecyclerView.setHapticFeedbackEnabled(true);
         mRecyclerView.setSoundEffectsEnabled(true);
 
+        mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy){
+                super.onScrolled(recyclerView,dx,dy);
+                Log.d("DY", dy+"");
+                mAudioItemArrayAdapter.setVerticalSpeedScroll(dy);
+            }
+        });
+
         //get the actionbar to enable some extra functionality
         //to toolbar
         setSupportActionBar(mToolbar);
@@ -229,7 +241,7 @@ public class MainActivity extends AppCompatActivity
         mFloatingActionButtonStop.hide();
         //create data source and adapter
         mAudioItemList = new ArrayList<>();
-        mAudioItemArrayAdapter = new TrackAdapter(getApplicationContext(), mAudioItemList,this);
+        mAudioItemArrayAdapter = new TrackAdapter(this, mAudioItemList,this);
         //sorting object
         sSorter = TrackAdapter.Sorter.getInstance();
 
@@ -254,8 +266,8 @@ public class MainActivity extends AppCompatActivity
                     //if we have the permission, check Bundle object to verify if the activity comes from onPause or from onCreate event
                     //if(savedInstanceState == null){
                         //int taskType = DataTrackDbHelper.existDatabase(getApplicationContext()) && mDataTrackDbHelper.getCount(null) > 0 ? READ_FROM_DATABASE : CREATE_DATABASE;
-                        AsyncReadFile asyncReadFile = new AsyncReadFile(RE_SCAN);
-                        asyncReadFile.execute();
+                        asyncReadFile = new AsyncReadFile(RE_SCAN);
+                        asyncReadFile.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
                     //}
 
                 }
@@ -277,8 +289,8 @@ public class MainActivity extends AppCompatActivity
                 mRecyclerView.setAdapter(mAudioItemArrayAdapter);
                 int taskType = DataTrackDbHelper.existDatabase(this) && mDataTrackDbHelper.getCount() > 0 ? READ_FROM_DATABASE : CREATE_DATABASE;
 
-                AsyncReadFile asyncReadFile = new AsyncReadFile(taskType);
-                asyncReadFile.execute();
+                asyncReadFile = new AsyncReadFile(taskType);
+                asyncReadFile.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
             //}
         }
         //Actually if service is running, then register filters and receiver immediately to update UI
@@ -632,6 +644,7 @@ public class MainActivity extends AppCompatActivity
         else {
             id = Settings.SETTING_SORT;
             Log.d("el id", id + "");
+            //default checked is SortBy path, descendant order
             lastCheckedItem = mMenu.findItem(id == 0  ? R.id.path_asc : id);
             lastCheckedItem.setIcon(ContextCompat.getDrawable(getApplicationContext(), R.drawable.ic_done_white));
         }
@@ -757,12 +770,16 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+    /**
+     * Refresh list by searching new and removed audio files
+     * from smartphone
+     */
     private void actionRefresh(){
         //request permission in case is necessary and update
         //our database
         if(RequiredPermissions.ACCESS_GRANTED_FILES) {
-            AsyncReadFile asyncReadFile = new AsyncReadFile(RE_SCAN);
-            asyncReadFile.execute();
+            asyncReadFile = new AsyncReadFile(RE_SCAN);
+            asyncReadFile.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
         }
         else {
             showRequestPermissionReason();
@@ -772,6 +789,7 @@ public class MainActivity extends AppCompatActivity
     /**
      * Sets the action to floating action button (mFloatingActionButtonStart)
      */
+    @SuppressLint("StaticFieldLeak")
     private void startTask(){
         if(ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED){
             ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 2);
@@ -782,7 +800,7 @@ public class MainActivity extends AppCompatActivity
             //we put this in AsyncTask because the isConnected method
             //makes a network operation which blocks UI if we execute
             //in UI Thread
-            new AsyncTask<Context,Void, Integer>(){
+                new AsyncTask<Context,Void, Integer>(){
                 @Override
                 protected Integer doInBackground(Context contexts[]){
                     int canContinue = allowExecute(contexts[0].getApplicationContext());
@@ -918,29 +936,35 @@ public class MainActivity extends AppCompatActivity
 
         boolean areAllSelected = mAudioItemArrayAdapter.areAllSelected();
 
-        new AsyncTask<Boolean, Integer, Void>(){
-            @Override
-            protected Void doInBackground(Boolean... params) {
-                ContentValues values = new ContentValues();
-                values.put(TrackContract.TrackData.IS_SELECTED,!params[0]);
-                mDataTrackDbHelper.updateData(values);
-                for(int f = 0; f< mAudioItemArrayAdapter.getItemCount() ; f++){
-                    mAudioItemList.get(f).setChecked(!params[0]);
-                    publishProgress(f);
-                }
-                mAudioItemArrayAdapter.setAllSelected(!params[0]);
-                return null;
+        AsyncSelectItem asyncSelectItem = new AsyncSelectItem(this);
+        asyncSelectItem .execute(areAllSelected);
+    }
+
+    private static class AsyncSelectItem extends AsyncTask<Boolean,Integer, Void>{
+        private WeakReference<MainActivity> mMainActivityWeakReference;
+
+        public AsyncSelectItem(MainActivity mainActivity){
+            mMainActivityWeakReference = new WeakReference<>(mainActivity);
+        }
+
+        @Override
+        protected Void doInBackground(Boolean... params) {
+            ContentValues values = new ContentValues();
+            values.put(TrackContract.TrackData.IS_SELECTED,!params[0]);
+            mMainActivityWeakReference.get().mDataTrackDbHelper.updateData(values);
+            for(int f = 0; f< mMainActivityWeakReference.get().mAudioItemArrayAdapter.getItemCount() ; f++){
+                mMainActivityWeakReference.get().mAudioItemList.get(f).setChecked(!params[0]);
+                publishProgress(f);
             }
+            mMainActivityWeakReference.get().mAudioItemArrayAdapter.setAllSelected(!params[0]);
+            return null;
+        }
 
-            @Override
-            protected void onProgressUpdate(Integer... integers){
-                super.onProgressUpdate(integers);
-                mAudioItemArrayAdapter.notifyItemChanged(integers[0]);
-            }
-
-        }.execute(areAllSelected);
-
-
+        @Override
+        protected void onProgressUpdate(Integer... integers){
+            super.onProgressUpdate(integers);
+            mMainActivityWeakReference.get().mAudioItemArrayAdapter.notifyItemChanged(integers[0]);
+        }
     }
 
     /**
@@ -1200,8 +1224,8 @@ public class MainActivity extends AppCompatActivity
         //if previously was granted the permission and our database has data
         //dont' clear that data, only read it instead.
         int taskType = DataTrackDbHelper.existDatabase(getApplicationContext()) && mDataTrackDbHelper.getCount() > 0 ? READ_FROM_DATABASE : CREATE_DATABASE;
-        AsyncReadFile asyncReadFile = new AsyncReadFile(taskType);
-        asyncReadFile.execute();
+        asyncReadFile = new AsyncReadFile(taskType);
+        asyncReadFile.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 
     }
 
@@ -1533,7 +1557,7 @@ public class MainActivity extends AppCompatActivity
             //when doInBackground finishes, this callback
             //is executed. Here is where we hide, for example,
             //a progress bar.
-
+            asyncReadFile = null;
             //is not necessary call its super method
             //because is an emtpy method
 
@@ -1590,6 +1614,7 @@ public class MainActivity extends AppCompatActivity
             super.onCancelled();
             //this method will be invoked instead of
             //onPostExecute if AsyncTask is cancelled
+            asyncReadFile = null;
             sIsGettingData = false;
             mSwipeRefreshLayout.setEnabled(true);
             mSwipeRefreshLayout.setRefreshing(false);
