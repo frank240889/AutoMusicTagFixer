@@ -4,7 +4,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Parcel;
 import android.os.Parcelable;
-import android.util.Log;
 import android.webkit.MimeTypeMap;
 
 import java.io.File;
@@ -16,6 +15,8 @@ import mx.dev.franco.automusictagfixer.utilities.StringUtilities;
  */
 
 public final class AudioItem implements Parcelable{
+
+    //Status of correction of items
     public static final int STATUS_NO_TAGS_SEARCHED_YET = 0;
     public static final int STATUS_ALL_TAGS_FOUND = 1;
     public static final int STATUS_ALL_TAGS_NOT_FOUND = 2;
@@ -23,8 +24,10 @@ public final class AudioItem implements Parcelable{
     public static final int STATUS_TAGS_EDITED_BY_USER = 3;
     public static final int FILE_ERROR_READ = 4;
     public static final int STATUS_TAGS_CORRECTED_BY_SEMIAUTOMATIC_MODE = 5;
+
     public static final float KILOBYTE = 1048576;
 
+    //Default values
     private long id = -1;
     private String title = "";
     private String artist = "";
@@ -33,11 +36,11 @@ public final class AudioItem implements Parcelable{
     private int status = STATUS_NO_TAGS_SEARCHED_YET;
     private int position = -1;
 
+    //States of items
     private boolean isChecked = false;
     private boolean isProcessing = false;
-    private boolean isPlayingAudio = false;
 
-    //Need for trackid from DetailsTrackActivity
+    //Fields that caches trackid results
     private byte[] coverArt = null;
     private String trackNumber = "";
     private String trackYear = "";
@@ -134,15 +137,6 @@ public final class AudioItem implements Parcelable{
         return this;
     }
 
-    public boolean isPlayingAudio() {
-        return isPlayingAudio;
-    }
-
-    public AudioItem setPlayingAudio(boolean playingAudio) {
-        isPlayingAudio = playingAudio;
-        return this;
-    }
-
     //Only for use when retrieved data for a single track and is sent to TrackDetailsActivity;
     //used for caching values retrieved and don't send again the query to Gracenote API,
     /************************************************************/
@@ -184,6 +178,12 @@ public final class AudioItem implements Parcelable{
     /*************************************************************/
 
 
+    /**
+     * Formats duration to human readable
+     * string
+     * @param duration duration in seconds
+     * @return formatted string duration
+     */
     public static String getHumanReadableDuration(String duration){
         if(duration == null || duration.isEmpty())
             return "0";
@@ -198,6 +198,11 @@ public final class AudioItem implements Parcelable{
         return readableDuration;
     }
 
+    /**
+     * Gets file size in megabytes
+     * @param size File size
+     * @return formatted file size string
+     */
     public static String getFileSize(long size){
         if(size <= 0)
             return "0 mb";
@@ -215,11 +220,14 @@ public final class AudioItem implements Parcelable{
         return readableSize;
     }
 
+    /**
+     * Gets image dimensions information
+     * @param cover Cover art data
+     * @return formatted string image size
+     */
     public static String getStringImageSize(byte[] cover){
-        Log.d("cover art is null",(cover == null)+"");
         String msg;
         if(cover != null && cover.length > 0) {
-            Log.d("cover art is null",(cover == null)+"_ " + cover.length);
             try {
                 Bitmap bitmapDrawable = BitmapFactory.decodeByteArray(cover, 0, cover.length);
                 msg = bitmapDrawable.getHeight() + " * " + bitmapDrawable.getWidth() + " pixeles";
@@ -265,14 +273,17 @@ public final class AudioItem implements Parcelable{
     }
 
     /**
-     * This method helps to rename the file,
-     * in case is set from options in settings activity
+     * Rename the file,
+     * in case is set from options in Settings activity
      * @param currentPath
      * @return String[]
      */
     public static String renameFile(String currentPath, String title, String artistName){
 
-        boolean couldBeRenamed = false;
+        if(!checkFileIntegrity(currentPath)){
+            return null;
+        }
+
         File currentFile = new File(currentPath), renamedFile;
         String newParentPath = currentFile.getParent();
 
@@ -280,7 +291,7 @@ public final class AudioItem implements Parcelable{
         String newAbsolutePath= newParentPath + "/" + newFilename;
         renamedFile = new File(newAbsolutePath);
         if(!renamedFile.exists()) {
-            couldBeRenamed = currentFile.renameTo(renamedFile);
+            currentFile.renameTo(renamedFile);
         }else {
             //if artist tag was found
             if(!artistName.equals("")) {
@@ -291,10 +302,8 @@ public final class AudioItem implements Parcelable{
             }
             newAbsolutePath = newParentPath + "/" + newFilename;
             renamedFile = new File(newAbsolutePath);
-            couldBeRenamed = currentFile.renameTo(renamedFile);
+            currentFile.renameTo(renamedFile);
         }
-
-        Log.d("MANUAL_RENAMED",couldBeRenamed+"");
 
         return newAbsolutePath;
     }

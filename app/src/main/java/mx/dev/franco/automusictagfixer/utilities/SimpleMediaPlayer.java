@@ -66,7 +66,6 @@ public final class SimpleMediaPlayer extends MediaPlayer implements MediaPlayer.
         if(mCurrentPosition == position && sMediaPlayer.isPlaying()) {
             sMediaPlayer.stop();
             sMediaPlayer.reset();
-            mCurrentAudioItem.setPlayingAudio(false);
             return;
         }
 
@@ -78,9 +77,6 @@ public final class SimpleMediaPlayer extends MediaPlayer implements MediaPlayer.
         }
         sMediaPlayer.setDataSource(mCurrentAudioItem.getAbsolutePath());
         sMediaPlayer.prepare();
-
-
-        mCurrentAudioItem.setPlayingAudio(true);
 
         sMediaPlayer.start();
     }
@@ -111,7 +107,6 @@ public final class SimpleMediaPlayer extends MediaPlayer implements MediaPlayer.
      */
 
     public void onCompletePlayback(){
-        mCurrentAudioItem.setPlayingAudio(false);
         mAdapter.notifyItemChanged(getCurrentPosition());
         sMediaPlayer.stop();
         sMediaPlayer.reset();

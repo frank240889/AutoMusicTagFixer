@@ -59,6 +59,7 @@ import org.jaudiotagger.tag.images.Artwork;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -117,6 +118,9 @@ public class FixerTrackService extends Service {
     //Receiver that process received intent of connection state
     private DetectorChangesConnection mDetectorChangesConnection;
 
+    private Thread mThreadService;
+    private Runnable mRunnable;
+
 
     /**
      * Creates a Service.  Invoked by your subclass's constructor.
@@ -150,13 +154,10 @@ public class FixerTrackService extends Service {
     @Override
     public int onStartCommand(final Intent intent, int flags, int startId){
         super.onStartCommand(intent,flags,startId);
-        //Log.d(CLASS_NAME,"onStartCommand");
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                onHandleIntent(intent);
-            }
-        }).start();
+        Log.d(CLASS_NAME,"onStartCommand");
+        mRunnable = new RunnableService(this, intent);
+        mThreadService = new Thread(mRunnable);
+        mThreadService.start();
         //Don't  re start the service if system kills it
         return START_NOT_STICKY;
     }
@@ -191,6 +192,10 @@ public class FixerTrackService extends Service {
         }
         //cancel detection of connection state
         unregisterReceiver(mDetectorChangesConnection);
+        mMusicIdFileEvents = null;
+        mThreadService = null;
+        mRunnable = null;
+        System.gc();
         Log.d("onDestroy","releasing resources...");
         super.onDestroy();
     }
@@ -876,23 +881,24 @@ public class FixerTrackService extends Service {
                     //Rename file if is enabled in settings
                     if (Settings.SETTING_RENAME_FILE_AUTOMATIC_MODE) {
                         String newAbsolutePath = AudioItem.renameFile(audioItem.getAbsolutePath(), tags[0], tags[1]);
+                        if (newAbsolutePath != null){
+                                //Lets inform to system that one file has change its name
+                                ContentValues newValuesToMediaStore = new ContentValues();
+                            newValuesToMediaStore.put(MediaStore.MediaColumns.DATA, newAbsolutePath);
+                            String selection = MediaStore.MediaColumns.DATA + "= ?";
+                            String selectionArgs[] = {audioItem.getAbsolutePath()}; //old path
+                            boolean successMediaStore = getContentResolver().
+                                    update(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                                            newValuesToMediaStore,
+                                            selection,
+                                            selectionArgs) == 1;
+                            newValuesToMediaStore.clear();
+                            newValuesToMediaStore = null;
 
-                        //Lets inform to system that one file has change its name
-                        ContentValues newValuesToMediaStore = new ContentValues();
-                        newValuesToMediaStore.put(MediaStore.MediaColumns.DATA, newAbsolutePath);
-                        String selection = MediaStore.MediaColumns.DATA + "= ?";
-                        String selectionArgs[] = {audioItem.getAbsolutePath()}; //old path
-                        boolean successMediaStore = getContentResolver().
-                                update(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-                                        newValuesToMediaStore,
-                                        selection,
-                                        selectionArgs) == 1;
-                        newValuesToMediaStore.clear();
-                        newValuesToMediaStore = null;
-
-                        audioItem.setAbsolutePath(newAbsolutePath);
-                        newTags.put(TrackContract.TrackData.DATA, newAbsolutePath); //new path
-                        Log.d("success renaming", successMediaStore+" and renaming");
+                            audioItem.setAbsolutePath(newAbsolutePath);
+                            newTags.put(TrackContract.TrackData.DATA, newAbsolutePath); //new path
+                            Log.d("success renaming", successMediaStore + " and renaming");
+                        }
                     }
 
                     //Update our database to keep track the state of songs
@@ -1113,6 +1119,19 @@ public class FixerTrackService extends Service {
                     stopSelf();
                 }
             }
+        }
+    }
+
+    private static class RunnableService implements Runnable{
+        private WeakReference<FixerTrackService> mFixerTrackServiceWeakReference;
+        private WeakReference<Intent> mIntent;
+        public RunnableService(FixerTrackService fixerTrackService, Intent intent){
+            mFixerTrackServiceWeakReference = new WeakReference<>(fixerTrackService);
+            mIntent = new WeakReference<>(intent);
+        }
+        @Override
+        public void run() {
+            mFixerTrackServiceWeakReference.get().onHandleIntent(mIntent.get());
         }
     }
 
