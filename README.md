@@ -1,4 +1,4 @@
-# AutomusicTagFixer
+# AutoMusicTagFixer
 ********************************************************************************************************************************
 -VERY IMPORTANT:
 1. This app is Beta version yet. 
