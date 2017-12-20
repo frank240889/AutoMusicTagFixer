@@ -6,16 +6,18 @@
     android:orientation="vertical">
 
 
-        <ImageView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:scaleType="fitXY"
-            android:src="@drawable/material" />
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:adjustViewBounds="true"
+        android:cropToPadding="true"
+        android:drawingCacheQuality="auto"
+        android:scaleType="fitXY"
+        android:src="@drawable/material_mini" />
 
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="false"
         android:layout_gravity="bottom"
         android:layout_marginStart="10dp"
         android:orientation="horizontal">
@@ -24,9 +26,6 @@
             android:id="@+id/imageView6"
             android:layout_width="48dp"
             android:layout_height="48dp"
-            android:layout_alignParentBottom="true"
-            android:layout_centerHorizontal="false"
-            android:layout_centerVertical="true"
             android:cropToPadding="false"
             android:scaleType="fitCenter"
             android:src="@drawable/splash"
@@ -35,11 +34,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignParentBottom="false"
-            android:layout_centerHorizontal="false"
-            android:layout_centerInParent="false"
             android:layout_gravity="center_vertical"
-            android:layout_toEndOf="@+id/imageView6"
             android:fontFamily="sans-serif"
             android:paddingStart="10dp"
             android:text="@string/app_name"

@@ -4,7 +4,6 @@ import android.content.Context;
 import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -63,6 +62,7 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
 
     private static AsyncLoadCover asyncLoadCover;
     private int mVerticalScrollSpeed = 0;
+    private int mScrollingState = 0;
 
     @SuppressWarnings("unchecked")
     public TrackAdapter(Context context, List<AudioItem> list, TrackAdapter.AudioItemHolder.ClickListener clickListener){
@@ -109,14 +109,6 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
     @Override
     public void onBindViewHolder(final AudioItemHolder holder, int position) {
         AudioItem audioItem = mCurrentList.get(position);
-        GlideApp.with(mContext).
-                load(null)
-                .placeholder(R.drawable.ic_album_white_48px)
-                .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.NONE))
-                .apply(RequestOptions.skipMemoryCacheOf(true))
-                .transition(DrawableTransitionOptions.withCrossFade(100))
-                .fitCenter()
-                .into(holder.mImageView);
         holder.mCheckBox.setChecked(audioItem.isChecked());
 
         if (audioItem.isProcessing()) {
@@ -127,11 +119,14 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
             holder.mProgressBar.setVisibility(GONE);
         }
 
-        //We need to load covers arts in other thread,
-        //because this operation is going to reduce performance
-        //in main thread, making the scroll very laggy
-        asyncLoadCover = new AsyncLoadCover(holder, mContext);
-        asyncLoadCover.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR , audioItem.getAbsolutePath());
+        //don't load covers if user is scrolling too fast
+       if(this.mVerticalScrollSpeed <= 350 && this.mVerticalScrollSpeed >= -350 && (mScrollingState == 0 || mScrollingState == 2)) {
+           //We need to read covers arts in other thread,
+           //because this operation is going to reduce performance
+           //in main thread, making the scroll very laggy
+            asyncLoadCover = new AsyncLoadCover(holder, mContext);
+            asyncLoadCover.execute(audioItem.getAbsolutePath());
+       }
 
             switch (audioItem.getStatus()) {
                 case AudioItem.STATUS_TAGS_CORRECTED_BY_SEMIAUTOMATIC_MODE:
@@ -174,6 +169,10 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
         mVerticalScrollSpeed = dy;
     }
 
+    public void setScrollState(int state){
+        mScrollingState = state;
+
+    }
 
     /**
      * Getter for mAllSelected property
@@ -258,18 +257,27 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
         return audioItem;
     }
 
+    /**
+     * Sets as false their processing state
+     * of items were processing by FixerTrackService service
+     * and updates UI
+     */
     public void cancelProcessing(){
         for (int t = 0; t < mCurrentList.size(); t++) {
             AudioItem audioItem = mCurrentList.get(t);
             if (audioItem.isProcessing()) {
                 audioItem.setProcessing(false);
                 notifyItemChanged(t);
-                Log.d("setprocessing", t+"");
             }
         }
 
     }
 
+    /**
+     * Count how many items were checked
+     * in list
+     * @return Number of checked items
+     */
     public int getCountSelectedItems(){
         int numberOfSelectedItems = 0;
         if(mCurrentList != null) {
@@ -402,6 +410,7 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
         }
         @Override
         protected void onPostExecute(Void voids){
+            this.mContext.clear();
             this.mHolder = null;
             this.mContext = null;
             asyncLoadCover = null;
@@ -411,6 +420,7 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
         @Override
         public void onCancelled(Void voids){
             this.mHolder = null;
+            this.mContext.clear();
             this.mContext = null;
             asyncLoadCover = null;
             System.gc();
@@ -420,12 +430,14 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
         protected void onProgressUpdate(byte[]... cover){
 
             GlideApp.with(mContext.get()).
-                    load(cover == null ? this.mContext.get().getResources().getDrawable(R.drawable.ic_album_white_48px,null) : cover[0] )
-                    .placeholder(R.drawable.ic_album_white_48px)
+                    load(cover == null ? null : cover[0] )
+                    .thumbnail(0.1f)
+                    .error(R.drawable.ic_album_white_48px)
                     .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.NONE))
                     .apply(RequestOptions.skipMemoryCacheOf(true))
                     .transition(DrawableTransitionOptions.withCrossFade(100))
                     .fitCenter()
+                    .placeholder(R.drawable.ic_album_white_48px)
                     .into(mHolder.get().mImageView);
 
         }

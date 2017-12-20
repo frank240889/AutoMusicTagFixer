@@ -229,6 +229,13 @@ public class MainActivity extends AppCompatActivity
                 Log.d("DY", dy+"");
                 mAudioItemArrayAdapter.setVerticalSpeedScroll(dy);
             }
+            @Override
+            public void onScrollStateChanged(RecyclerView recyclerView, int newState){
+                super.onScrollStateChanged(recyclerView,newState);
+                Log.d("STATE",newState+"");
+                mAudioItemArrayAdapter.setScrollState(newState);
+
+            }
         });
 
         //get the actionbar to enable some extra functionality
@@ -266,7 +273,7 @@ public class MainActivity extends AppCompatActivity
                     //if we have the permission, check Bundle object to verify if the activity comes from onPause or from onCreate event
                     //if(savedInstanceState == null){
                         //int taskType = DataTrackDbHelper.existDatabase(getApplicationContext()) && mDataTrackDbHelper.getCount(null) > 0 ? READ_FROM_DATABASE : CREATE_DATABASE;
-                        asyncReadFile = new AsyncReadFile(RE_SCAN);
+                        asyncReadFile = new AsyncReadFile(RE_SCAN, MainActivity.this);
                         asyncReadFile.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
                     //}
 
@@ -289,7 +296,7 @@ public class MainActivity extends AppCompatActivity
                 mRecyclerView.setAdapter(mAudioItemArrayAdapter);
                 int taskType = DataTrackDbHelper.existDatabase(this) && mDataTrackDbHelper.getCount() > 0 ? READ_FROM_DATABASE : CREATE_DATABASE;
 
-                asyncReadFile = new AsyncReadFile(taskType);
+                asyncReadFile = new AsyncReadFile(taskType, this);
                 asyncReadFile.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
             //}
         }
@@ -320,7 +327,7 @@ public class MainActivity extends AppCompatActivity
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, mToolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        drawer.setDrawerListener(toggle);
+        drawer.addDrawerListener(toggle);
         toggle.syncState();
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
@@ -778,7 +785,7 @@ public class MainActivity extends AppCompatActivity
         //request permission in case is necessary and update
         //our database
         if(RequiredPermissions.ACCESS_GRANTED_FILES) {
-            asyncReadFile = new AsyncReadFile(RE_SCAN);
+            asyncReadFile = new AsyncReadFile(RE_SCAN, this);
             asyncReadFile.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
         }
         else {
@@ -1042,36 +1049,13 @@ public class MainActivity extends AppCompatActivity
                         //we put this in AsyncTask because the isConnected method
                         //makes a network operation which blocks UI if we execute
                         //from UI Thread
-                        new AsyncTask<Context,Void, Integer>(){
-                            @Override
-                            protected Integer doInBackground(Context contexts[]){
-                                int canContinue = allowExecute(contexts[0].getApplicationContext());
-                                return canContinue;
-                            }
-                            @Override
-                            protected void onPostExecute(Integer canContinue){
-                                if(canContinue != 0) {
-                                    setSnackBarMessage(canContinue);
-                                    return;
-                                }
 
-                                registerReceivers();
-                                Intent intent = new Intent(MainActivity.this, FixerTrackService.class);
-                                if(Settings.BACKGROUND_CORRECTION)
-                                    intent.putExtra(Constants.Actions.ACTION_SHOW_NOTIFICATION, true);
-                                intent.putExtra(Constants.Activities.FROM_EDIT_MODE, false);
-                                intent.putExtra(Constants.MEDIASTORE_ID, audioItem.getId());
-                                startService(intent);
-                                mFloatingActionButtonStart.hide();
-                                mFloatingActionButtonStop.show();
-                            }
-                        }.execute(MainActivity.this);
+                        AsyncStartTask asyncStartTask = new AsyncStartTask(MainActivity.this, audioItem.getId());
+                        asyncStartTask.execute();
                     }
                 });
         final AlertDialog dialog =  builder.create();
         dialog.show();
-
-
     }
 
     /**
@@ -1111,7 +1095,7 @@ public class MainActivity extends AppCompatActivity
 
 
     /**
-     * Opens new activity showing up the details from current audio item_list pressed
+     * Opens new activity showing up the details from current audio item list pressed
      * @param view the view pressed, maybe the root view or any child
      * @param position the position of item in list
      * @param mode indicates what mode of correction execute when enters to TrackDetailsActivity
@@ -1224,7 +1208,7 @@ public class MainActivity extends AppCompatActivity
         //if previously was granted the permission and our database has data
         //dont' clear that data, only read it instead.
         int taskType = DataTrackDbHelper.existDatabase(getApplicationContext()) && mDataTrackDbHelper.getCount() > 0 ? READ_FROM_DATABASE : CREATE_DATABASE;
-        asyncReadFile = new AsyncReadFile(taskType);
+        asyncReadFile = new AsyncReadFile(taskType, this);
         asyncReadFile.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 
     }
@@ -1440,13 +1424,49 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+    private static class AsyncStartTask extends AsyncTask<Void,Void,Integer>{
+        private WeakReference<MainActivity> mainActivityWeakReference;
+        private long audioItemId;
+        public AsyncStartTask(MainActivity mainActivity, long id){
+            mainActivityWeakReference = new WeakReference<>(mainActivity);
+            audioItemId = id;
+        }
+
+        @Override
+        protected Integer doInBackground(Void... voids){
+            int canContinue = allowExecute(mainActivityWeakReference.get().getApplicationContext());
+            return canContinue;
+        }
+        @Override
+        protected void onPostExecute(Integer canContinue){
+            if(canContinue != 0) {
+                mainActivityWeakReference.get().setSnackBarMessage(canContinue);
+                return;
+            }
+
+            mainActivityWeakReference.get().registerReceivers();
+            Intent intent = new Intent(mainActivityWeakReference.get().getApplicationContext(), FixerTrackService.class);
+            if(Settings.BACKGROUND_CORRECTION)
+                intent.putExtra(Constants.Actions.ACTION_SHOW_NOTIFICATION, true);
+            intent.putExtra(Constants.Activities.FROM_EDIT_MODE, false);
+            intent.putExtra(Constants.MEDIASTORE_ID, audioItemId);
+            mainActivityWeakReference.get().startService(intent);
+            mainActivityWeakReference.get().mFloatingActionButtonStart.hide();
+            mainActivityWeakReference.get().mFloatingActionButtonStop.show();
+            audioItemId = -1;
+            mainActivityWeakReference.clear();
+            mainActivityWeakReference = null;
+            System.gc();
+        }
+    }
+
     /**
      * This class request reads information of audio files from MediaStore,
      * then creates the initial DB when app
      * is used by first time; next openings of app it
      * reads the songs from this database instead of MediaStore
      */
-    private class AsyncReadFile extends AsyncTask<Void, AudioItem, Void> {
+    private static class AsyncReadFile extends AsyncTask<Void, AudioItem, Void> {
         //Are we reading from our DB or MediaStore?
         private int taskType;
         //data retrieved from DB
@@ -1456,8 +1476,10 @@ public class MainActivity extends AppCompatActivity
         private int added = 0;
         private int removed = 0;
         private boolean mMediaScanCompleted = false;
+        private WeakReference<MainActivity> mainActivityWeakReference;
 
-        AsyncReadFile(int codeTaskType){
+        AsyncReadFile(int codeTaskType, MainActivity mainActivity){
+            mainActivityWeakReference = new WeakReference<>(mainActivity);
             this.taskType = codeTaskType;
         }
 
@@ -1467,7 +1489,7 @@ public class MainActivity extends AppCompatActivity
             //could not be completed, in this case
             //clear DB and re read data from Media Store
 
-            SharedPreferences sharedPreferences = getSharedPreferences(APP_SHARED_PREFERENCES, Context.MODE_PRIVATE);
+            SharedPreferences sharedPreferences = mainActivityWeakReference.get().getSharedPreferences(APP_SHARED_PREFERENCES, Context.MODE_PRIVATE);
             mMediaScanCompleted = sharedPreferences.getBoolean(Constants.COMPLETE_READ,false);
             if(!mMediaScanCompleted){
                 taskType = CREATE_DATABASE;
@@ -1477,10 +1499,10 @@ public class MainActivity extends AppCompatActivity
             //our background task begins, often
             //here is where we show for example
             //a progress bar.
-            mSwipeRefreshLayout.setRefreshing(true);
+            mainActivityWeakReference.get().mSwipeRefreshLayout.setRefreshing(true);
             sIsGettingData = true;
-            if(mSearchViewWidget != null){
-                mSearchViewWidget.setVisibility(View.GONE);
+            if(mainActivityWeakReference.get().mSearchViewWidget != null){
+                mainActivityWeakReference.get().mSearchViewWidget.setVisibility(View.GONE);
             }
 
         }
@@ -1492,12 +1514,12 @@ public class MainActivity extends AppCompatActivity
             //there have had a unsuccessful previous
             //creation of DB
             if(this.taskType == CREATE_DATABASE){
-                MainActivity.this.mDataTrackDbHelper.clearDb();
-                runOnUiThread(new Runnable() {
+                mainActivityWeakReference.get().mDataTrackDbHelper.clearDb();
+                mainActivityWeakReference.get().runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        showSnackBar(Snackbar.LENGTH_SHORT,getString(R.string.getting_data),NO_ID);
-                        mSearchAgainMessageTextView.setVisibility(View.GONE);
+                        mainActivityWeakReference.get().showSnackBar(Snackbar.LENGTH_SHORT,mainActivityWeakReference.get().getString(R.string.getting_data),NO_ID);
+                        mainActivityWeakReference.get().mSearchAgainMessageTextView.setVisibility(View.GONE);
                     }
                 });
             }
@@ -1540,16 +1562,16 @@ public class MainActivity extends AppCompatActivity
 
             //adds the item to top of list
             if(taskType == RE_SCAN){
-                mAudioItemList.add(0,audioItems[0]);
-                mAudioItemArrayAdapter.notifyItemInserted(0);
+                mainActivityWeakReference.get().mAudioItemList.add(0,audioItems[0]);
+                mainActivityWeakReference.get().mAudioItemArrayAdapter.notifyItemInserted(0);
             }
             else {
-                mAudioItemList.add(audioItems[0]);
-                mAudioItemArrayAdapter.notifyItemInserted(mAudioItemList.size()-1);
+                mainActivityWeakReference.get().mAudioItemList.add(audioItems[0]);
+                mainActivityWeakReference.get().mAudioItemArrayAdapter.notifyItemInserted(mainActivityWeakReference.get().mAudioItemList.size()-1);
             }
 
             //updates title of action bar
-            updateNumberItems();
+            mainActivityWeakReference.get().updateNumberItems();
         }
 
         @Override
@@ -1557,12 +1579,12 @@ public class MainActivity extends AppCompatActivity
             //when doInBackground finishes, this callback
             //is executed. Here is where we hide, for example,
             //a progress bar.
-            asyncReadFile = null;
+            mainActivityWeakReference.get().asyncReadFile = null;
             //is not necessary call its super method
             //because is an emtpy method
 
-            mSwipeRefreshLayout.setRefreshing(false);
-            mSwipeRefreshLayout.setEnabled(true);
+            mainActivityWeakReference.get().mSwipeRefreshLayout.setRefreshing(false);
+            mainActivityWeakReference.get().mSwipeRefreshLayout.setEnabled(true);
             sIsGettingData = false;
 
             //while we are creating the DB, if user closes the app
@@ -1570,7 +1592,7 @@ public class MainActivity extends AppCompatActivity
             //next time app starts will try to create again the database
             //until success
             if(this.taskType == CREATE_DATABASE) {
-                SharedPreferences sharedPreferences = getSharedPreferences(APP_SHARED_PREFERENCES, Context.MODE_PRIVATE);
+                SharedPreferences sharedPreferences = mainActivityWeakReference.get().getSharedPreferences(APP_SHARED_PREFERENCES, Context.MODE_PRIVATE);
                 SharedPreferences.Editor editor = sharedPreferences.edit();
                 editor.putBoolean(Constants.COMPLETE_READ, true);
                 editor.apply();
@@ -1579,33 +1601,36 @@ public class MainActivity extends AppCompatActivity
             }
 
             //there are not songs?
-            if(mAudioItemList.size() == 0){
-                MainActivity.this.mSearchAgainMessageTextView.setText(getString(R.string.no_items_found));
-                MainActivity.this.mSearchAgainMessageTextView.setVisibility(View.VISIBLE);
+            if(mainActivityWeakReference.get().mAudioItemList.size() == 0){
+                mainActivityWeakReference.get().mSearchAgainMessageTextView.setText(mainActivityWeakReference.get().getString(R.string.no_items_found));
+                mainActivityWeakReference.get().mSearchAgainMessageTextView.setVisibility(View.VISIBLE);
 
                 return;
             }
 
             if(removed > 0){
-                showSnackBar(Toast.LENGTH_SHORT,removed + " " + getString(R.string.removed_inexistent),NO_ID);
+                mainActivityWeakReference.get().showSnackBar(Toast.LENGTH_SHORT,removed + " " + mainActivityWeakReference.get().getString(R.string.removed_inexistent),NO_ID);
             }
 
             if(added > 0 ){
-                showSnackBar(Toast.LENGTH_SHORT,added + " " + getString(R.string.new_files_found),NO_ID);
-                mRecyclerView.smoothScrollToPosition(0);
+                mainActivityWeakReference.get().showSnackBar(Toast.LENGTH_SHORT,added + " " + mainActivityWeakReference.get().getString(R.string.new_files_found),NO_ID);
+                mainActivityWeakReference.get().mRecyclerView.smoothScrollToPosition(0);
             }
 
-            if(mSearchViewWidget != null){
-                mSearchViewWidget.setVisibility(View.VISIBLE);
+            if(mainActivityWeakReference.get().mSearchViewWidget != null){
+                mainActivityWeakReference.get().mSearchViewWidget.setVisibility(View.VISIBLE);
             }
-            updateNumberItems();
+            mainActivityWeakReference.get().updateNumberItems();
 
             //if audio files were found, then show
             //float action button that executes main task.
             //if no audio files were found, there is no case
             //to show this button because there will not have
             //anything to process.
-            MainActivity.this.mFloatingActionButtonStart.show();
+            mainActivityWeakReference.get().mFloatingActionButtonStart.show();
+
+            mainActivityWeakReference.clear();
+            mainActivityWeakReference = null;
             System.gc();
         }
 
@@ -1614,23 +1639,27 @@ public class MainActivity extends AppCompatActivity
             super.onCancelled();
             //this method will be invoked instead of
             //onPostExecute if AsyncTask is cancelled
-            asyncReadFile = null;
+            mainActivityWeakReference.get().asyncReadFile = null;
             sIsGettingData = false;
-            mSwipeRefreshLayout.setEnabled(true);
-            mSwipeRefreshLayout.setRefreshing(false);
-            updateNumberItems();
-            if(mSearchViewWidget != null){
-                mSearchViewWidget.setVisibility(View.VISIBLE);
+            mainActivityWeakReference.get().mSwipeRefreshLayout.setEnabled(true);
+            mainActivityWeakReference.get().mSwipeRefreshLayout.setRefreshing(false);
+            mainActivityWeakReference.get().updateNumberItems();
+            if(mainActivityWeakReference.get().mSearchViewWidget != null){
+                mainActivityWeakReference.get().mSearchViewWidget.setVisibility(View.VISIBLE);
             }
             //save state that could not be completed the data loading from songs
-            SharedPreferences sharedPreferences = getSharedPreferences(APP_SHARED_PREFERENCES, Context.MODE_PRIVATE);
+            SharedPreferences sharedPreferences = mainActivityWeakReference.get().getSharedPreferences(APP_SHARED_PREFERENCES, Context.MODE_PRIVATE);
             SharedPreferences.Editor editor =  sharedPreferences.edit();
-            MainActivity.this.mSearchAgainMessageTextView.setText(getString(R.string.no_items_found));
-            MainActivity.this.mSearchAgainMessageTextView.setVisibility(View.VISIBLE);
+            mainActivityWeakReference.get().mSearchAgainMessageTextView.setText(mainActivityWeakReference.get().getString(R.string.no_items_found));
+            mainActivityWeakReference.get().mSearchAgainMessageTextView.setVisibility(View.VISIBLE);
             editor.putBoolean(Constants.COMPLETE_READ, false);
             editor.apply();
             editor = null;
             sharedPreferences = null;
+            mainActivityWeakReference.clear();
+            mainActivityWeakReference = null;
+
+            System.gc();
         }
 
         /**
@@ -1654,7 +1683,7 @@ public class MainActivity extends AppCompatActivity
 
             //get data from content provider
             //the last parameter sorts the data alphanumerically by the "DATA" column in ascendant mode
-            return getApplicationContext().getContentResolver().query(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+            return mainActivityWeakReference.get().getApplicationContext().getContentResolver().query(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
                     projection,
                     selection,
                     null,
@@ -1668,7 +1697,7 @@ public class MainActivity extends AppCompatActivity
         private void rescanAndUpdateList(){
             data = getDataFromDevice();
             while(data.moveToNext()){
-                boolean existInTable = MainActivity.this.mDataTrackDbHelper.existInDatabase(data.getInt(0));
+                boolean existInTable = mainActivityWeakReference.get().mDataTrackDbHelper.existInDatabase(data.getInt(0));
 
                 if(!existInTable){
                     createAndAddAudioItem();
@@ -1688,13 +1717,13 @@ public class MainActivity extends AppCompatActivity
          * or deleted.
          */
         private void removeUnusedItems(){
-            for(int pos = 0; pos < mAudioItemList.size() ; pos++){
-                AudioItem audioItem = mAudioItemList.get(pos);
+            for(int pos = 0; pos < mainActivityWeakReference.get().mAudioItemList.size() ; pos++){
+                AudioItem audioItem = mainActivityWeakReference.get().mAudioItemList.get(pos);
                 File file = new File(audioItem.getAbsolutePath());
                 if (!file.exists()) {
-                    MainActivity.this.mDataTrackDbHelper.removeItem(audioItem.getId(), TrackContract.TrackData.TABLE_NAME);
-                    mAudioItemList.remove(pos);
-                    mAudioItemArrayAdapter.notifyItemRemoved(pos);
+                    mainActivityWeakReference.get().mDataTrackDbHelper.removeItem(audioItem.getId(), TrackContract.TrackData.TABLE_NAME);
+                    mainActivityWeakReference.get().mAudioItemList.remove(pos);
+                    mainActivityWeakReference.get().mAudioItemArrayAdapter.notifyItemRemoved(pos);
                     removed++;
                 }
                 file = null;
@@ -1725,7 +1754,7 @@ public class MainActivity extends AppCompatActivity
          */
         private void readFromDatabase(){
 
-            data = MainActivity.this.mDataTrackDbHelper.getDataFromDB(Sort.setDefaultOrder());
+            data = mainActivityWeakReference.get().mDataTrackDbHelper.getDataFromDB(Sort.setDefaultOrder());
             //retrieved null data means there are no elements, so our database
             int dataLength = data != null ? data.getCount() : 0;
             if (dataLength > 0) {
@@ -1781,7 +1810,7 @@ public class MainActivity extends AppCompatActivity
             //we do, relay in this id,
             //so when we save row to DB
             //it returns its id as a result
-            long _id = MainActivity.this.mDataTrackDbHelper.insertItem(values, TrackContract.TrackData.TABLE_NAME);
+            long _id = mainActivityWeakReference.get().mDataTrackDbHelper.insertItem(values, TrackContract.TrackData.TABLE_NAME);
             audioItem.setId(_id).setTitle(title).setArtist(artist).setAlbum(album).setAbsolutePath(fullPath);
 
             publishProgress(audioItem);

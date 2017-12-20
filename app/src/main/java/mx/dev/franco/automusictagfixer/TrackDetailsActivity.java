@@ -73,6 +73,7 @@ import org.jaudiotagger.tag.images.Artwork;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 
 import mx.dev.franco.automusictagfixer.database.DataTrackDbHelper;
@@ -109,6 +110,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
     private static final int HAS_EMPTY_FIELDS = 11;
     private static final int DATA_IS_TOO_LONG = 12;
     private static final int HAS_NOT_ALLOWED_CHARACTERS = 13;
+    //Indicates to user that actual audio files is processing
     //Indicates to user that actual audio files is processing
     //in case the user tries to make another task while this happen
     private static final int FILE_IS_PROCESSING = 14;
@@ -257,6 +259,11 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
     private MenuItem searchInWebItem;
 
     private boolean mIsMp3 = false;
+
+    private AsyncTrackId asyncTrackId;
+
+
+    private static final int CROSSFADE_DURATION = 200;
 
     /**
      * Callback when is created the activity
@@ -636,10 +643,12 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                             mNewCoverArtLength = mNewCoverArt.length;
                             GlideApp.with(mViewDetailsTrack).
                                     load(mNewCoverArt)
-                                    .transition(DrawableTransitionOptions.withCrossFade())
+                                    .error(R.drawable.ic_album_white_48px)
+                                    .transition(DrawableTransitionOptions.withCrossFade(CROSSFADE_DURATION))
                                     .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.NONE))
                                     .apply(RequestOptions.skipMemoryCacheOf(true))
                                     .fitCenter()
+                                    .placeholder(R.drawable.ic_album_white_48px)
                                     .into(mToolbarCover);
                             if (requestCode == INTENT_OPEN_GALLERY) {
                                 //show the new cover in mToolbar cover
@@ -937,10 +946,11 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
 
         //load a placeholder in case cover art is not present
         GlideApp.with(mViewDetailsTrack).
-                load(mCurrentCoverArt != null ? mCurrentCoverArt : getDrawable(R.drawable.ic_album_white_48px))
+                load(mCurrentCoverArt)
+                .error(R.drawable.ic_album_white_48px)
                 .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.NONE))
                 .apply(RequestOptions.skipMemoryCacheOf(true))
-                .transition(DrawableTransitionOptions.withCrossFade())
+                .transition(DrawableTransitionOptions.withCrossFade(CROSSFADE_DURATION))
                 .fitCenter()
                 .placeholder(R.drawable.ic_album_white_48px)
                 .into(mToolbarCover);
@@ -981,8 +991,14 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                 }
 
                 //Saves extracted cover using title + artist + album as file name
-                String newImageAbsolutePath = FileSaver.saveFile(mCurrentCoverArt, mCurrentTitle, mCurrentArtist, mCurrentAlbum);
-                if(!newImageAbsolutePath.equals(FileSaver.NULL_DATA) && !newImageAbsolutePath.equals(FileSaver.NO_EXTERNAL_STORAGE_WRITABLE) && !newImageAbsolutePath.equals(FileSaver.INPUT_OUTPUT_ERROR)) {
+                String newImageAbsolutePath = null;
+                try {
+                    newImageAbsolutePath = FileSaver.saveImageFile(mCurrentCoverArt, mCurrentTitle, mCurrentArtist, mCurrentAlbum);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                if(newImageAbsolutePath != null &&!newImageAbsolutePath.equals(FileSaver.NULL_DATA) &&
+                        !newImageAbsolutePath.equals(FileSaver.NO_EXTERNAL_STORAGE_WRITABLE) && !newImageAbsolutePath.equals(FileSaver.INPUT_OUTPUT_ERROR)) {
 
                     showSnackBar(7000, getString(R.string.cover_extracted), ACTION_VIEW_COVER, newImageAbsolutePath);
                     //Inform to system that one file has been created
@@ -1013,6 +1029,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
         mAutoFixButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                mOnlyCoverArt = false;
                 performTrackId();
             }
         });
@@ -1022,7 +1039,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
             public void onClick(View v) {
                 closeFABMenu();
 
-                mOnlyCoverArt = true;
+
 
                 //Check if exist trackidItem cached from previous request
                 //before making a request for saving data,
@@ -1031,44 +1048,12 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                     handleCoverArt();
                     return;
                 }
-
+                mOnlyCoverArt = true;
                 //we put this in AsyncTask because the isConnected method
                 //makes a network operation which blocks UI if we execute
                 //from UI Thread
-                new AsyncTask<Void,Void, Integer>(){
-
-                    @Override
-                    protected void onPreExecute(){
-                        if(!DetectorInternetConnection.sIsConnected)
-                            showSnackBar(Snackbar.LENGTH_SHORT, getString(R.string.checking_internet_connection),ACTION_NONE, null);
-                    }
-
-                    @Override
-                    protected Integer doInBackground(Void... voids){
-                        //This function requires some contidions to work, check them before
-                        //continue
-                        int canContinue = allowExecute();
-                        return canContinue;
-                    }
-                    @Override
-                    protected void onPostExecute(Integer canContinue){
-                        if(canContinue != 0) {
-                            setSnackBarMessage(canContinue);
-                            return;
-                        }
-
-                        showSnackBar(Snackbar.LENGTH_SHORT, getString(R.string.downloading_cover),ACTION_NONE, null);
-                        mProgressBar.setVisibility(View.VISIBLE);
-
-                        enableMiniFabs(false);
-                        mToolbarCover.setEnabled(false);
-                        Intent intent = new Intent(TrackDetailsActivity.this,FixerTrackService.class);
-                        intent.putExtra(Constants.Activities.FROM_EDIT_MODE, Constants.Activities.DETAILS_ACTIVITY);
-                        intent.putExtra(Constants.MEDIASTORE_ID, mCurrentItemId);
-                        startService(intent);
-                    }
-                }.execute();
-
+                asyncTrackId = new AsyncTrackId(TrackDetailsActivity.this);
+                asyncTrackId.execute();
             }
         });
 
@@ -1165,6 +1150,60 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
 
     }
 
+    private static class AsyncTrackId extends AsyncTask<Void,Void,Integer>{
+        private WeakReference<TrackDetailsActivity> trackDetailsActivityWeakReference;
+        public AsyncTrackId(TrackDetailsActivity trackDetailsActivity){
+            trackDetailsActivityWeakReference = new WeakReference<>(trackDetailsActivity);
+        }
+
+        @Override
+        protected void onPreExecute(){
+            if(!DetectorInternetConnection.sIsConnected)
+                trackDetailsActivityWeakReference.get().showSnackBar(Snackbar.LENGTH_SHORT, trackDetailsActivityWeakReference.get().
+                                                                                                                                                                getString(R.string.checking_internet_connection),ACTION_NONE, null);
+        }
+
+        @Override
+        protected java.lang.Integer doInBackground(java.lang.Void... voids){
+            //This function requires some contidions to work, check them before
+            //continue
+            int canContinue = trackDetailsActivityWeakReference.get().allowExecute();
+            return canContinue;
+        }
+        @Override
+        protected void onPostExecute(java.lang.Integer canContinue){
+            if(canContinue != 0) {
+                trackDetailsActivityWeakReference.get().setSnackBarMessage(canContinue);
+                return;
+            }
+
+            //inform to FixerTrackService correction mode
+            if(trackDetailsActivityWeakReference.get().mCorrectionMode != Constants.CorrectionModes.SEMI_AUTOMATIC
+                    || !trackDetailsActivityWeakReference.get().mOnlyCoverArt) {
+                trackDetailsActivityWeakReference.get().showSnackBar(Snackbar.LENGTH_LONG, trackDetailsActivityWeakReference.get().getString(R.string.downloading_tags), ACTION_NONE, null);
+            }
+            else {
+                trackDetailsActivityWeakReference.get().showSnackBar(Snackbar.LENGTH_SHORT, trackDetailsActivityWeakReference.get().getString(R.string.downloading_cover),ACTION_NONE, null);
+            }
+
+            trackDetailsActivityWeakReference.get().enableMiniFabs(false);
+            trackDetailsActivityWeakReference.get().mToolbarCover.setEnabled(false);
+            trackDetailsActivityWeakReference.get().mProgressBar.setVisibility(View.VISIBLE);
+
+            //prepare data to identify this song and start request
+            Intent intent = new Intent(trackDetailsActivityWeakReference.get(),FixerTrackService.class);
+            intent.putExtra(Constants.Activities.FROM_EDIT_MODE, Constants.Activities.DETAILS_ACTIVITY);
+            intent.putExtra(Constants.MEDIASTORE_ID, trackDetailsActivityWeakReference.get().mCurrentItemId);
+            trackDetailsActivityWeakReference.get().startService(intent);
+            trackDetailsActivityWeakReference.get().asyncTrackId = null;
+            trackDetailsActivityWeakReference.clear();
+            trackDetailsActivityWeakReference = null;
+            System.gc();
+        }
+    }
+
+
+
     /**
      * Executes track id for semiautomatic mode
      */
@@ -1183,42 +1222,8 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
         //we put this in AsyncTask because the isConnected method
         //makes a network operation which blocks UI if we execute
         //from UI Thread
-        new AsyncTask<Void,Void, Integer>(){
-            @Override
-            protected void onPreExecute(){
-                if(!DetectorInternetConnection.sIsConnected)
-                    showSnackBar(Snackbar.LENGTH_SHORT, getString(R.string.checking_internet_connection),ACTION_NONE, null);
-            }
-            @Override
-            protected Integer doInBackground(Void... voids){
-                //This functionality requires some conditions to work, check them before
-                int canContinue = allowExecute();
-                return canContinue;
-            }
-            @Override
-            protected void onPostExecute(Integer canContinue){
-                //cancel if can not continue
-                if(canContinue != 0) {
-                    setSnackBarMessage(canContinue);
-                    return;
-                }
-
-                //inform to FixerTrackService correction mode
-                if(mCorrectionMode != Constants.CorrectionModes.SEMI_AUTOMATIC)
-                    showSnackBar(Snackbar.LENGTH_LONG, getString(R.string.downloading_tags),ACTION_NONE, null);
-
-                mProgressBar.setVisibility(View.VISIBLE);
-
-                enableMiniFabs(false);
-
-                mToolbarCover.setEnabled(false);
-                //prepare data to identify this song and start request
-                Intent intent = new Intent(TrackDetailsActivity.this, FixerTrackService.class);
-                intent.putExtra(Constants.Activities.FROM_EDIT_MODE, Constants.Activities.DETAILS_ACTIVITY);
-                intent.putExtra(Constants.MEDIASTORE_ID, mCurrentItemId);
-                startService(intent);
-            }
-        }.execute();
+        asyncTrackId = new AsyncTrackId(this);
+        asyncTrackId.execute();
     }
 
     /**
@@ -1544,10 +1549,12 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
         if(mCurrentCoverArt != null && (mCurrentCoverArtLength != mNewCoverArtLength) ) {
                 GlideApp.with(mViewDetailsTrack).
                         load(mCurrentCoverArt)
+                        .error(R.drawable.ic_album_white_48px)
                         .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.NONE))
                         .apply(RequestOptions.skipMemoryCacheOf(true))
-                        .transition(DrawableTransitionOptions.withCrossFade())
+                        .transition(DrawableTransitionOptions.withCrossFade(CROSSFADE_DURATION))
                         .fitCenter()
+                        .placeholder(R.drawable.ic_album_white_48px)
                         .into(mToolbarCover);
                 mCurrentCoverArtLength = mCurrentCoverArt.length;
             return;
@@ -1555,10 +1562,11 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
 
         if(mCurrentCoverArt == null){
                 GlideApp.with(mViewDetailsTrack).
-                        load(R.drawable.ic_album_white_48px)
+                        load(null)
+                        .error(R.drawable.ic_album_white_48px)
                         .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.NONE))
                         .apply(RequestOptions.skipMemoryCacheOf(true))
-                        .transition(DrawableTransitionOptions.withCrossFade())
+                        .transition(DrawableTransitionOptions.withCrossFade(CROSSFADE_DURATION))
                         .fitCenter()
                         .placeholder(R.drawable.ic_album_white_48px)
                         .into(mToolbarCover);
@@ -2233,10 +2241,6 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
             }
 
 
-            if(mTrackIdCard.getVisibility() != View.VISIBLE) {
-                disableFields();
-                enableMiniFabs(true);
-            }
         }
 
         /**
@@ -2268,10 +2272,12 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                                     msg = getString(R.string.cover_updated);
                                     GlideApp.with(mViewDetailsTrack).
                                             load(mNewCoverArt)
+                                            .error(R.drawable.ic_album_white_48px)
                                             .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.NONE))
-                                            .transition(DrawableTransitionOptions.withCrossFade())
+                                            .transition(DrawableTransitionOptions.withCrossFade(CROSSFADE_DURATION))
                                             .apply(RequestOptions.skipMemoryCacheOf(true))
                                             .fitCenter()
+                                            .placeholder(R.drawable.ic_album_white_48px)
                                             .into(mToolbarCover);
                                     //update fields of status, filesize and image size
                                     mStatus.setText(getStatusText());
@@ -2292,10 +2298,12 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                                     if(!isSameCoverArt && mNewCoverArt != null) {
                                         GlideApp.with(mViewDetailsTrack).
                                                 load(mNewCoverArt)
+                                                .error(R.drawable.ic_album_white_48px)
                                                 .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.NONE))
-                                                .transition(DrawableTransitionOptions.withCrossFade())
+                                                .transition(DrawableTransitionOptions.withCrossFade(CROSSFADE_DURATION))
                                                 .apply(RequestOptions.skipMemoryCacheOf(true))
                                                 .fitCenter()
+                                                .placeholder(R.drawable.ic_album_white_48px)
                                                 .into(mToolbarCover);
                                         mFileSize.setText(AudioItem.getFileSize(mAudioFile.length()));
                                         mImageSize.setText(AudioItem.getStringImageSize(mNewCoverArt));
@@ -2332,6 +2340,8 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                             mOnlyCoverArt = false;
                             mDataUpdated = false;
                             mEditMode = false;
+                            disableFields();
+                            enableMiniFabs(true);
 
                         }
                     });
@@ -2354,16 +2364,19 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
             mImageSize.setText(AudioItem.getStringImageSize(null));
             //set the generic cover art
             GlideApp.with(mViewDetailsTrack).
-                    load(R.drawable.ic_album_white_48px)
+                    load(null)
+                    .error(R.drawable.ic_album_white_48px)
                     .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.NONE))
                     .apply(RequestOptions.skipMemoryCacheOf(true))
-                    .transition(DrawableTransitionOptions.withCrossFade())
+                    .transition(DrawableTransitionOptions.withCrossFade(CROSSFADE_DURATION))
                     .fitCenter()
                     .placeholder(R.drawable.ic_album_white_48px)
                     .into(mToolbarCover);
+            enableMiniFabs(true);
             showSnackBar(Snackbar.LENGTH_SHORT, getString(R.string.cover_removed),ACTION_NONE, null);
             mTrackAdapter.notifyItemChanged(mCurrentAudioItem.getPosition());
             cachingCurrentValues();
+
         }
 
     }
@@ -2473,10 +2486,12 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                         if(mNewCoverArt != null) {
                             GlideApp.with(mViewDetailsTrack).
                                     load(mNewCoverArt)
+                                    .error(R.drawable.ic_album_white_48px)
                                     .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.NONE))
                                     .apply(RequestOptions.skipMemoryCacheOf(true))
-                                    .transition(DrawableTransitionOptions.withCrossFade())
+                                    .transition(DrawableTransitionOptions.withCrossFade(CROSSFADE_DURATION))
                                     .fitCenter()
+                                    .placeholder(R.drawable.ic_album_white_48px)
                                     .into(mTrackIdCover);
 
                             mTrackIdCoverArtDimensions.setText(AudioItem.getStringImageSize(mNewCoverArt));
@@ -2484,10 +2499,11 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                         }
                         else{
                             GlideApp.with(mViewDetailsTrack).
-                                    load(getDrawable(R.drawable.ic_album_white_48px))
+                                    load(null)
+                                    .error(R.drawable.ic_album_white_48px)
                                     .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.NONE))
                                     .apply(RequestOptions.skipMemoryCacheOf(true))
-                                    .transition(DrawableTransitionOptions.withCrossFade())
+                                    .transition(DrawableTransitionOptions.withCrossFade(CROSSFADE_DURATION))
                                     .placeholder(R.drawable.ic_album_white_48px)
                                     .fitCenter()
                                     .into(mTrackIdCover);
@@ -2570,10 +2586,16 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
 
-                            String newImageAbsolutePath = FileSaver.saveFile(mNewCoverArt, mTrackIdAudioItem.getTitle(), mTrackIdAudioItem.getArtist(), mTrackIdAudioItem.getAlbum());
+                            String newImageAbsolutePath = null;
+                            try {
+                                newImageAbsolutePath = FileSaver.saveImageFile(mNewCoverArt, mTrackIdAudioItem.getTitle(), mTrackIdAudioItem.getArtist(), mTrackIdAudioItem.getAlbum());
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
                             //if was successful saved, then
                             //inform to system that one file has been created
-                            if(!newImageAbsolutePath.equals(FileSaver.NULL_DATA) && !newImageAbsolutePath.equals(FileSaver.NO_EXTERNAL_STORAGE_WRITABLE) && !newImageAbsolutePath.equals(FileSaver.INPUT_OUTPUT_ERROR)) {
+                            if(newImageAbsolutePath != null && !newImageAbsolutePath.equals(FileSaver.NULL_DATA)
+                                    && !newImageAbsolutePath.equals(FileSaver.NO_EXTERNAL_STORAGE_WRITABLE) && !newImageAbsolutePath.equals(FileSaver.INPUT_OUTPUT_ERROR)) {
 
                                 showSnackBar(7000, getString(R.string.cover_saved) + " " + AudioItem.getRelativePath(newImageAbsolutePath) + ".", ACTION_VIEW_COVER, newImageAbsolutePath);
                                 MediaScannerConnection.scanFile(
@@ -2612,9 +2634,10 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
 
                             GlideApp.with(mViewDetailsTrack).
                                     load(mNewCoverArt)
+                                    .error(R.drawable.ic_album_white_48px)
                                     .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.NONE))
                                     .apply(RequestOptions.skipMemoryCacheOf(true))
-                                    .transition(DrawableTransitionOptions.withCrossFade())
+                                    .transition(DrawableTransitionOptions.withCrossFade(CROSSFADE_DURATION))
                                     .fitCenter()
                                     .into(mTrackIdCover);
 
@@ -2625,6 +2648,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                             mFloatingActionMenu.hide();
                             mSaveButton.show();
                             mEditMode = true;
+                            enableMiniFabs(true);
                         }
                     });
                 }
@@ -2634,13 +2658,11 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
         }
         //No cover found
         else{
-            msg = getString(R.string.no_cover_art_found);
             mOnlyCoverArt = false;
             mNewCoverArt = mCurrentCoverArt;
             mNewCoverArtLength = mCurrentCoverArtLength;
+            msg = getString(R.string.no_cover_art_found);
             showSnackBar(Snackbar.LENGTH_LONG, msg,ACTION_ADD_COVER, null);
-            enableMiniFabs(true);
-
         }
 
         mProgressBar.setVisibility(View.INVISIBLE);
