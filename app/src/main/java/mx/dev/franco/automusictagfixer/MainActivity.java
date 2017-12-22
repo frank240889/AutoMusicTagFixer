@@ -2,6 +2,7 @@ package mx.dev.franco.automusictagfixer;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.content.ActivityNotFoundException;
 import android.content.BroadcastReceiver;
 import android.content.ContentValues;
 import android.content.Context;
@@ -287,7 +288,7 @@ public class MainActivity extends AppCompatActivity
         //If we already had the permission granted, lets go  read data from database and pass them to adapter, to show in Recyclerview,
         //otherwise we show the reason to access files until user grant permission
 
-        if(!RequiredPermissions.ACCESS_GRANTED_FILES) {
+        if(ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             showRequestPermissionReason();
         }
         else {
@@ -300,30 +301,27 @@ public class MainActivity extends AppCompatActivity
                 asyncReadFile.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
             //}
         }
+
+        mFloatingActionButtonStart.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startTask();
+            }
+        });
+
+        mFloatingActionButtonStop.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                stopTask();
+            }
+        });
+
         //Actually if service is running, then register filters and receiver immediately to update UI
         if(ServiceHelper.withContext(getApplicationContext()).withService(FixerTrackService.CLASS_NAME).isServiceRunning()) {
             registerReceivers();
             mFloatingActionButtonStart.hide();
             mFloatingActionButtonStop.show();
         }
-        //if not, then go through normal flow of components initialization
-        else {
-            mFloatingActionButtonStart.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    startTask();
-                }
-            });
-
-            mFloatingActionButtonStop.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    stopTask();
-                }
-            });
-
-        }
-
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, mToolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
@@ -359,29 +357,27 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onRestoreInstanceState(Bundle savedInstanceState){
         super.onRestoreInstanceState(savedInstanceState);
+
+        mFloatingActionButtonStart.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startTask();
+            }
+        });
+
+        mFloatingActionButtonStop.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                stopTask();
+            }
+        });
+
         //restore state of this components when restore event be fired
         //Actually if service is running, then register filters and receiver immediately to update UI
         if(ServiceHelper.withContext(getApplicationContext()).withService(FixerTrackService.CLASS_NAME).isServiceRunning()) {
             registerReceivers();
             mFloatingActionButtonStart.hide();
             mFloatingActionButtonStop.show();
-        }
-        //if not, then go through normal flow of components initialization
-        else {
-            mFloatingActionButtonStart.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    startTask();
-                }
-            });
-
-            mFloatingActionButtonStop.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    stopTask();
-                }
-            });
-
         }
 
         if(mRecyclerView.getAdapter() == null)
@@ -703,12 +699,16 @@ public class MainActivity extends AppCompatActivity
         int id = item.getItemId();
 
         if (id == R.id.rate) {
-            showSnackBar(Snackbar.LENGTH_SHORT, getString(R.string.in_development),NO_ID);
+            rateApp();
         } else if (id == R.id.share) {
-            Intent shareIntent = ShareCompat.IntentBuilder.from(this)
-                    .setType("text/plain")
-                    .setText(getString(R.string.app_name) + " " + getString(R.string.share_message) ).getIntent();
-            shareIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_DOCUMENT);
+            String shareSubText = getString(R.string.app_name) + " " + getString(R.string.share_message);
+            String shareBodyText = getPlayStoreLink();
+
+            Intent shareIntent = ShareCompat.IntentBuilder.from(this).setType("text/plain").setText(shareSubText +"\n"+ shareBodyText).getIntent();
+            //shareIntent.putExtra(Intent.EXTRA_TITLE, getString(R.string.app_name));
+            //shareIntent.putExtra(Intent.EXTRA_SUBJECT, shareSubText);
+            //shareIntent.putExtra(Intent.EXTRA_TEXT, shareBodyText);
+            shareIntent.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY | Intent.FLAG_ACTIVITY_NEW_DOCUMENT | Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
             startActivity(shareIntent);
         }
         else if(id == R.id.settings){
@@ -724,14 +724,41 @@ public class MainActivity extends AppCompatActivity
             Intent intent = new Intent(this,ScrollingAboutActivity.class);
             startActivity(intent);
         }
-        else {
-            ;
-        }
 
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    private String getPlayStoreLink(){
+        final String appPackageName = getApplicationContext().getPackageName();
+        //String strAppLink = null;
+
+        /*try {
+            strAppLink = "market://details?id=" + appPackageName;
+        }
+        catch (ActivityNotFoundException e) {
+            e.printStackTrace();
+            strAppLink = "https://play.google.com/store/apps/details?id=" + appPackageName;
+        }*/
+        //finally {
+            return "https://play.google.com/store/apps/details?id=" + appPackageName;
+        //}
+    }
+
+    private void rateApp(){
+        String packageName = getApplicationContext().getPackageName();
+        Uri uri = Uri.parse("market://details?id=" + packageName);
+        Intent goToMarket = new Intent(Intent.ACTION_VIEW, uri);
+        // To count with Play market backstack, After pressing back button,
+        // to taken back to our application, we need to add following flags to intent.
+        goToMarket.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY | Intent.FLAG_ACTIVITY_NEW_DOCUMENT | Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
+        try {
+            startActivity(goToMarket);
+        } catch (ActivityNotFoundException e) {
+            startActivity(new Intent(Intent.ACTION_VIEW,  Uri.parse("http://play.google.com/store/apps/details?id=" + packageName)));
+        }
     }
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)

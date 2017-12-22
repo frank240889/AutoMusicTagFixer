@@ -127,6 +127,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
     private static final int ACTION_VIEW_COVER = 32;
     //Duration of animations
     private static final int DURATION = 200;
+    private static final int ACTION_START_TRACKID = 33 ;
 
 
     //flag to indicate that is just required to download
@@ -261,9 +262,10 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
     private boolean mIsMp3 = false;
 
     private AsyncTrackId asyncTrackId;
+    private AsyncUpdateData mAsyncUpdateData;
 
 
-    private static final int CROSSFADE_DURATION = 200;
+    private static final int CROSS_FADE_DURATION = 200;
 
     /**
      * Callback when is created the activity
@@ -290,7 +292,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
         mFilterActionApiInitialized = new IntentFilter(Constants.GnServiceActions.ACTION_API_INITIALIZED);
         mFilterActionNotFound = new IntentFilter(Constants.Actions.ACTION_NOT_FOUND);
         mFilterActionConnectionLost = new IntentFilter(Constants.Actions.ACTION_CONNECTION_LOST);
-        mReceiver = new ResponseReceiver();
+        mReceiver = new ResponseReceiver(this);
         mLocalBroadcastManager = LocalBroadcastManager.getInstance(getApplicationContext());
 
         //main layout or root view
@@ -330,7 +332,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
      */
 
     private void createSnackBar() {
-        this.mSnackbar = Snackbar.make(mViewDetailsTrack,"",Snackbar.LENGTH_SHORT);
+        mSnackbar = Snackbar.make(mViewDetailsTrack,"",Snackbar.LENGTH_SHORT);
         TextView tv = (TextView) this.mSnackbar.getView().findViewById(android.support.design.R.id.snackbar_text);
         mSnackbar.getView().setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.primaryLightColor));
         tv.setTextColor(ContextCompat.getColor(getApplicationContext(),R.color.grey_800));
@@ -365,6 +367,17 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                     editCover(INTENT_GET_AND_UPDATE_FROM_GALLERY);
                 }
             });
+        }
+        else if(action == ACTION_START_TRACKID){
+            mSnackbar.setText(msg);
+            mSnackbar.setDuration(duration);
+            mSnackbar.setAction(R.string.start, new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    performTrackId();
+                }
+            });
+
         }
         else{
             mSnackbar.setText(msg);
@@ -485,8 +498,8 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                 builder.setPositiveButton("Si", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        AsyncUpdateData asyncUpdateData = new AsyncUpdateData(REMOVE_COVER, false);
-                        asyncUpdateData.execute();
+                        mAsyncUpdateData = new AsyncUpdateData(REMOVE_COVER, false,  TrackDetailsActivity.this);
+                        mAsyncUpdateData.execute();
                     }
                 });
                 AlertDialog alertDialog = builder.create();
@@ -644,7 +657,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                             GlideApp.with(mViewDetailsTrack).
                                     load(mNewCoverArt)
                                     .error(R.drawable.ic_album_white_48px)
-                                    .transition(DrawableTransitionOptions.withCrossFade(CROSSFADE_DURATION))
+                                    .transition(DrawableTransitionOptions.withCrossFade(CROSS_FADE_DURATION))
                                     .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.NONE))
                                     .apply(RequestOptions.skipMemoryCacheOf(true))
                                     .fitCenter()
@@ -656,8 +669,8 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                                     enableFieldsToEdit();
                                 }
                             } else {
-                                AsyncUpdateData asyncUpdateData = new AsyncUpdateData(ADD_COVER, false);
-                                asyncUpdateData.execute();
+                                mAsyncUpdateData = new AsyncUpdateData(ADD_COVER, false, this);
+                                mAsyncUpdateData.execute();
                             }
                             mAppBarLayout.setExpanded(true);
                         }
@@ -700,6 +713,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
         mTrackIdAudioItem = null;
         mFilterActionDoneDetails = null;
         mFilterActionCompleteTask = null;
+        mReceiver.releaseContext();
         mReceiver = null;
         mLocalBroadcastManager = null;
         super.onDestroy();
@@ -719,6 +733,17 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
+
+        if(asyncTrackId != null){
+            asyncTrackId.cancel(true);
+            asyncTrackId = null;
+        }
+
+        if(mAsyncUpdateData != null){
+            mAsyncUpdateData.cancel(true);
+            mAsyncUpdateData = null;
+        }
+
         mLocalBroadcastManager.unregisterReceiver(mReceiver);
         finishAfterTransition();
 
@@ -950,7 +975,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                 .error(R.drawable.ic_album_white_48px)
                 .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.NONE))
                 .apply(RequestOptions.skipMemoryCacheOf(true))
-                .transition(DrawableTransitionOptions.withCrossFade(CROSSFADE_DURATION))
+                .transition(DrawableTransitionOptions.withCrossFade(CROSS_FADE_DURATION))
                 .fitCenter()
                 .placeholder(R.drawable.ic_album_white_48px)
                 .into(mToolbarCover);
@@ -1040,7 +1065,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                 closeFABMenu();
 
 
-
+                mOnlyCoverArt = true;
                 //Check if exist trackidItem cached from previous request
                 //before making a request for saving data,
                 //this object only persist while the activity is open
@@ -1048,10 +1073,15 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                     handleCoverArt();
                     return;
                 }
-                mOnlyCoverArt = true;
+
                 //we put this in AsyncTask because the isConnected method
                 //makes a network operation which blocks UI if we execute
                 //from UI Thread
+                if(asyncTrackId != null){
+                    asyncTrackId.cancel(true);
+                    asyncTrackId = null;
+                    System.gc();
+                }
                 asyncTrackId = new AsyncTrackId(TrackDetailsActivity.this);
                 asyncTrackId.execute();
             }
@@ -1222,6 +1252,12 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
         //we put this in AsyncTask because the isConnected method
         //makes a network operation which blocks UI if we execute
         //from UI Thread
+        if(asyncTrackId != null){
+            asyncTrackId.cancel(true);
+            asyncTrackId = null;
+            System.gc();
+        }
+
         asyncTrackId = new AsyncTrackId(this);
         asyncTrackId.execute();
     }
@@ -1530,8 +1566,8 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
      */
     private void updateData() throws IOException {
         //we update the data creating another thread because the database operation can block UI thread
-        AsyncUpdateData asyncUpdateData = new AsyncUpdateData(UPDATE_ALL_METADATA, false);
-        asyncUpdateData.execute();
+        mAsyncUpdateData = new AsyncUpdateData(UPDATE_ALL_METADATA, false, this);
+        mAsyncUpdateData.execute();
     }
 
     /**
@@ -1552,7 +1588,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                         .error(R.drawable.ic_album_white_48px)
                         .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.NONE))
                         .apply(RequestOptions.skipMemoryCacheOf(true))
-                        .transition(DrawableTransitionOptions.withCrossFade(CROSSFADE_DURATION))
+                        .transition(DrawableTransitionOptions.withCrossFade(CROSS_FADE_DURATION))
                         .fitCenter()
                         .placeholder(R.drawable.ic_album_white_48px)
                         .into(mToolbarCover);
@@ -1566,7 +1602,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                         .error(R.drawable.ic_album_white_48px)
                         .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.NONE))
                         .apply(RequestOptions.skipMemoryCacheOf(true))
-                        .transition(DrawableTransitionOptions.withCrossFade(CROSSFADE_DURATION))
+                        .transition(DrawableTransitionOptions.withCrossFade(CROSS_FADE_DURATION))
                         .fitCenter()
                         .placeholder(R.drawable.ic_album_white_48px)
                         .into(mToolbarCover);
@@ -1748,20 +1784,23 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
      * Instances of this class, handles the changes made
      * to audio file, for not blocking the UI thread
      */
-    private class AsyncUpdateData extends AsyncTask<Void, Void, Void> {
+    private static class AsyncUpdateData extends AsyncTask<Void, Void, Void> {
         private final String TAG = AsyncUpdateData.class.getName();
         private int mOperationType;
         private boolean mOverwriteAllTags = false;
         private String causeError = "";
+        private WeakReference<TrackDetailsActivity> mTrackDetailsActivityWeakReference;
 
         /**
          * Set these 2 params in constructor
          * @param operationType what we are correcting
          * @param overwriteAllTags option to overwrite all tags or only those missing
+         * @param trackDetailsActivity
          */
-        AsyncUpdateData(int operationType, boolean overwriteAllTags){
+        AsyncUpdateData(int operationType, boolean overwriteAllTags, TrackDetailsActivity trackDetailsActivity){
             this.mOperationType = operationType;
             this.mOverwriteAllTags = overwriteAllTags;
+            this.mTrackDetailsActivityWeakReference = new WeakReference<>(trackDetailsActivity);
         }
 
         /**
@@ -1771,14 +1810,14 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
          */
         @Override
         protected void onPreExecute(){
-            mProgressBar.setVisibility(View.VISIBLE);
+            mTrackDetailsActivityWeakReference.get().mProgressBar.setVisibility(View.VISIBLE);
             try {
-                stopPlayback();
+                mTrackDetailsActivityWeakReference.get().stopPlayback();
             } catch (IOException | InterruptedException e) {
                 e.printStackTrace();
             }
-            enableMiniFabs(false);
-            mToolbarCover.setEnabled(false);
+            mTrackDetailsActivityWeakReference.get().enableMiniFabs(false);
+            mTrackDetailsActivityWeakReference.get().mToolbarCover.setEnabled(false);
         }
 
         /**
@@ -1789,34 +1828,34 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
             ContentValues contentValues = new ContentValues();
             try {
                 if(mOperationType == ADD_COVER){
-                    boolean isSameCoverArt = mCurrentCoverArt == mNewCoverArt;
+                    boolean isSameCoverArt = mTrackDetailsActivityWeakReference.get().mCurrentCoverArt == mTrackDetailsActivityWeakReference.get().mNewCoverArt;
                     //Here we update the data in case there have had changes
-                    if (!isSameCoverArt && mNewCoverArt != null && mNewCoverArtLength > 0) {
+                    if (!isSameCoverArt && mTrackDetailsActivityWeakReference.get().mNewCoverArt != null && mTrackDetailsActivityWeakReference.get().mNewCoverArtLength > 0) {
                         Artwork artwork = new AndroidArtwork();
-                        artwork.setBinaryData(mNewCoverArt);
-                        mTag.deleteArtworkField();
-                        mTag.setField(artwork);
+                        artwork.setBinaryData(mTrackDetailsActivityWeakReference.get().mNewCoverArt);
+                        mTrackDetailsActivityWeakReference.get().mTag.deleteArtworkField();
+                        mTrackDetailsActivityWeakReference.get().mTag.setField(artwork);
 
                         contentValues.put(TrackContract.TrackData.STATUS, AudioItem.STATUS_TAGS_EDITED_BY_USER);
 
                         //Update status for item list
-                        mCurrentAudioItem.setStatus(AudioItem.STATUS_TAGS_EDITED_BY_USER);
+                        mTrackDetailsActivityWeakReference.get().mCurrentAudioItem.setStatus(AudioItem.STATUS_TAGS_EDITED_BY_USER);
                         //Then, is necessary update the data in our DB
                         //to hold the state of current song
-                        mDbHelper.updateData(TrackDetailsActivity.this.mCurrentItemId, contentValues);
+                        mTrackDetailsActivityWeakReference.get().mDbHelper.updateData(mTrackDetailsActivityWeakReference.get().mCurrentItemId, contentValues);
                         Log.d("only_cover_art", "updated");
                     }
                 }
                 else if(mOperationType == REMOVE_COVER){
-                    mTag.deleteArtworkField();
+                    mTrackDetailsActivityWeakReference.get().mTag.deleteArtworkField();
                 }
                 //Apply changes to audio file
-                mAudioTaggerFile.commit();
-                mDataUpdated = true;
+                mTrackDetailsActivityWeakReference.get().mAudioTaggerFile.commit();
+                mTrackDetailsActivityWeakReference.get().mDataUpdated = true;
             }
             catch (CannotWriteException | TagException e){
                 e.printStackTrace();
-                mDataUpdated = false;
+                mTrackDetailsActivityWeakReference.get().mDataUpdated = false;
                 causeError = e.getMessage();
             }
 
@@ -1825,12 +1864,12 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
         private void updateTrackedIdTags(){
             try {
                 //Read file name
-                mAudioFile = new File(mTrackPath);
+                mTrackDetailsActivityWeakReference.get().mAudioFile = new File(mTrackDetailsActivityWeakReference.get().mTrackPath);
 
                 //Compare current file name again new title
-                String currentFileName = mAudioFile.getName();
+                String currentFileName = mTrackDetailsActivityWeakReference.get().mAudioFile.getName();
                 String currentFileNameWithoutExt = currentFileName.substring(0,currentFileName.length()-4);
-                boolean isTitleSameThanFilename = currentFileNameWithoutExt.equals(mNewTitle);
+                boolean isTitleSameThanFilename = currentFileNameWithoutExt.equals(mTrackDetailsActivityWeakReference.get().mNewTitle);
 
                 ContentValues contentValues = new ContentValues();
 
@@ -1838,13 +1877,13 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                 if(mOverwriteAllTags) {
                     //we verify if new values tags are different than currents
                     //to write only those that have changed
-                    boolean isSameTitle = mCurrentTitle.equals(mNewTitle);
-                    boolean isSameArtist = mCurrentArtist.equals(mNewArtist);
-                    boolean isSameAlbum = mCurrentAlbum.equals(mNewAlbum);
-                    boolean isSameGenre = mCurrentGenre.equals(mNewGenre);
-                    boolean isSameTrackNumber = mCurrentNumber.equals(mNewNumber);
-                    boolean isSameTrackYear = mCurrentYear.equals(mNewYear);
-                    boolean isSameCoverArt = mCurrentCoverArtLength == mNewCoverArtLength;
+                    boolean isSameTitle = mTrackDetailsActivityWeakReference.get().mCurrentTitle.equals(mTrackDetailsActivityWeakReference.get().mNewTitle);
+                    boolean isSameArtist = mTrackDetailsActivityWeakReference.get().mCurrentArtist.equals(mTrackDetailsActivityWeakReference.get().mNewArtist);
+                    boolean isSameAlbum = mTrackDetailsActivityWeakReference.get().mCurrentAlbum.equals(mTrackDetailsActivityWeakReference.get().mNewAlbum);
+                    boolean isSameGenre = mTrackDetailsActivityWeakReference.get().mCurrentGenre.equals(mTrackDetailsActivityWeakReference.get().mNewGenre);
+                    boolean isSameTrackNumber = mTrackDetailsActivityWeakReference.get().mCurrentNumber.equals(mTrackDetailsActivityWeakReference.get().mNewNumber);
+                    boolean isSameTrackYear = mTrackDetailsActivityWeakReference.get().mCurrentYear.equals(mTrackDetailsActivityWeakReference.get().mNewYear);
+                    boolean isSameCoverArt = mTrackDetailsActivityWeakReference.get().mCurrentCoverArtLength == mTrackDetailsActivityWeakReference.get().mNewCoverArtLength;
 
                     //this flag is used in case the user did not do any changes to tags,
                     //and pressed Save button, in tha case we don't write any tag
@@ -1852,54 +1891,54 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                     if(shouldUpdate){
                         //Verify that current values are not the same than news,
                         //and if new values are not empties (because from trackId can come empty values)
-                        if (!isSameTitle && !mNewTitle.isEmpty()) {
+                        if (!isSameTitle && !mTrackDetailsActivityWeakReference.get().mNewTitle.isEmpty()) {
                             //set value to tag
-                            mTag.setField(FieldKey.TITLE, mNewTitle);
+                            mTrackDetailsActivityWeakReference.get().mTag.setField(FieldKey.TITLE, mTrackDetailsActivityWeakReference.get().mNewTitle);
                             //set value to our DB
-                            contentValues.put(TrackContract.TrackData.TITLE, mNewTitle);
+                            contentValues.put(TrackContract.TrackData.TITLE, mTrackDetailsActivityWeakReference.get().mNewTitle);
                             //set value to item list
-                            mCurrentAudioItem.setTitle(mNewTitle);
+                            mTrackDetailsActivityWeakReference.get().mCurrentAudioItem.setTitle(mTrackDetailsActivityWeakReference.get().mNewTitle);
                             Log.d("title", "updated");
                         }
 
-                        if (!isSameArtist && !mNewArtist.isEmpty()) {
-                            mTag.setField(FieldKey.ARTIST, mNewArtist);
-                            contentValues.put(TrackContract.TrackData.ARTIST, mNewArtist);
-                            mCurrentAudioItem.setArtist(mNewArtist);
+                        if (!isSameArtist && !mTrackDetailsActivityWeakReference.get().mNewArtist.isEmpty()) {
+                            mTrackDetailsActivityWeakReference.get().mTag.setField(FieldKey.ARTIST, mTrackDetailsActivityWeakReference.get().mNewArtist);
+                            contentValues.put(TrackContract.TrackData.ARTIST, mTrackDetailsActivityWeakReference.get().mNewArtist);
+                            mTrackDetailsActivityWeakReference.get().mCurrentAudioItem.setArtist(mTrackDetailsActivityWeakReference.get().mNewArtist);
                             Log.d("artist", "updated");
                         }
-                        if (!isSameAlbum && !mNewAlbum.isEmpty()) {
-                            mTag.setField(FieldKey.ALBUM, mNewAlbum);
-                            contentValues.put(TrackContract.TrackData.ALBUM, mNewAlbum);
-                            mCurrentAudioItem.setAlbum(mNewAlbum);
+                        if (!isSameAlbum && !mTrackDetailsActivityWeakReference.get().mNewAlbum.isEmpty()) {
+                            mTrackDetailsActivityWeakReference.get().mTag.setField(FieldKey.ALBUM, mTrackDetailsActivityWeakReference.get().mNewAlbum);
+                            contentValues.put(TrackContract.TrackData.ALBUM, mTrackDetailsActivityWeakReference.get().mNewAlbum);
+                            mTrackDetailsActivityWeakReference.get().mCurrentAudioItem.setAlbum(mTrackDetailsActivityWeakReference.get().mNewAlbum);
                             Log.d("album", "updated");
                         }
 
                         //FOR NEXT TAGS ONLY UPDATE THE AUDIO FILE,
                         //NOT ITEM LIST NOR OUR DATABASE
                         //BECAUSE WE DON'T STORE THOSE VALUES
-                        if (!isSameTrackNumber && !mNewNumber.isEmpty()) {
-                            mTag.setField(FieldKey.TRACK, mNewNumber);
+                        if (!isSameTrackNumber && !mTrackDetailsActivityWeakReference.get().mNewNumber.isEmpty()) {
+                            mTrackDetailsActivityWeakReference.get().mTag.setField(FieldKey.TRACK, mTrackDetailsActivityWeakReference.get().mNewNumber);
                             Log.d("number", "updated");
                         }
-                        if (!isSameTrackYear && !mNewYear.isEmpty()) {
-                            mTag.setField(FieldKey.YEAR, mNewYear);
+                        if (!isSameTrackYear && !mTrackDetailsActivityWeakReference.get().mNewYear.isEmpty()) {
+                            mTrackDetailsActivityWeakReference.get().mTag.setField(FieldKey.YEAR, mTrackDetailsActivityWeakReference.get().mNewYear);
                             Log.d("year", "updated");
                         }
 
-                        if (!isSameGenre && !mNewGenre.isEmpty()) {
-                            mTag.setField(FieldKey.GENRE, mNewGenre);
+                        if (!isSameGenre && !mTrackDetailsActivityWeakReference.get().mNewGenre.isEmpty()) {
+                            mTrackDetailsActivityWeakReference.get().mTag.setField(FieldKey.GENRE, mTrackDetailsActivityWeakReference.get().mNewGenre);
                             Log.d("genre", "updated");
                         }
 
-                        if (!isSameCoverArt && mNewCoverArt != null) {
+                        if (!isSameCoverArt && mTrackDetailsActivityWeakReference.get().mNewCoverArt != null) {
                             Artwork artwork = new AndroidArtwork();
-                            artwork.setBinaryData(mNewCoverArt);
+                            artwork.setBinaryData(mTrackDetailsActivityWeakReference.get().mNewCoverArt);
                             //in accordance to library, is necessary
                             //first delete the artwork before
                             //write the new one
-                            mTag.deleteArtworkField();
-                            mTag.setField(artwork);
+                            mTrackDetailsActivityWeakReference.get().mTag.deleteArtworkField();
+                            mTrackDetailsActivityWeakReference.get().mTag.setField(artwork);
                             Log.d("coverart", "updated");
                         }
 
@@ -1907,7 +1946,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                         //in tag values,
                         //if not, no case to write any tag
                         if (shouldUpdate) {
-                            mAudioTaggerFile.commit();
+                            mTrackDetailsActivityWeakReference.get().mAudioTaggerFile.commit();
                             Log.d("overwrite", "updated_all");
                         }
                     }
@@ -1919,53 +1958,53 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                     //to audiofile in case any tag is new
                     boolean shouldUpdate = false;
 
-                    if (mCurrentTitle.isEmpty() && !mNewTitle.isEmpty()) {
-                        mTag.setField(FieldKey.TITLE, mNewTitle);
-                        contentValues.put(TrackContract.TrackData.TITLE, mNewTitle);
-                        mCurrentAudioItem.setTitle(mNewTitle);
+                    if (mTrackDetailsActivityWeakReference.get().mCurrentTitle.isEmpty() && !mTrackDetailsActivityWeakReference.get().mNewTitle.isEmpty()) {
+                        mTrackDetailsActivityWeakReference.get().mTag.setField(FieldKey.TITLE, mTrackDetailsActivityWeakReference.get().mNewTitle);
+                        contentValues.put(TrackContract.TrackData.TITLE, mTrackDetailsActivityWeakReference.get().mNewTitle);
+                        mTrackDetailsActivityWeakReference.get().mCurrentAudioItem.setTitle(mTrackDetailsActivityWeakReference.get().mNewTitle);
                         //this flags will change its value to true in case any new value
                         //is different than current
                         shouldUpdate = true;
                         Log.d("title", "updated");
                     }
 
-                    if (mCurrentArtist.isEmpty() && !mNewArtist.isEmpty()) {
-                        mTag.setField(FieldKey.ARTIST, mNewArtist);
-                        contentValues.put(TrackContract.TrackData.ARTIST, mNewArtist);
-                        mCurrentAudioItem.setArtist(mNewArtist);
+                    if (mTrackDetailsActivityWeakReference.get().mCurrentArtist.isEmpty() && !mTrackDetailsActivityWeakReference.get().mNewArtist.isEmpty()) {
+                        mTrackDetailsActivityWeakReference.get().mTag.setField(FieldKey.ARTIST, mTrackDetailsActivityWeakReference.get().mNewArtist);
+                        contentValues.put(TrackContract.TrackData.ARTIST, mTrackDetailsActivityWeakReference.get().mNewArtist);
+                        mTrackDetailsActivityWeakReference.get().mCurrentAudioItem.setArtist(mTrackDetailsActivityWeakReference.get().mNewArtist);
                         shouldUpdate = true;
                         Log.d("artist", "updated");
                     }
 
-                    if (mCurrentAlbum.isEmpty() && !mNewAlbum.isEmpty()) {
-                        mTag.setField(FieldKey.ALBUM, mNewAlbum);
-                        contentValues.put(TrackContract.TrackData.ALBUM, mNewAlbum);
-                        mCurrentAudioItem.setAlbum(mNewAlbum);
+                    if (mTrackDetailsActivityWeakReference.get().mCurrentAlbum.isEmpty() && !mTrackDetailsActivityWeakReference.get().mNewAlbum.isEmpty()) {
+                        mTrackDetailsActivityWeakReference.get().mTag.setField(FieldKey.ALBUM, mTrackDetailsActivityWeakReference.get().mNewAlbum);
+                        contentValues.put(TrackContract.TrackData.ALBUM, mTrackDetailsActivityWeakReference.get().mNewAlbum);
+                        mTrackDetailsActivityWeakReference.get().mCurrentAudioItem.setAlbum(mTrackDetailsActivityWeakReference.get().mNewAlbum);
                         shouldUpdate = true;
                         Log.d("album", "updated");
                     }
 
-                    if (mCurrentNumber.isEmpty() && !mNewNumber.isEmpty()) {
-                        mTag.setField(FieldKey.TRACK, mNewNumber);
+                    if (mTrackDetailsActivityWeakReference.get().mCurrentNumber.isEmpty() && !mTrackDetailsActivityWeakReference.get().mNewNumber.isEmpty()) {
+                        mTrackDetailsActivityWeakReference.get().mTag.setField(FieldKey.TRACK, mTrackDetailsActivityWeakReference.get().mNewNumber);
                         shouldUpdate = true;
                         Log.d("number", "updated");
                     }
-                    if (mCurrentYear.isEmpty() && !mNewYear.isEmpty()) {
-                        mTag.setField(FieldKey.YEAR, mNewYear);
+                    if (mTrackDetailsActivityWeakReference.get().mCurrentYear.isEmpty() && !mTrackDetailsActivityWeakReference.get().mNewYear.isEmpty()) {
+                        mTrackDetailsActivityWeakReference.get().mTag.setField(FieldKey.YEAR, mTrackDetailsActivityWeakReference.get().mNewYear);
                         shouldUpdate = true;
                         Log.d("year", "updated");
                     }
 
-                    if (mCurrentGenre.isEmpty() && !mNewGenre.isEmpty()) {
-                        mTag.setField(FieldKey.GENRE, mNewGenre);
+                    if (mTrackDetailsActivityWeakReference.get().mCurrentGenre.isEmpty() && !mTrackDetailsActivityWeakReference.get().mNewGenre.isEmpty()) {
+                        mTrackDetailsActivityWeakReference.get().mTag.setField(FieldKey.GENRE, mTrackDetailsActivityWeakReference.get().mNewGenre);
                         shouldUpdate = true;
                         Log.d("genre", "updated");
                     }
 
-                    if (mCurrentCoverArt == null && mNewCoverArt != null) {
+                    if (mTrackDetailsActivityWeakReference.get().mCurrentCoverArt == null && mTrackDetailsActivityWeakReference.get().mNewCoverArt != null) {
                         Artwork artwork = new AndroidArtwork();
-                        artwork.setBinaryData(mNewCoverArt);
-                        mTag.setField(artwork);
+                        artwork.setBinaryData(mTrackDetailsActivityWeakReference.get().mNewCoverArt);
+                        mTrackDetailsActivityWeakReference.get().mTag.setField(artwork);
                         shouldUpdate = true;
                         Log.d("coverart", "updated");
                     }
@@ -1973,12 +2012,12 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                     //Here we update the data in case there have had changes
                     //if not, no case to write any tag value
                     if (shouldUpdate) {
-                        if(mIsMp3 && ((MP3File)mAudioTaggerFile).hasID3v1Tag()){
+                        if(mTrackDetailsActivityWeakReference.get().mIsMp3 && ((MP3File)mTrackDetailsActivityWeakReference.get().mAudioTaggerFile).hasID3v1Tag()){
                             //remove old version of ID3 tags
                             Log.d("removed ID3v1","remove ID3v1");
-                            ((MP3File) mAudioTaggerFile).delete( ((MP3File)mAudioTaggerFile).getID3v1Tag() );
+                            ((MP3File) mTrackDetailsActivityWeakReference.get().mAudioTaggerFile).delete( ((MP3File)mTrackDetailsActivityWeakReference.get().mAudioTaggerFile).getID3v1Tag() );
                         }
-                        mAudioTaggerFile.commit();
+                        mTrackDetailsActivityWeakReference.get().mAudioTaggerFile.commit();
 
                         Log.d("missing", "updated_missing");
                     }
@@ -1990,38 +2029,40 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                     //new title is not the same than old title? then rename file
                     //and update data
                     if(!isTitleSameThanFilename) {
-                        String newAbsolutePath = AudioItem.renameFile(mCurrentAudioItem.getAbsolutePath(), mNewTitle, mNewArtist);
+                        String newAbsolutePath = AudioItem.renameFile(mTrackDetailsActivityWeakReference.get().mCurrentAudioItem.getAbsolutePath(), mTrackDetailsActivityWeakReference.get().mNewTitle, mTrackDetailsActivityWeakReference.get().mNewArtist);
                         contentValues.put(TrackContract.TrackData.DATA, newAbsolutePath);
 
                         //Inform to system that one file has change
                         ContentValues values = new ContentValues();
                         String selection = MediaStore.MediaColumns.DATA + "= ?";
-                        String selectionArgs[] = {mTrackPath}; //old path
+                        String selectionArgs[] = {mTrackDetailsActivityWeakReference.get().mTrackPath}; //old path
                         values.put(MediaStore.MediaColumns.DATA, newAbsolutePath); //DATA is the absolute path to file
-                        boolean successMediaStore = getContentResolver().
+                        boolean successMediaStore = mTrackDetailsActivityWeakReference.get().getContentResolver().
                                                     update(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
                                                             values,
                                                             selection,
                                                             selectionArgs) == 1;
 
-                        mCurrentAudioItem.setAbsolutePath(newAbsolutePath);
-                        mTrackPath = newAbsolutePath;
+                        mTrackDetailsActivityWeakReference.get().mCurrentAudioItem.setAbsolutePath(newAbsolutePath);
+                        mTrackDetailsActivityWeakReference.get().mTrackPath = newAbsolutePath;
                         //if file was renamed, we need a new reference to renamed file;
                         //in case the user needs to make additional corrections then
                         //re read file and tags written
-                        mAudioTaggerFile = AudioFileIO.read(new File(mTrackPath));
+                        mTrackDetailsActivityWeakReference.get().mAudioTaggerFile = AudioFileIO.read(new File(mTrackDetailsActivityWeakReference.get().mTrackPath));
                         //get an empty tag or its current values
-                        if(mIsMp3){
-                            mAudioHeader = ((MP3File)mAudioTaggerFile).getMP3AudioHeader();
-                            mTag = ((MP3File) mAudioTaggerFile).getID3v2Tag();
+                        if(mTrackDetailsActivityWeakReference.get().mIsMp3){
+                            mTrackDetailsActivityWeakReference.get().mAudioHeader = ((MP3File)mTrackDetailsActivityWeakReference.get().mAudioTaggerFile).getMP3AudioHeader();
+                            mTrackDetailsActivityWeakReference.get().mTag = ((MP3File) mTrackDetailsActivityWeakReference.get().mAudioTaggerFile).getID3v2Tag();
                         }
                         else {
                             //get info from header before trying to read tags
-                            mAudioHeader = mAudioTaggerFile.getAudioHeader();
-                            mTag = mAudioTaggerFile.getTag() == null ? mAudioTaggerFile.createDefaultTag() : mAudioTaggerFile.getTag();
+                            mTrackDetailsActivityWeakReference.get().mAudioHeader = mTrackDetailsActivityWeakReference.get().mAudioTaggerFile.getAudioHeader();
+                            mTrackDetailsActivityWeakReference.get().mTag = mTrackDetailsActivityWeakReference.get().mAudioTaggerFile.getTag() == null ?
+                                                                                                                                                            mTrackDetailsActivityWeakReference.get().mAudioTaggerFile.createDefaultTag() :
+                                                                                                                                                            mTrackDetailsActivityWeakReference.get().mAudioTaggerFile.getTag();
                         }
 
-                        Log.d("media store success", successMediaStore+" path: " + mTrackPath);
+                        Log.d("media store success", successMediaStore+" path: " + mTrackDetailsActivityWeakReference.get().mTrackPath);
                     }
 
                 }
@@ -2031,20 +2072,20 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                 contentValues.put(TrackContract.TrackData.STATUS,AudioItem.STATUS_TAGS_CORRECTED_BY_SEMIAUTOMATIC_MODE);
 
                 //Update the data of list item
-                mCurrentAudioItem.setStatus(AudioItem.STATUS_TAGS_CORRECTED_BY_SEMIAUTOMATIC_MODE);
+                mTrackDetailsActivityWeakReference.get().mCurrentAudioItem.setStatus(AudioItem.STATUS_TAGS_CORRECTED_BY_SEMIAUTOMATIC_MODE);
 
-                mDbHelper.updateData(mCurrentItemId,contentValues);
+                mTrackDetailsActivityWeakReference.get().mDbHelper.updateData(mTrackDetailsActivityWeakReference.get().mCurrentItemId,contentValues);
                 //all has gone fine?
-                mDataUpdated = true;
+                mTrackDetailsActivityWeakReference.get().mDataUpdated = true;
             }
             catch ( CannotWriteException | TagException | ReadOnlyFileException | CannotReadException | IOException | InvalidAudioFrameException e)  {
                 e.printStackTrace();
-                mDataUpdated = false;
+                mTrackDetailsActivityWeakReference.get().mDataUpdated = false;
                 causeError = e.getMessage();
                 //restore previous values to item
-                mCurrentAudioItem.setTitle(mCurrentTitle);
-                mCurrentAudioItem.setArtist(mCurrentArtist);
-                mCurrentAudioItem.setAlbum(mCurrentAlbum);
+                mTrackDetailsActivityWeakReference.get().mCurrentAudioItem.setTitle(mTrackDetailsActivityWeakReference.get().mCurrentTitle);
+                mTrackDetailsActivityWeakReference.get().mCurrentAudioItem.setArtist(mTrackDetailsActivityWeakReference.get().mCurrentArtist);
+                mTrackDetailsActivityWeakReference.get().mCurrentAudioItem.setAlbum(mTrackDetailsActivityWeakReference.get().mCurrentAlbum);
             }
         }
 
@@ -2056,24 +2097,24 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
 
             try {
                 //Read file name
-                mAudioFile = new File(mTrackPath);
+                mTrackDetailsActivityWeakReference.get().mAudioFile = new File(mTrackDetailsActivityWeakReference.get().mTrackPath);
 
-                String currentFileName = mAudioFile.getName();
+                String currentFileName = mTrackDetailsActivityWeakReference.get().mAudioFile.getName();
                 String currentFileNameWithoutExt = currentFileName.substring(0,currentFileName.length()-4);
 
                 ContentValues contentValues = new ContentValues();
 
                 //Compare current file name again new title
-                boolean isTitleSameThanFilename = currentFileNameWithoutExt.equals(mNewTitle);
+                boolean isTitleSameThanFilename = currentFileNameWithoutExt.equals(mTrackDetailsActivityWeakReference.get().mNewTitle);
                 //we verify if new values tags are different than currents
                 //to write only those that have changed
-                boolean isSameTitle = mCurrentTitle.equals(mNewTitle);
-                boolean isSameArtist = mCurrentArtist.equals(mNewArtist);
-                boolean isSameAlbum = mCurrentAlbum.equals(mNewAlbum);
-                boolean isSameGenre = mCurrentGenre.equals(mNewGenre);
-                boolean isSameTrackNumber = mCurrentNumber.equals(mNewNumber);
-                boolean isSameTrackYear = mCurrentYear.equals(mNewYear);
-                boolean isSameCoverArt = mCurrentCoverArtLength == mNewCoverArtLength;
+                boolean isSameTitle = mTrackDetailsActivityWeakReference.get().mCurrentTitle.equals(mTrackDetailsActivityWeakReference.get().mNewTitle);
+                boolean isSameArtist = mTrackDetailsActivityWeakReference.get().mCurrentArtist.equals(mTrackDetailsActivityWeakReference.get().mNewArtist);
+                boolean isSameAlbum = mTrackDetailsActivityWeakReference.get().mCurrentAlbum.equals(mTrackDetailsActivityWeakReference.get().mNewAlbum);
+                boolean isSameGenre = mTrackDetailsActivityWeakReference.get().mCurrentGenre.equals(mTrackDetailsActivityWeakReference.get().mNewGenre);
+                boolean isSameTrackNumber = mTrackDetailsActivityWeakReference.get().mCurrentNumber.equals(mTrackDetailsActivityWeakReference.get().mNewNumber);
+                boolean isSameTrackYear = mTrackDetailsActivityWeakReference.get().mCurrentYear.equals(mTrackDetailsActivityWeakReference.get().mNewYear);
+                boolean isSameCoverArt = mTrackDetailsActivityWeakReference.get().mCurrentCoverArtLength == mTrackDetailsActivityWeakReference.get().mNewCoverArtLength;
                 //this flag is used in case the user pressed Save button
                 //but did not do any changes , meaning that it will not
                 //write any tags because are the same
@@ -2083,54 +2124,54 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                 if (hasChanges) {
                     //Verify that current value is not the same than new.
                     //Also verify if new value is not empty, because from trackId can come empty values
-                    if (!isSameTitle && !mNewTitle.isEmpty()) {
-                        mTag.setField(FieldKey.TITLE, mNewTitle);
-                        contentValues.put(TrackContract.TrackData.TITLE, mNewTitle);
-                        mCurrentAudioItem.setTitle(mNewTitle);
+                    if (!isSameTitle && !mTrackDetailsActivityWeakReference.get().mNewTitle.isEmpty()) {
+                        mTrackDetailsActivityWeakReference.get().mTag.setField(FieldKey.TITLE, mTrackDetailsActivityWeakReference.get().mNewTitle);
+                        contentValues.put(TrackContract.TrackData.TITLE, mTrackDetailsActivityWeakReference.get().mNewTitle);
+                        mTrackDetailsActivityWeakReference.get().mCurrentAudioItem.setTitle(mTrackDetailsActivityWeakReference.get().mNewTitle);
                         Log.d("title", "updated");
                     }
-                    if (!isSameArtist && !mNewArtist.isEmpty()) {
-                        mTag.setField(FieldKey.ARTIST, mNewArtist);
-                        contentValues.put(TrackContract.TrackData.ARTIST, mNewArtist);
-                        mCurrentAudioItem.setArtist(mNewArtist);
+                    if (!isSameArtist && !mTrackDetailsActivityWeakReference.get().mNewArtist.isEmpty()) {
+                        mTrackDetailsActivityWeakReference.get().mTag.setField(FieldKey.ARTIST, mTrackDetailsActivityWeakReference.get().mNewArtist);
+                        contentValues.put(TrackContract.TrackData.ARTIST, mTrackDetailsActivityWeakReference.get().mNewArtist);
+                        mTrackDetailsActivityWeakReference.get().mCurrentAudioItem.setArtist(mTrackDetailsActivityWeakReference.get().mNewArtist);
                         Log.d("artist", "updated");
                     }
-                    if (!isSameAlbum && !mNewAlbum.isEmpty()) {
-                        mTag.setField(FieldKey.ALBUM, mNewAlbum);
-                        contentValues.put(TrackContract.TrackData.ALBUM, mNewAlbum);
-                        mCurrentAudioItem.setAlbum(mNewAlbum);
+                    if (!isSameAlbum && !mTrackDetailsActivityWeakReference.get().mNewAlbum.isEmpty()) {
+                        mTrackDetailsActivityWeakReference.get().mTag.setField(FieldKey.ALBUM, mTrackDetailsActivityWeakReference.get().mNewAlbum);
+                        contentValues.put(TrackContract.TrackData.ALBUM, mTrackDetailsActivityWeakReference.get().mNewAlbum);
+                        mTrackDetailsActivityWeakReference.get().mCurrentAudioItem.setAlbum(mTrackDetailsActivityWeakReference.get().mNewAlbum);
                         Log.d("album", "updated");
                     }
-                    if (!isSameTrackNumber && !mNewNumber.isEmpty()) {
-                        mTag.setField(FieldKey.TRACK, mNewNumber);
+                    if (!isSameTrackNumber && !mTrackDetailsActivityWeakReference.get().mNewNumber.isEmpty()) {
+                        mTrackDetailsActivityWeakReference.get().mTag.setField(FieldKey.TRACK, mTrackDetailsActivityWeakReference.get().mNewNumber);
                         Log.d("number", "updated");
                     }
-                    if (!isSameTrackYear && !mNewYear.isEmpty()) {
-                        mTag.setField(FieldKey.YEAR, mNewYear);
+                    if (!isSameTrackYear && !mTrackDetailsActivityWeakReference.get().mNewYear.isEmpty()) {
+                        mTrackDetailsActivityWeakReference.get().mTag.setField(FieldKey.YEAR, mTrackDetailsActivityWeakReference.get().mNewYear);
                         Log.d("year", "updated");
                     }
 
-                    if (!isSameGenre && !mNewGenre.isEmpty()) {
-                        mTag.setField(FieldKey.GENRE, mNewGenre);
-                        Log.d("genre", "updated " + mNewGenre);
+                    if (!isSameGenre && !mTrackDetailsActivityWeakReference.get().mNewGenre.isEmpty()) {
+                        mTrackDetailsActivityWeakReference.get().mTag.setField(FieldKey.GENRE, mTrackDetailsActivityWeakReference.get().mNewGenre);
+                        Log.d("genre", "updated " + mTrackDetailsActivityWeakReference.get().mNewGenre);
                     }
 
-                    if (!isSameCoverArt && mNewCoverArt != null && mNewCoverArt.length > 0) {
+                    if (!isSameCoverArt && mTrackDetailsActivityWeakReference.get().mNewCoverArt != null && mTrackDetailsActivityWeakReference.get().mNewCoverArt.length > 0) {
                         Artwork artwork = new AndroidArtwork();
-                        artwork.setBinaryData(mNewCoverArt);
-                        mTag.deleteArtworkField();
-                        mTag.setField(artwork);
+                        artwork.setBinaryData(mTrackDetailsActivityWeakReference.get().mNewCoverArt);
+                        mTrackDetailsActivityWeakReference.get().mTag.deleteArtworkField();
+                        mTrackDetailsActivityWeakReference.get().mTag.setField(artwork);
                         Log.d("coverart", "updated");
                     }
 
 
-                    if(mIsMp3 && ((MP3File)mAudioTaggerFile).hasID3v1Tag()){
+                    if(mTrackDetailsActivityWeakReference.get().mIsMp3 && ((MP3File)mTrackDetailsActivityWeakReference.get().mAudioTaggerFile).hasID3v1Tag()){
                         //remove old version of ID3 tags
                         Log.d("removed ID3v1","remove ID3v1");
-                        ((MP3File) mAudioTaggerFile).delete( ((MP3File)mAudioTaggerFile).getID3v1Tag() );
+                        ((MP3File) mTrackDetailsActivityWeakReference.get().mAudioTaggerFile).delete( ((MP3File)mTrackDetailsActivityWeakReference.get().mAudioTaggerFile).getID3v1Tag() );
                     }
                     //Here we apply new values to tag.
-                    mAudioTaggerFile.commit();
+                    mTrackDetailsActivityWeakReference.get().mAudioTaggerFile.commit();
                     Log.d("all_edited_metadata", "updated");
                 }
 
@@ -2141,40 +2182,42 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
 
                     //new title is not the same than old title? then rename file
                     if(!isTitleSameThanFilename) {
-                        String newAbsolutePath = AudioItem.renameFile(mCurrentAudioItem.getAbsolutePath(), mNewTitle, mNewArtist);
+                        String newAbsolutePath = AudioItem.renameFile(mTrackDetailsActivityWeakReference.get().mCurrentAudioItem.getAbsolutePath(), mTrackDetailsActivityWeakReference.get().mNewTitle, mTrackDetailsActivityWeakReference.get().mNewArtist);
                         contentValues.put(TrackContract.TrackData.DATA, newAbsolutePath);
 
                         //Inform to system that one file has change
                         ContentValues values = new ContentValues();
                         String selection = MediaStore.MediaColumns.DATA + "= ?";
-                        String selectionArgs[] = {mTrackPath}; //old path
+                        String selectionArgs[] = {mTrackDetailsActivityWeakReference.get().mTrackPath}; //old path
                         values.put(MediaStore.MediaColumns.DATA, newAbsolutePath); //new path
-                        boolean successMediaStore = getContentResolver().
+                        boolean successMediaStore = mTrackDetailsActivityWeakReference.get().getContentResolver().
                                 update(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
                                         values,
                                         selection,
                                         selectionArgs) == 1;
 
-                        mCurrentAudioItem.setAbsolutePath(newAbsolutePath);
-                        mTrackPath = newAbsolutePath;
+                        mTrackDetailsActivityWeakReference.get().mCurrentAudioItem.setAbsolutePath(newAbsolutePath);
+                        mTrackDetailsActivityWeakReference.get().mTrackPath = newAbsolutePath;
                         //if file was renamed, we need a new reference to renamed file
                         //in case the user needs to make additional corrections
                         //re read file and tags written
-                        mAudioTaggerFile = AudioFileIO.read(new File(mTrackPath));
+                        mTrackDetailsActivityWeakReference.get().mAudioTaggerFile = AudioFileIO.read(new File(mTrackDetailsActivityWeakReference.get().mTrackPath));
                         //get an empty tag or its current values
-                        if(mIsMp3){
-                            mAudioHeader = ((MP3File)mAudioTaggerFile).getMP3AudioHeader();
-                            mTag = ((MP3File) mAudioTaggerFile).getID3v2Tag();
+                        if(mTrackDetailsActivityWeakReference.get().mIsMp3){
+                            mTrackDetailsActivityWeakReference.get().mAudioHeader = ((MP3File)mTrackDetailsActivityWeakReference.get().mAudioTaggerFile).getMP3AudioHeader();
+                            mTrackDetailsActivityWeakReference.get().mTag = ((MP3File) mTrackDetailsActivityWeakReference.get().mAudioTaggerFile).getID3v2Tag();
                         }
                         else {
                             //get info from header before trying to read tags
-                            mAudioHeader = mAudioTaggerFile.getAudioHeader();
-                            mTag = mAudioTaggerFile.getTag() == null ? mAudioTaggerFile.createDefaultTag() : mAudioTaggerFile.getTag();
+                            mTrackDetailsActivityWeakReference.get().mAudioHeader = mTrackDetailsActivityWeakReference.get().mAudioTaggerFile.getAudioHeader();
+                            mTrackDetailsActivityWeakReference.get().mTag = mTrackDetailsActivityWeakReference.get().mAudioTaggerFile.getTag() == null ?
+                                                                                                                                                    mTrackDetailsActivityWeakReference.get().mAudioTaggerFile.createDefaultTag() :
+                                                                                                                                                    mTrackDetailsActivityWeakReference.get().mAudioTaggerFile.getTag();
                         }
 
                         values.clear();
                         values = null;
-                        Log.d("media store success", successMediaStore+" path: " + mTrackPath);
+                        Log.d("media store success", successMediaStore+" path: " + mTrackDetailsActivityWeakReference.get().mTrackPath);
                     }
 
                 }
@@ -2183,22 +2226,22 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                 //because we obtain this info when the app starts (after first time)
                 contentValues.put(TrackContract.TrackData.STATUS,AudioItem.STATUS_TAGS_EDITED_BY_USER);
                 //Update data of list item
-                mCurrentAudioItem.setStatus(AudioItem.STATUS_TAGS_EDITED_BY_USER);
-                mDbHelper.updateData(mCurrentItemId,contentValues);
+                mTrackDetailsActivityWeakReference.get().mCurrentAudioItem.setStatus(AudioItem.STATUS_TAGS_EDITED_BY_USER);
+                mTrackDetailsActivityWeakReference.get().mDbHelper.updateData(mTrackDetailsActivityWeakReference.get().mCurrentItemId,contentValues);
                 // all has gone fine?
-                mDataUpdated = true;
+                mTrackDetailsActivityWeakReference.get().mDataUpdated = true;
 
 
             }
             catch ( CannotWriteException | TagException | ReadOnlyFileException | CannotReadException | IOException | InvalidAudioFrameException e) {
                 e.printStackTrace();
                 //No fine =(
-                mDataUpdated = false;
+                mTrackDetailsActivityWeakReference.get().mDataUpdated = false;
                 causeError = e.getMessage();
                 //restore previous values to item
-                mCurrentAudioItem.setTitle(mCurrentTitle);
-                mCurrentAudioItem.setArtist(mCurrentArtist);
-                mCurrentAudioItem.setAlbum(mCurrentAlbum);
+                mTrackDetailsActivityWeakReference.get().mCurrentAudioItem.setTitle(mTrackDetailsActivityWeakReference.get().mCurrentTitle);
+                mTrackDetailsActivityWeakReference.get().mCurrentAudioItem.setArtist(mTrackDetailsActivityWeakReference.get().mCurrentArtist);
+                mTrackDetailsActivityWeakReference.get().mCurrentAudioItem.setAlbum(mTrackDetailsActivityWeakReference.get().mCurrentAlbum);
             }
         }
 
@@ -2230,7 +2273,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
          */
         @Override
         protected void onPostExecute(Void result){
-            mProgressBar.setVisibility(View.INVISIBLE);
+            mTrackDetailsActivityWeakReference.get().mProgressBar.setVisibility(View.INVISIBLE);
 
             if(mOperationType != REMOVE_COVER){
                 //hide card view of tracked id results
@@ -2239,8 +2282,15 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
             else {
                 redrawCover();
             }
+            mTrackDetailsActivityWeakReference.get().mAsyncUpdateData = null;
+        }
 
-
+        @Override
+        public void onCancelled(Void result){
+            mTrackDetailsActivityWeakReference.get().mAsyncUpdateData = null;
+            mTrackDetailsActivityWeakReference.clear();
+            mTrackDetailsActivityWeakReference = null;
+            System.gc();
         }
 
         /**
@@ -2249,99 +2299,105 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
          */
         private void hideLayoutTrackIdResults(){
 
-            mAudioFile = new File(mTrackPath);
+            mTrackDetailsActivityWeakReference.get().mAudioFile = new File(mTrackDetailsActivityWeakReference.get().mTrackPath);
 
-            mTrackIdCard.animate().setDuration(DURATION).alpha(0).setListener(new AnimatorListenerAdapter() {
+            mTrackDetailsActivityWeakReference.get().mTrackIdCard.animate().setDuration(DURATION).alpha(0).setListener(new AnimatorListenerAdapter() {
                 @Override
                 public void onAnimationEnd(Animator animation) {
-                    mContent.setEnabled(true);
-                    mTrackIdCard.setVisibility(GONE);
-                    mContent.setVisibility(View.VISIBLE);
-                    mContent.animate().setDuration(DURATION).alpha(1).setListener(new AnimatorListenerAdapter() {
+                    mTrackDetailsActivityWeakReference.get().mContent.setEnabled(true);
+                    mTrackDetailsActivityWeakReference.get().mTrackIdCard.setVisibility(GONE);
+                    mTrackDetailsActivityWeakReference.get().mContent.setVisibility(View.VISIBLE);
+                    mTrackDetailsActivityWeakReference.get().mContent.animate().setDuration(DURATION).alpha(1).setListener(new AnimatorListenerAdapter() {
                         @Override
                         public void onAnimationEnd(Animator animation) {
                             String msg = "";
                             //indicates that cover will be redrawn or not
-                            final boolean isSameCoverArt = mCurrentCoverArtLength == mNewCoverArtLength;
+                            final boolean isSameCoverArt = mTrackDetailsActivityWeakReference.get().mCurrentCoverArtLength == mTrackDetailsActivityWeakReference.get().mNewCoverArtLength;
 
                             //If data was update successfully
-                            if(mDataUpdated){
+                            if(mTrackDetailsActivityWeakReference.get().mDataUpdated){
 
                                 //update image of toolbar cover if necessary
-                                if(mOperationType == ADD_COVER && !isSameCoverArt && mNewCoverArt != null) {
-                                    msg = getString(R.string.cover_updated);
-                                    GlideApp.with(mViewDetailsTrack).
-                                            load(mNewCoverArt)
+                                if(mOperationType == ADD_COVER && !isSameCoverArt && mTrackDetailsActivityWeakReference.get().mNewCoverArt != null) {
+                                    msg = mTrackDetailsActivityWeakReference.get().getString(R.string.cover_updated);
+                                    GlideApp.with(mTrackDetailsActivityWeakReference.get().mViewDetailsTrack).
+                                            load(mTrackDetailsActivityWeakReference.get().mNewCoverArt)
                                             .error(R.drawable.ic_album_white_48px)
                                             .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.NONE))
-                                            .transition(DrawableTransitionOptions.withCrossFade(CROSSFADE_DURATION))
+                                            .transition(DrawableTransitionOptions.withCrossFade(CROSS_FADE_DURATION))
                                             .apply(RequestOptions.skipMemoryCacheOf(true))
                                             .fitCenter()
                                             .placeholder(R.drawable.ic_album_white_48px)
-                                            .into(mToolbarCover);
+                                            .into(mTrackDetailsActivityWeakReference.get().mToolbarCover);
                                     //update fields of status, filesize and image size
-                                    mStatus.setText(getStatusText());
-                                    mFileSize.setText(AudioItem.getFileSize(mAudioFile.length()));
-                                    mImageSize.setText(AudioItem.getStringImageSize(mNewCoverArt));
+                                    mTrackDetailsActivityWeakReference.get().mStatus.setText(mTrackDetailsActivityWeakReference.get().getStatusText());
+                                    mTrackDetailsActivityWeakReference.get().mFileSize.setText(AudioItem.getFileSize(mTrackDetailsActivityWeakReference.get().mAudioFile.length()));
+                                    mTrackDetailsActivityWeakReference.get(). mImageSize.setText(AudioItem.getStringImageSize(mTrackDetailsActivityWeakReference.get().mNewCoverArt));
                                     //show new state of item (the simple, double, etc..., check icon)
-                                    mStatus.setCompoundDrawablesWithIntrinsicBounds(getStatusDrawable(),null,null,null);
+                                    mTrackDetailsActivityWeakReference.get().mStatus.setCompoundDrawablesWithIntrinsicBounds(mTrackDetailsActivityWeakReference.get().getStatusDrawable(),null,null,null);
                                 }
                                 else {
                                     //all or missing data was updated
                                     if(mOperationType == UPDATE_ALL_METADATA || mOverwriteAllTags) {
-                                        msg = getString(R.string.message_data_update);
+                                        msg = mTrackDetailsActivityWeakReference.get().getString(R.string.message_data_update);
                                     }
                                     else{
-                                        msg = getString(R.string.update_missing);
+                                        msg = mTrackDetailsActivityWeakReference.get().getString(R.string.update_missing);
                                     }
                                     //Update fields in case we have replaced the strange chars
-                                    if(!isSameCoverArt && mNewCoverArt != null) {
-                                        GlideApp.with(mViewDetailsTrack).
-                                                load(mNewCoverArt)
+                                    if(!isSameCoverArt && mTrackDetailsActivityWeakReference.get().mNewCoverArt != null) {
+                                        GlideApp.with(mTrackDetailsActivityWeakReference.get().mViewDetailsTrack).
+                                                load(mTrackDetailsActivityWeakReference.get().mNewCoverArt)
                                                 .error(R.drawable.ic_album_white_48px)
                                                 .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.NONE))
-                                                .transition(DrawableTransitionOptions.withCrossFade(CROSSFADE_DURATION))
+                                                .transition(DrawableTransitionOptions.withCrossFade(CROSS_FADE_DURATION))
                                                 .apply(RequestOptions.skipMemoryCacheOf(true))
                                                 .fitCenter()
                                                 .placeholder(R.drawable.ic_album_white_48px)
-                                                .into(mToolbarCover);
-                                        mFileSize.setText(AudioItem.getFileSize(mAudioFile.length()));
-                                        mImageSize.setText(AudioItem.getStringImageSize(mNewCoverArt));
+                                                .into(mTrackDetailsActivityWeakReference.get().mToolbarCover);
+                                        mTrackDetailsActivityWeakReference.get().mFileSize.setText(AudioItem.getFileSize(mTrackDetailsActivityWeakReference.get().mAudioFile.length()));
+                                        mTrackDetailsActivityWeakReference.get().mImageSize.setText(AudioItem.getStringImageSize(mTrackDetailsActivityWeakReference.get().mNewCoverArt));
                                     }
 
-                                    mTitleLayer.setText(mAudioFile.getName());
-                                    mTitleField.setText(mTag.getFirst(FieldKey.TITLE));
-                                    mArtistField.setText(mTag.getFirst(FieldKey.ARTIST));
-                                    mAlbumField.setText(mTag.getFirst(FieldKey.ALBUM));
-                                    mGenreField.setText(mTag.getFirst(FieldKey.GENRE));
-                                    mNumberField.setText(mTag.getFirst(FieldKey.TRACK));
-                                    mYearField.setText(mTag.getFirst(FieldKey.YEAR));
-                                    mStatus.setText(getStatusText());
-                                    mStatus.setCompoundDrawablesWithIntrinsicBounds(getStatusDrawable(),null,null,null);
+                                    mTrackDetailsActivityWeakReference.get().mTitleLayer.setText(mTrackDetailsActivityWeakReference.get().mAudioFile.getName());
+                                    mTrackDetailsActivityWeakReference.get().mTitleField.setText(mTrackDetailsActivityWeakReference.get().mTag.getFirst(FieldKey.TITLE));
+                                    mTrackDetailsActivityWeakReference.get().mArtistField.setText(mTrackDetailsActivityWeakReference.get().mTag.getFirst(FieldKey.ARTIST));
+                                    mTrackDetailsActivityWeakReference.get().mAlbumField.setText(mTrackDetailsActivityWeakReference.get().mTag.getFirst(FieldKey.ALBUM));
+                                    mTrackDetailsActivityWeakReference.get().mGenreField.setText(mTrackDetailsActivityWeakReference.get().mTag.getFirst(FieldKey.GENRE));
+                                    mTrackDetailsActivityWeakReference.get().mNumberField.setText(mTrackDetailsActivityWeakReference.get().mTag.getFirst(FieldKey.TRACK));
+                                    mTrackDetailsActivityWeakReference.get().mYearField.setText(mTrackDetailsActivityWeakReference.get().mTag.getFirst(FieldKey.YEAR));
+                                    mTrackDetailsActivityWeakReference.get().mStatus.setText(mTrackDetailsActivityWeakReference.get().getStatusText());
+                                    mTrackDetailsActivityWeakReference.get().mStatus.setCompoundDrawablesWithIntrinsicBounds(mTrackDetailsActivityWeakReference.get().getStatusDrawable(),null,null,null);
                                 }
                                 //notify to adapter that one item has changed
-                                mTrackAdapter.notifyItemChanged(mCurrentAudioItem.getPosition());
+                                mTrackDetailsActivityWeakReference.get().mTrackAdapter.notifyItemChanged(mTrackDetailsActivityWeakReference.get().mCurrentAudioItem.getPosition());
 
                             }
                             //If data could not updated
                             else {
-                                msg = getString(R.string.message_no_data_updated) + ": " + causeError + ".";
-                                setPreviousValues();
+                                msg = mTrackDetailsActivityWeakReference.get().getString(R.string.message_no_data_updated) + ": " + causeError + ".";
+                                mTrackDetailsActivityWeakReference.get().setPreviousValues();
                             }
 
 
-                            showSnackBar(7000, msg,ACTION_NONE, null);
-                            mFloatingActionMenu.show();
-                            mSaveButton.hide();
-                            mToolbarCover.setEnabled(true);
-                            mAppBarLayout.setExpanded(true);
+                            mTrackDetailsActivityWeakReference.get().showSnackBar(7000, msg,ACTION_NONE, null);
+                            mTrackDetailsActivityWeakReference.get().mFloatingActionMenu.show();
+                            mTrackDetailsActivityWeakReference.get().mSaveButton.hide();
+                            mTrackDetailsActivityWeakReference.get().mToolbarCover.setEnabled(true);
+                            mTrackDetailsActivityWeakReference.get().mAppBarLayout.setExpanded(true);
 
-                            cachingCurrentValues();
-                            mOnlyCoverArt = false;
-                            mDataUpdated = false;
-                            mEditMode = false;
-                            disableFields();
-                            enableMiniFabs(true);
+                            mTrackDetailsActivityWeakReference.get().cachingCurrentValues();
+                            mTrackDetailsActivityWeakReference.get().mOnlyCoverArt = false;
+                            mTrackDetailsActivityWeakReference.get().mDataUpdated = false;
+                            mTrackDetailsActivityWeakReference.get().mEditMode = false;
+                            mTrackDetailsActivityWeakReference.get().disableFields();
+                            mTrackDetailsActivityWeakReference.get().enableMiniFabs(true);
+
+
+
+                            mTrackDetailsActivityWeakReference.clear();
+                            mTrackDetailsActivityWeakReference = null;
+                            System.gc();
 
                         }
                     });
@@ -2359,24 +2415,27 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
          */
 
         private void redrawCover() {
-            mAudioFile = new File(mTrackPath);
-            mFileSize.setText(AudioItem.getFileSize(mAudioFile.length()));
-            mImageSize.setText(AudioItem.getStringImageSize(null));
+            mTrackDetailsActivityWeakReference.get().mAudioFile = new File(mTrackDetailsActivityWeakReference.get().mTrackPath);
+            mTrackDetailsActivityWeakReference.get().mFileSize.setText(AudioItem.getFileSize(mTrackDetailsActivityWeakReference.get().mAudioFile.length()));
+            mTrackDetailsActivityWeakReference.get().mImageSize.setText(AudioItem.getStringImageSize(null));
             //set the generic cover art
-            GlideApp.with(mViewDetailsTrack).
+            GlideApp.with(mTrackDetailsActivityWeakReference.get().mViewDetailsTrack).
                     load(null)
                     .error(R.drawable.ic_album_white_48px)
                     .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.NONE))
                     .apply(RequestOptions.skipMemoryCacheOf(true))
-                    .transition(DrawableTransitionOptions.withCrossFade(CROSSFADE_DURATION))
+                    .transition(DrawableTransitionOptions.withCrossFade(CROSS_FADE_DURATION))
                     .fitCenter()
                     .placeholder(R.drawable.ic_album_white_48px)
-                    .into(mToolbarCover);
-            enableMiniFabs(true);
-            showSnackBar(Snackbar.LENGTH_SHORT, getString(R.string.cover_removed),ACTION_NONE, null);
-            mTrackAdapter.notifyItemChanged(mCurrentAudioItem.getPosition());
-            cachingCurrentValues();
+                    .into(mTrackDetailsActivityWeakReference.get().mToolbarCover);
+            mTrackDetailsActivityWeakReference.get().enableMiniFabs(true);
+            mTrackDetailsActivityWeakReference.get().showSnackBar(Snackbar.LENGTH_SHORT, mTrackDetailsActivityWeakReference.get().getString(R.string.cover_removed),ACTION_NONE, null);
+            mTrackDetailsActivityWeakReference.get().mTrackAdapter.notifyItemChanged(mTrackDetailsActivityWeakReference.get().mCurrentAudioItem.getPosition());
+            mTrackDetailsActivityWeakReference.get().cachingCurrentValues();
 
+            mTrackDetailsActivityWeakReference.clear();
+            mTrackDetailsActivityWeakReference = null;
+            System.gc();
         }
 
     }
@@ -2449,15 +2508,15 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                 builder.setNegativeButton("Todas", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        AsyncUpdateData asyncUpdateData = new AsyncUpdateData(UPDATE_TRACKED_ID_TAGS, true);
-                        asyncUpdateData.execute();
+                        mAsyncUpdateData = new AsyncUpdateData(UPDATE_TRACKED_ID_TAGS, true, TrackDetailsActivity.this);
+                        mAsyncUpdateData.execute();
                     }
                 });
                 builder.setPositiveButton("Faltantes", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        AsyncUpdateData asyncUpdateData = new AsyncUpdateData(UPDATE_TRACKED_ID_TAGS, false);
-                        asyncUpdateData.execute();
+                        mAsyncUpdateData = new AsyncUpdateData(UPDATE_TRACKED_ID_TAGS, false, TrackDetailsActivity.this);
+                        mAsyncUpdateData.execute();
                     }
                 });
                 AlertDialog alertDialog = builder.create();
@@ -2489,7 +2548,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                                     .error(R.drawable.ic_album_white_48px)
                                     .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.NONE))
                                     .apply(RequestOptions.skipMemoryCacheOf(true))
-                                    .transition(DrawableTransitionOptions.withCrossFade(CROSSFADE_DURATION))
+                                    .transition(DrawableTransitionOptions.withCrossFade(CROSS_FADE_DURATION))
                                     .fitCenter()
                                     .placeholder(R.drawable.ic_album_white_48px)
                                     .into(mTrackIdCover);
@@ -2503,7 +2562,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                                     .error(R.drawable.ic_album_white_48px)
                                     .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.NONE))
                                     .apply(RequestOptions.skipMemoryCacheOf(true))
-                                    .transition(DrawableTransitionOptions.withCrossFade(CROSSFADE_DURATION))
+                                    .transition(DrawableTransitionOptions.withCrossFade(CROSS_FADE_DURATION))
                                     .placeholder(R.drawable.ic_album_white_48px)
                                     .fitCenter()
                                     .into(mTrackIdCover);
@@ -2577,8 +2636,8 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                     builder.setPositiveButton(getString(R.string.as_cover_art), new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            AsyncUpdateData asyncUpdateData = new AsyncUpdateData(ADD_COVER, false);
-                            asyncUpdateData.execute();
+                            mAsyncUpdateData = new AsyncUpdateData(ADD_COVER, false, TrackDetailsActivity.this);
+                            mAsyncUpdateData.execute();
                         }
                     });
                     //save cover as image file
@@ -2637,7 +2696,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                                     .error(R.drawable.ic_album_white_48px)
                                     .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.NONE))
                                     .apply(RequestOptions.skipMemoryCacheOf(true))
-                                    .transition(DrawableTransitionOptions.withCrossFade(CROSSFADE_DURATION))
+                                    .transition(DrawableTransitionOptions.withCrossFade(CROSS_FADE_DURATION))
                                     .fitCenter()
                                     .into(mTrackIdCover);
 
@@ -2697,7 +2756,12 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
      * Instance of this Receiver handles the intents
      * received from FixerTrackService
      */
-    public class ResponseReceiver extends BroadcastReceiver {
+    public static class ResponseReceiver extends BroadcastReceiver {
+        private WeakReference<TrackDetailsActivity> mTrackDetailsActivityWeakReference;
+
+        public ResponseReceiver(TrackDetailsActivity trackDetailsActivity){
+            mTrackDetailsActivityWeakReference = new WeakReference<>(trackDetailsActivity);
+        }
 
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -2705,11 +2769,11 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
             action = intent.getAction();
 
             //enable fabs and hide progress bar
-            runOnUiThread(new Runnable() {
+            mTrackDetailsActivityWeakReference.get().runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    enableMiniFabs(true);
-                    mProgressBar.setVisibility(View.INVISIBLE);
+                    mTrackDetailsActivityWeakReference.get().enableMiniFabs(true);
+                    mTrackDetailsActivityWeakReference.get().mProgressBar.setVisibility(View.INVISIBLE);
                 }
             });
 
@@ -2717,17 +2781,17 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
             switch (action){
                 //TrackId found tags
                 case Constants.Actions.ACTION_DONE_DETAILS:
-                    mTrackIdAudioItem = intent.getParcelableExtra(Constants.AUDIO_ITEM);
-                    runOnUiThread(new Runnable() {
+                    mTrackDetailsActivityWeakReference.get().mTrackIdAudioItem = intent.getParcelableExtra(Constants.AUDIO_ITEM);
+                    mTrackDetailsActivityWeakReference.get().runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
                             //Only cover art was requested
-                            if (mOnlyCoverArt) {
-                                handleCoverArt();
+                            if (mTrackDetailsActivityWeakReference.get().mOnlyCoverArt) {
+                                mTrackDetailsActivityWeakReference.get().handleCoverArt();
                             }
                             //All info was requested
                             else {
-                                setDownloadedValues();
+                                mTrackDetailsActivityWeakReference.get().setDownloadedValues();
                             }
                         }
                     });
@@ -2735,41 +2799,46 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                     break;
                 //API is no initialized
                 case Constants.GnServiceActions.ACTION_API_INITIALIZED:
-                    showSnackBar(Snackbar.LENGTH_SHORT,getString(R.string.api_initialized),ACTION_NONE,null);
+                    mTrackDetailsActivityWeakReference.get().showSnackBar(Snackbar.LENGTH_LONG,mTrackDetailsActivityWeakReference.get().getString(R.string.api_initialized2),
+                                                                                                ACTION_START_TRACKID,null);
                     break;
                 //No match results were found for this song
                 case Constants.Actions.ACTION_NOT_FOUND:
-                    runOnUiThread(new Runnable() {
+                    mTrackDetailsActivityWeakReference.get().runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            showSnackBar(Snackbar.LENGTH_LONG,getString(R.string.file_status_bad),ACTION_NONE, null);
+                            mTrackDetailsActivityWeakReference.get().showSnackBar(Snackbar.LENGTH_LONG,mTrackDetailsActivityWeakReference.get().getString(R.string.file_status_bad),ACTION_NONE, null);
                         }
                     });
 
                     break;
                 //It has lost internet connection
                 case Constants.Actions.ACTION_CONNECTION_LOST:
-                    runOnUiThread(new Runnable() {
+                    mTrackDetailsActivityWeakReference.get().runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            showSnackBar(Snackbar.LENGTH_SHORT,getString(R.string.connection_lost),ACTION_NONE, null);
+                            mTrackDetailsActivityWeakReference.get().showSnackBar(Snackbar.LENGTH_SHORT,mTrackDetailsActivityWeakReference.get().getString(R.string.connection_lost),ACTION_NONE, null);
                         }
                     });
                     break;
                 //Any other response, maybe an error
                 default:
-                    runOnUiThread(new Runnable() {
+                    mTrackDetailsActivityWeakReference.get().runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            showSnackBar(Snackbar.LENGTH_SHORT,getString(R.string.error),ACTION_NONE, null);
+                            mTrackDetailsActivityWeakReference.get().showSnackBar(Snackbar.LENGTH_SHORT,mTrackDetailsActivityWeakReference.get().getString(R.string.error),ACTION_NONE, null);
                         }
                     });
                     break;
             }
+        }
 
-
-
-
+        public void releaseContext(){
+            if(mTrackDetailsActivityWeakReference != null) {
+                mTrackDetailsActivityWeakReference.clear();
+                mTrackDetailsActivityWeakReference = null;
+                System.gc();
+            }
         }
     }
 

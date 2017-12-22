@@ -58,6 +58,7 @@ import org.jaudiotagger.tag.images.AndroidArtwork;
 import org.jaudiotagger.tag.images.Artwork;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -509,6 +510,10 @@ public class FixerTrackService extends Service {
 
             //Callback to inform that fingerprint was retrieved from audiotrack.
                 try {
+                    if(AudioItem.checkFileIntegrity(fileInfo.fileName())){
+                        throw new FileNotFoundException("File does not exist anymore.");
+                    }
+
                     if (GnAudioFile.isFileFormatSupported(fileInfo.fileName())) {
                         fileInfo.fingerprintFromSource(new GnAudioFile(new File(fileInfo.fileName())));
                     }
@@ -519,6 +524,8 @@ public class FixerTrackService extends Service {
                         Log.e(sAppString, "error in fingerprinting file: " + e.errorAPI() + ", " + e.errorModule() + ", " + e.errorDescription());
 
                     }
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
                 }
 
         }

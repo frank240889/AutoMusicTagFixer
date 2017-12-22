@@ -162,7 +162,8 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
     @Override
     public void onViewRecycled(TrackAdapter.AudioItemHolder holder) {
         super.onViewRecycled(holder);
-        Glide.with(mContext).clear(holder.mImageView);
+        if(mContext != null)
+            Glide.with(mContext).clear(holder.mImageView);
     }
 
     public void setVerticalSpeedScroll(int dy){
