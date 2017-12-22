@@ -510,7 +510,7 @@ public class FixerTrackService extends Service {
 
             //Callback to inform that fingerprint was retrieved from audiotrack.
                 try {
-                    if(AudioItem.checkFileIntegrity(fileInfo.fileName())){
+                    if(!AudioItem.checkFileIntegrity(fileInfo.fileName())){
                         throw new FileNotFoundException("File does not exist anymore.");
                     }
 
