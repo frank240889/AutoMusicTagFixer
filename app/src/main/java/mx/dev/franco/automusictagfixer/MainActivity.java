@@ -65,7 +65,7 @@ import mx.dev.franco.automusictagfixer.database.DataTrackDbHelper;
 import mx.dev.franco.automusictagfixer.database.TrackContract;
 import mx.dev.franco.automusictagfixer.list.AudioItem;
 import mx.dev.franco.automusictagfixer.list.TrackAdapter;
-import mx.dev.franco.automusictagfixer.services.DetectorInternetConnection;
+import mx.dev.franco.automusictagfixer.services.ConnectivityDetector;
 import mx.dev.franco.automusictagfixer.services.FixerTrackService;
 import mx.dev.franco.automusictagfixer.services.Job;
 import mx.dev.franco.automusictagfixer.services.ServiceHelper;
@@ -932,8 +932,7 @@ public class MainActivity extends AppCompatActivity
     public static int allowExecute(Context appContext){
         Context context = appContext.getApplicationContext();
         //No internet connection
-        if(!DetectorInternetConnection.sIsConnected){
-            DetectorInternetConnection.startCheckingConnection(appContext);
+        if(!ConnectivityDetector.sIsConnected){
             return Constants.Conditions.NO_INTERNET_CONNECTION;
         }
 
@@ -1073,16 +1072,31 @@ public class MainActivity extends AppCompatActivity
                 .setPositiveButton(getString(R.string.automatic), new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        //we put this in AsyncTask because the isConnected method
-                        //makes a network operation which blocks UI if we execute
-                        //from UI Thread
-
-                        AsyncStartTask asyncStartTask = new AsyncStartTask(MainActivity.this, audioItem.getId());
-                        asyncStartTask.execute();
+                    performTrackId(audioItem.getId());
                     }
                 });
         final AlertDialog dialog =  builder.create();
         dialog.show();
+    }
+
+    private void performTrackId(long audioItemId){
+        int canContinue = allowExecute(getApplicationContext());
+        if(canContinue != 0) {
+            setSnackBarMessage(canContinue);
+            return;
+        }
+
+        registerReceivers();
+        Intent intent = new Intent(this, FixerTrackService.class);
+
+        if(Settings.BACKGROUND_CORRECTION)
+            intent.putExtra(Constants.Actions.ACTION_SHOW_NOTIFICATION, true);
+
+        intent.putExtra(Constants.Activities.FROM_EDIT_MODE, false);
+        intent.putExtra(Constants.MEDIASTORE_ID, audioItemId);
+        startService(intent);
+        mFloatingActionButtonStart.hide();
+        mFloatingActionButtonStop.show();
     }
 
     /**
@@ -1448,42 +1462,6 @@ public class MainActivity extends AppCompatActivity
     private void updateNumberItems(){
         if(mAudioItemList != null){
             mActionBar.setTitle(mAudioItemList.size() + " " +getString(R.string.tracks));
-        }
-    }
-
-    private static class AsyncStartTask extends AsyncTask<Void,Void,Integer>{
-        private WeakReference<MainActivity> mainActivityWeakReference;
-        private long audioItemId;
-        public AsyncStartTask(MainActivity mainActivity, long id){
-            mainActivityWeakReference = new WeakReference<>(mainActivity);
-            audioItemId = id;
-        }
-
-        @Override
-        protected Integer doInBackground(Void... voids){
-            int canContinue = allowExecute(mainActivityWeakReference.get().getApplicationContext());
-            return canContinue;
-        }
-        @Override
-        protected void onPostExecute(Integer canContinue){
-            if(canContinue != 0) {
-                mainActivityWeakReference.get().setSnackBarMessage(canContinue);
-                return;
-            }
-
-            mainActivityWeakReference.get().registerReceivers();
-            Intent intent = new Intent(mainActivityWeakReference.get().getApplicationContext(), FixerTrackService.class);
-            if(Settings.BACKGROUND_CORRECTION)
-                intent.putExtra(Constants.Actions.ACTION_SHOW_NOTIFICATION, true);
-            intent.putExtra(Constants.Activities.FROM_EDIT_MODE, false);
-            intent.putExtra(Constants.MEDIASTORE_ID, audioItemId);
-            mainActivityWeakReference.get().startService(intent);
-            mainActivityWeakReference.get().mFloatingActionButtonStart.hide();
-            mainActivityWeakReference.get().mFloatingActionButtonStop.show();
-            audioItemId = -1;
-            mainActivityWeakReference.clear();
-            mainActivityWeakReference = null;
-            System.gc();
         }
     }
 
@@ -1922,17 +1900,12 @@ public class MainActivity extends AppCompatActivity
                         });
                     break;
                 case Constants.Actions.ACTION_CONNECTION_LOST:
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            showSnackBar(Snackbar.LENGTH_LONG, getString(R.string.connection_lost), NO_ID);
-                        }
-                    });
                 case Constants.Actions.ACTION_CANCEL_TASK:
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            showSnackBar(Snackbar.LENGTH_LONG, getString(R.string.task_cancelled), NO_ID);
+                            AudioItem audioItem = intent.getParcelableExtra(Constants.AUDIO_ITEM);
+                            setNewItemValues(audioItem, audioItem.getId());
                         }
                     });
                 case Constants.Actions.ACTION_COMPLETE_TASK:
@@ -1940,6 +1913,18 @@ public class MainActivity extends AppCompatActivity
                         @Override
                         public void run() {
                             finishTaskByUser();
+                        }
+                    });
+                    mLocalBroadcastManager.unregisterReceiver(mReceiver);
+                    break;
+
+                default:
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            finishTaskByUser();
+                            String msg = intent.getStringExtra(Constants.GnServiceActions.API_ERROR);
+                            showSnackBar(Snackbar.LENGTH_LONG, getString(R.string.api_error) + msg, NO_ID);
                         }
                     });
                     mLocalBroadcastManager.unregisterReceiver(mReceiver);

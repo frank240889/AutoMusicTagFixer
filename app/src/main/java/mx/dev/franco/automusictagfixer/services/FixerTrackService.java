@@ -3,15 +3,11 @@ package mx.dev.franco.automusictagfixer.services;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
-import android.content.BroadcastReceiver;
 import android.content.ContentValues;
-import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.net.ConnectivityManager;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.provider.MediaStore;
@@ -106,18 +102,17 @@ public class FixerTrackService extends Service {
     //Notification on status bar
     private Notification notification;
     //indicates if user has cancel or not current correction task
-    private boolean finishTaskByUser = true;
+    private static volatile boolean sFinishTaskByUser = true;
     //save value extracted from intent, and indicates
     //it should put this service in foreground or not
     private boolean mShowNotification = false;
     //show notification only when request comes from MainActivity
     private boolean mStartOrUpdateForegroundNotification = false;
     //Connection state
-    private boolean mIsConnected = false;
-    //Filter to register and be able for receiving the connection state
-    private IntentFilter mIntentFilterConnectionChanges;
-    //Receiver that process received intent of connection state
-    private DetectorChangesConnection mDetectorChangesConnection;
+    private static volatile boolean sIsConnected = ConnectivityDetector.sIsConnected;
+    private static boolean sError = false;
+    private String mErrorMessage = null;
+    private AudioItem currentAudioItem;
 
     private Thread mThreadService;
     private Runnable mRunnable;
@@ -140,9 +135,6 @@ public class FixerTrackService extends Service {
         //Object to handle callbacks from Gracenote API
         mMusicIdFileEvents = new MusicIdFileEvents();
         mGnMusicIdFileList = new ArrayList<>();
-        mIntentFilterConnectionChanges = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
-        mDetectorChangesConnection = new DetectorChangesConnection();
-        registerReceiver(mDetectorChangesConnection,mIntentFilterConnectionChanges);
     }
 
     /**
@@ -192,10 +184,11 @@ public class FixerTrackService extends Service {
             mGnMusicIdFileList = null;
         }
         //cancel detection of connection state
-        unregisterReceiver(mDetectorChangesConnection);
+        //unregisterReceiver(mDetectorChangesConnection);
         mMusicIdFileEvents = null;
         mThreadService = null;
         mRunnable = null;
+        sFinishTaskByUser = false;
         System.gc();
         Log.d("onDestroy","releasing resources...");
         super.onDestroy();
@@ -248,7 +241,9 @@ public class FixerTrackService extends Service {
 
         //We services is stopped from notification
         if(intent.getAction() != null && intent.getAction().equals(Constants.Actions.ACTION_CANCEL_TASK)){
-            finishTaskByUser = true;
+            sError = false;
+            sIsConnected = true;
+            sFinishTaskByUser = true;
             stopSelf();
             return;
         }
@@ -330,6 +325,11 @@ public class FixerTrackService extends Service {
 
             } catch (GnException e) {
                 e.printStackTrace();
+                sError = true;
+                mErrorMessage = e.getMessage();
+                sFinishTaskByUser = false;
+                sIsConnected = true;
+                stopSelf();
             }
             finally {
                 //reset values in every iteration
@@ -355,8 +355,7 @@ public class FixerTrackService extends Service {
      */
     public void startTrackId(){
         //Before start check if there is internet connection yet
-        mIsConnected = DetectorInternetConnection.sIsConnected;
-        if(!mIsConnected){
+        if(!ConnectivityDetector.sIsConnected){
             stopSelf();
             return;
         }
@@ -369,6 +368,10 @@ public class FixerTrackService extends Service {
 
         } catch (GnException e) {
             e.printStackTrace();
+            sError = true;
+            mErrorMessage = e.getMessage();
+            sFinishTaskByUser = false;
+            sIsConnected = true;
             stopSelf();
         }
     }
@@ -377,55 +380,46 @@ public class FixerTrackService extends Service {
      * Stops track id process when user
      * cancel or lost internet connection
      */
-    public void stopTrackId(){
+    public synchronized void  stopTrackId(){
         //check if task were cancelled by user,
         //default value is true; in case that
         //correction task finishes and
         //ACTION_COMPLETE_TASK is broadcasted,
-        //finishTaskByUser will be false,
+        //sFinishTaskByUser will be false,
         //meaning that is not necessary call cancel method.
 
-        if(finishTaskByUser){
-            if(mGnMusicIdFileList != null) {
-                Iterator<GnMusicIdFile> iterator = mGnMusicIdFileList.iterator();
-                while (iterator.hasNext()) {
-                    Log.d("cancel gn", "cancelling...");
-                    iterator.next().cancel();
-                }
+        if(mGnMusicIdFileList != null) {
+            Iterator<GnMusicIdFile> iterator = mGnMusicIdFileList.iterator();
+            while (iterator.hasNext()) {
+
+                iterator.next().cancel();
             }
+        }
+        //Save state to database
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(TrackContract.TrackData.IS_PROCESSING, false);
+        int items = mDataTrackDbHelper.updateData(contentValues, TrackContract.TrackData.IS_PROCESSING, true);
+        Log.d("items updated", items+"");
 
-            //Save state to database
-            ContentValues contentValues = new ContentValues();
-            contentValues.put(TrackContract.TrackData.IS_PROCESSING, false);
-            int items = mDataTrackDbHelper.updateData(contentValues, TrackContract.TrackData.IS_PROCESSING, true);
-            Log.d("items updayed", items+"");
-
-            //broadcast action to interested receivers
-            Intent intentActionDone = new Intent();
-            intentActionDone.setAction(Constants.Actions.ACTION_CANCEL_TASK);
-            mLocalBroadcastManager.sendBroadcastSync(intentActionDone);
+        Intent intentAction = new Intent();
+        if(sFinishTaskByUser){
+            Log.d("cancel gn", "cancelling...");
+            intentAction.setAction(Constants.Actions.ACTION_CANCEL_TASK);
         }
         //when connection lost, cancel correction task
-        else if (!mIsConnected){
-            if(mGnMusicIdFileList != null) {
-                Iterator<GnMusicIdFile> iterator = mGnMusicIdFileList.iterator();
-                while (iterator.hasNext()) {
-                    Log.d("cancel gn", "cancelling...lost connection");
-                    iterator.next().cancel();
-                }
-            }
-            //Save state to database
-            ContentValues contentValues = new ContentValues();
-            contentValues.put(TrackContract.TrackData.IS_PROCESSING, false);
-            int items = mDataTrackDbHelper.updateData(contentValues, TrackContract.TrackData.IS_PROCESSING, true);
-            Log.d("items updayed", items+"");
+        else if (!sIsConnected){
+            Log.d("cancel gn", "cancelling...lost connection");
+            intentAction.setAction(Constants.Actions.ACTION_CONNECTION_LOST);
 
-            //broadcast action to interested receivers
-            Intent intentActionConnectionLost= new Intent();
-            intentActionConnectionLost.setAction(Constants.Actions.ACTION_CONNECTION_LOST);
-            mLocalBroadcastManager.sendBroadcastSync(intentActionConnectionLost);
         }
-
+        else if(sError){
+            Log.d("cancel gn", "cancelling...api error");
+            intentAction.setAction(Constants.Actions.ACTION_ERROR);
+            intentAction.putExtra(Constants.GnServiceActions.API_ERROR, mErrorMessage);
+        }
+        //broadcast action to interested receivers
+        intentAction.putExtra(Constants.AUDIO_ITEM, currentAudioItem);
+        mLocalBroadcastManager.sendBroadcastSync(intentAction);
     }
 
     /**
@@ -456,7 +450,6 @@ public class FixerTrackService extends Service {
             mLastFile = currentFile == totalFiles;
             Log.d("CallbackStatus", gnMusicIdFileCallbackStatus.toString());
 
-
             if (mGnStatusToDisplay.containsKey(status)) {
                 if (mStartOrUpdateForegroundNotification) {
                     try {
@@ -467,7 +460,10 @@ public class FixerTrackService extends Service {
                     }
                 }
                 if(status.equals(Constants.State.BEGIN_PROCESSING)){
-
+                    if(!ConnectivityDetector.sIsConnected){
+                        sIsConnected = false;
+                        stopSelf();
+                    }
 
                     try {
                         mPath = gnMusicIdFileInfo.fileName();
@@ -538,7 +534,11 @@ public class FixerTrackService extends Service {
 
         @Override
         public void musicIdFileAlbumResult(GnResponseAlbums gnResponseAlbums, long currentAlbum, long totalAlbums, IGnCancellable iGnCancellable) {
-            //Log.d("cancelled1",iGnCancellable.isCancelled()+"");
+            if(!ConnectivityDetector.sIsConnected){
+                sIsConnected = false;
+                stopSelf();
+            }
+
             String title = "";
             String artist = "";
             String album = "";
@@ -683,7 +683,14 @@ public class FixerTrackService extends Service {
             setNewAudioTags(iGnCancellable, title, artist, album, cover, number, year, genre);
         }
 
-        private void setNewAudioTags(IGnCancellable iGnCancellable, String... tags){
+        private synchronized void setNewAudioTags(IGnCancellable iGnCancellable, String... tags){
+            if(!ConnectivityDetector.sIsConnected){
+                sIsConnected = false;
+                stopSelf();
+            }
+
+            //clearValues();
+
             //check what data has been found
             boolean dataTitle = !tags[0].isEmpty();
             boolean dataArtist = !tags[1].isEmpty();
@@ -697,6 +704,7 @@ public class FixerTrackService extends Service {
             if(!mFromEditMode) {
                 ContentValues newTags = new ContentValues();
                 AudioItem audioItem = new AudioItem();
+                currentAudioItem = audioItem;
                 Tag tag = null;
                 AudioFile audioTaggerFile = null;
                 String mimeType = AudioItem.getMimeType(mPath);
@@ -873,7 +881,6 @@ public class FixerTrackService extends Service {
                     //are visible to all media players that are able to read
                     //ID3 tags (most nowadays)
                     audioTaggerFile.commit();
-
                     //If some info was not found, mark the state of this song as INCOMPLETE
                     if (!dataTitle || !dataArtist || !dataAlbum || !dataImage || !dataTrackNumber || !dataYear || !dataGenre) {
                         newTags.put(TrackContract.TrackData.STATUS, AudioItem.STATUS_ALL_TAGS_NOT_FOUND);
@@ -950,6 +957,7 @@ public class FixerTrackService extends Service {
             else {
                 AudioItem audioItem = new AudioItem();
                 audioItem.setId(mId);
+                currentAudioItem = audioItem;
                 //Wrap the found new tags(if are availables) in an AudioItem object.
                 if (dataTitle) {
                     audioItem.setTitle(tags[0]);
@@ -1003,11 +1011,11 @@ public class FixerTrackService extends Service {
                 }
                 //if this was the last file, lets assume that
                 //user did not cancel the task
-                finishTaskByUser = false;
+                sFinishTaskByUser = false;
                 stopSelf();
             }
 
-            clearValues();
+
         }
 
         @Override
@@ -1020,49 +1028,57 @@ public class FixerTrackService extends Service {
         public void musicIdFileResultNotFound(GnMusicIdFileInfo gnMusicIdFileInfo, long l, long l1, IGnCancellable iGnCancellable) {
             //this callback is triggered when no results, instead of musicIdFileAlbumResult or musicIdFileMatchResult
 
+            if(!ConnectivityDetector.sIsConnected){
+                sIsConnected = false;
+                stopSelf();
+            }
+
             try {
                 Log.d("Result_Not_Found",gnMusicIdFileInfo.status().name());
             } catch (GnException e) {
                 e.printStackTrace();
             }
+            finally {
 
-            //when no results found, if task was started by
-            //TrackDetailsActivity, only notify with action ACTION_NOT_FOUND
-            if(mFromEditMode){
-                Intent intentActionNotFound = new Intent();
-                intentActionNotFound.setAction(Constants.Actions.ACTION_NOT_FOUND);
-                mLocalBroadcastManager.sendBroadcastSync(intentActionNotFound);
-            }
-            //if task was started by MainActivity, notify the same but
-            //besides, update the UI and save the state to our database
-            else {
-                ContentValues contentValues = new ContentValues();
-                contentValues.put(TrackContract.TrackData.STATUS, AudioItem.STATUS_NO_TAGS_FOUND);
-                contentValues.put(TrackContract.TrackData.IS_PROCESSING, false);
-                contentValues.put(TrackContract.TrackData.IS_SELECTED, false);
-                mDataTrackDbHelper.updateData(mId, contentValues);
 
-                Intent intentActionNotFound = new Intent();
-                intentActionNotFound.setAction(Constants.Actions.ACTION_NOT_FOUND);
-                intentActionNotFound.putExtra(Constants.MEDIASTORE_ID, mId);
-                Log.d("media store not found",mId+"");
-                mLocalBroadcastManager.sendBroadcastSync(intentActionNotFound);
-            }
+                //when no results found, if task was started by
+                //TrackDetailsActivity, only notify with action ACTION_NOT_FOUND
+                if (mFromEditMode) {
+                    Intent intentActionNotFound = new Intent();
+                    intentActionNotFound.setAction(Constants.Actions.ACTION_NOT_FOUND);
+                    mLocalBroadcastManager.sendBroadcastSync(intentActionNotFound);
+                }
+                //if task was started by MainActivity, notify the same but
+                //besides, update the UI and save the state to our database
+                else {
+                    ContentValues contentValues = new ContentValues();
+                    contentValues.put(TrackContract.TrackData.STATUS, AudioItem.STATUS_NO_TAGS_FOUND);
+                    contentValues.put(TrackContract.TrackData.IS_PROCESSING, false);
+                    contentValues.put(TrackContract.TrackData.IS_SELECTED, false);
+                    mDataTrackDbHelper.updateData(mId, contentValues);
 
-            //if is the last file stop the service
-            if(mLastFile){
-                //Inform to update the UI only to MainActivity if task has completed;
-                //if task was started from TrackDetailsActivity is not necessary inform this action
-                if(!mFromEditMode) {
-                    finishTaskByUser = false;
-                    Intent intentCompleteTask = new Intent();
-                    intentCompleteTask.setAction(Constants.Actions.ACTION_COMPLETE_TASK);
-                    mLocalBroadcastManager.sendBroadcastSync(intentCompleteTask);
+                    Intent intentActionNotFound = new Intent();
+                    intentActionNotFound.setAction(Constants.Actions.ACTION_NOT_FOUND);
+                    intentActionNotFound.putExtra(Constants.MEDIASTORE_ID, mId);
+                    Log.d("media store not found", mId + "");
+                    mLocalBroadcastManager.sendBroadcastSync(intentActionNotFound);
                 }
 
-                stopSelf();
+                //if is the last file stop the service
+                if (mLastFile) {
+                    //Inform to update the UI only to MainActivity if task has completed;
+                    //if task was started from TrackDetailsActivity is not necessary inform this action
+                    if (!mFromEditMode) {
+                        sFinishTaskByUser = false;
+                        Intent intentCompleteTask = new Intent();
+                        intentCompleteTask.setAction(Constants.Actions.ACTION_COMPLETE_TASK);
+                        mLocalBroadcastManager.sendBroadcastSync(intentCompleteTask);
+                    }
+
+                    stopSelf();
+                }
+                clearValues();
             }
-            clearValues();
         }
 
         @Override
@@ -1076,56 +1092,10 @@ public class FixerTrackService extends Service {
             Log.d("gnStatus","gnStatus");
         }
 
-        private void onCancelTask(GnMusicIdFileInfo fileInfo){
-            Log.d("oncanceltask", "oncanceltask");
-                try {
-                    long currentId = Long.parseLong(fileInfo.mediaId());
-                    //onCancelTask(currentId);
-                    Log.d("oncanceltask7", "oncanceltask7");
-                } catch (GnException e1) {
-                    e1.printStackTrace();
-                }
-                finally {
-                    stopSelf();
-                }
-
-        }
-
-        private void onCancelTask(long currentId){
-
-            if(!mFromEditMode) {
-                ContentValues values = new ContentValues();
-                values.put(TrackContract.TrackData.IS_PROCESSING, false);
-                mDataTrackDbHelper.updateData(currentId, values);
-                values.clear();
-                values = null;
-            }
-            Intent intentActionDone = new Intent();
-            intentActionDone.putExtra(Constants.MEDIASTORE_ID, currentId);
-            intentActionDone.setAction(Constants.Actions.ACTION_CANCEL_TASK);
-            mLocalBroadcastManager.sendBroadcastSync(intentActionDone);
-
-            stopSelf();
-        }
-
         public void clearValues(){
-            mId= -1;
+            mId = -1;
             mPath = null;
-        }
-    }
-
-    public class DetectorChangesConnection extends BroadcastReceiver{
-
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-            if(action != null && action.equals(ConnectivityManager.CONNECTIVITY_ACTION)){
-                mIsConnected = DetectorInternetConnection.isConnected(getApplicationContext());
-                if(!mIsConnected){
-                    finishTaskByUser = false;
-                    stopSelf();
-                }
-            }
+            currentAudioItem = null;
         }
     }
 
@@ -1140,6 +1110,12 @@ public class FixerTrackService extends Service {
         public void run() {
             mFixerTrackServiceWeakReference.get().onHandleIntent(mIntent.get());
         }
+    }
+
+    public static void lostConnection(boolean lostConnection){
+        sError = false;
+        sIsConnected = lostConnection;
+        sFinishTaskByUser = false;
     }
 
 }

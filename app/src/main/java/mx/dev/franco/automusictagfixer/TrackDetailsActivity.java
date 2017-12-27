@@ -80,7 +80,7 @@ import mx.dev.franco.automusictagfixer.database.DataTrackDbHelper;
 import mx.dev.franco.automusictagfixer.database.TrackContract;
 import mx.dev.franco.automusictagfixer.list.AudioItem;
 import mx.dev.franco.automusictagfixer.list.TrackAdapter;
-import mx.dev.franco.automusictagfixer.services.DetectorInternetConnection;
+import mx.dev.franco.automusictagfixer.services.ConnectivityDetector;
 import mx.dev.franco.automusictagfixer.services.FixerTrackService;
 import mx.dev.franco.automusictagfixer.services.Job;
 import mx.dev.franco.automusictagfixer.services.ServiceHelper;
@@ -261,7 +261,6 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
 
     private boolean mIsMp3 = false;
 
-    private AsyncTrackId asyncTrackId;
     private AsyncUpdateData mAsyncUpdateData;
 
 
@@ -734,11 +733,6 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
             e.printStackTrace();
         }
 
-        if(asyncTrackId != null){
-            asyncTrackId.cancel(true);
-            asyncTrackId = null;
-        }
-
         if(mAsyncUpdateData != null){
             mAsyncUpdateData.cancel(true);
             mAsyncUpdateData = null;
@@ -1074,16 +1068,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                     return;
                 }
 
-                //we put this in AsyncTask because the isConnected method
-                //makes a network operation which blocks UI if we execute
-                //from UI Thread
-                if(asyncTrackId != null){
-                    asyncTrackId.cancel(true);
-                    asyncTrackId = null;
-                    System.gc();
-                }
-                asyncTrackId = new AsyncTrackId(TrackDetailsActivity.this);
-                asyncTrackId.execute();
+                performTrackId();
             }
         });
 
@@ -1180,60 +1165,6 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
 
     }
 
-    private static class AsyncTrackId extends AsyncTask<Void,Void,Integer>{
-        private WeakReference<TrackDetailsActivity> trackDetailsActivityWeakReference;
-        public AsyncTrackId(TrackDetailsActivity trackDetailsActivity){
-            trackDetailsActivityWeakReference = new WeakReference<>(trackDetailsActivity);
-        }
-
-        @Override
-        protected void onPreExecute(){
-            if(!DetectorInternetConnection.sIsConnected)
-                trackDetailsActivityWeakReference.get().showSnackBar(Snackbar.LENGTH_SHORT, trackDetailsActivityWeakReference.get().
-                                                                                                                                                                getString(R.string.checking_internet_connection),ACTION_NONE, null);
-        }
-
-        @Override
-        protected java.lang.Integer doInBackground(java.lang.Void... voids){
-            //This function requires some contidions to work, check them before
-            //continue
-            int canContinue = trackDetailsActivityWeakReference.get().allowExecute();
-            return canContinue;
-        }
-        @Override
-        protected void onPostExecute(java.lang.Integer canContinue){
-            if(canContinue != 0) {
-                trackDetailsActivityWeakReference.get().setSnackBarMessage(canContinue);
-                return;
-            }
-
-            //inform to FixerTrackService correction mode
-            if(trackDetailsActivityWeakReference.get().mCorrectionMode != Constants.CorrectionModes.SEMI_AUTOMATIC
-                    || !trackDetailsActivityWeakReference.get().mOnlyCoverArt) {
-                trackDetailsActivityWeakReference.get().showSnackBar(Snackbar.LENGTH_LONG, trackDetailsActivityWeakReference.get().getString(R.string.downloading_tags), ACTION_NONE, null);
-            }
-            else {
-                trackDetailsActivityWeakReference.get().showSnackBar(Snackbar.LENGTH_SHORT, trackDetailsActivityWeakReference.get().getString(R.string.downloading_cover),ACTION_NONE, null);
-            }
-
-            trackDetailsActivityWeakReference.get().enableMiniFabs(false);
-            trackDetailsActivityWeakReference.get().mToolbarCover.setEnabled(false);
-            trackDetailsActivityWeakReference.get().mProgressBar.setVisibility(View.VISIBLE);
-
-            //prepare data to identify this song and start request
-            Intent intent = new Intent(trackDetailsActivityWeakReference.get(),FixerTrackService.class);
-            intent.putExtra(Constants.Activities.FROM_EDIT_MODE, Constants.Activities.DETAILS_ACTIVITY);
-            intent.putExtra(Constants.MEDIASTORE_ID, trackDetailsActivityWeakReference.get().mCurrentItemId);
-            trackDetailsActivityWeakReference.get().startService(intent);
-            trackDetailsActivityWeakReference.get().asyncTrackId = null;
-            trackDetailsActivityWeakReference.clear();
-            trackDetailsActivityWeakReference = null;
-            System.gc();
-        }
-    }
-
-
-
     /**
      * Executes track id for semiautomatic mode
      */
@@ -1249,17 +1180,33 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
             return;
         }
 
-        //we put this in AsyncTask because the isConnected method
-        //makes a network operation which blocks UI if we execute
-        //from UI Thread
-        if(asyncTrackId != null){
-            asyncTrackId.cancel(true);
-            asyncTrackId = null;
-            System.gc();
+        //This function requires some contidions to work, check them before
+        //continue
+        int canContinue = allowExecute();
+
+        if(canContinue != 0) {
+            setSnackBarMessage(canContinue);
+            return;
         }
 
-        asyncTrackId = new AsyncTrackId(this);
-        asyncTrackId.execute();
+        //inform to FixerTrackService correction mode
+        if(!mOnlyCoverArt) {
+            showSnackBar(Snackbar.LENGTH_LONG, getString(R.string.downloading_tags), ACTION_NONE, null);
+        }
+        else {
+            showSnackBar(Snackbar.LENGTH_SHORT, getString(R.string.downloading_cover),ACTION_NONE, null);
+        }
+
+        enableMiniFabs(false);
+        mToolbarCover.setEnabled(false);
+        mProgressBar.setVisibility(View.VISIBLE);
+
+        //prepare data to identify this song and start request
+        Intent intent = new Intent(this,FixerTrackService.class);
+        intent.putExtra(Constants.Activities.FROM_EDIT_MODE, Constants.Activities.DETAILS_ACTIVITY);
+        intent.putExtra(Constants.MEDIASTORE_ID, mCurrentItemId);
+        startService(intent);
+        System.gc();
     }
 
     /**
@@ -2738,8 +2685,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
     private int allowExecute(){
 
         //No internet connection
-        if(!DetectorInternetConnection.sIsConnected){
-            DetectorInternetConnection.startCheckingConnection(getApplicationContext());
+        if(!ConnectivityDetector.sIsConnected){
             return Constants.Conditions.NO_INTERNET_CONNECTION;
         }
 
@@ -2814,12 +2760,12 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                     break;
                 //It has lost internet connection
                 case Constants.Actions.ACTION_CONNECTION_LOST:
-                    mTrackDetailsActivityWeakReference.get().runOnUiThread(new Runnable() {
+                    /*mTrackDetailsActivityWeakReference.get().runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
                             mTrackDetailsActivityWeakReference.get().showSnackBar(Snackbar.LENGTH_SHORT,mTrackDetailsActivityWeakReference.get().getString(R.string.connection_lost),ACTION_NONE, null);
                         }
-                    });
+                    });*/
                     break;
                 //Any other response, maybe an error
                 default:

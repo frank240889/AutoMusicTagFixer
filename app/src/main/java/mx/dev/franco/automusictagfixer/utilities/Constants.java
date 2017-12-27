@@ -46,7 +46,7 @@ public class Constants {
         public static final String ACTION_SHOULD_CONTINUE = BuildConfig.APPLICATION_ID + "." + "action_should_continue";
         public static final String ACTION_INTERNET_CONNECTION = BuildConfig.APPLICATION_ID + "." + "action_internet_connection";
         public static final String ACTION_CONNECTION_LOST = BuildConfig.APPLICATION_ID + "." + "action_connection_lost" ;
-        public static final String HAS_CONNECTION = BuildConfig.APPLICATION_ID + "." + "has_connection" ;
+        public static final String ACTION_ERROR = BuildConfig.APPLICATION_ID + "." + "action_error" ;
 
     }
 
@@ -58,6 +58,7 @@ public class Constants {
 
     public static class GnServiceActions{
         public static final String ACTION_API_INITIALIZED = BuildConfig.APPLICATION_ID + "." +"action_api_initialized";
+        public static final String API_ERROR = BuildConfig.APPLICATION_ID + "." + "api_error";
     }
 
     public static class Conditions {

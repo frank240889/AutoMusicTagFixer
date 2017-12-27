@@ -214,6 +214,7 @@
     <string name="does_not_exist_cover">La canción no tiene carátula.</string>
     <string name="can_not_extract_null_cover">No se puede extraer una carátula inexistente.</string>
     <string name="error">Ha ocurrido un error, inténtalo de nuevo.</string>
+    <string name="api_error">Ha ocurrido un error: </string>
     <string name="update_missing">Se añadieron las etiquetas faltantes.</string>
     <string name="share_message">corrigio mis canciones de manera fácil, rápida y automática!</string>
     <string name="correction_mode">Modo de corrección</string>
@@ -276,8 +277,9 @@
     <string name="not_supported">Tipo no soportado</string>
     <string name="file_status_corrected_by_semiautomatic_mode">Etiquetas corregidas por el modo semiautomatico.</string>
     <string name="connection_lost">No hay conexión a Internet o se ha perdido.</string>
+    <string name="connection_recovered">Se ha reestablecido la conexión.</string>
     <string name="task_cancelled">Corrección cancelada.</string>
-    <string name="checking_internet_connection">Verificando conexión a internet</string>
+    <string name="checking_internet_connection">Verificando conexión a internet.</string>
     <string name="start">Iniciar</string>
 
 

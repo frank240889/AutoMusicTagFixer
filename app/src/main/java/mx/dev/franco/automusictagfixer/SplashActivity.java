@@ -9,11 +9,9 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 
-import mx.dev.franco.automusictagfixer.services.DetectorInternetConnection;
+import mx.dev.franco.automusictagfixer.services.ConnectivityDetector;
 import mx.dev.franco.automusictagfixer.services.GnService;
-import mx.dev.franco.automusictagfixer.services.Job;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
 import mx.dev.franco.automusictagfixer.utilities.RequiredPermissions;
 import mx.dev.franco.automusictagfixer.utilities.Settings;
@@ -25,30 +23,11 @@ import mx.dev.franco.automusictagfixer.utilities.Settings;
 public class SplashActivity extends AppCompatActivity{
 
     public static final String APP_SHARED_PREFERENCES = "AutoMusicTagFixer";
-    public static boolean DEBUG_MODE = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
-
-        //We check first if there is internet connection for initialize api
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                boolean isConnected = DetectorInternetConnection.isConnected(getApplicationContext());
-                if(isConnected) {
-                    //We set context and initialize the GNSDK API.
-                    GnService.withContext(getApplicationContext()).initializeAPI(GnService.API_INITIALIZED_FROM_SPLASH);
-                }
-                //No internet connection, then we schedule the job for initialize API
-                //when internet connection restores it
-                else {
-                    Job.scheduleJob(getApplicationContext());
-                }
-            }
-        }).start();
-
-
+        ConnectivityDetector.withContext(this).setStartedFrom(GnService.API_INITIALIZED_FROM_SPLASH).startCheckingConnection();
 
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 
@@ -71,11 +50,8 @@ public class SplashActivity extends AppCompatActivity{
         preferences =  getSharedPreferences(APP_SHARED_PREFERENCES, Context.MODE_PRIVATE);
         boolean firstTime= preferences.getBoolean("first", true);
         Settings.SETTING_SORT = preferences.getInt(Constants.SORT_KEY, 0);
-        Log.d("sort",Settings.SETTING_SORT+"");
         //do we have permission to access files?
         RequiredPermissions.ACCESS_GRANTED_FILES = ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
-
-        //if(!DEBUG_MODE) {
 
             if (firstTime) {
                 //Is first app use
@@ -88,12 +64,8 @@ public class SplashActivity extends AppCompatActivity{
 
             }
 
-        //}
-        //else {
-        //    Intent intent = new Intent(this, ScreenSlidePagerActivity.class);
-        //    startActivity(intent);
-        //}
         preferences = null;
         finish();
     }
+
 }

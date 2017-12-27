@@ -120,7 +120,7 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
         }
 
         //don't load covers if user is scrolling too fast
-       if(this.mVerticalScrollSpeed <= 350 && this.mVerticalScrollSpeed >= -350 && (mScrollingState == 0 || mScrollingState == 2)) {
+       if(this.mVerticalScrollSpeed <= 400 && this.mVerticalScrollSpeed >= -350 && (mScrollingState == 0 || mScrollingState == 2)) {
            //We need to read covers arts in other thread,
            //because this operation is going to reduce performance
            //in main thread, making the scroll very laggy

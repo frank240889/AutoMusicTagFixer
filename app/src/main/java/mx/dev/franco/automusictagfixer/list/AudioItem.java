@@ -39,6 +39,7 @@ public final class AudioItem implements Parcelable{
     //States of items
     private boolean isChecked = false;
     private boolean isProcessing = false;
+    private boolean hasNewValues = false;
 
     //Fields that caches trackid results
     private byte[] coverArt = null;
@@ -137,6 +138,14 @@ public final class AudioItem implements Parcelable{
         return this;
     }
 
+    public AudioItem setHasNewValues(boolean hasNewValues){
+        this.hasNewValues = hasNewValues;
+        return this;
+    }
+
+    public boolean getHasNewValues(){
+        return this.hasNewValues;
+    }
     //Only for use when retrieved data for a single track and is sent to TrackDetailsActivity;
     //used for caching values retrieved and don't send again the query to Gracenote API,
     /************************************************************/

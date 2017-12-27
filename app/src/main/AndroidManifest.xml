@@ -10,6 +10,7 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <application
+        android:name=".AutoMusicTagFixer"
         android:allowBackup="true"
         android:configChanges="orientation|screenSize"
         android:hardwareAccelerated="true"
@@ -87,7 +88,7 @@
 
         <!-- We need this service for checking internet connection and handling the gracenote api initialization -->
         <service
-            android:name="mx.dev.franco.automusictagfixer.services.DetectorInternetConnection"
+            android:name="mx.dev.franco.automusictagfixer.services.ScheduleJobService"
             android:label="DetectionService"
             android:permission="android.permission.BIND_JOB_SERVICE" />
         <service

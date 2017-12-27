@@ -21,13 +21,11 @@ public class Job {
         //Component we want to execute
         //we need to pass context and name of our extended JobService class
         //that will execute the task
-        ComponentName serviceComponent = new ComponentName(context.getApplicationContext(), DetectorInternetConnection.class);
-        //the component is passed to the builder of job,
+        ComponentName serviceComponent = new ComponentName(context.getApplicationContext(), ScheduleJobService.class);
         //this builder object are the requirements
         //needed to execute our task, in this case, we need
         //that our task executes every 5 seconds
         JobInfo.Builder builder = new JobInfo.Builder(ID_JOB, serviceComponent);
-
         //Using setMinimumLatency with setOverrideDeadline together,
         //it makes something like minimum and maximum limit to execute the code, is useful
         //because minimum time for setPeriodic in Nougat are 15 minutes, so if you require

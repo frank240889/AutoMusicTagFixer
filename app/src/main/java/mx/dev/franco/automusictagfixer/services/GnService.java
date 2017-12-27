@@ -1,8 +1,7 @@
 package mx.dev.franco.automusictagfixer.services;
 
 import android.content.Context;
-import android.content.Intent;
-import android.support.v4.content.LocalBroadcastManager;
+import android.os.AsyncTask;
 import android.util.Log;
 
 import com.gracenote.gnsdk.GnDescriptor;
@@ -17,13 +16,12 @@ import com.gracenote.gnsdk.GnStorageSqlite;
 import com.gracenote.gnsdk.GnUser;
 import com.gracenote.gnsdk.GnUserStore;
 
-import mx.dev.franco.automusictagfixer.utilities.Constants;
-
 /**
  * Created by franco on 5/07/17.
  */
 
 public class GnService{
+    private static final java.lang.String TAG = GnService.class.getName();
     //We can set a Context in static field while we call getApplicationContext() to avoid memory leaks, because
     //if we use the activity Context, this activity can remain in memory due is still in use its Context
     private static Context sContext;
@@ -39,13 +37,15 @@ public class GnService{
     public static volatile boolean sIsInitializing = false;
     public static final int API_INITIALIZED_FROM_SPLASH = 100;
     public static final int API_INITIALIZED_AFTER_CONNECTED = 101;
+    private static AsyncApiInitialization sAsyncApiInitialization;
 
     /**
      * We don't need instances of this class
      */
     private GnService(Context context){
-        if(sContext == null)
+        if(sContext == null) {
             sContext = context.getApplicationContext();
+        }
     }
 
 
@@ -63,38 +63,51 @@ public class GnService{
     /**
      * This method initializes the API
      */
-    public synchronized void initializeAPI(final int connectedFrom){
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                Log.d("GNSDK","starting GNSDK");
-                //We initialize the necessary objects for using the GNSDK API in a different thread for not blocking the UI
-                try {
-                    sGnManager = new GnManager(sContext, sGnsdkLicenseString, GnLicenseInputMode.kLicenseInputModeString);
-                    sGnUser = new GnUser(new GnUserStore(sContext), sGnsdkClientId, sGnsdkClientTag, sAppString);
-                    sGnLocale = new GnLocale(GnLocaleGroup.kLocaleGroupMusic, GnLanguage.kLanguageSpanish, GnRegion.kRegionGlobal, GnDescriptor.kDescriptorDetailed, sGnUser);
-                    sGnLocale.setGroupDefault();
-                    GnStorageSqlite.enable();
-                    sApiInitialized = true;
+    public void initializeAPI(final int connectedFrom){
+        if(sAsyncApiInitialization == null && !sApiInitialized){
+            Log.d("sApiInitialized","initializing api");
+            sAsyncApiInitialization = new AsyncApiInitialization();
+            sAsyncApiInitialization.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, connectedFrom);
+        }
+    }
 
 
-                    //When api could not be initialized since SplashActivity,
-                    //inform to user after MainActivity starts
-                    if (connectedFrom == API_INITIALIZED_AFTER_CONNECTED){
+    private static class AsyncApiInitialization extends AsyncTask<Integer,Void,Boolean> {
+        private int mConnectedFrom = API_INITIALIZED_FROM_SPLASH;
+        @Override
+        protected Boolean doInBackground(Integer... code) {
+            //We initialize the necessary objects for using the GNSDK API in a different thread for not blocking the UI
+            try {
+                sGnManager = new GnManager(sContext, sGnsdkLicenseString, GnLicenseInputMode.kLicenseInputModeString);
+                sGnUser = new GnUser(new GnUserStore(sContext), sGnsdkClientId, sGnsdkClientTag, sAppString);
+                sGnLocale = new GnLocale(GnLocaleGroup.kLocaleGroupMusic, GnLanguage.kLanguageSpanish, GnRegion.kRegionGlobal, GnDescriptor.kDescriptorDetailed, sGnUser);
+                sGnLocale.setGroupDefault();
+                GnStorageSqlite.enable();
+                sApiInitialized = true;
+                mConnectedFrom = code[0];
+                //When api could not be initialized since SplashActivity,
+                //inform to user after MainActivity starts
 
-                        Intent intent = new Intent();
-                        intent.setAction(Constants.GnServiceActions.ACTION_API_INITIALIZED);
-                        LocalBroadcastManager.getInstance(sContext).sendBroadcast(intent);
-                        
-                    }
-
-                } catch (GnException e) {
-                    e.printStackTrace();
-                    //If could not be established the initialization of Gracenote API, try again
-                    sIsInitializing = false;
-                    Job.scheduleJob(sContext);
-                }
+                return true;
+            } catch (GnException e) {
+                e.printStackTrace();
+                //If could not be established the initialization of Gracenote API, try again
+                sIsInitializing = false;
+                sApiInitialized = false;
+                return false;
             }
-        }).start();
+
+        }
+
+        @Override
+        protected void onPostExecute(Boolean res){
+            Log.d("res",res+" " + (mConnectedFrom == API_INITIALIZED_AFTER_CONNECTED));
+            if(!res){
+                Job.scheduleJob(sContext);
+            }
+
+            sAsyncApiInitialization = null;
+        }
+
     }
 }
