@@ -121,7 +121,7 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
         }
 
         //don't load covers if user is scrolling too fast
-       if(this.mVerticalScrollSpeed <= 400 && this.mVerticalScrollSpeed >= -350 && (mScrollingState == 0 || mScrollingState == 2)) {
+       if(this.mVerticalScrollSpeed <= 450 && this.mVerticalScrollSpeed >= -450 && (mScrollingState == 0 || mScrollingState == 2)) {
            //We need to read covers arts in other thread,
            //because this operation is going to reduce performance
            //in main thread, making the scroll very laggy
@@ -422,8 +422,10 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
         @Override
         public void onCancelled(Void voids){
             this.mHolder = null;
-            this.mContext.clear();
-            this.mContext = null;
+            if(mContext != null && !((MainActivity) mContext.get()).isDestroyed() ) {
+                this.mContext.clear();
+                this.mContext = null;
+            }
             asyncLoadCover = null;
             System.gc();
         }
@@ -442,7 +444,7 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
                         .placeholder(R.drawable.ic_album_white_48px)
                         .into(mHolder.get().mImageView);
             }
-
+            System.gc();
         }
     }
 
@@ -541,6 +543,7 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
                 asyncLoadCover.cancel(true);
                 asyncLoadCover = null;
             }
+            System.gc();
     }
 
     /**

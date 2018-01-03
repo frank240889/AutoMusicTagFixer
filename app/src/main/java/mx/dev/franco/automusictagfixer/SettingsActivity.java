@@ -20,6 +20,9 @@ import android.view.MenuItem;
 
 import java.util.List;
 
+import mx.dev.franco.automusictagfixer.services.FixerTrackService;
+import mx.dev.franco.automusictagfixer.services.ServiceHelper;
+import mx.dev.franco.automusictagfixer.utilities.Constants;
 import mx.dev.franco.automusictagfixer.utilities.Settings;
 
 /**
@@ -193,12 +196,30 @@ public class SettingsActivity extends AppCompatPreferenceActivity{
                 break;
             case "key_use_embed_player":
                 Settings.SETTING_USE_EMBED_PLAYER = sharedPreferences.getBoolean(key,true);
+                Log.d(key, Settings.SETTING_USE_EMBED_PLAYER +"");
                 break;
             case "key_overwrite_all_tags_automatic_mode":
                 Settings.SETTING_OVERWRITE_ALL_TAGS_AUTOMATIC_MODE = sharedPreferences.getBoolean(key, true);
+                Log.d(key, Settings.SETTING_OVERWRITE_ALL_TAGS_AUTOMATIC_MODE +"");
                 break;
             case "key_background_service":
-                Settings.BACKGROUND_CORRECTION = sharedPreferences.getBoolean(key, false);
+                Settings.BACKGROUND_CORRECTION = sharedPreferences.getBoolean(key, true);
+
+                if(ServiceHelper.withContext(this).withService(FixerTrackService.CLASS_NAME).isServiceRunning()) {
+                    Intent intent = new Intent(this, FixerTrackService.class);
+                    intent.putExtra(Constants.Activities.FROM_EDIT_MODE, false);
+                    if(Settings.BACKGROUND_CORRECTION) {
+                        intent.putExtra(Constants.Actions.ACTION_SHOW_NOTIFICATION, true);
+
+                    }
+                    else {
+                        intent.putExtra(Constants.Actions.ACTION_SHOW_NOTIFICATION, false);
+                    }
+                    startService(intent);
+                }
+
+
+                Log.d(key, Settings.BACKGROUND_CORRECTION +"");
                 break;
         }
     }

@@ -76,6 +76,7 @@
             android:parentActivityName="mx.dev.franco.automusictagfixer.MainActivity"
             android:theme="@style/SettingsStyle" />
 
+        <!--This provider is necessary because in android >= 7 doesn't allow to access directly to files-->
         <provider
             android:name="android.support.v4.content.FileProvider"
             android:authorities="mx.dev.franco.automusictagfixer.fileProvider"
@@ -86,11 +87,13 @@
                 android:resource="@xml/file_paths" />
         </provider>
 
-        <!-- We need this service for checking internet connection and handling the gracenote api initialization -->
+        <!-- We need this service for start or schedule GNSDK API initialization -->
         <service
             android:name="mx.dev.franco.automusictagfixer.services.ScheduleJobService"
             android:label="DetectionService"
             android:permission="android.permission.BIND_JOB_SERVICE" />
+
+        <!--Service that runs in background thread and have the ability to run if app is closed-->
         <service android:name=".services.FixerTrackService"
             android:label="FixerTrackService"
             android:exported="false"/>

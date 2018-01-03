@@ -116,10 +116,6 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
     private static volatile boolean sIsConnected = ConnectivityDetector.sIsConnected;
     private static boolean sError = false;
     private String mErrorMessage = null;
-    private AudioItem currentAudioItem;
-
-    private Thread mThreadService;
-    private Runnable mRunnable;
 
     private HashMap<String,String> mGnStatusToDisplay;
     private String mPath = "";
@@ -189,8 +185,25 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
             return START_NOT_STICKY;
         }
 
+        //if value is true, then the service will be able to run in background,
+        //and a correction won't stop when app closes, but when you explicitly
+        //stop the task by pressing stop button or task finishes
+        mShowNotification = intent.getBooleanExtra(Constants.Actions.ACTION_SHOW_NOTIFICATION,false);
 
-       Message msg = mHandler.obtainMessage();
+        //show notification only when request comes from MainActivity
+        mStartOrUpdateForegroundNotification = !mFromEditMode && mShowNotification;
+
+        //starts or update notification progress
+        if(mStartOrUpdateForegroundNotification){
+            startNotification(null, null, null);
+        }
+        else {
+            stopForeground(true);
+        }
+
+
+
+        Message msg = mHandler.obtainMessage();
         msg.arg1 = startId;
         msg.obj = intent;
         mHandler.sendMessage(msg);
@@ -228,10 +241,16 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
         }
         //cancel detection of connection state
         //unregisterReceiver(mDetectorChangesConnection);
-        mThreadService = null;
-        mRunnable = null;
+
         sFinishTaskByUser = false;
         mThread = null;
+
+        //remove pending messages, means that intents
+        //sent while was processing will be cancelled
+        Message msg = mHandler.obtainMessage();
+        mHandler.removeMessages(msg.what, msg.obj);
+        mHandler = null;
+
         System.gc();
         Log.d("onDestroy","releasing resources...");
         super.onDestroy();
@@ -269,7 +288,7 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
                 .setLargeIcon(Bitmap.createScaledBitmap(icon, 128, 128, false))
                 .setContentIntent(pendingIntent)
                 .setOngoing(true)
-                .addAction(R.drawable.ic_stat_name,"Detener", pendingStopIntent)
+                .addAction(R.drawable.ic_stat_name,getString(R.string.stop), pendingStopIntent)
                 .build();
 
         startForeground(R.string.app_name,notification);
@@ -294,18 +313,7 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
         //if intent comes from TrackDetailsActivity means that
         //mFromEditMode will be true, default value is false
         mFromEditMode = intent.getBooleanExtra(Constants.Activities.FROM_EDIT_MODE, false);
-        //if value is true, then the service will be able to run in background,
-        //and a correction won't stop when app closes, but when you explicitly
-        //stop the task by pressing stop button or task finishes
-        mShowNotification = intent.getBooleanExtra(Constants.Actions.ACTION_SHOW_NOTIFICATION,false);
 
-        //show notification only when request comes from MainActivity
-        mStartOrUpdateForegroundNotification = !mFromEditMode && mShowNotification;
-
-        //starts or update notification progress
-        if(mStartOrUpdateForegroundNotification){
-            startNotification(null, null, null);
-        }
         createGnFiles();
     }
 
@@ -424,7 +432,9 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
         //ACTION_COMPLETE_TASK is broadcasted,
         //sFinishTaskByUser will be false,
         //meaning that is not necessary call cancel method.
+        //stop thread and looper
         mThread.quitSafely();
+        mLooper.quitSafely();
 
         if(mGnMusicIdFileList != null) {
             Iterator<GnMusicIdFile> iterator = mGnMusicIdFileList.iterator();
@@ -815,7 +825,6 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
         if(!mFromEditMode) {
             ContentValues newTags = new ContentValues();
             AudioItem audioItem = new AudioItem();
-            currentAudioItem = audioItem;
             Tag tag = null;
             AudioFile audioTaggerFile = null;
             String mimeType = AudioItem.getMimeType(mPath);
@@ -1068,7 +1077,6 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
         else {
             AudioItem audioItem = new AudioItem();
             audioItem.setId(mId);
-            currentAudioItem = audioItem;
             //Wrap the found new tags(if are availables) in an AudioItem object.
             if (dataTitle) {
                 audioItem.setTitle(tags[0]);
@@ -1137,7 +1145,6 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
     public void clearValues(){
         mId = -1;
         mPath = null;
-        currentAudioItem = null;
     }
 
     public static void lostConnection(boolean lostConnection){

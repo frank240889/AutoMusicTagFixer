@@ -99,11 +99,11 @@
     </string>
     <string name="pref_automatically_replace_strange_chars">Remover caracteres inválidos</string>
     <string name="pref_automatically_replace_strange_chars_description">Se eliminan automaticamente al guardar los cambios.</string>
-    <string name="pref_title_background">Servicio en segundo plano</string>
-    <string name="pref_title_background_description">Una corrección de varias canciones no se cancelerá aún cuando cierres la aplicación, sino hasta que termine o la detengas.</string>
+    <string name="pref_title_background">Usar corrección en segundo plano</string>
+    <string name="pref_title_background_description">La corrección de canciones no se cancelerá aún cuando cierres la aplicación, sino hasta que termine o la detengas; se mostrara una notificación con el progreso.</string>
 
     <string name="enable_embed_player">Multimedia</string>
-    <string name="pref_title_enable_embed_player">Reproductor integrado</string>
+    <string name="pref_title_enable_embed_player">Usar reproductor integrado</string>
     <string name="pref_enable_embed_player_description">Escuchar canción en el reproductor integrado.</string>
 
     <string name="pref_title_replace_all_tags">Sobreescribir etiquetas</string>
@@ -281,6 +281,7 @@
     <string name="task_cancelled">Corrección cancelada.</string>
     <string name="checking_internet_connection">Verificando conexión a internet.</string>
     <string name="start">Iniciar</string>
+    <string name="stop">Detener</string>
 
 
 </resources>

@@ -40,6 +40,7 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -426,32 +427,82 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    public void onDestroy(){
-        Log.d(TAG,"onDestroy");
-        //Before app closes, check if "Correccion en segundo plano" is OFF, in this case cancel the current task and
+    public void onDestroy() {
+        Log.d(TAG, "onDestroy");
+        //Before app closes, check if "Usar correccion en segundo plano" is OFF, in this case cancel the current task and
         // release resources used by DB connection
-        if(ServiceHelper.withContext(getApplicationContext()).withService(FixerTrackService.CLASS_NAME).isServiceRunning()
-                && !Settings.BACKGROUND_CORRECTION){
+        if (ServiceHelper.withContext(getApplicationContext()).withService(FixerTrackService.CLASS_NAME).isServiceRunning()
+                && !Settings.BACKGROUND_CORRECTION) {
+            Toast toast = Toast.makeText(getApplicationContext(), getString(R.string.cancelling), Toast.LENGTH_LONG);
+            View view = toast.getView();
+            TextView text = (TextView) view.findViewById(android.R.id.message);
+            text.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.grey_900));
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                text.setTextAppearance(R.style.CustomToast);
+            }
+            else {
+                text.setTextAppearance(getApplicationContext(),R.style.CustomToast);
+            }
+            view.setBackground(ContextCompat.getDrawable(getApplicationContext(), R.drawable.background_custom_toast) );
+            toast.setGravity(Gravity.CENTER, 0, 0);
+            toast.show();
+
             Intent intentStopService = new Intent(this, FixerTrackService.class);
             stopService(intentStopService);
-            if(mDataTrackDbHelper != null) {
+            if (mDataTrackDbHelper != null) {
                 mDataTrackDbHelper.close();
                 mDataTrackDbHelper = null;
             }
         }
         //if previous condition is ON, task will continue working after app closes.
-        //DB connection is not close because service will continue updating data in background.
+        //DB connection is not close because service will continue updating data in background thread.
+
+        //when app closes the app, unregister receiver, thus is not necessary to listen
+        //any broadcast an update UI
         mLocalBroadcastManager.unregisterReceiver(mReceiver);
-        if(sMediaPlayer.isPlaying()){
+
+        //release all that are going used anymore
+
+        if (sMediaPlayer.isPlaying()) {
             sMediaPlayer.stop();
             sMediaPlayer.reset();
             sMediaPlayer.release();
             sMediaPlayer = null;
         }
 
-        if(mAudioItemArrayAdapter != null){
+
+        if (mAudioItemArrayAdapter != null) {
             mAudioItemArrayAdapter.releaseResources();
+            mAudioItemArrayAdapter = null;
         }
+
+        mRecyclerView = null;
+        mActionBar = null;
+
+        if (mAudioItemList != null){
+            mAudioItemList.clear();
+            mAudioItemList = null;
+        }
+
+        mFilterActionCancel = null;
+        mFilterActionCompleteTask = null;
+        mFilterActionConnectionLost = null;
+        mFilterActionDone = null;
+        mFilterActionFail = null;
+        mFilterActionNotFound = null;
+        mFilterActionSetAudioProcessing = null;
+        mFilterApiInitialized = null;
+        mFloatingActionButtonStart = null;
+        mFloatingActionButtonStop = null;
+        mMenu = null;
+        mMenuItemAlbum = null;
+        mMenuItemArtist = null;
+        mMenuItemPath = null;
+        mMenuItemTitle = null;
+        mLocalBroadcastManager = null;
+        mSwipeRefreshLayout = null;
+        mSnackbar = null;
+        System.gc();
         super.onDestroy();
     }
 
