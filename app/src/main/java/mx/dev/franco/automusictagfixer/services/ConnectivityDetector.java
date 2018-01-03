@@ -58,7 +58,7 @@ public class ConnectivityDetector {
     }
 
 
-    private static class AsyncConnectivityDetection extends AsyncTask<Context,Void,Boolean>{
+    public static class AsyncConnectivityDetection extends AsyncTask<Context,Void,Boolean>{
 
         @Override
         protected Boolean doInBackground(Context... contexts) {
@@ -118,7 +118,7 @@ public class ConnectivityDetector {
                 toast.show();
 
                 if(ServiceHelper.withContext(sContext.getApplicationContext()).withService(FixerTrackService.CLASS_NAME).isServiceRunning()){
-                    FixerTrackService.lostConnection(false);
+                    FixerTrackService.lostConnection(true);
                     Intent stopIntent = new Intent(sContext, FixerTrackService.class);
                     sContext.stopService(stopIntent);
                 }

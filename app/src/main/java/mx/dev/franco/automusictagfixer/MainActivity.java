@@ -227,13 +227,13 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx, int dy){
                 super.onScrolled(recyclerView,dx,dy);
-                Log.d("DY", dy+"");
+                //Log.d("DY", dy+"");
                 mAudioItemArrayAdapter.setVerticalSpeedScroll(dy);
             }
             @Override
             public void onScrollStateChanged(RecyclerView recyclerView, int newState){
                 super.onScrollStateChanged(recyclerView,newState);
-                Log.d("STATE",newState+"");
+                //Log.d("STATE",newState+"");
                 mAudioItemArrayAdapter.setScrollState(newState);
 
             }
@@ -449,6 +449,9 @@ public class MainActivity extends AppCompatActivity
             sMediaPlayer = null;
         }
 
+        if(mAudioItemArrayAdapter != null){
+            mAudioItemArrayAdapter.releaseResources();
+        }
         super.onDestroy();
     }
 
@@ -823,54 +826,41 @@ public class MainActivity extends AppCompatActivity
     /**
      * Sets the action to floating action button (mFloatingActionButtonStart)
      */
-    @SuppressLint("StaticFieldLeak")
     private void startTask(){
+
         if(ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED){
             ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 2);
         }
         else {
 
             //Automatic mode require some conditions to execute
-            //we put this in AsyncTask because the isConnected method
-            //makes a network operation which blocks UI if we execute
-            //in UI Thread
-                new AsyncTask<Context,Void, Integer>(){
-                @Override
-                protected Integer doInBackground(Context contexts[]){
-                    int canContinue = allowExecute(contexts[0].getApplicationContext());
+                int canContinue = allowExecute(getApplicationContext());
 
-                    return canContinue;
+                if(canContinue != 0){
+                    setSnackBarMessage(canContinue);
+                    return;
                 }
-                @Override
-                protected void onPostExecute(Integer canContinue){
-                    if(canContinue != 0) {
-                        setSnackBarMessage(canContinue);
-                        return;
-                    }
 
-                    if(mAudioItemArrayAdapter.getCountSelectedItems() == 0){
-                        showSnackBar(Snackbar.LENGTH_LONG, getString(R.string.no_songs_to_correct), NO_ID);
-                        return;
-                    }
-
-                    //start correction in automatic mode
-                    registerReceivers();
-                    Intent intent = new Intent(MainActivity.this, FixerTrackService.class);
-                    intent.putExtra(Constants.Activities.FROM_EDIT_MODE, false);
-
-                    if(Settings.BACKGROUND_CORRECTION)
-                        intent.putExtra(Constants.Actions.ACTION_SHOW_NOTIFICATION, true);
-
-                    startService(intent);
-                    mFloatingActionButtonStart.hide();
-                    mFloatingActionButtonStop.show();
+                if(mAudioItemArrayAdapter.getCountSelectedItems() == 0){
+                    showSnackBar(Snackbar.LENGTH_LONG, getString(R.string.no_songs_to_correct), NO_ID);
+                    return;
                 }
-            }.execute(this);
+
+                //start correction in automatic mode
+                registerReceivers();
+                Intent intent = new Intent(MainActivity.this, FixerTrackService.class);
+                intent.putExtra(Constants.Activities.FROM_EDIT_MODE, false);
+
+                if(Settings.BACKGROUND_CORRECTION)
+                    intent.putExtra(Constants.Actions.ACTION_SHOW_NOTIFICATION, true);
+
+                startService(intent);
+                mFloatingActionButtonStart.hide();
+                mFloatingActionButtonStop.show();
+            }
 
 
 
-
-        }
     }
 
     /**
@@ -1401,6 +1391,7 @@ public class MainActivity extends AppCompatActivity
      * @param processedId the id sent by FixerTrackService, default value is -1 if no id was sent
      */
     private void setNewItemValues(@Nullable AudioItem newAudioItem, long processedId) {
+        Log.d("setNewItemValues",(newAudioItem == null)+"");
         //no results were found if newAudioItem is null
         boolean newAudioItemFound = (newAudioItem != null);
         long id = newAudioItemFound ? newAudioItem.getId() : processedId;
@@ -1904,18 +1895,19 @@ public class MainActivity extends AppCompatActivity
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            AudioItem audioItem = intent.getParcelableExtra(Constants.AUDIO_ITEM);
-                            setNewItemValues(audioItem, audioItem.getId());
+                            mLocalBroadcastManager.unregisterReceiver(mReceiver);
                         }
                     });
+
+                    break;
                 case Constants.Actions.ACTION_COMPLETE_TASK:
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
                             finishTaskByUser();
+                            mLocalBroadcastManager.unregisterReceiver(mReceiver);
                         }
                     });
-                    mLocalBroadcastManager.unregisterReceiver(mReceiver);
                     break;
 
                 default:
@@ -1925,9 +1917,9 @@ public class MainActivity extends AppCompatActivity
                             finishTaskByUser();
                             String msg = intent.getStringExtra(Constants.GnServiceActions.API_ERROR);
                             showSnackBar(Snackbar.LENGTH_LONG, getString(R.string.api_error) + msg, NO_ID);
+                            mLocalBroadcastManager.unregisterReceiver(mReceiver);
                         }
                     });
-                    mLocalBroadcastManager.unregisterReceiver(mReceiver);
                     break;
             }
         }

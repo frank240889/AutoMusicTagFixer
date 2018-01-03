@@ -34,6 +34,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
+import mx.dev.franco.automusictagfixer.MainActivity;
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.database.TrackContract;
 import mx.dev.franco.automusictagfixer.utilities.GlideApp;
@@ -46,7 +47,7 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
     public static final int ASC = 0;
     public static final int DESC = 1;
     //mListener attached to every item in listview
-    private final AudioItemHolder.ClickListener mClickListener;
+    private AudioItemHolder.ClickListener mClickListener;
     //we need the context to access some features like R class
     private Context mContext;
     //List of audioitems, we need to references: one for the filtered one
@@ -354,7 +355,7 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
      * This class should be static for avoiding memory leaks,
      * then we use weak references to resources needed inside
      */
-    private static class AsyncLoadCover extends AsyncTask<String, byte[], Void> {
+    public static class AsyncLoadCover extends AsyncTask<String, byte[], Void> {
 
         private WeakReference<AudioItemHolder> mHolder;
         private WeakReference<Context> mContext;
@@ -429,17 +430,18 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
 
         @Override
         protected void onProgressUpdate(byte[]... cover){
-
-            GlideApp.with(mContext.get()).
-                    load(cover == null ? null : cover[0] )
-                    .thumbnail(0.1f)
-                    .error(R.drawable.ic_album_white_48px)
-                    .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.NONE))
-                    .apply(RequestOptions.skipMemoryCacheOf(true))
-                    .transition(DrawableTransitionOptions.withCrossFade(100))
-                    .fitCenter()
-                    .placeholder(R.drawable.ic_album_white_48px)
-                    .into(mHolder.get().mImageView);
+            if(mContext != null && !((MainActivity) mContext.get()).isDestroyed() ) {
+                GlideApp.with(mContext.get()).
+                        load(cover == null ? null : cover[0])
+                        .thumbnail(0.1f)
+                        .error(R.drawable.ic_album_white_48px)
+                        .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.NONE))
+                        .apply(RequestOptions.skipMemoryCacheOf(true))
+                        .transition(DrawableTransitionOptions.withCrossFade(100))
+                        .fitCenter()
+                        .placeholder(R.drawable.ic_album_white_48px)
+                        .into(mHolder.get().mImageView);
+            }
 
         }
     }
@@ -526,6 +528,19 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
             this.mCustomFilter = new CustomFilter();
         }
         return this.mCustomFilter;
+    }
+
+    public void releaseResources(){
+            mClickListener = null;
+            mContext = null;
+            mCurrentList = null;
+            mCurrentFilteredList = null;
+            mCustomFilter = null;
+            mSorter = null;
+            if(null != asyncLoadCover){
+                asyncLoadCover.cancel(true);
+                asyncLoadCover = null;
+            }
     }
 
     /**

@@ -91,11 +91,9 @@
             android:name="mx.dev.franco.automusictagfixer.services.ScheduleJobService"
             android:label="DetectionService"
             android:permission="android.permission.BIND_JOB_SERVICE" />
-        <service
-            android:name="mx.dev.franco.automusictagfixer.services.FixerTrackService"
-            android:label="FixerTrackService">
-
-        </service>
+        <service android:name=".services.FixerTrackService"
+            android:label="FixerTrackService"
+            android:exported="false"/>
 
         <!--
  ATTENTION: This was auto-generated to add Google Play services to your project for

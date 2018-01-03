@@ -306,7 +306,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
         mCurrentItemId = getIntent().getLongExtra(Constants.MEDIASTORE_ID,-1);
 
         mCurrentPosition = getIntent().getIntExtra(Constants.POSITION,0);
-        mCurrentAudioItem = mTrackAdapter.getAudioItemByIdOrPath(mCurrentItemId, null); //getIntent().getParcelableExtra(FixerTrackService.AUDIO_ITEM); //MainActivity.getAudioItemByIdOrPath(mCurrentItemId,null);
+        mCurrentAudioItem = mTrackAdapter.getAudioItemByIdOrPath(mCurrentItemId, null);
 
         //current path to file
         mTrackPath = mCurrentAudioItem.getAbsolutePath();
@@ -2723,7 +2723,6 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                 }
             });
 
-            Log.d("action_received",action);
             switch (action){
                 //TrackId found tags
                 case Constants.Actions.ACTION_DONE_DETAILS:

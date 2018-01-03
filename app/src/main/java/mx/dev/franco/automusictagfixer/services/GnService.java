@@ -72,7 +72,7 @@ public class GnService{
     }
 
 
-    private static class AsyncApiInitialization extends AsyncTask<Integer,Void,Boolean> {
+    public static class AsyncApiInitialization extends AsyncTask<Integer,Void,Boolean> {
         private int mConnectedFrom = API_INITIALIZED_FROM_SPLASH;
         @Override
         protected Boolean doInBackground(Integer... code) {
@@ -83,18 +83,15 @@ public class GnService{
                 sGnLocale = new GnLocale(GnLocaleGroup.kLocaleGroupMusic, GnLanguage.kLanguageSpanish, GnRegion.kRegionGlobal, GnDescriptor.kDescriptorDetailed, sGnUser);
                 sGnLocale.setGroupDefault();
                 GnStorageSqlite.enable();
-                sApiInitialized = true;
                 mConnectedFrom = code[0];
                 //When api could not be initialized since SplashActivity,
                 //inform to user after MainActivity starts
 
-                return true;
+                return sApiInitialized = true;
             } catch (GnException e) {
                 e.printStackTrace();
                 //If could not be established the initialization of Gracenote API, try again
-                sIsInitializing = false;
-                sApiInitialized = false;
-                return false;
+                return sApiInitialized = sIsInitializing = false;
             }
 
         }

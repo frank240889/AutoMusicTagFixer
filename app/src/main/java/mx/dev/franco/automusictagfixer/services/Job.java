@@ -14,7 +14,8 @@ public class Job {
     public static final int ID_JOB = 1;
     /**
      * Here we schedule our task and constraints to execute,
-     * in this case a periodic task, for checking internet connection
+     * in this case a periodic task, that will try to initialize the API
+     * Gracenote
      * @param context
      */
     public static void scheduleJob(Context context){
