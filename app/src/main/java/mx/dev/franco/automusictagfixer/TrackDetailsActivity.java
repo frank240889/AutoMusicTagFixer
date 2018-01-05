@@ -261,6 +261,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
     private AsyncUpdateData mAsyncUpdateData;
 
     private static final int CROSS_FADE_DURATION = 200;
+    private AsyncSaveFile mAsyncSaveFile;
 
     /**
      * Callback when is created the activity
@@ -459,29 +460,9 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                     return false;
                 }
 
-                //Saves extracted cover using title + artist + album as file name
-                String newImageAbsolutePath = null;
-                try {
-                    newImageAbsolutePath = FileSaver.saveImageFile(mCurrentCoverArt, mCurrentTitle, mCurrentArtist, mCurrentAlbum);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                if(newImageAbsolutePath != null &&!newImageAbsolutePath.equals(FileSaver.NULL_DATA) &&
-                        !newImageAbsolutePath.equals(FileSaver.NO_EXTERNAL_STORAGE_WRITABLE) && !newImageAbsolutePath.equals(FileSaver.INPUT_OUTPUT_ERROR)) {
-
-                    showSnackBar(7000, getString(R.string.cover_extracted), ACTION_VIEW_COVER, newImageAbsolutePath);
-                    //Inform to system that one file has been created
-                    MediaScannerConnection.scanFile(
-                            getApplicationContext(),
-                            new String[]{newImageAbsolutePath},
-                            new String[]{MimeTypeMap.getFileExtensionFromUrl(newImageAbsolutePath)},
-                            null);
-                }
-                else {
-                    //Could not create the image file
-                    showSnackBar(Snackbar.LENGTH_LONG, getString(R.string.cover_not_saved), ACTION_NONE, null);
-                }
-
+                //Save extracted image file
+                mAsyncSaveFile = new AsyncSaveFile(TrackDetailsActivity.this, mCurrentCoverArt, mCurrentTitle, mCurrentArtist, mCurrentAlbum);
+                mAsyncSaveFile.execute();
                 return false;
             }
         });
@@ -1702,6 +1683,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
      * to audio file, for not blocking the UI thread
      */
     private static class AsyncUpdateData extends AsyncTask<Void, Void, Void> {
+
         private final String TAG = AsyncUpdateData.class.getName();
         private int mOperationType;
         private boolean mOverwriteAllTags = false;
@@ -2565,33 +2547,11 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                     builder.setNegativeButton(getString(R.string.as_file), new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-
-                            String newImageAbsolutePath = null;
-                            try {
-                                newImageAbsolutePath = FileSaver.saveImageFile(mNewCoverArt, mTrackIdAudioItem.getTitle(), mTrackIdAudioItem.getArtist(), mTrackIdAudioItem.getAlbum());
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                            //if was successful saved, then
-                            //inform to system that one file has been created
-                            if(newImageAbsolutePath != null && !newImageAbsolutePath.equals(FileSaver.NULL_DATA)
-                                    && !newImageAbsolutePath.equals(FileSaver.NO_EXTERNAL_STORAGE_WRITABLE) && !newImageAbsolutePath.equals(FileSaver.INPUT_OUTPUT_ERROR)) {
-
-                                showSnackBar(7000, getString(R.string.cover_saved) + " " + AudioItem.getRelativePath(newImageAbsolutePath) + ".", ACTION_VIEW_COVER, newImageAbsolutePath);
-                                MediaScannerConnection.scanFile(
-                                                                getApplicationContext(),
-                                                                new String[]{newImageAbsolutePath},
-                                                                new String[]{MimeTypeMap.getFileExtensionFromUrl(newImageAbsolutePath)},
-                                                                null);
-                            }
-                            else {
-                                showSnackBar(Snackbar.LENGTH_LONG, getString(R.string.cover_not_saved), ACTION_NONE, null);
-                            }
-
-                            dialog.cancel();
-                            hideTrackedIdResultsLayout();
+                            mAsyncSaveFile = new AsyncSaveFile(TrackDetailsActivity.this, mNewCoverArt, mTrackIdAudioItem.getTitle(), mTrackIdAudioItem.getArtist(), mTrackIdAudioItem.getAlbum());
+                            mAsyncSaveFile.execute();
                         }
                     });
+
                     builder.setMessage(R.string.description_downloaded_cover_art_dialog);
                     AlertDialog alertDialog = builder.create();
                     alertDialog.setCancelable(true);
@@ -2759,6 +2719,86 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                 System.gc();
             }
         }
+
+    }
+
+    public static class AsyncSaveFile extends AsyncTask<Void, Void, Boolean>{
+        private byte[] mDataImage;
+        private String mTitle, mArtist, mAlbum, mPathToFile;
+        private WeakReference<TrackDetailsActivity> mTrackDetailsActivityWeakReference;
+        public AsyncSaveFile(TrackDetailsActivity trackDetailsActivity, byte[] dataImage, String... data){
+            mTrackDetailsActivityWeakReference = new WeakReference<>(trackDetailsActivity);
+            mDataImage = dataImage;
+            mTitle = data[0];
+            mArtist = data[1];
+            mAlbum = data[2];
+        }
+
+        @Override
+        protected void onPreExecute(){
+            mTrackDetailsActivityWeakReference.get().mProgressBar.setVisibility(View.VISIBLE);
+        }
+
+        @Override
+        protected Boolean doInBackground(Void... voids) {
+            boolean success = false;
+            try {
+                mPathToFile = FileSaver.saveImageFile(mDataImage, mTitle, mArtist, mAlbum);
+                //if was successful saved, then
+                //inform to system that one file has been created
+                if(mPathToFile != null && !mPathToFile.equals(FileSaver.NULL_DATA)
+                        && !mPathToFile.equals(FileSaver.NO_EXTERNAL_STORAGE_WRITABLE)
+                        && !mPathToFile.equals(FileSaver.INPUT_OUTPUT_ERROR)) {
+                    MediaScannerConnection.scanFile(
+                            mTrackDetailsActivityWeakReference.get().getApplicationContext(),
+                            new String[]{mPathToFile},
+                            new String[]{MimeTypeMap.getFileExtensionFromUrl(mPathToFile)},
+                            null);
+                    success = true;
+                }
+
+            } catch (IOException e) {
+                e.printStackTrace();
+                success = false;
+            }
+
+            return success;
+        }
+
+        @Override
+        protected void onPostExecute(Boolean res){
+            mTrackDetailsActivityWeakReference.get().mProgressBar.setVisibility(View.INVISIBLE);
+            if(res){
+                mTrackDetailsActivityWeakReference.get().
+                        showSnackBar(7000, mTrackDetailsActivityWeakReference.get().getString(R.string.cover_saved) + " " + AudioItem.getRelativePath(mPathToFile) + ".", ACTION_VIEW_COVER, mPathToFile);
+            }
+            else {
+                mTrackDetailsActivityWeakReference.get().
+                        showSnackBar(Snackbar.LENGTH_LONG, mTrackDetailsActivityWeakReference.get().getString(R.string.cover_not_saved), ACTION_NONE, null);
+            }
+            mTrackDetailsActivityWeakReference.get().hideTrackedIdResultsLayout();
+            mTrackDetailsActivityWeakReference.get().mAsyncSaveFile = null;
+            mTrackDetailsActivityWeakReference.clear();
+            mTrackDetailsActivityWeakReference = null;
+        }
+
+        @Override
+        protected void onCancelled(Boolean res){
+            mTrackDetailsActivityWeakReference.get().mProgressBar.setVisibility(View.INVISIBLE);
+            if(res){
+                mTrackDetailsActivityWeakReference.get().
+                        showSnackBar(7000, mTrackDetailsActivityWeakReference.get().getString(R.string.cover_saved) + " " + AudioItem.getRelativePath(mPathToFile) + ".", ACTION_VIEW_COVER, mPathToFile);
+            }
+            else {
+                mTrackDetailsActivityWeakReference.get().
+                        showSnackBar(Snackbar.LENGTH_LONG, mTrackDetailsActivityWeakReference.get().getString(R.string.cover_not_saved), ACTION_NONE, null);
+            }
+            mTrackDetailsActivityWeakReference.get().hideTrackedIdResultsLayout();
+            mTrackDetailsActivityWeakReference.get().mAsyncSaveFile = null;
+            mTrackDetailsActivityWeakReference.clear();
+            mTrackDetailsActivityWeakReference = null;
+        }
+
     }
 
 }

@@ -288,6 +288,7 @@
     <string name="dummy_button">Dummy Button</string>
     <string name="dummy_content">DUMMY\nCONTENT</string>
     <string name="title_extract_cover">Extraer carátula</string>
+    <string name="could_not_init_api">No se ha podido iniciar la API:</string>
 
 
 </resources>

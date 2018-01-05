@@ -16,16 +16,13 @@ import java.util.Date;
  */
 
 public final class FileSaver {
-    public static final String SLASH = "/";
-    public static final String AUTO_MUSIC_TAG_FIXER_FOLDER_NAME = "Covers";
-    public static final String EXTENSION = "jpg";
-    public static final String DOT = ".";
+    private static final String SLASH = "/";
+    private static final String AUTO_MUSIC_TAG_FIXER_FOLDER_NAME = "Covers";
+    private static final String EXTENSION = "jpg";
+    private static final String DOT = ".";
     public static final String NULL_DATA = "null data";
     public static final String NO_EXTERNAL_STORAGE_WRITABLE = "no external storage writable";
     public static final String INPUT_OUTPUT_ERROR = "i/o error";
-    private static final String GENERIC_NAME = "Extracted_Cover";
-    private static String sNewFileName = "";
-
 
     /**
      *
@@ -72,14 +69,12 @@ public final class FileSaver {
             fos.close();
         } catch (IOException e) {
             e.printStackTrace();
-            sNewFileName = "";
             if(fos != null){
                 fos.close();
                 fos = null;
             }
             return INPUT_OUTPUT_ERROR;
         }
-        sNewFileName = "";
         return imageFileCreated.getAbsolutePath();
 
     }
@@ -110,10 +105,11 @@ public final class FileSaver {
             newFileName = album + "_"  + now.format(date);
         }
         else {
+            //get only name without extension
            newFileName = pathToFile.getName().split(".")[0] + "_" + now.format(date);
         }
 
-        return new File(pathToFile.getAbsolutePath() + SLASH + newFileName+ DOT + EXTENSION);
+        return new File(pathToFile.getAbsolutePath() + SLASH + newFileName + DOT + EXTENSION);
     }
 
     /**
@@ -125,7 +121,7 @@ public final class FileSaver {
     }
 
     /**
-     *Checks if external storage is available to at least read
+     *Checks if external storage is available for reading at least
      */
     private static boolean isExternalStorageReadable() {
         String state = Environment.getExternalStorageState();

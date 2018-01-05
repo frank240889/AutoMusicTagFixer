@@ -33,7 +33,6 @@
                 android:layout_gravity="top|start"
                 android:adjustViewBounds="true"
                 android:scaleType="fitCenter"
-                android:transitionName="transitionFragment"
                 app:layout_collapseMode="parallax"
                 app:layout_collapseParallaxMultiplier="0.7" />
 
@@ -95,22 +94,6 @@
     <include layout="@layout/content_details_track" />
 
     <include layout="@layout/details_item_trackid" />
-
-    <!--android.support.design.widget.FloatingActionButton
-        android:id="@+id/extractCover"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_margin="@dimen/standard_21"
-        android:scaleType="fitCenter"
-        android:elevation="6dp"
-        app:elevation="6dp"
-        app:borderWidth="0dp"
-        app:fabSize="mini"
-        android:theme="@style/CustomMiniFab"
-        app:useCompatPadding="true"
-        app:pressedTranslationZ="12dp"
-        app:srcCompat="@drawable/ic_photo_library_white_24px" /-->
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/editTrackInfo"

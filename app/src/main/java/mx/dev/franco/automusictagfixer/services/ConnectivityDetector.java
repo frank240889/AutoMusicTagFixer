@@ -8,7 +8,6 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.TextView;
@@ -80,9 +79,6 @@ public class ConnectivityDetector {
 
         @Override
         protected void onPostExecute(Boolean res){
-
-            Log.d("sIsConnected", sIsConnected+"");
-
             //if previously was disconnected and now is connected
             // this message indicates that connection has restored
             if(res && !sIsConnected){
@@ -141,11 +137,14 @@ public class ConnectivityDetector {
          * Sends a ping to a server to
          * to check if really exist connection to internet,
          * as a developer you can change the ip
-         * to which yo want to test this ping
+         * to against any other server you
+         * want to test this ping
          * @param ip The ip to send the ping in format "XXX.XXX.XXX.XXX"
          * @return
          */
         private static boolean isConnectedToInternet(@Nullable String ip){
+            //Send only 1 ping to Google DNS's to check internet connection
+            //or provided your desired server ip
             String ping = "system/bin/ping -c 1 8.8.8.8";
             if(ip != null && !ip.isEmpty() ){
                 ping = "system/bin/ping -c 1 " + ip;
@@ -153,20 +152,19 @@ public class ConnectivityDetector {
             Runtime runtime = Runtime.getRuntime();
             int termination = 1;
             try {
-                //send only 1 ping to Google DNS's to check internet connection
                 java.lang.Process process = runtime.exec(ping);
+
                 //abnormal termination will be different than 0,
                 termination = process.waitFor();
             } catch (InterruptedException | IOException e) {
                 e.printStackTrace();
             }
-            finally {
                 return (termination == 0);
-            }
         }
 
         private static boolean hasConnectivity(){
             ConnectivityManager cm = (ConnectivityManager)sContext.getSystemService(CONNECTIVITY_SERVICE);
+            //cm can be null if for example Airplane mode is activated
             if(cm == null)
                 return false;
 
