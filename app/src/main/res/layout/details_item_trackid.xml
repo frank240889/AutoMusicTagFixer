@@ -33,7 +33,8 @@
             android:layout_centerVertical="true"
             android:clickable="true"
             android:focusable="true"
-            android:scaleType="centerCrop"
+            android:scaleType="fitCenter"
+            android:transitionName="transitionFragment"
             app:srcCompat="@drawable/ic_album_white_48px" />
 
         <TextView

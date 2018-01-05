@@ -96,7 +96,7 @@
 
     <include layout="@layout/details_item_trackid" />
 
-    <android.support.design.widget.FloatingActionButton
+    <!--android.support.design.widget.FloatingActionButton
         android:id="@+id/extractCover"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -110,7 +110,7 @@
         android:theme="@style/CustomMiniFab"
         app:useCompatPadding="true"
         app:pressedTranslationZ="12dp"
-        app:srcCompat="@drawable/ic_photo_library_white_24px" />
+        app:srcCompat="@drawable/ic_photo_library_white_24px" /-->
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/editTrackInfo"
@@ -190,10 +190,4 @@
         app:pressedTranslationZ="12dp"
         app:srcCompat="@drawable/ic_save_white_24px" />
 
-
-    <FrameLayout
-        android:id="@+id/containerFragment"
-        android:elevation="8dp"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
 </android.support.design.widget.CoordinatorLayout>

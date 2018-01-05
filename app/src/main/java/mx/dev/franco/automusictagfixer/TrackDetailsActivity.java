@@ -22,7 +22,7 @@ import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
-import android.support.transition.TransitionManager;
+import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.FileProvider;
 import android.support.v4.content.LocalBroadcastManager;
@@ -33,12 +33,10 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.Toolbar;
-import android.transition.Fade;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.view.animation.Animation;
@@ -84,7 +82,6 @@ import mx.dev.franco.automusictagfixer.services.ConnectivityDetector;
 import mx.dev.franco.automusictagfixer.services.FixerTrackService;
 import mx.dev.franco.automusictagfixer.services.Job;
 import mx.dev.franco.automusictagfixer.services.ServiceHelper;
-import mx.dev.franco.automusictagfixer.transitions.DetailsTransition;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
 import mx.dev.franco.automusictagfixer.utilities.FileSaver;
 import mx.dev.franco.automusictagfixer.utilities.GlideApp;
@@ -147,7 +144,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
     private FloatingActionButton mEditButton;
     private FloatingActionButton mDownloadCoverButton;
     private FloatingActionButton mAutoFixButton;
-    private FloatingActionButton mExtractCoverButton;
+    private MenuItem mExtractCoverButton;
     private FloatingActionButton mSaveButton;
     private FloatingActionButton mFloatingActionMenu;
 
@@ -263,7 +260,6 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
 
     private AsyncUpdateData mAsyncUpdateData;
 
-
     private static final int CROSS_FADE_DURATION = 200;
 
     /**
@@ -284,7 +280,6 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
 
         //set the layout to this activity
         setContentView(R.layout.activity_track_details);
-
         //Create mReceiver and filters to handle responses from FixerTrackService
         mFilterActionDoneDetails = new IntentFilter(Constants.Actions.ACTION_DONE_DETAILS);
         mFilterActionCompleteTask = new IntentFilter(Constants.Actions.ACTION_COMPLETE_TASK);
@@ -452,6 +447,44 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_details_track_dialog, menu);
         mPlayPreviewButton = menu.findItem(R.id.action_play);
+        mExtractCoverButton = menu.findItem(R.id.action_extract_cover);
+
+        mExtractCoverButton.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem menuItem) {
+                closeFABMenu();
+                //current song has no cover
+                if(mCurrentCoverArt == null){
+                    showSnackBar(Snackbar.LENGTH_SHORT,getString(R.string.can_not_extract_null_cover),ACTION_NONE,null);
+                    return false;
+                }
+
+                //Saves extracted cover using title + artist + album as file name
+                String newImageAbsolutePath = null;
+                try {
+                    newImageAbsolutePath = FileSaver.saveImageFile(mCurrentCoverArt, mCurrentTitle, mCurrentArtist, mCurrentAlbum);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                if(newImageAbsolutePath != null &&!newImageAbsolutePath.equals(FileSaver.NULL_DATA) &&
+                        !newImageAbsolutePath.equals(FileSaver.NO_EXTERNAL_STORAGE_WRITABLE) && !newImageAbsolutePath.equals(FileSaver.INPUT_OUTPUT_ERROR)) {
+
+                    showSnackBar(7000, getString(R.string.cover_extracted), ACTION_VIEW_COVER, newImageAbsolutePath);
+                    //Inform to system that one file has been created
+                    MediaScannerConnection.scanFile(
+                            getApplicationContext(),
+                            new String[]{newImageAbsolutePath},
+                            new String[]{MimeTypeMap.getFileExtensionFromUrl(newImageAbsolutePath)},
+                            null);
+                }
+                else {
+                    //Could not create the image file
+                    showSnackBar(Snackbar.LENGTH_LONG, getString(R.string.cover_not_saved), ACTION_NONE, null);
+                }
+
+                return false;
+            }
+        });
         mPlayPreviewButton.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
             @Override
             public boolean onMenuItemClick(MenuItem item) {
@@ -534,12 +567,6 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
      */
     @Override
     public void onBackPressed() {
-        //Remove fragments
-        if(getSupportFragmentManager().getBackStackEntryCount() > 0) {
-            getSupportFragmentManager().popBackStackImmediate();
-            return;
-        }
-
         //hides fabs if are open
         if(mIsFloatingActionMenuOpen){
             closeFABMenu();
@@ -783,7 +810,6 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
 
         //Floating action buttons
         mDownloadCoverButton = (FloatingActionButton) mViewDetailsTrack.findViewById(R.id.downloadCover);
-        mExtractCoverButton = (FloatingActionButton) mViewDetailsTrack.findViewById(R.id.extractCover);
         mEditButton = (FloatingActionButton) mViewDetailsTrack.findViewById(R.id.editTrackInfo);
         mAutoFixButton = (FloatingActionButton) mViewDetailsTrack.findViewById(R.id.autofix);
         mFloatingActionMenu = (FloatingActionButton) mViewDetailsTrack.findViewById(R.id.floatingActionMenu);
@@ -918,7 +944,6 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                 mError = true;
                 mFloatingActionMenu.hide();
                 mDownloadCoverButton.hide();
-                mExtractCoverButton.hide();
                 mEditButton.hide();
                 mAutoFixButton.hide();
                 mFloatingActionMenu.hide();
@@ -998,43 +1023,6 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
      */
 
     private void addActionListeners(){
-        //extracts cover from current song, if exists
-        mExtractCoverButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                closeFABMenu();
-                //current song has no cover
-                if(mCurrentCoverArt == null){
-                    showSnackBar(Snackbar.LENGTH_SHORT,getString(R.string.can_not_extract_null_cover),ACTION_NONE,null);
-                    return;
-                }
-
-                //Saves extracted cover using title + artist + album as file name
-                String newImageAbsolutePath = null;
-                try {
-                    newImageAbsolutePath = FileSaver.saveImageFile(mCurrentCoverArt, mCurrentTitle, mCurrentArtist, mCurrentAlbum);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                if(newImageAbsolutePath != null &&!newImageAbsolutePath.equals(FileSaver.NULL_DATA) &&
-                        !newImageAbsolutePath.equals(FileSaver.NO_EXTERNAL_STORAGE_WRITABLE) && !newImageAbsolutePath.equals(FileSaver.INPUT_OUTPUT_ERROR)) {
-
-                    showSnackBar(7000, getString(R.string.cover_extracted), ACTION_VIEW_COVER, newImageAbsolutePath);
-                    //Inform to system that one file has been created
-                    MediaScannerConnection.scanFile(
-                                                    getApplicationContext(),
-                                                    new String[]{newImageAbsolutePath},
-                                                    new String[]{MimeTypeMap.getFileExtensionFromUrl(newImageAbsolutePath)},
-                                                    null);
-                }
-                else {
-                    //Could not create the image file
-                    showSnackBar(Snackbar.LENGTH_LONG, getString(R.string.cover_not_saved), ACTION_NONE, null);
-                }
-
-            }
-        });
-
         //enable manual mode
         mEditButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -1124,27 +1112,15 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                 //no cover art was found?
                 if(mTrackIdAudioItem.getCoverArt() == null)
                     return;
-                //delay transition for fragment
-                TransitionManager.beginDelayedTransition((ViewGroup) mViewDetailsTrack);
 
+                Intent intent = new Intent(TrackDetailsActivity.this, FullscreenViewerActivity.class);
+                intent.putExtra("cover", mTrackIdAudioItem.getCoverArt());
+                ActivityOptionsCompat options = ActivityOptionsCompat.makeSceneTransitionAnimation(
+                TrackDetailsActivity.this,
+                mTrackIdCover,
+                ViewCompat.getTransitionName(mTrackIdCover));
 
-                Bundle bundle = new Bundle();
-                bundle.putByteArray("cover", mTrackIdAudioItem.getCoverArt());
-                ImageViewer imageViewer = new ImageViewer();
-                imageViewer.setArguments(bundle);
-                imageViewer.setSharedElementEnterTransition(new DetailsTransition());
-                imageViewer.setEnterTransition(new Fade());
-                imageViewer.setSharedElementReturnTransition(new DetailsTransition());
-
-
-                ViewCompat.setTransitionName(mToolbarCover, "transition_"+ mCurrentAudioItem.getId());
-
-                getSupportFragmentManager()
-                        .beginTransaction()
-                        .addSharedElement(mToolbarCover, "transitionFragment")
-                        .add(R.id.containerFragment,imageViewer)
-                        .addToBackStack(null)
-                        .commit();
+                startActivity(intent, options.toBundle());
             }
         });
 
@@ -1284,7 +1260,6 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
         mDownloadCoverButton.setEnabled(enable);
         mEditButton.setEnabled(enable);
         mAutoFixButton.setEnabled(enable);
-        mExtractCoverButton.setEnabled(enable);
     }
 
     /**
@@ -1301,8 +1276,6 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
 
         mDownloadCoverButton.animate().translationY(-getResources().getDimension(R.dimen.standard_155));
 
-        mExtractCoverButton.animate().translationY(-getResources().getDimension(R.dimen.standard_205));
-
     }
 
     /**
@@ -1318,9 +1291,6 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
         mEditButton.animate().translationY(0);
 
         mDownloadCoverButton.animate().translationY(0);
-
-        mExtractCoverButton.animate().translationY(0);
-
 
     }
 
@@ -2229,14 +2199,16 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
             else {
                 redrawCover();
             }
-            mTrackDetailsActivityWeakReference.get().mAsyncUpdateData = null;
+
         }
 
         @Override
-        public void onCancelled(Void result){
-            mTrackDetailsActivityWeakReference.get().mAsyncUpdateData = null;
-            mTrackDetailsActivityWeakReference.clear();
-            mTrackDetailsActivityWeakReference = null;
+        public void onCancelled(Void result) {
+            if (mTrackDetailsActivityWeakReference != null){
+                mTrackDetailsActivityWeakReference.get().mAsyncUpdateData = null;
+                mTrackDetailsActivityWeakReference.clear();
+                mTrackDetailsActivityWeakReference = null;
+            }
             System.gc();
         }
 
@@ -2340,8 +2312,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                             mTrackDetailsActivityWeakReference.get().disableFields();
                             mTrackDetailsActivityWeakReference.get().enableMiniFabs(true);
 
-
-
+                            mTrackDetailsActivityWeakReference.get().mAsyncUpdateData = null;
                             mTrackDetailsActivityWeakReference.clear();
                             mTrackDetailsActivityWeakReference = null;
                             System.gc();
@@ -2379,10 +2350,13 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
             mTrackDetailsActivityWeakReference.get().showSnackBar(Snackbar.LENGTH_SHORT, mTrackDetailsActivityWeakReference.get().getString(R.string.cover_removed),ACTION_NONE, null);
             mTrackDetailsActivityWeakReference.get().mTrackAdapter.notifyItemChanged(mTrackDetailsActivityWeakReference.get().mCurrentAudioItem.getPosition());
             mTrackDetailsActivityWeakReference.get().cachingCurrentValues();
+            mTrackDetailsActivityWeakReference.get().disableFields();
 
+            mTrackDetailsActivityWeakReference.get().mAsyncUpdateData = null;
             mTrackDetailsActivityWeakReference.clear();
             mTrackDetailsActivityWeakReference = null;
             System.gc();
+
         }
 
     }
@@ -2722,7 +2696,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                     mTrackDetailsActivityWeakReference.get().mProgressBar.setVisibility(View.INVISIBLE);
                 }
             });
-
+            Log.d("ACTION",action);
             switch (action){
                 //TrackId found tags
                 case Constants.Actions.ACTION_DONE_DETAILS:

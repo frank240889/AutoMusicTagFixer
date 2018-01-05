@@ -5,7 +5,11 @@ import android.content.IntentFilter;
 import android.content.res.Configuration;
 import android.net.ConnectivityManager;
 
+import com.crashlytics.android.Crashlytics;
+
+import io.fabric.sdk.android.Fabric;
 import mx.dev.franco.automusictagfixer.services.ConnectivityChangesDetector;
+
 
 /**
  * Created by franco on 26/12/17.
@@ -19,6 +23,7 @@ public final class AutoMusicTagFixer extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+        Fabric.with(this, new Crashlytics());
         // Required initialization logic here!
         mConnectivityChangesDetector = new ConnectivityChangesDetector();
         mIntentFilter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);

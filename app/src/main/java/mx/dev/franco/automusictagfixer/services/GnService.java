@@ -1,7 +1,9 @@
 package mx.dev.franco.automusictagfixer.services;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.AsyncTask;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 import com.gracenote.gnsdk.GnDescriptor;
@@ -15,6 +17,8 @@ import com.gracenote.gnsdk.GnRegion;
 import com.gracenote.gnsdk.GnStorageSqlite;
 import com.gracenote.gnsdk.GnUser;
 import com.gracenote.gnsdk.GnUserStore;
+
+import mx.dev.franco.automusictagfixer.utilities.Constants;
 
 /**
  * Created by franco on 5/07/17.
@@ -66,7 +70,7 @@ public class GnService{
     public void initializeAPI(final int connectedFrom){
         if(sAsyncApiInitialization == null && !sApiInitialized){
             Log.d("sApiInitialized","initializing api");
-            sAsyncApiInitialization = new AsyncApiInitialization();
+            sAsyncApiInitialization = new AsyncApiInitialization(connectedFrom);
             sAsyncApiInitialization.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, connectedFrom);
         }
     }
@@ -74,6 +78,10 @@ public class GnService{
 
     public static class AsyncApiInitialization extends AsyncTask<Integer,Void,Boolean> {
         private int mConnectedFrom = API_INITIALIZED_FROM_SPLASH;
+
+        public AsyncApiInitialization(int connectedFrom){
+            mConnectedFrom = connectedFrom;
+        }
         @Override
         protected Boolean doInBackground(Integer... code) {
             //We initialize the necessary objects for using the GNSDK API in a different thread for not blocking the UI
@@ -99,8 +107,15 @@ public class GnService{
         @Override
         protected void onPostExecute(Boolean res){
             Log.d("res",res+" " + (mConnectedFrom == API_INITIALIZED_AFTER_CONNECTED));
+            //Schedule initialization if was not possible this time
             if(!res){
                 Job.scheduleJob(sContext);
+            }
+            //Notify to user
+            else {
+                Intent intent = new Intent();
+                intent.setAction(Constants.GnServiceActions.ACTION_API_INITIALIZED);
+                LocalBroadcastManager.getInstance(sContext).sendBroadcastSync(intent);
             }
 
             sAsyncApiInitialization = null;

@@ -5,7 +5,7 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
@@ -20,7 +20,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name="mx.dev.franco.automusictagfixer.SplashActivity"
+            android:name=".SplashActivity"
             android:configChanges="orientation|screenSize"
             android:screenOrientation="portrait"
             android:theme="@style/SplashTheme">
@@ -31,52 +31,51 @@
             </intent-filter>
         </activity>
         <activity
-            android:name="mx.dev.franco.automusictagfixer.ScreenSlidePagerActivity"
+            android:name=".ScreenSlidePagerActivity"
             android:configChanges="orientation|screenSize"
             android:theme="@style/AppTheme" />
         <activity
-            android:name="mx.dev.franco.automusictagfixer.MainActivity"
+            android:name=".MainActivity"
             android:configChanges="orientation|screenSize"
             android:label="@string/title_activity_folder_choser"
             android:launchMode="singleTop"
             android:theme="@style/MainActivityTheme" />
         <activity
-            android:name="mx.dev.franco.automusictagfixer.QuestionsActivity"
+            android:name=".QuestionsActivity"
             android:configChanges="orientation|screenSize"
             android:label="@string/faq"
-            android:parentActivityName="mx.dev.franco.automusictagfixer.MainActivity"
+            android:parentActivityName=".MainActivity"
             android:theme="@style/QuestionsTheme">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="mx.dev.franco.automusictagfixer.MainActivity" />
         </activity>
         <activity
-            android:name="mx.dev.franco.automusictagfixer.TrackDetailsActivity"
+            android:name=".TrackDetailsActivity"
             android:configChanges="orientation|screenSize"
-            android:parentActivityName="mx.dev.franco.automusictagfixer.MainActivity"
+            android:parentActivityName=".MainActivity"
             android:theme="@style/DetailsTrackDialogTheme">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="mx.dev.franco.automusictagfixer.MainActivity" />
         </activity>
-
         <activity
-            android:name="mx.dev.franco.automusictagfixer.ScrollingAboutActivity"
+            android:name=".ScrollingAboutActivity"
             android:label="@string/title_activity_scrolling_about"
-            android:parentActivityName="mx.dev.franco.automusictagfixer.MainActivity"
+            android:parentActivityName=".MainActivity"
             android:theme="@style/AboutTheme">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="mx.dev.franco.automusictagfixer.MainActivity" />
         </activity>
         <activity
-            android:name="mx.dev.franco.automusictagfixer.SettingsActivity"
+            android:name=".SettingsActivity"
             android:configChanges="orientation|screenSize"
             android:label="@string/title_activity_settings"
-            android:parentActivityName="mx.dev.franco.automusictagfixer.MainActivity"
+            android:parentActivityName=".MainActivity"
             android:theme="@style/SettingsStyle" />
 
-        <!--This provider is necessary because in android >= 7 doesn't allow to access directly to files-->
+        <!-- This provider is necessary because in android >= 7 doesn't allow to access directly to files -->
         <provider
             android:name="android.support.v4.content.FileProvider"
             android:authorities="mx.dev.franco.automusictagfixer.fileProvider"
@@ -89,14 +88,15 @@
 
         <!-- We need this service for start or schedule GNSDK API initialization -->
         <service
-            android:name="mx.dev.franco.automusictagfixer.services.ScheduleJobService"
+            android:name=".services.ScheduleJobService"
             android:label="DetectionService"
             android:permission="android.permission.BIND_JOB_SERVICE" />
 
-        <!--Service that runs in background thread and have the ability to run if app is closed-->
-        <service android:name=".services.FixerTrackService"
-            android:label="FixerTrackService"
-            android:exported="false"/>
+        <!-- Service that runs in background thread and have the ability to run if app is closed -->
+        <service
+            android:name=".services.FixerTrackService"
+            android:exported="false"
+            android:label="FixerTrackService" />
 
         <!--
  ATTENTION: This was auto-generated to add Google Play services to your project for
@@ -106,7 +106,21 @@
             android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version" />
 
+        <activity
+            android:name=".FullscreenViewerActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:label="@string/title_activity_fullscreen_viewer"
+            android:parentActivityName=".TrackDetailsActivity"
+            android:theme="@style/FullscreenTheme">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="mx.dev.franco.automusictagfixer.TrackDetailsActivity" />
+        </activity>
 
+        <meta-data
+            android:name="io.fabric.ApiKey"
+            android:value="3d4995f2cd3e5757faec4a2dadce6e00f2d0814e"
+            />
     </application>
 
 </manifest>

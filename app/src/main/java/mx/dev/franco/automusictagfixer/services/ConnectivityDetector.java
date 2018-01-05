@@ -17,6 +17,7 @@ import android.widget.Toast;
 import java.io.IOException;
 
 import mx.dev.franco.automusictagfixer.R;
+import mx.dev.franco.automusictagfixer.utilities.Constants;
 
 import static android.content.Context.CONNECTIVITY_SERVICE;
 
@@ -58,6 +59,10 @@ public class ConnectivityDetector {
     }
 
 
+    /**
+     * This class checks the connection to internet
+     */
+
     public static class AsyncConnectivityDetection extends AsyncTask<Context,Void,Boolean>{
 
         @Override
@@ -77,6 +82,9 @@ public class ConnectivityDetector {
         protected void onPostExecute(Boolean res){
 
             Log.d("sIsConnected", sIsConnected+"");
+
+            //if previously was disconnected and now is connected
+            // this message indicates that connection has restored
             if(res && !sIsConnected){
                 Toast toast = Toast.makeText(sContext, sContext.getString(R.string.connection_recovered), Toast.LENGTH_LONG);
                 View view = toast.getView();
@@ -93,8 +101,10 @@ public class ConnectivityDetector {
                 toast.show();
             }
 
+            //set value to global var
             sIsConnected = res;
 
+            //Initialize GNSDK API if is not initialized
             if(sIsConnected){
                 if(!GnService.sApiInitialized){
                     GnService.withContext(sContext).initializeAPI(sStartedFrom);
@@ -102,34 +112,42 @@ public class ConnectivityDetector {
             }
 
             else {
+                //Inform to user that connection has lost
+                if (ServiceHelper.withContext(sContext).withService(FixerTrackService.CLASS_NAME).isServiceRunning()){
+                    Toast toast = Toast.makeText(sContext, sContext.getString(R.string.connection_lost), Toast.LENGTH_LONG);
+                    View view = toast.getView();
+                    TextView text = (TextView) view.findViewById(android.R.id.message);
+                    text.setTextColor(ContextCompat.getColor(sContext, R.color.grey_900));
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        text.setTextAppearance(R.style.CustomToast);
+                    } else {
+                        text.setTextAppearance(sContext, R.style.CustomToast);
+                    }
+                    view.setBackground(ContextCompat.getDrawable(sContext, R.drawable.background_custom_toast));
+                    toast.setGravity(Gravity.CENTER, 0, 0);
+                    toast.show();
 
-                Toast toast = Toast.makeText(sContext, sContext.getString(R.string.connection_lost), Toast.LENGTH_LONG);
-                View view = toast.getView();
-                TextView text = (TextView) view.findViewById(android.R.id.message);
-                text.setTextColor(ContextCompat.getColor(sContext, R.color.grey_900));
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    text.setTextAppearance(R.style.CustomToast);
-                }
-                else {
-                    text.setTextAppearance(sContext,R.style.CustomToast);
-                }
-                view.setBackground(ContextCompat.getDrawable(sContext, R.drawable.background_custom_toast) );
-                toast.setGravity(Gravity.CENTER, 0, 0);
-                toast.show();
-
-                if(ServiceHelper.withContext(sContext.getApplicationContext()).withService(FixerTrackService.CLASS_NAME).isServiceRunning()){
-                    FixerTrackService.lostConnection(true);
+                    //Send this request to stop service
                     Intent stopIntent = new Intent(sContext, FixerTrackService.class);
-                    sContext.stopService(stopIntent);
+                    stopIntent.setAction(Constants.Actions.ACTION_STOP_SERVICE);
+                    stopIntent.putExtra(Constants.Actions.ACTION_STOP_SERVICE, Constants.StopsReasons.LOST_CONNECTION_TASK);
+                    sContext.startService(stopIntent);
                 }
-
             }
             sAsyncConnectivityDetection = null;
         }
 
+        /**
+         * Sends a ping to a server to
+         * to check if really exist connection to internet,
+         * as a developer you can change the ip
+         * to which yo want to test this ping
+         * @param ip The ip to send the ping in format "XXX.XXX.XXX.XXX"
+         * @return
+         */
         private static boolean isConnectedToInternet(@Nullable String ip){
             String ping = "system/bin/ping -c 1 8.8.8.8";
-            if(ip != null ){
+            if(ip != null && !ip.isEmpty() ){
                 ping = "system/bin/ping -c 1 " + ip;
             }
             Runtime runtime = Runtime.getRuntime();

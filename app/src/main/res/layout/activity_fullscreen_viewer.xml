@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/fragmentContainer"
+    android:layout_height="match_parent"
+    android:background="@color/true_black">
+
+    <ImageView
+        android:id="@+id/imageContainerViewer"
+        android:layout_width="match_parent"
+        android:layout_height="400dp"
+        android:layout_gravity="center_vertical"
+        android:adjustViewBounds="true"
+        app:srcCompat="@drawable/ic_album_white_48px"
+        android:scaleType="fitCenter"
+        android:transitionName="transitionFragment"
+        tools:ignore="ContentDescription,UnusedAttribute" />
+</FrameLayout>

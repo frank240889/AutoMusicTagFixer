@@ -101,7 +101,7 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
 
     //Cursor that stores the result of making a query
     private Cursor mSelectedItems = null;
-    //NUmber of elements in cursor
+    //Number of elements in cursor
     private int mNumberSelected = 0;
     //Notification on status bar
     private Notification notification;
@@ -112,9 +112,6 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
     private boolean mShowNotification = false;
     //show notification only when request comes from MainActivity
     private boolean mStartOrUpdateForegroundNotification = false;
-    //Connection state
-    private static volatile boolean sIsConnected = ConnectivityDetector.sIsConnected;
-    private static boolean sError = false;
     private String mErrorMessage = null;
 
     private HashMap<String,String> mGnStatusToDisplay;
@@ -124,7 +121,7 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
     private HandlerThread mThread;
     private Looper mLooper;
     private MyHandler mHandler;
-    private static volatile boolean sShouldContinue = true;
+    private volatile int mStopService = Constants.StopsReasons.CONTINUE_TASK;
 
 
     /**
@@ -138,19 +135,18 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
     @Override
     public void onCreate(){
         super.onCreate();
-        Log.d(CLASS_NAME, "onCreate");
+        //Log.d(CLASS_NAME, "onCreate");
         mDataTrackDbHelper = DataTrackDbHelper.getInstance(getApplicationContext());
         mLocalBroadcastManager = LocalBroadcastManager.getInstance(getApplicationContext());
 
-        //Object to handle callbacks from Gracenote API
         mGnMusicIdFileList = new ArrayList<>();
+
+        //Create the HandlerThread to handle the correction task in another thread and
+        //give it low priority
         mThread = new HandlerThread(CLASS_NAME, Process.THREAD_PRIORITY_BACKGROUND);
         mThread.start();
         mLooper = mThread.getLooper();
         mHandler = new MyHandler(mLooper,this);
-
-
-
 
         //These status are name events received from Gracenote server to
         //report status of track id task
@@ -175,13 +171,16 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
         super.onStartCommand(intent,flags,startId);
         Log.d(CLASS_NAME,"onStartCommand");
 
-        //We services is stopped from notification
-        if(intent.getAction() != null && intent.getAction().equals(Constants.Actions.ACTION_CANCEL_TASK)){
-            sError = false;
-            sIsConnected = true;
-            sFinishTaskByUser = true;
-            sShouldContinue = false;
-            //stopSelf();
+        //check if stop request was received, default is continue task
+        if(intent.getAction() != null && intent.getAction().equals(Constants.Actions.ACTION_STOP_SERVICE)) {
+            mStopService = intent.getIntExtra(Constants.Actions.ACTION_STOP_SERVICE, Constants.StopsReasons.CONTINUE_TASK);
+            Log.d("mStopService", mStopService + "");
+        }
+
+
+        //Service is stopped from notification "Detener" button
+        if(mStopService != Constants.StopsReasons.CONTINUE_TASK){
+            stopSelf();
             return START_NOT_STICKY;
         }
 
@@ -239,10 +238,7 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
             mGnMusicIdFileList.clear();
             mGnMusicIdFileList = null;
         }
-        //cancel detection of connection state
-        //unregisterReceiver(mDetectorChangesConnection);
 
-        sFinishTaskByUser = false;
         mThread = null;
 
         //remove pending messages, means that intents
@@ -259,10 +255,10 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
     /**
      * Starts a notification and set
      * this service as foreground service,
-     * allowing run it no matter if app closes
-     * @param contentText
-     * @param contentTitle
-     * @param status
+     * allowing run no matter if app closes
+     * @param contentText the content text o notification
+     * @param contentTitle the title of notification
+     * @param status the status string to show in notification
      */
     private void startNotification(String contentText, String contentTitle, String status) {
 
@@ -297,7 +293,7 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
 
     /**
      * Handles the intent received
-     * @param intent
+     * @param intent the intent received
      */
     private void onHandleIntent(Intent intent){
 
@@ -305,9 +301,10 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
         //get the ID received, if not, default value is -1
         mCurrentId = intent.getLongExtra(Constants.MEDIASTORE_ID, -1);
         //get selected items directly from DB, if ID is not -1,
-        //it means that cursor returned of this query will contain only
-        //one row, if mCurrentId is equal than -1, means that will get
-        //a cursor with more than one row
+        //it means that one id has been sent and
+        //cursor returned from this query will contain only
+        //one row, if mCurrentId is equal than -1, means that no id was provided
+        //and it will get a cursor with more than one row
         mSelectedItems = mDataTrackDbHelper.getAllSelected(mCurrentId, MainActivity.Sort.setDefaultOrder());
         mNumberSelected = mSelectedItems == null ? 0 : mSelectedItems.getCount();
         //if intent comes from TrackDetailsActivity means that
@@ -329,14 +326,16 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
         String album = "";
         String fullPath = "";
 
-        if(!sShouldContinue){
+        //Before start task check if is not cancelled
+        if(mStopService != Constants.StopsReasons.CONTINUE_TASK){
             stopSelf();
             return;
         }
 
-        //track id objects provide identification services
+        //GnMusicIdFile object provides identification service
         try {
             mGnMusicIdFile = new GnMusicIdFile(GnService.sGnUser, this);
+            //set options of track id process
             mGnMusicIdFile.options().lookupData(GnLookupData.kLookupDataContent, true);
             mGnMusicIdFile.options().preferResultLanguage(GnLanguage.kLanguageSpanish);
             //queue will be processed one by one
@@ -371,11 +370,13 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
 
             } catch (GnException e) {
                 e.printStackTrace();
-                sError = true;
+
+                //Service is stopped from notification "Detener" button
+                mStopService = Constants.StopsReasons.ERROR_TASK;
                 mErrorMessage = e.getMessage();
-                sFinishTaskByUser = false;
-                sIsConnected = true;
+
                 stopSelf();
+                return;
             }
             finally {
                 //reset values in every iteration
@@ -392,7 +393,7 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
         mSelectedItems.close();
         mSelectedItems = null;
 
-
+        //starts track id processing
         startTrackId();
     }
 
@@ -400,12 +401,14 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
      * Starts the correction task
      */
     public void startTrackId(){
-        //Before start check if there is internet connection yet
-        if(!ConnectivityDetector.sIsConnected  || !sShouldContinue){
+        //Before start task check if is not cancelled
+        if(mStopService != Constants.StopsReasons.CONTINUE_TASK){
             stopSelf();
             return;
         }
+
         try {
+            //use different methods depending on number of selected songs to be corrected
             if (mNumberSelected == 1) {
                 mGnMusicIdFile.doTrackId(GnMusicIdFileProcessType.kQueryReturnSingle, GnMusicIdFileResponseType.kResponseAlbums);
             } else if (mNumberSelected >= 2) {
@@ -413,11 +416,10 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
             }
         } catch (GnException e) {
             e.printStackTrace();
-            sError = true;
+            mStopService = Constants.StopsReasons.ERROR_TASK;
             mErrorMessage = e.getMessage();
-            sFinishTaskByUser = false;
-            sIsConnected = true;
             stopSelf();
+            return;
         }
     }
 
@@ -426,17 +428,7 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
      * cancel or lost internet connection
      */
     public void  stopTrackId(){
-        //check if task were cancelled by user,
-        //default value is true; in case that
-        //correction task finishes and
-        //ACTION_COMPLETE_TASK is broadcasted,
-        //sFinishTaskByUser will be false,
-        //meaning that is not necessary call cancel method.
-        //stop thread and looper
-        mThread.quitSafely();
-        mLooper.quitSafely();
-
-        if(mGnMusicIdFileList != null) {
+        if (mGnMusicIdFileList != null) {
             Iterator<GnMusicIdFile> iterator = mGnMusicIdFileList.iterator();
 
             while (iterator.hasNext()) {
@@ -444,45 +436,62 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
             }
 
         }
-        //Save state to database
-        ContentValues contentValues = new ContentValues();
-        contentValues.put(TrackContract.TrackData.IS_PROCESSING, false);
-        int items = mDataTrackDbHelper.updateData(contentValues, TrackContract.TrackData.IS_PROCESSING, true);
-        Log.d("items updated", items+"");
 
-        Intent intentAction = new Intent();
-        if(sFinishTaskByUser || !sShouldContinue){
-            Log.d("cancel gn", "cancelling...");
-            intentAction.setAction(Constants.Actions.ACTION_CANCEL_TASK);
-        }
-        //when connection lost, cancel correction task
-        else if (!sIsConnected){
-            Log.d("cancel gn", "cancelling...lost connection");
-            intentAction.setAction(Constants.Actions.ACTION_CONNECTION_LOST);
+        //check cause of cancel task
+        if(mStopService != Constants.StopsReasons.NORMAL_TERMINATION_TASK) {
 
-        }
-        else if(sError){
-            Log.d("cancel gn", "cancelling...api error");
-            intentAction.setAction(Constants.Actions.ACTION_ERROR);
-            intentAction.putExtra(Constants.GnServiceActions.API_ERROR, mErrorMessage);
-        }
-        //broadcast action to interested receivers
-        mLocalBroadcastManager.sendBroadcastSync(intentAction);
+            //Save state to database
+            ContentValues contentValues = new ContentValues();
+            contentValues.put(TrackContract.TrackData.IS_PROCESSING, false);
+            int items = mDataTrackDbHelper.updateData(contentValues, TrackContract.TrackData.IS_PROCESSING, true);
+            Log.d("items updated", items + "");
 
+            Intent intentAction = new Intent();
+
+            switch (mStopService){
+                case Constants.StopsReasons.USER_CANCEL_TASK:
+                        Log.d("cancel gn", "cancelling...");
+                        intentAction.setAction(Constants.Actions.ACTION_CANCEL_TASK);
+                    break;
+                case Constants.StopsReasons.ERROR_TASK:
+                        Log.d("cancel gn", "cancelling...api error");
+                        intentAction.setAction(Constants.Actions.ACTION_ERROR);
+                        intentAction.putExtra(Constants.GnServiceActions.API_ERROR, mErrorMessage);
+                    break;
+                case Constants.StopsReasons.LOST_CONNECTION_TASK:
+                        Log.d("cancel gn", "cancelling...lost connection");
+                        intentAction.setAction(Constants.Actions.ACTION_CONNECTION_LOST);
+                    break;
+                    default:
+                        Log.d("cancel gn", "cancelling...");
+                        intentAction.setAction(Constants.Actions.ACTION_CANCEL_TASK);
+                        break;
+            }
+
+            //broadcast action to interested receivers
+            mLocalBroadcastManager.sendBroadcastSync(intentAction);
+        }
+        //stop thread and looper
+        mThread.quitSafely();
+        mLooper.quitSafely();
     }
 
     @Override
     public void musicIdFileStatusEvent(GnMusicIdFileInfo gnMusicIdFileInfo, GnMusicIdFileCallbackStatus gnMusicIdFileCallbackStatus, long currentFile, long totalFiles, IGnCancellable iGnCancellable) {
+        //Retrieve current status of current tracked id song
         String status = gnMusicIdFileCallbackStatus.toString();
+        //Check if this is the last file being processed
         mLastFile = currentFile == totalFiles;
-        Log.d("CallbackStatus", gnMusicIdFileCallbackStatus.toString());
+        //Log.d("CallbackStatus", gnMusicIdFileCallbackStatus.toString());
 
-        if(!sShouldContinue){
+        if(mStopService != Constants.StopsReasons.CONTINUE_TASK){
             stopSelf();
             return;
         }
 
+        //check the current state
         if (mGnStatusToDisplay.containsKey(status)) {
+            //report status to notification
             if (mStartOrUpdateForegroundNotification) {
                 try {
                     startNotification(currentFile + " de " + totalFiles, AudioItem.getFilename(gnMusicIdFileInfo.fileName()), mGnStatusToDisplay.get(status));
@@ -491,21 +500,23 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
                     e.printStackTrace();
                 }
             }
-            if(status.equals(Constants.State.BEGIN_PROCESSING)){
-                if(!ConnectivityDetector.sIsConnected){
-                    sIsConnected = false;
-                    stopSelf();
-                }
 
+            if(status.equals(Constants.State.BEGIN_PROCESSING)){
+
+                //update status of current song
                 try {
                     mPath = gnMusicIdFileInfo.fileName();
                     mId = Long.parseLong(gnMusicIdFileInfo.mediaId());
-                    //update UI to show progress bar in current item list only in Main activity
+                    //update UI to show progress bar in current item list (only in MainActivity)
                     if (!mFromEditMode){
                         Intent intentUpdateUI = new Intent();
                         intentUpdateUI.setAction(Constants.Actions.ACTION_SET_AUDIOITEM_PROCESSING);
                         intentUpdateUI.putExtra(Constants.MEDIASTORE_ID, mId);
                         mLocalBroadcastManager.sendBroadcastSync(intentUpdateUI);
+                        //save state to current song in our database because
+                        //if user closes the app and then reopen it, the current
+                        //song if is still processing will show the progress bar
+                        //and user experience will be consistent
                         ContentValues processingValue = new ContentValues();
                         processingValue.put(TrackContract.TrackData.IS_PROCESSING, true);
                         mDataTrackDbHelper.updateData(mId, processingValue);
@@ -516,15 +527,14 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
             }
             else if(status.equals(Constants.State.STATUS_ERROR) || status.equals(Constants.State.STATUS_PROCESSING_ERROR)){
                 Log.d("error while processing","try again");
-                //if (!mFromEditMode){
                 Intent intentUpdateUI = new Intent();
                 intentUpdateUI.setAction(Constants.Actions.ACTION_SET_AUDIOITEM_PROCESSING);
                 intentUpdateUI.putExtra(Constants.MEDIASTORE_ID, mId);
                 mLocalBroadcastManager.sendBroadcastSync(intentUpdateUI);
                 ContentValues processingValue = new ContentValues();
                 processingValue.put(TrackContract.TrackData.IS_PROCESSING, false);
+
                 mDataTrackDbHelper.updateData(mId, processingValue);
-                //}
             }
 
 
@@ -535,13 +545,15 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
     public void gatherFingerprint(GnMusicIdFileInfo fileInfo, long l, long l1, IGnCancellable iGnCancellable) {
         //Log.d("gatherFingerprint", "gatherFingerprint");
 
-        if(!sShouldContinue){
+        //internet connection has lost?
+        if(mStopService != Constants.StopsReasons.CONTINUE_TASK){
             stopSelf();
             return;
         }
 
         //Callback to inform that fingerprint was retrieved from audiotrack.
         try {
+            //Verify that this song still exist in memory
             if(!AudioItem.checkFileIntegrity(fileInfo.fileName())){
                 throw new FileNotFoundException("File does not exist anymore.");
             }
@@ -564,17 +576,13 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
     @Override
     public void gatherMetadata(GnMusicIdFileInfo gnMusicIdFileInfo, long l, long l1, IGnCancellable iGnCancellable) {
         //Log.d("cancelled8",iGnCancellable.isCancelled()+"");
-        Log.d("gatherMetadata", "gatherMetadata");
+        //Log.d("gatherMetadata", "gatherMetadata");
     }
 
     @Override
     public void musicIdFileAlbumResult(GnResponseAlbums gnResponseAlbums, long l, long l1, IGnCancellable iGnCancellable) {
-        if(!ConnectivityDetector.sIsConnected){
-            sIsConnected = false;
-            stopSelf();
-        }
-
-        if(!sShouldContinue){
+        //This callback is executed if results were found to current song
+        if(mStopService != Constants.StopsReasons.CONTINUE_TASK){
             stopSelf();
             return;
         }
@@ -587,7 +595,7 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
         String year = "";
         String genre = "";
 
-        //retrieve results found
+        //retrieve title results found
         try {
             title = gnResponseAlbums.albums().at(0).next().trackMatched().title().display();
         } catch (GnException e) {
@@ -621,7 +629,7 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
                 cover = "";
             }
             //If is selected "De mejor calidad disponible"
-            //iterate from higher to lower quality and select the first higher found.
+            //iterate from higher to lower quality and select the first higher quality found.
             else if (Settings.SETTING_SIZE_ALBUM_ART == GnImageSize.kImageSizeXLarge) {
                 GnContent gnContent = gnResponseAlbums.albums().at(0).next().coverArt();
                 GnImageSize[] values = GnImageSize.values();
@@ -634,7 +642,7 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
                 }
             }
             //If is selected "De menor calidad disponible"
-            //iterate from lower to higher quality and select the first lower found.
+            //iterate from lower to higher quality and select the first lower quality found.
             else if (Settings.SETTING_SIZE_ALBUM_ART == GnImageSize.kImageSizeThumbnail) {
                 GnContent gnContent = gnResponseAlbums.albums().at(0).next().coverArt();
                 GnImageSize[] values = GnImageSize.values();
@@ -647,7 +655,7 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
                 }
             }
             //get the first found in any of those predefined sizes:
-            //"de baja calidad", "de media calidad", "de alta calidad", "de muy alta calidad"
+            //"De baja calidad", "De media calidad", "De alta calidad", "De muy alta calidad"
             else {
                 GnContent gnContent = gnResponseAlbums.albums().at(0).next().coverArt();
                 cover = gnContent.asset(Settings.SETTING_SIZE_ALBUM_ART).url();
@@ -712,15 +720,7 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
             genre = "";
         }
 
-            /*Log.d("TITLE_BG", title);
-            Log.d("ARTIST_BG", artist);
-            Log.d("ALBUM_BG", album);
-            Log.d("ALBUM_ART_BG", cover);
-            Log.d("NUMBER_BG", number);
-            Log.d("YEAR_BG", year);
-            Log.d("GENRE_BG", genre);*/
-        //Log.d("cancelled2",iGnCancellable.isCancelled()+"");
-        setNewAudioTags(iGnCancellable, title, artist, album, cover, number, year, genre);
+        setNewAudioTags(title, artist, album, cover, number, year, genre);
     }
 
     @Override
@@ -732,62 +732,51 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
     public void musicIdFileResultNotFound(GnMusicIdFileInfo gnMusicIdFileInfo, long l, long l1, IGnCancellable iGnCancellable) {
         //this callback is triggered when no results, instead of musicIdFileAlbumResult or musicIdFileMatchResult
 
-        if(!ConnectivityDetector.sIsConnected){
-            sIsConnected = false;
-            stopSelf();
-        }
-
-        if(!sShouldContinue){
+        if(mStopService != Constants.StopsReasons.CONTINUE_TASK){
             stopSelf();
             return;
         }
-
-        try {
-            Log.d("Result_Not_Found",gnMusicIdFileInfo.status().name());
-        } catch (GnException e) {
-            e.printStackTrace();
-        }
-        finally {
-
-
-            //when no results found, if task was started by
+            //when no results were found, if task was started by
             //TrackDetailsActivity, only notify with action ACTION_NOT_FOUND
+            //to show to user a snackbar indicating this
             if (mFromEditMode) {
                 Intent intentActionNotFound = new Intent();
                 intentActionNotFound.setAction(Constants.Actions.ACTION_NOT_FOUND);
                 mLocalBroadcastManager.sendBroadcastSync(intentActionNotFound);
             }
-            //if task was started by MainActivity, notify the same but
-            //besides, update the UI and save the state to our database
-            else {
-                ContentValues contentValues = new ContentValues();
-                contentValues.put(TrackContract.TrackData.STATUS, AudioItem.STATUS_NO_TAGS_FOUND);
-                contentValues.put(TrackContract.TrackData.IS_PROCESSING, false);
-                contentValues.put(TrackContract.TrackData.IS_SELECTED, false);
-                mDataTrackDbHelper.updateData(mId, contentValues);
 
-                Intent intentActionNotFound = new Intent();
-                intentActionNotFound.setAction(Constants.Actions.ACTION_NOT_FOUND);
-                intentActionNotFound.putExtra(Constants.MEDIASTORE_ID, mId);
-                Log.d("media store not found", mId + "");
-                mLocalBroadcastManager.sendBroadcastSync(intentActionNotFound);
-            }
+        //if task was started by MainActivity, notify the same but
+        //besides, update the UI and save the state to current song into our database
+        else {
+            ContentValues contentValues = new ContentValues();
+            contentValues.put(TrackContract.TrackData.STATUS, AudioItem.STATUS_NO_TAGS_FOUND);
+            contentValues.put(TrackContract.TrackData.IS_PROCESSING, false);
+            contentValues.put(TrackContract.TrackData.IS_SELECTED, false);
+            mDataTrackDbHelper.updateData(mId, contentValues);
 
-            //if is the last file stop the service
-            if (mLastFile) {
-                //Inform to update the UI only to MainActivity if task has completed;
-                //if task was started from TrackDetailsActivity is not necessary inform this action
-                if (!mFromEditMode) {
-                    sFinishTaskByUser = false;
-                    Intent intentCompleteTask = new Intent();
-                    intentCompleteTask.setAction(Constants.Actions.ACTION_COMPLETE_TASK);
-                    mLocalBroadcastManager.sendBroadcastSync(intentCompleteTask);
-                }
-
-                stopSelf();
-            }
-            clearValues();
+            Intent intentActionNotFound = new Intent();
+            intentActionNotFound.setAction(Constants.Actions.ACTION_NOT_FOUND);
+            intentActionNotFound.putExtra(Constants.MEDIASTORE_ID, mId);
+            //Log.d("media store not found", mId + "");
+            mLocalBroadcastManager.sendBroadcastSync(intentActionNotFound);
         }
+
+        //if is the last file stop the service
+        if (mLastFile) {
+            //Update the UI only to MainActivity if task has completed;
+            //if task was started from TrackDetailsActivity is not necessary inform this action
+            mStopService = Constants.StopsReasons.NORMAL_TERMINATION_TASK;
+            if (!mFromEditMode) {
+
+                Intent intentCompleteTask = new Intent();
+                intentCompleteTask.setAction(Constants.Actions.ACTION_COMPLETE_TASK);
+                mLocalBroadcastManager.sendBroadcastSync(intentCompleteTask);
+            }
+
+            stopSelf();
+        }
+        clearValues();
+
     }
 
     @Override
@@ -801,13 +790,9 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
         Log.d("gnStatus","gnStatus");
     }
 
-    private synchronized void setNewAudioTags(IGnCancellable iGnCancellable, String... tags){
-        if(!ConnectivityDetector.sIsConnected){
-            sIsConnected = false;
-            stopSelf();
-        }
+    private synchronized void setNewAudioTags(String... tags){
 
-        if(!sShouldContinue){
+        if(mStopService != Constants.StopsReasons.CONTINUE_TASK){
             stopSelf();
             return;
         }
@@ -829,9 +814,10 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
             AudioFile audioTaggerFile = null;
             String mimeType = AudioItem.getMimeType(mPath);
             boolean isMp3 = (mimeType.equals("audio/mpeg_mp3") || mimeType.equals("audio/mpeg")) && AudioItem.getExtension(mPath).equals("mp3");
+
             //because this audioitem is sent to main activity
-            //set firstly id and path(in case the file be renamed, we get the path from this audioitem)
-            //and wrap the found new tags(if are availables) into an AudioItem object.
+            //set firstly its id and path(in case the file be renamed, we get the path from this audioitem)
+            //and wrap new found tags(if are availables) into this AudioItem object.
             audioItem.setAbsolutePath(mPath);
             audioItem.setId(mId);
 
@@ -850,13 +836,13 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
                         ID3v24Tag id3v24Tag = new ID3v24Tag( ((MP3File)audioTaggerFile).getID3v1Tag() );
                         audioTaggerFile.setTag(id3v24Tag);
                         tag = ((MP3File) audioTaggerFile).getID3v2TagAsv24();
-                        Log.d("converted_tag","converted_tag");
+                        //Log.d("converted_tag","converted_tag");
                     }
                     else {
                         //already has ID3v2 tag version
                         if(((MP3File) audioTaggerFile).hasID3v2Tag()) {
                             tag = ((MP3File) audioTaggerFile).getID3v2Tag();
-                            Log.d("get_v24_tag","get_v24_tag");
+                            //Log.d("get_v24_tag","get_v24_tag");
                         }
                         //Has no tags? create a new one, but no save until
                         //user apply changes
@@ -864,7 +850,7 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
                             ID3v24Tag id3v24Tag = new ID3v24Tag();
                             ((MP3File) audioTaggerFile).setID3v2Tag(id3v24Tag);
                             tag = ((MP3File) audioTaggerFile).getID3v2TagAsv24();
-                            Log.d("create_v24_tag","create_v24_tag");
+                            //Log.d("create_v24_tag","create_v24_tag");
                         }
                     }
 
@@ -929,7 +915,7 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
                     if (dataGenre) {
                         tag.setField(FieldKey.GENRE, tags[6]);
                     }
-                    Log.d("OverwriteAllTags", Settings.SETTING_OVERWRITE_ALL_TAGS_AUTOMATIC_MODE+"");
+                    //Log.d("OverwriteAllTags", Settings.SETTING_OVERWRITE_ALL_TAGS_AUTOMATIC_MODE+"");
                 }
                 //Only write missing tags to audio file
                 else {
@@ -940,28 +926,28 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
                         audioItem.setTitle(tags[0]);
                         //set value to update the file
                         tag.setField(FieldKey.TITLE, tags[0]);
-                        Log.d("missing","title");
+                        //Log.d("missing","title");
                     }
 
                     if (dataArtist && tag.getFirst(FieldKey.ARTIST).isEmpty()) {
                         newTags.put(TrackContract.TrackData.ARTIST, tags[1]);
                         audioItem.setArtist(tags[1]);
                         tag.setField(FieldKey.ARTIST, tags[1]);
-                        Log.d("missing","artist");
+                        //Log.d("missing","artist");
                     }
 
                     if (dataAlbum && tag.getFirst(FieldKey.ALBUM).isEmpty()) {
                         newTags.put(TrackContract.TrackData.ALBUM, tags[2]);
                         audioItem.setAlbum(tags[2]);
                         tag.setField(FieldKey.ALBUM, tags[2]);
-                        Log.d("missing","album");
+                        //Log.d("missing","album");
                     }
 
                     //FOR NEXT TAGS ONLY UPDATE THE AUDIO FILE,
                     //NOT ITEM LIST NOR OUR DATABASE
                     //BECAUSE WE DON'T STORE THOSE VALUES
                     if (dataImage && tag.getFirstArtwork() != null && tag.getFirstArtwork().getBinaryData() == null ) {
-                        Log.d("missing","cover");
+                        //Log.d("missing","cover");
                         try {
                             byte[] imgData = new GnAssetFetch(GnService.sGnUser, tags[3]).data();
                             Artwork artwork = new AndroidArtwork();
@@ -974,53 +960,52 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
                     }
 
                     if (dataTrackNumber && tag.getFirst(FieldKey.TRACK).isEmpty()) {
-                        Log.d("missing","number");
+                        //Log.d("missing","number");
                         tag.setField(FieldKey.TRACK, tags[4]);
                     }
 
                     if (dataYear && tag.getFirst(FieldKey.YEAR).isEmpty()) {
-                        Log.d("missing","year");
+                        //Log.d("missing","year");
                         tag.setField(FieldKey.YEAR, tags[5]);
                     }
 
                     if (dataGenre && tag.getFirst(FieldKey.GENRE).isEmpty()) {
-                        Log.d("missing","genre");
+                        //Log.d("missing","genre");
                         tag.setField(FieldKey.GENRE, tags[6]);
                     }
-                    Log.d("OverwriteAllTags", Settings.SETTING_OVERWRITE_ALL_TAGS_AUTOMATIC_MODE+"");
+                    //Log.d("OverwriteAllTags", Settings.SETTING_OVERWRITE_ALL_TAGS_AUTOMATIC_MODE+"");
                 }
 
                 if(isMp3 && ((MP3File) audioTaggerFile).hasID3v1Tag()){
                     //remove old version of ID3 tags
-                    Log.d("removed ID3v1","remove ID3v1");
+                    //Log.d("removed ID3v1","remove ID3v1");
                     ((MP3File) audioTaggerFile).delete( ((MP3File)audioTaggerFile).getID3v1Tag() );
                 }
-                //Log.d("cancelled5",iGnCancellable.isCancelled()+"");
 
                 //Update the file meta tags, this changes in tags
                 //are visible to all media players that are able to read
                 //ID3 tags (most nowadays)
                 audioTaggerFile.commit();
-                //If some info was not found, mark the state of this song as INCOMPLETE
+                //If some info was not found, mark its state as INCOMPLETE
                 if (!dataTitle || !dataArtist || !dataAlbum || !dataImage || !dataTrackNumber || !dataYear || !dataGenre) {
                     newTags.put(TrackContract.TrackData.STATUS, AudioItem.STATUS_ALL_TAGS_NOT_FOUND);
                     audioItem.setStatus(AudioItem.STATUS_ALL_TAGS_NOT_FOUND);
                 }
-                //All info for this song was found, mark as complete!!!
+                //All info for this song was found, mark its state as COMPLETE!!!
                 else {
                     newTags.put(TrackContract.TrackData.STATUS, AudioItem.STATUS_ALL_TAGS_FOUND);
                     audioItem.setStatus(AudioItem.STATUS_ALL_TAGS_FOUND);
                 }
 
-                //Rename file if is enabled in settings
+                //Rename file if this option is enabled in Settings
                 if (Settings.SETTING_RENAME_FILE_AUTOMATIC_MODE) {
                     String newAbsolutePath = AudioItem.renameFile(audioItem.getAbsolutePath(), tags[0], tags[1]);
                     if (newAbsolutePath != null){
-                        //Lets inform to system that one file has change its name
+                        //Inform to system that one file has change its name
                         ContentValues newValuesToMediaStore = new ContentValues();
                         newValuesToMediaStore.put(MediaStore.MediaColumns.DATA, newAbsolutePath);
                         String selection = MediaStore.MediaColumns.DATA + "= ?";
-                        String selectionArgs[] = {audioItem.getAbsolutePath()}; //old path
+                        String selectionArgs[] = {audioItem.getAbsolutePath()}; //this is the old path
                         boolean successMediaStore = getContentResolver().
                                 update(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
                                         newValuesToMediaStore,
@@ -1040,8 +1025,8 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
                 newTags.put(TrackContract.TrackData.IS_PROCESSING, false);
                 mDataTrackDbHelper.updateData(audioItem.getId(), newTags);
 
-                //and finally report to receivers the status
-                //of this file, for updating the UI
+                //finally report to receivers the status
+                //of this file, to update the UI
                 Intent intentActionDone = new Intent();
                 intentActionDone.setAction(Constants.Actions.ACTION_DONE);
                 intentActionDone.putExtra(Constants.AUDIO_ITEM, audioItem);
@@ -1058,7 +1043,8 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
                 newTags.put(TrackContract.TrackData.IS_PROCESSING, false);
                 mDataTrackDbHelper.updateData(audioItem.getId(), newTags);
 
-                //and report to receivers the status
+                //and report to receivers that current song could
+                //not be processed
                 Intent intentActionDone = new Intent();
                 intentActionDone.setAction(Constants.Actions.ACTION_FAIL);
                 intentActionDone.putExtra(Constants.AUDIO_ITEM, audioItem);
@@ -1073,7 +1059,7 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
         //if intent was made from TrackDetailsActivity
         //don't modify the track, only retrieve data and
         //send back to activity to show to user, he/she has to decide
-        //if apply found tags, this is the SEMIAUTOMATIC MODE
+        //if want to apply found tags, this is the SEMIAUTOMATIC MODE
         else {
             AudioItem audioItem = new AudioItem();
             audioItem.setId(mId);
@@ -1112,15 +1098,19 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
                 audioItem.setGenre(tags[6]);
             }
 
-            //send back the results
+            //send back results and inform that track id for this
+            //song has been successful processed
             Intent intentActionDoneDetails = new Intent();
             intentActionDoneDetails.setAction(Constants.Actions.ACTION_DONE_DETAILS);
             intentActionDoneDetails.putExtra(Constants.AUDIO_ITEM, audioItem);
             mLocalBroadcastManager.sendBroadcastSync(intentActionDoneDetails);
 
         }
-        //if is the last file stop the service
+
+        //is the last processed song?
         if(mLastFile){
+            mStopService = Constants.StopsReasons.NORMAL_TERMINATION_TASK;
+
             //Inform to update the UI only to MainActivity if task has completed;
             //if task was started from TrackDetailsActivity is not necessary inform this action
             if(!mFromEditMode){
@@ -1128,44 +1118,47 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
                 intentCompleteTask.setAction(Constants.Actions.ACTION_COMPLETE_TASK);
                 mLocalBroadcastManager.sendBroadcastSync(intentCompleteTask);
             }
+
             //if this was the last file, lets assume that
-            //user did not cancel the task
-            sFinishTaskByUser = false;
+            //user did not cancel the task and stop service
             stopSelf();
+            return;
         }
 
 
-        if(!sShouldContinue){
+
+        //Check if is requested to stop service
+        if(mStopService != Constants.StopsReasons.CONTINUE_TASK){
             stopSelf();
             return;
         }
 
     }
 
+    /**
+     * Clear temporal values used to
+     * hold a global reference to current song being
+     * corrected
+     */
     public void clearValues(){
         mId = -1;
         mPath = null;
     }
 
-    public static void lostConnection(boolean lostConnection){
-        sError = false;
-        sIsConnected = lostConnection;
-        sFinishTaskByUser = false;
-    }
-
+    //This Handler class handles the task of correction
     public static class MyHandler extends Handler {
-        private WeakReference<FixerTrackService> fixerTrackService2WeakReference;
-        public MyHandler(Looper looper, FixerTrackService fixerTrackService2){
+        //A weak reference can avoid us memory leaks
+        private WeakReference<FixerTrackService> fixerTrackServiceWeakReference;
+        public MyHandler(Looper looper, FixerTrackService fixerTrackService){
             super(looper);
-            fixerTrackService2WeakReference = new WeakReference<>(fixerTrackService2);
+            fixerTrackServiceWeakReference = new WeakReference<>(fixerTrackService);
         }
 
         @Override
         public void handleMessage(Message msg){
-            //Log.d("message_received","received");
             int startId = msg.arg1;
             Intent intent = (Intent) msg.obj;
-            fixerTrackService2WeakReference.get().onHandleIntent(intent);
+            fixerTrackServiceWeakReference.get().onHandleIntent(intent);
             Log.i(CLASS_NAME, "startId: " + startId);
         }
     }

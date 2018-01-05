@@ -78,7 +78,6 @@ import mx.dev.franco.automusictagfixer.utilities.SimpleMediaPlayer;
 import static mx.dev.franco.automusictagfixer.SplashActivity.APP_SHARED_PREFERENCES;
 import static mx.dev.franco.automusictagfixer.services.GnService.sApiInitialized;
 
-
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
     TrackAdapter.AudioItemHolder.ClickListener {
@@ -448,7 +447,9 @@ public class MainActivity extends AppCompatActivity
             toast.show();
 
             Intent intentStopService = new Intent(this, FixerTrackService.class);
-            stopService(intentStopService);
+            intentStopService.setAction(Constants.Actions.ACTION_STOP_SERVICE);
+            intentStopService.putExtra(Constants.Actions.ACTION_STOP_SERVICE, Constants.StopsReasons.CANCEL_TASK);
+            startService(intentStopService);
             if (mDataTrackDbHelper != null) {
                 mDataTrackDbHelper.close();
                 mDataTrackDbHelper = null;
@@ -759,9 +760,6 @@ public class MainActivity extends AppCompatActivity
             String shareBodyText = getPlayStoreLink();
 
             Intent shareIntent = ShareCompat.IntentBuilder.from(this).setType("text/plain").setText(shareSubText +"\n"+ shareBodyText).getIntent();
-            //shareIntent.putExtra(Intent.EXTRA_TITLE, getString(R.string.app_name));
-            //shareIntent.putExtra(Intent.EXTRA_SUBJECT, shareSubText);
-            //shareIntent.putExtra(Intent.EXTRA_TEXT, shareBodyText);
             shareIntent.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY | Intent.FLAG_ACTIVITY_NEW_DOCUMENT | Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
             startActivity(shareIntent);
         }
@@ -1332,7 +1330,10 @@ public class MainActivity extends AppCompatActivity
                     public void onClick(DialogInterface dialog, int which) {
                         //stops service, and sets starting state to FAB
                         Intent requestStopService = new Intent(MainActivity.this, FixerTrackService.class);
-                        stopService(requestStopService);
+                        requestStopService.setAction(Constants.Actions.ACTION_STOP_SERVICE);
+                        requestStopService.putExtra(Constants.Actions.ACTION_STOP_SERVICE, Constants.StopsReasons.CANCEL_TASK);
+                        startService(requestStopService);
+
                         finishTaskByUser();
                         MainActivity.this.mFloatingActionButtonStop.hide();
                         MainActivity.this.mFloatingActionButtonStart.show();
@@ -1857,8 +1858,8 @@ public class MainActivity extends AppCompatActivity
             //we do, relay in this id,
             //so when we save row to DB
             //it returns its id as a result
-            long _id = mainActivityWeakReference.get().mDataTrackDbHelper.insertItem(values, TrackContract.TrackData.TABLE_NAME);
-            audioItem.setId(_id).setTitle(title).setArtist(artist).setAlbum(album).setAbsolutePath(fullPath);
+            mainActivityWeakReference.get().mDataTrackDbHelper.insertItem(values, TrackContract.TrackData.TABLE_NAME);
+            audioItem.setId(mediaStoreId).setTitle(title).setArtist(artist).setAlbum(album).setAbsolutePath(fullPath);
 
             publishProgress(audioItem);
             values.clear();
@@ -1943,14 +1944,6 @@ public class MainActivity extends AppCompatActivity
                     break;
                 case Constants.Actions.ACTION_CONNECTION_LOST:
                 case Constants.Actions.ACTION_CANCEL_TASK:
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            mLocalBroadcastManager.unregisterReceiver(mReceiver);
-                        }
-                    });
-
-                    break;
                 case Constants.Actions.ACTION_COMPLETE_TASK:
                     runOnUiThread(new Runnable() {
                         @Override

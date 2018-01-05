@@ -47,6 +47,7 @@ public class Constants {
         public static final String ACTION_INTERNET_CONNECTION = BuildConfig.APPLICATION_ID + "." + "action_internet_connection";
         public static final String ACTION_CONNECTION_LOST = BuildConfig.APPLICATION_ID + "." + "action_connection_lost" ;
         public static final String ACTION_ERROR = BuildConfig.APPLICATION_ID + "." + "action_error" ;
+        public static final String ACTION_STOP_SERVICE = BuildConfig.APPLICATION_ID + "." + "action_stop_service";
 
     }
 
@@ -64,6 +65,16 @@ public class Constants {
     public static class Conditions {
         public static  final int NO_INTERNET_CONNECTION = 2;
         public static  final int NO_INITIALIZED_API = 1;
+
+    }
+
+    public static class StopsReasons {
+        public static final int CONTINUE_TASK = -1;
+        public static final int NORMAL_TERMINATION_TASK = 0;
+        public static final int USER_CANCEL_TASK = 1;
+        public static final int CANCEL_TASK = 2;
+        public static final int ERROR_TASK = 3;
+        public static final int LOST_CONNECTION_TASK = 4;
 
     }
 

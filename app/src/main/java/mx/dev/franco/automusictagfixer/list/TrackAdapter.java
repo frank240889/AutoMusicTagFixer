@@ -4,6 +4,7 @@ import android.content.Context;
 import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -265,11 +266,14 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
      * and updates UI
      */
     public void cancelProcessing(){
+
+        Log.d("cancelprocessing1","cancelprocessing1");
         for (int t = 0; t < mCurrentList.size(); t++) {
             AudioItem audioItem = mCurrentList.get(t);
             if (audioItem.isProcessing()) {
                 audioItem.setProcessing(false);
                 notifyItemChanged(t);
+                Log.d("cancelprocessing3","cancelprocessing3");
             }
         }
 
@@ -527,7 +531,7 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
     @Override
     public Filter getFilter(){
         if(this.mCustomFilter == null){
-            this.mCustomFilter = new CustomFilter();
+            this.mCustomFilter = new CustomFilter(this);
         }
         return this.mCustomFilter;
     }
@@ -549,7 +553,11 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
     /**
      * class that filters a results of search widget
      */
-    private class CustomFilter extends Filter {
+    public static class CustomFilter extends Filter {
+        private WeakReference<TrackAdapter> mWeakReferenceTrackAdapter;
+        public CustomFilter(TrackAdapter trackAdapter){
+            mWeakReferenceTrackAdapter = new WeakReference<>(trackAdapter);
+        }
 
         @SuppressWarnings("unchecked")
         @Override
@@ -560,14 +568,14 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
             //is empty then is not needed to search
             //so we reference to the original list a return all results
             if (charString.isEmpty()) {
-                mCurrentList = mCurrentFilteredList;
+                mWeakReferenceTrackAdapter.get(). mCurrentList = mWeakReferenceTrackAdapter.get().mCurrentFilteredList;
             }
             else {
                 //creates a temporal filtered list
                 List<AudioItem> filteredList = new ArrayList<>();
 
                 //here we define the parameter in which the results are based
-                for (AudioItem audioItem : mCurrentFilteredList) {
+                for (AudioItem audioItem : mWeakReferenceTrackAdapter.get().mCurrentFilteredList) {
                     if (audioItem.getTitle().toLowerCase().contains(charString.toLowerCase())) {
                         //if this item satisfy the criteria of search then add to temporal list
                         filteredList.add(audioItem);
@@ -576,13 +584,13 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
                 //now our current list references to filtered list
                 //but we don't lose the orinal reference, because when the search
                 //finish we need the original list.
-                mCurrentList = filteredList;
+                mWeakReferenceTrackAdapter.get().mCurrentList = filteredList;
 
             }
 
             FilterResults  filterResults = new FilterResults();
-            filterResults.values = mCurrentList;
-            filterResults.count = mCurrentList.size();
+            filterResults.values = mWeakReferenceTrackAdapter.get().mCurrentList;
+            filterResults.count = mWeakReferenceTrackAdapter.get().mCurrentList.size();
 
             return filterResults;
         }
@@ -596,9 +604,9 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
         @Override
         protected void publishResults(CharSequence constraint, FilterResults results) {
 
-            mCurrentList = (ArrayList<AudioItem>) results.values;
+            mWeakReferenceTrackAdapter.get().mCurrentList = (ArrayList<AudioItem>) results.values;
             //inform to recycler view to update the views.
-            notifyDataSetChanged();
+            mWeakReferenceTrackAdapter.get().notifyDataSetChanged();
         }
     }
 
