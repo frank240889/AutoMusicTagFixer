@@ -302,7 +302,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
         mCurrentItemId = getIntent().getLongExtra(Constants.MEDIASTORE_ID,-1);
 
         mCurrentPosition = getIntent().getIntExtra(Constants.POSITION,0);
-        mCurrentAudioItem = mTrackAdapter.getAudioItemByIdOrPath(mCurrentItemId, null);
+        mCurrentAudioItem = mTrackAdapter.getAudioItemByIdOrPath(mCurrentItemId);
 
         //current path to file
         mTrackPath = mCurrentAudioItem.getAbsolutePath();

@@ -12,6 +12,7 @@ public class Constants {
     public static final String POSITION = "position";
     public static final String COMPLETE_READ = "complete_read";
     public static final String SORT_KEY = "key_default_sort";
+    public static final String ALL_ITEMS_CHECKED = "all_items_checked";
 
     public static class Application{
         public static String FULL_QUALIFIED_NAME = BuildConfig.APPLICATION_ID;

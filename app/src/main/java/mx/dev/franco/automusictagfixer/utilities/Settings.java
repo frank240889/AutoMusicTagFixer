@@ -34,7 +34,7 @@ public class Settings {
     //else, only missing tags will be written
     public static boolean SETTING_OVERWRITE_ALL_TAGS_AUTOMATIC_MODE = false;
 
-    public static boolean ALL_SELECTED = false;
+    public static boolean ALL_CHECKED = false;
 
     public static GnImageSize setValueImageSize(String preferenceSaved){
         GnImageSize size = null;

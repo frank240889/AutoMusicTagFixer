@@ -1,10 +1,10 @@
 package mx.dev.franco.automusictagfixer.list;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -37,7 +37,9 @@ import java.util.List;
 
 import mx.dev.franco.automusictagfixer.MainActivity;
 import mx.dev.franco.automusictagfixer.R;
+import mx.dev.franco.automusictagfixer.SplashActivity;
 import mx.dev.franco.automusictagfixer.database.TrackContract;
+import mx.dev.franco.automusictagfixer.utilities.Constants;
 import mx.dev.franco.automusictagfixer.utilities.GlideApp;
 
 import static android.view.View.GONE;
@@ -122,8 +124,8 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
         }
 
         //don't load covers if user is scrolling too fast
-       if(this.mVerticalScrollSpeed <= 450 && this.mVerticalScrollSpeed >= -450 && (mScrollingState == 0 || mScrollingState == 2)) {
-           //We need to read covers arts in other thread,
+       if(this.mVerticalScrollSpeed <= 450 && this.mVerticalScrollSpeed >= -450) {
+           //We need to read cover arts in other thread,
            //because this operation is going to reduce performance
            //in main thread, making the scroll very laggy
             asyncLoadCover = new AsyncLoadCover(holder, mContext);
@@ -178,20 +180,25 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
     }
 
     /**
-     * Getter for mAllSelected property
+     * Check if all items were previously checked
      * @return true if are all selected, false otherwise
      */
-    public boolean areAllSelected(){
-        return this.mAllSelected;
+    public boolean areAllChecked(){
+        return mContext.getSharedPreferences(SplashActivity.APP_SHARED_PREFERENCES, Context.MODE_PRIVATE).
+                getBoolean(Constants.ALL_ITEMS_CHECKED, false);
     }
 
     /**
-     * Setter for mAllSelected property
-     * @return this object adapter.
+     * Sets new state to ALL_ITEMS_CHECKED
+     * @param allChecked
      */
-    public TrackAdapter setAllSelected(boolean allSelected){
-        this.mAllSelected = allSelected;
-        return this;
+    public void setAllChecked(boolean allChecked){
+        SharedPreferences sharedPreferences = mContext.getSharedPreferences(SplashActivity.APP_SHARED_PREFERENCES, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putBoolean(Constants.ALL_ITEMS_CHECKED, allChecked);
+        editor.apply();
+        editor = null;
+        sharedPreferences = null;
     }
 
     /**
@@ -217,25 +224,32 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
 
     /**
      * Return the corresponding audio item
-     * that has the id or path passed as parameter
-     * @param id
-     * @param path
-     * @return
+     * that has the id passed as parameter
+     * @param id The id to search
+     * @return An AudioItem object if was found, null otherwise
      */
-    public AudioItem getAudioItemByIdOrPath(long id, String path){
+    public AudioItem getAudioItemByIdOrPath(long id){
         AudioItem audioItem = null;
 
-        if(id != -1){
-            for(int t = 0; t < getItemCount() ; t++){
-                if(mCurrentList.get(t).getId() == id ){
-                    audioItem =  mCurrentList.get(t);
-                    audioItem.setPosition(t);
-                    break;
-                }
+        for(int t = 0; t < getItemCount() ; t++){
+            if(mCurrentList.get(t).getId() == id ){
+                audioItem =  mCurrentList.get(t);
+                audioItem.setPosition(t);
+                break;
             }
-            return audioItem;
         }
 
+        return audioItem;
+    }
+
+    /**
+     * Return the corresponding audio item
+     * that has the path passed as parameter
+     * @param path The path to search
+     * @return An AudioItem object if was found, null otherwise
+     */
+    public AudioItem getAudioItemByIdOrPath(String path){
+        AudioItem audioItem = null;
         if(path != null && !path.equals("")){
             for(int t = 0; t < getItemCount() ; t++){
                 if(mCurrentList.get(t).getAbsolutePath().equals(path)){
@@ -248,6 +262,10 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
 
         return audioItem;
     }
+
+
+
+
 
     public AudioItem getAudioItemByPosition(int position){
         AudioItem audioItem = null;
@@ -266,14 +284,29 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
      * and updates UI
      */
     public void cancelProcessing(){
-
-        Log.d("cancelprocessing1","cancelprocessing1");
         for (int t = 0; t < mCurrentList.size(); t++) {
             AudioItem audioItem = mCurrentList.get(t);
             if (audioItem.isProcessing()) {
                 audioItem.setProcessing(false);
                 notifyItemChanged(t);
-                Log.d("cancelprocessing3","cancelprocessing3");
+            }
+        }
+    }
+
+    public void checkAudioItem(long id, boolean checked){
+        int position;
+        if(id != -1){
+            AudioItem audioItem = getAudioItemByIdOrPath(id);
+            audioItem.setChecked(checked);
+            position = audioItem.getPosition();
+            notifyItemChanged(position);
+            audioItem.setPosition(-1);
+        }
+        else {
+            for (int t = 0; t < mCurrentList.size(); t++) {
+                AudioItem audioItem = mCurrentList.get(t);
+                    audioItem.setChecked(checked);
+                    notifyItemChanged(t);
             }
         }
 

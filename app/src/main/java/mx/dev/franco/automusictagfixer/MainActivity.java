@@ -46,7 +46,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
-import android.widget.CheckBox;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -537,7 +536,7 @@ public class MainActivity extends AppCompatActivity
         mMenuItemArtist = menu.findItem(R.id.action_sort_by_artist);
         mMenuItemAlbum = menu.findItem(R.id.action_sort_by_album);
 
-        setCheckedItem(null);
+        checkMenuItem(null);
         // Define an expand listener for search widget
         MenuItemCompat.OnActionExpandListener expandListener = new MenuItemCompat.OnActionExpandListener() {
             @Override
@@ -624,54 +623,54 @@ public class MainActivity extends AppCompatActivity
 
         switch (id){
             case R.id.action_select_all:
-                actionSelectAll();
+                checkAllItems();
                 break;
 
             case R.id.action_refresh:
-                actionRefresh();
+                refreshList();
                 break;
 
             case R.id.path_asc:
-                actionSortBy(TrackContract.TrackData.DATA, TrackAdapter.ASC);
-                setCheckedItem(item);
+                sortBy(TrackContract.TrackData.DATA, TrackAdapter.ASC);
+                checkMenuItem(item);
                 break;
             case R.id.path_desc:
-                actionSortBy(TrackContract.TrackData.DATA, TrackAdapter.DESC);
-                setCheckedItem(item);
+                sortBy(TrackContract.TrackData.DATA, TrackAdapter.DESC);
+                checkMenuItem(item);
                 break;
 
             case R.id.title_asc:
-                actionSortBy(TrackContract.TrackData.TITLE, TrackAdapter.ASC);
-                setCheckedItem(item);
+                sortBy(TrackContract.TrackData.TITLE, TrackAdapter.ASC);
+                checkMenuItem(item);
                 break;
             case R.id.title_desc:
-                actionSortBy(TrackContract.TrackData.TITLE, TrackAdapter.DESC);
-                setCheckedItem(item);
+                sortBy(TrackContract.TrackData.TITLE, TrackAdapter.DESC);
+                checkMenuItem(item);
                 break;
 
             case R.id.artist_asc:
-                actionSortBy(TrackContract.TrackData.ARTIST, TrackAdapter.ASC);
-                setCheckedItem(item);
+                sortBy(TrackContract.TrackData.ARTIST, TrackAdapter.ASC);
+                checkMenuItem(item);
                 break;
             case R.id.artist_desc:
-                actionSortBy(TrackContract.TrackData.ARTIST, TrackAdapter.DESC);
-                setCheckedItem(item);
+                sortBy(TrackContract.TrackData.ARTIST, TrackAdapter.DESC);
+                checkMenuItem(item);
                 break;
 
             case R.id.album_asc:
-                actionSortBy(TrackContract.TrackData.ALBUM, TrackAdapter.ASC);
-                setCheckedItem(item);
+                sortBy(TrackContract.TrackData.ALBUM, TrackAdapter.ASC);
+                checkMenuItem(item);
                 break;
             case R.id.album_desc:
-                actionSortBy(TrackContract.TrackData.ALBUM, TrackAdapter.DESC);
-                setCheckedItem(item);
+                sortBy(TrackContract.TrackData.ALBUM, TrackAdapter.DESC);
+                checkMenuItem(item);
                 break;
         }
 
         return super.onOptionsItemSelected(item);
     }
 
-    private void setCheckedItem(MenuItem item){
+    private void checkMenuItem(MenuItem item){
         if(null == item && mAudioItemList.size() == 0){
             showSnackBar(Snackbar.LENGTH_SHORT, getString(R.string.no_items), NO_ID);
             return;
@@ -701,7 +700,7 @@ public class MainActivity extends AppCompatActivity
         }
         else {
             id = Settings.SETTING_SORT;
-            Log.d("el id", id + "");
+            //Log.d("el id", id + "");
             //default checked is SortBy path, descendant order
             lastCheckedItem = mMenu.findItem(id == 0  ? R.id.path_asc : id);
             lastCheckedItem.setIcon(ContextCompat.getDrawable(getApplicationContext(), R.drawable.ic_done_white));
@@ -844,7 +843,7 @@ public class MainActivity extends AppCompatActivity
                 onClickCoverArt(view, position, Constants.CorrectionModes.VIEW_INFO);
                 break;
             case R.id.checkBoxTrack:
-                selectItem((long)view.getTag(), view, position);
+                checkItem((long)view.getTag(), view, position);
                 break;
             default:
                 try {
@@ -860,7 +859,7 @@ public class MainActivity extends AppCompatActivity
      * Refresh list by searching new and removed audio files
      * from smartphone
      */
-    private void actionRefresh(){
+    private void refreshList(){
         //request permission in case is necessary and update
         //our database
         if(RequiredPermissions.ACCESS_GRANTED_FILES) {
@@ -993,7 +992,7 @@ public class MainActivity extends AppCompatActivity
      * This method mark as select all
      * items in recycler view
      */
-    private void actionSelectAll(){
+    private void checkAllItems(){
 
         if(mAudioItemList.size() == 0 ){
             showSnackBar(Snackbar.LENGTH_SHORT, getString(R.string.no_items), NO_ID);
@@ -1006,37 +1005,18 @@ public class MainActivity extends AppCompatActivity
             return;
         }
 
-        boolean areAllSelected = mAudioItemArrayAdapter.areAllSelected();
-
-        AsyncSelectItem asyncSelectItem = new AsyncSelectItem(this);
-        asyncSelectItem .execute(areAllSelected);
-    }
-
-    private static class AsyncSelectItem extends AsyncTask<Boolean,Integer, Void>{
-        private WeakReference<MainActivity> mMainActivityWeakReference;
-
-        public AsyncSelectItem(MainActivity mainActivity){
-            mMainActivityWeakReference = new WeakReference<>(mainActivity);
-        }
-
-        @Override
-        protected Void doInBackground(Boolean... params) {
-            ContentValues values = new ContentValues();
-            values.put(TrackContract.TrackData.IS_SELECTED,!params[0]);
-            mMainActivityWeakReference.get().mDataTrackDbHelper.updateData(values);
-            for(int f = 0; f< mMainActivityWeakReference.get().mAudioItemArrayAdapter.getItemCount() ; f++){
-                mMainActivityWeakReference.get().mAudioItemList.get(f).setChecked(!params[0]);
-                publishProgress(f);
+        final boolean allSelected = mAudioItemArrayAdapter.areAllChecked();
+        mAudioItemArrayAdapter.checkAudioItem(-1,!allSelected);
+        mAudioItemArrayAdapter.setAllChecked(!allSelected);
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                ContentValues values = new ContentValues();
+                values.put(TrackContract.TrackData.IS_SELECTED,!allSelected);
+                mDataTrackDbHelper.updateData(values);
             }
-            mMainActivityWeakReference.get().mAudioItemArrayAdapter.setAllSelected(!params[0]);
-            return null;
-        }
-
-        @Override
-        protected void onProgressUpdate(Integer... integers){
-            super.onProgressUpdate(integers);
-            mMainActivityWeakReference.get().mAudioItemArrayAdapter.notifyItemChanged(integers[0]);
-        }
+        });
+        thread.start();
     }
 
     /**
@@ -1044,7 +1024,7 @@ public class MainActivity extends AppCompatActivity
      * @param sortBy the field/column to sort by
      * @param sortType the sort type, may be ascendant or descendant
      */
-    private void actionSortBy(String sortBy, int sortType){
+    private void sortBy(String sortBy, int sortType){
 
         //if no songs, no case sort anything
         if(mAudioItemList.size() == 0 ){
@@ -1176,7 +1156,7 @@ public class MainActivity extends AppCompatActivity
 
     /**
      * Opens new activity showing up the details from current audio item list pressed
-     * @param view the view pressed, maybe the root view or any child
+     * @param view the view pressed, may be the root view or any child
      * @param position the position of item in list
      * @param mode indicates what mode of correction execute when enters to TrackDetailsActivity
      */
@@ -1216,65 +1196,27 @@ public class MainActivity extends AppCompatActivity
      * @param view checkbox that was checked or unchecked
      * @param position the position of item in list
      */
-    private void selectItem(final long id, final View view, final int position){
-        AudioItem audioItem = mAudioItemArrayAdapter.getAudioItemByIdOrPath(id, null);
+    private void checkItem(final long id, View view, final int position){
+        AudioItem audioItem = mAudioItemArrayAdapter.getAudioItemByIdOrPath(id);
         Log.d("mMenuItemPath", audioItem.getAbsolutePath());
         if(!AudioItem.checkFileIntegrity(audioItem.getAbsolutePath())){
             showConfirmationDialog(position, audioItem);
             return;
         }
 
-        final CheckBox checkBox = (CheckBox) view;
-        new Thread(new Runnable() {
+        boolean checked = audioItem.isChecked();
+
+        final ContentValues checkedValue = new ContentValues();
+        checkedValue.put(TrackContract.TrackData.IS_SELECTED, !checked);
+        mAudioItemArrayAdapter.checkAudioItem(id, !checked);
+
+        final Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
-                Cursor data = mDataTrackDbHelper.getDataRow(id);
-                ContentValues newValues = null;
-                if(data != null){
-                    data.moveToFirst();
-
-                    boolean isChecked = data.getInt(data.getColumnIndexOrThrow(TrackContract.TrackData.IS_SELECTED)) != 0;
-
-                    AudioItem audioItem = mAudioItemArrayAdapter.getAudioItemByIdOrPath(id, "");
-
-                    newValues = new ContentValues();
-                    if(isChecked) {
-                        newValues.put(TrackContract.TrackData.IS_SELECTED, false);
-                        audioItem.setChecked(false);
-
-                        //only main thread can touch its views.
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                checkBox.setChecked(false);
-                            }
-                        });
-
-                    }
-                    else {
-                        newValues.put(TrackContract.TrackData.IS_SELECTED, true);
-                        audioItem.setChecked(true);
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                checkBox.setChecked(true);
-                            }
-                        });
-                    }
-                    mDataTrackDbHelper.updateData(id, newValues);
-                    newValues.clear();
-                    data.close();
-                    data = null;
-
-                    System.gc();
-
-                }
-
+                mDataTrackDbHelper.updateData(id, checkedValue);
             }
-
-        }).start();
-
-
+        });
+        thread.start();
     }
 
     /**
@@ -1448,7 +1390,7 @@ public class MainActivity extends AppCompatActivity
         boolean newAudioItemFound = (newAudioItem != null);
         long id = newAudioItemFound ? newAudioItem.getId() : processedId;
         //get current item by id received and set its processing and check state to false
-        AudioItem actualAudioItem = mAudioItemArrayAdapter.getAudioItemByIdOrPath(id,null);
+        AudioItem actualAudioItem = mAudioItemArrayAdapter.getAudioItemByIdOrPath(id);
 
         //check if actual audio item exist in list yet
         if(actualAudioItem != null) {
@@ -1490,7 +1432,7 @@ public class MainActivity extends AppCompatActivity
      * @param id the id sent by FixerTrackService
      */
     private void setProcessingAudioItem(long id){
-        AudioItem audioItem = mAudioItemArrayAdapter.getAudioItemByIdOrPath(id,null);
+        AudioItem audioItem = mAudioItemArrayAdapter.getAudioItemByIdOrPath(id);
         audioItem.setProcessing(true);
         mRecyclerView.scrollToPosition(audioItem.getPosition());
         mAudioItemArrayAdapter.notifyItemChanged(audioItem.getPosition());
@@ -1533,14 +1475,16 @@ public class MainActivity extends AppCompatActivity
 
         @Override
         protected void onPreExecute() {
-            //check if a previous read of files
-            //could not be completed, in this case
+            //check if a previous reading of files
+            //could not be successful completed, in this case
             //clear DB and re read data from Media Store
 
             SharedPreferences sharedPreferences = mainActivityWeakReference.get().getSharedPreferences(APP_SHARED_PREFERENCES, Context.MODE_PRIVATE);
             mMediaScanCompleted = sharedPreferences.getBoolean(Constants.COMPLETE_READ,false);
             if(!mMediaScanCompleted){
                 taskType = CREATE_DATABASE;
+                mainActivityWeakReference.get().showSnackBar(Snackbar.LENGTH_SHORT,mainActivityWeakReference.get().getString(R.string.getting_data),NO_ID);
+                mainActivityWeakReference.get().mSearchAgainMessageTextView.setVisibility(View.GONE);
             }
 
             //this method is invoked before
@@ -1561,17 +1505,6 @@ public class MainActivity extends AppCompatActivity
             //database to avoid any problem, in case
             //there have had a unsuccessful previous
             //creation of DB
-            if(this.taskType == CREATE_DATABASE){
-                mainActivityWeakReference.get().mDataTrackDbHelper.clearDb();
-                mainActivityWeakReference.get().runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        mainActivityWeakReference.get().showSnackBar(Snackbar.LENGTH_SHORT,mainActivityWeakReference.get().getString(R.string.getting_data),NO_ID);
-                        mainActivityWeakReference.get().mSearchAgainMessageTextView.setVisibility(View.GONE);
-                    }
-                });
-            }
-
 
             switch (taskType){
                 //If we are updating for new elements added
@@ -1581,6 +1514,7 @@ public class MainActivity extends AppCompatActivity
                     break;
                 //if database does not exist or is first use of app
                 case CREATE_DATABASE:
+                    mainActivityWeakReference.get().mDataTrackDbHelper.clearDb();
                     createNewTable();
                     break;
                 //if we are reading data from database (this means later app openings)

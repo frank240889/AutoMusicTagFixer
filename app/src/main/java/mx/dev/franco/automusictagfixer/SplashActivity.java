@@ -35,7 +35,7 @@ public class SplashActivity extends AppCompatActivity{
         Settings.SETTING_RENAME_FILE_AUTOMATIC_MODE = preferences.getBoolean("key_rename_file_automatic_mode", true);
         Settings.SETTING_RENAME_FILE_MANUAL_MODE = preferences.getBoolean("key_rename_file_manual_mode", true);
         Settings.SETTING_REPLACE_STRANGE_CHARS_MANUAL_MODE = preferences.getBoolean("key_replace_strange_chars_manual_mode",true);
-        Settings.ALL_SELECTED = preferences.getBoolean("allSelected",false);
+        Settings.ALL_CHECKED = preferences.getBoolean(Constants.ALL_ITEMS_CHECKED,false);
         Settings.SETTING_OVERWRITE_ALL_TAGS_AUTOMATIC_MODE = preferences.getBoolean("key_overwrite_all_tags_automatic_mode", true);
         Settings.SETTING_RENAME_FILE_SEMI_AUTOMATIC_MODE = preferences.getBoolean("key_rename_file_semi_automatic_mode", true);
         Settings.SETTING_USE_EMBED_PLAYER = preferences.getBoolean("key_use_embed_player",true);

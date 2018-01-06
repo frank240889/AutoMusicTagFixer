@@ -21,6 +21,7 @@ import com.gracenote.gnsdk.GnLocale;
 import com.gracenote.gnsdk.GnLocaleGroup;
 import com.gracenote.gnsdk.GnManager;
 import com.gracenote.gnsdk.GnRegion;
+import com.gracenote.gnsdk.GnStorageSqlite;
 import com.gracenote.gnsdk.GnUser;
 import com.gracenote.gnsdk.GnUserStore;
 
@@ -110,8 +111,8 @@ public class GnService{
                 sGnManager = new GnManager(sContext, sGnsdkLicenseString, GnLicenseInputMode.kLicenseInputModeString);
                 sGnUser = new GnUser(new GnUserStore(sContext), sGnsdkClientId, sGnsdkClientTag, sAppString);
                 sGnLocale = new GnLocale(GnLocaleGroup.kLocaleGroupMusic, GnLanguage.kLanguageSpanish, GnRegion.kRegionGlobal, GnDescriptor.kDescriptorDetailed, sGnUser);
-                //sGnLocale.setGroupDefault();
-                //GnStorageSqlite.enable();
+                sGnLocale.setGroupDefault();
+                GnStorageSqlite.enable();
                 mConnectedFrom = code[0];
                 //When api could not be initialized since SplashActivity,
                 //inform to user after MainActivity starts
@@ -148,6 +149,7 @@ public class GnService{
                     toast.setGravity(Gravity.CENTER, 0, 0);
                     toast.show();
                     sCountIntents = 0;
+                    //Stop trying to initialize API
                     JobScheduler jobScheduler = (JobScheduler) sContext.getApplicationContext().getSystemService(Context.JOB_SCHEDULER_SERVICE);
                     jobScheduler.cancelAll();
                 }

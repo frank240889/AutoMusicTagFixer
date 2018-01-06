@@ -31,7 +31,7 @@ public class ScrollingAboutActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                openInExternalApp(Intent.ACTION_SENDTO, "mailto: francocastillo2@hotmail.com");
+                openInExternalApp(Intent.ACTION_SENDTO, "mailto: dark.yellow.studios@gmail.com");
             }
         });
 
