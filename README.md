@@ -42,6 +42,7 @@ Features:
 - The correction made, including cover art, is made over the file itself, means that changes are visible to every media player able to read ID3 tags(most nowadays).
 - For MP3 files, in any mode of correction, ID3 tags version 1 will be automatically converted to ID3 version 2, this conversion will allow to write covers over the file itself(and other tags) to mp3 files, because ID3 version 1 has not support for some tags.
 - Background correction (with notification in status bar indicating the progress of task an ability to stop it from here) no matter if you close the app.
+- Crashlytics to report back to developer issues and crashes.
 
 How to build it?
 
