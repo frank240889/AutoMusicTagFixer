@@ -1,7 +1,6 @@
 package mx.dev.franco.automusictagfixer;
 
 import android.Manifest;
-import android.annotation.SuppressLint;
 import android.content.ActivityNotFoundException;
 import android.content.BroadcastReceiver;
 import android.content.ContentValues;
@@ -49,11 +48,6 @@ import android.view.WindowManager;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.appindexing.Action;
-import com.google.android.gms.appindexing.AppIndex;
-import com.google.android.gms.appindexing.Thing;
-import com.google.android.gms.common.api.GoogleApiClient;
-
 import java.io.File;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
@@ -74,49 +68,46 @@ import mx.dev.franco.automusictagfixer.utilities.RequiredPermissions;
 import mx.dev.franco.automusictagfixer.utilities.Settings;
 import mx.dev.franco.automusictagfixer.utilities.SimpleMediaPlayer;
 
-import static mx.dev.franco.automusictagfixer.SplashActivity.APP_SHARED_PREFERENCES;
 import static mx.dev.franco.automusictagfixer.services.GnService.sApiInitialized;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
     TrackAdapter.AudioItemHolder.ClickListener {
-    public static final String ACTION_OPEN_MAIN_ACTIVITY = "main_action";
-    public static String TAG = MainActivity.class.getName();
+     public static String TAG = MainActivity.class.getName();
 
-    //flag to indicate when the app is retrieving data from Gracenote service
+    //flag to indicate when the app is retrieving data from songs
     public static boolean sIsGettingData = false;
 
-    //Reasons why cannot execute task
+    //Indicates why cannot execute task twice at the same time
     public static final int PROCESSING_TASK = 42;
 
     //media player instance, only one is allowed
     public static SimpleMediaPlayer sMediaPlayer;
     //indicates there's no action to take
     private static final int NO_ID = -1;
-    //object for sorting the list
+    //object for sorting list
     private static TrackAdapter.Sorter sSorter;
-
 
     //Adapter of recyclerview
     private TrackAdapter mAudioItemArrayAdapter;
     //Data source to populate the adapter
     private List<AudioItem> mAudioItemList;
 
-    //actions to indicate from where to retrieve data or what to do in first use app.
+    //actions to indicate from where to retrieve data depending on is first use app or not
     private static final int RE_SCAN = 20;
     private static final int CREATE_DATABASE = 21;
     private static final int READ_FROM_DATABASE = 22;
 
-    //message to user when permission to read files is not granted, or
+    //view to show messages to user when permission to read files is not granted, or
     //in case there have no music files
     private TextView mSearchAgainMessageTextView;
     //search widget object, for search more quickly
-    //any track by title in recyclerview list
+    //any song by title in recyclerview list
     private SearchView mSearchViewWidget;
-    //FloatingActionButton button, this executes main task: correct a bunch of selected tracks;
+    //FloatingActionButton, this executes main task: correct a bunch of selected tracks;
     //this executes the automatic mode, without intervention of user,
-    //it can also cancel the task, in case the user decides it.
     private FloatingActionButton mFloatingActionButtonStart;
+    //This FloatingActionButton can cancel the task, in case the user decides it.
     private FloatingActionButton mFloatingActionButtonStop;
     //swipe refresh layout for give to user the
     //ability to re scan his/her library making a swipe down gesture,
@@ -146,23 +137,23 @@ public class MainActivity extends AppCompatActivity
     private MenuItem mMenuItemPath, mMenuItemTitle, mMenuItemArtist, mMenuItemAlbum;
     private MenuItem lastCheckedItem;
     private Menu mMenu;
-
-    private GoogleApiClient client;
-
     //contextual Toolbar
     private Toolbar mToolbar;
 
     //snackbar is a bottom UI component
     //to indicate to user what is happening
+    //when a correction task is in progress
     private Snackbar mSnackbar;
     //a reference to action bar to making use
-    //of something useful methods from this object
+    //of some useful methods from this object
     private ActionBar mActionBar;
 
+    //This async task retrieves the data from songs
+    //to populate the adapter, or executes an update
+    //for searching new songs and eliminate from list
+    //those whose don't exist anymore in smartphone
     private AsyncReadFile asyncReadFile;
 
-    @RequiresApi(api = Build.VERSION_CODES.M)
-    @SuppressLint("UseSparseArrays")
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -299,6 +290,7 @@ public class MainActivity extends AppCompatActivity
                 asyncReadFile = new AsyncReadFile(taskType, this);
                 asyncReadFile.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
             //}
+
         }
 
         mFloatingActionButtonStart.setOnClickListener(new View.OnClickListener() {
@@ -315,7 +307,7 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
-        //Actually if service is running, then register filters and receiver immediately to update UI
+        //Iif service is running currently, then register receiver and filters to update UI
         if(ServiceHelper.withContext(getApplicationContext()).withService(FixerTrackService.CLASS_NAME).isServiceRunning()) {
             registerReceivers();
             mFloatingActionButtonStart.hide();
@@ -330,25 +322,12 @@ public class MainActivity extends AppCompatActivity
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
-        // ATTENTION: This was auto-generated to implement the App Indexing API.
-        // See https://g.co/AppIndexing/AndroidStudio for more information.
-        client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
         Log.d(TAG,"onCreate");
     }
-
-    /**
-     * ATTENTION: This was auto-generated to implement the App Indexing API.
-     * See https://g.co/AppIndexing/AndroidStudio for more information.
-     */
 
     @Override
     public void onStart() {
         super.onStart();
-
-        // ATTENTION: This was auto-generated to implement the App Indexing API.
-        // See https://g.co/AppIndexing/AndroidStudio for more information.
-        client.connect();
-        AppIndex.AppIndexApi.start(client, getIndexApiAction());
         Log.d(TAG,"onStart");
 
     }
@@ -400,7 +379,7 @@ public class MainActivity extends AppCompatActivity
     protected void onPause(){
         super.onPause();
         Log.d(TAG,"onPause");
-        //Deregister filters if FixerTrackService is not processing any task,
+        //Deregister filters if FixerTrackService if not processing any task,
         //useful for saving resources
 
         if(!ServiceHelper.withContext(getApplicationContext()).withService(FixerTrackService.CLASS_NAME).isServiceRunning())
@@ -417,10 +396,6 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onStop() {
         Log.d(TAG,"onStop");
-        // ATTENTION: This was auto-generated to implement the App Indexing API.
-        // See https://g.co/AppIndexing/AndroidStudio for more information.
-        AppIndex.AppIndexApi.end(client, getIndexApiAction());
-        client.disconnect();
         super.onStop();
     }
 
@@ -454,14 +429,14 @@ public class MainActivity extends AppCompatActivity
                 mDataTrackDbHelper = null;
             }
         }
-        //if previous condition is ON, task will continue working after app closes.
-        //DB connection is not close because service will continue updating data in background thread.
+        //if "Usar correccion en segundo plano" is ON, task will continue working after app closes.
+        //DB connection will not close because service will continue updating data in background thread.
 
         //when app closes the app, unregister receiver, thus is not necessary to listen
-        //any broadcast an update UI
+        //any broadcast to update UI
         mLocalBroadcastManager.unregisterReceiver(mReceiver);
 
-        //release all that are going used anymore
+        //release all that are not going used anymore
 
         if (sMediaPlayer.isPlaying()) {
             sMediaPlayer.stop();
@@ -527,8 +502,7 @@ public class MainActivity extends AppCompatActivity
 
         MenuItem searchItem = menu.findItem(R.id.action_search);
         //get a global reference to search widget
-        mSearchViewWidget = (SearchView) MenuItemCompat.getActionView(searchItem);
-        mSearchViewWidget.setVisibility(View.GONE);
+
 
         //get global references to sort types actions
         mMenuItemPath = menu.findItem(R.id.action_sort_by_path);
@@ -538,73 +512,151 @@ public class MainActivity extends AppCompatActivity
 
         checkMenuItem(null);
         // Define an expand listener for search widget
-        MenuItemCompat.OnActionExpandListener expandListener = new MenuItemCompat.OnActionExpandListener() {
-            @Override
-            public boolean onMenuItemActionCollapse(MenuItem item) {
-                //when no searching a track, activate refresh listener
-                //of swipe layouy
-                if(mSwipeRefreshLayout != null) {
-                    mSwipeRefreshLayout.setEnabled(true);
-                }
-                //reset filter to show all tracks
-                if(mAudioItemArrayAdapter != null) {
-                    mAudioItemArrayAdapter.getFilter().filter("");
-                }
-                //and show floating action menu if user have songs
-                if(mAudioItemList.size() != 0)
-                    mFloatingActionButtonStart.show();
-                //finally remove listener
-                mSearchViewWidget.setOnQueryTextListener(null);
-                return true;  // Return true to collapse action mSwipeRefreshLayout
-            }
-
-            @Override
-            public boolean onMenuItemActionExpand(MenuItem item) {
-                //if no songs, no case to expand the search widget
-                if(mAudioItemList.size() <= 0){
-                    showSnackBar(Snackbar.LENGTH_LONG, getString(R.string.no_items_found),NO_ID);
-                    return false;
-                }
-                //when searching a song, deactivate the swipe refresh layout
-                //and don't let update with swipe gesture
-                if (mSwipeRefreshLayout != null){
-                    mSwipeRefreshLayout.setEnabled(false);
-                }
-                //when app is reading data from DB
-                //do not let searching to avoid an error
-                if(sIsGettingData){
-                    showSnackBar(Snackbar.LENGTH_LONG,getString(R.string.getting_data),NO_ID);
-                    return false;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            Log.d("expandingO","expandingO");
+            mSearchViewWidget = (SearchView) searchItem.getActionView();
+            MenuItem.OnActionExpandListener expandListener = new MenuItem.OnActionExpandListener() {
+                @Override
+                public boolean onMenuItemActionCollapse(MenuItem item) {
+                    //when no searching a track, activate refresh listener
+                    //of swipe layouy
+                    if(mSwipeRefreshLayout != null) {
+                        mSwipeRefreshLayout.setEnabled(true);
+                    }
+                    //reset filter to show all tracks
+                    if(mAudioItemArrayAdapter != null) {
+                        mAudioItemArrayAdapter.getFilter().filter("");
+                    }
+                    //and show floating action menu if user have songs
+                    if(mAudioItemList.size() != 0)
+                        mFloatingActionButtonStart.show();
+                    //finally remove listener
+                    mSearchViewWidget.setOnQueryTextListener(null);
+                    return true;  // Return true to collapse action widget
                 }
 
-                //then if user is searching a song, hide the fab button
-                mFloatingActionButtonStart.hide();
+                @Override
+                public boolean onMenuItemActionExpand(MenuItem item) {
 
-                //attach a listener that returns results while user is searching his/her song
-                mSearchViewWidget.setOnQueryTextListener(new SearchView.OnQueryTextListener(){
-
-                    @Override
-                    public boolean onQueryTextSubmit(String query) {
-                        return true;
+                    //if no songs, no case to expand the search widget
+                    if(mAudioItemList.size() <= 0){
+                        showSnackBar(Snackbar.LENGTH_LONG, getString(R.string.no_items_found),NO_ID);
+                        return false;
+                    }
+                    //when searching a song, deactivate the swipe refresh layout
+                    //and don't let update with swipe gesture
+                    if (mSwipeRefreshLayout != null){
+                        mSwipeRefreshLayout.setEnabled(false);
+                    }
+                    //when app is reading data from DB
+                    //do not let searching to avoid an error
+                    if(sIsGettingData){
+                        showSnackBar(Snackbar.LENGTH_LONG,getString(R.string.getting_data),NO_ID);
+                        return false;
                     }
 
-                    @Override
-                    public boolean onQueryTextChange(String newText) {
-                        if(mAudioItemArrayAdapter != null) {
-                            mAudioItemArrayAdapter.getFilter().filter(newText);
-                        }
-                        else {
-                            showSnackBar(Snackbar.LENGTH_SHORT,getString(R.string.no_items_found),-1);
-                        }
-                        return true;
-                    }
-                });
-                return true;  // Return true to expand action mSwipeRefreshLayout
-            }
-        };
+                    //then if user is searching a song, hide the fab button
+                    mFloatingActionButtonStart.hide();
 
-        // Assign the listener to searchItem
-        MenuItemCompat.setOnActionExpandListener(searchItem, expandListener);
+                    //attach a listener that returns results while user is searching his/her song
+                    mSearchViewWidget.setOnQueryTextListener(new SearchView.OnQueryTextListener(){
+
+                        @Override
+                        public boolean onQueryTextSubmit(String query) {
+                            return true;
+                        }
+
+                        @Override
+                        public boolean onQueryTextChange(String newText) {
+                            if(mAudioItemArrayAdapter != null) {
+                                mAudioItemArrayAdapter.getFilter().filter(newText);
+                            }
+                            else {
+                                showSnackBar(Snackbar.LENGTH_SHORT,getString(R.string.no_items_found),-1);
+                            }
+                            return true;
+                        }
+                    });
+                    return true;  // Return true to expand action mSwipeRefreshLayout
+                }
+            };
+
+            // Assign the listener to searchItem
+            searchItem.setOnActionExpandListener(expandListener);
+        }
+        else {
+            Log.d("expanding","expanding");
+            mSearchViewWidget = (SearchView) MenuItemCompat.getActionView(searchItem);
+            MenuItemCompat.OnActionExpandListener expandListener = new MenuItemCompat.OnActionExpandListener() {
+                @Override
+                public boolean onMenuItemActionCollapse(MenuItem item) {
+                    //when no searching a track, activate refresh listener
+                    //of swipe layouy
+                    if(mSwipeRefreshLayout != null) {
+                        mSwipeRefreshLayout.setEnabled(true);
+                    }
+                    //reset filter to show all tracks
+                    if(mAudioItemArrayAdapter != null) {
+                        mAudioItemArrayAdapter.getFilter().filter("");
+                    }
+                    //and show floating action menu if user have songs
+                    if(mAudioItemList.size() != 0)
+                        mFloatingActionButtonStart.show();
+                    //finally remove listener
+                    mSearchViewWidget.setOnQueryTextListener(null);
+                    return true;  // Return true to collapse action widget
+                }
+
+                @Override
+                public boolean onMenuItemActionExpand(MenuItem item) {
+                    //if no songs, no case to expand the search widget
+
+                    if(mAudioItemList.size() <= 0){
+                        showSnackBar(Snackbar.LENGTH_LONG, getString(R.string.no_items_found),NO_ID);
+                        return false;
+                    }
+                    //when searching a song, deactivate the swipe refresh layout
+                    //and don't let update with swipe gesture
+                    if (mSwipeRefreshLayout != null){
+                        mSwipeRefreshLayout.setEnabled(false);
+                    }
+                    //when app is reading data from DB
+                    //do not let searching to avoid an error
+                    if(sIsGettingData){
+                        showSnackBar(Snackbar.LENGTH_LONG,getString(R.string.getting_data),NO_ID);
+                        return false;
+                    }
+
+                    //then if user is searching a song, hide the fab button
+                    mFloatingActionButtonStart.hide();
+
+                    //attach a listener that returns results while user is searching his/her song
+                    mSearchViewWidget.setOnQueryTextListener(new SearchView.OnQueryTextListener(){
+
+                        @Override
+                        public boolean onQueryTextSubmit(String query) {
+                            return true;
+                        }
+
+                        @Override
+                        public boolean onQueryTextChange(String newText) {
+                            if(mAudioItemArrayAdapter != null) {
+                                mAudioItemArrayAdapter.getFilter().filter(newText);
+                            }
+                            else {
+                                showSnackBar(Snackbar.LENGTH_SHORT,getString(R.string.no_items_found),-1);
+                            }
+                            return true;
+                        }
+                    });
+                    return true;  // Return true to expand action mSwipeRefreshLayout
+                }
+            };
+
+            // Assign the listener to searchItem
+            MenuItemCompat.setOnActionExpandListener(searchItem, expandListener);
+        }
+
         return true;
     }
 
@@ -688,9 +740,10 @@ public class MainActivity extends AppCompatActivity
             if(lastCheckedItem != null)
                 lastCheckedItem.setIcon(null);
 
+            //it references the new checked item
             lastCheckedItem = item;
             lastCheckedItem.setIcon(ContextCompat.getDrawable(getApplicationContext(), R.drawable.ic_done_white));
-            SharedPreferences preferences = getSharedPreferences(APP_SHARED_PREFERENCES, Context.MODE_PRIVATE);
+            SharedPreferences preferences = getSharedPreferences(Constants.Application.FULL_QUALIFIED_NAME, Context.MODE_PRIVATE);
             SharedPreferences.Editor editor = preferences.edit();
             Log.d("id_sort_item",id+"");
             editor.putInt(Constants.SORT_KEY,id);
@@ -699,15 +752,15 @@ public class MainActivity extends AppCompatActivity
             editor = null;
         }
         else {
+            //default checked is SortBy path, ascendant order if no sort order
+            //is provided
             id = Settings.SETTING_SORT;
             //Log.d("el id", id + "");
-            //default checked is SortBy path, descendant order
             lastCheckedItem = mMenu.findItem(id == 0  ? R.id.path_asc : id);
             lastCheckedItem.setIcon(ContextCompat.getDrawable(getApplicationContext(), R.drawable.ic_done_white));
         }
 
-        //mark sort type and reset other UI sort elements
-
+        //mark sort type and reset icon of other UI elements
         switch (id){
             case R.id.path_asc:
             case R.id.path_desc:
@@ -743,6 +796,9 @@ public class MainActivity extends AppCompatActivity
                 mMenuItemAlbum.setIcon(ContextCompat.getDrawable(getApplicationContext(), R.drawable.ic_done_white));
                 break;
         }
+        //Sets the current sort in static field, so when user
+        //starts a correction task in automatic mode, the recycler view be able
+        //to scroll in order in which the songs were checked
         Settings.SETTING_SORT = id;
     }
 
@@ -802,7 +858,7 @@ public class MainActivity extends AppCompatActivity
         String packageName = getApplicationContext().getPackageName();
         Uri uri = Uri.parse("market://details?id=" + packageName);
         Intent goToMarket = new Intent(Intent.ACTION_VIEW, uri);
-        // To count with Play market backstack, After pressing back button,
+        // To count with Play market backstack, after pressing back button,
         // to taken back to our application, we need to add following flags to intent.
         goToMarket.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY | Intent.FLAG_ACTIVITY_NEW_DOCUMENT | Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
         try {
@@ -815,7 +871,7 @@ public class MainActivity extends AppCompatActivity
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[], @NonNull int[] grantResults) {
-        //verify permission to access files and execute scan if were granted
+        //Check permission to access files and execute scan if were granted
         if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             setFilePermissionGranted();
             executeScan();
@@ -832,7 +888,7 @@ public class MainActivity extends AppCompatActivity
 
 
     /**
-     * this method handles click to every item_list in recycler view
+     * Handles click for every item_list in recycler view
      * @param position
      * @param view
      */
@@ -876,6 +932,7 @@ public class MainActivity extends AppCompatActivity
      */
     private void startTask(){
 
+        //Before starts task could permission were denied, so check them
         if(ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED){
             ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 2);
         }
@@ -894,11 +951,12 @@ public class MainActivity extends AppCompatActivity
                     return;
                 }
 
-                //start correction in automatic mode
+                //Register receivers to update UI and start correction in automatic mode
                 registerReceivers();
                 Intent intent = new Intent(MainActivity.this, FixerTrackService.class);
                 intent.putExtra(Constants.Activities.FROM_EDIT_MODE, false);
 
+                //If "Correccion en segundo plano" is ON, start a foreground notification in case user closes the app
                 if(Settings.BACKGROUND_CORRECTION)
                     intent.putExtra(Constants.Actions.ACTION_SHOW_NOTIFICATION, true);
 
@@ -944,15 +1002,15 @@ public class MainActivity extends AppCompatActivity
             mSnackbar.setAction("",null);
         }
         else {
-            //setaction if id != -1
+            //Suggest to user to correct song manually, if no tags were found
             mSnackbar.setText(msg);
             mSnackbar.setDuration(duration);
             mSnackbar.setAction(R.string.manual_mode, new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     Intent intent2 = new Intent(MainActivity.this, TrackDetailsActivity.class);
-                    intent2.putExtra("itemId",id);
-                    intent2.putExtra("manualMode",true);
+                    intent2.putExtra(Constants.MEDIA_STORE_ID,id);
+                    intent2.putExtra(Constants.CorrectionModes.MODE, Constants.CorrectionModes.MANUAL);
                     startActivity(intent2);
                 }
             });
@@ -962,8 +1020,11 @@ public class MainActivity extends AppCompatActivity
     }
 
     /**
-     * Some actions require that some conditions are true
-     * this method verifies these conditions
+     * Automatic, semiautomatic and download cover mode
+     * require internet and initialized GNSDK API,
+     * this method verifies these conditions are met.
+     * Also if a correction task is in progress, it will not
+     * start a new one until current finishes
      * @param appContext
      * @return
      */
@@ -980,7 +1041,7 @@ public class MainActivity extends AppCompatActivity
             return Constants.Conditions.NO_INITIALIZED_API;
         }
 
-        //Task is already executing
+        //A correction task is already in progress
         if(ServiceHelper.withContext(appContext).withService(FixerTrackService.CLASS_NAME).isServiceRunning()){
             return PROCESSING_TASK;
         }
@@ -1008,6 +1069,7 @@ public class MainActivity extends AppCompatActivity
         final boolean allSelected = mAudioItemArrayAdapter.areAllChecked();
         mAudioItemArrayAdapter.checkAudioItem(-1,!allSelected);
         mAudioItemArrayAdapter.setAllChecked(!allSelected);
+        //Make DB operations in other thread for not blocking UI thread
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -1056,7 +1118,7 @@ public class MainActivity extends AppCompatActivity
         final String absolutePath = (String) view.findViewById(R.id.absolute_path).getTag();
         final View getView = view.findViewById(R.id.coverArt);
 
-        final AudioItem audioItem = mAudioItemArrayAdapter.getAudioItemByPosition(position); //mAudioItemArrayAdapter.getAudioItemByIdOrPath(NO_ID, absolutePath);
+        final AudioItem audioItem = mAudioItemArrayAdapter.getAudioItemByPosition(position);
 
         //check if audio file can be accessed
         boolean canBeRead = AudioItem.checkFileIntegrity(absolutePath);
@@ -1072,7 +1134,7 @@ public class MainActivity extends AppCompatActivity
         }
 
         final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle(getString(R.string.correction_mode)).setMessage(getString(R.string.select_correction_mode) + " " + AudioItem.getFilename(absolutePath) + "?")
+        builder.setTitle(getString(R.string.correction_mode)).setMessage(getString(R.string.select_correction_mode) + " " + AudioItem.getFilename(absolutePath))
                 .setNeutralButton(getString(R.string.manual), new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
@@ -1112,7 +1174,7 @@ public class MainActivity extends AppCompatActivity
             intent.putExtra(Constants.Actions.ACTION_SHOW_NOTIFICATION, true);
 
         intent.putExtra(Constants.Activities.FROM_EDIT_MODE, false);
-        intent.putExtra(Constants.MEDIASTORE_ID, audioItemId);
+        intent.putExtra(Constants.MEDIA_STORE_ID, audioItemId);
         startService(intent);
         mFloatingActionButtonStart.hide();
         mFloatingActionButtonStop.show();
@@ -1177,7 +1239,7 @@ public class MainActivity extends AppCompatActivity
 
         Intent intent = new Intent(this, TrackDetailsActivity.class);
         intent.putExtra(Constants.POSITION, position);
-        intent.putExtra(Constants.MEDIASTORE_ID, audioItem.getId());
+        intent.putExtra(Constants.MEDIA_STORE_ID, audioItem.getId());
         intent.putExtra(Constants.CorrectionModes.MODE, mode);
         /*ActivityOptionsCompat options = ActivityOptionsCompat.makeSceneTransitionAnimation(
                 MainActivity.this,
@@ -1341,7 +1403,7 @@ public class MainActivity extends AppCompatActivity
      * Save to shared preferences the access files permission
      */
     private void setFilePermissionGranted(){
-        SharedPreferences sharedPreferences = getSharedPreferences(APP_SHARED_PREFERENCES, Context.MODE_PRIVATE);
+        SharedPreferences sharedPreferences = getSharedPreferences(Constants.Application.FULL_QUALIFIED_NAME, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putBoolean("accessFilesPermission", true);
         editor.apply();
@@ -1479,7 +1541,7 @@ public class MainActivity extends AppCompatActivity
             //could not be successful completed, in this case
             //clear DB and re read data from Media Store
 
-            SharedPreferences sharedPreferences = mainActivityWeakReference.get().getSharedPreferences(APP_SHARED_PREFERENCES, Context.MODE_PRIVATE);
+            SharedPreferences sharedPreferences = mainActivityWeakReference.get().getSharedPreferences(Constants.Application.FULL_QUALIFIED_NAME, Context.MODE_PRIVATE);
             mMediaScanCompleted = sharedPreferences.getBoolean(Constants.COMPLETE_READ,false);
             if(!mMediaScanCompleted){
                 taskType = CREATE_DATABASE;
@@ -1574,7 +1636,7 @@ public class MainActivity extends AppCompatActivity
             //next time app starts will try to create again the database
             //until success
             if(this.taskType == CREATE_DATABASE) {
-                SharedPreferences sharedPreferences = mainActivityWeakReference.get().getSharedPreferences(APP_SHARED_PREFERENCES, Context.MODE_PRIVATE);
+                SharedPreferences sharedPreferences = mainActivityWeakReference.get().getSharedPreferences(Constants.Application.FULL_QUALIFIED_NAME, Context.MODE_PRIVATE);
                 SharedPreferences.Editor editor = sharedPreferences.edit();
                 editor.putBoolean(Constants.COMPLETE_READ, true);
                 editor.apply();
@@ -1630,7 +1692,7 @@ public class MainActivity extends AppCompatActivity
                 mainActivityWeakReference.get().mSearchViewWidget.setVisibility(View.VISIBLE);
             }
             //save state that could not be completed the data loading from songs
-            SharedPreferences sharedPreferences = mainActivityWeakReference.get().getSharedPreferences(APP_SHARED_PREFERENCES, Context.MODE_PRIVATE);
+            SharedPreferences sharedPreferences = mainActivityWeakReference.get().getSharedPreferences(Constants.Application.FULL_QUALIFIED_NAME, Context.MODE_PRIVATE);
             SharedPreferences.Editor editor =  sharedPreferences.edit();
             mainActivityWeakReference.get().mSearchAgainMessageTextView.setText(mainActivityWeakReference.get().getString(R.string.no_items_found));
             mainActivityWeakReference.get().mSearchAgainMessageTextView.setVisibility(View.VISIBLE);
@@ -1804,22 +1866,6 @@ public class MainActivity extends AppCompatActivity
 
 
     /**
-     * ATTENTION: This was auto-generated to implement the App Indexing API.
-     * See https://g.co/AppIndexing/AndroidStudio for more information.
-     */
-    public Action getIndexApiAction() {
-        Thing object = new Thing.Builder()
-                .setName("SelectFolder Page") // TODO: Define a mMenuItemTitle for the content shown.
-                // TODO: Make sure this auto-generated URL is correct.
-                .setUrl(Uri.parse("http://[ENTER-YOUR-URL-HERE]"))
-                .build();
-        return new Action.Builder(Action.TYPE_VIEW)
-                .setObject(object)
-                .setActionStatus(Action.STATUS_TYPE_COMPLETED)
-                .build();
-    }
-
-    /**
      * Instance of this class handles the response from FixerTrackService
      */
     public class ResponseReceiver extends BroadcastReceiver{
@@ -1853,7 +1899,7 @@ public class MainActivity extends AppCompatActivity
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            setNewItemValues(null, intent.getLongExtra(Constants.MEDIASTORE_ID,-1));
+                            setNewItemValues(null, intent.getLongExtra(Constants.MEDIA_STORE_ID,-1));
                         }
                     });
                     break;
@@ -1872,7 +1918,7 @@ public class MainActivity extends AppCompatActivity
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                setProcessingAudioItem(intent.getLongExtra(Constants.MEDIASTORE_ID,NO_ID));
+                                setProcessingAudioItem(intent.getLongExtra(Constants.MEDIA_STORE_ID,NO_ID));
                             }
                         });
                     break;

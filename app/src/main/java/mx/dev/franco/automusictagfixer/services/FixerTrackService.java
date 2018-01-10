@@ -169,12 +169,12 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
     @Override
     public int onStartCommand(final Intent intent, int flags, int startId){
         super.onStartCommand(intent,flags,startId);
-        Log.d(CLASS_NAME,"onStartCommand");
+        //Log.d(CLASS_NAME,"onStartCommand");
 
         //check if stop request was received, default is continue task
         if(intent.getAction() != null && intent.getAction().equals(Constants.Actions.ACTION_STOP_SERVICE)) {
             mStopService = intent.getIntExtra(Constants.Actions.ACTION_STOP_SERVICE, Constants.StopsReasons.CONTINUE_TASK);
-            Log.d("mStopService", mStopService + "");
+            //Log.d("mStopService", mStopService + "");
         }
 
 
@@ -213,7 +213,7 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
     /**
      * This callback is called when service is binded
      * to an activity
-     * @param intent
+     * @param intent Intent object
      * @return
      */
     @Nullable
@@ -263,7 +263,7 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
     private void startNotification(String contentText, String contentTitle, String status) {
 
         Intent notificationIntent = new Intent(this,MainActivity.class);
-        notificationIntent.setAction(MainActivity.ACTION_OPEN_MAIN_ACTIVITY);
+        notificationIntent.setAction(Constants.ACTION_OPEN_MAIN_ACTIVITY);
         notificationIntent.setFlags(Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT | Intent.FLAG_ACTIVITY_NEW_TASK);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
 
@@ -299,7 +299,7 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
 
         //if intent comes from touching an item, or from TrackDetailsActivity
         //get the ID received, if not, default value is -1
-        mCurrentId = intent.getLongExtra(Constants.MEDIASTORE_ID, -1);
+        mCurrentId = intent.getLongExtra(Constants.MEDIA_STORE_ID, -1);
         //get selected items directly from DB, if ID is not -1,
         //it means that one id has been sent and
         //cursor returned from this query will contain only
@@ -511,7 +511,7 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
                     if (!mFromEditMode){
                         Intent intentUpdateUI = new Intent();
                         intentUpdateUI.setAction(Constants.Actions.ACTION_SET_AUDIOITEM_PROCESSING);
-                        intentUpdateUI.putExtra(Constants.MEDIASTORE_ID, mId);
+                        intentUpdateUI.putExtra(Constants.MEDIA_STORE_ID, mId);
                         mLocalBroadcastManager.sendBroadcastSync(intentUpdateUI);
                         //save state to current song in our database because
                         //if user closes the app and then reopen it, the current
@@ -529,7 +529,7 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
                 Log.d("error while processing","try again");
                 Intent intentUpdateUI = new Intent();
                 intentUpdateUI.setAction(Constants.Actions.ACTION_SET_AUDIOITEM_PROCESSING);
-                intentUpdateUI.putExtra(Constants.MEDIASTORE_ID, mId);
+                intentUpdateUI.putExtra(Constants.MEDIA_STORE_ID, mId);
                 mLocalBroadcastManager.sendBroadcastSync(intentUpdateUI);
                 ContentValues processingValue = new ContentValues();
                 processingValue.put(TrackContract.TrackData.IS_PROCESSING, false);
@@ -756,7 +756,7 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
 
             Intent intentActionNotFound = new Intent();
             intentActionNotFound.setAction(Constants.Actions.ACTION_NOT_FOUND);
-            intentActionNotFound.putExtra(Constants.MEDIASTORE_ID, mId);
+            intentActionNotFound.putExtra(Constants.MEDIA_STORE_ID, mId);
             //Log.d("media store not found", mId + "");
             mLocalBroadcastManager.sendBroadcastSync(intentActionNotFound);
         }

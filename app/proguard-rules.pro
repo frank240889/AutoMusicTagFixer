@@ -15,3 +15,8 @@
 #-keepclassmembers class fqcn.of.javascript.interface.for.webview {
 #   public *;
 #}
+-dontwarn org.jaudiotagger.**
+-dontwarn com.google.android.gms.**
+-keep class com.gracenote.** { *; }
+-keep class org.jaudiotagger.** { *; }
+-keep class android.support.v7.widget.SearchView { *; }

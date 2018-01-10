@@ -17,6 +17,8 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 
+import mx.dev.franco.automusictagfixer.utilities.Constants;
+
 
 /**
  * Created by franco on 10/11/16.
@@ -146,7 +148,7 @@ public class ScreenSlidePagerActivity extends FragmentActivity {
     }
 
     private void onClickLastPager(){
-        SharedPreferences sharedPreferences = getSharedPreferences(SplashActivity.APP_SHARED_PREFERENCES, Context.MODE_PRIVATE);
+        SharedPreferences sharedPreferences = getSharedPreferences(Constants.Application.FULL_QUALIFIED_NAME, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putBoolean("first",false);
         editor.apply();

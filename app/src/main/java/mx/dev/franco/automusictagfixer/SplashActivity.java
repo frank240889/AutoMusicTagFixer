@@ -22,8 +22,6 @@ import mx.dev.franco.automusictagfixer.utilities.Settings;
 
 public class SplashActivity extends AppCompatActivity{
 
-    public static final String APP_SHARED_PREFERENCES = "AutoMusicTagFixer";
-
     @Override
     protected void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
@@ -47,7 +45,7 @@ public class SplashActivity extends AppCompatActivity{
         preferences = null;
 
         //Is first use of app?
-        preferences =  getSharedPreferences(APP_SHARED_PREFERENCES, Context.MODE_PRIVATE);
+        preferences =  getSharedPreferences(Constants.Application.FULL_QUALIFIED_NAME, Context.MODE_PRIVATE);
         boolean firstTime= preferences.getBoolean("first", true);
         Settings.SETTING_SORT = preferences.getInt(Constants.SORT_KEY, 0);
         //do we have permission to access files?

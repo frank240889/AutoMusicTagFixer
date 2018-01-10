@@ -17,7 +17,6 @@
             android:layout_width="144dp"
             android:layout_height="144dp"
             android:layout_alignParentTop="true"
-            android:layout_alignStart="@+id/imageView4"
             android:layout_centerHorizontal="true"
             android:layout_marginTop="49dp"
             android:src="@drawable/ic_sentiment_very_satisfied_white_24px"

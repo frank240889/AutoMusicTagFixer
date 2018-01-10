@@ -35,7 +35,6 @@
         android:scaleType="fitCenter"
         app:elevation="6dp"
         app:borderWidth="0dp"
-        app:theme="@style/CustomFab"
         android:theme="@style/CustomFab"
         app:pressedTranslationZ="12dp"
         app:srcCompat="@drawable/ic_magic_wand_auto_fix_button" />
@@ -48,7 +47,6 @@
         android:scaleType="fitCenter"
         app:elevation="6dp"
         app:borderWidth="0dp"
-        app:theme="@style/CustomFab"
         android:theme="@style/CustomFab"
         app:pressedTranslationZ="12dp"
         app:srcCompat="@drawable/ic_stop_white_24dp" />

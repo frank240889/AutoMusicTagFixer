@@ -1,3 +1,12 @@
+buildscript {
+    repositories {
+        maven { url 'https://maven.fabric.io/public' }
+    }
+
+    dependencies {
+        classpath 'io.fabric.tools:gradle:1.+'
+    }
+}
 /**
  * The first line in the build configuration applies the Android plugin for
  * Gradle to this build and makes the android {} block available to specify
@@ -6,10 +15,10 @@
 
 apply plugin: 'com.android.application'
 apply plugin: 'io.fabric'
+
 repositories {
     maven { url 'https://maven.fabric.io/public' }
 }
-
 /**
  * The android {} block is where you configure all your Android-specific
  * build options.
@@ -25,7 +34,8 @@ android {
      * utilities, and compiler that Gradle should use to build your app. You need to
      * download the build tools using the SDK Manager.
      */
-    compileSdkVersion 25
+    lintOptions { checkReleaseBuilds true }
+    compileSdkVersion 26
     buildToolsVersion '26.0.2'
     /**
      * The defaultConfig {} block encapsulates default settings and entries for all
@@ -60,12 +70,15 @@ android {
          * shrinking, using minifyEnabled, and specifies the Proguard settings file.
          */
         release {
+            //consumerProguardFiles 'proguard-project.txt'
             minifyEnabled true
+            shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            debuggable false
         }
 
         debug {
-            ext.enableCrashlytics = true
+            ext.enableCrashlytics = false
         }
     }
 
@@ -86,16 +99,15 @@ android {
      * ABI. You'll also need to configure your build so that each APK has a
      * different versionCode.
      */
-    /*splits {
+    splits {
         abi {
-            enable
+            enable true
             reset()
-            //include 'x86', 'armeabi', 'armeabi-v7a', 'mips'
-            /*exclude 'x86', 'mips', 'armeabi-v7a'
-            include 'armeabi'
-            //universalApk true
+            include 'armeabi', 'armeabi-v7a', 'x86', 'arm64-v8a'
+            universalApk true
      }
-    }*/
+    }
+
 }
 
 /**
@@ -110,16 +122,17 @@ dependencies {
     compile files('libs/gnsdk.jar')
     compile files('libs/gnsdk_helpers.jar')
     compile files('libs/jaudiotagger-2.2.4.jar')
-    compile 'com.android.support:appcompat-v7:25.4.0'
-    compile 'com.android.support:design:25.4.0'
-    compile 'com.android.support:cardview-v7:25.4.0'
+    compile 'com.android.support:appcompat-v7:26.1.0'
+    compile 'com.android.support:design:26.1.0'
+    compile 'com.android.support:cardview-v7:26.1.0'
     compile 'com.github.bumptech.glide:glide:4.0.0-RC1'
-    compile 'com.android.support:support-v4:25.4.0'
-    compile 'com.google.firebase:firebase-appindexing:11.8.0'
+    compile 'com.android.support:support-v4:26.1.0'
     compile 'com.android.support.constraint:constraint-layout:1.0.2'
     compile('com.crashlytics.sdk.android:crashlytics:2.7.1@aar') {
         transitive = true;
     }
+
+    compile 'com.google.android.gms:play-services-gcm:11.8.0'
     testCompile 'junit:junit:4.12'
     annotationProcessor 'com.github.bumptech.glide:compiler:4.0.0-RC1'
 }

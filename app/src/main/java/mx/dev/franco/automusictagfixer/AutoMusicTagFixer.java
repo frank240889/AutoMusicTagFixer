@@ -6,6 +6,7 @@ import android.content.res.Configuration;
 import android.net.ConnectivityManager;
 
 import com.crashlytics.android.Crashlytics;
+import com.crashlytics.android.core.CrashlyticsCore;
 
 import io.fabric.sdk.android.Fabric;
 import mx.dev.franco.automusictagfixer.services.ConnectivityChangesDetector;
@@ -23,7 +24,14 @@ public final class AutoMusicTagFixer extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-        Fabric.with(this, new Crashlytics());
+        //Fabric.with(this, new Crashlytics());
+// Set up Crashlytics, disabled for debug builds
+        Crashlytics crashlyticsKit = new Crashlytics.Builder()
+                .core(new CrashlyticsCore.Builder().disabled(BuildConfig.DEBUG).build())
+                .build();
+
+// Initialize Fabric with the debug-disabled crashlytics.
+        Fabric.with(this, crashlyticsKit);
         // Required initialization logic here!
         mConnectivityChangesDetector = new ConnectivityChangesDetector();
         mIntentFilter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);

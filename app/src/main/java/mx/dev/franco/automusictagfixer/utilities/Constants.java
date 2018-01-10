@@ -7,12 +7,13 @@ import mx.dev.franco.automusictagfixer.BuildConfig;
  */
 
 public class Constants {
-    public static final String MEDIASTORE_ID = "mediastore_id";
+    public static final String MEDIA_STORE_ID = "media_store_id";
     public static final String AUDIO_ITEM = "audio_item";
     public static final String POSITION = "position";
     public static final String COMPLETE_READ = "complete_read";
     public static final String SORT_KEY = "key_default_sort";
     public static final String ALL_ITEMS_CHECKED = "all_items_checked";
+    public static final String ACTION_OPEN_MAIN_ACTIVITY = "action_open_main_activity";
 
     public static class Application{
         public static String FULL_QUALIFIED_NAME = BuildConfig.APPLICATION_ID;

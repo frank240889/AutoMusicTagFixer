@@ -37,7 +37,6 @@ import java.util.List;
 
 import mx.dev.franco.automusictagfixer.MainActivity;
 import mx.dev.franco.automusictagfixer.R;
-import mx.dev.franco.automusictagfixer.SplashActivity;
 import mx.dev.franco.automusictagfixer.database.TrackContract;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
 import mx.dev.franco.automusictagfixer.utilities.GlideApp;
@@ -184,7 +183,7 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
      * @return true if are all selected, false otherwise
      */
     public boolean areAllChecked(){
-        return mContext.getSharedPreferences(SplashActivity.APP_SHARED_PREFERENCES, Context.MODE_PRIVATE).
+        return mContext.getSharedPreferences(Constants.Application.FULL_QUALIFIED_NAME, Context.MODE_PRIVATE).
                 getBoolean(Constants.ALL_ITEMS_CHECKED, false);
     }
 
@@ -193,7 +192,7 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
      * @param allChecked
      */
     public void setAllChecked(boolean allChecked){
-        SharedPreferences sharedPreferences = mContext.getSharedPreferences(SplashActivity.APP_SHARED_PREFERENCES, Context.MODE_PRIVATE);
+        SharedPreferences sharedPreferences = mContext.getSharedPreferences(Constants.Application.FULL_QUALIFIED_NAME, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putBoolean(Constants.ALL_ITEMS_CHECKED, allChecked);
         editor.apply();
@@ -407,7 +406,7 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
             String path = params[0];
             File file = new File(path);
             if(!file.exists()) {
-                publishProgress(null);
+                publishProgress(new byte[0]);
                 file = null;
                 return null;
             }
@@ -417,7 +416,7 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
                 Tag tag = null;
                 byte[] cover = null;
                 if (audioTaggerFile.getTag() == null) {
-                    publishProgress(null);
+                    publishProgress(new byte[0]);
                     return null;
 
                 }
@@ -425,12 +424,12 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
                 tag = audioTaggerFile.getTag();
 
                 if (tag.getFirstArtwork() == null) {
-                    publishProgress(null);
+                    publishProgress(new byte[0]);
                     return null;
                 }
 
                 if(tag.getFirstArtwork().getBinaryData() == null){
-                    publishProgress(null);
+                    publishProgress(new byte[0]);
                     return null;
                 }
 
@@ -442,7 +441,7 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
             }
             catch(IOException | CannotReadException | ReadOnlyFileException | InvalidAudioFrameException | TagException e){
                 e.printStackTrace();
-                publishProgress(null);
+                publishProgress(new byte[0]);
                 System.gc();
                 return null;
             }
@@ -471,7 +470,7 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
         protected void onProgressUpdate(byte[]... cover){
             if(mContext != null && !((MainActivity) mContext.get()).isDestroyed() ) {
                 GlideApp.with(mContext.get()).
-                        load(cover == null ? null : cover[0])
+                        load(cover[0].length == 0 ? null : cover[0])
                         .thumbnail(0.1f)
                         .error(R.drawable.ic_album_white_48px)
                         .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.NONE))

@@ -299,7 +299,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
         //if this intent comes when is touched any element from dialog in list of MainActivity
         mCorrectionMode = getIntent().getIntExtra(Constants.CorrectionModes.MODE,Constants.CorrectionModes.VIEW_INFO);
         //currentId of audioItem
-        mCurrentItemId = getIntent().getLongExtra(Constants.MEDIASTORE_ID,-1);
+        mCurrentItemId = getIntent().getLongExtra(Constants.MEDIA_STORE_ID,-1);
 
         mCurrentPosition = getIntent().getIntExtra(Constants.POSITION,0);
         mCurrentAudioItem = mTrackAdapter.getAudioItemByIdOrPath(mCurrentItemId);
@@ -1161,7 +1161,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
         //prepare data to identify this song and start request
         Intent intent = new Intent(this,FixerTrackService.class);
         intent.putExtra(Constants.Activities.FROM_EDIT_MODE, Constants.Activities.DETAILS_ACTIVITY);
-        intent.putExtra(Constants.MEDIASTORE_ID, mCurrentItemId);
+        intent.putExtra(Constants.MEDIA_STORE_ID, mCurrentItemId);
         startService(intent);
         System.gc();
     }
@@ -2602,7 +2602,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
             mNewCoverArt = mCurrentCoverArt;
             mNewCoverArtLength = mCurrentCoverArtLength;
             msg = getString(R.string.no_cover_art_found);
-            showSnackBar(Snackbar.LENGTH_LONG, msg,ACTION_ADD_COVER, null);
+            showSnackBar(7000, msg,ACTION_ADD_COVER, null);
         }
 
         mProgressBar.setVisibility(View.INVISIBLE);
