@@ -51,6 +51,7 @@ import android.widget.TextView;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
 import com.bumptech.glide.request.RequestOptions;
+import com.crashlytics.android.Crashlytics;
 
 import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.audio.AudioFileIO;
@@ -412,6 +413,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
             }
             startActivity(intent);
         } catch (ActivityNotFoundException e) {
+            Crashlytics.logException(e);
             e.printStackTrace();
         }
     }
@@ -475,6 +477,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                     try {
                         playPreview();
                     } catch (IOException | InterruptedException e) {
+                        Crashlytics.logException(e);
                         e.printStackTrace();
                     }
                 }
@@ -917,7 +920,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                 error = false;
             } catch (CannotReadException | IOException | ReadOnlyFileException | InvalidAudioFrameException | TagException e) {
                 e.printStackTrace();
-
+                Crashlytics.logException(e);
                 mCurrentAudioItem.setStatus(AudioItem.FILE_ERROR_READ);
                 showSnackBar(Snackbar.LENGTH_LONG, getString(R.string.could_not_read_file) + " " + e.getMessage(), ACTION_NONE, null);
                 mTitleLayer.setText(mAudioFile.getName());
@@ -1562,6 +1565,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                                     try {
                                         updateData();
                                     } catch (IOException e) {
+                                        Crashlytics.logException(e);
                                         e.printStackTrace();
                                     }
                                 }
@@ -1713,6 +1717,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
             try {
                 mTrackDetailsActivityWeakReference.get().stopPlayback();
             } catch (IOException | InterruptedException e) {
+                Crashlytics.logException(e);
                 e.printStackTrace();
             }
             mTrackDetailsActivityWeakReference.get().enableMiniFabs(false);
@@ -1753,6 +1758,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                 mTrackDetailsActivityWeakReference.get().mDataUpdated = true;
             }
             catch (CannotWriteException | TagException e){
+                Crashlytics.logException(e);
                 e.printStackTrace();
                 mTrackDetailsActivityWeakReference.get().mDataUpdated = false;
                 causeError = e.getMessage();
@@ -1979,6 +1985,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
             }
             catch ( CannotWriteException | TagException | ReadOnlyFileException | CannotReadException | IOException | InvalidAudioFrameException e)  {
                 e.printStackTrace();
+                Crashlytics.logException(e);
                 mTrackDetailsActivityWeakReference.get().mDataUpdated = false;
                 causeError = e.getMessage();
                 //restore previous values to item
@@ -2134,6 +2141,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
             }
             catch ( CannotWriteException | TagException | ReadOnlyFileException | CannotReadException | IOException | InvalidAudioFrameException e) {
                 e.printStackTrace();
+                Crashlytics.logException(e);
                 //No fine =(
                 mTrackDetailsActivityWeakReference.get().mDataUpdated = false;
                 causeError = e.getMessage();
@@ -2620,6 +2628,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
 
         //No internet connection
         if(!ConnectivityDetector.sIsConnected){
+            ConnectivityDetector.withContext(this).startCheckingConnection();
             return Constants.Conditions.NO_INTERNET_CONNECTION;
         }
 
@@ -2691,15 +2700,6 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                     });
 
                     break;
-                //It has lost internet connection
-                case Constants.Actions.ACTION_CONNECTION_LOST:
-                    /*mTrackDetailsActivityWeakReference.get().runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            mTrackDetailsActivityWeakReference.get().showSnackBar(Snackbar.LENGTH_SHORT,mTrackDetailsActivityWeakReference.get().getString(R.string.connection_lost),ACTION_NONE, null);
-                        }
-                    });*/
-                    break;
                 //Any other response, maybe an error
                 default:
                     mTrackDetailsActivityWeakReference.get().runOnUiThread(new Runnable() {
@@ -2758,6 +2758,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                 }
 
             } catch (IOException e) {
+                Crashlytics.logException(e);
                 e.printStackTrace();
                 success = false;
             }

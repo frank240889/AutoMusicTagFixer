@@ -513,7 +513,6 @@ public class MainActivity extends AppCompatActivity
         checkMenuItem(null);
         // Define an expand listener for search widget
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            Log.d("expandingO","expandingO");
             mSearchViewWidget = (SearchView) searchItem.getActionView();
             MenuItem.OnActionExpandListener expandListener = new MenuItem.OnActionExpandListener() {
                 @Override
@@ -585,7 +584,6 @@ public class MainActivity extends AppCompatActivity
             searchItem.setOnActionExpandListener(expandListener);
         }
         else {
-            Log.d("expanding","expanding");
             mSearchViewWidget = (SearchView) MenuItemCompat.getActionView(searchItem);
             MenuItemCompat.OnActionExpandListener expandListener = new MenuItemCompat.OnActionExpandListener() {
                 @Override
@@ -1032,6 +1030,7 @@ public class MainActivity extends AppCompatActivity
         Context context = appContext.getApplicationContext();
         //No internet connection
         if(!ConnectivityDetector.sIsConnected){
+            ConnectivityDetector.withContext(appContext).startCheckingConnection();
             return Constants.Conditions.NO_INTERNET_CONNECTION;
         }
 
@@ -1890,7 +1889,8 @@ public class MainActivity extends AppCompatActivity
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                showSnackBar(Snackbar.LENGTH_SHORT, getString(R.string.api_initialized), NO_ID);
+                                if(mAudioItemList != null && !mAudioItemList.isEmpty())
+                                    showSnackBar(Snackbar.LENGTH_SHORT, getString(R.string.api_initialized), NO_ID);
                             }
                         });
                     }

@@ -15,6 +15,7 @@ import android.widget.Toast;
 
 import java.io.IOException;
 
+import mx.dev.franco.automusictagfixer.BuildConfig;
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
 
@@ -159,7 +160,10 @@ public class ConnectivityDetector {
             } catch (InterruptedException | IOException e) {
                 e.printStackTrace();
             }
-                return (termination == 0);
+            if(BuildConfig.DEBUG)
+                return true;
+
+            return (termination == 0);
         }
 
         private static boolean hasConnectivity(){

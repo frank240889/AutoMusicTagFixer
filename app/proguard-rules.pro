@@ -17,6 +17,19 @@
 #}
 -dontwarn org.jaudiotagger.**
 -dontwarn com.google.android.gms.**
+-dontwarn com.crashlytics.**
+
 -keep class com.gracenote.** { *; }
 -keep class org.jaudiotagger.** { *; }
 -keep class android.support.v7.widget.SearchView { *; }
+-keep class com.google.** { *; }
+-keep class com.android.** { *; }
+#Fabric uses annotations internally
+-keepattributes *Annotation*
+#In order to provide the most meaningful crash reports
+-keepattributes SourceFile,LineNumberTable
+#Crashlytics will still function without this rule, but your crash reports will not include proper file names or line numbers.
+#if using custom exceptions:
+-keep public class * extends java.lang.Exception
+#To skip running ProGuard on Crashlytics
+-keep class com.crashlytics.** { *; }

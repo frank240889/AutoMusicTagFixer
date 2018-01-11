@@ -157,8 +157,8 @@
     <string name="cancel_task">¿Desea cancelar la corrección en curso?</string>
     <string name="cancelling">Cancelando...</string>
     <string name="processing_task">Espera a que termine la corrección en modo automático.</string>
-    <string name="api_initialized">Conectado. Toca cualquier canción para corregirla.</string>
-    <string name="api_initialized2">Conectado.</string>
+    <string name="api_initialized">Toca cualquier canción para corregirla.</string>
+    <string name="api_initialized2">Toca el botón amarilo para opciones.</string>
     <string name="remove_from_list">Remover</string>
 
     <string name="question_1">¿Lorem ipsum dolor sit amet?</string>

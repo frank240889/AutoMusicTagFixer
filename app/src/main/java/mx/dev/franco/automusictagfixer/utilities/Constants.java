@@ -56,7 +56,6 @@ public class Constants {
     public static class Activities {
         public static final String FROM_EDIT_MODE = "from_edit_mode";
         public static final boolean DETAILS_ACTIVITY = true;
-        public static final boolean MAIN_ACTIVITY = false;
     }
 
     public static class GnServiceActions{

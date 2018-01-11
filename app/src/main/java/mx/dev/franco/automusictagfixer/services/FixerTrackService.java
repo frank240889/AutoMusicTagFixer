@@ -17,11 +17,12 @@ import android.os.Process;
 import android.preference.PreferenceManager;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
+import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
-import android.support.v7.app.NotificationCompat;
 import android.util.Log;
 
+import com.crashlytics.android.Crashlytics;
 import com.gracenote.gnsdk.GnAssetFetch;
 import com.gracenote.gnsdk.GnAudioFile;
 import com.gracenote.gnsdk.GnContent;
@@ -104,11 +105,8 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
     //Number of elements in cursor
     private int mNumberSelected = 0;
     //Notification on status bar
-    private Notification notification;
-    //indicates if user has cancel or not current correction task
-    private static volatile boolean sFinishTaskByUser = true;
-    //save value extracted from intent, and indicates
-    //it should put this service in foreground or not
+    private Notification mNotification;
+    //Should put this service in background or not
     private boolean mShowNotification = false;
     //show notification only when request comes from MainActivity
     private boolean mStartOrUpdateForegroundNotification = false;
@@ -268,26 +266,28 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
 
         Intent stopTaskIntent = new Intent(this, FixerTrackService.class);
-        stopTaskIntent.setAction(Constants.Actions.ACTION_CANCEL_TASK);
+        stopTaskIntent.setAction(Constants.Actions.ACTION_STOP_SERVICE);
+        stopTaskIntent.putExtra(Constants.Actions.ACTION_STOP_SERVICE, Constants.StopsReasons.USER_CANCEL_TASK);
         PendingIntent pendingStopIntent = PendingIntent.getService(this, 0, stopTaskIntent, 0);
 
         Bitmap icon = BitmapFactory.decodeResource(getResources(),
                 R.mipmap.ic_launcher);
-        notification = new NotificationCompat.Builder(this)
-                .setContentTitle(contentTitle != null ? contentTitle : "")
-                .setAutoCancel(true)
-                .setColor(ContextCompat.getColor(getApplicationContext(),R.color.grey_800))
-                .setTicker(getString(R.string.app_name))
-                .setSubText(contentText != null ? contentText : getString(R.string.fixing_task))
-                .setContentText(status != null ? status : "")
-                .setSmallIcon(R.drawable.ic_stat_name)
-                .setLargeIcon(Bitmap.createScaledBitmap(icon, 128, 128, false))
-                .setContentIntent(pendingIntent)
-                .setOngoing(true)
-                .addAction(R.drawable.ic_stat_name,getString(R.string.stop), pendingStopIntent)
-                .build();
 
-        startForeground(R.string.app_name,notification);
+            mNotification = new NotificationCompat.Builder(this, Constants.Application.FULL_QUALIFIED_NAME)
+                    .setContentTitle(contentTitle != null ? contentTitle : "")
+                    .setAutoCancel(true)
+                    .setColor(ContextCompat.getColor(getApplicationContext(), R.color.grey_800))
+                    .setTicker(getString(R.string.app_name))
+                    .setSubText(contentText != null ? contentText : getString(R.string.fixing_task))
+                    .setContentText(status != null ? status : "")
+                    .setSmallIcon(R.drawable.ic_stat_name)
+                    .setLargeIcon(Bitmap.createScaledBitmap(icon, 128, 128, false))
+                    .setContentIntent(pendingIntent)
+                    .setOngoing(true)
+                    .addAction(R.drawable.ic_stat_name, getString(R.string.stop), pendingStopIntent)
+                    .build();
+
+        startForeground(R.string.app_name, mNotification);
 
     }
 
@@ -349,6 +349,7 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
 
         } catch (GnException e) {
             e.printStackTrace();
+            Crashlytics.logException(e);
         }
 
         //create and add files to a queue for process them
@@ -370,7 +371,7 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
 
             } catch (GnException e) {
                 e.printStackTrace();
-
+                Crashlytics.logException(e);
                 //Service is stopped from notification "Detener" button
                 mStopService = Constants.StopsReasons.ERROR_TASK;
                 mErrorMessage = e.getMessage();
@@ -416,6 +417,7 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
             }
         } catch (GnException e) {
             e.printStackTrace();
+            Crashlytics.logException(e);
             mStopService = Constants.StopsReasons.ERROR_TASK;
             mErrorMessage = e.getMessage();
             stopSelf();
@@ -497,6 +499,7 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
                     startNotification(currentFile + " de " + totalFiles, AudioItem.getFilename(gnMusicIdFileInfo.fileName()), mGnStatusToDisplay.get(status));
                 }
                 catch(GnException e){
+                    Crashlytics.logException(e);
                     e.printStackTrace();
                 }
             }
@@ -522,6 +525,7 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
                         mDataTrackDbHelper.updateData(mId, processingValue);
                     }
                 }catch (GnException e){
+                    Crashlytics.logException(e);
                     e.printStackTrace();
                 }
             }
@@ -599,6 +603,7 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
         try {
             title = gnResponseAlbums.albums().at(0).next().trackMatched().title().display();
         } catch (GnException e) {
+
             e.printStackTrace();
             title = "";
         }
@@ -1035,6 +1040,7 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
             }
             catch (CannotWriteException | IOException | InvalidAudioFrameException | TagException | ReadOnlyFileException | CannotReadException e) {
                 e.printStackTrace();
+                Crashlytics.logException(e);
                 //if an error has ocurred, mark this file as bad
                 //update our database
                 audioItem.setStatus(AudioItem.FILE_ERROR_READ);

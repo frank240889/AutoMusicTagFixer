@@ -63,7 +63,7 @@ public class DataTrackDbHelper extends SQLiteOpenHelper {
      * @param context
      * @return
      */
-    public static DataTrackDbHelper getInstance(Context context){
+    public static synchronized DataTrackDbHelper getInstance(Context context){
         if(dbHelper == null){
             dbHelper =  new DataTrackDbHelper(context.getApplicationContext());
             dbHelper.getWritableDatabase();
@@ -123,7 +123,6 @@ public class DataTrackDbHelper extends SQLiteOpenHelper {
      */
     public long insertItem(ContentValues data, String tableName){
         long id = getWritableDatabase().insert(tableName, null,data);
-        this.close();
         return id;
     }
 
@@ -212,7 +211,6 @@ public class DataTrackDbHelper extends SQLiteOpenHelper {
         if(c != null) {
             c.moveToFirst();
             if(c.getCount() > 0 && c.getInt(c.getColumnIndex(TrackContract.TrackData.MEDIASTORE_ID)) == id){
-                c.close();
                 return true;
             }
         }

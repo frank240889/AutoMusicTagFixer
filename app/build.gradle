@@ -53,8 +53,8 @@ android {
         applicationId 'mx.dev.franco.automusictagfixer'
         minSdkVersion 21
         targetSdkVersion 25
-        versionCode 1
-        versionName "1.0"
+        versionCode 4
+        versionName "1.0.3a"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     /**
