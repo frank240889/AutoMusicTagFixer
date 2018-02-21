@@ -56,6 +56,11 @@ android {
         versionCode 4
         versionName "1.0.3a"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+
+        def documentsAuthorityValue = applicationId + ".documents"
+
+        manifestPlaceholders = [documentsAuthority: documentsAuthorityValue]
+        buildConfigField "String","DOCUMENTS_AUTHORITY","\"${documentsAuthorityValue}\""
     }
     /**
      * The buildTypes {} block is where you can configure multiple build types.

@@ -4,6 +4,8 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.support.v4.provider.DocumentFile;
+import android.util.Log;
 import android.webkit.MimeTypeMap;
 
 import java.io.File;
@@ -259,9 +261,17 @@ public final class AudioItem implements Parcelable{
      * @return
      */
     public static String getRelativePath(String str){
+        int limit = 0;
+        if(str.contains("emulated")){
+            limit = 3;
+        }
+        else if(str.contains("storage/extSdCard")){
+            limit = 2;
+        }
+
         String[] parts = str.split("/");
         String relativePath = "";
-        for (int t = 4 ; t < parts.length ; t++){
+        for (int t = parts.length - 1 ; t > limit ; --t){
             relativePath += "/"+parts[t];
         }
         return relativePath;
@@ -290,9 +300,11 @@ public final class AudioItem implements Parcelable{
     public static String renameFile(String currentPath, String title, String artistName){
 
         if(!checkFileIntegrity(currentPath)){
+            Log.d("integrity ", ""+checkFileIntegrity(currentPath));
             return null;
         }
 
+        boolean success =false;
         File currentFile = new File(currentPath), renamedFile;
         String newParentPath = currentFile.getParent();
 
@@ -300,7 +312,8 @@ public final class AudioItem implements Parcelable{
         String newAbsolutePath= newParentPath + "/" + newFilename;
         renamedFile = new File(newAbsolutePath);
         if(!renamedFile.exists()) {
-            currentFile.renameTo(renamedFile);
+            //currentFile.renameTo(renamedFile);
+            success = DocumentFile.fromFile(currentFile).renameTo(renamedFile.getName());
         }else {
             //if artist tag was found
             if(!artistName.equals("")) {
@@ -311,12 +324,13 @@ public final class AudioItem implements Parcelable{
             }
             newAbsolutePath = newParentPath + "/" + newFilename;
             renamedFile = new File(newAbsolutePath);
-            currentFile.renameTo(renamedFile);
+            //currentFile.renameTo(renamedFile);
+            success = DocumentFile.fromFile(currentFile).renameTo(renamedFile.getName());
         }
 
+        Log.d("reanmed",success+"");
         return newAbsolutePath;
     }
-
 
     public static String getFrequency(String freq){
         if(freq == null || freq.isEmpty())
@@ -352,8 +366,20 @@ public final class AudioItem implements Parcelable{
         return file.exists() && file.length() > 0 && file.canRead();
     }
 
+    public static boolean checkFileIntegrity(DocumentFile file){
+        return file.exists() && file.length() > 0 && file.canRead();
+    }
+
     public static String getMimeType(String absolutePath){
         String ext = getExtension(absolutePath);
+        if(ext == null)
+            return null;
+        //get type depending on extension
+        return MimeTypeMap.getSingleton().getMimeTypeFromExtension(ext);
+    }
+
+    public static String getMimeType(File file){
+        String ext = getExtension(file);
         if(ext == null)
             return null;
         //get type depending on extension

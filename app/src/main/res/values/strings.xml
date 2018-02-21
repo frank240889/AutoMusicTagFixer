@@ -182,7 +182,7 @@
     <string name="add_cover">Añadir de galería</string>
     <string name="automatic_mode">Modo automático</string>
     <string name="edit_cover">Añadir carátula de galería</string>
-    <string name="update_list">Buscar nuevas</string>
+    <string name="update_list">Actualizar</string>
     <string name="already_updating_list">Actualización en curso.</string>
     <string name="not_created_list">No esta disponible la lista aún.</string>
     <string name="downloading_tags">Buscando etiquetas...</string>
@@ -288,6 +288,16 @@
     <string name="dummy_content">DUMMY\nCONTENT</string>
     <string name="title_extract_cover">Extraer carátula</string>
     <string name="could_not_init_api">No se ha podido iniciar la API:</string>
+    <string name="media_mounted">Se ha montado una memoria extraíble.</string>
+    <string name="media_unmounted">Se ha desmontado una memoria extraíble.</string>
+    <string name="removable_storage">Almacenamiento externo</string>
+    <string name="pref_enable_auto_update_list">Actualiza la lista automáticamente cuando añades/remueves una memoria extraíble.</string>
+    <string name="pref_title_enable_auto_update_list">Actualizar lista automáticamente</string>
+    <string name="storage_has_change">Nuevas canciones han sido encontradas.</string>
+    <string name="could_not_create_temp_file">No se pudo crear el archivo temporal.</string>
+    <string name="enable_sd_card_access">Acceso a tarjeta SD</string>
+    <string name="pref_title_enable_sd_card_access">Conceder permiso de acceso a tarjeta SD.</string>
+    <string name="pref_enable_sd_card_access_description">A partir de Android 5, es necesario que concedas este permiso explícitamente para que podamos corregir las canciones de la SD.</string>
 
 
 </resources>

@@ -24,16 +24,16 @@ public class ScheduleJobService extends JobService {
         Log.d("ONSTART","onstart");
 
         //We set context and initialize the GNSDK API if it was not before.
-        if(ConnectivityDetector.sIsConnected) {
+        boolean shouldInitialize = (ConnectivityDetector.sIsConnected && !GnService.sApiInitialized);
+        if(shouldInitialize) {
             //GnService.API_INITIALIZED_AFTER_CONNECTED flag indicates
             //that service was not initialized from Splash.
             //is useful to inform to user in MainActivity
             //that API of GNSDK has been initialized
             GnService.withContext(getApplicationContext()).initializeAPI(GnService.API_INITIALIZED_AFTER_CONNECTED);
         }
-
-        //if is connected, we finalize this job
-        jobFinished(params, !ConnectivityDetector.sIsConnected);
+        //if already should not initialize it, we finalize this job
+        jobFinished(params, !shouldInitialize);
         return true;
     }
 

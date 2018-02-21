@@ -73,7 +73,6 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
         this.mCurrentList = list;
         this.mCurrentFilteredList = mCurrentList;
         this.mClickListener = clickListener;
-
     }
 
     /**

@@ -47,7 +47,6 @@ import com.gracenote.gnsdk.IGnMusicIdFileEvents;
 import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.audio.AudioFileIO;
 import org.jaudiotagger.audio.exceptions.CannotReadException;
-import org.jaudiotagger.audio.exceptions.CannotWriteException;
 import org.jaudiotagger.audio.exceptions.InvalidAudioFrameException;
 import org.jaudiotagger.audio.exceptions.ReadOnlyFileException;
 import org.jaudiotagger.audio.mp3.MP3File;
@@ -75,6 +74,7 @@ import mx.dev.franco.automusictagfixer.database.TrackContract;
 import mx.dev.franco.automusictagfixer.list.AudioItem;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
 import mx.dev.franco.automusictagfixer.utilities.Settings;
+import mx.dev.franco.automusictagfixer.utilities.TaggerHelper;
 
 import static mx.dev.franco.automusictagfixer.services.GnService.sAppString;
 
@@ -120,6 +120,7 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
     private Looper mLooper;
     private MyHandler mHandler;
     private volatile int mStopService = Constants.StopsReasons.CONTINUE_TASK;
+    private TaggerHelper mTaggerHelper;
 
 
     /**
@@ -145,7 +146,7 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
         mThread.start();
         mLooper = mThread.getLooper();
         mHandler = new MyHandler(mLooper,this);
-
+        mTaggerHelper = TaggerHelper.getInstance(getApplicationContext());
         //These status are name events received from Gracenote server to
         //report status of track id task
         mGnStatusToDisplay = new HashMap<>();
@@ -981,16 +982,13 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
                     //Log.d("OverwriteAllTags", Settings.SETTING_OVERWRITE_ALL_TAGS_AUTOMATIC_MODE+"");
                 }
 
-                if(isMp3 && ((MP3File) audioTaggerFile).hasID3v1Tag()){
-                    //remove old version of ID3 tags
-                    //Log.d("removed ID3v1","remove ID3v1");
-                    ((MP3File) audioTaggerFile).delete( ((MP3File)audioTaggerFile).getID3v1Tag() );
-                }
-
                 //Update the file meta tags, this changes in tags
                 //are visible to all media players that are able to read
                 //ID3 tags (most nowadays)
-                audioTaggerFile.commit();
+                //audioTaggerFile.commit();
+                boolean res = mTaggerHelper.setSourceFile(new File(mPath)).
+                                                                                setTags(tag).
+                                                                                applyTags();
                 //If some info was not found, mark its state as INCOMPLETE
                 if (!dataTitle || !dataArtist || !dataAlbum || !dataImage || !dataTrackNumber || !dataYear || !dataGenre) {
                     newTags.put(TrackContract.TrackData.STATUS, AudioItem.STATUS_ALL_TAGS_NOT_FOUND);
@@ -1004,7 +1002,8 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
 
                 //Rename file if this option is enabled in Settings
                 if (Settings.SETTING_RENAME_FILE_AUTOMATIC_MODE) {
-                    String newAbsolutePath = AudioItem.renameFile(audioItem.getAbsolutePath(), tags[0], tags[1]);
+                    String newAbsolutePath =  mTaggerHelper.setSourceFile(new File(mPath)).
+                            renameFile(tags[0], tags[1]);//AudioItem.renameFile(audioItem.getAbsolutePath(), tags[0], tags[1]);
                     if (newAbsolutePath != null){
                         //Inform to system that one file has change its name
                         ContentValues newValuesToMediaStore = new ContentValues();
@@ -1038,7 +1037,7 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
                 mLocalBroadcastManager.sendBroadcastSync(intentActionDone);
 
             }
-            catch (CannotWriteException | IOException | InvalidAudioFrameException | TagException | ReadOnlyFileException | CannotReadException e) {
+            catch ( IOException | InvalidAudioFrameException | TagException | ReadOnlyFileException | CannotReadException e) {
                 e.printStackTrace();
                 Crashlytics.logException(e);
                 //if an error has ocurred, mark this file as bad

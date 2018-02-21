@@ -1,6 +1,7 @@
 package mx.dev.franco.automusictagfixer;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.BroadcastReceiver;
 import android.content.ContentValues;
@@ -26,6 +27,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.ShareCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
+import android.support.v4.provider.DocumentFile;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -67,13 +69,15 @@ import mx.dev.franco.automusictagfixer.utilities.Constants;
 import mx.dev.franco.automusictagfixer.utilities.RequiredPermissions;
 import mx.dev.franco.automusictagfixer.utilities.Settings;
 import mx.dev.franco.automusictagfixer.utilities.SimpleMediaPlayer;
+import mx.dev.franco.automusictagfixer.utilities.StorageHelper;
 
 import static mx.dev.franco.automusictagfixer.services.GnService.sApiInitialized;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
     TrackAdapter.AudioItemHolder.ClickListener {
-     public static String TAG = MainActivity.class.getName();
+    private static final long UPDATE_LIST = -2;
+    public static String TAG = MainActivity.class.getName();
 
     //flag to indicate when the app is retrieving data from songs
     public static boolean sIsGettingData = false;
@@ -130,6 +134,7 @@ public class MainActivity extends AppCompatActivity
     private IntentFilter mFilterActionSetAudioProcessing;
     private IntentFilter mFilterActionNotFound;
     private IntentFilter mFilterActionConnectionLost;
+    private IntentFilter mFilterActionRequestUpdateList;
     //the receiver that handles the intents from FixerTrackService
     private ResponseReceiver mReceiver;
 
@@ -183,6 +188,7 @@ public class MainActivity extends AppCompatActivity
         mFilterApiInitialized = new IntentFilter(Constants.GnServiceActions.ACTION_API_INITIALIZED);
         mFilterActionSetAudioProcessing = new IntentFilter(Constants.Actions.ACTION_SET_AUDIOITEM_PROCESSING);
         mFilterActionConnectionLost = new IntentFilter(Constants.Actions.ACTION_CONNECTION_LOST);
+        mFilterActionRequestUpdateList = new IntentFilter(Constants.Actions.ACTION_REQUEST_UPDATE_LIST);
 
         //create receiver
         mReceiver = new ResponseReceiver();
@@ -278,7 +284,7 @@ public class MainActivity extends AppCompatActivity
         //If we already had the permission granted, lets go  read data from database and pass them to adapter, to show in Recyclerview,
         //otherwise we show the reason to access files until user grant permission
 
-        if(ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+        if(ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             showRequestPermissionReason();
         }
         else {
@@ -372,6 +378,7 @@ public class MainActivity extends AppCompatActivity
         //be stablished at splash, and then receive a notification when a connection
         //could be stablished
         mLocalBroadcastManager.registerReceiver(mReceiver, mFilterApiInitialized);
+        mLocalBroadcastManager.registerReceiver(mReceiver, mFilterActionRequestUpdateList);
         Log.d(TAG,"onResume");
     }
 
@@ -680,6 +687,9 @@ public class MainActivity extends AppCompatActivity
                 refreshList();
                 break;
 
+            case R.id.test_button:
+                performFileSearch();
+                break;
             case R.id.path_asc:
                 sortBy(TrackContract.TrackData.DATA, TrackAdapter.ASC);
                 checkMenuItem(item);
@@ -718,6 +728,45 @@ public class MainActivity extends AppCompatActivity
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    public void performFileSearch() {
+
+        // BEGIN_INCLUDE (use_open_document_intent)
+        // ACTION_OPEN_DOCUMENT is the intent to choose a file via the system's file browser.
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+        startActivityForResult(intent, 1000);
+        // END_INCLUDE (use_open_document_intent)
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent resultData) {
+        Log.i(TAG, "Received an \"Activity Result\"");
+        // The ACTION_OPEN_DOCUMENT intent was sent with the request code READ_REQUEST_CODE.
+        // If the request code seen here doesn't match, it's the response to some other intent,
+        // and the below code shouldn't run at all.
+        Log.d(TAG, "request code " + requestCode + " - resultCode" + resultCode + " resultData is null " + (resultData == null));
+        if (requestCode == 1000 && resultCode == Activity.RESULT_OK) {
+            // The document selected by the user won't be returned in the intent.
+            // Instead, a URI to that document will be contained in the return intent
+            // provided to this method as a parameter.  Pull that uri using "resultData.getData()"
+            Uri uri = null;
+            if (resultData != null) {
+                Constants.URI_SD_CARD = resultData.getData();
+                Log.i(TAG, "Uri: " + Constants.URI_SD_CARD .toString());
+
+                Log.d("URI SD",Constants.URI_SD_CARD.toString());
+
+                DocumentFile documentFile = DocumentFile.fromTreeUri(this,Uri.parse(Constants.URI_SD_CARD.toString()));
+                Log.d("doc URI SD",documentFile.getUri().toString());
+                documentFile.listFiles();
+                // Persist access permissions.
+                final int takeFlags = resultData.getFlags();// & (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                Log.d("permissions",takeFlags+"");
+                //getContentResolver().takePersistableUriPermission(Constants.URI_SD_CARD, takeFlags);
+
+            }
+        }
     }
 
     private void checkMenuItem(MenuItem item){
@@ -902,6 +951,9 @@ public class MainActivity extends AppCompatActivity
             default:
                 try {
                     correctSong(view, position);
+                    AudioItem audioItem = mAudioItemArrayAdapter.getAudioItemByPosition(position);
+                    String path = audioItem.getAbsolutePath();
+                    StorageHelper.withContext(this).createTempFileFrom(new File(path));
                 } catch (IOException | InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -999,6 +1051,19 @@ public class MainActivity extends AppCompatActivity
             mSnackbar.setDuration(duration);
             mSnackbar.setAction("",null);
         }
+        else if( id == -2){
+            //Suggest to user to update list
+            mSnackbar.setText(msg);
+            mSnackbar.setDuration(duration);
+            mSnackbar.setAction(R.string.update_list, new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                asyncReadFile = new AsyncReadFile(RE_SCAN, MainActivity.this);
+                asyncReadFile.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                }
+            });
+        }
+
         else {
             //Suggest to user to correct song manually, if no tags were found
             mSnackbar.setText(msg);
@@ -1303,10 +1368,10 @@ public class MainActivity extends AppCompatActivity
      */
     private void requestPermission(String permission) {
 
-        if(permission.equals(Manifest.permission.READ_EXTERNAL_STORAGE)){
+        if(permission.equals(Manifest.permission.WRITE_EXTERNAL_STORAGE)){
             //No permission? then request it
             if (ContextCompat.checkSelfPermission(getApplicationContext(), permission) != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(this, new String[]{permission}, RequiredPermissions.READ_EXTERNAL_STORAGE_PERMISSION);
+                ActivityCompat.requestPermissions(this, new String[]{permission}, RequiredPermissions.WRITE_EXTERNAL_STORAGE_PERMISSION);
             }
             else {
                 executeScan();
@@ -1421,7 +1486,7 @@ public class MainActivity extends AppCompatActivity
         builder.setPositiveButton(R.string.ok_button, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                requestPermission(Manifest.permission.READ_EXTERNAL_STORAGE);
+                requestPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE);
             }
         });
         builder.setNegativeButton(R.string.cancel_button, new DialogInterface.OnClickListener() {
@@ -1570,8 +1635,8 @@ public class MainActivity extends AppCompatActivity
             switch (taskType){
                 //If we are updating for new elements added
                 case RE_SCAN:
-                    removeUnusedItems();
                     rescanAndUpdateList();
+                    removeUnusedItems();
                     break;
                 //if database does not exist or is first use of app
                 case CREATE_DATABASE:
@@ -1605,8 +1670,14 @@ public class MainActivity extends AppCompatActivity
 
             //adds the item to top of list
             if(taskType == RE_SCAN){
-                mainActivityWeakReference.get().mAudioItemList.add(0,audioItems[0]);
-                mainActivityWeakReference.get().mAudioItemArrayAdapter.notifyItemInserted(0);
+                if(audioItems[0].getId() == -1) {
+                    mainActivityWeakReference.get().mAudioItemList.remove(audioItems[0]);
+                    mainActivityWeakReference.get().mAudioItemArrayAdapter.notifyItemRemoved(audioItems[0].getPosition());
+                }
+                else {
+                    mainActivityWeakReference.get().mAudioItemList.add(0, audioItems[0]);
+                    mainActivityWeakReference.get().mAudioItemArrayAdapter.notifyItemInserted(0);
+                }
             }
             else {
                 mainActivityWeakReference.get().mAudioItemList.add(audioItems[0]);
@@ -1674,6 +1745,8 @@ public class MainActivity extends AppCompatActivity
 
             mainActivityWeakReference.clear();
             mainActivityWeakReference = null;
+            added = 0;
+            removed = 0;
             System.gc();
         }
 
@@ -1701,7 +1774,8 @@ public class MainActivity extends AppCompatActivity
             sharedPreferences = null;
             mainActivityWeakReference.clear();
             mainActivityWeakReference = null;
-
+            added = 0;
+            removed = 0;
             System.gc();
         }
 
@@ -1760,14 +1834,15 @@ public class MainActivity extends AppCompatActivity
          * or deleted.
          */
         private void removeUnusedItems(){
-            for(int pos = 0; pos < mainActivityWeakReference.get().mAudioItemList.size() ; pos++){
+            for(int pos = mainActivityWeakReference.get().mAudioItemList.size() -1 ; pos >= 0 ; --pos){
                 AudioItem audioItem = mainActivityWeakReference.get().mAudioItemList.get(pos);
                 File file = new File(audioItem.getAbsolutePath());
                 if (!file.exists()) {
                     mainActivityWeakReference.get().mDataTrackDbHelper.removeItem(audioItem.getId(), TrackContract.TrackData.TABLE_NAME);
-                    mainActivityWeakReference.get().mAudioItemList.remove(pos);
-                    mainActivityWeakReference.get().mAudioItemArrayAdapter.notifyItemRemoved(pos);
+                    publishProgress(audioItem.setId(-1).setPosition(pos));
                     removed++;
+                    Log.d("removed", removed+"");
+                    //pos--;
                 }
                 file = null;
             }
@@ -1779,7 +1854,7 @@ public class MainActivity extends AppCompatActivity
          * to store the state of every song,
          * generally it only runs the first time
          * the app is executed, or when DB
-         * could be created at any previous app open.
+         * could not be created at any previous app open.
          */
         private void createNewTable(){
             data = getDataFromDevice();
@@ -1838,7 +1913,8 @@ public class MainActivity extends AppCompatActivity
             String title = data.getString(1);
             String artist = data.getString(2);
             String album = data.getString(3);
-            String fullPath = Uri.parse(data.getString(4)).toString(); //MediaStore.Audio.Media.DATA column is the file mMenuItemPath
+            String path = data.getString(4);
+            String fullPath = Uri.parse(path).toString(); //MediaStore.Audio.Media.DATA column is the file mMenuItemPath
 
             ContentValues values = new ContentValues();
             values.put(TrackContract.TrackData.MEDIASTORE_ID,mediaStoreId);
@@ -1933,7 +2009,20 @@ public class MainActivity extends AppCompatActivity
                         }
                     });
                     break;
-
+                case Constants.Actions.ACTION_REQUEST_UPDATE_LIST:
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            if(Settings.SETTING_AUTO_UPDATE_LIST) {
+                                AsyncReadFile asyncReadFile= new AsyncReadFile(RE_SCAN, MainActivity.this);
+                                asyncReadFile.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR);
+                            }
+                            else {
+                                showSnackBar(Snackbar.LENGTH_INDEFINITE,getString(R.string.storage_has_change), UPDATE_LIST);
+                            }
+                        }
+                    });
+                    break;
                 default:
                     runOnUiThread(new Runnable() {
                         @Override

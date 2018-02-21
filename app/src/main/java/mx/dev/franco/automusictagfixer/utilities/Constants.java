@@ -1,5 +1,7 @@
 package mx.dev.franco.automusictagfixer.utilities;
 
+import android.net.Uri;
+
 import mx.dev.franco.automusictagfixer.BuildConfig;
 
 /**
@@ -14,6 +16,7 @@ public class Constants {
     public static final String SORT_KEY = "key_default_sort";
     public static final String ALL_ITEMS_CHECKED = "all_items_checked";
     public static final String ACTION_OPEN_MAIN_ACTIVITY = "action_open_main_activity";
+    public static Uri URI_SD_CARD = null;
 
     public static class Application{
         public static String FULL_QUALIFIED_NAME = BuildConfig.APPLICATION_ID;
@@ -51,6 +54,7 @@ public class Constants {
         public static final String ACTION_ERROR = BuildConfig.APPLICATION_ID + "." + "action_error" ;
         public static final String ACTION_STOP_SERVICE = BuildConfig.APPLICATION_ID + "." + "action_stop_service";
 
+        public static final String ACTION_REQUEST_UPDATE_LIST = BuildConfig.APPLICATION_ID + "." + "action_request_update_list";
     }
 
     public static class Activities {
@@ -76,6 +80,7 @@ public class Constants {
         public static final int CANCEL_TASK = 2;
         public static final int ERROR_TASK = 3;
         public static final int LOST_CONNECTION_TASK = 4;
+        public static final int REMOVABLE_MEDIA_CHANGE = 5;
 
     }
 

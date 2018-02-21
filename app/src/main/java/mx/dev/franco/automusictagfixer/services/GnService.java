@@ -152,14 +152,15 @@ public class GnService{
                     //Stop trying to initialize API
                     JobScheduler jobScheduler = (JobScheduler) sContext.getApplicationContext().getSystemService(Context.JOB_SCHEDULER_SERVICE);
                     jobScheduler.cancelAll();
+                    JobManager.withContext(sContext).cancelAllJobs();
                 }
                 else {
-                    Job.scheduleJob(sContext);
                     sCountIntents++;
                 }
             }
             //Notify to user
             else {
+                JobManager.withContext(sContext).cancelAllJobs();
                 Intent intent = new Intent();
                 intent.setAction(Constants.GnServiceActions.ACTION_API_INITIALIZED);
                 LocalBroadcastManager.getInstance(sContext).sendBroadcastSync(intent);

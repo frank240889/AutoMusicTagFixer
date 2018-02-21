@@ -2,6 +2,7 @@ package mx.dev.franco.automusictagfixer;
 
 
 import android.annotation.TargetApi;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -14,15 +15,21 @@ import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.ActionBar;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.List;
 
 import mx.dev.franco.automusictagfixer.services.FixerTrackService;
 import mx.dev.franco.automusictagfixer.services.ServiceHelper;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
+import mx.dev.franco.automusictagfixer.utilities.RequiredPermissions;
 import mx.dev.franco.automusictagfixer.utilities.Settings;
 
 /**
@@ -37,6 +44,8 @@ import mx.dev.franco.automusictagfixer.utilities.Settings;
  * API Guide</a> for more information on developing a Settings UI.
  */
 public class SettingsActivity extends AppCompatPreferenceActivity{
+    private static final String TAG = SettingsActivity.class.getName();
+
     /**
      * A preference value change listener that updates the preference's summary
      * to reflect its new value.
@@ -202,6 +211,10 @@ public class SettingsActivity extends AppCompatPreferenceActivity{
                 Settings.SETTING_OVERWRITE_ALL_TAGS_AUTOMATIC_MODE = sharedPreferences.getBoolean(key, true);
                 Log.d(key, Settings.SETTING_OVERWRITE_ALL_TAGS_AUTOMATIC_MODE +"");
                 break;
+            case "key_auto_update_list":
+                Settings.SETTING_AUTO_UPDATE_LIST = sharedPreferences.getBoolean(key, true);
+                Log.d(key, Settings.SETTING_AUTO_UPDATE_LIST +"");
+                break;
             case "key_background_service":
                 Settings.BACKGROUND_CORRECTION = sharedPreferences.getBoolean(key, true);
 
@@ -221,7 +234,18 @@ public class SettingsActivity extends AppCompatPreferenceActivity{
 
                 Log.d(key, Settings.BACKGROUND_CORRECTION +"");
                 break;
+
+            case "key_enable_sd_card_access":
+                requestAccessToSD();
+                break;
         }
+    }
+
+    public void requestAccessToSD() {
+        //Request permission to access SD card
+        //through Storage Access Framework
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+        startActivityForResult(intent, RequiredPermissions.REQUEST_PERMISSION_SAF);
     }
 
     /**
@@ -281,4 +305,42 @@ public class SettingsActivity extends AppCompatPreferenceActivity{
             return super.onOptionsItemSelected(item);
         }
     }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent resultData) {
+
+        Log.d(TAG, "request code " + requestCode + " - resultCode" + resultCode + " resultData is null " + (resultData == null));
+        if (requestCode == RequiredPermissions.REQUEST_PERMISSION_SAF && resultCode == Activity.RESULT_OK) {
+            // The document selected by the user won't be returned in the intent.
+            // Instead, a URI to that document will be contained in the return intent
+            // provided to this method as a parameter.  Pull that uri using "resultData.getData()"
+            if (resultData != null) {
+                Log.i(TAG, "Uri: " + resultData.getData().toString());
+
+                //Save root Uri of SD card
+                Constants.URI_SD_CARD = resultData.getData();
+
+                // Persist access permissions.
+                /*final int takeFlags = resultData.getFlags()
+                        & (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                getContentResolver().takePersistableUriPermission(Constants.URI_SD_CARD, takeFlags);*/
+
+            }
+        }
+        else {
+            Toast toast = Toast.makeText(this.getApplicationContext(), getString(R.string.permission_denied), Toast.LENGTH_LONG);
+            View view = toast.getView();
+            TextView text = (TextView) view.findViewById(android.R.id.message);
+            text.setTextColor(ContextCompat.getColor(this.getApplicationContext(), R.color.grey_900));
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                text.setTextAppearance(R.style.CustomToast);
+            } else {
+                text.setTextAppearance(this.getApplicationContext(), R.style.CustomToast);
+            }
+            view.setBackground(ContextCompat.getDrawable(this.getApplicationContext(), R.drawable.background_custom_toast));
+            toast.setGravity(Gravity.CENTER, 0, 0);
+            toast.show();
+        }
+    }
+
 }

@@ -27,6 +27,7 @@ public class SplashActivity extends AppCompatActivity{
         super.onCreate(savedInstanceState);
         ConnectivityDetector.withContext(this).setStartedFrom(GnService.API_INITIALIZED_FROM_SPLASH).startCheckingConnection();
 
+
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 
         //Get default or saved values of settings
@@ -40,14 +41,14 @@ public class SplashActivity extends AppCompatActivity{
         Settings.BACKGROUND_CORRECTION = preferences.getBoolean("key_background_service", true);
         String imageSizeSaved = preferences.getString("key_size_album_art","1000");
         Settings.SETTING_SIZE_ALBUM_ART = Settings.setValueImageSize(imageSizeSaved);
+        Settings.SETTING_AUTO_UPDATE_LIST = preferences.getBoolean("key_auto_update_list", false);
 
 
-        preferences = null;
 
         //Is first use of app?
-        preferences =  getSharedPreferences(Constants.Application.FULL_QUALIFIED_NAME, Context.MODE_PRIVATE);
-        boolean firstTime= preferences.getBoolean("first", true);
-        Settings.SETTING_SORT = preferences.getInt(Constants.SORT_KEY, 0);
+        SharedPreferences preferences2 =  getSharedPreferences(Constants.Application.FULL_QUALIFIED_NAME, Context.MODE_PRIVATE);
+        boolean firstTime= preferences2.getBoolean("first", true);
+        Settings.SETTING_SORT = preferences2.getInt(Constants.SORT_KEY, 0);
         //do we have permission to access files?
         RequiredPermissions.ACCESS_GRANTED_FILES = ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
 
@@ -62,7 +63,6 @@ public class SplashActivity extends AppCompatActivity{
 
             }
 
-        preferences = null;
         finish();
     }
 

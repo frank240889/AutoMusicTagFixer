@@ -103,8 +103,8 @@ public class ConnectivityDetector {
 
             //Initialize GNSDK API if is not initialized
             if(sIsConnected){
-                if(!GnService.sApiInitialized){
-                    GnService.withContext(sContext).initializeAPI(sStartedFrom);
+                if(!GnService.sApiInitialized && JobManager.withContext(sContext).getJobById(Job.ID_JOB) == null){
+                    Job.scheduleJob(sContext);
                 }
             }
 

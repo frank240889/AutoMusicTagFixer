@@ -41,6 +41,14 @@
             android:title="@string/pref_automatically_replace_strange_chars" />
     </PreferenceCategory>
     <PreferenceCategory
+        android:title="@string/removable_storage">
+        <SwitchPreference
+            android:defaultValue="false"
+            android:key="key_auto_update_list"
+            android:summary="@string/pref_enable_auto_update_list"
+            android:title="@string/pref_title_enable_auto_update_list" />
+    </PreferenceCategory>
+    <PreferenceCategory
         android:title="@string/enable_embed_player">
         <SwitchPreference
             android:defaultValue="true"
@@ -48,4 +56,14 @@
             android:summary="@string/pref_enable_embed_player_description"
             android:title="@string/pref_title_enable_embed_player" />
     </PreferenceCategory>
+
+    <PreferenceCategory
+        android:title="@string/enable_sd_card_access">
+        <SwitchPreference
+            android:defaultValue="false"
+            android:key="key_enable_sd_card_access"
+            android:summary="@string/pref_enable_sd_card_access_description"
+            android:title="@string/pref_title_enable_sd_card_access" />
+    </PreferenceCategory>
+
 </PreferenceScreen>

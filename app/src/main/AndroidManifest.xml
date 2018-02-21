@@ -8,6 +8,7 @@
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
 
     <application
         android:name=".AutoMusicTagFixer"
@@ -85,11 +86,11 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="mx.dev.franco.automusictagfixer.TrackDetailsActivity" />
         </activity>
-
+        <!--"mx.dev.franco.automusictagfixer.fileProvider"-->
         <!-- This provider is necessary because in android >= 7 doesn't allow to access directly to files -->
         <provider
             android:name="android.support.v4.content.FileProvider"
-            android:authorities="mx.dev.franco.automusictagfixer.fileProvider"
+            android:authorities= "${documentsAuthority}"
             android:exported="false"
             android:grantUriPermissions="true">
             <meta-data

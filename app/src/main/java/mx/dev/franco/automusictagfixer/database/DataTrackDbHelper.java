@@ -109,7 +109,7 @@ public class DataTrackDbHelper extends SQLiteOpenHelper {
      * @param id
      * @param tableName
      */
-    public void removeItem(long id, String tableName){
+    public synchronized void removeItem(long id, String tableName){
         String selection = TrackContract.TrackData.MEDIASTORE_ID + " = ?";
         String[] selectionArgs = {id+""};
         getWritableDatabase().delete(tableName, selection, selectionArgs);
@@ -121,7 +121,7 @@ public class DataTrackDbHelper extends SQLiteOpenHelper {
      * @param tableName
      * @return id corresponding to current row inserted
      */
-    public long insertItem(ContentValues data, String tableName){
+    public synchronized long insertItem(ContentValues data, String tableName){
         long id = getWritableDatabase().insert(tableName, null,data);
         return id;
     }
@@ -191,7 +191,7 @@ public class DataTrackDbHelper extends SQLiteOpenHelper {
      * @param id the id from MediaStore to search in App DB
      * @return false in case doesn't exist in our database
      */
-    public boolean existInDatabase(int id){
+    public synchronized boolean existInDatabase(int id){
         String[] projection = {
                 TrackContract.TrackData.MEDIASTORE_ID,
         };
@@ -211,9 +211,11 @@ public class DataTrackDbHelper extends SQLiteOpenHelper {
         if(c != null) {
             c.moveToFirst();
             if(c.getCount() > 0 && c.getInt(c.getColumnIndex(TrackContract.TrackData.MEDIASTORE_ID)) == id){
+                c.close();
                 return true;
             }
         }
+        c.close();
         return false;
     }
 
@@ -223,7 +225,7 @@ public class DataTrackDbHelper extends SQLiteOpenHelper {
      * @param contentValues
      * @return how many rows were updated
      */
-    public int updateData(long id, ContentValues contentValues){
+    public synchronized int updateData(long id, ContentValues contentValues){
 
         String selection = TrackContract.TrackData.MEDIASTORE_ID + " = ?";
         String selectionArgs[] = {id+""};
@@ -235,7 +237,7 @@ public class DataTrackDbHelper extends SQLiteOpenHelper {
      * @param contentValues object that wraps columns and new values to apply
      * @return how many rows were updated
      */
-    public int updateData(ContentValues contentValues){
+    public synchronized int updateData(ContentValues contentValues){
         int updatedRow = getWritableDatabase().update(TrackContract.TrackData.TABLE_NAME, contentValues, null, null );
         return updatedRow;
     }
@@ -248,7 +250,7 @@ public class DataTrackDbHelper extends SQLiteOpenHelper {
      * @param condition represent the " = somevalue" part of where condition
      * @return
      */
-    public int updateData(ContentValues contentValues, String columnToUpdate, boolean condition){
+    public synchronized int updateData(ContentValues contentValues, String columnToUpdate, boolean condition){
         String whereClause = columnToUpdate + " = ?";
         String[] whereArgs = {(condition?1:0)+""};
         return getWritableDatabase().update(TrackContract.TrackData.TABLE_NAME, contentValues, whereClause, whereArgs );
@@ -257,7 +259,7 @@ public class DataTrackDbHelper extends SQLiteOpenHelper {
      * Remove all tables from DB
      * @return number of tables deleted
      */
-    public int clearDb(){
+    public synchronized int clearDb(){
         return getWritableDatabase().delete(TrackContract.TrackData.TABLE_NAME, null, null);
     }
 
@@ -265,7 +267,7 @@ public class DataTrackDbHelper extends SQLiteOpenHelper {
      * Returns total elements in table
      * @return number of elements
      */
-    public int getCount(){
+    public synchronized int getCount(){
         return getReadableDatabase().query(
                 TrackContract.TrackData.TABLE_NAME,     // Table to query
                 null,                             // Which columns are going to retrieve, is the "SELECT columns FROM" part
@@ -282,7 +284,8 @@ public class DataTrackDbHelper extends SQLiteOpenHelper {
      * @param context
      * @return true if exists
      */
-    public static boolean existDatabase(Context context){
+    public synchronized
+    static boolean existDatabase(Context context){
         File db = context.getApplicationContext().getDatabasePath(DATABASE_NAME);
         return db.exists();
     }

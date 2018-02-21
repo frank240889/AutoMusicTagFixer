@@ -4,12 +4,11 @@
     <item
         android:drawable="@color/grey_900"/>
 
-    <item android:width="256dp"
-        android:height="256dp"
-        android:gravity="center">
+    <item>
         <bitmap
             android:dither="true"
             android:mipMap="true"
+            android:gravity="center"
             android:antialias="true"
             android:src="@drawable/splash"/>
     </item>

@@ -19,6 +19,11 @@ public class Job {
      * @param context
      */
     public static void scheduleJob(Context context){
+
+        //Don't create a job if is running
+        if(null != JobManager.withContext(context).getJobById(ID_JOB))
+            return;
+
         //Component we want to execute
         //we need to pass context and name of our extended JobService class
         //that will execute the task
@@ -45,6 +50,8 @@ public class Job {
 
         //time to schedule task
         JobScheduler jobScheduler = (JobScheduler) context.getApplicationContext().getSystemService(Context.JOB_SCHEDULER_SERVICE);
-        jobScheduler.schedule(builder.build());
+        JobInfo job = builder.build();
+        JobManager.withContext(context).addJob(job);
+        jobScheduler.schedule(job);
     }
 }
