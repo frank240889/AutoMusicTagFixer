@@ -40,6 +40,14 @@ import static mx.dev.franco.automusictagfixer.list.AudioItem.getExtension;
 
 /**
  * Created by franco on 16/01/18.
+ * This class was created to delegate
+ * the responsibility of update tags, because implies
+ * additional functionality when files are
+ * stored on sd card.
+ *
+ * Is implemented by using part of Storage Access Framework
+ * because is the only way to modify data when is stored
+ * in SD.
  */
 
 public final class TaggerHelper {
