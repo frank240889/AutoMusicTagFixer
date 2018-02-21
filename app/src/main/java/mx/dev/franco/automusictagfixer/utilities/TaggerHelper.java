@@ -440,7 +440,7 @@ public final class TaggerHelper {
         //Copy file with new tags to its original location
         try {
             //First create a DocumentFile object referencing to its original path that we store
-            DocumentFile newFile =  sourceDocumentFile.getParentFile().createFile("audio/mp3", mSourceFile.getName() );
+            DocumentFile newFile =  sourceDocumentFile.getParentFile().createFile(AudioItem.getMimeType(mSourceFile), mSourceFile.getName() );
             Log.d("newFile uri",newFile.getUri().toString());
             out = sContext.getContentResolver().openOutputStream(newFile.getUri());
             in = new FileInputStream(outputFile);
