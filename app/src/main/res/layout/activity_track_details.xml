@@ -37,7 +37,7 @@
                 app:layout_collapseParallaxMultiplier="0.7" />
 
             <FrameLayout
-                android:id="@+id/blackTransparentLayer"
+                android:id="@+id/topTransparentLayer"
                 android:layout_width="match_parent"
                 android:layout_height="?attr/actionBarSize"
                 android:layout_gravity="top"
@@ -51,7 +51,7 @@
             </FrameLayout>
 
             <FrameLayout
-                android:id="@+id/blackTransparentLayer2"
+                android:id="@+id/bottomTransparentLayer"
                 android:layout_width="match_parent"
                 android:layout_height="?attr/actionBarSize"
                 android:layout_gravity="bottom"
@@ -96,7 +96,7 @@
     <include layout="@layout/details_item_trackid" />
 
     <android.support.design.widget.FloatingActionButton
-        android:id="@+id/editTrackInfo"
+        android:id="@+id/fabEditTrackInfo"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
@@ -112,7 +112,7 @@
         app:srcCompat="@drawable/ic_edit_white" />
 
     <android.support.design.widget.FloatingActionButton
-        android:id="@+id/downloadCover"
+        android:id="@+id/fabDownloadCover"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
@@ -128,7 +128,7 @@
         app:srcCompat="@drawable/ic_photo_white" />
 
     <android.support.design.widget.FloatingActionButton
-        android:id="@+id/autofix"
+        android:id="@+id/fabAutofix"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
@@ -144,7 +144,7 @@
         app:srcCompat="@drawable/ic_magic_wand_auto_fix_button" />
 
     <android.support.design.widget.FloatingActionButton
-        android:id="@+id/floatingActionMenu"
+        android:id="@+id/fabMenu"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
@@ -159,7 +159,7 @@
         app:srcCompat="@drawable/ic_add_white_24px" />
 
     <android.support.design.widget.FloatingActionButton
-        android:id="@+id/saveInfo"
+        android:id="@+id/fabSaveInfo"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
@@ -173,4 +173,13 @@
         app:pressedTranslationZ="12dp"
         app:srcCompat="@drawable/ic_save_white_24px" />
 
+
+    <ProgressBar
+        android:id="@+id/progressSavingData"
+        style="?android:attr/progressBarStyleLarge"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:indeterminate="true"
+        android:visibility="invisible" />
 </android.support.design.widget.CoordinatorLayout>

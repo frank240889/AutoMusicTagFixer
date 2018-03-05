@@ -68,8 +68,8 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
     private int mScrollingState = 0;
 
     @SuppressWarnings("unchecked")
-    public TrackAdapter(Context context, List<AudioItem> list, TrackAdapter.AudioItemHolder.ClickListener clickListener){
-        this.mContext = context;
+    public TrackAdapter(List<AudioItem> list, AudioItemHolder.ClickListener clickListener){
+        this.mContext = ((MainActivity)clickListener).getApplicationContext();
         this.mCurrentList = list;
         this.mCurrentFilteredList = mCurrentList;
         this.mClickListener = clickListener;
@@ -143,6 +143,11 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
                     holder.mCheckMark.setImageResource(R.drawable.ic_error_outline_white);
                     break;
                 case AudioItem.FILE_ERROR_READ:
+                case AudioItem.STATUS_COULD_NOT_APPLIED_CHANGES:
+                case AudioItem.STATUS_COULD_RESTORE_FILE_TO_ITS_LOCATION:
+                case AudioItem.STATUS_COULD_NOT_CREATE_AUDIOFILE:
+                case AudioItem.STATUS_COULD_NOT_CREATE_TEMP_FILE:
+                case AudioItem.STATUS_FILE_IN_SD_WITHOUT_PERMISSION:
                     holder.mCheckMark.setImageResource(R.drawable.ic_highlight_off_white_material);
                     break;
                 default:
@@ -467,7 +472,7 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
 
         @Override
         protected void onProgressUpdate(byte[]... cover){
-            if(mContext != null && !((MainActivity) mContext.get()).isDestroyed() ) {
+            if(mContext != null/* && !((MainActivity) mContext).isDestroyed() */) {
                 GlideApp.with(mContext.get()).
                         load(cover[0].length == 0 ? null : cover[0])
                         .thumbnail(0.1f)

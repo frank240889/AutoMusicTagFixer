@@ -26,7 +26,7 @@
     <string name="share_and_rate">Comparte y califica</string>
 
     <string name="message_no_data_updated">No se pudo actualizar la canción: </string>
-    <string name="message_data_update">Actualización correcta.</string>
+    <string name="message_all_data_updated">Todas las etiquetas actualizadas correctamente.</string>
     <string name="image_too_big">Imagen muy grande, reduce su tamaño.</string>
     <string name="error_load_image">Error al leer la imagen.</string>
     <string name="title_downloaded_cover_art_dialog">Guardar carátula</string>
@@ -215,7 +215,7 @@
     <string name="can_not_extract_null_cover">No hay carátula para extraer.</string>
     <string name="error">Ha ocurrido un error, inténtalo de nuevo.</string>
     <string name="api_error">Ha ocurrido un error: </string>
-    <string name="update_missing">Se añadieron las etiquetas faltantes.</string>
+    <string name="message_missing_data_updated">Etiquetas faltantes añadidas correctamente.</string>
     <string name="share_message">corrigio mis canciones de manera fácil, rápida y automática!</string>
     <string name="correction_mode">Modo de corrección</string>
     <string name="select_correction_mode">Selecciona modo de corrección para</string>
@@ -298,6 +298,25 @@
     <string name="enable_sd_card_access">Acceso a tarjeta SD</string>
     <string name="pref_title_enable_sd_card_access">Conceder permiso de acceso a tarjeta SD.</string>
     <string name="pref_enable_sd_card_access_description">A partir de Android 5, es necesario que concedas este permiso explícitamente para que podamos corregir las canciones de la SD.</string>
+    <string name="message_could_not_apply_cover">No se pudo aplicar la carátula.</string>
+    <string name="message_could_not_apply_tags">No se pudieron aplicar las etiquetas.</string>
+    <string name="message_could_copy_back">No se pudo copiar el archivo a su ubicación original.</string>
+    <string name="message_could_not_create_audio_file">No se pudo crear el objeto AudioFile.</string>
+    <string name="message_could_not_create_temp_file">No se pudo crear el archivo temporal.</string>
+    <string name="message_could_not_read_tags">No se pudo leer las etiquetas actuales.</string>
+    <string name="message_could_not_remove_cover">No se pudo remover la carátula actual.</string>
+    <string name="message_unknown_error">Error desconocido.</string>
+    <string name="message_uri_tree_not_set">No se habilitó el permiso de escritura a la SD.</string>
+    <string name="enable">Habilitar</string>
+    <string name="toast_apply_tags_again">Permiso hablitado, intenta aplicar nuevamente las etiquetas.</string>
+    <string name="removable_media_no_detected">No se detectó memoria extraíble.</string>
+    <string name="all_tags">Todas</string>
+    <string name="missing_tags">Faltantes</string>
+    <string name="message_same_tags_applied">Se aplicaron las mismas etiquetas.</string>
+    <string name="file_status_in_sd_without_permission">El permiso para modificar archivos de una memoria extraíble no se ha concedido.</string>
+    <string name="could_not_apply_changes">No se pudieron aplicar las etiquetas.</string>
+    <string name="could_not_copy_to_its_original_location">El archivo temporal no pudo ser restaurado a su ubicación original.</string>
+    <string name="could_not_create_audiofile">No se pudo crear el objecto AudioFile.</string>
 
 
 </resources>

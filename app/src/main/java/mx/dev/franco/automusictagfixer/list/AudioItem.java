@@ -4,13 +4,9 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Parcel;
 import android.os.Parcelable;
-import android.support.v4.provider.DocumentFile;
-import android.util.Log;
 import android.webkit.MimeTypeMap;
 
 import java.io.File;
-
-import mx.dev.franco.automusictagfixer.utilities.StringUtilities;
 
 /**
  * Created by franco on 14/04/17.
@@ -24,6 +20,11 @@ public final class AudioItem implements Parcelable{
     public static final int STATUS_ALL_TAGS_NOT_FOUND = 2;
     public static final int STATUS_NO_TAGS_FOUND = -1;
     public static final int STATUS_TAGS_EDITED_BY_USER = 3;
+    public static final int STATUS_FILE_IN_SD_WITHOUT_PERMISSION = 6;
+    public static final int STATUS_COULD_NOT_CREATE_TEMP_FILE = 7;
+    public static final int STATUS_COULD_NOT_CREATE_AUDIOFILE = 8;
+    public static final int STATUS_COULD_RESTORE_FILE_TO_ITS_LOCATION = 9;
+    public static final int STATUS_COULD_NOT_APPLIED_CHANGES = 10;
     public static final int FILE_ERROR_READ = 4;
     public static final int STATUS_TAGS_CORRECTED_BY_SEMIAUTOMATIC_MODE = 5;
 
@@ -291,47 +292,6 @@ public final class AudioItem implements Parcelable{
         return parts[parts.length-1];
     }
 
-    /**
-     * Rename the file,
-     * in case is set from options in Settings activity
-     * @param currentPath
-     * @return String[]
-     */
-    public static String renameFile(String currentPath, String title, String artistName){
-
-        if(!checkFileIntegrity(currentPath)){
-            Log.d("integrity ", ""+checkFileIntegrity(currentPath));
-            return null;
-        }
-
-        boolean success =false;
-        File currentFile = new File(currentPath), renamedFile;
-        String newParentPath = currentFile.getParent();
-
-        String newFilename = StringUtilities.sanitizeFilename(title) + "." + getExtension(currentPath);
-        String newAbsolutePath= newParentPath + "/" + newFilename;
-        renamedFile = new File(newAbsolutePath);
-        if(!renamedFile.exists()) {
-            //currentFile.renameTo(renamedFile);
-            success = DocumentFile.fromFile(currentFile).renameTo(renamedFile.getName());
-        }else {
-            //if artist tag was found
-            if(!artistName.equals("")) {
-                newFilename = title + "(" + artistName + ")" + "." + getExtension(currentPath);
-            }
-            else{
-                newFilename = title +"("+ (int)Math.floor((Math.random()*10)+ 1) +")"+ "." + getExtension(currentPath);
-            }
-            newAbsolutePath = newParentPath + "/" + newFilename;
-            renamedFile = new File(newAbsolutePath);
-            //currentFile.renameTo(renamedFile);
-            success = DocumentFile.fromFile(currentFile).renameTo(renamedFile.getName());
-        }
-
-        Log.d("reanmed",success+"");
-        return newAbsolutePath;
-    }
-
     public static String getFrequency(String freq){
         if(freq == null || freq.isEmpty())
             return "0 Khz";
@@ -352,22 +312,6 @@ public final class AudioItem implements Parcelable{
             return bitrate + " Kbps";
         }
         return "0 Kbps";
-    }
-
-    /**
-     * This method check the integrity of file
-     *
-     * @param absolutePath
-     * @return false in case it cannot be read
-     */
-
-    public static boolean checkFileIntegrity(String absolutePath){
-        File file = new File(absolutePath);
-        return file.exists() && file.length() > 0 && file.canRead();
-    }
-
-    public static boolean checkFileIntegrity(DocumentFile file){
-        return file.exists() && file.length() > 0 && file.canRead();
     }
 
     public static String getMimeType(String absolutePath){

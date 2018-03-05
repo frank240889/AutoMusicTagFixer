@@ -31,6 +31,7 @@ import mx.dev.franco.automusictagfixer.services.ServiceHelper;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
 import mx.dev.franco.automusictagfixer.utilities.RequiredPermissions;
 import mx.dev.franco.automusictagfixer.utilities.Settings;
+import mx.dev.franco.automusictagfixer.utilities.StorageHelper;
 
 /**
  * A {@link PreferenceActivity} that presents a set of application settings. On
@@ -258,6 +259,13 @@ public class SettingsActivity extends AppCompatPreferenceActivity{
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
             addPreferencesFromResource(R.xml.pref_general);
+            //Disable URI SD request if no removable media is detected
+            if(StorageHelper.getInstance(getActivity().getApplicationContext()).getBasePaths().size()<2){
+                Preference enableSdCardAccess = findPreference("key_enable_sd_card_access");
+                enableSdCardAccess.setEnabled(false);
+                enableSdCardAccess.setSummary(getString(R.string.removable_media_no_detected));
+
+            }
             setHasOptionsMenu(true);
             // Bind the summaries of EditText/List/Dialog/Ringtone preferences
             // to their values. When their values change, their summaries are
@@ -269,7 +277,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity{
         public boolean onOptionsItemSelected(MenuItem item) {
             int id = item.getItemId();
             if (id == android.R.id.home) {
-                startActivity(new Intent(getActivity(), SettingsActivity.class));
+                getActivity().finish();//startActivity(new Intent(getActivity(), SettingsActivity.class));
                 return true;
             }
             return super.onOptionsItemSelected(item);
@@ -299,7 +307,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity{
         public boolean onOptionsItemSelected(MenuItem item) {
             int id = item.getItemId();
             if (id == android.R.id.home) {
-                startActivity(new Intent(getActivity(), SettingsActivity.class));
+                getActivity().finish();//startActivity(new Intent(getActivity(), SettingsActivity.class));
                 return true;
             }
             return super.onOptionsItemSelected(item);
@@ -308,21 +316,16 @@ public class SettingsActivity extends AppCompatPreferenceActivity{
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent resultData) {
-
-        Log.d(TAG, "request code " + requestCode + " - resultCode" + resultCode + " resultData is null " + (resultData == null));
         if (requestCode == RequiredPermissions.REQUEST_PERMISSION_SAF && resultCode == Activity.RESULT_OK) {
             // The document selected by the user won't be returned in the intent.
             // Instead, a URI to that document will be contained in the return intent
             // provided to this method as a parameter.  Pull that uri using "resultData.getData()"
             if (resultData != null) {
-                Log.i(TAG, "Uri: " + resultData.getData().toString());
-
                 //Save root Uri of SD card
                 Constants.URI_SD_CARD = resultData.getData();
 
                 // Persist access permissions.
-                /*final int takeFlags = resultData.getFlags()
-                        & (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                /*final int takeFlags = resultData.getFlags() & (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
                 getContentResolver().takePersistableUriPermission(Constants.URI_SD_CARD, takeFlags);*/
 
             }

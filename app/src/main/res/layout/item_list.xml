@@ -5,7 +5,6 @@
     android:layout_height="wrap_content"
     app:cardElevation="2dp"
     app:cardUseCompatPadding="true"
-
     app:contentPadding="8dp">
 
     <RelativeLayout
@@ -20,8 +19,8 @@
 
         <ImageView
             android:id="@+id/coverArt"
-            android:layout_width="78dp"
-            android:layout_height="78dp"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
             android:layout_centerVertical="true"
             android:layout_marginStart="10dp"
             android:clickable="true"

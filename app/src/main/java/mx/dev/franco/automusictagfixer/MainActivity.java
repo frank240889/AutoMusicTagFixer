@@ -1,7 +1,6 @@
 package mx.dev.franco.automusictagfixer;
 
 import android.Manifest;
-import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.BroadcastReceiver;
 import android.content.ContentValues;
@@ -27,7 +26,6 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.ShareCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
-import android.support.v4.provider.DocumentFile;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -69,7 +67,6 @@ import mx.dev.franco.automusictagfixer.utilities.Constants;
 import mx.dev.franco.automusictagfixer.utilities.RequiredPermissions;
 import mx.dev.franco.automusictagfixer.utilities.Settings;
 import mx.dev.franco.automusictagfixer.utilities.SimpleMediaPlayer;
-import mx.dev.franco.automusictagfixer.utilities.StorageHelper;
 
 import static mx.dev.franco.automusictagfixer.services.GnService.sApiInitialized;
 
@@ -245,7 +242,7 @@ public class MainActivity extends AppCompatActivity
         mFloatingActionButtonStop.hide();
         //create data source and adapter
         mAudioItemList = new ArrayList<>();
-        mAudioItemArrayAdapter = new TrackAdapter(this, mAudioItemList,this);
+        mAudioItemArrayAdapter = new TrackAdapter(mAudioItemList,this);
         //sorting object
         sSorter = TrackAdapter.Sorter.getInstance();
 
@@ -388,7 +385,7 @@ public class MainActivity extends AppCompatActivity
         Log.d(TAG,"onPause");
         //Deregister filters if FixerTrackService if not processing any task,
         //useful for saving resources
-
+        mRecyclerView.stopScroll();
         if(!ServiceHelper.withContext(getApplicationContext()).withService(FixerTrackService.CLASS_NAME).isServiceRunning())
             mLocalBroadcastManager.unregisterReceiver(mReceiver);
     }
@@ -403,6 +400,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onStop() {
         Log.d(TAG,"onStop");
+        mRecyclerView.stopScroll();
         super.onStop();
     }
 
@@ -452,6 +450,7 @@ public class MainActivity extends AppCompatActivity
             sMediaPlayer = null;
         }
 
+        mRecyclerView.stopScroll();
 
         if (mAudioItemArrayAdapter != null) {
             mAudioItemArrayAdapter.releaseResources();
@@ -687,9 +686,6 @@ public class MainActivity extends AppCompatActivity
                 refreshList();
                 break;
 
-            case R.id.test_button:
-                performFileSearch();
-                break;
             case R.id.path_asc:
                 sortBy(TrackContract.TrackData.DATA, TrackAdapter.ASC);
                 checkMenuItem(item);
@@ -728,45 +724,6 @@ public class MainActivity extends AppCompatActivity
         }
 
         return super.onOptionsItemSelected(item);
-    }
-
-    public void performFileSearch() {
-
-        // BEGIN_INCLUDE (use_open_document_intent)
-        // ACTION_OPEN_DOCUMENT is the intent to choose a file via the system's file browser.
-        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
-        startActivityForResult(intent, 1000);
-        // END_INCLUDE (use_open_document_intent)
-    }
-
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent resultData) {
-        Log.i(TAG, "Received an \"Activity Result\"");
-        // The ACTION_OPEN_DOCUMENT intent was sent with the request code READ_REQUEST_CODE.
-        // If the request code seen here doesn't match, it's the response to some other intent,
-        // and the below code shouldn't run at all.
-        Log.d(TAG, "request code " + requestCode + " - resultCode" + resultCode + " resultData is null " + (resultData == null));
-        if (requestCode == 1000 && resultCode == Activity.RESULT_OK) {
-            // The document selected by the user won't be returned in the intent.
-            // Instead, a URI to that document will be contained in the return intent
-            // provided to this method as a parameter.  Pull that uri using "resultData.getData()"
-            Uri uri = null;
-            if (resultData != null) {
-                Constants.URI_SD_CARD = resultData.getData();
-                Log.i(TAG, "Uri: " + Constants.URI_SD_CARD .toString());
-
-                Log.d("URI SD",Constants.URI_SD_CARD.toString());
-
-                DocumentFile documentFile = DocumentFile.fromTreeUri(this,Uri.parse(Constants.URI_SD_CARD.toString()));
-                Log.d("doc URI SD",documentFile.getUri().toString());
-                documentFile.listFiles();
-                // Persist access permissions.
-                final int takeFlags = resultData.getFlags();// & (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-                Log.d("permissions",takeFlags+"");
-                //getContentResolver().takePersistableUriPermission(Constants.URI_SD_CARD, takeFlags);
-
-            }
-        }
     }
 
     private void checkMenuItem(MenuItem item){
@@ -951,9 +908,6 @@ public class MainActivity extends AppCompatActivity
             default:
                 try {
                     correctSong(view, position);
-                    AudioItem audioItem = mAudioItemArrayAdapter.getAudioItemByPosition(position);
-                    String path = audioItem.getAbsolutePath();
-                    StorageHelper.withContext(this).createTempFileFrom(new File(path));
                 } catch (IOException | InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -1185,11 +1139,11 @@ public class MainActivity extends AppCompatActivity
         final AudioItem audioItem = mAudioItemArrayAdapter.getAudioItemByPosition(position);
 
         //check if audio file can be accessed
-        boolean canBeRead = AudioItem.checkFileIntegrity(absolutePath);
+        /*boolean canBeRead = AudioItem.checkFileIntegrity(absolutePath);
         if(!canBeRead){
             showConfirmationDialog(position,audioItem);
             return;
-        }
+        }*/
 
         //wait until service finish correction to this track
         if(ServiceHelper.withContext(getApplicationContext()).withService(FixerTrackService.CLASS_NAME).isServiceRunning()){
@@ -1291,10 +1245,10 @@ public class MainActivity extends AppCompatActivity
         AudioItem audioItem = mAudioItemArrayAdapter.getAudioItemByPosition(position);
         String path = audioItem.getAbsolutePath();
 
-        if(!AudioItem.checkFileIntegrity(path)){
+        /*if(!AudioItem.checkFileIntegrity(path)){
             showConfirmationDialog(position,audioItem);
             return;
-        }
+        }*/
 
         if(audioItem.isProcessing()){
             showSnackBar(Snackbar.LENGTH_LONG, getString(R.string.current_file_processing),NO_ID);
@@ -1325,10 +1279,11 @@ public class MainActivity extends AppCompatActivity
     private void checkItem(final long id, View view, final int position){
         AudioItem audioItem = mAudioItemArrayAdapter.getAudioItemByIdOrPath(id);
         Log.d("mMenuItemPath", audioItem.getAbsolutePath());
-        if(!AudioItem.checkFileIntegrity(audioItem.getAbsolutePath())){
+
+        /*if(!AudioItem.checkFileIntegrity(audioItem.getAbsolutePath())){
             showConfirmationDialog(position, audioItem);
             return;
-        }
+        }*/
 
         boolean checked = audioItem.isChecked();
 

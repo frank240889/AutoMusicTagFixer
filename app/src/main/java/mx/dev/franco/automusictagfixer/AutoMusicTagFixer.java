@@ -9,10 +9,12 @@ import android.os.Build;
 
 import com.crashlytics.android.Crashlytics;
 import com.crashlytics.android.core.CrashlyticsCore;
+import com.squareup.leakcanary.LeakCanary;
 
 import io.fabric.sdk.android.Fabric;
 import mx.dev.franco.automusictagfixer.services.ConnectivityChangesDetector;
 import mx.dev.franco.automusictagfixer.services.DetectorRemovableMediaStorages;
+import mx.dev.franco.automusictagfixer.utilities.StorageHelper;
 
 
 /**
@@ -55,7 +57,14 @@ public final class AutoMusicTagFixer extends Application {
 
         registerReceiver(mDetectorRemovableMediaStorages, mIntentFilterMediaMounted);
         registerReceiver(mDetectorRemovableMediaStorages, mIntentFilterMediaUnmounted);
+        StorageHelper.getInstance(getApplicationContext()).detectStorages();
 
+        if (LeakCanary.isInAnalyzerProcess(this)) {
+            // This process is dedicated to LeakCanary for heap analysis.
+            // You should not init your app in this process.
+            return;
+        }
+        LeakCanary.install(this);
     }
 
     // Called by the system when the device configuration changes while your component is running.

@@ -46,7 +46,7 @@ public final class StringUtilities {
 
     public static String sanitizeFilename(String dirtyFileName){
         if(dirtyFileName != null && !dirtyFileName.equals(""))
-            return dirtyFileName.replaceAll("[^\\w\\s()&_\\-\\]\\[\'#.:$]", "");
+            return dirtyFileName.replaceAll("[^\\w\\s()&_\\-\\]\\[\'#.:$/]", "");
 
         return "";
     }

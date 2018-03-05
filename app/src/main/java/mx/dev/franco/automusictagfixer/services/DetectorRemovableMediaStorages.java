@@ -14,6 +14,7 @@ import android.widget.Toast;
 
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
+import mx.dev.franco.automusictagfixer.utilities.StorageHelper;
 
 /**
  * Created by franco on 12/01/18.
@@ -32,7 +33,7 @@ public final class DetectorRemovableMediaStorages extends BroadcastReceiver{
     public void onReceive(Context context, Intent intent) {
         Log.d("media","works");
         String action = intent.getAction();
-        Toast toast = Toast.makeText(context, context.getString(R.string.connection_recovered), Toast.LENGTH_LONG);
+        Toast toast = Toast.makeText(context, "", Toast.LENGTH_LONG);
         View view = toast.getView();
         TextView text = view.findViewById(android.R.id.message);
         text.setTextColor(ContextCompat.getColor(context, R.color.grey_900));
@@ -53,6 +54,9 @@ public final class DetectorRemovableMediaStorages extends BroadcastReceiver{
         }
 
         toast.show();
+        //Reload number of storages availables
+        StorageHelper.getInstance(context).getBasePaths().clear();
+        StorageHelper.getInstance(context).detectStorages();
 
         boolean isServiceRunning = ServiceHelper.withContext(context).withService(FixerTrackService.CLASS_NAME).isServiceRunning();
         //if media has mounted or unmounted, stop service to avoid

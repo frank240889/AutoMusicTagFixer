@@ -26,9 +26,10 @@ public final class SimpleMediaPlayer extends MediaPlayer implements MediaPlayer.
      * Don't let instantiate this class, we need only one instance,
      * so we use a singleton pattern in order to make this.
      */
-    private SimpleMediaPlayer(){
+    private SimpleMediaPlayer(Context context){
         super();
-        this.setVolume(1f,1f);
+        setVolume(1f,1f);
+        setWakeMode(context.getApplicationContext(), PowerManager.PARTIAL_WAKE_LOCK);
         setOnCompletionListener(this);
     }
 
@@ -39,10 +40,8 @@ public final class SimpleMediaPlayer extends MediaPlayer implements MediaPlayer.
      */
     public static SimpleMediaPlayer getInstance(Context context){
         if(sMediaPlayer == null){
-            sMediaPlayer = new SimpleMediaPlayer();
-            sMediaPlayer.setWakeMode(context.getApplicationContext(), PowerManager.PARTIAL_WAKE_LOCK);
+            sMediaPlayer = new SimpleMediaPlayer(context);
         }
-
         return sMediaPlayer;
     }
 
