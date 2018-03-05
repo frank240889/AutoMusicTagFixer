@@ -23,7 +23,8 @@ What corrects?
 
 
 Features:
-- Tags correction for your audio files. It currently fully supports Mp3, Mp4 (Mp4 audio, M4a and M4p audio) Ogg Vorbis, Flac and Wma, there is limited support for Wav and Real formats.(http://www.jthink.net/jaudiotagger/index.jsp) 
+- Tags correction for your audio files. It currently fully supports Mp3, Mp4 (Mp4 audio, M4a and M4p audio) Ogg Vorbis, Flac and Wma, there is limited support for Wav and Real formats.(http://www.jthink.net/jaudiotagger/index.jsp).
+- Full support for files both non removable external storage(better known as internal or shared storage) and removable storage(SD Card).
 - Material Design UI with dark theme for battery save on AMOLED displays.
 - Automatic mode: Allows select one or more songs from list and correct them without user intervention.
 - Semi automatic mode: Downloads track information, but requires confirmation from user to apply found tags.
