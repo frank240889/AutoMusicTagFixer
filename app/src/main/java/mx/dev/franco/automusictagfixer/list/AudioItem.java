@@ -253,32 +253,6 @@ public final class AudioItem implements Parcelable{
     }
 
     /**
-     * This method returns the relative path,
-     * t = 4 because further on is the
-     * understable path of file, for example, absolute
-     * path from any file may be "/storage/emulated/0/music/rock/song.mp3",
-     * so this method returns only "/music/rock"
-     * @param str
-     * @return
-     */
-    public static String getRelativePath(String str){
-        int limit = 0;
-        if(str.contains("emulated")){
-            limit = 3;
-        }
-        else if(str.contains("storage/extSdCard")){
-            limit = 2;
-        }
-
-        String[] parts = str.split("/");
-        String relativePath = "";
-        for (int t = parts.length - 1 ; t > limit ; --t){
-            relativePath += "/"+parts[t];
-        }
-        return relativePath;
-    }
-
-    /**
      * Returns only the last part of absolute path,
      * it means, the file name
      * @param absolutePath

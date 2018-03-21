@@ -10,11 +10,13 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -34,9 +36,10 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
+import android.support.v7.widget.SimpleItemAnimator;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Gravity;
@@ -67,6 +70,7 @@ import mx.dev.franco.automusictagfixer.utilities.Constants;
 import mx.dev.franco.automusictagfixer.utilities.RequiredPermissions;
 import mx.dev.franco.automusictagfixer.utilities.Settings;
 import mx.dev.franco.automusictagfixer.utilities.SimpleMediaPlayer;
+import mx.dev.franco.automusictagfixer.utilities.StorageHelper;
 
 import static mx.dev.franco.automusictagfixer.services.GnService.sApiInitialized;
 
@@ -132,6 +136,7 @@ public class MainActivity extends AppCompatActivity
     private IntentFilter mFilterActionNotFound;
     private IntentFilter mFilterActionConnectionLost;
     private IntentFilter mFilterActionRequestUpdateList;
+    private IntentFilter mFilterActionErrorApi;
     //the receiver that handles the intents from FixerTrackService
     private ResponseReceiver mReceiver;
 
@@ -154,7 +159,8 @@ public class MainActivity extends AppCompatActivity
     //to populate the adapter, or executes an update
     //for searching new songs and eliminate from list
     //those whose don't exist anymore in smartphone
-    private AsyncReadFile asyncReadFile;
+    private AsyncFileReader mAsyncFileReader;
+    private GridLayoutManager mGridLayoutManager;
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
@@ -186,9 +192,10 @@ public class MainActivity extends AppCompatActivity
         mFilterActionSetAudioProcessing = new IntentFilter(Constants.Actions.ACTION_SET_AUDIOITEM_PROCESSING);
         mFilterActionConnectionLost = new IntentFilter(Constants.Actions.ACTION_CONNECTION_LOST);
         mFilterActionRequestUpdateList = new IntentFilter(Constants.Actions.ACTION_REQUEST_UPDATE_LIST);
+        mFilterActionErrorApi = new IntentFilter(Constants.Actions.ACTION_ERROR);
 
         //create receiver
-        mReceiver = new ResponseReceiver();
+        mReceiver = new ResponseReceiver(this);
         //get instance of local broadcast manager
         mLocalBroadcastManager = LocalBroadcastManager.getInstance(getApplicationContext());
 
@@ -206,7 +213,10 @@ public class MainActivity extends AppCompatActivity
         //layout manager gives the ability to show elements in different
         //ways, for example, LinearLayoutManager, shows as a list, but we can use
         //GridLayoutManager and our elements will be shown as mosaics.
-        mRecyclerView.setLayoutManager( new LinearLayoutManager(this));
+        mGridLayoutManager = new GridLayoutManager(this, 1);
+        mRecyclerView.setLayoutManager(mGridLayoutManager);
+        //mRecyclerView.setLayoutManager( new LinearLayoutManager(this));
+        //mRecyclerView.setLayoutManager( new GridLayoutManager(this,2));
         //this options gives us more improvements to our list
         mRecyclerView.setHasFixedSize(true);
         mRecyclerView.setItemViewCacheSize(10);
@@ -215,7 +225,7 @@ public class MainActivity extends AppCompatActivity
         //enable sound and vibration when touch an element
         mRecyclerView.setHapticFeedbackEnabled(true);
         mRecyclerView.setSoundEffectsEnabled(true);
-
+        ((SimpleItemAnimator) mRecyclerView.getItemAnimator()).setSupportsChangeAnimations(false);
         mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx, int dy){
@@ -267,8 +277,8 @@ public class MainActivity extends AppCompatActivity
                     //if we have the permission, check Bundle object to verify if the activity comes from onPause or from onCreate event
                     //if(savedInstanceState == null){
                         //int taskType = DataTrackDbHelper.existDatabase(getApplicationContext()) && mDataTrackDbHelper.getCount(null) > 0 ? READ_FROM_DATABASE : CREATE_DATABASE;
-                        asyncReadFile = new AsyncReadFile(RE_SCAN, MainActivity.this);
-                        asyncReadFile.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                        mAsyncFileReader = new AsyncFileReader(RE_SCAN, MainActivity.this);
+                        mAsyncFileReader.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
                     //}
 
                 }
@@ -290,8 +300,8 @@ public class MainActivity extends AppCompatActivity
                 mRecyclerView.setAdapter(mAudioItemArrayAdapter);
                 int taskType = DataTrackDbHelper.existDatabase(this) && mDataTrackDbHelper.getCount() > 0 ? READ_FROM_DATABASE : CREATE_DATABASE;
 
-                asyncReadFile = new AsyncReadFile(taskType, this);
-                asyncReadFile.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                mAsyncFileReader = new AsyncFileReader(taskType, this);
+                mAsyncFileReader.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
             //}
 
         }
@@ -326,6 +336,12 @@ public class MainActivity extends AppCompatActivity
         navigationView.setNavigationItemSelectedListener(this);
 
         Log.d(TAG,"onCreate");
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        mGridLayoutManager.setSpanCount(newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE ? 2 : 1);
+        super.onConfigurationChanged(newConfig);
     }
 
     @Override
@@ -440,16 +456,7 @@ public class MainActivity extends AppCompatActivity
         //when app closes the app, unregister receiver, thus is not necessary to listen
         //any broadcast to update UI
         mLocalBroadcastManager.unregisterReceiver(mReceiver);
-
-        //release all that are not going used anymore
-
-        if (sMediaPlayer.isPlaying()) {
-            sMediaPlayer.stop();
-            sMediaPlayer.reset();
-            sMediaPlayer.release();
-            sMediaPlayer = null;
-        }
-
+        sMediaPlayer.setAdapter(null);
         mRecyclerView.stopScroll();
 
         if (mAudioItemArrayAdapter != null) {
@@ -492,7 +499,13 @@ public class MainActivity extends AppCompatActivity
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
-        } else {
+        }
+        else {
+
+        if(mAsyncFileReader != null && (mAsyncFileReader.getStatus() == AsyncTask.Status.RUNNING || mAsyncFileReader.getStatus() == AsyncTask.Status.PENDING)){
+            mAsyncFileReader.cancel(true);
+        }
+
             super.onBackPressed();
         }
     }
@@ -727,8 +740,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void checkMenuItem(MenuItem item){
-        if(null == item && mAudioItemList.size() == 0){
-            showSnackBar(Snackbar.LENGTH_SHORT, getString(R.string.no_items), NO_ID);
+        if(mAsyncFileReader != null && mAsyncFileReader.getStatus() == AsyncTask.Status.RUNNING){
             return;
         }
 
@@ -761,7 +773,13 @@ public class MainActivity extends AppCompatActivity
             id = Settings.SETTING_SORT;
             //Log.d("el id", id + "");
             lastCheckedItem = mMenu.findItem(id == 0  ? R.id.path_asc : id);
-            lastCheckedItem.setIcon(ContextCompat.getDrawable(getApplicationContext(), R.drawable.ic_done_white));
+            if(lastCheckedItem != null) {
+                lastCheckedItem.setIcon(ContextCompat.getDrawable(getApplicationContext(), R.drawable.ic_done_white));
+            }
+            else {
+                lastCheckedItem = mMenu.findItem(R.id.path_asc);
+                lastCheckedItem.setIcon(ContextCompat.getDrawable(getApplicationContext(), R.drawable.ic_done_white));
+            }
         }
 
         //mark sort type and reset icon of other UI elements
@@ -905,6 +923,22 @@ public class MainActivity extends AppCompatActivity
             case R.id.checkBoxTrack:
                 checkItem((long)view.getTag(), view, position);
                 break;
+            case R.id.checkMark:
+                AudioItem audioItem = mAudioItemArrayAdapter.getAudioItemByPosition(position);
+                Toast toast = Toast.makeText(this, getStatusText(audioItem.getStatus()), Toast.LENGTH_LONG);
+                View v = toast.getView();
+                TextView text = v.findViewById(android.R.id.message);
+                text.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.grey_900));
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    text.setTextAppearance(R.style.CustomToast);
+                }
+                else {
+                    text.setTextAppearance(this,R.style.CustomToast);
+                }
+                v.setBackground(ContextCompat.getDrawable(getApplicationContext(), R.drawable.background_custom_toast) );
+                toast.setGravity(Gravity.CENTER, 0, 0);
+                toast.show();
+                break;
             default:
                 try {
                     correctSong(view, position);
@@ -923,13 +957,64 @@ public class MainActivity extends AppCompatActivity
         //request permission in case is necessary and update
         //our database
         if(RequiredPermissions.ACCESS_GRANTED_FILES) {
-            asyncReadFile = new AsyncReadFile(RE_SCAN, this);
-            asyncReadFile.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+            mAsyncFileReader = new AsyncFileReader(RE_SCAN, this);
+            mAsyncFileReader.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
         }
         else {
             showRequestPermissionReason();
         }
     }
+
+    /**
+     * Converts from status code from audioitem object
+     * to human readable status text
+     * @return msg Is the string code
+     */
+
+    private String getStatusText(int status){
+        String msg = "";
+        switch (status){
+            case AudioItem.STATUS_ALL_TAGS_FOUND:
+                msg = getResources().getString(R.string.file_status_ok);
+                break;
+            case AudioItem.STATUS_ALL_TAGS_NOT_FOUND:
+                msg = getResources().getString(R.string.file_status_incomplete);
+                break;
+            case AudioItem.STATUS_NO_TAGS_FOUND:
+                msg = getResources().getString(R.string.file_status_bad);
+                break;
+            case AudioItem.STATUS_TAGS_EDITED_BY_USER:
+                msg = getResources().getString(R.string.file_status_edit_by_user);
+                break;
+            case AudioItem.FILE_ERROR_READ:
+                msg = getString(R.string.file_status_error_read);
+                break;
+            case AudioItem.STATUS_TAGS_CORRECTED_BY_SEMIAUTOMATIC_MODE:
+                msg = getString(R.string.file_status_corrected_by_semiautomatic_mode);
+                break;
+            case AudioItem.STATUS_FILE_IN_SD_WITHOUT_PERMISSION:
+                msg = getString(R.string.file_status_in_sd_without_permission);
+                break;
+            case AudioItem.STATUS_COULD_NOT_APPLIED_CHANGES:
+                msg = getString(R.string.could_not_apply_changes);
+                break;
+            case AudioItem.STATUS_COULD_RESTORE_FILE_TO_ITS_LOCATION:
+                msg = getString(R.string.could_not_copy_to_its_original_location);
+                break;
+            case AudioItem.STATUS_COULD_NOT_CREATE_AUDIOFILE:
+                msg = getString(R.string.could_not_create_audiofile);
+                break;
+            case AudioItem.STATUS_COULD_NOT_CREATE_TEMP_FILE:
+                msg = getString(R.string.could_not_create_temp_file);
+                break;
+            default:
+                msg = getResources().getString(R.string.file_status_no_processed);
+                break;
+        }
+
+        return msg;
+    }
+
 
     /**
      * Sets the action to floating action button (mFloatingActionButtonStart)
@@ -1012,8 +1097,8 @@ public class MainActivity extends AppCompatActivity
             mSnackbar.setAction(R.string.update_list, new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                asyncReadFile = new AsyncReadFile(RE_SCAN, MainActivity.this);
-                asyncReadFile.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                mAsyncFileReader = new AsyncFileReader(RE_SCAN, MainActivity.this);
+                mAsyncFileReader.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
                 }
             });
         }
@@ -1085,8 +1170,7 @@ public class MainActivity extends AppCompatActivity
         }
 
         final boolean allSelected = mAudioItemArrayAdapter.areAllChecked();
-        mAudioItemArrayAdapter.checkAudioItem(-1,!allSelected);
-        mAudioItemArrayAdapter.setAllChecked(!allSelected);
+
         //Make DB operations in other thread for not blocking UI thread
         Thread thread = new Thread(new Runnable() {
             @Override
@@ -1094,6 +1178,14 @@ public class MainActivity extends AppCompatActivity
                 ContentValues values = new ContentValues();
                 values.put(TrackContract.TrackData.IS_SELECTED,!allSelected);
                 mDataTrackDbHelper.updateData(values);
+                Handler handler = new Handler(getMainLooper());
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        mAudioItemArrayAdapter.checkAudioItem(-1,!allSelected);
+                        mAudioItemArrayAdapter.setAllChecked(!allSelected);
+                    }
+                });
             }
         });
         thread.start();
@@ -1311,8 +1403,8 @@ public class MainActivity extends AppCompatActivity
         //if previously was granted the permission and our database has data
         //dont' clear that data, only read it instead.
         int taskType = DataTrackDbHelper.existDatabase(getApplicationContext()) && mDataTrackDbHelper.getCount() > 0 ? READ_FROM_DATABASE : CREATE_DATABASE;
-        asyncReadFile = new AsyncReadFile(taskType, this);
-        asyncReadFile.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+        mAsyncFileReader = new AsyncFileReader(taskType, this);
+        mAsyncFileReader.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 
     }
 
@@ -1380,6 +1472,7 @@ public class MainActivity extends AppCompatActivity
         mLocalBroadcastManager.registerReceiver(mReceiver, mFilterActionSetAudioProcessing);
         mLocalBroadcastManager.registerReceiver(mReceiver, mFilterActionNotFound);
         mLocalBroadcastManager.registerReceiver(mReceiver, mFilterActionConnectionLost);
+        mLocalBroadcastManager.registerReceiver(mReceiver, mFilterActionErrorApi);
 
     }
 
@@ -1537,7 +1630,7 @@ public class MainActivity extends AppCompatActivity
      * is used by first time; next openings of app it
      * reads the songs from this database instead of MediaStore
      */
-    private static class AsyncReadFile extends AsyncTask<Void, AudioItem, Void> {
+    public static class AsyncFileReader extends AsyncTask<Void, AudioItem, Void> {
         //Are we reading from our DB or MediaStore?
         private int taskType;
         //data retrieved from DB
@@ -1547,11 +1640,11 @@ public class MainActivity extends AppCompatActivity
         private int added = 0;
         private int removed = 0;
         private boolean mMediaScanCompleted = false;
-        private WeakReference<MainActivity> mainActivityWeakReference;
+        private WeakReference<MainActivity> mWeakRef;
 
-        AsyncReadFile(int codeTaskType, MainActivity mainActivity){
-            mainActivityWeakReference = new WeakReference<>(mainActivity);
-            this.taskType = codeTaskType;
+        AsyncFileReader(int codeTaskType, MainActivity mainActivity){
+            mWeakRef = new WeakReference<>(mainActivity);
+            taskType = codeTaskType;
         }
 
         @Override
@@ -1560,22 +1653,22 @@ public class MainActivity extends AppCompatActivity
             //could not be successful completed, in this case
             //clear DB and re read data from Media Store
 
-            SharedPreferences sharedPreferences = mainActivityWeakReference.get().getSharedPreferences(Constants.Application.FULL_QUALIFIED_NAME, Context.MODE_PRIVATE);
+            SharedPreferences sharedPreferences = mWeakRef.get().getSharedPreferences(Constants.Application.FULL_QUALIFIED_NAME, Context.MODE_PRIVATE);
             mMediaScanCompleted = sharedPreferences.getBoolean(Constants.COMPLETE_READ,false);
             if(!mMediaScanCompleted){
                 taskType = CREATE_DATABASE;
-                mainActivityWeakReference.get().showSnackBar(Snackbar.LENGTH_SHORT,mainActivityWeakReference.get().getString(R.string.getting_data),NO_ID);
-                mainActivityWeakReference.get().mSearchAgainMessageTextView.setVisibility(View.GONE);
+                mWeakRef.get().showSnackBar(Snackbar.LENGTH_SHORT, mWeakRef.get().getString(R.string.getting_data),NO_ID);
+                mWeakRef.get().mSearchAgainMessageTextView.setVisibility(View.GONE);
             }
 
             //this method is invoked before
             //our background task begins, often
             //here is where we show for example
             //a progress bar.
-            mainActivityWeakReference.get().mSwipeRefreshLayout.setRefreshing(true);
+            mWeakRef.get().mSwipeRefreshLayout.setRefreshing(true);
             sIsGettingData = true;
-            if(mainActivityWeakReference.get().mSearchViewWidget != null){
-                mainActivityWeakReference.get().mSearchViewWidget.setVisibility(View.GONE);
+            if(mWeakRef.get().mSearchViewWidget != null){
+                mWeakRef.get().mSearchViewWidget.setVisibility(View.GONE);
             }
 
         }
@@ -1595,7 +1688,7 @@ public class MainActivity extends AppCompatActivity
                     break;
                 //if database does not exist or is first use of app
                 case CREATE_DATABASE:
-                    mainActivityWeakReference.get().mDataTrackDbHelper.clearDb();
+                    mWeakRef.get().mDataTrackDbHelper.clearDb();
                     createNewTable();
                     break;
                 //if we are reading data from database (this means later app openings)
@@ -1626,21 +1719,21 @@ public class MainActivity extends AppCompatActivity
             //adds the item to top of list
             if(taskType == RE_SCAN){
                 if(audioItems[0].getId() == -1) {
-                    mainActivityWeakReference.get().mAudioItemList.remove(audioItems[0]);
-                    mainActivityWeakReference.get().mAudioItemArrayAdapter.notifyItemRemoved(audioItems[0].getPosition());
+                    mWeakRef.get().mAudioItemList.remove(audioItems[0]);
+                    mWeakRef.get().mAudioItemArrayAdapter.notifyItemRemoved(audioItems[0].getPosition());
                 }
                 else {
-                    mainActivityWeakReference.get().mAudioItemList.add(0, audioItems[0]);
-                    mainActivityWeakReference.get().mAudioItemArrayAdapter.notifyItemInserted(0);
+                    mWeakRef.get().mAudioItemList.add(0, audioItems[0]);
+                    mWeakRef.get().mAudioItemArrayAdapter.notifyItemInserted(0);
                 }
             }
             else {
-                mainActivityWeakReference.get().mAudioItemList.add(audioItems[0]);
-                mainActivityWeakReference.get().mAudioItemArrayAdapter.notifyItemInserted(mainActivityWeakReference.get().mAudioItemList.size()-1);
+                mWeakRef.get().mAudioItemList.add(audioItems[0]);
+                mWeakRef.get().mAudioItemArrayAdapter.notifyItemInserted(mWeakRef.get().mAudioItemList.size()-1);
             }
 
             //updates title of action bar
-            mainActivityWeakReference.get().updateNumberItems();
+            mWeakRef.get().updateNumberItems();
         }
 
         @Override
@@ -1648,58 +1741,77 @@ public class MainActivity extends AppCompatActivity
             //when doInBackground finishes, this callback
             //is executed. Here is where we hide, for example,
             //a progress bar.
-            mainActivityWeakReference.get().asyncReadFile = null;
+            mWeakRef.get().mAsyncFileReader = null;
             //is not necessary call its super method
             //because is an emtpy method
 
-            mainActivityWeakReference.get().mSwipeRefreshLayout.setRefreshing(false);
-            mainActivityWeakReference.get().mSwipeRefreshLayout.setEnabled(true);
+            mWeakRef.get().mSwipeRefreshLayout.setRefreshing(false);
+            mWeakRef.get().mSwipeRefreshLayout.setEnabled(true);
             sIsGettingData = false;
 
             //while we are creating the DB, if user closes the app
             //COMPLETED_READ can not be successful, so
             //next time app starts will try to create again the database
             //until success
-            if(this.taskType == CREATE_DATABASE) {
-                SharedPreferences sharedPreferences = mainActivityWeakReference.get().getSharedPreferences(Constants.Application.FULL_QUALIFIED_NAME, Context.MODE_PRIVATE);
+            if(taskType == CREATE_DATABASE) {
+                SharedPreferences sharedPreferences = mWeakRef.get().getSharedPreferences(Constants.Application.FULL_QUALIFIED_NAME, Context.MODE_PRIVATE);
                 SharedPreferences.Editor editor = sharedPreferences.edit();
                 editor.putBoolean(Constants.COMPLETE_READ, true);
                 editor.apply();
-                editor = null;
-                sharedPreferences = null;
             }
 
             //there are not songs?
-            if(mainActivityWeakReference.get().mAudioItemList.size() == 0){
-                mainActivityWeakReference.get().mSearchAgainMessageTextView.setText(mainActivityWeakReference.get().getString(R.string.no_items_found));
-                mainActivityWeakReference.get().mSearchAgainMessageTextView.setVisibility(View.VISIBLE);
+            if(mWeakRef.get().mAudioItemList.size() == 0){
+                mWeakRef.get().mSearchAgainMessageTextView.setText(mWeakRef.get().getString(R.string.no_items_found));
+                mWeakRef.get().mSearchAgainMessageTextView.setVisibility(View.VISIBLE);
 
                 return;
             }
 
             if(removed > 0){
-                mainActivityWeakReference.get().showSnackBar(Toast.LENGTH_SHORT,removed + " " + mainActivityWeakReference.get().getString(R.string.removed_inexistent),NO_ID);
+                mWeakRef.get().showSnackBar(Toast.LENGTH_SHORT,removed + " " + mWeakRef.get().getString(R.string.removed_inexistent),NO_ID);
             }
 
             if(added > 0 ){
-                mainActivityWeakReference.get().showSnackBar(Toast.LENGTH_SHORT,added + " " + mainActivityWeakReference.get().getString(R.string.new_files_found),NO_ID);
-                mainActivityWeakReference.get().mRecyclerView.smoothScrollToPosition(0);
+                mWeakRef.get().showSnackBar(Toast.LENGTH_SHORT,added + " " + mWeakRef.get().getString(R.string.new_files_found),NO_ID);
+                mWeakRef.get().mRecyclerView.smoothScrollToPosition(0);
             }
 
-            if(mainActivityWeakReference.get().mSearchViewWidget != null){
-                mainActivityWeakReference.get().mSearchViewWidget.setVisibility(View.VISIBLE);
+            if(mWeakRef.get().mSearchViewWidget != null){
+                mWeakRef.get().mSearchViewWidget.setVisibility(View.VISIBLE);
             }
-            mainActivityWeakReference.get().updateNumberItems();
+
+            mWeakRef.get().updateNumberItems();
 
             //if audio files were found, then show
             //float action button that executes main task.
             //if no audio files were found, there is no case
             //to show this button because there will not have
             //anything to process.
-            mainActivityWeakReference.get().mFloatingActionButtonStart.show();
+            mWeakRef.get().mFloatingActionButtonStart.show();
+            //Check if exist SD to show instructions about how to activate permission
+            //to write to SD
+            boolean isPresentSD = StorageHelper.getInstance(mWeakRef.get().getApplicationContext()).isPresentRemovableStorage();
+            if(isPresentSD){
+                if((Constants.URI_SD_CARD == null || !Settings.ENABLE_SD_CARD_ACCESS))
+                    mWeakRef.get().startActivity(new Intent(mWeakRef.get(), TransparentActivity.class));
+            }
+            else {
+                //Revoke permission to write to SD card and remove URI from shared preferences.
+                if(Constants.URI_SD_CARD != null){
+                    int takeFlags = Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION;
+                    mWeakRef.get().getContentResolver().releasePersistableUriPermission(Constants.URI_SD_CARD, takeFlags);
+                    Constants.URI_SD_CARD = null;
+                    Settings.ENABLE_SD_CARD_ACCESS = false;
+                }
 
-            mainActivityWeakReference.clear();
-            mainActivityWeakReference = null;
+                    SharedPreferences sharedPreferences = mWeakRef.get().getSharedPreferences(Constants.Application.FULL_QUALIFIED_NAME, Context.MODE_PRIVATE);
+                    SharedPreferences.Editor editor = sharedPreferences.edit();
+                    editor.remove(Constants.URI_TREE);
+                    editor.apply();
+            }
+            mWeakRef.clear();
+            mWeakRef = null;
             added = 0;
             removed = 0;
             System.gc();
@@ -1710,25 +1822,25 @@ public class MainActivity extends AppCompatActivity
             super.onCancelled();
             //this method will be invoked instead of
             //onPostExecute if AsyncTask is cancelled
-            mainActivityWeakReference.get().asyncReadFile = null;
+            mWeakRef.get().mAsyncFileReader = null;
             sIsGettingData = false;
-            mainActivityWeakReference.get().mSwipeRefreshLayout.setEnabled(true);
-            mainActivityWeakReference.get().mSwipeRefreshLayout.setRefreshing(false);
-            mainActivityWeakReference.get().updateNumberItems();
-            if(mainActivityWeakReference.get().mSearchViewWidget != null){
-                mainActivityWeakReference.get().mSearchViewWidget.setVisibility(View.VISIBLE);
+            mWeakRef.get().mSwipeRefreshLayout.setEnabled(true);
+            mWeakRef.get().mSwipeRefreshLayout.setRefreshing(false);
+            mWeakRef.get().updateNumberItems();
+            if(mWeakRef.get().mSearchViewWidget != null){
+                mWeakRef.get().mSearchViewWidget.setVisibility(View.VISIBLE);
             }
             //save state that could not be completed the data loading from songs
-            SharedPreferences sharedPreferences = mainActivityWeakReference.get().getSharedPreferences(Constants.Application.FULL_QUALIFIED_NAME, Context.MODE_PRIVATE);
+            SharedPreferences sharedPreferences = mWeakRef.get().getSharedPreferences(Constants.Application.FULL_QUALIFIED_NAME, Context.MODE_PRIVATE);
             SharedPreferences.Editor editor =  sharedPreferences.edit();
-            mainActivityWeakReference.get().mSearchAgainMessageTextView.setText(mainActivityWeakReference.get().getString(R.string.no_items_found));
-            mainActivityWeakReference.get().mSearchAgainMessageTextView.setVisibility(View.VISIBLE);
+            mWeakRef.get().mSearchAgainMessageTextView.setText(mWeakRef.get().getString(R.string.no_items_found));
+            mWeakRef.get().mSearchAgainMessageTextView.setVisibility(View.VISIBLE);
             editor.putBoolean(Constants.COMPLETE_READ, false);
             editor.apply();
             editor = null;
             sharedPreferences = null;
-            mainActivityWeakReference.clear();
-            mainActivityWeakReference = null;
+            mWeakRef.clear();
+            mWeakRef = null;
             added = 0;
             removed = 0;
             System.gc();
@@ -1755,7 +1867,7 @@ public class MainActivity extends AppCompatActivity
 
             //get data from content provider
             //the last parameter sorts the data alphanumerically by the "DATA" column in ascendant mode
-            return mainActivityWeakReference.get().getApplicationContext().getContentResolver().query(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+            return mWeakRef.get().getApplicationContext().getContentResolver().query(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
                     projection,
                     selection,
                     null,
@@ -1769,7 +1881,7 @@ public class MainActivity extends AppCompatActivity
         private void rescanAndUpdateList(){
             data = getDataFromDevice();
             while(data.moveToNext()){
-                boolean existInTable = mainActivityWeakReference.get().mDataTrackDbHelper.existInDatabase(data.getInt(0));
+                boolean existInTable = mWeakRef.get().mDataTrackDbHelper.existInDatabase(data.getInt(0));
 
                 if(!existInTable){
                     createAndAddAudioItem();
@@ -1789,11 +1901,11 @@ public class MainActivity extends AppCompatActivity
          * or deleted.
          */
         private void removeUnusedItems(){
-            for(int pos = mainActivityWeakReference.get().mAudioItemList.size() -1 ; pos >= 0 ; --pos){
-                AudioItem audioItem = mainActivityWeakReference.get().mAudioItemList.get(pos);
+            for(int pos = mWeakRef.get().mAudioItemList.size() -1; pos >= 0 ; --pos){
+                AudioItem audioItem = mWeakRef.get().mAudioItemList.get(pos);
                 File file = new File(audioItem.getAbsolutePath());
                 if (!file.exists()) {
-                    mainActivityWeakReference.get().mDataTrackDbHelper.removeItem(audioItem.getId(), TrackContract.TrackData.TABLE_NAME);
+                    mWeakRef.get().mDataTrackDbHelper.removeItem(audioItem.getId(), TrackContract.TrackData.TABLE_NAME);
                     publishProgress(audioItem.setId(-1).setPosition(pos));
                     removed++;
                     Log.d("removed", removed+"");
@@ -1827,7 +1939,7 @@ public class MainActivity extends AppCompatActivity
          */
         private void readFromDatabase(){
 
-            data = mainActivityWeakReference.get().mDataTrackDbHelper.getDataFromDB(Sort.setDefaultOrder());
+            data = mWeakRef.get().mDataTrackDbHelper.getDataFromDB(Sort.setDefaultOrder());
             //retrieved null data means there are no elements, so our database
             int dataLength = data != null ? data.getCount() : 0;
             if (dataLength > 0) {
@@ -1864,6 +1976,10 @@ public class MainActivity extends AppCompatActivity
          * this object and adding to list
          */
         private void createAndAddAudioItem(){
+
+            if(isCancelled())
+                return;
+
             int mediaStoreId = data.getInt(0);//mediastore id
             String title = data.getString(1);
             String artist = data.getString(2);
@@ -1884,9 +2000,10 @@ public class MainActivity extends AppCompatActivity
             //we do, relay in this id,
             //so when we save row to DB
             //it returns its id as a result
-            mainActivityWeakReference.get().mDataTrackDbHelper.insertItem(values, TrackContract.TrackData.TABLE_NAME);
+            mWeakRef.get().mDataTrackDbHelper.insertItem(values, TrackContract.TrackData.TABLE_NAME);
             audioItem.setId(mediaStoreId).setTitle(title).setArtist(artist).setAlbum(album).setAbsolutePath(fullPath);
-
+            if(isCancelled())
+                return;
             publishProgress(audioItem);
             values.clear();
             values = null;
@@ -1898,94 +2015,93 @@ public class MainActivity extends AppCompatActivity
     /**
      * Instance of this class handles the response from FixerTrackService
      */
-    public class ResponseReceiver extends BroadcastReceiver{
+    public static class ResponseReceiver extends BroadcastReceiver{
         private String TAG = ResponseReceiver.class.getName();
+        private WeakReference<MainActivity> mWeakRef;
+
+        public ResponseReceiver(MainActivity mainActivity){
+            mWeakRef = new WeakReference<>(mainActivity);
+        }
+
+
         @Override
-        public void onReceive(Context context, final Intent intent) {
-            /* This can be called by an application in {@link #onReceive} to allow
-             * it to keep the broadcast active after returning from that function.
-             * This does <em>not</em> change the expectation of being relatively
-             * responsive to the broadcast (finishing it within 10s), but does allow
-             * the implementation to move work related to it over to another thread
-             * to avoid glitching the main UI thread due to disk IO.
-            * */
-            goAsync();
+        public void onReceive(final Context context, final Intent intent) {
 
             //get action and handle it
             String action = intent.getAction();
             Log.d(TAG, action);
             switch (action) {
                 case Constants.GnServiceActions.ACTION_API_INITIALIZED:
-                    if(mAudioItemList.size() > 0 ) {
-                        runOnUiThread(new Runnable() {
+                    if(mWeakRef.get().mAudioItemList.size() > 0 ) {
+                        mWeakRef.get().runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                if(mAudioItemList != null && !mAudioItemList.isEmpty())
-                                    showSnackBar(Snackbar.LENGTH_SHORT, getString(R.string.api_initialized), NO_ID);
+                                if(mWeakRef.get().mAudioItemList != null && !mWeakRef.get().mAudioItemList.isEmpty())
+                                    mWeakRef.get().showSnackBar(Snackbar.LENGTH_SHORT, context.getString(R.string.api_initialized), NO_ID);
                             }
                         });
                     }
                     break;
                 case Constants.Actions.ACTION_NOT_FOUND:
-                    runOnUiThread(new Runnable() {
+                    mWeakRef.get().runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            setNewItemValues(null, intent.getLongExtra(Constants.MEDIA_STORE_ID,-1));
+                            mWeakRef.get().setNewItemValues(null, intent.getLongExtra(Constants.MEDIA_STORE_ID,-1));
                         }
                     });
                     break;
                 case Constants.Actions.ACTION_FAIL:
                 case Constants.Actions.ACTION_DONE:
-                    runOnUiThread(new Runnable() {
+                    mWeakRef.get().runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
                             AudioItem audioItem = intent.getParcelableExtra(Constants.AUDIO_ITEM);
-                            setNewItemValues(audioItem, audioItem.getId());
+                            mWeakRef.get().setNewItemValues(audioItem, audioItem.getId());
                         }
                     });
 
                     break;
                 case Constants.Actions.ACTION_SET_AUDIOITEM_PROCESSING:
-                        runOnUiThread(new Runnable() {
+                    mWeakRef.get().runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                setProcessingAudioItem(intent.getLongExtra(Constants.MEDIA_STORE_ID,NO_ID));
+                                mWeakRef.get().setProcessingAudioItem(intent.getLongExtra(Constants.MEDIA_STORE_ID,NO_ID));
                             }
                         });
                     break;
                 case Constants.Actions.ACTION_CONNECTION_LOST:
                 case Constants.Actions.ACTION_CANCEL_TASK:
                 case Constants.Actions.ACTION_COMPLETE_TASK:
-                    runOnUiThread(new Runnable() {
+                    mWeakRef.get().runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            finishTaskByUser();
-                            mLocalBroadcastManager.unregisterReceiver(mReceiver);
+                            mWeakRef.get().finishTaskByUser();
+                            mWeakRef.get().mLocalBroadcastManager.unregisterReceiver(mWeakRef.get().mReceiver);
                         }
                     });
                     break;
                 case Constants.Actions.ACTION_REQUEST_UPDATE_LIST:
-                    runOnUiThread(new Runnable() {
+                    mWeakRef.get().runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
                             if(Settings.SETTING_AUTO_UPDATE_LIST) {
-                                AsyncReadFile asyncReadFile= new AsyncReadFile(RE_SCAN, MainActivity.this);
-                                asyncReadFile.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR);
+                                mWeakRef.get().mAsyncFileReader = new AsyncFileReader(RE_SCAN, mWeakRef.get());
+                                mWeakRef.get().mAsyncFileReader.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR);
                             }
                             else {
-                                showSnackBar(Snackbar.LENGTH_INDEFINITE,getString(R.string.storage_has_change), UPDATE_LIST);
+                                mWeakRef.get().showSnackBar(Snackbar.LENGTH_INDEFINITE,context.getString(R.string.storage_has_change), UPDATE_LIST);
                             }
                         }
                     });
                     break;
                 default:
-                    runOnUiThread(new Runnable() {
+                    mWeakRef.get().runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            finishTaskByUser();
+                            mWeakRef.get().finishTaskByUser();
                             String msg = intent.getStringExtra(Constants.GnServiceActions.API_ERROR);
-                            showSnackBar(Snackbar.LENGTH_LONG, getString(R.string.api_error) + msg, NO_ID);
-                            mLocalBroadcastManager.unregisterReceiver(mReceiver);
+                            mWeakRef.get().showSnackBar(Snackbar.LENGTH_LONG, context.getString(R.string.api_error) + " " + msg, NO_ID);
+                            mWeakRef.get().mLocalBroadcastManager.unregisterReceiver(mWeakRef.get().mReceiver);
                         }
                     });
                     break;

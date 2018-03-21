@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.content.ContextCompat;
@@ -42,11 +43,15 @@ public class SplashActivity extends AppCompatActivity{
         String imageSizeSaved = preferences.getString("key_size_album_art","1000");
         Settings.SETTING_SIZE_ALBUM_ART = Settings.setValueImageSize(imageSizeSaved);
         Settings.SETTING_AUTO_UPDATE_LIST = preferences.getBoolean("key_auto_update_list", false);
+        Settings.ENABLE_SD_CARD_ACCESS = preferences.getBoolean("key_enable_sd_card_access", false);
+
 
 
 
         //Is first use of app?
         SharedPreferences preferences2 =  getSharedPreferences(Constants.Application.FULL_QUALIFIED_NAME, Context.MODE_PRIVATE);
+        String uriString = preferences2.getString(Constants.URI_TREE, null);
+        Constants.URI_SD_CARD = uriString != null ? Uri.parse(uriString) : null;
         boolean firstTime= preferences2.getBoolean("first", true);
         Settings.SETTING_SORT = preferences2.getInt(Constants.SORT_KEY, 0);
         //do we have permission to access files?

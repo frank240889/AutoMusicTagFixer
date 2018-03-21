@@ -16,6 +16,8 @@ public class Constants {
     public static final String SORT_KEY = "key_default_sort";
     public static final String ALL_ITEMS_CHECKED = "all_items_checked";
     public static final String ACTION_OPEN_MAIN_ACTIVITY = "action_open_main_activity";
+    public static final String URI_TREE = "uri_tree";
+
     public static Uri URI_SD_CARD = null;
 
     public static class Application{

@@ -26,6 +26,15 @@
             app:layout_collapseMode="parallax"
             app:layout_scrollFlags="scroll|exitUntilCollapsed">
 
+            <TextView
+                android:id="@+id/message_cover"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="@string/touch_to_replace"
+                android:foreground="?android:attr/selectableItemBackgroundBorderless"
+                app:srcCompat="@drawable/ic_photo_library_black_24dp" />
+
             <ImageView
                 android:id="@+id/toolbarCover"
                 android:layout_width="match_parent"
@@ -33,6 +42,7 @@
                 android:layout_gravity="top|start"
                 android:adjustViewBounds="true"
                 android:scaleType="fitCenter"
+                android:transitionName="transitionFragment"
                 app:layout_collapseMode="parallax"
                 app:layout_collapseParallaxMultiplier="0.7" />
 
@@ -100,7 +110,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
-        android:layout_margin="@dimen/standard_21"
+        android:layout_margin="@dimen/standard_24"
         android:scaleType="fitCenter"
         android:elevation="6dp"
         app:elevation="6dp"
@@ -116,7 +126,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
-        android:layout_margin="@dimen/standard_21"
+        android:layout_margin="@dimen/standard_24"
         android:scaleType="fitCenter"
         android:elevation="6dp"
         app:elevation="6dp"
@@ -132,7 +142,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
-        android:layout_margin="@dimen/standard_21"
+        android:layout_margin="@dimen/standard_24"
         android:scaleType="fitCenter"
         android:elevation="6dp"
         app:elevation="6dp"
@@ -179,7 +189,8 @@
         style="?android:attr/progressBarStyleLarge"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="center"
+        android:layout_gravity="center_horizontal|bottom"
         android:indeterminate="true"
+        android:layout_marginBottom="@dimen/margin_bottom_snackbar"
         android:visibility="invisible" />
 </android.support.design.widget.CoordinatorLayout>

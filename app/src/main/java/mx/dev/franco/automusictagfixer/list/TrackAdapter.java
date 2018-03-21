@@ -2,8 +2,10 @@ package mx.dev.franco.automusictagfixer.list;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -11,14 +13,19 @@ import android.view.ViewGroup;
 import android.widget.CheckBox;
 import android.widget.Filter;
 import android.widget.Filterable;
+import android.widget.FrameLayout;
+import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.DataSource;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.bumptech.glide.load.engine.GlideException;
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
+import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.RequestOptions;
+import com.bumptech.glide.request.target.Target;
 
 import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.audio.AudioFileIO;
@@ -69,7 +76,7 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
 
     @SuppressWarnings("unchecked")
     public TrackAdapter(List<AudioItem> list, AudioItemHolder.ClickListener clickListener){
-        this.mContext = ((MainActivity)clickListener).getApplicationContext();
+        this.mContext = ((MainActivity)clickListener);
         this.mCurrentList = list;
         this.mCurrentFilteredList = mCurrentList;
         this.mClickListener = clickListener;
@@ -89,7 +96,7 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
     @Override
     public AudioItemHolder onCreateViewHolder(ViewGroup parent, int viewType) {
 
-        View itemView = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_list, parent, false);
+        View itemView = LayoutInflater.from(mContext).inflate(R.layout.item_list, parent, false);
 
         return new AudioItemHolder(itemView, this.mClickListener);
     }
@@ -109,7 +116,7 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
      * @param position
      */
     @Override
-    public void onBindViewHolder(final AudioItemHolder holder, int position) {
+    public void onBindViewHolder(AudioItemHolder holder, int position) {
         AudioItem audioItem = mCurrentList.get(position);
         holder.mCheckBox.setChecked(audioItem.isChecked());
 
@@ -121,14 +128,11 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
             holder.mProgressBar.setVisibility(GONE);
         }
 
-        //don't load covers if user is scrolling too fast
-       if(this.mVerticalScrollSpeed <= 450 && this.mVerticalScrollSpeed >= -450) {
-           //We need to read cover arts in other thread,
+           //We need to extracts cover arts in other thread,
            //because this operation is going to reduce performance
            //in main thread, making the scroll very laggy
-            asyncLoadCover = new AsyncLoadCover(holder, mContext);
+            asyncLoadCover = new AsyncLoadCover(holder.mImageView, mContext);
             asyncLoadCover.execute(audioItem.getAbsolutePath());
-       }
 
             switch (audioItem.getStatus()) {
                 case AudioItem.STATUS_TAGS_CORRECTED_BY_SEMIAUTOMATIC_MODE:
@@ -283,7 +287,7 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
 
     /**
      * Sets as false their processing state
-     * of items were processing by FixerTrackService service
+     * foe items were processing by FixerTrackService service
      * and updates UI
      */
     public void cancelProcessing(){
@@ -345,26 +349,27 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
         public TextView mArtistName;
         public TextView mAlbumName;
         public TextView mAbsolutePath;
-        public ProgressBar mProgressBar;
+        public FrameLayout mProgressBar;
         public ImageView mImageView;
-        public ImageView mCheckMark;
+        public ImageButton mCheckMark;
         public ClickListener mListener;
 
         public AudioItemHolder(View itemView, ClickListener clickListener) {
             super(itemView);
-            mCheckBox = (CheckBox) itemView.findViewById(R.id.checkBoxTrack);
+            mCheckBox = itemView.findViewById(R.id.checkBoxTrack);
             mCheckBox.setChecked(false);
-            mTrackName = (TextView) itemView.findViewById(R.id.track_name);
-            mArtistName = (TextView) itemView.findViewById(R.id.artist_name);
-            mAlbumName = (TextView) itemView.findViewById(R.id.album_name);
-            mProgressBar = (ProgressBar) itemView.findViewById(R.id.progressProcessingFile);
+            mTrackName = itemView.findViewById(R.id.track_name);
+            mArtistName = itemView.findViewById(R.id.artist_name);
+            mAlbumName = itemView.findViewById(R.id.album_name);
+            mProgressBar = itemView.findViewById(R.id.layer_information);
 
-            mAbsolutePath = (TextView) itemView.findViewById(R.id.absolute_path);
-            mImageView = (ImageView) itemView.findViewById(R.id.coverArt);
-            mCheckMark = (ImageView) itemView.findViewById(R.id.checkMark);
+            mAbsolutePath = itemView.findViewById(R.id.absolute_path);
+            mImageView = itemView.findViewById(R.id.coverArt);
+            mCheckMark = itemView.findViewById(R.id.checkMark);
             mListener = clickListener;
             mCheckBox.setOnClickListener(this);
             mImageView.setOnClickListener(this);
+            mCheckMark.setOnClickListener(this);
             itemView.setOnClickListener(this);
         }
 
@@ -397,11 +402,11 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
      */
     public static class AsyncLoadCover extends AsyncTask<String, byte[], Void> {
 
-        private WeakReference<AudioItemHolder> mHolder;
+        private WeakReference<ImageView> mImageView;
         private WeakReference<Context> mContext;
 
-        private AsyncLoadCover(AudioItemHolder holder, Context context) {
-            this.mHolder = new WeakReference<>(holder);
+        private AsyncLoadCover(ImageView holder, Context context) {
+            this.mImageView = new WeakReference<>(holder);
             this.mContext = new WeakReference<>(context);
         }
 
@@ -446,23 +451,19 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
             catch(IOException | CannotReadException | ReadOnlyFileException | InvalidAudioFrameException | TagException e){
                 e.printStackTrace();
                 publishProgress(new byte[0]);
-                System.gc();
                 return null;
             }
         }
         @Override
         protected void onPostExecute(Void voids){
-            this.mContext.clear();
-            this.mHolder = null;
-            this.mContext = null;
-            asyncLoadCover = null;
-            System.gc();
+
         }
 
         @Override
         public void onCancelled(Void voids){
-            this.mHolder = null;
-            if(mContext != null && !((MainActivity) mContext.get()).isDestroyed() ) {
+            mImageView.clear();
+            mImageView = null;
+            if(mContext != null /*&& !((MainActivity) mContext.get()).isDestroyed()*/ ) {
                 this.mContext.clear();
                 this.mContext = null;
             }
@@ -472,19 +473,41 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
 
         @Override
         protected void onProgressUpdate(byte[]... cover){
-            if(mContext != null/* && !((MainActivity) mContext).isDestroyed() */) {
-                GlideApp.with(mContext.get()).
-                        load(cover[0].length == 0 ? null : cover[0])
-                        .thumbnail(0.1f)
-                        .error(R.drawable.ic_album_white_48px)
-                        .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.NONE))
-                        .apply(RequestOptions.skipMemoryCacheOf(true))
-                        .transition(DrawableTransitionOptions.withCrossFade(100))
-                        .fitCenter()
-                        .placeholder(R.drawable.ic_album_white_48px)
-                        .into(mHolder.get().mImageView);
+            if(mContext != null) {
+                try {
+                    GlideApp.with(mContext.get()).
+                            load(cover[0].length == 0 ? null : cover[0])
+                            .thumbnail(0.5f)
+                            .error(R.drawable.ic_album_white_48px)
+                            .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.NONE))
+                            .apply(RequestOptions.skipMemoryCacheOf(true))
+                            .transition(DrawableTransitionOptions.withCrossFade(150))
+                            .fitCenter()
+                            .listener(new RequestListener<Drawable>() {
+                                @Override
+                                public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
+                                    mImageView= null;
+                                    mContext = null;
+                                    asyncLoadCover = null;
+                                    return false;
+                                }
+
+                                @Override
+                                public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) {
+                                    mImageView= null;
+                                    mContext = null;
+                                    asyncLoadCover = null;
+                                    return false;
+                                }
+                            })
+                            .placeholder(R.drawable.ic_album_white_48px)
+                            .into(mImageView.get());
+                }
+                catch (Exception e){
+                    e.printStackTrace();
+                }
             }
-            System.gc();
+
         }
     }
 

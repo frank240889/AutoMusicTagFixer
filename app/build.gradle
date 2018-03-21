@@ -60,7 +60,7 @@ android {
         def documentsAuthorityValue = applicationId + ".documents"
 
         manifestPlaceholders = [documentsAuthority: documentsAuthorityValue]
-        buildConfigField "String","DOCUMENTS_AUTHORITY","\"${documentsAuthorityValue}\""
+        buildConfigField "String", "DOCUMENTS_AUTHORITY", "\"${documentsAuthorityValue}\""
     }
     /**
      * The buildTypes {} block is where you can configure multiple build types.
@@ -110,7 +110,7 @@ android {
             reset()
             include 'armeabi', 'armeabi-v7a', 'x86', 'arm64-v8a'
             universalApk true
-     }
+        }
     }
 
 }

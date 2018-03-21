@@ -10,6 +10,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.media.MediaPlayer;
@@ -247,7 +248,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
     private MenuItem removeItem;
     private MenuItem searchInWebItem;
 
-    private AsyncUpdateData mAsyncUpdateData;
+    private static AsyncUpdateData sAsyncUpdateData;
 
     private static final int CROSS_FADE_DURATION = 200;
     private AsyncSaveFile mAsyncSaveFile;
@@ -261,7 +262,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        //set mStatus bar translucent, these calls to window object must be done before setContentView
+        //set status bar translucent, these calls to window object must be done before setContentView
         Window window = getWindow();
         window.setFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS,WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
         window.setAllowEnterTransitionOverlap(true);
@@ -302,7 +303,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
         //get an instance of connection to DB
         mDbHelper = DataTrackDbHelper.getInstance(getApplicationContext());
 
-        window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN);
+        window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN|WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
 
         createSnackBar();
 
@@ -315,7 +316,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
 
     private void createSnackBar() {
         mSnackbar = Snackbar.make(mViewDetailsTrack,"",Snackbar.LENGTH_SHORT);
-        TextView tv = (TextView) this.mSnackbar.getView().findViewById(android.support.design.R.id.snackbar_text);
+        TextView tv = this.mSnackbar.getView().findViewById(android.support.design.R.id.snackbar_text);
         mSnackbar.getView().setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.primaryLightColor));
         tv.setTextColor(ContextCompat.getColor(getApplicationContext(),R.color.grey_800));
         mSnackbar.setActionTextColor(ContextCompat.getColor(getApplicationContext(),R.color.grey_800));
@@ -406,7 +407,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
             //files in external app
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                Uri contentUri = FileProvider.getUriForFile(getApplicationContext(), "mx.dev.franco.automusictagfixer.fileProvider", file);
+                Uri contentUri = FileProvider.getUriForFile(getApplicationContext(), BuildConfig.DOCUMENTS_AUTHORITY, file);
                 intent.setDataAndType(contentUri, type);
             } else {
                 intent.setDataAndType(Uri.fromFile(file), type);
@@ -514,8 +515,8 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                 builder.setPositiveButton("Si", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        mAsyncUpdateData = new AsyncUpdateData(TaggerHelper.MODE_REMOVE_COVER, TrackDetailsActivity.this);
-                        mAsyncUpdateData.execute();
+                        sAsyncUpdateData = new AsyncUpdateData(TaggerHelper.MODE_REMOVE_COVER, TrackDetailsActivity.this);
+                        sAsyncUpdateData.execute();
                     }
                 });
                 AlertDialog alertDialog = builder.create();
@@ -684,8 +685,8 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                                     enableFieldsToEdit();
                                 }
                             } else {
-                                mAsyncUpdateData = new AsyncUpdateData(TaggerHelper.MODE_ADD_COVER, this);
-                                mAsyncUpdateData.execute();
+                                sAsyncUpdateData = new AsyncUpdateData(TaggerHelper.MODE_ADD_COVER, this);
+                                sAsyncUpdateData.execute();
                             }
                             mAppBarLayout.setExpanded(true);
                         }
@@ -712,10 +713,15 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                         Constants.URI_SD_CARD = data.getData();
                         msg = getString(R.string.toast_apply_tags_again);
                         // Persist access permissions.
-                /*final int takeFlags = resultData.getFlags()
-                        & (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-                getContentResolver().takePersistableUriPermission(Constants.URI_SD_CARD, takeFlags);*/
+                        final int takeFlags = data.getFlags()
+                                & (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                        getContentResolver().takePersistableUriPermission(Constants.URI_SD_CARD, takeFlags);
 
+                        SharedPreferences sharedPreferences = getSharedPreferences(Constants.Application.FULL_QUALIFIED_NAME, Context.MODE_PRIVATE);
+                        SharedPreferences.Editor editor = sharedPreferences.edit();
+                        editor.putString(Constants.URI_TREE, Constants.URI_SD_CARD.toString());
+                        editor.apply();
+                        Settings.ENABLE_SD_CARD_ACCESS = true;
                     }
                 }
                 else {
@@ -849,9 +855,9 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
             e.printStackTrace();
         }
 
-        if(mAsyncUpdateData != null){
-            mAsyncUpdateData.cancel(true);
-            mAsyncUpdateData = null;
+        if(sAsyncUpdateData != null){
+            sAsyncUpdateData.cancel(true);
+            sAsyncUpdateData = null;
         }
 
         mPlayer.setOnCompletionListener(null);
@@ -1634,6 +1640,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                                 public void onClick(DialogInterface dialog, int which) {
                                     dialog.dismiss();
                                     disableFields();
+                                    setPreviousValues();
                                     mAppBarLayout.setExpanded(true);
                                 }
                             });
@@ -1641,8 +1648,8 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {
                                     //we update data in async task
-                                    mAsyncUpdateData = new AsyncUpdateData(TaggerHelper.MODE_OVERWRITE_ALL_TAGS, TrackDetailsActivity.this);
-                                    mAsyncUpdateData.execute(Constants.CorrectionModes.MANUAL);
+                                    sAsyncUpdateData = new AsyncUpdateData(TaggerHelper.MODE_OVERWRITE_ALL_TAGS, TrackDetailsActivity.this);
+                                    sAsyncUpdateData.execute(Constants.CorrectionModes.MANUAL);
                                 }
                             });
                             AlertDialog alertDialog = builder.create();
@@ -1720,13 +1727,22 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
 
         mSaveButton.hide();
         mSaveButton.setOnClickListener(null);
-
+        mSaveButton.setEnabled(true);
         mFloatingActionMenu.show();
         mImageSize.setText(AudioItem.getStringImageSize(mCurrentCoverArt));
         mImageSize.setCompoundDrawablesWithIntrinsicBounds(getDrawable(R.drawable.ic_photo_white_24px),null,null,null);
         mImageSize.setOnClickListener(null);
         mToolbarCover.setEnabled(true);
         mEditMode = false;
+        //to hide it, call the method again
+        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+        try {
+            assert imm != null;
+            imm.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0);
+        }
+        catch (Exception e){
+            e.printStackTrace();
+        }
 
    }
 
@@ -1754,351 +1770,6 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
         mPlayPreviewButton.setIcon(R.drawable.ic_play_arrow_white_24px);
         mPlayer.onCompletePlayback();
 
-
-    }
-
-    /**
-     * Instances of this class, handles the changes made
-     * to audio file in background thread,
-     * for not blocking the UI thread
-     */
-    private static class AsyncUpdateData extends AsyncTask<Integer, Void, Void> {
-
-        private final String TAG = AsyncUpdateData.class.getName();
-        private int mOperationType;
-        private boolean mDataUpdated = false;
-        private WeakReference<TrackDetailsActivity> mWeakRef;
-        private int mMessageCode = -2;
-
-        /**
-         * Set these 2 params in constructor
-         * @param operationType Correct all fields or only missing
-         * @param trackDetailsActivity reference to activity
-         */
-        AsyncUpdateData(int operationType, TrackDetailsActivity trackDetailsActivity){
-            this.mOperationType = operationType;
-            this.mWeakRef = new WeakReference<>(trackDetailsActivity);
-
-        }
-
-        /**
-         * Callback that executes before
-         * our task, here we show for examploe
-         * the progress bar and disable mini fabs
-         */
-        @Override
-        protected void onPreExecute(){
-            mWeakRef.get().mProgressBar.setVisibility(View.VISIBLE);
-            try {
-                mWeakRef.get().stopPlayback();
-            } catch (IOException | InterruptedException e) {
-                Crashlytics.logException(e);
-                e.printStackTrace();
-            }
-            mWeakRef.get().enableMiniFabs(false);
-            mWeakRef.get().mToolbarCover.setEnabled(false);
-        }
-
-        /**
-         * Updates cover art by removing or replacing
-         * the existent one
-         */
-        private void updateCoverArt() {
-            if(mOperationType == TaggerHelper.MODE_ADD_COVER){
-            //Here we update cover
-                mDataUpdated = mWeakRef.get().mTaggerHelper.applyCover(mWeakRef.get().mNewCoverArt);
-            }
-            //remove cover
-            else if(mOperationType == TaggerHelper.MODE_REMOVE_COVER){
-                mDataUpdated = mWeakRef.get().mTaggerHelper.applyCover(null);
-            }
-            mMessageCode = mWeakRef.get().mTaggerHelper.getMessageCode();
-        }
-
-        /**
-         * Updates tag fields with the values retrieved from
-         * query Gracenote service
-         * @param correctionMode
-         */
-        private void updateTags(int correctionMode){
-
-            ContentValues contentValues = new ContentValues();
-
-            HashMap<FieldKey, Object> tagsToApply = new HashMap<>();
-            if(!mWeakRef.get().mNewTitle.isEmpty())
-                tagsToApply.put(FieldKey.TITLE,mWeakRef.get().mNewTitle);
-            if(!mWeakRef.get().mNewArtist.isEmpty())
-                tagsToApply.put(FieldKey.ARTIST,mWeakRef.get().mNewArtist);
-            if(!mWeakRef.get().mNewArtist.isEmpty())
-                tagsToApply.put(FieldKey.ALBUM,mWeakRef.get().mNewAlbum);
-            if(!mWeakRef.get().mNewGenre.isEmpty())
-                tagsToApply.put(FieldKey.GENRE,mWeakRef.get().mNewGenre);
-            if(!mWeakRef.get().mNewNumber.isEmpty())
-                tagsToApply.put(FieldKey.TRACK,mWeakRef.get().mNewNumber);
-            if(!mWeakRef.get().mNewYear.isEmpty())
-                tagsToApply.put(FieldKey.YEAR,mWeakRef.get().mNewYear);
-            if(mWeakRef.get().mNewCoverArt != null && mWeakRef.get().mNewCoverArt.length > 0)
-                tagsToApply.put(FieldKey.COVER_ART,mWeakRef.get().mNewCoverArt);
-
-            mWeakRef.get().mTaggerHelper.setTags(tagsToApply);
-            mDataUpdated = mWeakRef.get().mTaggerHelper.applyTags(mOperationType);
-
-            //Data updated successfully
-            if (mDataUpdated) {
-                if(mWeakRef.get().mTaggerHelper.getUpdatedFields().size() > 0) {
-                    for (Map.Entry entry : mWeakRef.get().mTaggerHelper.getUpdatedFields().entrySet()) {
-                        switch ((FieldKey) entry.getKey()) {
-                            case TITLE:
-                                //set value to our DB
-                                contentValues.put(TrackContract.TrackData.TITLE, (String) entry.getValue());
-                                //set value to item list
-                                mWeakRef.get().mCurrentAudioItem.setTitle((String) entry.getValue());
-                                break;
-                            case ARTIST:
-                                contentValues.put(TrackContract.TrackData.ARTIST, (String) entry.getValue());
-                                mWeakRef.get().mCurrentAudioItem.setArtist((String) entry.getValue());
-                                break;
-                            case ALBUM:
-                                contentValues.put(TrackContract.TrackData.ALBUM, (String) entry.getValue());
-                                mWeakRef.get().mCurrentAudioItem.setAlbum((String) entry.getValue());
-                                break;
-                        }
-                    }
-                    mWeakRef.get().mTaggerHelper.getUpdatedFields().clear();
-                }
-
-                //Then, is necessary update the data in database,
-                //because we obtain this info when the app starts (after first time),
-                if(correctionMode == Constants.CorrectionModes.SEMI_AUTOMATIC) {
-                    contentValues.put(TrackContract.TrackData.STATUS, AudioItem.STATUS_TAGS_CORRECTED_BY_SEMIAUTOMATIC_MODE);
-                    //Update the data of list item
-                    mWeakRef.get().mCurrentAudioItem.setStatus(AudioItem.STATUS_TAGS_CORRECTED_BY_SEMIAUTOMATIC_MODE);
-                }
-                else {
-                    contentValues.put(TrackContract.TrackData.STATUS, AudioItem.STATUS_TAGS_EDITED_BY_USER);
-                    //Update the data of list item
-                    mWeakRef.get().mCurrentAudioItem.setStatus(AudioItem.STATUS_TAGS_EDITED_BY_USER);
-                }
-
-                mWeakRef.get().mCurrentFile = new File(mWeakRef.get().mTrackPath);
-            }
-
-
-            //If this option is enabled in Settings,
-            //then rename file
-            if((correctionMode == Constants.CorrectionModes.MANUAL && Settings.SETTING_RENAME_FILE_MANUAL_MODE) ||
-                    ((correctionMode == Constants.CorrectionModes.SEMI_AUTOMATIC && Settings.SETTING_RENAME_FILE_SEMI_AUTOMATIC_MODE))){
-
-                String newAbsolutePath = TaggerHelper.renameFile(mWeakRef.get().mCurrentFile,
-                        mWeakRef.get().getApplicationContext(),
-                        mWeakRef.get().mNewTitle,
-                        mWeakRef.get().mNewArtist);
-
-                if(newAbsolutePath != null){
-                    contentValues.put(TrackContract.TrackData.DATA, newAbsolutePath);
-
-                    Log.d(TAG, "newAbsolutePath " + newAbsolutePath);
-                    //Inform to system that one file has change
-                    ContentValues values = new ContentValues();
-                    String selection = MediaStore.MediaColumns.DATA + "= ?";
-                    String selectionArgs[] = {mWeakRef.get().mTrackPath}; //old path
-                    values.put(MediaStore.MediaColumns.DATA, newAbsolutePath); //DATA is the absolute path to file
-                    boolean successMediaStore = mWeakRef.get().getContentResolver().
-                            update(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-                                    values,
-                                    selection,
-                                    selectionArgs) == 1;
-
-                    mWeakRef.get().mCurrentAudioItem.setAbsolutePath(newAbsolutePath);
-                    mWeakRef.get().mTrackPath = newAbsolutePath;
-                    mWeakRef.get().mCurrentFile = new File(mWeakRef.get().mTrackPath);
-                    Log.d("media store success", successMediaStore + " path: " + mWeakRef.get().mTrackPath);
-                }
-
-            }
-
-            //UPdate data in DB
-            if(contentValues.size() > 0){
-                mWeakRef.get().mDbHelper.updateData(mWeakRef.get().mCurrentItemId,contentValues);
-            }
-
-            mMessageCode = mWeakRef.get().mTaggerHelper.getMessageCode();
-
-
-        }
-
-        /**
-         * Executes in background Thread,
-         * preventing to block UI thread.
-         * @param modes Mode that request apply tags
-         * @return
-         */
-        @Override
-        protected Void doInBackground(Integer... modes) {
-            switch (mOperationType){
-                case TaggerHelper.MODE_ADD_COVER:
-                case TaggerHelper.MODE_REMOVE_COVER:
-                    updateCoverArt();
-                    break;
-                case TaggerHelper.MODE_WRITE_ONLY_MISSING:
-                case TaggerHelper.MODE_OVERWRITE_ALL_TAGS:
-                    updateTags(modes[0]);
-                    break;
-            }
-
-            return null;
-        }
-
-        /**
-         * Once doInBackground has finished,
-         * report results to UI thread
-         * @param result
-         */
-        @Override
-        protected void onPostExecute(Void result){
-
-            try {
-                hideLayoutTrackIdResults();
-            } catch (ReadOnlyFileException | CannotReadException | InvalidAudioFrameException | IOException | TagException e) {
-                e.printStackTrace();
-            }
-        }
-
-        @Override
-        public void onCancelled(Void result) {
-            if (mWeakRef != null){
-                mWeakRef.get().mAsyncUpdateData = null;
-                mWeakRef.clear();
-                mWeakRef = null;
-            }
-            System.gc();
-        }
-
-        /**
-         * Hides with smooth animation the
-         * card view that holds the tracked id results
-         */
-        private void hideLayoutTrackIdResults() throws ReadOnlyFileException, CannotReadException, TagException, InvalidAudioFrameException, IOException {
-            final Tag tag = mWeakRef.get().mTaggerHelper.getCurrentTag();
-            mWeakRef.get().extractData();
-
-            mWeakRef.get().mTrackIdCard.animate().setDuration(DURATION).alpha(0).setListener(new AnimatorListenerAdapter() {
-                @Override
-                public void onAnimationEnd(Animator animation) {
-                    mWeakRef.get().mContent.setEnabled(true);
-                    mWeakRef.get().mTrackIdCard.setVisibility(GONE);
-                    mWeakRef.get().mContent.setVisibility(View.VISIBLE);
-                    mWeakRef.get().mContent.animate().setDuration(DURATION).alpha(1).setListener(new AnimatorListenerAdapter() {
-                        @Override
-                        public void onAnimationEnd(Animator animation) {
-                            String msg = "";
-
-                            //If data was update successfully
-                            if(mDataUpdated){
-                                //If only cover art was updated, added or removed
-                                if(mOperationType == TaggerHelper.MODE_ADD_COVER || mOperationType == TaggerHelper.MODE_REMOVE_COVER){
-                                    if(mMessageCode == TaggerHelper.NEW_COVER_APPLIED || mMessageCode == TaggerHelper.APPLIED_SAME_COVER){
-                                        msg = mWeakRef.get().getString(R.string.cover_updated);
-                                        mWeakRef.get().mImageSize.setText(AudioItem.getStringImageSize(mWeakRef.get().mCurrentCoverArt));
-                                    }
-                                    else if(mMessageCode == TaggerHelper.CURRENT_COVER_REMOVED){
-                                        msg = mWeakRef.get().getString(R.string.cover_removed);
-                                        mWeakRef.get().mImageSize.setText(AudioItem.getStringImageSize(null));
-                                    }
-
-                                    mWeakRef.get().mFileSize.setText(AudioItem.getFileSize(mWeakRef.get().mCurrentFile.length()));
-
-
-                                    GlideApp.with(mWeakRef.get().mViewDetailsTrack).
-                                            load(mWeakRef.get().mCurrentCoverArt)
-                                            .error(R.drawable.ic_album_white_48px)
-                                            .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.NONE))
-                                            .transition(DrawableTransitionOptions.withCrossFade(CROSS_FADE_DURATION))
-                                            .apply(RequestOptions.skipMemoryCacheOf(true))
-                                            .fitCenter()
-                                            .placeholder(R.drawable.ic_album_white_48px)
-                                            .into(mWeakRef.get().mToolbarCover);
-                                }
-                                //If all tags ro only missing were applied
-                                else if(mOperationType == TaggerHelper.MODE_OVERWRITE_ALL_TAGS || mOperationType == TaggerHelper.MODE_WRITE_ONLY_MISSING) {
-                                    //all or missing data was updated
-                                    if(mMessageCode == TaggerHelper.APPLIED_ALL_TAGS) {
-                                        msg = mWeakRef.get().getString(R.string.message_all_data_updated);
-                                    }
-                                    else if(mMessageCode == TaggerHelper.APPLIED_ONLY_MISSING_TAGS){
-                                        msg = mWeakRef.get().getString(R.string.message_missing_data_updated);
-                                    }
-                                    else if(mMessageCode == TaggerHelper.APPLIED_SAME_TAGS){
-                                        msg = mWeakRef.get().getString(R.string.message_same_tags_applied);
-                                    }
-
-                                    if(mWeakRef.get().mTaggerHelper.getCurrentArtwork() != null) {
-                                        GlideApp.with(mWeakRef.get().mViewDetailsTrack).
-                                                load(mWeakRef.get().mTaggerHelper.getCurrentArtwork())
-                                                .error(R.drawable.ic_album_white_48px)
-                                                .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.NONE))
-                                                .transition(DrawableTransitionOptions.withCrossFade(CROSS_FADE_DURATION))
-                                                .apply(RequestOptions.skipMemoryCacheOf(true))
-                                                .fitCenter()
-                                                .placeholder(R.drawable.ic_album_white_48px)
-                                                .into(mWeakRef.get().mToolbarCover);
-                                        mWeakRef.get().mFileSize.setText(AudioItem.getFileSize(mWeakRef.get().mCurrentFile.length()));
-                                        mWeakRef.get().mImageSize.setText(AudioItem.getStringImageSize(mWeakRef.get().mNewCoverArt));
-                                    }
-
-
-                                    mWeakRef.get().mLayerFileName.setText(mWeakRef.get().mCurrentFile.getName());
-                                    mWeakRef.get().mTitleField.setText(mWeakRef.get().mCurrentTitle);
-                                    mWeakRef.get().mArtistField.setText(mWeakRef.get().mCurrentArtist);
-                                    mWeakRef.get().mAlbumField.setText(mWeakRef.get().mCurrentAlbum);
-                                    mWeakRef.get().mGenreField.setText(mWeakRef.get().mCurrentGenre);
-                                    mWeakRef.get().mNumberField.setText(mWeakRef.get().mCurrentNumber);
-                                    mWeakRef.get().mYearField.setText(mWeakRef.get().mCurrentYear);
-                                    mWeakRef.get().mStatus.setText(mWeakRef.get().getStatusText());
-                                    mWeakRef.get().mStatus.setCompoundDrawablesWithIntrinsicBounds(mWeakRef.get().getStatusDrawable(),null,null,null);
-                                }
-                                //notify to adapter that one item has changed
-                                mWeakRef.get().mTrackAdapter.notifyItemChanged(mWeakRef.get().mCurrentAudioItem.getPosition());
-
-                            }
-                            //If data could not updated
-                            else {
-                                    msg = mWeakRef.get().mTaggerHelper.getMessage();
-                                    mWeakRef.get().setPreviousValues();
-                            }
-
-
-                            int action = mMessageCode == TaggerHelper.COULD_NOT_GET_URI_SD_ROOT_TREE ? ACTION_SD_WRITING_ENABLE_PERMISSION : ACTION_NONE;
-
-                            mWeakRef.get().showSnackBar(7000, msg,action, null);
-                            mWeakRef.get().mFloatingActionMenu.show();
-                            mWeakRef.get().mSaveButton.hide();
-                            mWeakRef.get().mToolbarCover.setEnabled(true);
-                            mWeakRef.get().mAppBarLayout.setExpanded(true);
-
-                            mWeakRef.get().cachingCurrentValues();
-                            mWeakRef.get().mOnlyCoverArt = false;
-                            mDataUpdated = false;
-                            mWeakRef.get().mEditMode = false;
-                            mWeakRef.get().disableFields();
-                            mWeakRef.get().enableMiniFabs(true);
-
-                            mWeakRef.get().mProgressBar.setVisibility(View.GONE);
-
-                            mWeakRef.get().mAsyncUpdateData = null;
-                            mWeakRef.clear();
-                            mWeakRef = null;
-                            System.gc();
-
-                        }
-                    });
-
-                }
-            });
-
-
-
-        }
 
     }
 
@@ -2170,15 +1841,15 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                 builder.setNegativeButton(getString(R.string.all_tags), new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        mAsyncUpdateData = new AsyncUpdateData(TaggerHelper.MODE_OVERWRITE_ALL_TAGS, TrackDetailsActivity.this);
-                        mAsyncUpdateData.execute(Constants.CorrectionModes.SEMI_AUTOMATIC);
+                        sAsyncUpdateData = new AsyncUpdateData(TaggerHelper.MODE_OVERWRITE_ALL_TAGS, TrackDetailsActivity.this);
+                        sAsyncUpdateData.execute(Constants.CorrectionModes.SEMI_AUTOMATIC);
                     }
                 });
                 builder.setPositiveButton(getString(R.string.missing_tags), new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        mAsyncUpdateData = new AsyncUpdateData(TaggerHelper.MODE_WRITE_ONLY_MISSING, TrackDetailsActivity.this);
-                        mAsyncUpdateData.execute(Constants.CorrectionModes.SEMI_AUTOMATIC);
+                        sAsyncUpdateData = new AsyncUpdateData(TaggerHelper.MODE_WRITE_ONLY_MISSING, TrackDetailsActivity.this);
+                        sAsyncUpdateData.execute(Constants.CorrectionModes.SEMI_AUTOMATIC);
                     }
                 });
                 AlertDialog alertDialog = builder.create();
@@ -2298,8 +1969,8 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                     builder.setPositiveButton(getString(R.string.as_cover_art), new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            mAsyncUpdateData = new AsyncUpdateData(TaggerHelper.MODE_ADD_COVER, TrackDetailsActivity.this);
-                            mAsyncUpdateData.execute();
+                            sAsyncUpdateData = new AsyncUpdateData(TaggerHelper.MODE_ADD_COVER, TrackDetailsActivity.this);
+                            sAsyncUpdateData.execute();
                         }
                     });
                     //save cover as image file
@@ -2473,8 +2144,363 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
 
     }
 
+    /**
+     * Instances of this class, handles the changes made
+     * to audio file in background thread,
+     * for not blocking the UI thread
+     */
+    private static class AsyncUpdateData extends AsyncTask<Integer, Void, Void> {
+
+        private final String TAG = AsyncUpdateData.class.getName();
+        private int mOperationType;
+        private boolean mDataUpdated = false;
+        private WeakReference<TrackDetailsActivity> mWeakRef;
+        private int mMessageCode = -2;
+
+        /**
+         * Set these 2 params in constructor
+         * @param operationType Correct all fields or only missing
+         * @param trackDetailsActivity reference to activity
+         */
+        AsyncUpdateData(int operationType, TrackDetailsActivity trackDetailsActivity){
+            this.mOperationType = operationType;
+            this.mWeakRef = new WeakReference<>(trackDetailsActivity);
+
+        }
+
+        /**
+         * Callback that executes before
+         * our task, here we show for examploe
+         * the progress bar and disable mini fabs
+         */
+        @Override
+        protected void onPreExecute(){
+            mWeakRef.get().mProgressBar.setVisibility(View.VISIBLE);
+            try {
+                mWeakRef.get().stopPlayback();
+            } catch (IOException | InterruptedException e) {
+                Crashlytics.logException(e);
+                e.printStackTrace();
+            }
+            mWeakRef.get().enableMiniFabs(false);
+            mWeakRef.get().mToolbarCover.setEnabled(false);
+            mWeakRef.get().mSaveButton.setEnabled(false);
+        }
+
+        /**
+         * Updates cover art by removing or replacing
+         * the existent one
+         */
+        private void updateCoverArt() {
+            if(mOperationType == TaggerHelper.MODE_ADD_COVER){
+                //Here we update cover
+                mDataUpdated = mWeakRef.get().mTaggerHelper.applyCover(mWeakRef.get().mNewCoverArt);
+            }
+            //remove cover
+            else if(mOperationType == TaggerHelper.MODE_REMOVE_COVER){
+                mDataUpdated = mWeakRef.get().mTaggerHelper.applyCover(null);
+            }
+            mMessageCode = mWeakRef.get().mTaggerHelper.getMessageCode();
+        }
+
+        /**
+         * Updates tag fields with the values retrieved from
+         * query Gracenote service
+         * @param correctionMode
+         */
+        private void updateTags(int correctionMode){
+
+            ContentValues contentValues = new ContentValues();
+
+            HashMap<FieldKey, Object> tagsToApply = new HashMap<>();
+            if(!mWeakRef.get().mNewTitle.isEmpty())
+                tagsToApply.put(FieldKey.TITLE,mWeakRef.get().mNewTitle);
+            if(!mWeakRef.get().mNewArtist.isEmpty())
+                tagsToApply.put(FieldKey.ARTIST,mWeakRef.get().mNewArtist);
+            if(!mWeakRef.get().mNewArtist.isEmpty())
+                tagsToApply.put(FieldKey.ALBUM,mWeakRef.get().mNewAlbum);
+            if(!mWeakRef.get().mNewGenre.isEmpty())
+                tagsToApply.put(FieldKey.GENRE,mWeakRef.get().mNewGenre);
+            if(!mWeakRef.get().mNewNumber.isEmpty())
+                tagsToApply.put(FieldKey.TRACK,mWeakRef.get().mNewNumber);
+            if(!mWeakRef.get().mNewYear.isEmpty())
+                tagsToApply.put(FieldKey.YEAR,mWeakRef.get().mNewYear);
+            if(mWeakRef.get().mNewCoverArt != null && mWeakRef.get().mNewCoverArt.length > 0)
+                tagsToApply.put(FieldKey.COVER_ART,mWeakRef.get().mNewCoverArt);
+
+            mWeakRef.get().mTaggerHelper.setTags(tagsToApply);
+            mDataUpdated = mWeakRef.get().mTaggerHelper.applyTags(mOperationType);
+
+            //Data updated successfully
+            if (mDataUpdated) {
+                if(mWeakRef.get().mTaggerHelper.getUpdatedFields().size() > 0) {
+                    for (Map.Entry entry : mWeakRef.get().mTaggerHelper.getUpdatedFields().entrySet()) {
+                        switch ((FieldKey) entry.getKey()) {
+                            case TITLE:
+                                //set value to our DB
+                                contentValues.put(TrackContract.TrackData.TITLE, (String) entry.getValue());
+                                //set value to item list
+                                mWeakRef.get().mCurrentAudioItem.setTitle((String) entry.getValue());
+                                break;
+                            case ARTIST:
+                                contentValues.put(TrackContract.TrackData.ARTIST, (String) entry.getValue());
+                                mWeakRef.get().mCurrentAudioItem.setArtist((String) entry.getValue());
+                                break;
+                            case ALBUM:
+                                contentValues.put(TrackContract.TrackData.ALBUM, (String) entry.getValue());
+                                mWeakRef.get().mCurrentAudioItem.setAlbum((String) entry.getValue());
+                                break;
+                        }
+                    }
+                    mWeakRef.get().mTaggerHelper.getUpdatedFields().clear();
+                }
+
+                //Then, is necessary update the data in database,
+                //because we obtain this info when the app starts (after first time),
+                if(correctionMode == Constants.CorrectionModes.SEMI_AUTOMATIC) {
+                    contentValues.put(TrackContract.TrackData.STATUS, AudioItem.STATUS_TAGS_CORRECTED_BY_SEMIAUTOMATIC_MODE);
+                    //Update the data of list item
+                    mWeakRef.get().mCurrentAudioItem.setStatus(AudioItem.STATUS_TAGS_CORRECTED_BY_SEMIAUTOMATIC_MODE);
+                }
+                else {
+                    contentValues.put(TrackContract.TrackData.STATUS, AudioItem.STATUS_TAGS_EDITED_BY_USER);
+                    //Update the data of list item
+                    mWeakRef.get().mCurrentAudioItem.setStatus(AudioItem.STATUS_TAGS_EDITED_BY_USER);
+                }
+
+                mWeakRef.get().mCurrentFile = new File(mWeakRef.get().mTrackPath);
+            }
+
+
+            //If this option is enabled in Settings,
+            //then rename file
+            if((correctionMode == Constants.CorrectionModes.MANUAL && Settings.SETTING_RENAME_FILE_MANUAL_MODE) ||
+                    ((correctionMode == Constants.CorrectionModes.SEMI_AUTOMATIC && Settings.SETTING_RENAME_FILE_SEMI_AUTOMATIC_MODE))){
+
+                String newAbsolutePath = TaggerHelper.renameFile(mWeakRef.get().mCurrentFile,
+                        mWeakRef.get().getApplicationContext(),
+                        mWeakRef.get().mNewTitle,
+                        mWeakRef.get().mNewArtist);
+
+                if(newAbsolutePath != null){
+                    contentValues.put(TrackContract.TrackData.DATA, newAbsolutePath);
+
+                    Log.d(TAG, "newAbsolutePath " + newAbsolutePath);
+                    //Inform to system that one file has change
+                    ContentValues values = new ContentValues();
+                    String selection = MediaStore.MediaColumns.DATA + "= ?";
+                    String selectionArgs[] = {mWeakRef.get().mTrackPath}; //old path
+                    values.put(MediaStore.MediaColumns.DATA, newAbsolutePath); //DATA is the absolute path to file
+                    boolean successMediaStore = mWeakRef.get().getContentResolver().
+                            update(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                                    values,
+                                    selection,
+                                    selectionArgs) == 1;
+
+                    mWeakRef.get().mCurrentAudioItem.setAbsolutePath(newAbsolutePath);
+                    mWeakRef.get().mTrackPath = newAbsolutePath;
+                    mWeakRef.get().mCurrentFile = new File(mWeakRef.get().mTrackPath);
+                    Log.d("media store success", successMediaStore + " path: " + mWeakRef.get().mTrackPath);
+                }
+
+            }
+
+            //UPdate data in DB
+            if(contentValues.size() > 0){
+                mWeakRef.get().mDbHelper.updateData(mWeakRef.get().mCurrentItemId,contentValues);
+            }
+
+            mMessageCode = mWeakRef.get().mTaggerHelper.getMessageCode();
+
+
+        }
+
+        /**
+         * Executes in background Thread,
+         * preventing to block UI thread.
+         * @param modes Mode that request apply tags
+         * @return
+         */
+        @Override
+        protected Void doInBackground(Integer... modes) {
+            switch (mOperationType){
+                case TaggerHelper.MODE_ADD_COVER:
+                case TaggerHelper.MODE_REMOVE_COVER:
+                    updateCoverArt();
+                    break;
+                case TaggerHelper.MODE_WRITE_ONLY_MISSING:
+                case TaggerHelper.MODE_OVERWRITE_ALL_TAGS:
+                    updateTags(modes[0]);
+                    break;
+            }
+
+            return null;
+        }
+
+        /**
+         * Once doInBackground has finished,
+         * report results to UI thread
+         * @param result
+         */
+        @Override
+        protected void onPostExecute(Void result){
+
+            try {
+                hideLayoutTrackIdResults();
+            } catch (ReadOnlyFileException | CannotReadException | InvalidAudioFrameException | IOException | TagException e) {
+                e.printStackTrace();
+            }
+        }
+
+        @Override
+        public void onCancelled(Void result) {
+            if (mWeakRef != null){
+                sAsyncUpdateData = null;
+                mWeakRef.clear();
+                mWeakRef = null;
+            }
+            System.gc();
+        }
+
+        /**
+         * Hides with smooth animation the
+         * card view that holds the tracked id results
+         */
+        private void hideLayoutTrackIdResults() throws ReadOnlyFileException, CannotReadException, TagException, InvalidAudioFrameException, IOException {
+            final Tag tag = mWeakRef.get().mTaggerHelper.getCurrentTag();
+            mWeakRef.get().extractData();
+
+            mWeakRef.get().mTrackIdCard.animate().setDuration(DURATION).alpha(0).setListener(new AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    mWeakRef.get().mContent.setEnabled(true);
+                    mWeakRef.get().mTrackIdCard.setVisibility(GONE);
+                    mWeakRef.get().mContent.setVisibility(View.VISIBLE);
+                    mWeakRef.get().mContent.animate().setDuration(DURATION).alpha(1).setListener(new AnimatorListenerAdapter() {
+                        @Override
+                        public void onAnimationEnd(Animator animation) {
+                            String msg = "";
+
+                            //If data was update successfully
+                            if(mDataUpdated){
+                                //If only cover art was updated, added or removed
+                                if(mOperationType == TaggerHelper.MODE_ADD_COVER || mOperationType == TaggerHelper.MODE_REMOVE_COVER){
+                                    if(mMessageCode == TaggerHelper.NEW_COVER_APPLIED || mMessageCode == TaggerHelper.APPLIED_SAME_COVER){
+                                        msg = mWeakRef.get().getString(R.string.cover_updated);
+                                        mWeakRef.get().mImageSize.setText(AudioItem.getStringImageSize(mWeakRef.get().mCurrentCoverArt));
+                                    }
+                                    else if(mMessageCode == TaggerHelper.CURRENT_COVER_REMOVED){
+                                        msg = mWeakRef.get().getString(R.string.cover_removed);
+                                        mWeakRef.get().mImageSize.setText(AudioItem.getStringImageSize(null));
+                                    }
+
+                                    mWeakRef.get().mFileSize.setText(AudioItem.getFileSize(mWeakRef.get().mCurrentFile.length()));
+
+
+                                    GlideApp.with(mWeakRef.get().mViewDetailsTrack).
+                                            load(mWeakRef.get().mCurrentCoverArt)
+                                            .error(R.drawable.ic_album_white_48px)
+                                            .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.NONE))
+                                            .transition(DrawableTransitionOptions.withCrossFade(CROSS_FADE_DURATION))
+                                            .apply(RequestOptions.skipMemoryCacheOf(true))
+                                            .fitCenter()
+                                            .placeholder(R.drawable.ic_album_white_48px)
+                                            .into(mWeakRef.get().mToolbarCover);
+                                }
+                                //If all tags ro only missing were applied
+                                else if(mOperationType == TaggerHelper.MODE_OVERWRITE_ALL_TAGS || mOperationType == TaggerHelper.MODE_WRITE_ONLY_MISSING) {
+                                    //all or missing data was updated
+                                    if(mMessageCode == TaggerHelper.APPLIED_ALL_TAGS) {
+                                        msg = mWeakRef.get().getString(R.string.message_all_data_updated);
+                                    }
+                                    else if(mMessageCode == TaggerHelper.APPLIED_ONLY_MISSING_TAGS){
+                                        msg = mWeakRef.get().getString(R.string.message_missing_data_updated);
+                                    }
+                                    else if(mMessageCode == TaggerHelper.APPLIED_SAME_TAGS){
+                                        msg = mWeakRef.get().getString(R.string.message_same_tags_applied);
+                                    }
+
+                                    if(mWeakRef.get().mTaggerHelper.getCurrentArtwork() != null) {
+                                        GlideApp.with(mWeakRef.get().mViewDetailsTrack).
+                                                load(mWeakRef.get().mTaggerHelper.getCurrentArtwork())
+                                                .error(R.drawable.ic_album_white_48px)
+                                                .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.NONE))
+                                                .transition(DrawableTransitionOptions.withCrossFade(CROSS_FADE_DURATION))
+                                                .apply(RequestOptions.skipMemoryCacheOf(true))
+                                                .fitCenter()
+                                                .placeholder(R.drawable.ic_album_white_48px)
+                                                .into(mWeakRef.get().mToolbarCover);
+                                        mWeakRef.get().mFileSize.setText(AudioItem.getFileSize(mWeakRef.get().mCurrentFile.length()));
+                                        mWeakRef.get().mImageSize.setText(AudioItem.getStringImageSize(mWeakRef.get().mNewCoverArt));
+                                    }
+
+
+                                    mWeakRef.get().mLayerFileName.setText(mWeakRef.get().mCurrentFile.getName());
+                                    mWeakRef.get().mTitleField.setText(mWeakRef.get().mCurrentTitle);
+                                    mWeakRef.get().mArtistField.setText(mWeakRef.get().mCurrentArtist);
+                                    mWeakRef.get().mAlbumField.setText(mWeakRef.get().mCurrentAlbum);
+                                    mWeakRef.get().mGenreField.setText(mWeakRef.get().mCurrentGenre);
+                                    mWeakRef.get().mNumberField.setText(mWeakRef.get().mCurrentNumber);
+                                    mWeakRef.get().mYearField.setText(mWeakRef.get().mCurrentYear);
+                                    mWeakRef.get().mStatus.setText(mWeakRef.get().getStatusText());
+                                    mWeakRef.get().mStatus.setCompoundDrawablesWithIntrinsicBounds(mWeakRef.get().getStatusDrawable(),null,null,null);
+                                }
+                                //notify to adapter that one item has changed
+                                mWeakRef.get().mTrackAdapter.notifyItemChanged(mWeakRef.get().mCurrentAudioItem.getPosition());
+
+                            }
+                            //If data could not updated
+                            else {
+                                msg = mWeakRef.get().mTaggerHelper.getMessage();
+                                mWeakRef.get().setPreviousValues();
+                            }
+
+
+                            int action = mMessageCode == TaggerHelper.COULD_NOT_GET_URI_SD_ROOT_TREE ? ACTION_SD_WRITING_ENABLE_PERMISSION : ACTION_NONE;
+
+                            mWeakRef.get().showSnackBar(7000, msg,action, null);
+                            mWeakRef.get().mFloatingActionMenu.show();
+                            mWeakRef.get().mSaveButton.hide();
+                            mWeakRef.get().mToolbarCover.setEnabled(true);
+                            mWeakRef.get().mAppBarLayout.setExpanded(true);
+
+                            mWeakRef.get().cachingCurrentValues();
+                            mWeakRef.get().mOnlyCoverArt = false;
+                            mDataUpdated = false;
+                            mWeakRef.get().mEditMode = false;
+                            mWeakRef.get().disableFields();
+                            mWeakRef.get().enableMiniFabs(true);
+
+
+
+                            mWeakRef.get().mProgressBar.setVisibility(View.GONE);
+
+                            sAsyncUpdateData = null;
+                            mWeakRef.clear();
+                            mWeakRef = null;
+                            System.gc();
+
+                        }
+                    });
+
+                }
+            });
+
+
+
+        }
+
+    }
+
+    /**
+     * Saves cover art as image file, using
+     * another thread to avoid blocking UI
+     */
+
     public static class AsyncSaveFile extends AsyncTask<Void, Void, Boolean>{
+        //Data of cover art to save
         private byte[] mDataImage;
+        //Tags used for using in name of output file
         private String mTitle, mArtist, mAlbum, mPathToFile;
         private WeakReference<TrackDetailsActivity> mWeakRef;
         public AsyncSaveFile(TrackDetailsActivity trackDetailsActivity, byte[] dataImage, String... data){
@@ -2506,6 +2532,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                             new String[]{MimeTypeMap.getFileExtensionFromUrl(mPathToFile)},
                             null);
                     success = true;
+
                 }
 
             } catch (IOException e) {
@@ -2520,9 +2547,14 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
         @Override
         protected void onPostExecute(Boolean res){
             mWeakRef.get().mProgressBar.setVisibility(View.INVISIBLE);
-            if(res){
+
+            if(res.booleanValue()){
+                String relativePath = TaggerHelper.getInstance(mWeakRef.get().getApplicationContext()).getRelativePathFrom(new File(mPathToFile));
                 mWeakRef.get().
-                        showSnackBar(7000, mWeakRef.get().getString(R.string.cover_saved) + " " + AudioItem.getRelativePath(mPathToFile) + ".", ACTION_VIEW_COVER, mPathToFile);
+                        showSnackBar(7000,
+                                mWeakRef.get().getString(R.string.cover_saved) + " " + relativePath + ".",
+                                ACTION_VIEW_COVER,
+                                mPathToFile);
             }
             else {
                 mWeakRef.get().
@@ -2538,8 +2570,12 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
         protected void onCancelled(Boolean res){
             mWeakRef.get().mProgressBar.setVisibility(View.INVISIBLE);
             if(res){
+                String relativePath = TaggerHelper.getInstance(mWeakRef.get().getApplicationContext()).getRelativePathFrom(new File(mPathToFile));
                 mWeakRef.get().
-                        showSnackBar(7000, mWeakRef.get().getString(R.string.cover_saved) + " " + AudioItem.getRelativePath(mPathToFile) + ".", ACTION_VIEW_COVER, mPathToFile);
+                        showSnackBar(7000,
+                                mWeakRef.get().getString(R.string.cover_saved) + " " + relativePath + ".",
+                                ACTION_VIEW_COVER,
+                                mPathToFile);
             }
             else {
                 mWeakRef.get().

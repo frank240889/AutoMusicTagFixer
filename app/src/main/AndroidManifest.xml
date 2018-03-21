@@ -8,7 +8,7 @@
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
-    <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
 
     <application
         android:name=".AutoMusicTagFixer"
@@ -19,6 +19,7 @@
         android:label="@string/app_name"
         android:screenOrientation="portrait"
         android:supportsRtl="true"
+        android:resizeableActivity="false"
         android:theme="@style/AppTheme">
         <activity
             android:name=".SplashActivity"
@@ -55,6 +56,7 @@
             android:name=".TrackDetailsActivity"
             android:configChanges="orientation|screenSize"
             android:parentActivityName=".MainActivity"
+            android:windowSoftInputMode="adjustResize"
             android:theme="@style/DetailsTrackDialogTheme">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
@@ -75,7 +77,6 @@
             android:label="@string/title_activity_settings"
             android:parentActivityName=".MainActivity"
             android:theme="@style/SettingsStyle" />
-
         <activity
             android:name=".FullscreenViewerActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
@@ -86,11 +87,11 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="mx.dev.franco.automusictagfixer.TrackDetailsActivity" />
         </activity>
-        <!--"mx.dev.franco.automusictagfixer.fileProvider"-->
+        <!-- "mx.dev.franco.automusictagfixer.fileProvider" -->
         <!-- This provider is necessary because in android >= 7 doesn't allow to access directly to files -->
         <provider
             android:name="android.support.v4.content.FileProvider"
-            android:authorities= "${documentsAuthority}"
+            android:authorities="${documentsAuthority}"
             android:exported="false"
             android:grantUriPermissions="true">
             <meta-data
@@ -117,11 +118,13 @@
         <meta-data
             android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version" />
-
         <meta-data
             android:name="io.fabric.ApiKey"
-            android:value="3d4995f2cd3e5757faec4a2dadce6e00f2d0814e"
-            />
+            android:value="3d4995f2cd3e5757faec4a2dadce6e00f2d0814e" />
+
+        <activity
+            android:name=".TransparentActivity"
+            android:theme="@style/MyTransparentTheme" />
     </application>
 
 </manifest>

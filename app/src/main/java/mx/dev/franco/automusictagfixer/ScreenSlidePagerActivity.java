@@ -3,6 +3,7 @@ package mx.dev.franco.automusictagfixer;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
@@ -11,8 +12,6 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
-import android.view.GestureDetector;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
@@ -35,19 +34,14 @@ public class ScreenSlidePagerActivity extends FragmentActivity {
      * The pager widget, which handles animation and allows swiping horizontally to access previous
      * and next wizard steps.
      */
-    private ViewPager viewPager;
+    private ViewPager mViewPager;
 
     /**
      * The pager adapter, which provides the pages to the swipeRefreshLayout pager widget.
      */
-    private PagerAdapter pagerAdapter;
-    private static final int SWIPE_MIN_DISTANCE = 120;
-    private static final int SWIPE_MAX_OFF_PATH = 250;
-    private static final int SWIPE_THRESHOLD_VELOCITY = 200;
-    private GestureDetector gestureDetector;
-    private View.OnTouchListener gestureListener;
+    private PagerAdapter mPagerAdapter;
 
-    private Button buttonNext, buttonOmit ;
+    private Button mButtonNext, mButtonOmit;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,38 +50,28 @@ public class ScreenSlidePagerActivity extends FragmentActivity {
 
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS,
                 WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+        // Making notification bar transparent
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
+        }
 
-        gestureDetector = new GestureDetector(this, new MyGestureDetector());
-        gestureListener = new View.OnTouchListener() {
-            public boolean onTouch(View v, MotionEvent event) {
-                return gestureDetector.onTouchEvent(event);
-            }
-        };
         // Instantiate a ViewPager and a PagerAdapter.
-        viewPager = (ViewPager) findViewById(R.id.pager);
-        pagerAdapter = new ScreenSlidePagerAdapter(getSupportFragmentManager());
-        viewPager.setAdapter(pagerAdapter);
+        mViewPager = findViewById(R.id.pager);
+        mPagerAdapter = new ScreenSlidePagerAdapter(getSupportFragmentManager());
+        mViewPager.setOffscreenPageLimit(5);
+        mViewPager.setAdapter(mPagerAdapter);
 
-        buttonNext = (Button) this.findViewById(R.id.bNext);
-        buttonOmit = (Button) this.findViewById(R.id.bOmit);
-        viewPager.setOnTouchListener(gestureListener);
-        buttonOmit.setOnClickListener(new View.OnClickListener() {
+        mButtonNext = this.findViewById(R.id.bNext);
+        mButtonOmit = this.findViewById(R.id.bOmit);
+
+        mViewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(ScreenSlidePagerActivity.this, MainActivity.class);
-                onClickLastPager();
-                startActivity(intent);
-                finish();
-            }
-        });
-        buttonNext.setOnClickListener(new View.OnClickListener(){
-            @Override
-            public void onClick(View v) {
-                if (viewPager.getCurrentItem() + 1 == NUM_PAGES - 1) {
-                    buttonNext.setText(R.string.ok_button_last_slide);
-                    buttonOmit.setVisibility(View.GONE);
-                    buttonNext.setOnClickListener(null);
-                    buttonNext.setOnClickListener(new View.OnClickListener() {
+            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+                if(position == mViewPager.getChildCount() - 1){
+                    mButtonNext.setText(R.string.ok_button_last_slide);
+                    mButtonOmit.setVisibility(View.GONE);
+                    mButtonNext.setOnClickListener(null);
+                    mButtonNext.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View view) {
                             Intent intent = new Intent(ScreenSlidePagerActivity.this, MainActivity.class);
@@ -97,31 +81,96 @@ public class ScreenSlidePagerActivity extends FragmentActivity {
                         }
                     });
                 }
-                viewPager.setCurrentItem(viewPager.getCurrentItem() + 1, true);
+                else {
+                    mButtonNext.setText(R.string.nextSlide);
+                    mButtonOmit.setVisibility(View.VISIBLE);
+                    mButtonNext.setOnClickListener(new View.OnClickListener(){
+                        @Override
+                        public void onClick(View v) {
+                            if (mViewPager.getCurrentItem() + 1 == NUM_PAGES - 1) {
+                                mButtonNext.setText(R.string.ok_button_last_slide);
+                                mButtonOmit.setVisibility(View.GONE);
+                                mButtonNext.setOnClickListener(null);
+                                mButtonNext.setOnClickListener(new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View view) {
+                                        Intent intent = new Intent(ScreenSlidePagerActivity.this, MainActivity.class);
+                                        onClickLastPager();
+                                        startActivity(intent);
+                                        finish();
+                                    }
+                                });
+                            }
+                            mViewPager.setCurrentItem(mViewPager.getCurrentItem() + 1, true);
+                        }
+                    });
+                }
+            }
+
+            @Override
+            public void onPageSelected(int position) {
+
+            }
+
+            @Override
+            public void onPageScrollStateChanged(int state) {
+
             }
         });
 
-        TabLayout tabLayout = (TabLayout) findViewById(R.id.tabDots);
-        tabLayout.setupWithViewPager(viewPager, true);
+        mButtonOmit.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(ScreenSlidePagerActivity.this, MainActivity.class);
+                onClickLastPager();
+                startActivity(intent);
+                finish();
+            }
+        });
+
+        mButtonNext.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View v) {
+                if (mViewPager.getCurrentItem() + 1 == NUM_PAGES - 1) {
+                    mButtonNext.setText(R.string.ok_button_last_slide);
+                    mButtonOmit.setVisibility(View.GONE);
+                    mButtonNext.setOnClickListener(null);
+                    mButtonNext.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            Intent intent = new Intent(ScreenSlidePagerActivity.this, MainActivity.class);
+                            onClickLastPager();
+                            startActivity(intent);
+                            finish();
+                        }
+                    });
+                }
+                mViewPager.setCurrentItem(mViewPager.getCurrentItem() + 1, true);
+            }
+        });
+
+
+        TabLayout tabLayout = findViewById(R.id.tabDots);
+        tabLayout.setupWithViewPager(mViewPager, true);
     }
 
     @Override
     public void onBackPressed() {
-        if (viewPager.getCurrentItem() == 0) {
+        if (mViewPager.getCurrentItem() == 0) {
             // If the user is currently looking at the first step, allow the system to handle the
             // Back button. This calls finish() on this activity and pops the back stack.
             super.onBackPressed();
         } else {
-            buttonNext.setText(R.string.nextSlide);
-            buttonOmit.setVisibility(View.VISIBLE);
-            buttonNext.setOnClickListener(new View.OnClickListener(){
+            mButtonNext.setText(R.string.nextSlide);
+            mButtonOmit.setVisibility(View.VISIBLE);
+            mButtonNext.setOnClickListener(new View.OnClickListener(){
                 @Override
                 public void onClick(View v) {
-                    if (viewPager.getCurrentItem() + 1 == NUM_PAGES - 1) {
-                        buttonNext.setText(R.string.ok_button_last_slide);
-                        buttonOmit.setVisibility(View.GONE);
-                        buttonNext.setOnClickListener(null);
-                        buttonNext.setOnClickListener(new View.OnClickListener() {
+                    if (mViewPager.getCurrentItem() + 1 == NUM_PAGES - 1) {
+                        mButtonNext.setText(R.string.ok_button_last_slide);
+                        mButtonOmit.setVisibility(View.GONE);
+                        mButtonNext.setOnClickListener(null);
+                        mButtonNext.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View view) {
                                 Intent intent = new Intent(ScreenSlidePagerActivity.this, MainActivity.class);
@@ -131,11 +180,11 @@ public class ScreenSlidePagerActivity extends FragmentActivity {
                             }
                         });
                     }
-                    viewPager.setCurrentItem(viewPager.getCurrentItem() + 1, true);
+                    mViewPager.setCurrentItem(mViewPager.getCurrentItem() + 1, true);
                 }
             });
             // Otherwise, select the previous step.
-            viewPager.setCurrentItem(viewPager.getCurrentItem() - 1);
+            mViewPager.setCurrentItem(mViewPager.getCurrentItem() - 1);
         }
 
 
@@ -190,46 +239,6 @@ public class ScreenSlidePagerActivity extends FragmentActivity {
         @Override
         public int getCount() {
             return NUM_PAGES;
-        }
-    }
-
-    private class MyGestureDetector extends GestureDetector.SimpleOnGestureListener {
-        @Override
-        public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
-            try {
-                if (Math.abs(e1.getY() - e2.getY()) > SWIPE_MAX_OFF_PATH)
-                    return false;
-                // right to left swipe
-                if(e1.getX() - e2.getX() > SWIPE_MIN_DISTANCE && Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY) {
-
-                    if (viewPager.getCurrentItem() + 1 == NUM_PAGES - 1) {
-                        buttonNext.setText(R.string.ok_button_last_slide);
-                        buttonNext.setOnClickListener(null);
-                        buttonNext.setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View view) {
-                                Intent intent = new Intent(ScreenSlidePagerActivity.this,MainActivity.class);
-                                startActivity(intent);
-                                onClickLastPager();
-                                finish();
-                            }
-                        });
-                        buttonOmit.setVisibility(View.GONE);
-                    }
-                } else if (e2.getX() - e1.getX() > SWIPE_MIN_DISTANCE && Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY) {
-                    buttonNext.setText(R.string.nextSlide);
-                    buttonOmit.setVisibility(View.VISIBLE);
-
-                }
-            } catch (Exception e) {
-
-            }
-            return false;
-        }
-
-        @Override
-        public boolean onDown(MotionEvent e) {
-            return true;
         }
     }
 }

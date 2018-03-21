@@ -1,22 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
     android:theme="@style/AppTheme"
     app:theme="@style/AppTheme"
-    android:orientation="vertical"
-    android:weightSum="1">
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
 
     <android.support.v4.view.ViewPager
         android:id="@+id/pager"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:layout_above="@+id/tabDots"
         app:theme="@style/AppTheme"
-        android:theme="@style/AppTheme">
-
-    </android.support.v4.view.ViewPager>
+        android:theme="@style/AppTheme" />
 
     <android.support.design.widget.TabLayout
         android:id="@+id/tabDots"
@@ -24,44 +20,44 @@
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
         app:tabBackground="@drawable/tab_selector"
-        app:theme="@style/AppTheme"
-        android:theme="@style/AppTheme"
         app:tabGravity="center"
-        app:tabIndicatorHeight="0dp" />
+        app:tabIndicatorHeight="0dp"/>
 
     <RelativeLayout
-        android:id="@+id/relativeLayout3"
+        android:id="@+id/container_buttons"
         android:layout_width="match_parent"
-        android:layout_height="48dp"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentStart="true"
-        android:orientation="horizontal">
+        android:layout_height="match_parent"
+        android:layout_below="@id/pager"
+        android:gravity="center_vertical">
 
         <Button
             android:id="@+id/bOmit"
-            style="@android:style/Widget.Material.Button.Borderless"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignParentStart="true"
-            android:layout_alignParentTop="true"
-            android:elevation="0dp"
+            android:layout_gravity="center_vertical|start"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:minWidth="64dp"
+            android:padding="8dp"
             android:text="@string/omit"
             android:textAlignment="center"
-            android:textSize="16sp"
-            android:textStyle="normal" />
+            android:textSize="14sp" />
 
         <Button
             android:id="@+id/bNext"
-            style="@android:style/Widget.Material.Button.Borderless"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentEnd="true"
             android:layout_alignTop="@+id/bOmit"
-            android:elevation="0dp"
+            android:layout_centerVertical="true"
+            android:layout_gravity="center_vertical|end"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:minWidth="64dp"
+            android:padding="8dp"
             android:text="@string/nextSlide"
-            android:textSize="16sp"
-            android:textStyle="normal" />
+            android:textAlignment="center"
+            android:textSize="14sp" />
     </RelativeLayout>
 
 

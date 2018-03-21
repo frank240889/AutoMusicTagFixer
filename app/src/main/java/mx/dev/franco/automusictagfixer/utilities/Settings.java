@@ -40,6 +40,8 @@ public class Settings {
 
     public static boolean ALL_CHECKED = false;
 
+    public static boolean ENABLE_SD_CARD_ACCESS = false;
+
     public static GnImageSize setValueImageSize(String preferenceSaved){
         GnImageSize size = null;
         switch (preferenceSaved){

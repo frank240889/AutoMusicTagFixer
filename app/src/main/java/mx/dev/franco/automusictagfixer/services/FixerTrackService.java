@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
@@ -21,6 +22,10 @@ import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
+import android.view.Gravity;
+import android.view.View;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import com.crashlytics.android.Crashlytics;
 import com.gracenote.gnsdk.GnAssetFetch;
@@ -65,6 +70,7 @@ import mx.dev.franco.automusictagfixer.database.DataTrackDbHelper;
 import mx.dev.franco.automusictagfixer.database.TrackContract;
 import mx.dev.franco.automusictagfixer.list.AudioItem;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
+import mx.dev.franco.automusictagfixer.utilities.GnErrorCodes;
 import mx.dev.franco.automusictagfixer.utilities.Settings;
 import mx.dev.franco.automusictagfixer.utilities.TaggerHelper;
 
@@ -236,10 +242,22 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
         Message msg = mHandler.obtainMessage();
         mHandler.removeMessages(msg.what, msg.obj);
         mHandler = null;
-        if(!mFromEditMode) {
+        if(!mFromEditMode && mTaggerHelper != null) {
             mTaggerHelper.releaseResources();
             mTaggerHelper = null;
         }
+
+        //mGnMusicIdFileInfoManager = null;
+        //mGnMusicIdFile = null;
+        //mDataTrackDbHelper = null;
+        //mLocalBroadcastManager = null;
+        //mSelectedItems = null;
+        //mNotification = null;
+        //mErrorMessage = null;
+
+        //mGnStatusToDisplay.clear();
+        //mGnStatusToDisplay = null;
+
         System.gc();
         Log.d("onDestroy","releasing resources...");
         super.onDestroy();
@@ -299,7 +317,7 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
         //it means that one id has been sent and
         //cursor returned from this query will contain only
         //one row, if mCurrentId is equal than -1, means that no id was provided
-        //and it will get a cursor with more than one row
+        //and it will get a cursor with all rows marked as selected in MainActivity
         mSelectedItems = mDataTrackDbHelper.getAllSelected(mCurrentId, MainActivity.Sort.setDefaultOrder());
         mNumberSelected = mSelectedItems == null ? 0 : mSelectedItems.getCount();
         //if intent comes from TrackDetailsActivity means that
@@ -360,21 +378,22 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
             fullPath = mSelectedItems.getString(mSelectedItems.getColumnIndexOrThrow(TrackContract.TrackData.DATA));
 
             try {
-                //add all info available for more accurate results
-                GnMusicIdFileInfo gnMusicIdFileInfo = mGnMusicIdFileInfoManager.add(fullPath);
-                gnMusicIdFileInfo.fileName(fullPath);
-                gnMusicIdFileInfo.mediaId(String.valueOf(id));
-                gnMusicIdFileInfo.trackTitle(title);
-                gnMusicIdFileInfo.trackArtist(artist);
-                gnMusicIdFileInfo.albumTitle(album);
+                //add all info available for more accurate results.
+                //Check if file already was previously added.
+
+                    GnMusicIdFileInfo gnMusicIdFileInfo = mGnMusicIdFileInfoManager.add(fullPath);
+                    gnMusicIdFileInfo.fileName(fullPath);
+                    gnMusicIdFileInfo.mediaId(String.valueOf(id));
+                    gnMusicIdFileInfo.trackTitle(title);
+                    gnMusicIdFileInfo.trackArtist(artist);
+                    gnMusicIdFileInfo.albumTitle(album);
 
             } catch (GnException e) {
                 e.printStackTrace();
                 Crashlytics.logException(e);
                 //Service is stopped from notification "Detener" button
                 mStopService = Constants.StopsReasons.ERROR_TASK;
-                mErrorMessage = e.getMessage();
-
+                mErrorMessage = GnErrorCodes.getMessage(getApplicationContext(), e.sourceErrorCode(), fullPath);
                 stopSelf();
                 return;
             }
@@ -436,6 +455,8 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
                 iterator.next().cancel();
             }
 
+            mGnMusicIdFileList.clear();
+
         }
 
         //check cause of cancel task
@@ -470,7 +491,7 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
             }
 
             //broadcast action to interested receivers
-            mLocalBroadcastManager.sendBroadcastSync(intentAction);
+            mLocalBroadcastManager.sendBroadcast(intentAction);
         }
         //stop thread and looper
         mThread.quitSafely();
@@ -808,7 +829,7 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
         //Is it a request from MainActivity?
         if(!mFromEditMode) {
             ContentValues contentValues = new ContentValues();
-            AudioItem audioItem = new AudioItem();
+            final AudioItem audioItem = new AudioItem();
             HashMap<FieldKey, Object> tagsToApply = new HashMap<>();
 
             //Tag tag = null;
@@ -857,6 +878,9 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
                 mTaggerHelper.setTags(tagsToApply);
                 int applyAllTags = Settings.SETTING_OVERWRITE_ALL_TAGS_AUTOMATIC_MODE ? TaggerHelper.MODE_OVERWRITE_ALL_TAGS :TaggerHelper.MODE_WRITE_ONLY_MISSING;
                 boolean success = mTaggerHelper.applyTags(applyAllTags);
+                //and report to receivers that current song could
+                //not be processed
+                Intent intentActionDone = new Intent();
 
                 if(success){
                     if(mTaggerHelper.getUpdatedFields().size() > 0) {
@@ -892,13 +916,13 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
                         contentValues.put(TrackContract.TrackData.STATUS, AudioItem.STATUS_ALL_TAGS_FOUND);
                         audioItem.setStatus(AudioItem.STATUS_ALL_TAGS_FOUND);
                     }
-
                 }
+
 
                 else {
                     //if an error has ocurred, mark this file as bad
-                    //update our database
                     int code;
+                    Log.d("message code",mTaggerHelper.getMessageCode()+"");
                     switch (mTaggerHelper.getMessageCode()){
                         case TaggerHelper.COULD_NOT_APPLY_COVER:
                         case TaggerHelper.COULD_NOT_APPLY_TAGS:
@@ -915,6 +939,26 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
                             break;
                         case TaggerHelper.COULD_NOT_GET_URI_SD_ROOT_TREE:
                             code = AudioItem.STATUS_FILE_IN_SD_WITHOUT_PERMISSION;
+                            Handler handler = new Handler(Looper.getMainLooper());
+                            handler.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    String msg = String.format(getString(R.string.file_without_permission), AudioItem.getFilename(audioItem.getAbsolutePath()));
+                                    Toast toast = Toast.makeText(getApplicationContext(),msg , Toast.LENGTH_LONG);
+                                    View view = toast.getView();
+                                    TextView text = view.findViewById(android.R.id.message);
+                                    text.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.grey_900));
+                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                                        text.setTextAppearance(R.style.CustomToast);
+                                    } else {
+                                        text.setTextAppearance(getApplicationContext(), R.style.CustomToast);
+                                    }
+                                    view.setBackground(ContextCompat.getDrawable(getApplicationContext(), R.drawable.background_custom_toast));
+                                    toast.setGravity(Gravity.CENTER, 0, 0);
+                                    toast.show();
+                                }
+                            });
+
                             break;
                         default:
                             code = AudioItem.FILE_ERROR_READ;
@@ -923,22 +967,17 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
 
                     }
 
-
                     audioItem.setStatus(code);
                     contentValues.put(TrackContract.TrackData.STATUS, code);
-                    contentValues.put(TrackContract.TrackData.IS_SELECTED, false);
-                    contentValues.put(TrackContract.TrackData.IS_PROCESSING, false);
-                    mDataTrackDbHelper.updateData(audioItem.getId(), contentValues);
-
-                    //and report to receivers that current song could
-                    //not be processed
-                    Intent intentActionDone = new Intent();
                     intentActionDone.setAction(Constants.Actions.ACTION_FAIL);
                     intentActionDone.putExtra(Constants.AUDIO_ITEM, audioItem);
-                    mLocalBroadcastManager.sendBroadcastSync(intentActionDone);
+
                 }
-
-
+                //update our database and send back to activity new values of audio item
+                contentValues.put(TrackContract.TrackData.IS_SELECTED, false);
+                contentValues.put(TrackContract.TrackData.IS_PROCESSING, false);
+                mDataTrackDbHelper.updateData(audioItem.getId(), contentValues);
+                mLocalBroadcastManager.sendBroadcastSync(intentActionDone);
 
             } catch (ReadOnlyFileException | IOException | InvalidAudioFrameException | TagException | CannotReadException e) {
                 e.printStackTrace();
@@ -1057,6 +1096,7 @@ public class FixerTrackService extends Service implements IGnMusicIdFileEvents {
         //Check if is requested to stop service
         if(mStopService != Constants.StopsReasons.CONTINUE_TASK){
             stopSelf();
+            return;
         }
 
     }

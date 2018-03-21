@@ -40,14 +40,14 @@
             android:summary="@string/pref_automatically_replace_strange_chars_description"
             android:title="@string/pref_automatically_replace_strange_chars" />
     </PreferenceCategory>
-    <PreferenceCategory
+    <!--PreferenceCategory
         android:title="@string/removable_storage">
         <SwitchPreference
             android:defaultValue="false"
             android:key="key_auto_update_list"
             android:summary="@string/pref_enable_auto_update_list"
             android:title="@string/pref_title_enable_auto_update_list" />
-    </PreferenceCategory>
+    </PreferenceCategory-->
     <PreferenceCategory
         android:title="@string/enable_embed_player">
         <SwitchPreference

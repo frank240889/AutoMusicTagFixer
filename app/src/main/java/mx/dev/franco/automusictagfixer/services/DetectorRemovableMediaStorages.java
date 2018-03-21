@@ -3,6 +3,7 @@ package mx.dev.franco.automusictagfixer.services;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Build;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
@@ -14,6 +15,7 @@ import android.widget.Toast;
 
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
+import mx.dev.franco.automusictagfixer.utilities.Settings;
 import mx.dev.franco.automusictagfixer.utilities.StorageHelper;
 
 /**
@@ -51,6 +53,18 @@ public final class DetectorRemovableMediaStorages extends BroadcastReceiver{
         }
         else if(action.equals(Intent.ACTION_MEDIA_UNMOUNTED)) {
             text.setText(context.getString(R.string.media_unmounted));
+            //Revoke permission to write to SD card and remove URI from shared preferences.
+            if(Constants.URI_SD_CARD != null) {
+                int takeFlags = Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION;
+                context.getContentResolver().releasePersistableUriPermission(Constants.URI_SD_CARD, takeFlags);
+                Constants.URI_SD_CARD = null;
+                Settings.ENABLE_SD_CARD_ACCESS = false;
+            }
+
+            SharedPreferences sharedPreferences = context.getSharedPreferences(Constants.Application.FULL_QUALIFIED_NAME, Context.MODE_PRIVATE);
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.remove(Constants.URI_TREE);
+            editor.apply();
         }
 
         toast.show();

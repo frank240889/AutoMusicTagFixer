@@ -15,6 +15,7 @@ import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
+import android.preference.SwitchPreference;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.ActionBar;
 import android.util.Log;
@@ -46,6 +47,7 @@ import mx.dev.franco.automusictagfixer.utilities.StorageHelper;
  */
 public class SettingsActivity extends AppCompatPreferenceActivity{
     private static final String TAG = SettingsActivity.class.getName();
+    public SwitchPreference mSDCardAccess = null;
 
     /**
      * A preference value change listener that updates the preference's summary
@@ -212,10 +214,10 @@ public class SettingsActivity extends AppCompatPreferenceActivity{
                 Settings.SETTING_OVERWRITE_ALL_TAGS_AUTOMATIC_MODE = sharedPreferences.getBoolean(key, true);
                 Log.d(key, Settings.SETTING_OVERWRITE_ALL_TAGS_AUTOMATIC_MODE +"");
                 break;
-            case "key_auto_update_list":
+            /*case "key_auto_update_list":
                 Settings.SETTING_AUTO_UPDATE_LIST = sharedPreferences.getBoolean(key, true);
                 Log.d(key, Settings.SETTING_AUTO_UPDATE_LIST +"");
-                break;
+                break;*/
             case "key_background_service":
                 Settings.BACKGROUND_CORRECTION = sharedPreferences.getBoolean(key, true);
 
@@ -237,9 +239,42 @@ public class SettingsActivity extends AppCompatPreferenceActivity{
                 break;
 
             case "key_enable_sd_card_access":
-                requestAccessToSD();
+                Settings.ENABLE_SD_CARD_ACCESS = sharedPreferences.getBoolean(key, true);
+                if(Settings.ENABLE_SD_CARD_ACCESS){
+                    requestAccessToSD();
+                }
+                else {
+                    revokePermission();
+                }
                 break;
         }
+    }
+
+    private void revokePermission() {
+        if(Constants.URI_SD_CARD != null) {
+            int takeFlags = Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION;
+            getContentResolver().releasePersistableUriPermission(Constants.URI_SD_CARD, takeFlags);
+        }
+
+        SharedPreferences sharedPreferences = getSharedPreferences(Constants.Application.FULL_QUALIFIED_NAME, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.remove(Constants.URI_TREE);
+        editor.apply();
+
+        Toast toast = Toast.makeText(getApplicationContext(), getString(R.string.permission_revoked), Toast.LENGTH_LONG);
+        View view = toast.getView();
+        TextView text = view.findViewById(android.R.id.message);
+        text.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.grey_900));
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            text.setTextAppearance(R.style.CustomToast);
+        } else {
+            text.setTextAppearance(this.getApplicationContext(), R.style.CustomToast);
+        }
+        view.setBackground(ContextCompat.getDrawable(getApplicationContext(), R.drawable.background_custom_toast));
+        toast.setGravity(Gravity.CENTER, 0, 0);
+        toast.show();
+        Constants.URI_SD_CARD = null;
+        mSDCardAccess.setChecked(false);
     }
 
     public void requestAccessToSD() {
@@ -259,12 +294,17 @@ public class SettingsActivity extends AppCompatPreferenceActivity{
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
             addPreferencesFromResource(R.xml.pref_general);
+            ((SettingsActivity)getActivity()).mSDCardAccess = (SwitchPreference) findPreference("key_enable_sd_card_access");
             //Disable URI SD request if no removable media is detected
             if(StorageHelper.getInstance(getActivity().getApplicationContext()).getBasePaths().size()<2){
-                Preference enableSdCardAccess = findPreference("key_enable_sd_card_access");
-                enableSdCardAccess.setEnabled(false);
-                enableSdCardAccess.setSummary(getString(R.string.removable_media_no_detected));
 
+                ((SettingsActivity)getActivity()).mSDCardAccess.setEnabled(false);
+                ((SettingsActivity)getActivity()).mSDCardAccess.setSummary(getString(R.string.removable_media_no_detected));
+
+            }
+            else {
+
+                ((SettingsActivity)getActivity()).mSDCardAccess.setChecked((Constants.URI_SD_CARD != null));
             }
             setHasOptionsMenu(true);
             // Bind the summaries of EditText/List/Dialog/Ringtone preferences
@@ -316,34 +356,46 @@ public class SettingsActivity extends AppCompatPreferenceActivity{
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent resultData) {
-        if (requestCode == RequiredPermissions.REQUEST_PERMISSION_SAF && resultCode == Activity.RESULT_OK) {
+        String msg;
+        if (requestCode == RequiredPermissions.REQUEST_PERMISSION_SAF && resultCode == Activity.RESULT_OK && resultData != null) {
             // The document selected by the user won't be returned in the intent.
             // Instead, a URI to that document will be contained in the return intent
             // provided to this method as a parameter.  Pull that uri using "resultData.getData()"
-            if (resultData != null) {
                 //Save root Uri of SD card
                 Constants.URI_SD_CARD = resultData.getData();
 
                 // Persist access permissions.
-                /*final int takeFlags = resultData.getFlags() & (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-                getContentResolver().takePersistableUriPermission(Constants.URI_SD_CARD, takeFlags);*/
+                final int takeFlags = resultData.getFlags()
+                        & (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                getContentResolver().takePersistableUriPermission(Constants.URI_SD_CARD, takeFlags);
 
-            }
+                SharedPreferences sharedPreferences = getSharedPreferences(Constants.Application.FULL_QUALIFIED_NAME, Context.MODE_PRIVATE);
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                editor.putString(Constants.URI_TREE, Constants.URI_SD_CARD.toString());
+                editor.apply();
+                mSDCardAccess.setChecked(true);
+                msg = getString(R.string.permission_granted);
+                Settings.ENABLE_SD_CARD_ACCESS = true;
         }
         else {
-            Toast toast = Toast.makeText(this.getApplicationContext(), getString(R.string.permission_denied), Toast.LENGTH_LONG);
-            View view = toast.getView();
-            TextView text = (TextView) view.findViewById(android.R.id.message);
-            text.setTextColor(ContextCompat.getColor(this.getApplicationContext(), R.color.grey_900));
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                text.setTextAppearance(R.style.CustomToast);
-            } else {
-                text.setTextAppearance(this.getApplicationContext(), R.style.CustomToast);
-            }
-            view.setBackground(ContextCompat.getDrawable(this.getApplicationContext(), R.drawable.background_custom_toast));
-            toast.setGravity(Gravity.CENTER, 0, 0);
-            toast.show();
+            msg = getString(R.string.permission_denied);
+            mSDCardAccess.setChecked(false);
+            Settings.ENABLE_SD_CARD_ACCESS = false;
         }
+
+        Toast toast = Toast.makeText(this.getApplicationContext(),msg , Toast.LENGTH_LONG);
+        View view = toast.getView();
+        TextView text = view.findViewById(android.R.id.message);
+        text.setTextColor(ContextCompat.getColor(this.getApplicationContext(), R.color.grey_900));
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            text.setTextAppearance(R.style.CustomToast);
+        } else {
+            text.setTextAppearance(this.getApplicationContext(), R.style.CustomToast);
+        }
+        view.setBackground(ContextCompat.getDrawable(this.getApplicationContext(), R.drawable.background_custom_toast));
+        toast.setGravity(Gravity.CENTER, 0, 0);
+        toast.show();
+
     }
 
 }

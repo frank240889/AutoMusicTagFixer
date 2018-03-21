@@ -6,7 +6,7 @@
 
     <dimen name="dialog_corners">0dp</dimen>
     <dimen name="dialog_elevation">8dp</dimen>
-    <dimen name="standard_21">24dp</dimen>
+    <dimen name="standard_24">24dp</dimen>
     <dimen name="standard_55">55dp</dimen>
     <dimen name="standard_105">105dp</dimen>
     <dimen name="standard_155">155dp</dimen>

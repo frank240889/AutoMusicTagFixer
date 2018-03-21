@@ -40,7 +40,10 @@
         <item name="android:textViewStyle">@style/RobotoTextViewStyle</item>
     </style>
 
-
+    <style name="MyTransparentTheme" parent="Theme.AppCompat.NoActionBar">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+    </style>
 
     <!--style name="AppTheme.NoActionBar" parent="Theme.AppCompat.NoActionBar">
         <item name="windowActionBar">false</item>
@@ -52,6 +55,7 @@
         <item name="spinBars">true</item>
         <item name="color">@color/true_black</item>
     </style-->
+
 
     <style name="MyApp.ActionBarTheme" parent="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
         <item name="android:colorControlHighlight">@color/primaryLightColor</item>
@@ -73,6 +77,7 @@
         <item name="android:colorPrimary">@color/primaryColor</item>
         <item name="android:textViewStyle">@style/RobotoTextViewStyle</item>
         <item name="android:buttonStyle">@style/CustomButton</item>
+        <item name="android:textSize">20sp</item>
     </style>
 
 
@@ -88,7 +93,7 @@
 
     <style name="CustomButton" parent="@android:style/Widget.Button">
         <item name="android:textColor">@color/primaryLightColor</item>
-        <item name="android:fontFamily">sans-serif-light</item>
+        <item name="android:textViewStyle">@style/RobotoTextViewStyle</item>
     </style>
 
     <style name="CustomProgressBar" parent="Theme.AppCompat.Light">

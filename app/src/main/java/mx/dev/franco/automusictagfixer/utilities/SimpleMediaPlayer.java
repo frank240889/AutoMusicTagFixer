@@ -15,7 +15,7 @@ import mx.dev.franco.automusictagfixer.list.TrackAdapter;
  * Created by franco on 29/03/17.
  */
 
-public final class SimpleMediaPlayer extends MediaPlayer implements MediaPlayer.OnCompletionListener {
+public final class SimpleMediaPlayer extends MediaPlayer implements MediaPlayer.OnCompletionListener, MediaPlayer.OnErrorListener {
 
     private static SimpleMediaPlayer sMediaPlayer;
     private AudioItem mCurrentAudioItem;
@@ -31,6 +31,7 @@ public final class SimpleMediaPlayer extends MediaPlayer implements MediaPlayer.
         setVolume(1f,1f);
         setWakeMode(context.getApplicationContext(), PowerManager.PARTIAL_WAKE_LOCK);
         setOnCompletionListener(this);
+        setOnErrorListener(this);
     }
 
     /**
@@ -106,8 +107,19 @@ public final class SimpleMediaPlayer extends MediaPlayer implements MediaPlayer.
      */
 
     public void onCompletePlayback(){
-        mAdapter.notifyItemChanged(getCurrentPosition());
+        mAdapter.notifyItemChanged((int)getCurrentPosition2());
         sMediaPlayer.stop();
         sMediaPlayer.reset();
+    }
+
+    @Override
+    public boolean onError(MediaPlayer mp, int what, int extra) {
+        try{
+            onCompletePlayback();
+        }
+        catch (Exception e){
+            e.printStackTrace();
+        }
+        return false;
     }
 }

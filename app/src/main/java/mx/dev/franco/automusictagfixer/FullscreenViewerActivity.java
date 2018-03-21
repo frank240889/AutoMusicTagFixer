@@ -21,7 +21,7 @@ public class FullscreenViewerActivity extends AppCompatActivity {
         setContentView(R.layout.activity_fullscreen_viewer);
         Intent bundle = getIntent();
         byte[] cover = bundle.getByteArrayExtra("cover");
-        ImageView imageView = (ImageView) findViewById(R.id.imageContainerViewer);
+        ImageView imageView = findViewById(R.id.imageContainerViewer);
         imageView.setImageBitmap(BitmapFactory.decodeByteArray(cover,0,cover.length-1));
     }
 

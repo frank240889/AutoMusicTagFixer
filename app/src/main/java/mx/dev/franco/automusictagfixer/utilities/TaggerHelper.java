@@ -271,7 +271,7 @@ public final class TaggerHelper {
             return false;
         }
 
-        boolean isNeedToApplyTags = isNeedUpdateTags();
+        boolean isNeedToApplyTags = isNeededUpdateTags();
 
         if(!isNeedToApplyTags){
             setMessageCode(APPLIED_SAME_TAGS);
@@ -670,25 +670,42 @@ public final class TaggerHelper {
      * Compares if any of new tags are the same
      * than current
      */
-    private boolean isNeedUpdateTags(){
+    private boolean isNeededUpdateTags(){
 
         //Iterates over new values tag passed, to compare
-        //against the values of current tag.
+        //against the values of current tag and update only those
+        //that are different than current
         for(Map.Entry entry : mNewTags.entrySet()){
             //For case of field cover, we need to compare the length of byte array
             if(entry.getKey() == FieldKey.COVER_ART){
-                if( (mCurrentArtwork == null) || mCurrentArtwork.length == 0 || mCurrentArtwork.length != ((byte[])entry.getValue()).length){
-                    mFieldsToUpdate.put((FieldKey) entry.getKey(), entry.getValue());
+                //Write missing tags only
+                if(mOverrideAllTags == MODE_WRITE_ONLY_MISSING) {
+                    if ((mCurrentArtwork == null) || mCurrentArtwork.length == 0) {
+                        mFieldsToUpdate.put((FieldKey) entry.getKey(), entry.getValue());
+                    }
+                }
+                //Overwrite tags, but last comparision is to check if new cover is same
+                //than current, if is the same we don't update the field
+                else {
+                    if ((mCurrentArtwork == null) || mCurrentArtwork.length == 0 || mCurrentArtwork.length != ((byte[])entry.getValue()).length ) {
+                        mFieldsToUpdate.put((FieldKey) entry.getKey(), entry.getValue());
+                    }
                 }
             }
             //Compare for other fields if current value tag exist, and if current value tags is different that new
             else {
-                if ( ( mCurrentTag.getFirst((FieldKey) entry.getKey()) == null ) ||
-                        mCurrentTag.getFirst((FieldKey) entry.getKey()).isEmpty() ||
-                        ( !mCurrentTag.getFirst((FieldKey) entry.getKey()).equals(entry.getValue()))
-                        ){
+                if(mOverrideAllTags == MODE_WRITE_ONLY_MISSING){
+                    if ( ( mCurrentTag.getFirst((FieldKey) entry.getKey()) == null ) ||
+                            mCurrentTag.getFirst((FieldKey) entry.getKey()).isEmpty() ){
+                        mFieldsToUpdate.put((FieldKey) entry.getKey(), entry.getValue());
+                    }
+                }
+                else {
+                    if( ( mCurrentTag.getFirst((FieldKey) entry.getKey()) == null ) ||
+                            !mCurrentTag.getFirst((FieldKey) entry.getKey()).equals(entry.getValue()))
                     mFieldsToUpdate.put((FieldKey) entry.getKey(), entry.getValue());
                 }
+
             }
         }
 
@@ -1022,6 +1039,11 @@ public final class TaggerHelper {
 
         return relativePath;
     }
+
+    public String getRelativePathFrom(File file){
+        return getRelativePath(file);
+    }
+
 
     /**
      * Returns the relative path of
