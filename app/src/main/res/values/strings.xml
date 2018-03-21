@@ -9,7 +9,7 @@
     <string name="step_2">¿Cómo te ayuda? Corrigiendo el nombre del archivo, título de canción, artista, álbum, etc, incluso la imagen del álbum.</string>
     <string name="step_3">Solo déjala buscar y listar las canciones de tu smartphone.</string>
     <string name="step_4">Luego toca una cancion para corregirla en modo manual, semiautomático o automático.</string>
-    <string name="step_5">O selecciona varias canciones y pulsa el botón amarillo para corregirlas automaticamente, una tras otra sin que hagas algo más, solo esperar.</string>
+    <string name="step_5">O selecciona varias canciones y pulsa {gmd-photo-filter} para corregirlas automaticamente, una tras otra sin que hagas algo más, solo esperar.</string>
     <string name="ok_button_last_slide">ENTENDIDO</string>
 
 
@@ -255,8 +255,8 @@
     <string-array name="answers">
         <item>Para cada canción que tienes en tu smartphone, genera una huella digital del audio, posteriormente, consulta en un base de datos esa huella y obtiene la información correspondiente de la canción.</item>
         <item>Debido a que las canciones se almacenan en la memoria, ya sea interna o externa de tu smartphone, es necesario el permiso para poder leerlas; es el único permiso requerido, de lo contrario, la aplicación no tendrá funcionalidad útil.</item>
-        <item>Solo toca una canción de la lista y elige el modo de corrección, o si prefieres, puedes chequear las que quieras corregir y posteriormente oprimir el floating action button amarillo de la esquina inferior derecha para corregir esas canciones en modo automático.</item>
-        <item>Es el modo en el cual tu chequeas las canciones que quieres corregir, oprimes el botón amarillo, y la aplicación corrige por ti cada canción, incluido el nombre del archivo (puedes desactivar esta opción en la Configuración), no tienes que hacer nada, solo esperar a que termine. Ten en cuenta que este modo no requiere tu intervención.</item>
+        <item>Solo toca una canción de la lista y elige el modo de corrección, o si prefieres, puedes chequear las que quieras corregir y posteriormente oprimir {gmd-photo-filter} en la esquina inferior derecha en la pantalla principal para corregir esas canciones en modo automático.</item>
+        <item>Es el modo en el cual tu chequeas las canciones que quieres corregir, oprimes el botón amarillo, y la aplicación corrige por ti cada canción, incluido el nombre del archivo (puedes desactivar esta opción en la {gmd-settings}Configuración), no tienes que hacer nada, solo esperar a que termine. Ten en cuenta que este modo no requiere tu intervención.</item>
         <item>Este modo obtendrá la información de la canción, pero no modificará la canción hasta que tu la apliques.</item>
         <item>El modo manual te permite corregir por ti mismo las etiquetas de cada canción, incluida la caŕatula, si es que tienes la información a la mano. Toca la carátula de cada canción de la lista para más opciones.</item>
         <item>Actualmente Mp3, Mp4 (Mp4 audio, M4a y M4p audio) Ogg Vorbis, Flac, Wma y limitado soporte a Wav y Real audio, que son los que soporta la librería JAudioTagger. Aunque podrían ser menos formatos ya que Android no soporta algunos tipos de audio de manera nativa, por ejemplo Wma; en futuras actualizaciones de la aplicación se soportará la totalidad de tipos de archivo.</item>
@@ -268,9 +268,9 @@
         <item>La aplicación consulta una base de datos con información de 200 millones de canciones (http://www.gracenote.com/music/music-recognition/), por lo que es probable
         que la canción que estas tratando de corregir, haya sido descargada/convertida de una fuente de audio de baja calidad y la huella digital generada es inexistente, por favor intenta descargar/convertir con mayor
         calidad tus canciones o corrígela manualmente.</item>
-        <item>Revisa en las opciones de Configuración->Consumo de datos y selecciona otro tamaño de carátula, no todos los tamaños están disponibles para cada canción.</item>
+        <item>Revisa en las opciones de {gmd-settings}Configuración->{gmd-data-usage}Consumo de datos y selecciona otro tamaño de carátula, no todos los tamaños están disponibles para cada canción.</item>
         <item>Depende de la conexión a la red, si es buena, tardará entre unos 5 a 10 segundos; si la conexión es lenta puede demorar más.</item>
-        <item>La corrección de canciones puede funcionar en segundo plano en el modo automático (puedes desactivar esta opción en Configuración), y asi la corrección seguirá hasta que termine o la detengas.
+        <item>La corrección de canciones puede funcionar en segundo plano en el modo automático (puedes desactivar esta opción en {gmd-settings}Configuración), y asi la corrección seguirá hasta que termine o la detengas.
         Si esta opción no esta activa se cancelará el proceso de corrección cuando la cierres. Para los demás modos, la corrección se interrumpirá si cierras la aplicación.</item>
         <item>AutoMusicTagFixer comprueba el estado de la red y la conexión a internet, por lo que si no detecta una conexión activa a internet no funcionará el modo automático, semiautomático y descarga de carátula; si esta en curso una corrección
         simplemente se detendrá la corrección. El modo manual no requiere internet.</item>

@@ -13,6 +13,8 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.mikepenz.iconics.view.IconicsTextView;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -56,7 +58,7 @@ public class QuestionsActivity extends AppCompatActivity implements Toolbar.OnMe
         mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                TextView answer = (TextView) view.findViewById(R.id.answer);
+                IconicsTextView answer = view.findViewById(R.id.answer);
                 if(answer.getVisibility() == View.GONE){
                     answer.setVisibility(View.VISIBLE);
                 }

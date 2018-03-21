@@ -37,7 +37,7 @@
         app:borderWidth="0dp"
         android:theme="@style/CustomFab"
         app:pressedTranslationZ="12dp"
-        app:srcCompat="@drawable/ic_magic_wand_auto_fix_button" />
+        app:srcCompat="@drawable/ic_photo_filter_white_24px" />
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/fab_stop"
         android:layout_width="wrap_content"

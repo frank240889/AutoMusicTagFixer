@@ -52,7 +52,7 @@ public class SplashActivity extends AppCompatActivity{
         SharedPreferences preferences2 =  getSharedPreferences(Constants.Application.FULL_QUALIFIED_NAME, Context.MODE_PRIVATE);
         String uriString = preferences2.getString(Constants.URI_TREE, null);
         Constants.URI_SD_CARD = uriString != null ? Uri.parse(uriString) : null;
-        boolean firstTime= preferences2.getBoolean("first", true);
+        boolean firstTime  = preferences2.getBoolean("first", true);
         Settings.SETTING_SORT = preferences2.getInt(Constants.SORT_KEY, 0);
         //do we have permission to access files?
         RequiredPermissions.ACCESS_GRANTED_FILES = ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
