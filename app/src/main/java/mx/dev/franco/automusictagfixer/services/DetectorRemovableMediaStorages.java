@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
+import android.preference.PreferenceManager;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
@@ -65,6 +66,11 @@ public final class DetectorRemovableMediaStorages extends BroadcastReceiver{
             SharedPreferences.Editor editor = sharedPreferences.edit();
             editor.remove(Constants.URI_TREE);
             editor.apply();
+
+            SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+            SharedPreferences.Editor e  = preferences.edit();
+            e.putBoolean("key_enable_sd_card_access",false);
+            e.commit();
         }
 
         toast.show();
@@ -79,7 +85,7 @@ public final class DetectorRemovableMediaStorages extends BroadcastReceiver{
             Intent intentStopService = new Intent();
             intentStopService.setAction(Constants.Actions.ACTION_STOP_SERVICE);
             intentStopService.putExtra(Constants.Actions.ACTION_STOP_SERVICE, Constants.StopsReasons.CANCEL_TASK);
-            mLocalBroadcastManager.sendBroadcastSync(intent);
+            mLocalBroadcastManager.sendBroadcast(intent);
         }
 
     }

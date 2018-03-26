@@ -101,7 +101,8 @@
 
     </android.support.design.widget.AppBarLayout>
 
-    <include layout="@layout/content_details_track" />
+        <include layout="@layout/content_details_track" />
+
 
     <include layout="@layout/details_item_trackid" />
 
@@ -111,15 +112,10 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_margin="@dimen/standard_24"
-        android:scaleType="fitCenter"
-        android:elevation="6dp"
-        app:elevation="6dp"
-        app:borderWidth="0dp"
         app:fabSize="mini"
-        android:theme="@style/CustomMiniFab"
+        android:tint="@color/grey_800"
         app:useCompatPadding="true"
-        app:pressedTranslationZ="12dp"
-        app:srcCompat="@drawable/ic_edit_white" />
+        android:src="@drawable/ic_edit_white" />
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/fabDownloadCover"
@@ -127,15 +123,10 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_margin="@dimen/standard_24"
-        android:scaleType="fitCenter"
-        android:elevation="6dp"
-        app:elevation="6dp"
-        app:borderWidth="0dp"
         app:fabSize="mini"
-        android:theme="@style/CustomMiniFab"
+        android:tint="@color/grey_800"
         app:useCompatPadding="true"
-        app:pressedTranslationZ="12dp"
-        app:srcCompat="@drawable/ic_photo_white" />
+        android:src="@drawable/ic_photo_white" />
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/fabAutofix"
@@ -143,15 +134,10 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_margin="@dimen/standard_24"
-        android:scaleType="fitCenter"
-        android:elevation="6dp"
-        app:elevation="6dp"
-        app:borderWidth="0dp"
         app:fabSize="mini"
-        android:theme="@style/CustomMiniFab"
+        android:tint="@color/grey_800"
         app:useCompatPadding="true"
-        app:pressedTranslationZ="12dp"
-        app:srcCompat="@drawable/ic_photo_filter_white_24px" />
+        android:src="@drawable/ic_photo_filter_white_24px" />
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/fabMenu"
@@ -159,14 +145,9 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_margin="@dimen/fab_margin"
-        android:scaleType="fitCenter"
-        android:elevation="6dp"
-        app:elevation="6dp"
-        app:borderWidth="0dp"
-        android:theme="@style/CustomFab"
+        android:tint="@color/grey_800"
         app:useCompatPadding="true"
-        app:pressedTranslationZ="12dp"
-        app:srcCompat="@drawable/ic_add_white_24px" />
+        android:src="@drawable/ic_add_white_24px" />
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/fabSaveInfo"
@@ -174,14 +155,9 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_margin="@dimen/fab_margin"
-        android:scaleType="fitCenter"
-        android:elevation="6dp"
-        app:elevation="6dp"
-        app:borderWidth="0dp"
-        android:theme="@style/CustomFab"
+        android:tint="@color/grey_800"
         app:useCompatPadding="true"
-        app:pressedTranslationZ="12dp"
-        app:srcCompat="@drawable/ic_save_white_24px" />
+        android:src="@drawable/ic_save_white_24px" />
 
 
     <ProgressBar

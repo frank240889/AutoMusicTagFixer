@@ -1,28 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="match_parent"
-    android:layout_height="match_parent">
-
-    <TextView
-        android:id="@+id/question"
+<android.support.v7.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:foreground="?selectableItemBackgroundBorderless"
+    android:stateListAnimator="@animator/default_z_transformation_card_view"
+    app:cardElevation="@dimen/cardview_default_elevation"
+    app:contentPadding="8dp"
+    app:cardUseCompatPadding="true">
+    <LinearLayout
+        android:id="@+id/container_questiom"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingBottom="10dp"
-        android:paddingEnd="10dp"
-        android:paddingStart="10dp"
-        android:paddingTop="10dp"
-        android:text="question"
-        android:textSize="16sp" />
+        android:orientation="vertical"
+        android:animateLayoutChanges="true">
+        <TextView
+            android:id="@+id/question"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingBottom="10dp"
+            android:paddingEnd="10dp"
+            android:paddingStart="10dp"
+            android:paddingTop="10dp"
+            android:text="question"
+            android:textSize="16sp" />
 
-    <com.mikepenz.iconics.view.IconicsCheckableTextView
-        android:paddingStart="10dp"
-        android:paddingEnd="10dp"
-        android:paddingBottom="10dp"
-        android:paddingTop="10dp"
-        android:id="@+id/answer"
-        android:visibility="gone"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="answer"
-        android:textSize="16sp" />
-</LinearLayout>
+        <com.mikepenz.iconics.view.IconicsTextView
+            android:id="@+id/answer"
+            android:paddingStart="10dp"
+            android:paddingEnd="10dp"
+            android:paddingBottom="10dp"
+            android:paddingTop="10dp"
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="answer"
+            android:textSize="16sp"/>
+    </LinearLayout>
+</android.support.v7.widget.CardView>

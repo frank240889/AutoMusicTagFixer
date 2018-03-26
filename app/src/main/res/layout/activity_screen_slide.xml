@@ -41,6 +41,7 @@
             android:minWidth="64dp"
             android:padding="8dp"
             android:text="@string/omit"
+            android:textColor="@color/primaryColor"
             android:textAlignment="center"
             android:textSize="14sp" />
 
@@ -56,6 +57,7 @@
             android:minWidth="64dp"
             android:padding="8dp"
             android:text="@string/nextSlide"
+            android:textColor="@color/primaryColor"
             android:textAlignment="center"
             android:textSize="14sp" />
     </RelativeLayout>

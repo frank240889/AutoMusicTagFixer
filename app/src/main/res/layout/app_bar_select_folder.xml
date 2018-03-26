@@ -32,22 +32,16 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_margin="@dimen/fab_margin"
-        android:scaleType="fitCenter"
-        app:elevation="6dp"
-        app:borderWidth="0dp"
-        android:theme="@style/CustomFab"
-        app:pressedTranslationZ="12dp"
-        app:srcCompat="@drawable/ic_photo_filter_white_24px" />
+        android:tint="@color/grey_800"
+        app:useCompatPadding="true"
+        android:src="@drawable/ic_photo_filter_white_24px" />
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/fab_stop"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_margin="@dimen/fab_margin"
-        android:scaleType="fitCenter"
-        app:elevation="6dp"
-        app:borderWidth="0dp"
-        android:theme="@style/CustomFab"
-        app:pressedTranslationZ="12dp"
-        app:srcCompat="@drawable/ic_stop_white_24dp" />
+        android:tint="@color/grey_800"
+        app:useCompatPadding="true"
+        android:src="@drawable/ic_stop_white_24dp" />
 </android.support.design.widget.CoordinatorLayout>

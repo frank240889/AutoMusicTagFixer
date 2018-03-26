@@ -62,17 +62,11 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
     //List of audioitems, we need to references: one for the filtered one
     //and the other one to original list
     private List<AudioItem> mCurrentList, mCurrentFilteredList;
-    //this property indicate us if all items were selected
-    //not used, for now
-    private boolean mAllSelected = false;
     //filters search results
     private CustomFilter mCustomFilter;
     //Comparator for ordering list
     private static Sorter mSorter;
-
-    private static AsyncLoadCover asyncLoadCover;
-    private int mVerticalScrollSpeed = 0;
-    private int mScrollingState = 0;
+    private static AsyncLoadCover sAsyncLoadCover;
 
     @SuppressWarnings("unchecked")
     public TrackAdapter(List<AudioItem> list, AudioItemHolder.ClickListener clickListener){
@@ -131,20 +125,23 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
            //We need to extracts cover arts in other thread,
            //because this operation is going to reduce performance
            //in main thread, making the scroll very laggy
-            asyncLoadCover = new AsyncLoadCover(holder.mImageView, mContext);
-            asyncLoadCover.execute(audioItem.getAbsolutePath());
+            sAsyncLoadCover = new AsyncLoadCover(holder.mImageView, mContext);
+            sAsyncLoadCover.execute(audioItem.getAbsolutePath());
 
             switch (audioItem.getStatus()) {
                 case AudioItem.STATUS_TAGS_CORRECTED_BY_SEMIAUTOMATIC_MODE:
                 case AudioItem.STATUS_ALL_TAGS_FOUND:
                 case AudioItem.STATUS_TAGS_EDITED_BY_USER:
                     holder.mCheckMark.setImageResource(R.drawable.ic_done_all_white);
+                    holder.mCheckMark.setVisibility(VISIBLE);
                     break;
                 case AudioItem.STATUS_ALL_TAGS_NOT_FOUND:
                     holder.mCheckMark.setImageResource(R.drawable.ic_done_white);
+                    holder.mCheckMark.setVisibility(VISIBLE);
                     break;
                 case AudioItem.STATUS_NO_TAGS_FOUND:
                     holder.mCheckMark.setImageResource(R.drawable.ic_error_outline_white);
+                    holder.mCheckMark.setVisibility(VISIBLE);
                     break;
                 case AudioItem.FILE_ERROR_READ:
                 case AudioItem.STATUS_COULD_NOT_APPLIED_CHANGES:
@@ -153,9 +150,11 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
                 case AudioItem.STATUS_COULD_NOT_CREATE_TEMP_FILE:
                 case AudioItem.STATUS_FILE_IN_SD_WITHOUT_PERMISSION:
                     holder.mCheckMark.setImageResource(R.drawable.ic_highlight_off_white_material);
+                    holder.mCheckMark.setVisibility(VISIBLE);
                     break;
                 default:
                     holder.mCheckMark.setImageResource(0);
+                    holder.mCheckMark.setVisibility(GONE);
                     break;
             }
 
@@ -175,15 +174,6 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
         super.onViewRecycled(holder);
         if(mContext != null)
             Glide.with(mContext).clear(holder.mImageView);
-    }
-
-    public void setVerticalSpeedScroll(int dy){
-        mVerticalScrollSpeed = dy;
-    }
-
-    public void setScrollState(int state){
-        mScrollingState = state;
-
     }
 
     /**
@@ -362,7 +352,6 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
             mArtistName = itemView.findViewById(R.id.artist_name);
             mAlbumName = itemView.findViewById(R.id.album_name);
             mProgressBar = itemView.findViewById(R.id.layer_information);
-
             mAbsolutePath = itemView.findViewById(R.id.absolute_path);
             mImageView = itemView.findViewById(R.id.coverArt);
             mCheckMark = itemView.findViewById(R.id.checkMark);
@@ -467,7 +456,7 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
                 this.mContext.clear();
                 this.mContext = null;
             }
-            asyncLoadCover = null;
+            sAsyncLoadCover = null;
             System.gc();
         }
 
@@ -488,7 +477,7 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
                                 public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
                                     mImageView= null;
                                     mContext = null;
-                                    asyncLoadCover = null;
+                                    sAsyncLoadCover = null;
                                     return false;
                                 }
 
@@ -496,7 +485,7 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
                                 public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) {
                                     mImageView= null;
                                     mContext = null;
-                                    asyncLoadCover = null;
+                                    sAsyncLoadCover = null;
                                     return false;
                                 }
                             })
@@ -602,9 +591,9 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.AudioItemHol
             mCurrentFilteredList = null;
             mCustomFilter = null;
             mSorter = null;
-            if(null != asyncLoadCover){
-                asyncLoadCover.cancel(true);
-                asyncLoadCover = null;
+            if(null != sAsyncLoadCover){
+                sAsyncLoadCover.cancel(true);
+                sAsyncLoadCover = null;
             }
             System.gc();
     }

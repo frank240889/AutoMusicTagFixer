@@ -19,6 +19,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.provider.MediaStore;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.CollapsingToolbarLayout;
@@ -123,6 +124,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
 
     //Duration of animations
     private static final int DURATION = 150;
+    private static final int ACTION_EDIT = 34;
 
     //flag to indicate that is just required to download
     //the coverart
@@ -189,6 +191,8 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
     private ActionBar mActionBar;
     private NestedScrollView mContent;
     private Snackbar mSnackbar;
+
+
     //File object to read some data
     private File mCurrentFile;
 
@@ -262,7 +266,9 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        //set status bar translucent, these calls to window object must be done before setContentView
+        //windows is the top level in the view hierarchy,
+        //it has a single Surface in which the contents of the window is rendered
+        //A Surface is an object holding pixels that are being composited to the screen.
         Window window = getWindow();
         window.setFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS,WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
         window.setAllowEnterTransitionOverlap(true);
@@ -375,6 +381,16 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                 }
             });
 
+        }
+        else if(action == ACTION_EDIT){
+            mSnackbar.setText(msg);
+            mSnackbar.setDuration(duration);
+            mSnackbar.setAction(R.string.edit, new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                editInfoTrack();
+                }
+            });
         }
         else{
             mSnackbar.setText(msg);
@@ -692,7 +708,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                         }
                     } catch(IOException e){
                         e.printStackTrace();
-                        showSnackBar(Snackbar.LENGTH_LONG, getString(R.string.error_load_image), ACTION_NONE, null);
+                        showSnackBar(Snackbar.LENGTH_SHORT, getString(R.string.error_load_image), ACTION_NONE, null);
                         mNewCoverArt = mCurrentCoverArt;
                         mNewCoverArtLength = mCurrentCoverArtLength;
                     }
@@ -722,6 +738,10 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                         editor.putString(Constants.URI_TREE, Constants.URI_SD_CARD.toString());
                         editor.apply();
                         Settings.ENABLE_SD_CARD_ACCESS = true;
+                        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+                        SharedPreferences.Editor e  = preferences.edit();
+                        e.putBoolean("key_enable_sd_card_access",true);
+                        e.commit();
                     }
                 }
                 else {
@@ -1006,7 +1026,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
         boolean success = extractData();
         if(!success){
             mCurrentAudioItem.setStatus(AudioItem.FILE_ERROR_READ);
-            showSnackBar(Snackbar.LENGTH_LONG, getString(R.string.could_not_read_file), ACTION_NONE, null);
+            showSnackBar(Snackbar.LENGTH_SHORT, getString(R.string.could_not_read_file), ACTION_NONE, null);
             mLayerFileName.setText(mCurrentFile.getName());
             mSubtitleLayer.setText(mCurrentFile.getAbsolutePath());
             mError = true;
@@ -1230,10 +1250,10 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
 
         //inform to FixerTrackService correction mode
         if(!mOnlyCoverArt) {
-            showSnackBar(Snackbar.LENGTH_LONG, getString(R.string.downloading_tags), ACTION_NONE, null);
+            showSnackBar(Snackbar.LENGTH_INDEFINITE, getString(R.string.downloading_tags), ACTION_NONE, null);
         }
         else {
-            showSnackBar(Snackbar.LENGTH_SHORT, getString(R.string.downloading_cover),ACTION_NONE, null);
+            showSnackBar(Snackbar.LENGTH_INDEFINITE, getString(R.string.downloading_cover),ACTION_NONE, null);
         }
 
         enableMiniFabs(false);
@@ -2032,7 +2052,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
             mNewCoverArt = mCurrentCoverArt;
             mNewCoverArtLength = mCurrentCoverArtLength;
             msg = getString(R.string.no_cover_art_found);
-            showSnackBar(7000, msg,ACTION_ADD_COVER, null);
+            showSnackBar(Snackbar.LENGTH_LONG, msg,ACTION_ADD_COVER, null);
         }
 
         mProgressBar.setVisibility(View.INVISIBLE);
@@ -2117,7 +2137,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                     mWeakRef.get().runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            mWeakRef.get().showSnackBar(Snackbar.LENGTH_LONG, mWeakRef.get().getString(R.string.file_status_bad),ACTION_NONE, null);
+                            mWeakRef.get().showSnackBar(Snackbar.LENGTH_LONG, mWeakRef.get().getString(R.string.no_found_tags),ACTION_EDIT, null);
                         }
                     });
 
@@ -2458,7 +2478,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
 
                             int action = mMessageCode == TaggerHelper.COULD_NOT_GET_URI_SD_ROOT_TREE ? ACTION_SD_WRITING_ENABLE_PERMISSION : ACTION_NONE;
 
-                            mWeakRef.get().showSnackBar(7000, msg,action, null);
+                            mWeakRef.get().showSnackBar(Snackbar.LENGTH_SHORT, msg,action, null);
                             mWeakRef.get().mFloatingActionMenu.show();
                             mWeakRef.get().mSaveButton.hide();
                             mWeakRef.get().mToolbarCover.setEnabled(true);
@@ -2470,7 +2490,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
                             mWeakRef.get().mEditMode = false;
                             mWeakRef.get().disableFields();
                             mWeakRef.get().enableMiniFabs(true);
-
+                            mWeakRef.get().resetValues();
 
 
                             mWeakRef.get().mProgressBar.setVisibility(View.GONE);
@@ -2551,14 +2571,14 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
             if(res.booleanValue()){
                 String relativePath = TaggerHelper.getInstance(mWeakRef.get().getApplicationContext()).getRelativePathFrom(new File(mPathToFile));
                 mWeakRef.get().
-                        showSnackBar(7000,
+                        showSnackBar(Snackbar.LENGTH_LONG,
                                 mWeakRef.get().getString(R.string.cover_saved) + " " + relativePath + ".",
                                 ACTION_VIEW_COVER,
                                 mPathToFile);
             }
             else {
                 mWeakRef.get().
-                        showSnackBar(Snackbar.LENGTH_LONG, mWeakRef.get().getString(R.string.cover_not_saved), ACTION_NONE, null);
+                        showSnackBar(Snackbar.LENGTH_SHORT, mWeakRef.get().getString(R.string.cover_not_saved), ACTION_NONE, null);
             }
             mWeakRef.get().hideTrackedIdResultsLayout();
             mWeakRef.get().mAsyncSaveFile = null;
@@ -2572,7 +2592,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements MediaPlay
             if(res){
                 String relativePath = TaggerHelper.getInstance(mWeakRef.get().getApplicationContext()).getRelativePathFrom(new File(mPathToFile));
                 mWeakRef.get().
-                        showSnackBar(7000,
+                        showSnackBar(Snackbar.LENGTH_LONG,
                                 mWeakRef.get().getString(R.string.cover_saved) + " " + relativePath + ".",
                                 ACTION_VIEW_COVER,
                                 mPathToFile);

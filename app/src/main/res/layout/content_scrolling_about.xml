@@ -33,32 +33,18 @@
             android:textAlignment="center"
             android:textSize="24sp" />
 
-        <!--TextView
-            android:id="@+id/develop_by"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
+        <com.mikepenz.iconics.view.IconicsTextView
+            android:id="@+id/contact_dev"
             android:layout_marginEnd="10dp"
             android:layout_marginStart="10dp"
             android:layout_marginTop="10dp"
-            android:text="@string/developed_by"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
             android:textAlignment="center"
-            android:textSize="18sp" />
+            android:textSize="24sp"
+            android:text="@string/contact_dev"/>
 
-        <TextView
-            android:id="@+id/developer"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginEnd="10dp"
-            android:layout_marginStart="10dp"
-            android:layout_marginTop="10dp"
-            android:drawablePadding="8dp"
-            android:drawableStart="@drawable/ic_public_white_24px"
-            android:fontFamily="sans-serif"
-            android:text="@string/developer"
-            android:textAlignment="center"
-            android:textSize="18sp" /-->
 
         <TextView
             android:id="@+id/tech_used"
@@ -116,8 +102,33 @@
             android:layout_marginTop="10dp"
             android:drawablePadding="8dp"
             android:drawableStart="@drawable/ic_public_white_24px"
-            android:text="Créditos imagen en drawer"
+            android:text="Créditos imagen en drawer."
             android:textSize="18sp"/>
+
+        <TextView
+            android:id="@+id/crashlytics_lib"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="10dp"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="10dp"
+            android:drawablePadding="8dp"
+            android:drawableStart="@drawable/ic_public_white_24px"
+            android:text="Crashlytics."
+            android:textSize="18sp"/>
+
+        <TextView
+            android:id="@+id/iconics_lib"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="10dp"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="10dp"
+            android:drawablePadding="8dp"
+            android:drawableStart="@drawable/ic_public_white_24px"
+            android:text="Android-Iconics."
+            android:textSize="18sp"/>
+
     </LinearLayout>
 
 </android.support.v4.widget.NestedScrollView>

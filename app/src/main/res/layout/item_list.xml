@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <android.support.v7.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/card_question"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:foreground="?selectableItemBackgroundBorderless"
@@ -17,15 +18,13 @@
             android:id="@+id/itemListView"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:transitionName="openDetails"
-            android:padding="8dp">
+            android:transitionName="openDetails">
 
             <ImageView
                 android:id="@+id/coverArt"
-                android:layout_width="80dp"
-                android:layout_height="80dp"
+                android:layout_width="100dp"
+                android:layout_height="100dp"
                 android:layout_centerVertical="true"
-                android:layout_marginStart="10dp"
                 android:clickable="true"
                 android:focusable="true"
                 android:scaleType="centerCrop"
@@ -39,13 +38,13 @@
                 android:layout_height="wrap_content"
                 android:layout_alignTop="@+id/coverArt"
                 android:layout_centerInParent="false"
-                android:layout_marginStart="8dp"
                 android:layout_toEndOf="@+id/coverArt"
                 android:layout_toStartOf="@+id/checkBoxTrack"
                 android:drawableStart="@drawable/ic_music_note_white_24px"
                 android:ellipsize="end"
                 android:gravity="center_vertical"
                 android:maxLines="1"
+                android:padding="8dp"
                 android:text="Track Name"
                 android:textSize="18sp" />
 
@@ -61,6 +60,8 @@
                 android:ellipsize="end"
                 android:gravity="center_vertical"
                 android:maxLines="1"
+                android:paddingEnd="8dp"
+                android:paddingStart="8dp"
                 android:singleLine="true"
                 android:text="Artist Name"
                 android:textSize="14sp" />
@@ -77,6 +78,8 @@
                 android:ellipsize="end"
                 android:gravity="center_vertical"
                 android:maxLines="1"
+                android:paddingEnd="8dp"
+                android:paddingStart="8dp"
                 android:singleLine="true"
                 android:text="Album Name"
                 android:textSize="14sp" />
@@ -108,6 +111,7 @@
                 android:layout_height="24dp"
                 android:layout_alignParentEnd="true"
                 android:layout_alignParentTop="true"
+                android:layout_margin="8dp"
                 android:background="?android:attr/selectableItemBackgroundBorderless"
                 android:tint="@color/primaryLightColor"
                 android:tintMode="src_atop" />
@@ -118,12 +122,13 @@
             android:id="@+id/layer_information"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:orientation="vertical">
+            android:visibility="gone">
+
             <ImageView
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:alpha="0.8"
-                android:background="@color/grey_800" />
+                android:background="@color/grey_900" />
 
             <ProgressBar
                 android:id="@+id/progressProcessingFile"

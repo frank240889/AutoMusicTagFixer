@@ -36,7 +36,7 @@ android {
      */
     lintOptions { checkReleaseBuilds true }
     compileSdkVersion 27
-    buildToolsVersion '27.0.0'
+    buildToolsVersion '27.0.3'
     /**
      * The defaultConfig {} block encapsulates default settings and entries for all
      * build variants, and can override some attributes in main/AndroidManifest.xml
@@ -52,9 +52,9 @@ android {
          */
         applicationId 'mx.dev.franco.automusictagfixer'
         minSdkVersion 21
-        targetSdkVersion 26
-        versionCode 4
-        versionName "1.0.3a"
+        targetSdkVersion 27
+        versionCode 5
+        versionName "1.0.4a"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
         def documentsAuthorityValue = applicationId + ".documents"
@@ -137,7 +137,7 @@ dependencies {
         transitive = true
     }
 
-    compile 'com.google.android.gms:play-services-gcm:12.0.0'
+    //implementation 'com.google.android.gms:play-services-gcm:12.0.0'
     testCompile 'junit:junit:4.12'
     annotationProcessor 'com.github.bumptech.glide:compiler:4.6.1'
 

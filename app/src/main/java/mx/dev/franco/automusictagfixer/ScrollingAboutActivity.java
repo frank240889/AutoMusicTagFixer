@@ -17,15 +17,23 @@ public class ScrollingAboutActivity extends AppCompatActivity {
         //Set layout of activity
         setContentView(R.layout.activity_scrolling_about);
         //Set an action bar
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ScrollingAboutActivity.super.onBackPressed();
+            }
+        });
 
         //Set UI elements
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        TextView jaudiotagger = (TextView) findViewById(R.id.audiotagger);
-        TextView glide = (TextView) findViewById(R.id.glide);
-        TextView gnsdk = (TextView) findViewById(R.id.gnsdk);
-        TextView drawer= (TextView) findViewById(R.id.drawer_image);
+        FloatingActionButton fab = findViewById(R.id.fab);
+        TextView jaudiotagger = findViewById(R.id.audiotagger);
+        TextView glide = findViewById(R.id.glide);
+        TextView gnsdk = findViewById(R.id.gnsdk);
+        TextView drawer = findViewById(R.id.drawer_image);
+        TextView crashlytics = findViewById(R.id.crashlytics_lib);
+        TextView iconics = findViewById(R.id.iconics_lib);
 
         //Set listener for UI elements
         fab.setOnClickListener(new View.OnClickListener() {
@@ -60,6 +68,19 @@ public class ScrollingAboutActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 openInExternalApp(Intent.ACTION_VIEW, "https://tgs266.deviantart.com/");
+            }
+        });
+
+        crashlytics.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                openInExternalApp(Intent.ACTION_VIEW, "https://fabric.io/kits/android/crashlytics");
+            }
+        });
+        iconics.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                openInExternalApp(Intent.ACTION_VIEW, "https://github.com/mikepenz/Android-Iconics");
             }
         });
         //Get action bar from toolbar

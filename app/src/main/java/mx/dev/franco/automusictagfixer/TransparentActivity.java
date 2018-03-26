@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Gravity;
@@ -67,6 +68,10 @@ public class TransparentActivity extends AppCompatActivity {
                 editor.apply();
                 mSuccess = true;
                 Settings.ENABLE_SD_CARD_ACCESS = true;
+                SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+                SharedPreferences.Editor e  = preferences.edit();
+                e.putBoolean("key_enable_sd_card_access",true);
+                e.commit();
             }
         }
         else {

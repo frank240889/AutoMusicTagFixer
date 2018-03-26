@@ -1,8 +1,8 @@
 package mx.dev.franco.automusictagfixer;
 
 import android.Manifest;
+import android.animation.LayoutTransition;
 import android.content.ActivityNotFoundException;
-import android.content.BroadcastReceiver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -62,6 +62,7 @@ import mx.dev.franco.automusictagfixer.database.DataTrackDbHelper;
 import mx.dev.franco.automusictagfixer.database.TrackContract;
 import mx.dev.franco.automusictagfixer.list.AudioItem;
 import mx.dev.franco.automusictagfixer.list.TrackAdapter;
+import mx.dev.franco.automusictagfixer.receivers.ResponseReceiver;
 import mx.dev.franco.automusictagfixer.services.ConnectivityDetector;
 import mx.dev.franco.automusictagfixer.services.FixerTrackService;
 import mx.dev.franco.automusictagfixer.services.Job;
@@ -76,7 +77,7 @@ import static mx.dev.franco.automusictagfixer.services.GnService.sApiInitialized
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
-    TrackAdapter.AudioItemHolder.ClickListener {
+    TrackAdapter.AudioItemHolder.ClickListener, ResponseReceiver.OnResponse {
     private static final long UPDATE_LIST = -2;
     public static String TAG = MainActivity.class.getName();
 
@@ -138,7 +139,7 @@ public class MainActivity extends AppCompatActivity
     private IntentFilter mFilterActionRequestUpdateList;
     private IntentFilter mFilterActionErrorApi;
     //the receiver that handles the intents from FixerTrackService
-    private ResponseReceiver mReceiver;
+    private mx.dev.franco.automusictagfixer.receivers.ResponseReceiver mReceiver;
 
     //global references to menu items
     private MenuItem mMenuItemPath, mMenuItemTitle, mMenuItemArtist, mMenuItemAlbum;
@@ -195,7 +196,7 @@ public class MainActivity extends AppCompatActivity
         mFilterActionErrorApi = new IntentFilter(Constants.Actions.ACTION_ERROR);
 
         //create receiver
-        mReceiver = new ResponseReceiver(this);
+        mReceiver = new mx.dev.franco.automusictagfixer.receivers.ResponseReceiver(this, new Handler());
         //get instance of local broadcast manager
         mLocalBroadcastManager = LocalBroadcastManager.getInstance(getApplicationContext());
 
@@ -226,21 +227,6 @@ public class MainActivity extends AppCompatActivity
         mRecyclerView.setHapticFeedbackEnabled(true);
         mRecyclerView.setSoundEffectsEnabled(true);
         ((SimpleItemAnimator) mRecyclerView.getItemAnimator()).setSupportsChangeAnimations(false);
-        mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
-            @Override
-            public void onScrolled(RecyclerView recyclerView, int dx, int dy){
-                super.onScrolled(recyclerView,dx,dy);
-                //Log.d("DY", dy+"");
-                mAudioItemArrayAdapter.setVerticalSpeedScroll(dy);
-            }
-            @Override
-            public void onScrollStateChanged(RecyclerView recyclerView, int newState){
-                super.onScrollStateChanged(recyclerView,newState);
-                //Log.d("STATE",newState+"");
-                mAudioItemArrayAdapter.setScrollState(newState);
-
-            }
-        });
 
         //get the actionbar to enable some extra functionality
         //to toolbar
@@ -264,6 +250,11 @@ public class MainActivity extends AppCompatActivity
         //attach adapter to our recyclerview
         mRecyclerView.setAdapter(mAudioItemArrayAdapter);
         //Lets implement functionality for refresh layout listener
+        mSwipeRefreshLayout.setColorSchemeColors(
+                ContextCompat.getColor(getApplicationContext(), R.color.primaryColor),
+                ContextCompat.getColor(getApplicationContext(), R.color.primaryDarkColor),
+                ContextCompat.getColor(getApplicationContext(), R.color.primaryLightColor)
+        );
         mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
@@ -340,6 +331,7 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
+        mRecyclerView.stopScroll();
         mGridLayoutManager.setSpanCount(newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE ? 2 : 1);
         super.onConfigurationChanged(newConfig);
     }
@@ -533,6 +525,8 @@ public class MainActivity extends AppCompatActivity
         // Define an expand listener for search widget
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             mSearchViewWidget = (SearchView) searchItem.getActionView();
+            mSearchViewWidget.getLayoutTransition()
+                    .enableTransitionType(LayoutTransition.CHANGING);
             MenuItem.OnActionExpandListener expandListener = new MenuItem.OnActionExpandListener() {
                 @Override
                 public boolean onMenuItemActionCollapse(MenuItem item) {
@@ -556,6 +550,13 @@ public class MainActivity extends AppCompatActivity
                 @Override
                 public boolean onMenuItemActionExpand(MenuItem item) {
 
+                    boolean isServiceRunning = ServiceHelper.withContext(getApplicationContext()).withService(FixerTrackService.CLASS_NAME).isServiceRunning();
+                    if(isServiceRunning){
+                        showSnackBar(Snackbar.LENGTH_LONG,getString(R.string.processing_task),-1);
+                        return false;
+                    }
+
+
                     //if no songs, no case to expand the search widget
                     if(mAudioItemList.size() <= 0){
                         showSnackBar(Snackbar.LENGTH_LONG, getString(R.string.no_items_found),NO_ID);
@@ -586,6 +587,8 @@ public class MainActivity extends AppCompatActivity
 
                         @Override
                         public boolean onQueryTextChange(String newText) {
+                            mRecyclerView.stopScroll();
+
                             if(mAudioItemArrayAdapter != null) {
                                 mAudioItemArrayAdapter.getFilter().filter(newText);
                             }
@@ -607,6 +610,12 @@ public class MainActivity extends AppCompatActivity
             MenuItemCompat.OnActionExpandListener expandListener = new MenuItemCompat.OnActionExpandListener() {
                 @Override
                 public boolean onMenuItemActionCollapse(MenuItem item) {
+                    boolean isServiceRunning = ServiceHelper.withContext(getApplicationContext()).withService(FixerTrackService.CLASS_NAME).isServiceRunning();
+                    if(isServiceRunning){
+                        showSnackBar(Snackbar.LENGTH_LONG,getString(R.string.processing_task),-1);
+                        return false;
+                    }
+
                     //when no searching a track, activate refresh listener
                     //of swipe layouy
                     if(mSwipeRefreshLayout != null) {
@@ -657,6 +666,7 @@ public class MainActivity extends AppCompatActivity
 
                         @Override
                         public boolean onQueryTextChange(String newText) {
+                            mRecyclerView.stopScroll();
                             if(mAudioItemArrayAdapter != null) {
                                 mAudioItemArrayAdapter.getFilter().filter(newText);
                             }
@@ -916,6 +926,8 @@ public class MainActivity extends AppCompatActivity
      */
     @Override
     public void onItemClicked(int position, View view) {
+
+
         switch (view.getId()) {
             case R.id.coverArt:
                 onClickCoverArt(view, position, Constants.CorrectionModes.VIEW_INFO);
@@ -957,6 +969,7 @@ public class MainActivity extends AppCompatActivity
         //request permission in case is necessary and update
         //our database
         if(RequiredPermissions.ACCESS_GRANTED_FILES) {
+            mRecyclerView.stopScroll();
             mAsyncFileReader = new AsyncFileReader(RE_SCAN, this);
             mAsyncFileReader.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
         }
@@ -1170,7 +1183,7 @@ public class MainActivity extends AppCompatActivity
         }
 
         final boolean allSelected = mAudioItemArrayAdapter.areAllChecked();
-
+        mRecyclerView.stopScroll();
         //Make DB operations in other thread for not blocking UI thread
         Thread thread = new Thread(new Runnable() {
             @Override
@@ -1210,6 +1223,7 @@ public class MainActivity extends AppCompatActivity
             return;
         }
 
+        mRecyclerView.stopScroll();
         sSorter.setSortParams(sortBy, sortType);
         Collections.sort(mAudioItemList, sSorter);
         mAudioItemArrayAdapter.notifyDataSetChanged();
@@ -1225,6 +1239,26 @@ public class MainActivity extends AppCompatActivity
      * @throws InterruptedException
      */
     private void correctSong(View view, final int position) throws IOException, InterruptedException {
+        boolean isServiceRunning = ServiceHelper.withContext(getApplicationContext()).withService(FixerTrackService.CLASS_NAME).isServiceRunning();
+        if(isServiceRunning){
+            Toast toast = Toast.makeText(getApplicationContext(), R.string.processing_task, Toast.LENGTH_LONG);
+            View v = toast.getView();
+            TextView text = v.findViewById(android.R.id.message);
+            text.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.grey_900));
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                text.setTextAppearance(R.style.CustomToast);
+            }
+            else {
+                text.setTextAppearance(getApplicationContext(),R.style.CustomToast);
+            }
+            v.setBackground(ContextCompat.getDrawable(getApplicationContext(), R.drawable.background_custom_toast) );
+            toast.setGravity(Gravity.CENTER, 0, 0);
+            toast.show();
+
+
+            return;
+        }
+
         final String absolutePath = (String) view.findViewById(R.id.absolute_path).getTag();
         final View getView = view.findViewById(R.id.coverArt);
 
@@ -1333,6 +1367,26 @@ public class MainActivity extends AppCompatActivity
      * @param mode indicates what mode of correction execute when enters to TrackDetailsActivity
      */
     public void onClickCoverArt(View view, int position, int mode){
+
+        boolean isServiceRunning = ServiceHelper.withContext(getApplicationContext()).withService(FixerTrackService.CLASS_NAME).isServiceRunning();
+        if(isServiceRunning){
+            Toast toast = Toast.makeText(getApplicationContext(), R.string.processing_task, Toast.LENGTH_LONG);
+            View v = toast.getView();
+            TextView text = v.findViewById(android.R.id.message);
+            text.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.grey_900));
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                text.setTextAppearance(R.style.CustomToast);
+            }
+            else {
+                text.setTextAppearance(getApplicationContext(),R.style.CustomToast);
+            }
+            v.setBackground(ContextCompat.getDrawable(getApplicationContext(), R.drawable.background_custom_toast) );
+            toast.setGravity(Gravity.CENTER, 0, 0);
+            toast.show();
+
+
+            return;
+        }
 
         AudioItem audioItem = mAudioItemArrayAdapter.getAudioItemByPosition(position);
         String path = audioItem.getAbsolutePath();
@@ -1596,7 +1650,6 @@ public class MainActivity extends AppCompatActivity
             mAudioItemArrayAdapter.notifyItemChanged(actualAudioItem.getPosition());
             //reset position because can change when we reorder the list
             actualAudioItem.setPosition(-1);
-            actualAudioItem = null;
         }
     }
 
@@ -1607,11 +1660,12 @@ public class MainActivity extends AppCompatActivity
      */
     private void setProcessingAudioItem(long id){
         AudioItem audioItem = mAudioItemArrayAdapter.getAudioItemByIdOrPath(id);
-        audioItem.setProcessing(true);
-        mRecyclerView.scrollToPosition(audioItem.getPosition());
-        mAudioItemArrayAdapter.notifyItemChanged(audioItem.getPosition());
-        audioItem.setPosition(-1);
-        audioItem = null;
+        if(audioItem != null) {
+            audioItem.setProcessing(true);
+            mRecyclerView.scrollToPosition(audioItem.getPosition());
+            mAudioItemArrayAdapter.notifyItemChanged(audioItem.getPosition());
+            audioItem.setPosition(-1);
+        }
     }
 
     /**
@@ -1622,6 +1676,58 @@ public class MainActivity extends AppCompatActivity
         if(mAudioItemList != null){
             mActionBar.setTitle(mAudioItemList.size() + " " +getString(R.string.tracks));
         }
+    }
+
+    /**
+     * Handles responses from {@link FixerTrackService}
+     * @param intent
+     */
+    @Override
+    public void onResponse(Intent intent) {
+        //get action and handle it
+        String action = intent.getAction();
+        Log.d(TAG, action);
+        switch (action) {
+            case Constants.GnServiceActions.ACTION_API_INITIALIZED:
+                    if(mAudioItemList.size() > 0 ) {
+                        if(mAudioItemList != null && !mAudioItemList.isEmpty())
+                           showSnackBar(Snackbar.LENGTH_SHORT, getString(R.string.api_initialized), NO_ID);
+                    }
+                break;
+            case Constants.Actions.ACTION_NOT_FOUND:
+                    setNewItemValues(null, intent.getLongExtra(Constants.MEDIA_STORE_ID,-1));
+                break;
+            case Constants.Actions.ACTION_FAIL:
+            case Constants.Actions.ACTION_DONE:
+                    AudioItem audioItem = intent.getParcelableExtra(Constants.AUDIO_ITEM);
+                    setNewItemValues(audioItem, audioItem.getId());
+                break;
+            case Constants.Actions.ACTION_SET_AUDIOITEM_PROCESSING:
+                    setProcessingAudioItem(intent.getLongExtra(Constants.MEDIA_STORE_ID,NO_ID));
+                break;
+            case Constants.Actions.ACTION_CONNECTION_LOST:
+            case Constants.Actions.ACTION_CANCEL_TASK:
+            case Constants.Actions.ACTION_COMPLETE_TASK:
+                    finishTaskByUser();
+                    mLocalBroadcastManager.unregisterReceiver(mReceiver);
+                break;
+            case Constants.Actions.ACTION_REQUEST_UPDATE_LIST:
+                    if(Settings.SETTING_AUTO_UPDATE_LIST) {
+                        mAsyncFileReader = new AsyncFileReader(RE_SCAN, this);
+                        mAsyncFileReader.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR);
+                    }
+                    else {
+                        showSnackBar(Snackbar.LENGTH_INDEFINITE, getString(R.string.storage_has_change), UPDATE_LIST);
+                    }
+                break;
+            default:
+                    finishTaskByUser();
+                    String msg = intent.getStringExtra(Constants.GnServiceActions.API_ERROR);
+                    showSnackBar(Snackbar.LENGTH_LONG, getString(R.string.api_error) + " " + msg, NO_ID);
+                    mLocalBroadcastManager.unregisterReceiver(mReceiver);
+                break;
+        }
+
     }
 
     /**
@@ -1805,10 +1911,10 @@ public class MainActivity extends AppCompatActivity
                     Settings.ENABLE_SD_CARD_ACCESS = false;
                 }
 
-                    SharedPreferences sharedPreferences = mWeakRef.get().getSharedPreferences(Constants.Application.FULL_QUALIFIED_NAME, Context.MODE_PRIVATE);
-                    SharedPreferences.Editor editor = sharedPreferences.edit();
-                    editor.remove(Constants.URI_TREE);
-                    editor.apply();
+                SharedPreferences sharedPreferences = mWeakRef.get().getSharedPreferences(Constants.Application.FULL_QUALIFIED_NAME, Context.MODE_PRIVATE);
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                editor.remove(Constants.URI_TREE);
+                editor.apply();
             }
             mWeakRef.clear();
             mWeakRef = null;
@@ -2009,104 +2115,6 @@ public class MainActivity extends AppCompatActivity
             values = null;
         }
 
-    }
-
-
-    /**
-     * Instance of this class handles the response from FixerTrackService
-     */
-    public static class ResponseReceiver extends BroadcastReceiver{
-        private String TAG = ResponseReceiver.class.getName();
-        private WeakReference<MainActivity> mWeakRef;
-
-        public ResponseReceiver(MainActivity mainActivity){
-            mWeakRef = new WeakReference<>(mainActivity);
-        }
-
-
-        @Override
-        public void onReceive(final Context context, final Intent intent) {
-
-            //get action and handle it
-            String action = intent.getAction();
-            Log.d(TAG, action);
-            switch (action) {
-                case Constants.GnServiceActions.ACTION_API_INITIALIZED:
-                    if(mWeakRef.get().mAudioItemList.size() > 0 ) {
-                        mWeakRef.get().runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                if(mWeakRef.get().mAudioItemList != null && !mWeakRef.get().mAudioItemList.isEmpty())
-                                    mWeakRef.get().showSnackBar(Snackbar.LENGTH_SHORT, context.getString(R.string.api_initialized), NO_ID);
-                            }
-                        });
-                    }
-                    break;
-                case Constants.Actions.ACTION_NOT_FOUND:
-                    mWeakRef.get().runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            mWeakRef.get().setNewItemValues(null, intent.getLongExtra(Constants.MEDIA_STORE_ID,-1));
-                        }
-                    });
-                    break;
-                case Constants.Actions.ACTION_FAIL:
-                case Constants.Actions.ACTION_DONE:
-                    mWeakRef.get().runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            AudioItem audioItem = intent.getParcelableExtra(Constants.AUDIO_ITEM);
-                            mWeakRef.get().setNewItemValues(audioItem, audioItem.getId());
-                        }
-                    });
-
-                    break;
-                case Constants.Actions.ACTION_SET_AUDIOITEM_PROCESSING:
-                    mWeakRef.get().runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                mWeakRef.get().setProcessingAudioItem(intent.getLongExtra(Constants.MEDIA_STORE_ID,NO_ID));
-                            }
-                        });
-                    break;
-                case Constants.Actions.ACTION_CONNECTION_LOST:
-                case Constants.Actions.ACTION_CANCEL_TASK:
-                case Constants.Actions.ACTION_COMPLETE_TASK:
-                    mWeakRef.get().runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            mWeakRef.get().finishTaskByUser();
-                            mWeakRef.get().mLocalBroadcastManager.unregisterReceiver(mWeakRef.get().mReceiver);
-                        }
-                    });
-                    break;
-                case Constants.Actions.ACTION_REQUEST_UPDATE_LIST:
-                    mWeakRef.get().runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            if(Settings.SETTING_AUTO_UPDATE_LIST) {
-                                mWeakRef.get().mAsyncFileReader = new AsyncFileReader(RE_SCAN, mWeakRef.get());
-                                mWeakRef.get().mAsyncFileReader.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR);
-                            }
-                            else {
-                                mWeakRef.get().showSnackBar(Snackbar.LENGTH_INDEFINITE,context.getString(R.string.storage_has_change), UPDATE_LIST);
-                            }
-                        }
-                    });
-                    break;
-                default:
-                    mWeakRef.get().runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            mWeakRef.get().finishTaskByUser();
-                            String msg = intent.getStringExtra(Constants.GnServiceActions.API_ERROR);
-                            mWeakRef.get().showSnackBar(Snackbar.LENGTH_LONG, context.getString(R.string.api_error) + " " + msg, NO_ID);
-                            mWeakRef.get().mLocalBroadcastManager.unregisterReceiver(mWeakRef.get().mReceiver);
-                        }
-                    });
-                    break;
-            }
-        }
     }
 
     /**

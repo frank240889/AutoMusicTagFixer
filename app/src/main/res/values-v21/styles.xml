@@ -2,9 +2,8 @@
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.AppCompat.NoActionBar">
         <item name="android:colorPrimary">@color/primaryColor</item>
-        <item name="android:colorAccent">@color/primaryDarkColor</item>
-        <item name="android:textViewStyle">@style/RobotoTextViewStyle</item>
-        <item name="android:buttonStyle">@style/CustomButton</item>
+        <item name="android:colorPrimaryDark">@color/primaryDarkColor</item>
+        <item name="android:colorAccent">@color/primaryLightColor</item>
         <item name="android:colorControlActivated">@color/primaryColor</item>
         <item name="android:colorControlHighlight">@color/primaryLightColor</item>
         <item name="android:windowContentTransitions">true</item>
@@ -13,31 +12,30 @@
     </style>
 
     <style name="MainActivityTheme" parent="AppTheme">
-
-    </style>
-
-    <!--Style splash-->
-    <style name="SplashTheme" parent="AppTheme">
-        <item name="android:windowBackground">@drawable/background_splash</item>
-        <item name="android:textViewStyle">@style/RobotoTextViewStyle</item>
-        <item name="android:buttonStyle">@style/CustomButton</item>
-        <item name="android:windowTranslucentNavigation">true</item>
+        <item name="colorAccent">@color/primaryColor</item>
     </style>
 
     <!--Style details track details activity-->
     <style name="DetailsTrackDialogTheme" parent="AppTheme">
-        <item name="android:windowTranslucentNavigation">false</item>
+        <item name="colorAccent">@color/primaryColor</item>
+    </style>
+
+    <!--Style splash-->
+    <style name="SplashTheme" parent="Theme.AppCompat.NoActionBar">
+        <item name="android:windowBackground">@drawable/background_splash</item>
+        <item name="android:windowTranslucentNavigation">true</item>
+        <item name="android:buttonStyle">@color/primaryColor</item>
+        <item name="colorAccent">@color/primaryColor</item>
     </style>
 
     <!--Style details track dialog activity-->
     <style name="AboutTheme" parent="AppTheme">
-        <item name="android:windowTranslucentNavigation">false</item>
+        <item name="colorAccent">@color/primaryColor</item>
     </style>
 
     <!--Style details questions activity-->
     <style name="QuestionsTheme" parent="AppTheme">
-        <item name="android:colorAccent">@color/primaryColor</item>
-        <item name="android:textViewStyle">@style/RobotoTextViewStyle</item>
+        <item name="colorAccent">@color/primaryColor</item>
     </style>
 
     <style name="MyTransparentTheme" parent="Theme.AppCompat.NoActionBar">
@@ -45,79 +43,25 @@
         <item name="android:windowBackground">@android:color/transparent</item>
     </style>
 
-    <!--style name="AppTheme.NoActionBar" parent="Theme.AppCompat.NoActionBar">
-        <item name="windowActionBar">false</item>
-        <item name="windowNoTitle">true</item>
-        <item name="android:windowTranslucentNavigation">true</item>
-    </style-->
 
-    <!--style name="DrawerArrowStyle" parent="@style/Widget.AppCompat.DrawerArrowToggle">
-        <item name="spinBars">true</item>
-        <item name="color">@color/true_black</item>
-    </style-->
-
+    <style name="SettingsStyle" parent="Theme.AppCompat">
+        <item name="android:textColorPrimary">@android:color/primary_text_dark</item>
+        <item name="android:colorControlActivated">@color/primaryColor</item>
+        <item name="android:colorAccent">@color/primaryColor</item>
+        <item name="android:colorPrimary">@color/primaryColor</item>
+        <item name="android:colorControlHighlight">@color/primaryLightColor</item>
+        <item name="actionBarTheme">@style/MyApp.ActionBarTheme</item>
+        <item name="colorAccent">@color/primaryColor</item>
+    </style>
 
     <style name="MyApp.ActionBarTheme" parent="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
         <item name="android:colorControlHighlight">@color/primaryLightColor</item>
     </style>
 
-    <style name="SettingsStyle" parent="Theme.AppCompat">
-        <item name="android:textColorPrimary">@android:color/primary_text_dark</item>
-        <item name="android:colorControlActivated">@color/primaryColor</item>
-        <item name="android:fontFamily">sans-serif-light</item>
-        <item name="android:colorAccent">@color/primaryColor</item>
-        <item name="android:textViewStyle">@style/RobotoTextViewStyle</item>
-        <item name="android:colorPrimary">@color/primaryColor</item>
-        <item name="android:colorControlHighlight">@color/primaryLightColor</item>
-        <item name="actionBarTheme">@style/MyApp.ActionBarTheme</item>
-    </style>
-
-    <style name="ToolbarStyle" parent="@style/ThemeOverlay.AppCompat.Light">
-        <item name="android:textColorPrimary">@color/true_black</item>
-        <item name="android:colorPrimary">@color/primaryColor</item>
-        <item name="android:textViewStyle">@style/RobotoTextViewStyle</item>
-        <item name="android:buttonStyle">@style/CustomButton</item>
-        <item name="android:textSize">20sp</item>
-    </style>
-
-
-
-    <style name="CustomFab" parent="AppTheme">
-        <item name="android:backgroundTint">@color/primaryColor</item>
-    </style>
-
-    <style name="CustomMiniFab" parent="AppTheme">
-        <item name="android:backgroundTint">@color/primaryDarkColor</item>
-        <item name="android:disabledAlpha">0.5</item>
-    </style>
-
-    <style name="CustomButton" parent="@android:style/Widget.Button">
-        <item name="android:textColor">@color/primaryLightColor</item>
-        <item name="android:textViewStyle">@style/RobotoTextViewStyle</item>
-    </style>
-
-    <style name="CustomProgressBar" parent="Theme.AppCompat.Light">
-        <item name="colorAccent">@color/primaryLightColor</item>
-        <item name="android:progressBackgroundTint">@color/grey_900</item>
-    </style>
-
     <style name="RobotoTextViewStyle" parent="android:Widget.TextView">
-        <item name="android:fontFamily">sans-serif-light</item>
+        <!--item name="android:fontFamily">sans-serif-light</item-->
     </style>
 
-    <style name="CustomAlertDialog" parent="Theme.AppCompat.Dialog.Alert">
-        <!-- Used for the buttons -->
-        <item name="colorAccent">@color/primaryColor</item>
-        <item name="android:textViewStyle">@style/RobotoTextViewStyle</item>
-        <item name="android:buttonStyle">@style/CustomButton</item>
-        <item name="android:alertDialogStyle">@style/RobotoTextViewStyle</item>
-    </style>
-
-    <!--Style Message dialog-->
-    <style name="TextAppearance.AppCompat.Subhead" parent="Base.TextAppearance.AppCompat.Subhead"/>
-    <style name="Base.TextAppearance.AppCompat.Subhead">
-        <item name="android:fontFamily" >sans-serif-light</item>
-    </style>
 
     <!-- TextInputLayout style-->
     <style name="CustomEditTextHint" parent="AppTheme">
@@ -126,9 +70,9 @@
 
 
     <style name="CustomToast" parent="TextAppearance.AppCompat.Small">
-        <item name="android:fontFamily">sans-serif-light</item>
-        <item name="android:textColor">@color/grey_900</item>
+        <item name="android:textColor">@color/grey_800</item>
         <item name="android:padding">10dp</item>
         <item name="android:textSize">14sp</item>
     </style>
+
 </resources>

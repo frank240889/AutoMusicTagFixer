@@ -33,3 +33,8 @@
 -keep public class * extends java.lang.Exception
 #To skip running ProGuard on Crashlytics
 -keep class com.crashlytics.** { *; }
+#Exclude R from ProGuard to enable the font addon auto detection
+-keep class .R
+-keep class **.R$* {
+    <fields>;
+}

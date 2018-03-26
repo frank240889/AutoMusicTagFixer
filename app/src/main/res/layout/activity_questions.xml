@@ -3,8 +3,10 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:fitsSystemWindows="true"
-    tools:context="mx.dev.franco.automusictagfixer.QuestionsActivity">
+    tools:context="mx.dev.franco.automusictagfixer.QuestionsActivity"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior">
     <android.support.design.widget.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
@@ -17,13 +19,8 @@
 
     </android.support.design.widget.AppBarLayout>
 
-    <RelativeLayout
-        android:paddingTop="?attr/actionBarSize"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-        <ListView
-            android:id="@+id/questions_listview"
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/questions_recyclerview"
             android:layout_width="match_parent"
             android:divider="@null"
             android:dividerHeight="0dp"
@@ -31,8 +28,7 @@
             android:scrollbarStyle="outsideOverlay"
             android:scrollbarThumbVertical="@drawable/custom_scrollbar_thumb"
             android:scrollbars="vertical"
-            android:layout_height="match_parent" />
-
-    </RelativeLayout>
+            android:layout_height="match_parent"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior"/>
 
 </android.support.design.widget.CoordinatorLayout>

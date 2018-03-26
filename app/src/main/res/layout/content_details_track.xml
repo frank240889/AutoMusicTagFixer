@@ -5,11 +5,11 @@
     android:id="@+id/contentContainer"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:context=".TrackDetailsActivity"
+    tools:showIn="@layout/activity_track_details"
     android:paddingBottom="80dp"
     android:clipToPadding="false"
-    tools:showIn="@layout/activity_track_details">
+    app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
     <android.support.v7.widget.CardView
         android:id="@+id/cardviewContainer"
@@ -18,6 +18,7 @@
         android:elevation="@dimen/cardview_default_elevation"
         app:cardElevation="@dimen/cardview_default_radius"
         app:cardUseCompatPadding="true"
+        android:padding="8dp"
         app:contentPadding="8dp">
 
 
@@ -63,7 +64,6 @@
                     android:inputType="text|textNoSuggestions"
                     android:maxLength="50"
                     android:maxLines="1"
-                    android:fontFamily="sans-serif-light"
                     android:text="" />
             </android.support.design.widget.TextInputLayout>
 
@@ -85,7 +85,6 @@
                     android:inputType="text|textNoSuggestions"
                     android:maxLength="50"
                     android:maxLines="1"
-                    android:fontFamily="sans-serif-light"
                     android:text="" />
             </android.support.design.widget.TextInputLayout>
 
@@ -108,7 +107,6 @@
                     android:inputType="text|textNoSuggestions"
                     android:maxLength="50"
                     android:maxLines="1"
-                    android:fontFamily="sans-serif-light"
                     android:text="" />
             </android.support.design.widget.TextInputLayout>
 
@@ -130,7 +128,6 @@
                     android:inputType="text|textNoSuggestions"
                     android:maxLength="40"
                     android:maxLines="1"
-                    android:fontFamily="sans-serif-light"
                     android:text="" />
             </android.support.design.widget.TextInputLayout>
 
@@ -152,7 +149,6 @@
                     android:inputType="number"
                     android:maxLength="4"
                     android:maxLines="1"
-                    android:fontFamily="sans-serif-light"
                     android:text="" />
             </android.support.design.widget.TextInputLayout>
 
@@ -174,7 +170,6 @@
                     android:inputType="number"
                     android:maxLength="4"
                     android:maxLines="1"
-                    android:fontFamily="sans-serif-light"
                     android:text="" />
             </android.support.design.widget.TextInputLayout>
 

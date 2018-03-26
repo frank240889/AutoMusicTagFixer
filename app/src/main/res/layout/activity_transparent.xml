@@ -57,18 +57,10 @@
         android:padding="8dp"
         android:text="@string/enable" />
 
-    <ImageView
-        android:id="@+id/image_instructions_step1"
-        android:layout_width="match_parent"
-        android:layout_height="100dp"
-        android:layout_below="@id/request_permission_button"
-        android:layout_centerHorizontal="true"
-        android:adjustViewBounds="true"
-        android:scaleType="fitCenter"
-        android:src="@drawable/step1_1" />
+
     <TextView
         android:id="@+id/instructions_step2"
-        android:layout_below="@id/image_instructions_step1"
+        android:layout_below="@id/request_permission_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="16dp"
@@ -76,11 +68,23 @@
         android:textColor="@color/primaryLightColor"
         android:text="@string/step2"/>
 
+
+    <ImageView
+        android:id="@+id/image_instructions_step1"
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:layout_below="@id/instructions_step2"
+        android:layout_centerHorizontal="true"
+        android:adjustViewBounds="true"
+        android:scaleType="fitCenter"
+        android:src="@drawable/step1_1" />
+
+
     <ImageView
         android:id="@+id/image_instructions_step2"
         android:layout_width="match_parent"
         android:layout_height="100dp"
-        android:layout_below="@id/instructions_step2"
+        android:layout_below="@id/image_instructions_step1"
         android:layout_centerHorizontal="true"
         android:adjustViewBounds="true"
         android:scaleType="fitCenter"
