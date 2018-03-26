@@ -7,6 +7,11 @@
 4. This app uses the amazing Glide library, visit https://github.com/bumptech/glide for more information.
 5- This app and source code is made for Android >= 5, so maybe doesn't work on Android <= 4 BUT you can fork it and adapt tou your needs!!
 ********************************************************************************************************************************
+- NOTICE!: Now the app is published under beta state, so you can directly download by join it to beta program, click in below link:
+
+https://play.google.com/apps/testing/mx.dev.franco.automusictagfixer
+
+
 What does it do?
 - For every audio file you have in your smartphone (all supported audio types by Android and jAudioTagger library), it will generate an audio fingerprint, then will connect to an ACR server and will download the correct data for every song, later will allow you to correct the song with this downloaded information; in other words, it will make a Shazam-like recognition but not from audio recorded, but over audio files you have and will correct their meta tags, including filename.
 
