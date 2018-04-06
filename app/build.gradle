@@ -53,8 +53,8 @@ android {
         applicationId 'mx.dev.franco.automusictagfixer'
         minSdkVersion 21
         targetSdkVersion 27
-        versionCode 5
-        versionName "1.0.4a"
+        versionCode 7
+        versionName "1.0.6a"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
         def documentsAuthorityValue = applicationId + ".documents"

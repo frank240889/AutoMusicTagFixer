@@ -1,7 +1,6 @@
 package mx.dev.franco.automusictagfixer;
 
 import android.Manifest;
-import android.animation.LayoutTransition;
 import android.content.ActivityNotFoundException;
 import android.content.ContentValues;
 import android.content.Context;
@@ -525,8 +524,6 @@ public class MainActivity extends AppCompatActivity
         // Define an expand listener for search widget
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             mSearchViewWidget = (SearchView) searchItem.getActionView();
-            mSearchViewWidget.getLayoutTransition()
-                    .enableTransitionType(LayoutTransition.CHANGING);
             MenuItem.OnActionExpandListener expandListener = new MenuItem.OnActionExpandListener() {
                 @Override
                 public boolean onMenuItemActionCollapse(MenuItem item) {

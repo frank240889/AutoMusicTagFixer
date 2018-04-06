@@ -274,7 +274,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity{
         toast.setGravity(Gravity.CENTER, 0, 0);
         toast.show();
         Constants.URI_SD_CARD = null;
-        mSDCardAccess.setChecked(false);
     }
 
     public void requestAccessToSD() {
