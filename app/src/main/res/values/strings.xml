@@ -9,12 +9,12 @@
     <string name="step_2">¿Cómo te ayuda? Corrigiendo el nombre del archivo, título de canción, artista, álbum, etc, incluso la imagen del álbum.</string>
     <string name="step_3">Solo déjala buscar y listar las canciones de tu smartphone.</string>
     <string name="step_4">Luego toca una cancion para corregirla en modo manual, semiautomático o automático.</string>
-    <string name="step_5">O selecciona varias canciones y pulsa {gmd-photo-filter} para corregirlas automaticamente, una tras otra sin que hagas algo más, solo esperar.</string>
+    <string name="step_5">O selecciona varias canciones para corregirlas automaticamente, una tras otra sin que hagas algo más, solo esperar.</string>
     <string name="ok_button_last_slide">ENTENDIDO</string>
 
 
     <string name="title_activity_folder_choser">Biblioteca de música</string>
-    <string name="title_dialog_permision">Permiso requerido</string>
+    <string name="title_dialog_permision">Permiso de acceso a archivos requerido</string>
 
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
@@ -48,7 +48,7 @@
     <string name="data_too_long_message">Esta etiqueta es muy larga.</string>
     <string name="file_is_processing">Espera a que el modo automático termine de corregir esta canción.</string>
     <string name="title_dialog_file_error">Error en archivo</string>
-    <string name="file_error">No se puede leer la canción por que fue movida, eliminada ó renombrada, ¿Deseas quitarla de la lista?</string>
+    <string name="file_error">No se puede leer %1$s por que fue movida, eliminada ó renombrada, ¿Deseas quitarla de la lista?</string>
 
 
     <string name="no_items">No hay canciones en la lista.</string>
@@ -61,16 +61,16 @@
 
     <string name="snackbar_message_track_preview">Presiona para detener.</string>
     <string name="snackbar_message_track_is_processing">No puedes reproducir la canción mientras se corrige.</string>
-    <string name="permission_denied">No se obtuvo el permiso requerido.</string>
+    <string name="permission_denied">No se obtuvo el permiso requerido para escanear tu biblioteca, desliza hacia abajo para intentarlo de nuevo.</string>
     <string name="permission_granted_fail">No se concedio el permiso, actívalo en Configuración->General, para poder corregir las canciones de la SD.</string>
     <string name="permission_granted">Permiso para corregir las canciones de la SD concedido.</string>
-    <string name="current_file_processing">Espera que el modo automático corrija esta canción.</string>
-    <string name="initializing_recognition_api">Conectando al servicio de identificación, espera por favor...</string>
+    <string name="current_file_processing">Se esta corriengiendo esta canción.</string>
+    <string name="initializing_recognition_api">Conectando al servicio de reconocimiento, un momento por favor…</string>
     <string name="no_internet_connection_download_cover">Para descargar la carátula conectate internet.</string>
     <string name="no_internet_connection_automatic_mode">Para usar el modo automático conectate a internet.</string>
     <string name="no_internet_connection_semi_automatic_mode">Para usar el modo semi automático conectate a internet.</string>
     <string name="no_items_found">No se encontrarón canciones.</string>
-    <string name="no_found_tags">Sin etiquetas disponibles.</string>
+    <string name="no_found_tags">No se encontró ninguna coincidencia.</string>
 
     <string name="file_status_ok">Todas las etiquetas se encontraron y aplicaron.</string>
     <string name="file_status_incomplete">Faltaron algunas etiquetas, prueba a añadirlas manualmente.</string>
@@ -184,7 +184,7 @@
     <string name="new_files_found"> cancion(es) nueva(s) se han encontrado y añadido al inicio de la lista.</string>
     <string name="add_cover">Añadir de galería</string>
     <string name="automatic_mode">Modo automático</string>
-    <string name="edit_cover">Añadir/cambiar carátula de galería</string>
+    <string name="edit_cover">Actualizar carátula.</string>
     <string name="update_list">Actualizar</string>
     <string name="already_updating_list">Actualización en curso.</string>
     <string name="not_created_list">No esta disponible la lista aún.</string>
@@ -197,14 +197,14 @@
     <string name="artist">Artista</string>
     <string name="track_year">Año de publicación</string>
     <string name="dimensions">Tamaño</string>
-    <string name="apply_tags">Etiquetas nuevas</string>
+    <string name="apply_tags">Etiquetas aplicadas correctamente.</string>
     <string name="message_apply_found_tags">¿Qué etiquetas deseas aplicar a la canción?</string>
     <string name="message_apply_new_tags">¿Deseas aplicar los cambios a la canción?</string>
     <string name="swipe_up_search">Desliza hacia abajo para volver a buscar.</string>
     <string name="message_no_cover">Sin carátula</string>
     <string name="tracks">canciones</string>
     <string name="fixing_task">Corrigiendo canciones.</string>
-    <string name="cover_saved">Carátula guardada en</string>
+    <string name="cover_saved">Imagen guardada en %1$s</string>
     <string name="cover_extracted">Carátula extraida.</string>
     <string name="cover_not_saved">No se pudo guardar la carátula.</string>
     <string name="web_search">Buscar en Internet</string>
@@ -232,7 +232,7 @@
     <string name="title_activity_about">Sobre la app</string>
     <string name="developed_by">Desarrollada por</string>
     <string name="developer">Dark Yellow Studios</string>
-    <string name="technologies_used">Se usaron las siguientes librerías, tecnologías y recursos:</string>
+    <string name="technologies_used">Créditos:</string>
 
     <string-array name="questions">
         <item>1. ¿Cómo funciona la app?</item>
@@ -281,7 +281,7 @@
     <string name="title_activity_scrolling_about">SobreAutoMusicTagFixer</string>
     <string name="not_supported">Tipo no soportado</string>
     <string name="file_status_corrected_by_semiautomatic_mode">Etiquetas corregidas por el modo semiautomatico.</string>
-    <string name="connection_lost">Se ha perdido la conexión a Internet.</string>
+    <string name="connection_lost">No hay conexión a internet.</string>
     <string name="connection_recovered">Se ha reestablecido la conexión.</string>
     <string name="task_cancelled">Corrección cancelada.</string>
     <string name="checking_internet_connection">Verificando conexión a internet.</string>
@@ -320,7 +320,7 @@
     <string name="message_same_tags_applied">Se aplicaron las mismas etiquetas.</string>
     <string name="file_status_in_sd_without_permission">Se requiere el permiso de escritura a la SD para corregir esta canción..</string>
     <string name="file_without_permission">%1$s se encuentra en una SD y se require el permiso para poder modificarlo, habilitalo en la configuración.</string>
-    <string name="could_not_apply_changes">No se pudieron aplicar las etiquetas.</string>
+    <string name="could_not_apply_changes">No se pudieron aplicar los cambios.</string>
     <string name="could_not_copy_to_its_original_location">El archivo temporal no pudo ser restaurado a su ubicación original.</string>
     <string name="could_not_create_audiofile">No se pudo crear el objeto AudioFile.</string>
     <string name="instructions_request_permission">Si tienes canciones en la SD, es necesario habilitar el permiso como se muestra a continuación, de lo contrario las canciones que tengas en la SD no se podrán corregir:</string>
@@ -331,9 +331,45 @@
     <string name="touch_to_replace">Toca para añadir/cambiar carátula.</string>
     <string name="permission_revoked">Permiso de escritura a SD revocado.</string>
     <string name="file_already_added">Archivo %1$s duplicado.</string>
-    <string name="fixing">Corrigiendo etiquetas...</string>
+    <string name="fixing">Corrigiendo etiquetas…</string>
     <string name="edit">Editar</string>
     <string name="contact_dev">¿Dudas o comentarios? Contacta al desarrollador tocando {gmd-email}.</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="title_activity_main_controller">MainControllerActivity</string>
+    <string name="nav_header_title">Android Studio</string>
+    <string name="nav_header_subtitle">android.studio@android.com</string>
+    <string name="nav_header_desc">Navigation header</string>
+    <string name="action_settings">Settings</string>
+    <string name="correction_in_progress">Corrección en progreso.</string>
+    <string name="message_track">Selecciona modo de corrección para %1$s.</string>
+    <string name="yes">Si</string>
+    <string name="gathering_fingerprint">Creando huella para %1$s</string>
+    <string name="loading_tracks">Cargando lista…</string>
+    <string name="more">Más</string>
+    <string name="saf_denied">Permiso de lectura/escritura a SD denegado.</string>
+    <string name="path_to_file">Ruta de archivo</string>
+    <string name="duration">Duración</string>
+    <string name="bitrate">Bitrate</string>
+    <string name="frequency">Frecuencia</string>
+    <string name="resolution">Resolución</string>
+    <string name="file_type">Tipo de archivo</string>
+    <string name="channels">Canales</string>
+    <string name="file_size">Tamaño</string>
+    <string name="size_cover">Tamaño de carátula</string>
+    <string name="identification_interrupted">Identificación interrumpida.</string>
+    <string name="message_results">Aplicar las etiquetas.</string>
+    <string name="message_results_cover">Guardar carátula como:</string>
+    <string name="file_name">Nombre de archivo</string>
+    <string name="saving_cover">Guardando carátula…</string>
+    <string name="watch">Ver</string>
+    <string name="accept">Aceptar</string>
+    <string name="add_some_tracks">Añade canciones a tu smartphone para comenzar.</string>
+    <string name="search_label">Buscar</string>
+    <string name="no_found_items">Sin resultados para \"%1$s\"</string>
+    <string name="search_results">%1$s canciones para \"%2$s\"</string>
+    <string name="no_results">Sin resultados.</string>
 
 
 </resources>

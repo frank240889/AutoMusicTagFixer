@@ -22,7 +22,7 @@ public final class FileSaver {
     private static final String DOT = ".";
     public static final String NULL_DATA = "null data";
     public static final String NO_EXTERNAL_STORAGE_WRITABLE = "no external storage writable";
-    public static final String INPUT_OUTPUT_ERROR = "i/o error";
+    public static final String INPUT_OUTPUT_ERROR = "i/o identificationError";
 
     /**
      *
@@ -31,7 +31,7 @@ public final class FileSaver {
      * @param artist The artist of song if exist
      * @param album The album of song if exist
      * @return string absolute path where image was saved or
-     *                  any other string representing the error.
+     *                  any other string representing the identificationError.
      * @throws IOException
      */
     public static String saveImageFile(byte[] data, String title, String artist, String album) throws IOException {
@@ -42,7 +42,7 @@ public final class FileSaver {
 
         //External storage es not writable
         if(!isExternalStorageWritable()){
-            Log.e("error", "no external storage writable");
+            Log.e("identificationError", "no external storage writable");
             return NO_EXTERNAL_STORAGE_WRITABLE;
         }
 
@@ -71,7 +71,6 @@ public final class FileSaver {
             e.printStackTrace();
             if(fos != null){
                 fos.close();
-                fos = null;
             }
             return INPUT_OUTPUT_ERROR;
         }

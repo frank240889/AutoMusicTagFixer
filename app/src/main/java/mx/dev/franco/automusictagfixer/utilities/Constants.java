@@ -17,6 +17,16 @@ public class Constants {
     public static final String ALL_ITEMS_CHECKED = "all_items_checked";
     public static final String ACTION_OPEN_MAIN_ACTIVITY = "action_open_main_activity";
     public static final String URI_TREE = "uri_tree";
+    public static final String MESSAGE = "message";
+    public static final String PATH = "path";
+    public static final String TRACK_NAME = "track_name";
+    public static final String STATUS = "status";
+    public static final String SELECTED_ITEM = "selected_item";
+    public static final String LAST_SELECTED_ITEM = "lasy_selected_item";
+    public static final String TASK = "task";
+    public static final int CACHED = 0;
+    public static final int MANUAL = 1;
+    public static final int SEMIAUTOMATIC = 2;
 
     public static Uri URI_SD_CARD = null;
 
@@ -49,14 +59,35 @@ public class Constants {
         public static final String ACTION_COMPLETE_TASK = BuildConfig.APPLICATION_ID + "." + "action_complete_task";
         public static final String ACTION_SET_AUDIOITEM_PROCESSING = BuildConfig.APPLICATION_ID + "." + "action_set_audioitem_processing";
         public static final String ACTION_START_TASK = BuildConfig.APPLICATION_ID + "." +"action_start_task";
+        public static final String ACTION_TEST_NETWORK = BuildConfig.APPLICATION_ID + "." +"action_test_network";
 
         public static final String ACTION_SHOULD_CONTINUE = BuildConfig.APPLICATION_ID + "." + "action_should_continue";
         public static final String ACTION_INTERNET_CONNECTION = BuildConfig.APPLICATION_ID + "." + "action_internet_connection";
         public static final String ACTION_CONNECTION_LOST = BuildConfig.APPLICATION_ID + "." + "action_connection_lost" ;
+        public static final String ACTION_CONNECTION_RECOVERED = BuildConfig.APPLICATION_ID + "." + "action_connection_recovered" ;
         public static final String ACTION_ERROR = BuildConfig.APPLICATION_ID + "." + "action_error" ;
         public static final String ACTION_STOP_SERVICE = BuildConfig.APPLICATION_ID + "." + "action_stop_service";
 
         public static final String ACTION_REQUEST_UPDATE_LIST = BuildConfig.APPLICATION_ID + "." + "action_request_update_list";
+        public static final String ACTION_SET_AUDIOITEM_STATE_PROCESSING = BuildConfig.APPLICATION_ID + "." + "action_set_audioitem_state_processing";
+        public static final String ACTION_REQUEST_ITEM_PROCESSING = BuildConfig.APPLICATION_ID + "." + "action_request_item_processing";
+        public static final String STATUS = BuildConfig.APPLICATION_ID + ".action_report_status";
+        public static final String START_PROCESSING_FOR = BuildConfig.APPLICATION_ID + ".start_identification_for";
+        public static final String IDENTIFICATION_ERROR = BuildConfig.APPLICATION_ID + ".identification_error";
+
+        public static final String IDENTIFICATION_NOT_FOUND = BuildConfig.APPLICATION_ID + "identification_not_found";
+        public static final String IDENTIFICATION_FOUND = BuildConfig.APPLICATION_ID + ".identification_found";
+        public static final String IDENTIFICATION_COMPLETE = BuildConfig.APPLICATION_ID + ".identification_complete";
+        public static final String CANCELLED_IDENTIFICATION = BuildConfig.APPLICATION_ID+ ".cancelled_identification";
+        public static final String APPLYING_TAGS = BuildConfig.APPLICATION_ID + ".applying_tags";
+        public static final String TAGS_APPLIED = BuildConfig.APPLICATION_ID + ".tags_applied";
+        public static final String CORRECTION_ERROR = BuildConfig.APPLICATION_ID + ".correction_error";
+        public static final String CORRECTION_CANCELLED = BuildConfig.APPLICATION_ID + ".correction_task_cancelled";
+        public static final String SEND_BACK_RESULTS = BuildConfig.APPLICATION_ID + ".send_back_results";
+        public static final String ACTION_FINISHED_TASK = BuildConfig.APPLICATION_ID + ".action_finished_task";
+        public static final String ACTION_PENDING_TRACK = BuildConfig.APPLICATION_ID + ".action_pending_track";
+        public static final String ACTION_ADD_OR_REMOVE = BuildConfig.APPLICATION_ID + ".action_add_or_remove";
+        public static final String FINISH_TRACK_PROCESSING = BuildConfig.APPLICATION_ID + ".action_finish_track_processing";
     }
 
     public static class Activities {
@@ -93,8 +124,8 @@ public class Constants {
         public static final String STATUS_ERROR = "kMusicIdFileCallbackStatusError";
         public static final String STATUS_PROCESSING_ERROR = "kMusicIdFileCallbackStatusProcessingError";
 
-        public static final String BEGIN_PROCESSING_MSG = "Iniciando corrección";
-        public static final String QUERYING_INFO_MSG = "Solicitando información";
+        public static final String BEGIN_PROCESSING_MSG = "Iniciando identificación...";
+        public static final String QUERYING_INFO_MSG = "Identificando, espere por favor...";
         public static final String COMPLETE_IDENTIFICATION_MSG = "Identificación completa";
         public static final String STATUS_ERROR_MSG = "Error";
         public static final String STATUS_PROCESSING_ERROR_MSG = "Error al procesar ";

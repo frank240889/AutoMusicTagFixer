@@ -9,11 +9,15 @@ import android.os.Build;
 
 import com.crashlytics.android.Crashlytics;
 import com.crashlytics.android.core.CrashlyticsCore;
+import com.facebook.stetho.Stetho;
 import com.squareup.leakcanary.LeakCanary;
 
 import io.fabric.sdk.android.Fabric;
-import mx.dev.franco.automusictagfixer.services.ConnectivityChangesDetector;
-import mx.dev.franco.automusictagfixer.services.DetectorRemovableMediaStorages;
+import mx.dev.franco.automusictagfixer.dagger.ContextComponent;
+import mx.dev.franco.automusictagfixer.dagger.ContextModule;
+import mx.dev.franco.automusictagfixer.dagger.DaggerContextComponent;
+import mx.dev.franco.automusictagfixer.network.ConnectivityChangesDetector;
+import mx.dev.franco.automusictagfixer.receivers.DetectorRemovableMediaStorages;
 import mx.dev.franco.automusictagfixer.utilities.StorageHelper;
 
 
@@ -22,41 +26,44 @@ import mx.dev.franco.automusictagfixer.utilities.StorageHelper;
  */
 
 public final class AutoMusicTagFixer extends Application {
+    private static ContextComponent mContextComponent;
     private ConnectivityChangesDetector mConnectivityChangesDetector;
     private IntentFilter mIntentFilter;
-
     private IntentFilter mIntentFilterMediaMounted;
     private IntentFilter mIntentFilterMediaUnmounted;
     private DetectorRemovableMediaStorages mDetectorRemovableMediaStorages;
-    public static boolean IS_LOLLIPOP = Build.VERSION.SDK_INT < Build.VERSION_CODES.M;
     // Called when the application is starting, before any other application objects have been created.
     // Overriding this method is totally optional!
     @Override
     public void onCreate() {
         super.onCreate();
+        mContextComponent = DaggerContextComponent.builder().
+                contextModule(new ContextModule(this)).
+                build();
+
+
         //Fabric.with(this, new Crashlytics());
 // Set up Crashlytics, disabled for debug builds
         Crashlytics crashlyticsKit = new Crashlytics.Builder()
                 .core(new CrashlyticsCore.Builder().disabled(BuildConfig.DEBUG).build())
                 .build();
-
 // Initialize Fabric with the debug-disabled crashlytics.
         Fabric.with(this, crashlyticsKit);
         //Detect connectivity changes
         mConnectivityChangesDetector = new ConnectivityChangesDetector();
-        mIntentFilter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
+        IntentFilter filterConnectivity = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
 
-        registerReceiver(mConnectivityChangesDetector,mIntentFilter);
+        registerReceiver(mConnectivityChangesDetector,filterConnectivity);
 
         //Detect if a media is removed or added while app is running
-        mDetectorRemovableMediaStorages = new DetectorRemovableMediaStorages(getApplicationContext());
-        mIntentFilterMediaMounted = new IntentFilter(Intent.ACTION_MEDIA_MOUNTED);
-        mIntentFilterMediaMounted.addDataScheme("file");
-        mIntentFilterMediaUnmounted = new IntentFilter(Intent.ACTION_MEDIA_UNMOUNTED);
-        mIntentFilterMediaUnmounted.addDataScheme("file");
+        mDetectorRemovableMediaStorages = new DetectorRemovableMediaStorages();
+        IntentFilter filterMediaMounted = new IntentFilter(Intent.ACTION_MEDIA_MOUNTED);
+        filterMediaMounted.addDataScheme("file");
+        IntentFilter filterMediaUnmounted = new IntentFilter(Intent.ACTION_MEDIA_UNMOUNTED);
+        filterMediaUnmounted.addDataScheme("file");
 
-        registerReceiver(mDetectorRemovableMediaStorages, mIntentFilterMediaMounted);
-        registerReceiver(mDetectorRemovableMediaStorages, mIntentFilterMediaUnmounted);
+        registerReceiver(mDetectorRemovableMediaStorages, filterMediaMounted);
+        registerReceiver(mDetectorRemovableMediaStorages, filterMediaUnmounted);
         StorageHelper.getInstance(getApplicationContext()).detectStorages();
 
         if (LeakCanary.isInAnalyzerProcess(this)) {
@@ -65,6 +72,7 @@ public final class AutoMusicTagFixer extends Application {
             return;
         }
         LeakCanary.install(this);
+        Stetho.initializeWithDefaults(this);
     }
 
     // Called by the system when the device configuration changes while your component is running.
@@ -80,5 +88,9 @@ public final class AutoMusicTagFixer extends Application {
     @Override
     public void onLowMemory() {
         super.onLowMemory();
+    }
+
+    public static ContextComponent getContextComponent(){
+        return mContextComponent;
     }
 }

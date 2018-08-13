@@ -17,13 +17,13 @@
         android:hardwareAccelerated="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
+        android:resizeableActivity="false"
         android:screenOrientation="portrait"
         android:supportsRtl="true"
-        android:resizeableActivity="false"
         android:theme="@style/AppTheme"
         tools:targetApi="n">
         <activity
-            android:name=".SplashActivity"
+            android:name=".UI.SplashActivity"
             android:configChanges="orientation|screenSize"
             android:screenOrientation="portrait"
             android:theme="@style/SplashTheme">
@@ -34,66 +34,62 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".ScreenSlidePagerActivity"
+            android:name=".UI.intro.ScreenSlidePagerActivity"
             android:configChanges="orientation|screenSize"
             android:theme="@style/AppTheme" />
         <activity
-            android:name=".MainActivity"
+            android:name=".UI.intro.IntroActivity"
+            android:configChanges="orientation|screenSize"
+            android:theme="@style/Theme.Intro" />
+        <activity
+            android:name=".UI.main.MainActivity"
             android:configChanges="orientation|screenSize"
             android:label="@string/title_activity_folder_choser"
             android:screenOrientation="portrait"
-            android:theme="@style/MainActivityTheme" />
-        <activity
-            android:name=".TrackDetailsActivity"
-            android:configChanges="orientation|screenSize"
-            android:parentActivityName=".MainActivity"
-            android:windowSoftInputMode="adjustResize"
-            android:screenOrientation="portrait"
-            android:theme="@style/DetailsTrackDialogTheme">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="mx.dev.franco.automusictagfixer.MainActivity" />
+            android:theme="@style/MainActivityTheme">
+            <meta-data android:name="android.app.default_searchable"
+                android:value=".UI.search.Search" />
         </activity>
         <activity
-            android:name=".QuestionsActivity"
+            android:name=".UI.track_detail.TrackDetailsActivity"
+            android:configChanges="orientation|screenSize"
+            android:parentActivityName=".UI.main.MainActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/DetailsTrackDialogTheme"
+            android:windowSoftInputMode="adjustResize">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="mx.dev.franco.automusictagfixer.UI.main.MainActivity" />
+        </activity>
+        <activity
+            android:name=".UI.faq.QuestionsActivity"
             android:configChanges="orientation|screenSize"
             android:label="@string/faq"
-            android:parentActivityName=".MainActivity"
+            android:parentActivityName=".UI.main.MainActivity"
             android:screenOrientation="portrait"
             android:theme="@style/QuestionsTheme">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="mx.dev.franco.automusictagfixer.MainActivity" />
+                android:value="mx.dev.franco.automusictagfixer.UI.main.MainActivity" />
         </activity>
         <activity
-            android:name=".ScrollingAboutActivity"
+            android:name=".UI.about.ScrollingAboutActivity"
             android:configChanges="orientation|screenSize"
             android:label="@string/title_activity_scrolling_about"
-            android:parentActivityName=".MainActivity"
+            android:parentActivityName=".UI.main.MainActivity"
             android:screenOrientation="portrait"
             android:theme="@style/AboutTheme">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="mx.dev.franco.automusictagfixer.MainActivity" />
+                android:value="mx.dev.franco.automusictagfixer.UI.main.MainActivity" />
         </activity>
         <activity
-            android:name=".SettingsActivity"
+            android:name=".UI.settings.SettingsActivity"
             android:configChanges="orientation|screenSize"
             android:label="@string/title_activity_settings"
-            android:parentActivityName=".MainActivity"
+            android:parentActivityName=".UI.main.MainActivity"
             android:screenOrientation="portrait"
             android:theme="@style/SettingsStyle" />
-        <activity
-            android:name=".FullscreenViewerActivity"
-            android:configChanges="orientation|keyboardHidden|screenSize"
-            android:label="@string/title_activity_fullscreen_viewer"
-            android:parentActivityName=".TrackDetailsActivity"
-            android:screenOrientation="portrait"
-            android:theme="@style/FullscreenTheme">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="mx.dev.franco.automusictagfixer.TrackDetailsActivity" />
-        </activity>
         <!-- "mx.dev.franco.automusictagfixer.fileProvider" -->
         <!-- This provider is necessary because in android >= 7 doesn't allow to access directly to files -->
         <provider
@@ -122,17 +118,31 @@
  ATTENTION: This was auto-generated to add Google Play services to your project for
      App Indexing.  See https://g.co/AppIndexing/AndroidStudio for more information.
         -->
-        <!--meta-data
+        <!--
+            meta-data
             android:name="com.google.android.gms.version"
-            android:value="@integer/google_play_services_version" /-->
+            android:value="@integer/google_play_services_version" /
+        -->
         <meta-data
             android:name="io.fabric.ApiKey"
             android:value="3d4995f2cd3e5757faec4a2dadce6e00f2d0814e" />
 
         <activity
-            android:name=".TransparentActivity"
+            android:name=".UI.sd_card_instructions.TransparentActivity"
             android:screenOrientation="portrait"
-            android:theme="@style/MyTransparentTheme" />
+            android:theme="@style/MyTransparentTheme"/>
+        <activity android:name=".UI.search.Search"
+            android:configChanges="orientation|screenSize"
+            android:screenOrientation="portrait"
+            android:theme="@style/MainActivityTheme"
+            android:launchMode="singleTop">
+            <intent-filter>
+                <action android:name="android.intent.action.SEARCH"/>
+            </intent-filter>
+            <meta-data
+                android:name="android.app.searchable"
+                android:resource="@xml/searchable" />
+        </activity>
     </application>
 
 </manifest>

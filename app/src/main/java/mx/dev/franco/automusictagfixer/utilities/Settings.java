@@ -28,11 +28,11 @@ public class Settings {
     //is true, otherwise it will be shown an alert indicating that data entered by user is not valid
     public static volatile boolean SETTING_REPLACE_STRANGE_CHARS_MANUAL_MODE = true;
     //default sort is by ascendant location
-    public static int SETTING_SORT = 0;
+    public static String SETTING_SORT = null;
     public static boolean SETTING_USE_EMBED_PLAYER = true;
     //Determine the size of downloaded cover art, default value is not download cover art.
     public static volatile GnImageSize SETTING_SIZE_ALBUM_ART = GnImageSize.kImageSizeUnknown;
-    //if true, will be overwritten all tags found by service in automatic mode
+    //if true, will be overwritten all tags identificationFound by service in automatic mode
     //else, only missing tags will be written
     public static volatile boolean SETTING_OVERWRITE_ALL_TAGS_AUTOMATIC_MODE = false;
 

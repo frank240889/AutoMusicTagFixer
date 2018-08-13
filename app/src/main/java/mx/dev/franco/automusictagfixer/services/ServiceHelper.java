@@ -3,7 +3,10 @@ package mx.dev.franco.automusictagfixer.services;
 import android.app.ActivityManager;
 import android.content.Context;
 
+import mx.dev.franco.automusictagfixer.network.ConnectivityDetector;
+
 import static android.content.Context.ACTIVITY_SERVICE;
+import static mx.dev.franco.automusictagfixer.services.gnservice.GnService.sApiInitialized;
 
 /**
  * Created by franco on 30/10/17.
@@ -23,31 +26,16 @@ public class ServiceHelper {
      * @param context
      * @return ServicerHelper singleton
      */
-    public static ServiceHelper withContext(Context context){
+    public static ServiceHelper getInstance(Context context){
         if(sServiceHelper == null)
             sServiceHelper = new ServiceHelper(context);
         return sServiceHelper;
     }
 
-    /**
-     * Service to verify if is running
-     * @param service String name of service, regularly is the name returned by
-     *                YourServiceClass.class.getName()
-     * @return ServicerHelper object
-     */
-    public ServiceHelper withService(String service){
-        mService = service;
-        return this;
-    }
-
-    /**
-     * Check if service is running.
-     * @return True if is running, false otherwise.
-     */
-    public boolean isServiceRunning() {
+    public boolean checkIfServiceIsRunning(String serviceName){
         ActivityManager manager = (ActivityManager) mContext.getSystemService(ACTIVITY_SERVICE);
         for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)){
-            if(mService.equals(service.service.getClassName())) {
+            if(serviceName.equals(service.service.getClassName())) {
                 return true;
             }
         }

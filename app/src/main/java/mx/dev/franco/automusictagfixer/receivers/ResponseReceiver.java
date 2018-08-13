@@ -22,13 +22,19 @@ public class ResponseReceiver extends BroadcastReceiver {
         mHandler = handler;
     }
 
+    public void clearReceiver(){
+        mCallback = null;
+        mHandler = null;
+    }
+
     @Override
     public void onReceive(Context context, final Intent intent) {
         if(mCallback != null && mHandler != null){
             mHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    mCallback.onResponse(intent);
+                    if(mCallback != null)
+                        mCallback.onResponse(intent);
                 }
             });
         }

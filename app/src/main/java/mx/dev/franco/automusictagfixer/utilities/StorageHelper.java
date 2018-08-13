@@ -67,11 +67,6 @@ public class StorageHelper{
         return mBasePaths;
     }
 
-
-    public long getAvailableSize(){
-        return getInternalAvailableSize();
-    }
-
     /**
      * Gets current available size
      * @return available size of current storage
@@ -162,12 +157,5 @@ public class StorageHelper{
             }
         }
         return true;
-    }
-
-    public void releaseResources(){
-        sContext = null;
-        sStorage = null;
-        mBasePaths = null;
-        System.gc();
     }
 }

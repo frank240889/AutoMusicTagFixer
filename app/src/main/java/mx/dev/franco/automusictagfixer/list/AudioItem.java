@@ -8,6 +8,8 @@ import android.webkit.MimeTypeMap;
 
 import java.io.File;
 
+import mx.dev.franco.automusictagfixer.utilities.Tagger;
+
 /**
  * Created by franco on 14/04/17.
  */
@@ -217,7 +219,7 @@ public final class AudioItem implements Parcelable{
      */
     public static String getFileSize(long size){
         if(size <= 0)
-            return "0 mb";
+            return "0 Mb";
 
         float s = size / KILOBYTE;
         String str = String.valueOf(s);
@@ -230,6 +232,14 @@ public final class AudioItem implements Parcelable{
         readableSize += " mb";
 
         return readableSize;
+    }
+
+    public static String getFileSize(String path){
+        File file = new File(path);
+        if(!Tagger.checkFileIntegrity(file))
+            return "0 Mb";
+
+        return getFileSize(file.length());
     }
 
     /**
@@ -320,6 +330,17 @@ public final class AudioItem implements Parcelable{
         return file.getName().substring(file.getName().lastIndexOf(".") + 1).toLowerCase();
     }
 
+    public static String getPath(String path){
+        if(path == null)
+            return null;
+        return path.substring(path.lastIndexOf("/") + 1);
+    }
+
+    public static String getPath(File file){
+        if(file == null)
+            return null;
+        return getPath(file.getAbsolutePath());
+    }
 
 
     @Override
