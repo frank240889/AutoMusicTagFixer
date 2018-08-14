@@ -101,18 +101,21 @@ AsyncFileReader.IRetriever, ResponseReceiver.OnResponse{
         //if value is true, then the service will be able to run in background,
         //and a correction won't stop when app closes, but when you explicitly
         //stop the task by pressing stop button or task finishes
-
-
-        int id = intent.getIntExtra(Constants.MEDIA_STORE_ID, -1);
-        if(id == -1) {
-            sIdLoader = new IdLoader(this, trackRoomDatabase);
-            sIdLoader.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, id);
+        String action = intent.getAction();
+        if(action != null && action.equals(Constants.Actions.ACTION_COMPLETE_TASK)){
+            stopSelf();
         }
         else {
-            mIds.add(id);
-            startCorrection();
-        }
+            int id = intent.getIntExtra(Constants.MEDIA_STORE_ID, -1);
+            if (id == -1) {
+                sIdLoader = new IdLoader(this, trackRoomDatabase);
+                sIdLoader.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, id);
+            } else {
+                mIds.add(id);
+                startCorrection();
+            }
 
+        }
         return START_NOT_STICKY;//
     }
 
@@ -233,11 +236,12 @@ AsyncFileReader.IRetriever, ResponseReceiver.OnResponse{
         Intent notificationIntent = new Intent(this,MainActivity.class);
         notificationIntent.setAction(Constants.ACTION_OPEN_MAIN_ACTIVITY);
         notificationIntent.setFlags(Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT | Intent.FLAG_ACTIVITY_NEW_TASK);
+        notificationIntent.putExtra(Constants.MEDIA_STORE_ID, mCurrentTrack.getMediaStoreId());
+        notificationIntent.putExtra("processing", true);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
 
         Intent stopTaskIntent = new Intent(this, FixerTrackService.class);
-        stopTaskIntent.setAction(Constants.Actions.ACTION_STOP_SERVICE);
-        stopTaskIntent.putExtra(Constants.Actions.ACTION_STOP_SERVICE, Constants.StopsReasons.USER_CANCEL_TASK);
+        stopTaskIntent.setAction(Constants.Actions.ACTION_COMPLETE_TASK);
         PendingIntent pendingStopIntent = PendingIntent.getService(this, 0, stopTaskIntent, 0);
 
         Bitmap icon = BitmapFactory.decodeResource(getResources(),

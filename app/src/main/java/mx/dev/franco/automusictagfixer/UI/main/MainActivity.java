@@ -17,7 +17,6 @@ import android.support.annotation.RequiresApi;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
-import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.ShareCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
@@ -39,7 +38,6 @@ import android.widget.Toast;
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.UI.about.ScrollingAboutActivity;
 import mx.dev.franco.automusictagfixer.UI.faq.QuestionsActivity;
-//import mx.dev.franco.automusictagfixer.UI.track_detail.TrackDetailFragment;
 import mx.dev.franco.automusictagfixer.UI.settings.SettingsActivity;
 import mx.dev.franco.automusictagfixer.datasource.TrackAdapter;
 import mx.dev.franco.automusictagfixer.receivers.ResponseReceiver;
@@ -103,6 +101,7 @@ public class MainActivity extends AppCompatActivity
 
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+
         Log.d(TAG,"onCreate");
     }
 

@@ -28,9 +28,6 @@ import mx.dev.franco.automusictagfixer.utilities.StorageHelper;
 public final class AutoMusicTagFixer extends Application {
     private static ContextComponent mContextComponent;
     private ConnectivityChangesDetector mConnectivityChangesDetector;
-    private IntentFilter mIntentFilter;
-    private IntentFilter mIntentFilterMediaMounted;
-    private IntentFilter mIntentFilterMediaUnmounted;
     private DetectorRemovableMediaStorages mDetectorRemovableMediaStorages;
     // Called when the application is starting, before any other application objects have been created.
     // Overriding this method is totally optional!

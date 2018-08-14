@@ -107,8 +107,9 @@ public class Identifier extends AsyncTask<Void, Void, Void> implements GnRespons
                 return null;
             }
             mGnMusicIdFileInfo.albumTitle(mTrack.getAlbum());
+            mGnMusicIdFileInfo.mediaId(mTrack.getMediaStoreId()+"");
 
-            mGnMusicIdFile.doTrackIdAsync(GnMusicIdFileProcessType.kQueryReturnSingle, GnMusicIdFileResponseType.kResponseAlbums);
+            mGnMusicIdFile.doAlbumIdAsync(GnMusicIdFileProcessType.kQueryReturnSingle, GnMusicIdFileResponseType.kResponseAlbums);
 
             while (true){
                 //Log.d("LOOP","LOOPING");

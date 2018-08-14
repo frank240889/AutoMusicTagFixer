@@ -112,6 +112,10 @@ public class Fixer extends AsyncTask<GnResponseListener.IdentificationResults,Vo
         clear();
     }
     public void onCancelled(Void voids){
+        if(mListener != null)
+            mListener.onCorrectionCancelled(mTrack.getTitle());
+
+        super.onCancelled(voids);
         clear();
     }
 
