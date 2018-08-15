@@ -49,7 +49,7 @@ public class GnResponseListener implements IGnMusicIdFileEvents, IGnCancellable 
         void identificationFound(IdentificationResults results);
         void identificationCompleted(String trackName);
         void onStartIdentification(String trackName);
-        void onIdentificationCancelled();
+        void onIdentificationCancelled(String cancelledReason);
         void status(String message);
     }
 
@@ -104,7 +104,7 @@ public class GnResponseListener implements IGnMusicIdFileEvents, IGnCancellable 
 
                 mHandler.post(() -> {
                     if(mListener != null) {
-                        mListener.identificationError(Constants.State.STATUS_ERROR_MSG);
+                        mListener.onIdentificationCancelled(Constants.State.STATUS_ERROR_MSG);//identificationError(Constants.State.STATUS_ERROR_MSG);
                     }
                 });
         }

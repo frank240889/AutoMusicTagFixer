@@ -153,7 +153,7 @@ public class Identifier extends AsyncTask<Void, Void, Void> implements GnRespons
     public void onCancelled(){
         Log.d(TAG, "CANCELLED");
         if(mGnListener != null)
-            mGnListener.onIdentificationCancelled();
+            mGnListener.onIdentificationCancelled(null);
         mTrack.setChecked(0);
         clear();
     }
@@ -216,7 +216,7 @@ public class Identifier extends AsyncTask<Void, Void, Void> implements GnRespons
     }
 
     @Override
-    public void onIdentificationCancelled() {
+    public void onIdentificationCancelled(String cancelledReason) {
         //mGnMusicIdFile.cancel();
         //mGnMusicIdFile.delete();
         //mGnMusicIdFile = null;

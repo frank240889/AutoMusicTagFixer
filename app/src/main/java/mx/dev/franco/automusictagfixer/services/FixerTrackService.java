@@ -3,9 +3,6 @@ package mx.dev.franco.automusictagfixer.services;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
-import android.arch.lifecycle.Lifecycle;
-import android.arch.lifecycle.LifecycleOwner;
-import android.arch.lifecycle.Observer;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Bitmap;
@@ -14,7 +11,6 @@ import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.ContextCompat;
@@ -32,6 +28,7 @@ import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.UI.main.MainActivity;
 import mx.dev.franco.automusictagfixer.list.AudioItem;
 import mx.dev.franco.automusictagfixer.media_store_retriever.AsyncFileReader;
+import mx.dev.franco.automusictagfixer.network.ConnectivityDetector;
 import mx.dev.franco.automusictagfixer.receivers.ResponseReceiver;
 import mx.dev.franco.automusictagfixer.repository.TrackRepository;
 import mx.dev.franco.automusictagfixer.room.Track;
@@ -42,6 +39,7 @@ import mx.dev.franco.automusictagfixer.services.Fixer.Fixer;
 import mx.dev.franco.automusictagfixer.services.Fixer.IdLoader;
 import mx.dev.franco.automusictagfixer.services.Fixer.TrackLoader;
 import mx.dev.franco.automusictagfixer.services.gnservice.GnResponseListener;
+import mx.dev.franco.automusictagfixer.services.gnservice.GnService;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
 import mx.dev.franco.automusictagfixer.utilities.Tagger;
 
@@ -98,9 +96,11 @@ AsyncFileReader.IRetriever, ResponseReceiver.OnResponse{
     public int onStartCommand(final Intent intent, int flags, int startId){
         super.onStartCommand(intent,flags,startId);
         //Log.d(CLASS_NAME,"onStartCommand");
-        //if value is true, then the service will be able to run in background,
+
+        //When setting "Corrección en segundo plano" is on,
+        //then the service will be able to run in background,
         //and a correction won't stop when app closes, but when you explicitly
-        //stop the task by pressing stop button or task finishes
+        //stop the task by pressing stop button in main screen or notification or task finishes.
         String action = intent.getAction();
         if(action != null && action.equals(Constants.Actions.ACTION_COMPLETE_TASK)){
             stopSelf();
@@ -140,11 +140,31 @@ AsyncFileReader.IRetriever, ResponseReceiver.OnResponse{
     }
 
     private void startCorrection(){
+        if(!canContinue()){
+            stopSelf();
+            return;
+        }
+
         if(isRunning)
             return;
 
         sTrackDataLoader = new TrackLoader(this, trackRoomDatabase);
         sTrackDataLoader.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, mIds.get(0));
+    }
+
+
+    private boolean canContinue(){
+        if(!ConnectivityDetector.sIsConnected){
+            ConnectivityDetector.getInstance(getApplicationContext()).onStartTestingNetwork();
+            return false;
+        }
+
+        if(GnService.sIsInitializing || !GnService.sApiInitialized){
+            GnService.getInstance(getApplicationContext()).initializeAPI();
+            return false;
+        }
+
+        return true;
     }
 
     @Override
@@ -380,7 +400,7 @@ AsyncFileReader.IRetriever, ResponseReceiver.OnResponse{
     }
 
     @Override
-    public void onIdentificationCancelled() {
+    public void onIdentificationCancelled(String cancelledReason) {
 
         Intent intent = new Intent(Constants.Actions.FINISH_TRACK_PROCESSING);
         intent.putExtra("should_reload_cover", true);

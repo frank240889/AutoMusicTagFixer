@@ -205,7 +205,7 @@ public class TrackDetailFragment extends Fragment implements EditableView, Resul
                         Uri imageData = data.getData();
                         Bitmap bitmap = MediaStore.Images.Media.getBitmap(getActivity().getContentResolver(), imageData);
 
-                        if (bitmap.getHeight() > 1080 || bitmap.getWidth() > 1080) {
+                        if (bitmap.getHeight() > 2000 || bitmap.getWidth() > 2000) {
                             Snackbar snackbar = ViewUtils.getSnackbar(mLayout, getActivity().getApplicationContext());
                             snackbar.setText(getString(R.string.image_too_big));
                             snackbar.setDuration(Snackbar.LENGTH_LONG);
@@ -395,7 +395,7 @@ public class TrackDetailFragment extends Fragment implements EditableView, Resul
         mGenreField.setEnabled(true);
 
         mImageSize.setText(getString(R.string.edit_cover));
-        mImageSize.setCompoundDrawablesWithIntrinsicBounds(getActivity().getDrawable(R.drawable.ic_add_to_photos_white_24px),null,null,null);
+        mImageSize.setCompoundDrawablesWithIntrinsicBounds(getActivity().getDrawable(R.drawable.ic_autorenew_black_24dp),null,null,null);
         //Enabled "Añadir carátula de galería" to add cover when is pressed
         mImageSize.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -759,6 +759,7 @@ public class TrackDetailFragment extends Fragment implements EditableView, Resul
     @Override
     public void onSuccessfullyFileSaved(final String message) {
         Snackbar snackbar = ViewUtils.getSnackbar(mLayout, getActivity().getApplicationContext());
+        snackbar.setDuration(Snackbar.LENGTH_LONG);
         snackbar.setText(String.format(getString(R.string.cover_saved), message));
         snackbar.setAction(R.string.watch, new View.OnClickListener() {
             @Override

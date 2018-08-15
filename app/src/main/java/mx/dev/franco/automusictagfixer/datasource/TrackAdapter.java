@@ -393,10 +393,6 @@ public class TrackAdapter extends RecyclerView.Adapter<mx.dev.franco.automusicta
         if(tracks != null) {
             Log.d(TAG, tracks.size()+"");
             if (getItemCount() != 0) {
-                //DiffUtil.DiffResult diffResult = DiffUtil.
-                //        calculateDiff(new MyDiffCallback(mTrackList, tracks));
-                /*mTrackList = tracks;
-                diffResult.dispatchUpdatesTo(this);*/
                 updateInBackground(tracks);
             } else {
                 mTrackList = tracks;

@@ -184,7 +184,7 @@
     <string name="new_files_found"> cancion(es) nueva(s) se han encontrado y añadido al inicio de la lista.</string>
     <string name="add_cover">Añadir de galería</string>
     <string name="automatic_mode">Modo automático</string>
-    <string name="edit_cover">Actualizar carátula.</string>
+    <string name="edit_cover">Actualizar carátula</string>
     <string name="update_list">Actualizar</string>
     <string name="already_updating_list">Actualización en curso.</string>
     <string name="not_created_list">No esta disponible la lista aún.</string>

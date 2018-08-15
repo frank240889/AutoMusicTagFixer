@@ -149,7 +149,8 @@ public class ListFragment extends Fragment implements AudioItemHolder.ClickListe
             }
         });
         mRecyclerView.setAdapter(mAdapter);
-        //Lets implement functionality for refresh mLayout listener
+
+        //Color of progress bar of refresh layout
         mSwipeRefreshLayout.setColorSchemeColors(
                 ContextCompat.getColor(getActivity(), R.color.primaryColor),
                 ContextCompat.getColor(getActivity(), R.color.primaryDarkColor),
@@ -192,7 +193,10 @@ public class ListFragment extends Fragment implements AudioItemHolder.ClickListe
 
         setHasOptionsMenu(true);
         setRetainInstance(true);
-
+        int id = getActivity().getIntent().getIntExtra(Constants.MEDIA_STORE_ID, -1);
+        if(id != -1){
+            updateItem(id, getActivity().getIntent());
+        }
         return mLayout;
     }
 
@@ -280,100 +284,11 @@ public class ListFragment extends Fragment implements AudioItemHolder.ClickListe
     @Override
     public void onPrepareOptionsMenu(Menu menu){
         super.onPrepareOptionsMenu(menu);
-        // Define an expand listener for search widget
-        /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            //mSearchViewWidget = (SearchView) searchItem.getActionView();
-            //mSearchViewWidget.getLayoutTransition()
-            //        .enableTransitionType(LayoutTransition.CHANGING);
-            MenuItem.OnActionExpandListener expandListener = new MenuItem.OnActionExpandListener() {
-                @Override
-                public boolean onMenuItemActionCollapse(MenuItem item) {
-
-                    // When no searching a track, activate refresh listener
-                    // of swipe mLayout
-                    //mSwipeRefreshLayout.setEnabled(true);
-                    //mSearchViewWidget.setOnQueryTextListener(null);
-                    return true;  // Return true to collapse action widget
-                }
-
-                @Override
-                public boolean onMenuItemActionExpand(MenuItem item) {
-                    // When searching a song, deactivate the swipe refresh mLayout
-                    // and don't let update with swipe gesture
-                    //mSwipeRefreshLayout.setEnabled(false);
-                    Animator animator = createRevealWithDelay(searchView,0,0,0,20);
-                    animator.start();
-                    // Attach a listener that returns results while user is searching his/her song
-                    mSearchViewWidget.setOnQueryTextListener(new SearchView.OnQueryTextListener(){
-
-                        @Override
-                        public boolean onQueryTextSubmit(String query) {
-                            return true;
-                        }
-
-                        @Override
-                        public boolean onQueryTextChange(String newText) {
-                            //mRecyclerView.stopScroll();
-                            //mAdapter.filter(newText);
-                            return true;
-                        }
-                    });
-                    return true;  // Return true to expand action mSwipeRefreshLayout
-                }
-            };
-
-            // Assign the listener to searchItem
-            //searchItem.setOnActionExpandListener(expandListener);
-        }
-        else {
-            //mSearchViewWidget = (SearchView) MenuItemCompat.getActionView(searchItem);
-            MenuItemCompat.OnActionExpandListener expandListener = new MenuItemCompat.OnActionExpandListener() {
-                @Override
-                public boolean onMenuItemActionCollapse(MenuItem item) {
-                    //when no searching a track, activate refresh listener
-                    //of swipe mLayout
-                    //mSwipeRefreshLayout.setEnabled(true);
-                    //mSearchViewWidget.setOnQueryTextListener(null);
-                    return true;  // Return true to collapse action widget
-                }
-
-                @Override
-                public boolean onMenuItemActionExpand(MenuItem item) {
-                    //when searching a song, deactivate the swipe refresh mLayout
-                    //and don't let update with swipe gesture
-                    //mSwipeRefreshLayout.setEnabled(false);
-                    Animator animator = createRevealWithDelay(searchView,0,0,0,20);
-                    animator.start();
-                    //attach a listener that returns results while user is searching his/her song
-                    mSearchViewWidget.setOnQueryTextListener(new SearchView.OnQueryTextListener(){
-
-                        @Override
-                        public boolean onQueryTextSubmit(String query) {
-                            return true;
-                        }
-
-                        @Override
-                        public boolean onQueryTextChange(String newText) {
-                            //mRecyclerView.stopScroll();
-                            //mAdapter.filter(newText);
-                            return true;
-                        }
-                    });
-                    return true;  // Return true to expand action mSwipeRefreshLayout
-                }
-            };
-
-            // Assign the listener to searchItem
-            //MenuItemCompat.setOnActionExpandListener(searchItem, expandListener);
-        }*/
     }
 
     @Override
     public void onPause(){
         super.onPause();
-        //Deregister filters if FixerTrackService if not processing any task,
-        //useful for saving resources
-
         mRecyclerView.stopScroll();
     }
 
@@ -517,56 +432,6 @@ public class ListFragment extends Fragment implements AudioItemHolder.ClickListe
         dialog.show();
     }
 
-    /**
-     * Converts from status code from audioitem object
-     * to human readable status text
-     * @return msg Is the string code
-     */
-
-    /*private String getStatusText(int status){
-        String msg = "";
-        switch (status){
-            case AudioItem.STATUS_ALL_TAGS_FOUND:
-                msg = getResources().getString(R.string.file_status_ok);
-                break;
-            case AudioItem.STATUS_ALL_TAGS_NOT_FOUND:
-                msg = getResources().getString(R.string.file_status_incomplete);
-                break;
-            case AudioItem.STATUS_NO_TAGS_FOUND:
-                msg = getResources().getString(R.string.file_status_bad);
-                break;
-            case AudioItem.STATUS_TAGS_EDITED_BY_USER:
-                msg = getResources().getString(R.string.file_status_edit_by_user);
-                break;
-            case AudioItem.FILE_ERROR_READ:
-                msg = getString(R.string.file_status_error_read);
-                break;
-            case AudioItem.STATUS_TAGS_CORRECTED_BY_SEMIAUTOMATIC_MODE:
-                msg = getString(R.string.file_status_corrected_by_semiautomatic_mode);
-                break;
-            case AudioItem.STATUS_FILE_IN_SD_WITHOUT_PERMISSION:
-                msg = getString(R.string.file_status_in_sd_without_permission);
-                break;
-            case AudioItem.STATUS_COULD_NOT_APPLIED_CHANGES:
-                msg = getString(R.string.could_not_apply_changes);
-                break;
-            case AudioItem.STATUS_COULD_RESTORE_FILE_TO_ITS_LOCATION:
-                msg = getString(R.string.could_not_copy_to_its_original_location);
-                break;
-            case AudioItem.STATUS_COULD_NOT_CREATE_AUDIOFILE:
-                msg = getString(R.string.could_not_create_audiofile);
-                break;
-            case AudioItem.STATUS_COULD_NOT_CREATE_TEMP_FILE:
-                msg = getString(R.string.could_not_create_temp_file);
-                break;
-            default:
-                msg = getResources().getString(R.string.file_status_no_processed);
-                break;
-        }
-
-        return msg;
-    }*/
-
     private void showInnaccesibleTrack(ViewWrapper viewWrapper) {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         builder.setMessage(String.format(getString(R.string.file_error), viewWrapper.track.getPath())).
@@ -601,9 +466,6 @@ public class ListFragment extends Fragment implements AudioItemHolder.ClickListe
     }
 
     public void updateItem(int id, Intent intent) {
-        //Bundle bundle = new Bundle();
-        //bundle.putBoolean("should_reload_cover", intent.getBooleanExtra("should_reload_cover", true));
-        //bundle.putBoolean("processing", intent.getBooleanExtra("processing", false));
         Track track = mAdapter.getTrackById(id);
         int position = mAdapter.getDatasource().indexOf(track);
         mAdapter.notifyItemChanged(position, intent.getExtras());

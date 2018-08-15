@@ -366,7 +366,7 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
     }
 
     @Override
-    public void onIdentificationCancelled() {
+    public void onIdentificationCancelled(String cancelledReason) {
         if(mView != null) {
             mView.hideProgress();
             mView.setMessageStatus("");
@@ -426,14 +426,19 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
         sFixer = null;
         String errorMessage = null;
         switch (resultCorrection.code){
-            case Tagger.NEW_COVER_APPLIED:
-            case Tagger.APPLIED_ALL_TAGS:
-            case Tagger.APPLIED_ONLY_MISSING_TAGS:
             case Tagger.APPLIED_SAME_COVER:
-            case Tagger.APPLIED_SAME_TAGS:
+            case Tagger.NEW_COVER_APPLIED:
             case Tagger.CURRENT_COVER_REMOVED:
-                    //mInteractor.updateTrack(mCurrentId);
-                    updateTempCurrentTrackDataItem(resultCorrection);
+                    updateTempCurrentTrackDataCover(resultCorrection);
+                break;
+            case Tagger.APPLIED_ALL_TAGS:
+                    updateAppliedAllTagsView(resultCorrection);
+                break;
+            case Tagger.APPLIED_ONLY_MISSING_TAGS:
+                    updateAppliedMissingTagsView(resultCorrection);
+                break;
+            case Tagger.APPLIED_SAME_TAGS:
+                mView.onSuccessfullyCorrection(resourceManager.getString(R.string.message_same_tags_applied));
                 break;
             case Tagger.COULD_NOT_APPLY_COVER:
                 errorMessage = resourceManager.getString(R.string.message_could_not_apply_cover);
@@ -598,51 +603,139 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
 
     }
 
-    private void updateTempCurrentTrackDataItem(Tagger.ResultCorrection resultCorrection){
+    private void updateTempCurrentTrackDataCover(Tagger.ResultCorrection resultCorrection ){
+        if(resultCorrection.code != Tagger.CURRENT_COVER_REMOVED) {
+            if (mDataFrom == Constants.CACHED) {
+                GnResponseListener.IdentificationResults results = mCache.getCache().load(mCurrentId);
+                mView.setCover(results.cover);
+                mView.setImageSize(AudioItem.getStringImageSize(results.cover));
+                mCurrentTrackDataItem.cover = results.cover;
 
+            } else {
+                mView.setCover(mView.getCover());
+                mView.setImageSize(AudioItem.getStringImageSize(mView.getCover()));
+                mCurrentTrackDataItem.cover = mView.getCover();
+                mView.disableEditMode();
+            }
+            mView.onSuccessfullyCorrection(resourceManager.getString(R.string.cover_updated));
+        }
+        else {
+            mView.setCover(null);
+            mCurrentTrackDataItem.cover = null;
+            mView.setImageSize(AudioItem.getStringImageSize(null));
+            mView.setFilesize(AudioItem.getFileSize(mCurrentTrack.getPath()));
+            mView.onSuccessfullyCorrection(resourceManager.getString(R.string.cover_removed));
+        }
+
+
+        trackRepository.update(mCurrentTrack);
+    }
+
+    private void updateAppliedAllTagsView(Tagger.ResultCorrection resultCorrection){
+        //File was renamed
         if(resultCorrection.pathTofileUpdated != null) {
             mView.setFilename(resultCorrection.pathTofileUpdated);
             mView.setFilesize(AudioItem.getFileSize(resultCorrection.pathTofileUpdated));
             mCurrentTrack.setPath(resultCorrection.pathTofileUpdated);
         }
 
-        if(resultCorrection.code != Tagger.CURRENT_COVER_REMOVED) {
-            if (mDataFrom == Constants.CACHED) {
-                GnResponseListener.IdentificationResults results = mCache.getCache().load(mCurrentId);
+        if (mDataFrom == Constants.CACHED) {
+            GnResponseListener.IdentificationResults results = mCache.getCache().load(mCurrentId);
+
+            if(results.title != null && !results.title.isEmpty())
+                mCurrentTrackDataItem.title = results.title;
+            if(results.artist != null && !results.artist.isEmpty())
+                mCurrentTrackDataItem.artist = results.artist;
+            if(results.album != null && !results.album.isEmpty())
+                mCurrentTrackDataItem.album = results.album;
+            if(results.genre != null && !results.genre.isEmpty())
+                mCurrentTrackDataItem.genre = results.genre;
+            if(results.trackNumber != null && !results.trackNumber.isEmpty())
+                mCurrentTrackDataItem.trackNumber = results.trackNumber;
+            if(results.trackYear != null && !results.trackYear.isEmpty())
+                mCurrentTrackDataItem.trackYear = results.trackYear;
+            if(results.cover != null) {
+                mCurrentTrackDataItem.cover = results.cover;
                 mView.setCover(results.cover);
                 mView.setImageSize(AudioItem.getStringImageSize(results.cover));
-
-                mCurrentTrackDataItem.title = results.title;
-                mCurrentTrackDataItem.artist = results.artist;
-                mCurrentTrackDataItem.album = results.album;
-                mCurrentTrackDataItem.genre = results.genre;
-                mCurrentTrackDataItem.trackNumber = results.trackNumber;
-                mCurrentTrackDataItem.trackYear = results.trackYear;
-                mCurrentTrackDataItem.cover = results.cover;
-                setEditableInfo(mCurrentTrackDataItem);
-                setAdditionalInfo(mCurrentTrackDataItem);
-
-            } else {
-                mView.setCover(mView.getCover());
-                mView.setImageSize(AudioItem.getStringImageSize(mView.getCover()));
-                mCurrentTrackDataItem.title = mView.getTrackTitle();
-                mCurrentTrackDataItem.artist = mView.getArtist();
-                mCurrentTrackDataItem.album = mView.getAlbum();
-                mCurrentTrackDataItem.genre = mView.getGenre();
-                mCurrentTrackDataItem.trackNumber = mView.getTrackNumber();
-                mCurrentTrackDataItem.trackYear = mView.getTrackYear();
-                mCurrentTrackDataItem.cover = mView.getCover();
-                mView.disableEditMode();
             }
-            mCurrentTrack.setTitle(resultCorrection.track.getTitle());
-            mCurrentTrack.setArtist(resultCorrection.track.getArtist());
-            mCurrentTrack.setAlbum(resultCorrection.track.getAlbum());
+            setEditableInfo(mCurrentTrackDataItem);
+            setAdditionalInfo(mCurrentTrackDataItem);
         }
         else {
-            mView.setCover(null);
-            mCurrentTrackDataItem.cover = null;
-            mView.setImageSize(AudioItem.getStringImageSize(null));
+            mView.setCover(mView.getCover());
+            mView.setImageSize(AudioItem.getStringImageSize(mView.getCover()));
+            mCurrentTrackDataItem.title = mView.getTrackTitle();
+            mCurrentTrackDataItem.artist = mView.getArtist();
+            mCurrentTrackDataItem.album = mView.getAlbum();
+            mCurrentTrackDataItem.genre = mView.getGenre();
+            mCurrentTrackDataItem.trackNumber = mView.getTrackNumber();
+            mCurrentTrackDataItem.trackYear = mView.getTrackYear();
+            mCurrentTrackDataItem.cover = mView.getCover();
+            mView.disableEditMode();
         }
+
+        if(!resultCorrection.track.getTitle().isEmpty())
+            mCurrentTrack.setTitle(resultCorrection.track.getTitle());
+        if(!resultCorrection.track.getArtist().isEmpty())
+            mCurrentTrack.setArtist(resultCorrection.track.getArtist());
+        if(!resultCorrection.track.getAlbum().isEmpty())
+            mCurrentTrack.setAlbum(resultCorrection.track.getAlbum());
+
+        mView.onSuccessfullyCorrection(resourceManager.getString(R.string.apply_tags));
+        trackRepository.update(mCurrentTrack);
+    }
+
+
+    private void updateAppliedMissingTagsView(Tagger.ResultCorrection resultCorrection){
+
+        //File was renamed
+        if(resultCorrection.pathTofileUpdated != null) {
+            mView.setFilename(resultCorrection.pathTofileUpdated);
+            mView.setFilesize(AudioItem.getFileSize(resultCorrection.pathTofileUpdated));
+            mCurrentTrack.setPath(resultCorrection.pathTofileUpdated);
+        }
+
+        if (mDataFrom == Constants.CACHED) {
+            GnResponseListener.IdentificationResults results = mCache.getCache().load(mCurrentId);
+
+            if(results.title != null && mView.getTrackTitle().isEmpty())
+                mCurrentTrackDataItem.title = results.title;
+            if(results.artist != null && mView.getArtist().isEmpty())
+                mCurrentTrackDataItem.artist = results.artist;
+            if(results.album != null && mView.getAlbum().isEmpty())
+                mCurrentTrackDataItem.album = results.album;
+            if(results.genre != null && mView.getGenre().isEmpty())
+                mCurrentTrackDataItem.genre = results.genre;
+            if(results.trackNumber != null && mView.getTrackNumber().isEmpty())
+                mCurrentTrackDataItem.trackNumber = results.trackNumber;
+            if(results.trackYear != null && mView.getTrackYear().isEmpty())
+                mCurrentTrackDataItem.trackYear = results.trackYear;
+            if(results.cover != null && mView.getCover() == null) {
+                mCurrentTrackDataItem.cover = results.cover;
+                mView.setCover(results.cover);
+                mView.setImageSize(AudioItem.getStringImageSize(results.cover));
+            }
+            setEditableInfo(mCurrentTrackDataItem);
+            setAdditionalInfo(mCurrentTrackDataItem);
+
+        }
+        else {
+            mView.setCover(mView.getCover());
+            mView.setImageSize(AudioItem.getStringImageSize(mView.getCover()));
+            mCurrentTrackDataItem.title = mView.getTrackTitle();
+            mCurrentTrackDataItem.artist = mView.getArtist();
+            mCurrentTrackDataItem.album = mView.getAlbum();
+            mCurrentTrackDataItem.genre = mView.getGenre();
+            mCurrentTrackDataItem.trackNumber = mView.getTrackNumber();
+            mCurrentTrackDataItem.trackYear = mView.getTrackYear();
+            mCurrentTrackDataItem.cover = mView.getCover();
+            mView.disableEditMode();
+        }
+        mCurrentTrack.setTitle(resultCorrection.track.getTitle());
+        mCurrentTrack.setArtist(resultCorrection.track.getArtist());
+        mCurrentTrack.setAlbum(resultCorrection.track.getAlbum());
+
         mView.onSuccessfullyCorrection(resourceManager.getString(R.string.apply_tags));
         trackRepository.update(mCurrentTrack);
 

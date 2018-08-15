@@ -52,10 +52,8 @@ public class MainActivity extends AppCompatActivity
         implements ResponseReceiver.OnResponse, ListFragment.OnInteractionFragment, NavigationView.OnNavigationItemSelectedListener{
     public static String TAG = MainActivity.class.getName();
 
-    //local broadcast for handling responses from FixerTrackService.
-    private LocalBroadcastManager mLocalBroadcastManager;
     //the receiver that handles the intents from FixerTrackService
-    private mx.dev.franco.automusictagfixer.receivers.ResponseReceiver mReceiver;
+    private ResponseReceiver mReceiver;
 
     private ListFragment mListFragment;
 
@@ -338,7 +336,7 @@ public class MainActivity extends AppCompatActivity
         IntentFilter finishProcessingFilter = new IntentFilter(Constants.Actions.FINISH_TRACK_PROCESSING);
         IntentFilter completedTaskFilter = new IntentFilter(Constants.Actions.ACTION_COMPLETE_TASK);
 
-        mReceiver = new mx.dev.franco.automusictagfixer.receivers.ResponseReceiver(this, new Handler());
+        mReceiver = new ResponseReceiver(this, new Handler());
 
         LocalBroadcastManager localBroadcastManager = LocalBroadcastManager.getInstance(getApplicationContext());
 
