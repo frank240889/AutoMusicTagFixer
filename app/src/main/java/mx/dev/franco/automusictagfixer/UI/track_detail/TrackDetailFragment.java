@@ -9,10 +9,13 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.design.widget.Snackbar;
+import android.support.design.widget.TextInputLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.Toolbar;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -21,6 +24,8 @@ import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
@@ -37,6 +42,7 @@ import javax.inject.Inject;
 
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.list.AudioItem;
+import mx.dev.franco.automusictagfixer.services.Fixer.Fixer;
 import mx.dev.franco.automusictagfixer.services.gnservice.GnResponseListener;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
 import mx.dev.franco.automusictagfixer.utilities.RequiredPermissions;
@@ -102,6 +108,7 @@ public class TrackDetailFragment extends Fragment implements EditableView, Resul
     private TextView mStatus;
     private ProgressBar mProgressBar;
     private Toolbar mToolbar;
+    private AlertDialog mResultsDialog;
 
 
     //temporal references to new and current cover art
@@ -219,7 +226,10 @@ public class TrackDetailFragment extends Fragment implements EditableView, Resul
 
                             if (requestCode == INTENT_GET_AND_UPDATE_FROM_GALLERY) {
                                 mCurrentCoverArt = byteArrayOutputStream.toByteArray();
-                                mTrackDetailPresenter.performCorrection(Constants.MANUAL, Tagger.MODE_ADD_COVER);
+                                Fixer.CorrectionParams correctionParams = new Fixer.CorrectionParams();
+                                correctionParams.dataFrom = Constants.MANUAL;
+                                correctionParams.mode = Tagger.MODE_ADD_COVER;
+                                mTrackDetailPresenter.performCorrection(correctionParams);
                             }
                         }
                     } catch(IOException e){
@@ -296,7 +306,8 @@ public class TrackDetailFragment extends Fragment implements EditableView, Resul
         mStatus = null;
         mProgressBar = null;
         mTrackDetailPresenter = null;
-
+        if(mResultsDialog != null)
+            mResultsDialog.dismiss();
         System.gc();
         super.onDestroy();
     }
@@ -652,11 +663,13 @@ public class TrackDetailFragment extends Fragment implements EditableView, Resul
 
     @Override
     public void showProgress() {
+        mListener.onPerformingTask();
         mProgressContainer.setVisibility(View.VISIBLE);
     }
 
     @Override
     public void hideProgress() {
+        mListener.onFinishedTask();
         mProgressContainer.setVisibility(View.GONE);
     }
 
@@ -688,30 +701,82 @@ public class TrackDetailFragment extends Fragment implements EditableView, Resul
 
     @Override
     public void loadIdentificationResults(GnResponseListener.IdentificationResults results) {
+        Fixer.CorrectionParams correctionParams = new Fixer.CorrectionParams();
+
         DialogInterface.OnClickListener positiveButtonListener = (dialog, which) -> {
-            mTrackDetailPresenter.performCorrection(Constants.CACHED,Tagger.MODE_OVERWRITE_ALL_TAGS);
+            correctionParams.dataFrom = Constants.CACHED;
+            correctionParams.mode = Tagger.MODE_OVERWRITE_ALL_TAGS;
+            mTrackDetailPresenter.performCorrection(correctionParams);
         };
 
         DialogInterface.OnClickListener negativeButtonListener = (dialog, which) -> {
-            mTrackDetailPresenter.performCorrection(Constants.CACHED,Tagger.MODE_WRITE_ONLY_MISSING);
+            correctionParams.dataFrom = Constants.CACHED;
+            correctionParams.mode = Tagger.MODE_WRITE_ONLY_MISSING;
+            mTrackDetailPresenter.performCorrection(correctionParams);
         };
-        AlertDialog alertDialog = ViewUtils.createResultsDialog(getActivity(),results, R.string.message_results, true, positiveButtonListener,negativeButtonListener );
-        alertDialog.show();
+        View view = LayoutInflater.from(getActivity()).inflate(R.layout.fragment_results_track_id, null);
+
+        final CheckBox checkBox = view.findViewById(R.id.checkbox_rename);
+        TextInputLayout textInputLayout = view.findViewById(R.id.label_rename_to);
+        EditText editText = view.findViewById(R.id.rename_to);
+        TextView textView = view.findViewById(R.id.message_rename_hint);
+        editText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                correctionParams.newName = editText.getText().toString();
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
+            }
+        });
+        checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                //Log.d("checked", (isChecked) + "");
+                if(!isChecked){
+                    textInputLayout.setVisibility(View.GONE);
+                    textView.setVisibility(View.GONE);
+                    editText.setText("");
+                    correctionParams.newName = "";
+                    correctionParams.shouldRename = false;
+                }
+                else{
+                    textInputLayout.setVisibility(View.VISIBLE);
+                    textView.setVisibility(View.VISIBLE);
+                    correctionParams.newName = editText.getText().toString();
+                    correctionParams.shouldRename = true;
+                }
+            }
+        });
+
+        mResultsDialog = ViewUtils.createResultsDialog(getActivity(),results, R.string.message_results, true, view, positiveButtonListener,negativeButtonListener );
+        mResultsDialog.show();
     }
 
     @Override
     public void loadCoverIdentificationResults(GnResponseListener.IdentificationResults results) {
+
         DialogInterface.OnClickListener positiveButtonListener = (dialog, which) -> {
-            mTrackDetailPresenter.performCorrection(Constants.CACHED,Tagger.MODE_ADD_COVER);
+            Fixer.CorrectionParams correctionParams = new Fixer.CorrectionParams();
+            correctionParams.dataFrom = Constants.CACHED;
+            correctionParams.mode = Tagger.MODE_ADD_COVER;
+            mTrackDetailPresenter.performCorrection(correctionParams);
         };
 
         DialogInterface.OnClickListener negativeButtonListener = (dialog, which) -> {
             mTrackDetailPresenter.saveAsImageFileFrom(Constants.CACHED);
         };
-        AlertDialog alertDialog = ViewUtils.createResultsDialog(getActivity(),results, R.string.message_results_cover, false, positiveButtonListener,negativeButtonListener );
-        alertDialog.show();
-        alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).setText(R.string.as_cover_art);
-        alertDialog.getButton(AlertDialog.BUTTON_NEGATIVE).setText(R.string.as_file);
+        mResultsDialog = ViewUtils.createResultsDialog(getActivity(),results, R.string.message_results_cover, false, positiveButtonListener,negativeButtonListener );
+        mResultsDialog.show();
+        mResultsDialog.getButton(AlertDialog.BUTTON_POSITIVE).setText(R.string.as_cover_art);
+        mResultsDialog.getButton(AlertDialog.BUTTON_NEGATIVE).setText(R.string.as_file);
     }
 
     @Override
@@ -807,7 +872,51 @@ public class TrackDetailFragment extends Fragment implements EditableView, Resul
 
     @Override
     public void onDataValid() {
+        Fixer.CorrectionParams correctionParams = new Fixer.CorrectionParams();
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        View view = LayoutInflater.from(getActivity()).inflate(R.layout.manual_correction_layout, null);
+        builder.setView(view);
+
+        final CheckBox checkBox = view.findViewById(R.id.manual_checkbox_rename);
+        TextInputLayout textInputLayout = view.findViewById(R.id.manual_label_rename_to);
+        EditText editText = view.findViewById(R.id.manual_rename_to);
+        editText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                correctionParams.newName = editText.getText().toString();
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
+            }
+        });
+        TextView textView = view.findViewById(R.id.manual_message_rename_hint);
+        checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                //Log.d("checked", (isChecked) + "");
+                if(!isChecked){
+                    textInputLayout.setVisibility(View.GONE);
+                    textView.setVisibility(View.GONE);
+                    editText.setText("");
+                    correctionParams.newName = "";
+                    correctionParams.shouldRename = false;
+                }
+                else{
+                    textInputLayout.setVisibility(View.VISIBLE);
+                    textView.setVisibility(View.VISIBLE);
+                    correctionParams.newName = editText.getText().toString();
+                    correctionParams.shouldRename = true;
+                }
+            }
+        });
+
         builder.setMessage(R.string.message_apply_new_tags);
         builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
             @Override
@@ -820,7 +929,9 @@ public class TrackDetailFragment extends Fragment implements EditableView, Resul
         builder.setPositiveButton("Si", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                mTrackDetailPresenter.performCorrection(Constants.MANUAL,Tagger.MODE_OVERWRITE_ALL_TAGS);
+                correctionParams.dataFrom = Constants.MANUAL;
+                correctionParams.mode = Tagger.MODE_OVERWRITE_ALL_TAGS;
+                mTrackDetailPresenter.performCorrection(correctionParams);
             }
         });
         AlertDialog alertDialog = builder.create();

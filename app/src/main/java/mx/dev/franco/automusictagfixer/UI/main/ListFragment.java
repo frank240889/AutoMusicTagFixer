@@ -25,7 +25,6 @@ import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -333,8 +332,8 @@ public class ListFragment extends Fragment implements AudioItemHolder.ClickListe
     @Override
     public void onCheckMarkClick(int position) {
         String status =  mListViewModel.getState(mAdapter.getDatasource().get(position).getState());
-        Toast t = Toast.makeText(getActivity().getApplicationContext(), status, Toast.LENGTH_LONG);
-        t.setGravity(Gravity.CENTER,0,0);
+        Toast t = ViewUtils.getToast(getActivity());
+        t.setText(status);
         t.show();
     }
 

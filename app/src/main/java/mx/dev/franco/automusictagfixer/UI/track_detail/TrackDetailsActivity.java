@@ -587,6 +587,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements SimpleMed
      * @param enable true for enable, false to disable
      */
     private void enableMiniFabs(boolean enable){
+        mToolbarCover.setEnabled(enable);
         mDownloadCoverButton.setEnabled(enable);
         mEditButton.setEnabled(enable);
         mAutoFixButton.setEnabled(enable);

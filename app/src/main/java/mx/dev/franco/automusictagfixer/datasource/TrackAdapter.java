@@ -422,9 +422,9 @@ public class TrackAdapter extends RecyclerView.Adapter<mx.dev.franco.automusicta
     public boolean sortBy(String sortBy, int sortType){
 
         //if no songs, no case sort anything
-        /*if(mTrackList.size() == 0 ){
+        if(mTrackList.size() == 0 ){
             return false;
-        }*/
+        }
 
         //wait for sorting while correction task is running
         if(serviceHelper.checkIfServiceIsRunning(FixerTrackService.class.getName())){
@@ -461,7 +461,7 @@ public class TrackAdapter extends RecyclerView.Adapter<mx.dev.franco.automusicta
     public void clearLoads() {
         if(mAsyncTaskQueue != null && mAsyncTaskQueue.size() > 0 ){
             for(AsyncLoaderCover asyncLoaderCover: mAsyncTaskQueue){
-                //if(asyncLoaderCover.getStatus() == AsyncTask.Status.PENDING || asyncLoaderCover.getStatus() == AsyncTask.Status.RUNNING)
+                if(asyncLoaderCover.getStatus() == AsyncTask.Status.PENDING || asyncLoaderCover.getStatus() == AsyncTask.Status.RUNNING)
                 asyncLoaderCover.cancel(true);
             }
 

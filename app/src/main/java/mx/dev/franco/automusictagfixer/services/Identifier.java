@@ -50,6 +50,7 @@ public class Identifier extends AsyncTask<Void, Void, Void> implements GnRespons
         mGnListener.onStartIdentification(mTrack.getTitle());
         try {
             mGnMusicIdFile = new GnMusicIdFile(GnService.sGnUser, mGnResponseListener);
+            mTrack.setChecked(1);
         } catch (GnException e) {
             e.printStackTrace();
         }
@@ -57,8 +58,6 @@ public class Identifier extends AsyncTask<Void, Void, Void> implements GnRespons
 
     @Override
     protected Void doInBackground(Void... voids) {
-        mTrack.setChecked(1);
-        //trackRepository.update(mTrack);
         //GnMusicIdFile object provides identification service
         try {
 
@@ -132,11 +131,11 @@ public class Identifier extends AsyncTask<Void, Void, Void> implements GnRespons
         catch (GnException e) {
             e.printStackTrace();
             Crashlytics.logException(e);
-            if(mGnListener != null) {
                 Handler handler = new Handler(Looper.getMainLooper());
-                handler.post(() -> mGnListener.identificationError(e.getMessage()));
-
-            }
+                handler.post(() -> {
+                    if(mGnListener != null)
+                        mGnListener.identificationError(e.getMessage());
+                });
         }
         return null;
     }
@@ -144,7 +143,8 @@ public class Identifier extends AsyncTask<Void, Void, Void> implements GnRespons
     @Override
     protected void onPostExecute(Void voids){
         Log.d(TAG, "POSTEXECUTE");
-        mTrack.setChecked(0);
+        if(mTrack != null)
+            mTrack.setChecked(0);
         clear();
     }
 
@@ -154,12 +154,12 @@ public class Identifier extends AsyncTask<Void, Void, Void> implements GnRespons
         Log.d(TAG, "CANCELLED");
         if(mGnListener != null)
             mGnListener.onIdentificationCancelled(null);
-        mTrack.setChecked(0);
+        if(mTrack != null)
+            mTrack.setChecked(0);
         clear();
     }
 
     public void cancelIdentification(){
-        //mGnMusicIdFile.cancel();
         cancel(true);
     }
 

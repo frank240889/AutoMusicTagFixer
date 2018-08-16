@@ -8,12 +8,16 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
 import android.support.design.widget.Snackbar;
+import android.support.design.widget.TextInputLayout;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.FileProvider;
 import android.support.v7.app.AlertDialog;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -129,6 +133,26 @@ public class ViewUtils {
     }
 
     public static AlertDialog createResultsDialog(Context context, GnResponseListener.IdentificationResults results,
+                                                  int message, boolean showAll, View customView, DialogInterface.OnClickListener... listeners){
+        AlertDialog.Builder builder = getBuilder(context, results, showAll, customView);
+        builder.setMessage(message);
+        builder.setPositiveButton(R.string.all_tags, listeners[0]).
+                setNegativeButton(R.string.missing_tags, listeners[1]);
+
+        return builder.create();
+    }
+
+    private static AlertDialog.Builder getBuilder(Context context, GnResponseListener.IdentificationResults results, boolean showAll, View customView){
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        builder.setView(customView);
+        if(showAll)
+            setValues(results, customView);
+        else
+            setCover(results,customView);
+        return builder;
+    }
+
+    public static AlertDialog createResultsDialog(Context context, GnResponseListener.IdentificationResults results,
                                                   int title, int message, DialogInterface.OnClickListener... listeners){
         AlertDialog.Builder builder = getBuilder(context, results, false);
         builder.setTitle(title);
@@ -143,6 +167,10 @@ public class ViewUtils {
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         View view = LayoutInflater.from(context).inflate(R.layout.fragment_results_track_id, null);
         builder.setView(view);
+        view.findViewById(R.id.checkbox_rename).setVisibility(View.GONE);
+        view.findViewById(R.id.label_rename_to).setVisibility(View.GONE);
+        view.findViewById(R.id.rename_to).setVisibility(View.GONE);
+        view.findViewById(R.id.message_rename_hint).setVisibility(View.GONE);
         if(showAll)
             setValues(results, view);
         else
@@ -198,7 +226,6 @@ public class ViewUtils {
             year.setVisibility(View.VISIBLE);
             year.setText(results.trackYear);
         }
-
     }
 
     private static void setCover(GnResponseListener.IdentificationResults results, View view){

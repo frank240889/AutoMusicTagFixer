@@ -39,6 +39,7 @@ public class Fixer extends AsyncTask<GnResponseListener.IdentificationResults,Vo
     private Track mTrack;
     private OnCorrectionListener mListener;
     private boolean mShouldRename = true;
+    private String mRenameTo = "";
     @Inject
     Tagger taggerHelper;
     @Inject
@@ -64,6 +65,10 @@ public class Fixer extends AsyncTask<GnResponseListener.IdentificationResults,Vo
 
     public void setShouldRename(boolean shouldRename){
         mShouldRename = shouldRename;
+    }
+
+    public void renameTo(String newName){
+        mRenameTo = newName;
     }
 
     @Override
@@ -201,10 +206,20 @@ public class Fixer extends AsyncTask<GnResponseListener.IdentificationResults,Vo
         String newAbsolutePath = null;
         //Rename file if this option is enabled in Settings
         if (mShouldRename) {
-            newAbsolutePath = taggerHelper.renameFile(new File(mTrack.getPath()),
-                    results.title,
-                    results.artist,
-                    results.album);
+
+            if(mRenameTo.isEmpty()) {
+
+                newAbsolutePath = taggerHelper.renameFile(new File(mTrack.getPath()),
+                        results.title,
+                        results.artist,
+                        results.album);
+            }
+            else {
+                newAbsolutePath = taggerHelper.renameFile(new File(mTrack.getPath()),
+                        mRenameTo,
+                        results.artist,
+                        results.album);
+            }
 
             if (newAbsolutePath != null){
                 ContentValues newValuesToMediaStore = new ContentValues();
@@ -246,5 +261,13 @@ public class Fixer extends AsyncTask<GnResponseListener.IdentificationResults,Vo
         }
         mResultsCorrection.track = mTrack;
 
+    }
+
+
+    public static class CorrectionParams{
+        public int dataFrom;
+        public int mode;
+        public boolean shouldRename = false;
+        public String newName = "";
     }
 }

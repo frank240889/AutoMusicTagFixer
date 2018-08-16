@@ -18,16 +18,16 @@
             android:summary="@string/pref_title_background_description"
             android:title="@string/pref_title_background" />
     </PreferenceCategory>
-    <PreferenceCategory
+    <!--PreferenceCategory
         android:title="@string/semi_automatic_mode">
         <SwitchPreference
             android:defaultValue="true"
             android:key="key_rename_file_semi_automatic_mode"
             android:summary="@string/pref_semi_automatic_title_change_description"
             android:title="@string/pref_semi_automatic_title_change" />
-    </PreferenceCategory>
+    </PreferenceCategory-->
 
-    <PreferenceCategory
+    <!--PreferenceCategory
         android:title="@string/manual_mode">
         <SwitchPreference
             android:defaultValue="true"
@@ -39,7 +39,7 @@
             android:key="key_replace_strange_chars_manual_mode"
             android:summary="@string/pref_automatically_replace_strange_chars_description"
             android:title="@string/pref_automatically_replace_strange_chars" />
-    </PreferenceCategory>
+    </PreferenceCategory-->
     <!--PreferenceCategory
         android:title="@string/removable_storage">
         <SwitchPreference

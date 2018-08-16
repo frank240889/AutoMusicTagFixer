@@ -199,7 +199,7 @@
     <string name="dimensions">Tamaño</string>
     <string name="apply_tags">Etiquetas aplicadas correctamente.</string>
     <string name="message_apply_found_tags">¿Qué etiquetas deseas aplicar a la canción?</string>
-    <string name="message_apply_new_tags">¿Deseas aplicar los cambios a la canción?</string>
+    <string name="message_apply_new_tags">¿Aplicar los cambios?</string>
     <string name="swipe_up_search">Desliza hacia abajo para volver a buscar.</string>
     <string name="message_no_cover">Sin carátula</string>
     <string name="tracks">canciones</string>
@@ -370,6 +370,9 @@
     <string name="no_found_items">Sin resultados para \"%1$s\"</string>
     <string name="search_results">%1$s canciones para \"%2$s\"</string>
     <string name="no_results">Sin resultados.</string>
+    <string name="hint_rename">Nombre sin extensión</string>
+    <string name="message_checkbox_rename">Renombrar archivo</string>
+    <string name="message_rename">Dejar vacío para usar el título(si esta disponible) como nombre.</string>
 
 
 </resources>

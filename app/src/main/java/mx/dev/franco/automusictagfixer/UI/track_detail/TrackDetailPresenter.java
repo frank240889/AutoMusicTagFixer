@@ -383,14 +383,18 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
     }
 
     /************************Correction*************************/
-    public void performCorrection(int dataFrom, int mode){
+    //public void performCorrection(int dataFrom, int mode){
+    public void performCorrection(Fixer.CorrectionParams correctionParams){
         GnResponseListener.IdentificationResults results;
         sFixer = new Fixer(this);
+
         sFixer.setTrack(mCurrentTrack);
-        sFixer.setTask(mode);
-        sFixer.setShouldRename(true);
-        mDataFrom = dataFrom;
-        if(dataFrom == Constants.CACHED) {
+        sFixer.setTask(correctionParams.mode);
+        sFixer.setShouldRename(correctionParams.shouldRename);
+        sFixer.renameTo(correctionParams.newName);
+
+        mDataFrom = correctionParams.dataFrom;
+        if(mDataFrom == Constants.CACHED) {
             results = mCache.load(mCurrentId);
         }
         else {
@@ -438,7 +442,8 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
                     updateAppliedMissingTagsView(resultCorrection);
                 break;
             case Tagger.APPLIED_SAME_TAGS:
-                mView.onSuccessfullyCorrection(resourceManager.getString(R.string.message_same_tags_applied));
+                updateAppliedAllTagsView(resultCorrection);
+                //mView.onSuccessfullyCorrection(resourceManager.getString(R.string.message_same_tags_applied));
                 break;
             case Tagger.COULD_NOT_APPLY_COVER:
                 errorMessage = resourceManager.getString(R.string.message_could_not_apply_cover);

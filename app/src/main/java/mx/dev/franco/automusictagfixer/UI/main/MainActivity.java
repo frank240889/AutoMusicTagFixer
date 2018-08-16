@@ -12,6 +12,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
 import android.support.design.widget.FloatingActionButton;
@@ -142,6 +143,11 @@ public class MainActivity extends AppCompatActivity
         LocalBroadcastManager.getInstance(getApplicationContext()).unregisterReceiver(mReceiver);
         mReceiver.clearReceiver();
         mReceiver = null;
+        if(!PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getBoolean("key_background_service", true)){
+            Intent intent = new Intent(this,FixerTrackService.class);
+            stopService(intent);
+        }
+
         super.onDestroy();
     }
 

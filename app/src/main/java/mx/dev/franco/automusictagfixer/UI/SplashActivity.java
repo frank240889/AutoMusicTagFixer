@@ -39,16 +39,16 @@ public class SplashActivity extends AppCompatActivity{
 
         //Get default or saved values of settings
         Settings.SETTING_RENAME_FILE_AUTOMATIC_MODE = preferences.getBoolean("key_rename_file_automatic_mode", true);
-        Settings.SETTING_RENAME_FILE_MANUAL_MODE = preferences.getBoolean("key_rename_file_manual_mode", true);
-        Settings.SETTING_REPLACE_STRANGE_CHARS_MANUAL_MODE = preferences.getBoolean("key_replace_strange_chars_manual_mode",true);
-        Settings.ALL_CHECKED = preferences.getBoolean(Constants.ALL_ITEMS_CHECKED,false);
+        //Settings.SETTING_RENAME_FILE_MANUAL_MODE = preferences.getBoolean("key_rename_file_manual_mode", true);
+        //Settings.SETTING_REPLACE_STRANGE_CHARS_MANUAL_MODE = preferences.getBoolean("key_replace_strange_chars_manual_mode",true);
+        //Settings.ALL_CHECKED = preferences.getBoolean(Constants.ALL_ITEMS_CHECKED,false);
         Settings.SETTING_OVERWRITE_ALL_TAGS_AUTOMATIC_MODE = preferences.getBoolean("key_overwrite_all_tags_automatic_mode", true);
-        Settings.SETTING_RENAME_FILE_SEMI_AUTOMATIC_MODE = preferences.getBoolean("key_rename_file_semi_automatic_mode", true);
+        //Settings.SETTING_RENAME_FILE_SEMI_AUTOMATIC_MODE = preferences.getBoolean("key_rename_file_semi_automatic_mode", true);
         Settings.SETTING_USE_EMBED_PLAYER = preferences.getBoolean("key_use_embed_player",true);
         Settings.BACKGROUND_CORRECTION = preferences.getBoolean("key_background_service", true);
         String imageSizeSaved = preferences.getString("key_size_album_art","1000");
         Settings.SETTING_SIZE_ALBUM_ART = Settings.setValueImageSize(imageSizeSaved);
-        Settings.SETTING_AUTO_UPDATE_LIST = preferences.getBoolean("key_auto_update_list", false);
+        //Settings.SETTING_AUTO_UPDATE_LIST = preferences.getBoolean("key_auto_update_list", false);
         Settings.ENABLE_SD_CARD_ACCESS = preferences.getBoolean("key_enable_sd_card_access", false);
 
 
