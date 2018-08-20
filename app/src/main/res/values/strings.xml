@@ -63,7 +63,7 @@
     <string name="snackbar_message_track_is_processing">No puedes reproducir la canción mientras se corrige.</string>
     <string name="permission_denied">No se obtuvo el permiso requerido para escanear tu biblioteca, desliza hacia abajo para intentarlo de nuevo.</string>
     <string name="permission_granted_fail">No se concedio el permiso, actívalo en Configuración->General, para poder corregir las canciones de la SD.</string>
-    <string name="permission_granted">Permiso para corregir las canciones de la SD concedido.</string>
+    <string name="permission_granted">Permiso otorgado para corregir las canciones de la SD.</string>
     <string name="current_file_processing">Se esta corriengiendo esta canción.</string>
     <string name="initializing_recognition_api">Conectando al servicio de reconocimiento, un momento por favor…</string>
     <string name="no_internet_connection_download_cover">Para descargar la carátula conectate internet.</string>
@@ -318,7 +318,7 @@
     <string name="all_tags">Todas</string>
     <string name="missing_tags">Faltantes</string>
     <string name="message_same_tags_applied">Se aplicaron las mismas etiquetas.</string>
-    <string name="file_status_in_sd_without_permission">Se requiere el permiso de escritura a la SD para corregir esta canción..</string>
+    <string name="file_status_in_sd_without_permission">Se requiere el permiso de escritura a la SD para corregir %1$s.</string>
     <string name="file_without_permission">%1$s se encuentra en una SD y se require el permiso para poder modificarlo, habilitalo en la configuración.</string>
     <string name="could_not_apply_changes">No se pudieron aplicar los cambios.</string>
     <string name="could_not_copy_to_its_original_location">El archivo temporal no pudo ser restaurado a su ubicación original.</string>
@@ -373,6 +373,10 @@
     <string name="hint_rename">Nombre sin extensión</string>
     <string name="message_checkbox_rename">Renombrar archivo</string>
     <string name="message_rename">Dejar vacío para usar el título(si esta disponible) como nombre.</string>
+    <string name="found">Coincidencia encontrada</string>
+    <string name="starting_correction">Corrigiendo...</string>
+    <string name="applying_tags">Aplicando cambios, espera por favor...</string>
+    <string name="success">Corrección terminada.</string>
 
 
 </resources>

@@ -183,7 +183,10 @@ public class SearchTrackAdapter extends RecyclerView.Adapter<FoundItemHolder> im
         }
 
         mAsyncTaskQueue = null;
-
+        serviceHelper = null;
+        context = null;
+        mTrackList.clear();
+        mTrackList = null;
         mListener = null;
         System.gc();
     }

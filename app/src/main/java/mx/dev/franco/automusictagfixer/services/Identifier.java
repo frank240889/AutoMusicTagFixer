@@ -23,6 +23,7 @@ import mx.dev.franco.automusictagfixer.services.gnservice.GnResponseListener;
 import mx.dev.franco.automusictagfixer.services.gnservice.GnService;
 
 public class Identifier extends AsyncTask<Void, Void, Void> implements GnResponseListener.GnListener {
+
     public static final int ALL_TAGS = 0;
     public static final int JUST_COVER = 1;
     private static final String TAG = Identifier.class.getName();
@@ -47,7 +48,7 @@ public class Identifier extends AsyncTask<Void, Void, Void> implements GnRespons
     @Override
     protected void onPreExecute(){
         mGnResponseListener = new GnResponseListener(this);
-        mGnListener.onStartIdentification(mTrack.getTitle());
+        mGnListener.onStartIdentification(mTrack);
         try {
             mGnMusicIdFile = new GnMusicIdFile(GnService.sGnUser, mGnResponseListener);
             mTrack.setChecked(1);
@@ -134,7 +135,7 @@ public class Identifier extends AsyncTask<Void, Void, Void> implements GnRespons
                 Handler handler = new Handler(Looper.getMainLooper());
                 handler.post(() -> {
                     if(mGnListener != null)
-                        mGnListener.identificationError(e.getMessage());
+                        mGnListener.identificationError(e.getMessage(), mTrack);
                 });
         }
         return null;
@@ -143,8 +144,6 @@ public class Identifier extends AsyncTask<Void, Void, Void> implements GnRespons
     @Override
     protected void onPostExecute(Void voids){
         Log.d(TAG, "POSTEXECUTE");
-        if(mTrack != null)
-            mTrack.setChecked(0);
         clear();
     }
 
@@ -152,8 +151,9 @@ public class Identifier extends AsyncTask<Void, Void, Void> implements GnRespons
     @Override
     public void onCancelled(){
         Log.d(TAG, "CANCELLED");
-        if(mGnListener != null)
-            mGnListener.onIdentificationCancelled(null);
+        if(mGnListener != null) {
+            mGnListener.onIdentificationCancelled(null, mTrack);
+        }
         if(mTrack != null)
             mTrack.setChecked(0);
         clear();
@@ -170,53 +170,56 @@ public class Identifier extends AsyncTask<Void, Void, Void> implements GnRespons
     }
 
     @Override
-    public void statusIdentification(String status, String trackName) {
+    public void statusIdentification(String status, Track track) {
         if(mGnListener != null)
-            mGnListener.statusIdentification(status, trackName);
+            mGnListener.statusIdentification(status, track);
     }
 
     @Override
-    public void gatheringFingerprint(String trackName) {
+    public void gatheringFingerprint(Track track) {
         if(mGnListener != null)
-            mGnListener.gatheringFingerprint(trackName);
+            mGnListener.gatheringFingerprint(mTrack);
     }
 
     @Override
-    public void identificationError(String error) {
-        if(mGnListener != null)
-            mGnListener.identificationError(error);
+    public void identificationError(String error, Track track) {
+        if(mGnListener != null) {
+            mGnListener.identificationError(error, mTrack);
+        }
     }
 
     @Override
-    public void identificationNotFound(String trackName) {
-        if(mGnListener != null)
-            mGnListener.identificationNotFound(trackName);
-
+    public void identificationNotFound(Track track) {
         mFinished = true;
+        if(mGnListener != null) {
+            mGnListener.identificationNotFound(mTrack);
+        }
     }
 
     @Override
-    public void identificationFound(GnResponseListener.IdentificationResults results) {
-        if(mGnListener != null)
-            mGnListener.identificationFound(results);
+    public void identificationFound(GnResponseListener.IdentificationResults results, Track track) {
+        if(mGnListener != null) {
+            mGnListener.identificationFound(results, mTrack);
+        }
     }
 
     @Override
-    public void identificationCompleted(String trackName) {
-        if(mGnListener != null)
-            mGnListener.identificationCompleted(trackName);
-
+    public void identificationCompleted(Track track) {
         mFinished = true;
+        if(mGnListener != null) {
+            mGnListener.identificationCompleted(mTrack);
+        }
     }
 
     @Override
-    public void onStartIdentification(String trackName) {
-        if(mGnListener != null)
-            mGnListener.onStartIdentification(trackName);
+    public void onStartIdentification(Track track) {
+        if(mGnListener != null) {
+            mGnListener.onStartIdentification(mTrack);
+        }
     }
 
     @Override
-    public void onIdentificationCancelled(String cancelledReason) {
+    public void onIdentificationCancelled(String cancelledReason, Track track) {
         //mGnMusicIdFile.cancel();
         //mGnMusicIdFile.delete();
         //mGnMusicIdFile = null;

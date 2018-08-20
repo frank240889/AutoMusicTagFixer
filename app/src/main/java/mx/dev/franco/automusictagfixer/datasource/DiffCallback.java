@@ -1,4 +1,4 @@
-package mx.dev.franco.automusictagfixer.utilities;
+package mx.dev.franco.automusictagfixer.datasource;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -8,12 +8,12 @@ import java.util.List;
 
 import mx.dev.franco.automusictagfixer.room.Track;
 
-public class MyDiffCallback extends DiffUtil.Callback{
+public class DiffCallback extends DiffUtil.Callback{
 
     List<Track> oldTracks;
     List<Track> newTracks;
 
-    public MyDiffCallback(List<Track> newTracks, List<Track> oldTracks) {
+    public DiffCallback(List<Track> newTracks, List<Track> oldTracks) {
         this.newTracks = newTracks;
         this.oldTracks = oldTracks;
     }

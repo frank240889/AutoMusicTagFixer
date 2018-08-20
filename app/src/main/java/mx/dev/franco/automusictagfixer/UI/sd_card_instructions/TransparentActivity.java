@@ -17,6 +17,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import mx.dev.franco.automusictagfixer.R;
+import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
 import mx.dev.franco.automusictagfixer.utilities.RequiredPermissions;
 import mx.dev.franco.automusictagfixer.utilities.Settings;
@@ -55,24 +56,8 @@ public class TransparentActivity extends AppCompatActivity {
             // provided to this method as a parameter.  Pull that uri using "resultData.getData()"
             if (resultData != null) {
                 //Save root Uri of SD card
-                Constants.URI_SD_CARD = resultData.getData();
-
-                // Persist access permissions.
-                // Persist access permissions.
-                final int takeFlags = resultData.getFlags()
-                        & (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-                getContentResolver().takePersistableUriPermission(Constants.URI_SD_CARD, takeFlags);
-
-                SharedPreferences sharedPreferences = getSharedPreferences(Constants.Application.FULL_QUALIFIED_NAME, Context.MODE_PRIVATE);
-                SharedPreferences.Editor editor = sharedPreferences.edit();
-                editor.putString(Constants.URI_TREE, Constants.URI_SD_CARD.toString());
-                editor.apply();
+                AndroidUtils.grantPermissionSD(getApplicationContext(), resultData);
                 mSuccess = true;
-                Settings.ENABLE_SD_CARD_ACCESS = true;
-                SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-                SharedPreferences.Editor e  = preferences.edit();
-                e.putBoolean("key_enable_sd_card_access",true);
-                e.commit();
             }
         }
         else {
@@ -83,28 +68,17 @@ public class TransparentActivity extends AppCompatActivity {
 
     @Override
     public void onDestroy(){
-        Toast toast = Toast.makeText(getApplicationContext(), "", Toast.LENGTH_LONG);
-        View view = toast.getView();
-        TextView text = view.findViewById(android.R.id.message);
-        text.setTextColor(ContextCompat.getColor(this.getApplicationContext(), R.color.grey_900));
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            text.setTextAppearance(R.style.CustomToast);
-        } else {
-            text.setTextAppearance(this.getApplicationContext(), R.style.CustomToast);
-        }
-        view.setBackground(ContextCompat.getDrawable(getApplicationContext(), R.drawable.background_custom_toast));
-        toast.setGravity(Gravity.CENTER, 0, 0);
+        Toast toast = AndroidUtils.getToast(this);
+        toast.setDuration(Toast.LENGTH_SHORT);
 
         String msg;
         if(mSuccess){
             msg = getString(R.string.permission_granted);
-            toast.setDuration(Toast.LENGTH_SHORT);
         }
         else {
             msg = getString(R.string.permission_granted_fail);
         }
-
-        text.setText(msg);
+        toast.setText(msg);
         toast.show();
 
         super.onDestroy();

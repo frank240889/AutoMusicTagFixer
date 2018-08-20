@@ -3,7 +3,6 @@ package mx.dev.franco.automusictagfixer.UI.main;
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MutableLiveData;
 import android.arch.lifecycle.ViewModel;
-import android.util.Log;
 
 import java.util.List;
 
@@ -16,11 +15,10 @@ import mx.dev.franco.automusictagfixer.media_store_retriever.AsyncFileReader;
 import mx.dev.franco.automusictagfixer.network.ConnectivityDetector;
 import mx.dev.franco.automusictagfixer.repository.TrackRepository;
 import mx.dev.franco.automusictagfixer.room.Track;
-import mx.dev.franco.automusictagfixer.services.Identifier;
 import mx.dev.franco.automusictagfixer.services.ServiceHelper;
 import mx.dev.franco.automusictagfixer.services.gnservice.GnService;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
-import mx.dev.franco.automusictagfixer.utilities.FileUtils;
+import mx.dev.franco.automusictagfixer.utilities.Tagger;
 import mx.dev.franco.automusictagfixer.utilities.resource_manager.ResourceManager;
 import mx.dev.franco.automusictagfixer.utilities.shared_preferences.AbstractSharedPreferences;
 
@@ -29,7 +27,7 @@ public class ListViewModel extends ViewModel {
     private MutableLiveData<ListFragment.ViewWrapper> mTrack = new MutableLiveData<>();
     private MutableLiveData<Integer> mCanRunService = new MutableLiveData<>();
     private MutableLiveData<String> mTrackIsProcessing = new MutableLiveData<>();
-    private MutableLiveData<ListFragment.ViewWrapper> mTrackInnaccesible = new MutableLiveData<>();
+    private MutableLiveData<ListFragment.ViewWrapper> mTrackInaccessible = new MutableLiveData<>();
     private MutableLiveData<Boolean> mHasFinishedRetrieving = new MutableLiveData<>();
     private LiveData<List<Track>> mTracks;
     private MutableLiveData<ListFragment.ViewWrapper> mCanOpenDetails = new MutableLiveData<>();
@@ -190,9 +188,9 @@ public class ListViewModel extends ViewModel {
     }
 
     public void onClickCover(ListFragment.ViewWrapper viewWrapper){
-        boolean isAccessible = FileUtils.isAccessible(viewWrapper.track.getPath());
+        boolean isAccessible = Tagger.checkFileIntegrity(viewWrapper.track.getPath());
         if(!isAccessible){
-            mTrackInnaccesible.setValue(viewWrapper);
+            mTrackInaccessible.setValue(viewWrapper);
         }
         else if(viewWrapper.track.isProcessing()){
             mTrackIsProcessing.setValue(resourceManager.getString(R.string.current_file_processing));
@@ -227,7 +225,7 @@ public class ListViewModel extends ViewModel {
     }
 
     public LiveData<ListFragment.ViewWrapper> actionIsTrackInaccessible(){
-        return mTrackInnaccesible;
+        return mTrackInaccessible;
     }
 
     public LiveData<Boolean> hasFinishedRetrievedTracks(){
@@ -251,9 +249,9 @@ public class ListViewModel extends ViewModel {
     }
 
     private boolean evaluateTrack(ListFragment.ViewWrapper viewWrapper){
-        boolean isAccessible = FileUtils.isAccessible(viewWrapper.track.getPath());
+        boolean isAccessible = Tagger.checkFileIntegrity(viewWrapper.track.getPath());
         if(!isAccessible){
-            mTrackInnaccesible.setValue(viewWrapper);
+            mTrackInaccessible.setValue(viewWrapper);
             return false;
         }
 
@@ -275,11 +273,5 @@ public class ListViewModel extends ViewModel {
         }
 
         return true;
-    }
-
-
-
-    private boolean isFileAccesible(ListFragment.ViewWrapper viewWrapper){
-        return FileUtils.isAccessible(viewWrapper.track.getPath());
     }
 }

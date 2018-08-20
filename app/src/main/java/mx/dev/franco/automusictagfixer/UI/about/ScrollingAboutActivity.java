@@ -1,7 +1,6 @@
 package mx.dev.franco.automusictagfixer.UI.about;
 
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
@@ -10,7 +9,7 @@ import android.view.View;
 import android.widget.TextView;
 
 import mx.dev.franco.automusictagfixer.R;
-import mx.dev.franco.automusictagfixer.utilities.ViewUtils;
+import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 
 public class ScrollingAboutActivity extends AppCompatActivity {
 
@@ -42,14 +41,14 @@ public class ScrollingAboutActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                ViewUtils.openInExternalApp(Intent.ACTION_SENDTO, "mailto: dark.yellow.studios@gmail.com", ScrollingAboutActivity.this);
+                AndroidUtils.openInExternalApp(Intent.ACTION_SENDTO, "mailto: dark.yellow.studios@gmail.com", ScrollingAboutActivity.this);
             }
         });
 
         jaudiotagger.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ViewUtils.openInExternalApp(Intent.ACTION_VIEW, "http://www.jthink.net/jaudiotagger/", ScrollingAboutActivity.this);
+                AndroidUtils.openInExternalApp(Intent.ACTION_VIEW, "http://www.jthink.net/jaudiotagger/", ScrollingAboutActivity.this);
             }
         });
 
@@ -70,7 +69,7 @@ public class ScrollingAboutActivity extends AppCompatActivity {
         drawer.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ViewUtils.openInExternalApp(Intent.ACTION_VIEW, "https://tgs266.deviantart.com/", ScrollingAboutActivity.this);
+                AndroidUtils.openInExternalApp(Intent.ACTION_VIEW, "https://tgs266.deviantart.com/", ScrollingAboutActivity.this);
             }
         });
 

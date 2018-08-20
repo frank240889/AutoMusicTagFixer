@@ -187,7 +187,7 @@ public class Tagger {
     private ResultCorrection applyTags(File file, HashMap<FieldKey, Object> tags, int overWriteTags) throws ReadOnlyFileException, IOException, TagException, InvalidAudioFrameException, CannotReadException {
         boolean isStoredInSd = sStorageHelper.isStoredInSD(file);
 
-        if(isStoredInSd && Constants.URI_SD_CARD == null) {
+        if(isStoredInSd && AndroidUtils.getUriSD(sContext) == null) {
             ResultCorrection resultCorrection = new ResultCorrection();
             resultCorrection.code = COULD_NOT_GET_URI_SD_ROOT_TREE;
             return resultCorrection;
@@ -571,10 +571,11 @@ public class Tagger {
      * @return SD card document file
      */
     private DocumentFile getUriTree(){
-        if(Constants.URI_SD_CARD == null) {
+        Uri uri = AndroidUtils.getUriSD(sContext);
+        if(uri == null) {
             return null;
         }
-        return DocumentFile.fromTreeUri(sContext, Constants.URI_SD_CARD);
+        return DocumentFile.fromTreeUri(sContext, uri);
     }
 
     /**
@@ -711,7 +712,7 @@ public class Tagger {
             return resultCorrection;
         }
 
-        if(isStoredInSd && Constants.URI_SD_CARD == null) {
+        if(isStoredInSd && AndroidUtils.getUriSD(sContext) == null) {
             resultCorrection.code = COULD_NOT_GET_URI_SD_ROOT_TREE;
             return resultCorrection;
         }
@@ -858,7 +859,7 @@ public class Tagger {
         boolean isStoredInSd = sStorageHelper.isStoredInSD(currentFile);
 
         if(isStoredInSd ){
-            if (Constants.URI_SD_CARD == null){
+            if (AndroidUtils.getUriSD(sContext) == null){
                 return null;
             }
             return internalRenameDocumentFile(currentFile ,metadata);
@@ -905,7 +906,7 @@ public class Tagger {
 
         //Check if new file document already exist
         id = id + getRelativePath(new File(newRelativeFilePath));
-        Uri childUri = DocumentsContract.buildDocumentUriUsingTree(Constants.URI_SD_CARD, id);
+        Uri childUri = DocumentsContract.buildDocumentUriUsingTree(AndroidUtils.getUriSD(sContext), id);
         DocumentFile renamedDocument = DocumentFile.fromSingleUri(sContext, childUri);
         boolean wasRenamed = false;
         if(renamedDocument == null){
@@ -996,11 +997,15 @@ public class Tagger {
     }
 
     public static boolean checkFileIntegrity(DocumentFile file){
-        return file.exists() && file.length() > 0 && file.canRead() && file.canWrite();
+        return file.exists() && file.isFile() && file.length() > 0 && file.canRead() && file.canWrite();
     }
 
     public static boolean checkFileIntegrity(File file) {
-        return file.exists() && file.length() > 0 && file.canRead() && file.canWrite();
+        return file.exists() && file.isFile() && file.length() > 0 && file.canRead() && file.canWrite();
+    }
+
+    public static boolean checkFileIntegrity(String path) {
+        return checkFileIntegrity(new File(path));
     }
 
         /**

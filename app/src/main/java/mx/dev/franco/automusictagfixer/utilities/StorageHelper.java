@@ -44,7 +44,7 @@ public class StorageHelper{
     /**
      * Detect number of storage available.
      */
-    public void detectStorages(){
+    public StorageHelper detectStorages(){
         File[] storage = ContextCompat.getExternalFilesDirs(sContext, "temp_tagged_files");
 
         int numberMountedStorage = 0;
@@ -61,6 +61,7 @@ public class StorageHelper{
                 Log.d("storage", basePath);
             }
         }
+        return this;
     }
 
     public SparseArray<String> getBasePaths(){

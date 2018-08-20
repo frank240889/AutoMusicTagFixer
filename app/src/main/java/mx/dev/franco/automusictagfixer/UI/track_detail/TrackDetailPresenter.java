@@ -281,7 +281,7 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
 
             sIdentifier = new Identifier(this);
             sIdentifier.setTrack(mCurrentTrack);
-            sIdentifier.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+            sIdentifier.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR);
         }
     }
 
@@ -293,19 +293,19 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
     }
 
     @Override
-    public void statusIdentification(String status, String trackName) {
+    public void statusIdentification(String status, Track track) {
         if(mView != null)
             mView.setMessageStatus(status);
     }
 
     @Override
-    public void gatheringFingerprint(String trackName) {
+    public void gatheringFingerprint(Track track) {
         if(mView != null)
-            mView.setMessageStatus(trackName);
+            mView.setMessageStatus(AudioItem.getPath(track.getPath()));
     }
 
     @Override
-    public void identificationError(String error) {
+    public void identificationError(String error, Track track) {
         if(mView != null) {
             mView.hideStatus();
             mView.setMessageStatus("");
@@ -316,7 +316,7 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
     }
 
     @Override
-    public void identificationNotFound(String trackName) {
+    public void identificationNotFound(Track track) {
         if(mView != null) {
             mView.onCorrectionError(resourceManager.getString(R.string.no_found_tags));
             mView.setMessageStatus("");
@@ -327,7 +327,7 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
     }
 
     @Override
-    public void identificationFound(GnResponseListener.IdentificationResults results) {
+    public void identificationFound(GnResponseListener.IdentificationResults results, Track track) {
         if(mView != null) {
             mCache.getCache().add(mCurrentId, results);
             mView.hideProgress();
@@ -349,14 +349,14 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
     }
 
     @Override
-    public void identificationCompleted(String trackName) {
+    public void identificationCompleted(Track track) {
         if(mView != null)
             mView.hideProgress();
         sIdentifier = null;
     }
 
     @Override
-    public void onStartIdentification(String trackName) {
+    public void onStartIdentification(Track track) {
         if(mView != null) {
             mView.setMessageStatus("");
             mView.showStatus();
@@ -366,7 +366,7 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
     }
 
     @Override
-    public void onIdentificationCancelled(String cancelledReason) {
+    public void onIdentificationCancelled(String cancelledReason, Track track) {
         if(mView != null) {
             mView.hideProgress();
             mView.setMessageStatus("");
@@ -412,7 +412,7 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
 
 
     @Override
-    public void onCorrectionStarted(String trackName) {
+    public void onCorrectionStarted(Track track) {
         if(mView != null) {
             mView.setMessageStatus("Corrigiendo, espera por favor...");
             mView.showStatus();
@@ -421,7 +421,7 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
     }
 
     @Override
-    public void onCorrectionCompleted(Tagger.ResultCorrection resultCorrection) {
+    public void onCorrectionCompleted(Tagger.ResultCorrection resultCorrection, Track track) {
         if(mView != null) {
             mView.setMessageStatus("");
             mView.hideStatus();
@@ -483,13 +483,19 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
     }
 
     @Override
-    public void onCorrectionCancelled(String trackName) {
+    public void onCorrectionCancelled(Track track) {
         if(mView != null) {
             mView.setMessageStatus("");
             mView.hideStatus();
             mView.hideProgress();
         }
         sFixer = null;
+    }
+
+    @Override
+    public void onCorrectionError(Track track, String error) {
+        if(mView != null)
+            mView.onCorrectionError(error);
     }
 
     /***********************************************************/

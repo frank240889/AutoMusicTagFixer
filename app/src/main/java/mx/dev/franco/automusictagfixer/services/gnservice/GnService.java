@@ -25,7 +25,7 @@ import com.gracenote.gnsdk.GnUserStore;
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.services.Job;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
-import mx.dev.franco.automusictagfixer.utilities.ViewUtils;
+import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 
 /**
  * Created by franco on 5/07/17.
@@ -124,7 +124,7 @@ public class GnService{
                 //when number of intents is 5
                 //inform the user that API could not be initialized and the cause
                 if(sCountAttempts == 5){
-                    Toast toast = ViewUtils.getToast(sContext);
+                    Toast toast = AndroidUtils.getToast(sContext);
                     toast.setText(R.string.could_not_init_api + mMsg);
                     toast.setDuration(15000);
                     toast.show();

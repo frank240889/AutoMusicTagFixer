@@ -6,7 +6,6 @@ import android.support.v7.util.DiffUtil;
 import java.util.List;
 
 import mx.dev.franco.automusictagfixer.room.Track;
-import mx.dev.franco.automusictagfixer.utilities.MyDiffCallback;
 
 public class DiffExecutor extends AsyncTask<List<Track>, Void, DiffExecutor.DiffResults>{
     public interface DiffCallbackListener {
@@ -28,7 +27,7 @@ public class DiffExecutor extends AsyncTask<List<Track>, Void, DiffExecutor.Diff
     @Override
     protected DiffResults doInBackground(List<Track>... lists) {
         DiffUtil.DiffResult diffResult = DiffUtil.
-                calculateDiff(new MyDiffCallback(lists[0], lists[1]));
+                calculateDiff(new DiffCallback(lists[0], lists[1]));
         DiffResults diffResults = new DiffResults();
         diffResults.diffResult = diffResult;
         diffResults.list = lists[1];

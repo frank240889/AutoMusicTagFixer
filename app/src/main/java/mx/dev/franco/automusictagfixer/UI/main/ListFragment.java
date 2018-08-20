@@ -51,7 +51,7 @@ import mx.dev.franco.automusictagfixer.services.FixerTrackService;
 import mx.dev.franco.automusictagfixer.services.ServiceHelper;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
 import mx.dev.franco.automusictagfixer.utilities.RequiredPermissions;
-import mx.dev.franco.automusictagfixer.utilities.ViewUtils;
+import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 
 public class ListFragment extends Fragment implements AudioItemHolder.ClickListener,Observer<List<Track>> {
     private static final String TAG = ListFragment.class.getName();
@@ -202,7 +202,7 @@ public class ListFragment extends Fragment implements AudioItemHolder.ClickListe
 
 
     private void showMessageError(String s) {
-        Snackbar snackbar = ViewUtils.getSnackbar(mLayout, getActivity().getApplicationContext());
+        Snackbar snackbar = AndroidUtils.getSnackbar(mLayout, getActivity().getApplicationContext());
         snackbar.setText(s);
         snackbar.show();
     }
@@ -332,7 +332,7 @@ public class ListFragment extends Fragment implements AudioItemHolder.ClickListe
     @Override
     public void onCheckMarkClick(int position) {
         String status =  mListViewModel.getState(mAdapter.getDatasource().get(position).getState());
-        Toast t = ViewUtils.getToast(getActivity());
+        Toast t = AndroidUtils.getToast(getActivity());
         t.setText(status);
         t.show();
     }

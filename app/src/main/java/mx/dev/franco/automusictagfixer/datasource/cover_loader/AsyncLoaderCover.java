@@ -14,6 +14,10 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 
+/**
+ * Extracts a loads cover from audiofiles using
+ * another thread.
+ */
 public class AsyncLoaderCover extends AsyncTask<String, Void, byte[]> {
     private CoverLoaderListener mListener;
     //private WeakReference<CoverLoaderListener> mWeakRef;
@@ -64,10 +68,10 @@ public class AsyncLoaderCover extends AsyncTask<String, Void, byte[]> {
         if(mListener != null)
             mListener.onLoadingFinished(cover);
         mListener = null;
-        //if(mWeakRef.get() != null)
-            //mWeakRef.get().onLoadingFinished(cover);
-        //mWeakRef.clear();
-        //mWeakRef = null;
+        /*if(mWeakRef.get() != null)
+            mWeakRef.get().onLoadingFinished(cover);
+        mWeakRef.clear();
+        mWeakRef = null;*/
     }
 
     @Override

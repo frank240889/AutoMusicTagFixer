@@ -20,7 +20,6 @@ import android.view.WindowManager;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
-import com.google.android.flexbox.AlignContent;
 import com.google.android.flexbox.AlignItems;
 import com.google.android.flexbox.FlexDirection;
 import com.google.android.flexbox.FlexboxLayoutManager;
@@ -36,7 +35,7 @@ import mx.dev.franco.automusictagfixer.UI.track_detail.TrackDetailsActivity;
 import mx.dev.franco.automusictagfixer.repository.TrackRepository;
 import mx.dev.franco.automusictagfixer.room.Track;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
-import mx.dev.franco.automusictagfixer.utilities.ViewUtils;
+import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 
 public class Search extends AppCompatActivity implements AsyncSearch.ResultsSearchListener, FoundItemHolder.ClickListener {
     private static final String TAG = Search.class.getName();
@@ -96,11 +95,10 @@ public class Search extends AppCompatActivity implements AsyncSearch.ResultsSear
         mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
-                Log.d(TAG, "State: " + newState);
-                if (newState == RecyclerView.SCROLL_STATE_IDLE) {
+                if (newState == RecyclerView.SCROLL_STATE_IDLE && !isDestroyed()) {
                     Glide.with(Search.this).resumeRequests();
                 }
-                if (newState == RecyclerView.SCROLL_STATE_DRAGGING || newState == RecyclerView.SCROLL_STATE_SETTLING) {
+                if (newState == RecyclerView.SCROLL_STATE_DRAGGING || newState == RecyclerView.SCROLL_STATE_SETTLING && !isDestroyed()) {
                     Glide.with(Search.this).pauseRequests();
                 }
                 super.onScrollStateChanged(recyclerView, newState);
@@ -142,7 +140,7 @@ public class Search extends AppCompatActivity implements AsyncSearch.ResultsSear
 
     @Override
     public void onStartSearch() {
-
+        mRecyclerView.stopScroll();
     }
 
     @SuppressLint({"StringFormatMatches", "StringFormatInvalid"})
@@ -179,7 +177,7 @@ public class Search extends AppCompatActivity implements AsyncSearch.ResultsSear
             startActivity(intent);
         }
         else {
-            Snackbar snackbar = ViewUtils.getSnackbar(mToolbar, this);
+            Snackbar snackbar = AndroidUtils.getSnackbar(mToolbar, this);
             snackbar.setText(R.string.current_file_processing);
             snackbar.show();
         }
@@ -188,6 +186,7 @@ public class Search extends AppCompatActivity implements AsyncSearch.ResultsSear
 
     @Override
     public void onDestroy(){
+        mRecyclerView.stopScroll();
         if(mAsyncSearch != null && (mAsyncSearch.getStatus() == AsyncSearch.Status.PENDING || mAsyncSearch.getStatus() == AsyncSearch.Status.RUNNING)){
             mAsyncSearch.cancel(true);
         }

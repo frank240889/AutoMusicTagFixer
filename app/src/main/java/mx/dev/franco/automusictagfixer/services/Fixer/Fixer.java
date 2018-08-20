@@ -2,8 +2,6 @@ package mx.dev.franco.automusictagfixer.services.Fixer;
 
 import android.content.ContentValues;
 import android.content.Context;
-import android.media.MediaScannerConnection;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.provider.MediaStore;
 import android.util.Log;
@@ -21,18 +19,20 @@ import java.util.HashMap;
 import javax.inject.Inject;
 
 import mx.dev.franco.automusictagfixer.AutoMusicTagFixer;
+import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.list.AudioItem;
 import mx.dev.franco.automusictagfixer.repository.TrackRepository;
 import mx.dev.franco.automusictagfixer.room.Track;
 import mx.dev.franco.automusictagfixer.services.gnservice.GnResponseListener;
-import mx.dev.franco.automusictagfixer.utilities.Settings;
 import mx.dev.franco.automusictagfixer.utilities.Tagger;
+import mx.dev.franco.automusictagfixer.utilities.resource_manager.ResourceManager;
 
-public class Fixer extends AsyncTask<GnResponseListener.IdentificationResults,Void,Void> {
+public class Fixer extends AsyncTask<GnResponseListener.IdentificationResults,Void,Boolean> {
     public interface OnCorrectionListener {
-        void onCorrectionStarted(String trackName);
-        void onCorrectionCompleted(Tagger.ResultCorrection resultCorrection);
-        void onCorrectionCancelled(String trackName);
+        void onCorrectionStarted(Track track);
+        void onCorrectionCompleted(Tagger.ResultCorrection resultCorrection, Track track);
+        void onCorrectionCancelled(Track track);
+        void onCorrectionError(Track track, String error);
     }
 
     private static final String TAG = Fixer.class.getName();
@@ -44,6 +44,8 @@ public class Fixer extends AsyncTask<GnResponseListener.IdentificationResults,Vo
     Tagger taggerHelper;
     @Inject
     TrackRepository trackRepository;
+    @Inject
+    ResourceManager resourceManager;
     @Inject
     Context context;
 
@@ -74,13 +76,13 @@ public class Fixer extends AsyncTask<GnResponseListener.IdentificationResults,Vo
     @Override
     protected void onPreExecute(){
         if(mListener != null){
-            mListener.onCorrectionStarted(AudioItem.getFilename(mTrack.getPath()));
+            mListener.onCorrectionStarted(mTrack);
         }
     }
 
     @Override
-    protected final Void doInBackground(GnResponseListener.IdentificationResults... results) {
-
+    protected final Boolean doInBackground(GnResponseListener.IdentificationResults... results) {
+        boolean result = false;
         switch (mTask){
             case Tagger.MODE_ADD_COVER:
             case Tagger.MODE_REMOVE_COVER:
@@ -101,13 +103,18 @@ public class Fixer extends AsyncTask<GnResponseListener.IdentificationResults,Vo
         }
 
 
-        return null;
+        return result;
     }
 
     @Override
-    protected void onPostExecute(Void voids){
+    protected void onPostExecute(Boolean booleans){
         if(mListener != null){
-            mListener.onCorrectionCompleted(mResultsCorrection);
+            if(booleans)
+                mListener.onCorrectionCompleted(mResultsCorrection, mTrack);
+            else
+                mListener.onCorrectionError(
+                        mTrack,
+                        String.format(resourceManager.getString(R.string.file_status_in_sd_without_permission), AudioItem.getPath(mTrack.getPath())));
         }
         clear();
     }
@@ -116,11 +123,11 @@ public class Fixer extends AsyncTask<GnResponseListener.IdentificationResults,Vo
     public void onCancelled(){
         clear();
     }
-    public void onCancelled(Void voids){
+    public void onCancelled(Boolean booleans){
         if(mListener != null)
-            mListener.onCorrectionCancelled(mTrack.getTitle());
+            mListener.onCorrectionCancelled(mTrack);
 
-        super.onCancelled(voids);
+        super.onCancelled(booleans);
         clear();
     }
 
@@ -133,9 +140,9 @@ public class Fixer extends AsyncTask<GnResponseListener.IdentificationResults,Vo
         context = null;
     }
 
-    private void updateTags(GnResponseListener.IdentificationResults results, int overwriteTags) throws TagException, ReadOnlyFileException, CannotReadException, InvalidAudioFrameException, IOException {
+    private boolean updateTags(GnResponseListener.IdentificationResults results, int overwriteTags) throws TagException, ReadOnlyFileException, CannotReadException, InvalidAudioFrameException, IOException {
         if(isCancelled())
-            return;
+            return true;
         //check what data has been identificationFound
         boolean dataTitle = false;
         boolean dataArtist = false;
@@ -146,12 +153,12 @@ public class Fixer extends AsyncTask<GnResponseListener.IdentificationResults,Vo
         boolean dataGenre = false;
 
         if(isCancelled())
-            return;
+            return true;
 
         HashMap<FieldKey, Object> tagsToApply = new HashMap<>();
 
         if(isCancelled())
-            return;
+            return true;
 
         if(results.title != null && !results.title.equals("")){
             tagsToApply.put(FieldKey.TITLE, results.title);
@@ -186,20 +193,24 @@ public class Fixer extends AsyncTask<GnResponseListener.IdentificationResults,Vo
         }
 
         if(isCancelled())
-            return;
+            return true;
 
-            mResultsCorrection = taggerHelper.saveTags(mTrack.getPath(), tagsToApply, overwriteTags);
-            mResultsCorrection.track = mTrack;
-                //If some info was not identificationFound, mark its state as INCOMPLETE
-                if (!dataTitle || !dataArtist || !dataAlbum || !dataImage || !dataTrackNumber || !dataYear || !dataGenre) {
-                    mResultsCorrection.allTagsApplied = AudioItem.STATUS_ALL_TAGS_NOT_FOUND;
-                    mTrack.setState(AudioItem.STATUS_ALL_TAGS_NOT_FOUND);
-                }
-                //All info for this song was identificationFound, mark its state as COMPLETE!!!
-                else {
-                    mResultsCorrection.allTagsApplied = AudioItem.STATUS_ALL_TAGS_FOUND;
-                    mTrack.setState(AudioItem.STATUS_ALL_TAGS_FOUND);
-                }
+        mResultsCorrection = taggerHelper.saveTags(mTrack.getPath(), tagsToApply, overwriteTags);
+
+        if(mResultsCorrection.code == Tagger.COULD_NOT_GET_URI_SD_ROOT_TREE)
+            return false;
+
+        mResultsCorrection.track = mTrack;
+        //If some info was not identificationFound, mark its state as INCOMPLETE
+        if (!dataTitle || !dataArtist || !dataAlbum || !dataImage || !dataTrackNumber || !dataYear || !dataGenre) {
+            mResultsCorrection.allTagsApplied = AudioItem.STATUS_ALL_TAGS_NOT_FOUND;
+            mTrack.setState(AudioItem.STATUS_ALL_TAGS_NOT_FOUND);
+        }
+        //All info for this song was identificationFound, mark its state as COMPLETE!!!
+        else {
+            mResultsCorrection.allTagsApplied = AudioItem.STATUS_ALL_TAGS_FOUND;
+            mTrack.setState(AudioItem.STATUS_ALL_TAGS_FOUND);
+        }
 
         String selection = null;
         String[] selectionArgs = null; //this is the old path
@@ -207,50 +218,48 @@ public class Fixer extends AsyncTask<GnResponseListener.IdentificationResults,Vo
         //Rename file if this option is enabled in Settings
         if (mShouldRename) {
 
-            if(mRenameTo.isEmpty()) {
+            if (mRenameTo.isEmpty()) {
 
                 newAbsolutePath = taggerHelper.renameFile(new File(mTrack.getPath()),
                         results.title,
                         results.artist,
                         results.album);
-            }
-            else {
+            } else {
                 newAbsolutePath = taggerHelper.renameFile(new File(mTrack.getPath()),
                         mRenameTo,
                         results.artist,
                         results.album);
             }
 
-            if (newAbsolutePath != null){
+            if (newAbsolutePath != null) {
                 ContentValues newValuesToMediaStore = new ContentValues();
                 selection = MediaStore.Audio.Media._ID + "= ?";
-                selectionArgs = new String[]{mTrack.getMediaStoreId()+""}; //this is the old path
+                selectionArgs = new String[]{mTrack.getMediaStoreId() + ""}; //this is the old path
                 mResultsCorrection.pathTofileUpdated = newAbsolutePath;
                 newValuesToMediaStore.put(MediaStore.MediaColumns.DATA, newAbsolutePath);
-                if(mTrack.getMediaStoreId() != -1) {
+                if (mTrack.getMediaStoreId() != -1) {
                     boolean successMediaStore = context.getContentResolver().
                             update(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
                                     newValuesToMediaStore,
                                     selection,
                                     selectionArgs) == 1;
                     newValuesToMediaStore.clear();
-                    Log.d(TAG,"success media store update: " + successMediaStore);
+                    Log.d(TAG, "success media store update: " + successMediaStore);
                 }
                 mResultsCorrection.track.setPath(newAbsolutePath);
-                /*MediaScannerConnection.scanFile(context, new String[]{newAbsolutePath}, null, new MediaScannerConnection.OnScanCompletedListener() {
-                    @Override
-                    public void onScanCompleted(String path, Uri uri) {
-                        Log.d(TAG,"success media store scnned: " + path);
-                    }
-                });*/
+            /*MediaScannerConnection.scanFile(context, new String[]{newAbsolutePath}, null, new MediaScannerConnection.OnScanCompletedListener() {
+                @Override
+                public void onScanCompleted(String path, Uri uri) {
+                    Log.d(TAG,"success media store scnned: " + path);
+                }
+            });*/
 
             }
-
         }
+        return true;
     }
 
-    private void updateCoverArt(GnResponseListener.IdentificationResults results) throws ReadOnlyFileException, CannotReadException, TagException, InvalidAudioFrameException, IOException {
-
+    private boolean updateCoverArt(GnResponseListener.IdentificationResults results) throws ReadOnlyFileException, CannotReadException, TagException, InvalidAudioFrameException, IOException {
         if(mTask == Tagger.MODE_ADD_COVER){
             //Here we update cover
             mResultsCorrection = taggerHelper.applyCover(results.cover, mTrack.getPath());
@@ -261,6 +270,10 @@ public class Fixer extends AsyncTask<GnResponseListener.IdentificationResults,Vo
         }
         mResultsCorrection.track = mTrack;
 
+        if(mResultsCorrection.code == Tagger.COULD_NOT_GET_URI_SD_ROOT_TREE)
+            return false;
+
+        return true;
     }
 
 

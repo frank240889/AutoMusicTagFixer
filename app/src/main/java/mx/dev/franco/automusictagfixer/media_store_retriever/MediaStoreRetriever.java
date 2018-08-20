@@ -3,11 +3,6 @@ package mx.dev.franco.automusictagfixer.media_store_retriever;
 import android.content.Context;
 import android.database.Cursor;
 import android.provider.MediaStore;
-import android.support.annotation.WorkerThread;
-
-import javax.inject.Inject;
-
-import mx.dev.franco.automusictagfixer.utilities.Sort;
 
 public class MediaStoreRetriever {
 

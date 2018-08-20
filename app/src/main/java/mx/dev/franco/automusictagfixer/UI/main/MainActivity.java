@@ -47,7 +47,8 @@ import mx.dev.franco.automusictagfixer.services.FixerTrackService;
 import mx.dev.franco.automusictagfixer.services.ServiceHelper;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
 import mx.dev.franco.automusictagfixer.utilities.RequiredPermissions;
-import mx.dev.franco.automusictagfixer.utilities.ViewUtils;
+import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
+import mx.dev.franco.automusictagfixer.utilities.StorageHelper;
 
 public class MainActivity extends AppCompatActivity
         implements ResponseReceiver.OnResponse, ListFragment.OnInteractionFragment, NavigationView.OnNavigationItemSelectedListener{
@@ -187,17 +188,22 @@ public class MainActivity extends AppCompatActivity
         boolean sorted = false;
         switch (id){
             case R.id.action_select_all:
+                if(mListFragment.getDatasource() == null || mListFragment.getDatasource().size() == 0){
+                    Snackbar snackbar = AndroidUtils.getSnackbar(mToolbar, getApplicationContext());
+                    snackbar.setText(R.string.no_available);
+                    snackbar.show();
+                    return false;
+                }
                 mListFragment.checkAll();
                 break;
             case R.id.action_refresh:
                 boolean hasPermission = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
                 if(!hasPermission) {
                     mListFragment.requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, RequiredPermissions.WRITE_EXTERNAL_STORAGE_PERMISSION);
-                    //ActivityCompat.requestPermissions(this,new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, RequiredPermissions.WRITE_EXTERNAL_STORAGE_PERMISSION);
                 }
                 else if(ServiceHelper.getInstance(getApplicationContext()).checkIfServiceIsRunning(FixerTrackService.class.getName())){
-                    Snackbar snackbar = ViewUtils.getSnackbar(mToolbar, getApplicationContext());
-                    snackbar.setText(R.string.processing_task);
+                    Snackbar snackbar = AndroidUtils.getSnackbar(mToolbar, getApplicationContext());
+                    snackbar.setText(R.string.no_available);
                     snackbar.show();
                 }
                 else {
@@ -208,8 +214,8 @@ public class MainActivity extends AppCompatActivity
             case R.id.path_asc:
                 sorted = mListFragment.sort(TrackContract.TrackData.DATA, TrackAdapter.ASC);
                 if(!sorted){
-                    Snackbar snackbar = ViewUtils.getSnackbar(mToolbar, getApplicationContext());
-                    snackbar.setText(R.string.processing_task);
+                    Snackbar snackbar = AndroidUtils.getSnackbar(mToolbar, getApplicationContext());
+                    snackbar.setText(R.string.no_available);
                     snackbar.show();
                     return false;
                 }
@@ -218,8 +224,8 @@ public class MainActivity extends AppCompatActivity
             case R.id.path_desc:
                 sorted = mListFragment.sort(TrackContract.TrackData.DATA, TrackAdapter.DESC);
                 if(!sorted){
-                    Snackbar snackbar = ViewUtils.getSnackbar(mToolbar, getApplicationContext());
-                    snackbar.setText(R.string.processing_task);
+                    Snackbar snackbar = AndroidUtils.getSnackbar(mToolbar, getApplicationContext());
+                    snackbar.setText(R.string.no_available);
                     snackbar.show();
                     return false;
                 }
@@ -228,8 +234,8 @@ public class MainActivity extends AppCompatActivity
             case R.id.title_asc:
                 sorted = mListFragment.sort(TrackContract.TrackData.TITLE, TrackAdapter.ASC);
                 if(!sorted){
-                    Snackbar snackbar = ViewUtils.getSnackbar(mToolbar, getApplicationContext());
-                    snackbar.setText(R.string.processing_task);
+                    Snackbar snackbar = AndroidUtils.getSnackbar(mToolbar, getApplicationContext());
+                    snackbar.setText(R.string.no_available);
                     snackbar.show();
                     return false;
                 }
@@ -238,8 +244,8 @@ public class MainActivity extends AppCompatActivity
             case R.id.title_desc:
                 sorted = mListFragment.sort(TrackContract.TrackData.TITLE, TrackAdapter.DESC);
                 if(!sorted){
-                    Snackbar snackbar = ViewUtils.getSnackbar(mToolbar, getApplicationContext());
-                    snackbar.setText(R.string.processing_task);
+                    Snackbar snackbar = AndroidUtils.getSnackbar(mToolbar, getApplicationContext());
+                    snackbar.setText(R.string.no_available);
                     snackbar.show();
                     return false;
                 }
@@ -248,8 +254,8 @@ public class MainActivity extends AppCompatActivity
             case R.id.artist_asc:
                 sorted = mListFragment.sort(TrackContract.TrackData.ARTIST, TrackAdapter.ASC);
                 if(!sorted){
-                    Snackbar snackbar = ViewUtils.getSnackbar(mToolbar, getApplicationContext());
-                    snackbar.setText(R.string.processing_task);
+                    Snackbar snackbar = AndroidUtils.getSnackbar(mToolbar, getApplicationContext());
+                    snackbar.setText(R.string.no_available);
                     snackbar.show();
                     return false;
                 }
@@ -258,8 +264,8 @@ public class MainActivity extends AppCompatActivity
             case R.id.artist_desc:
                 sorted =mListFragment.sort(TrackContract.TrackData.ARTIST, TrackAdapter.DESC);
                 if(!sorted){
-                    Snackbar snackbar = ViewUtils.getSnackbar(mToolbar, getApplicationContext());
-                    snackbar.setText(R.string.processing_task);
+                    Snackbar snackbar = AndroidUtils.getSnackbar(mToolbar, getApplicationContext());
+                    snackbar.setText(R.string.no_available);
                     snackbar.show();
                     return false;
                 }
@@ -268,8 +274,8 @@ public class MainActivity extends AppCompatActivity
             case R.id.album_asc:
                 sorted =mListFragment.sort(TrackContract.TrackData.ALBUM, TrackAdapter.ASC);
                 if(!sorted){
-                    Snackbar snackbar = ViewUtils.getSnackbar(mToolbar, getApplicationContext());
-                    snackbar.setText(R.string.processing_task);
+                    Snackbar snackbar = AndroidUtils.getSnackbar(mToolbar, getApplicationContext());
+                    snackbar.setText(R.string.no_available);
                     snackbar.show();
                     return false;
                 }
@@ -278,8 +284,8 @@ public class MainActivity extends AppCompatActivity
             case R.id.album_desc:
                 sorted = mListFragment.sort(TrackContract.TrackData.ALBUM, TrackAdapter.DESC);
                 if(!sorted){
-                    Snackbar snackbar = ViewUtils.getSnackbar(mToolbar, getApplicationContext());
-                    snackbar.setText(R.string.processing_task);
+                    Snackbar snackbar = AndroidUtils.getSnackbar(mToolbar, getApplicationContext());
+                    snackbar.setText(R.string.no_available);
                     snackbar.show();
                     return false;
                 }
@@ -355,58 +361,6 @@ public class MainActivity extends AppCompatActivity
 
     }
 
-
-    /**
-     * Handles responses from {@link FixerTrackService}
-     * @param intent
-     */
-    @Override
-    public void onResponse(Intent intent) {
-
-        //get action and handle it
-        String action = intent.getAction();
-        int id = intent.getIntExtra(Constants.MEDIA_STORE_ID, -1);
-        Snackbar snackbar;
-        Log.d(TAG, action);
-        switch (action) {
-            case Constants.GnServiceActions.ACTION_API_INITIALIZED:
-                snackbar = ViewUtils.getSnackbar(this.mToolbar, this);
-                if(mListFragment.getDatasource().size() > 0) {
-                    snackbar.setText(R.string.api_initialized);
-                }
-                else {
-                    if(ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED){
-                        snackbar.setText(R.string.title_dialog_permision);
-                    }
-                    else {
-                        snackbar.setText(R.string.add_some_tracks);
-                    }
-                }
-                snackbar.show();
-
-                break;
-            case Constants.Actions.ACTION_CONNECTION_LOST:
-                Toast toast = ViewUtils.getToast(this);
-                toast.setText(R.string.connection_lost);
-                toast.setDuration(Toast.LENGTH_SHORT);
-                toast.show();
-                break;
-
-            case Constants.Actions.ACTION_START_TASK:
-                mListFragment.correctionStarted();
-                break;
-            case Constants.Actions.START_PROCESSING_FOR:
-            case Constants.Actions.FINISH_TRACK_PROCESSING:
-                mListFragment.updateItem(id, intent);
-                break;
-            case Constants.Actions.ACTION_COMPLETE_TASK:
-                mListFragment.correctionCompleted();
-                break;
-        }
-
-    }
-
-
     @Override
     public void onClickCover() {
         /*TrackDetailFragment trackDetailFragment = TrackDetailFragment.newInstance("","");
@@ -481,5 +435,61 @@ public class MainActivity extends AppCompatActivity
         } catch (ActivityNotFoundException e) {
             startActivity(new Intent(Intent.ACTION_VIEW,  Uri.parse("http://play.google.com/store/apps/details?id=" + packageName)));
         }
+    }
+
+    /**
+     * Handles responses from {@link FixerTrackService}
+     * @param intent
+     */
+    @Override
+    public void onResponse(Intent intent) {
+
+        //get action and handle it
+        String action = intent.getAction();
+        int id = intent.getIntExtra(Constants.MEDIA_STORE_ID, -1);
+        Snackbar snackbar;
+        Toast toast;
+        Log.d(TAG, action);
+        switch (action) {
+            case Constants.GnServiceActions.ACTION_API_INITIALIZED:
+                snackbar = AndroidUtils.getSnackbar(this.mToolbar, this);
+                if(mListFragment.getDatasource().size() > 0) {
+                    snackbar.setText(R.string.api_initialized);
+                }
+                else {
+                    if(ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED){
+                        snackbar.setText(R.string.title_dialog_permision);
+                    }
+                    else {
+                        snackbar.setText(R.string.add_some_tracks);
+                    }
+                }
+                snackbar.show();
+
+                break;
+            case Constants.Actions.ACTION_CONNECTION_LOST:
+                toast = AndroidUtils.getToast(this);
+                toast.setText(R.string.connection_lost);
+                toast.setDuration(Toast.LENGTH_SHORT);
+                toast.show();
+                break;
+
+            case Constants.Actions.ACTION_START_TASK:
+                mListFragment.correctionStarted();
+                break;
+            case Constants.Actions.ACTION_SD_CARD_ERROR:
+                toast = AndroidUtils.getToast(getApplicationContext());
+                toast.setText(intent.getStringExtra("error"));
+                toast.setDuration(Toast.LENGTH_SHORT);
+                toast.show();
+            case Constants.Actions.START_PROCESSING_FOR:
+            case Constants.Actions.FINISH_TRACK_PROCESSING:
+                mListFragment.updateItem(id, intent);
+                break;
+            case Constants.Actions.ACTION_COMPLETE_TASK:
+                mListFragment.correctionCompleted();
+                break;
+        }
+
     }
 }

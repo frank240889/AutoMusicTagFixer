@@ -1,9 +1,5 @@
 package mx.dev.franco.automusictagfixer.utilities;
 
-import android.provider.MediaStore;
-
-import mx.dev.franco.automusictagfixer.R;
-
 /**
  * Sets default order for querying our DB
  */

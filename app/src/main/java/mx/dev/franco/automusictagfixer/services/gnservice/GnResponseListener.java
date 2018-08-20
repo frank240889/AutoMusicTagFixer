@@ -22,6 +22,7 @@ import com.gracenote.gnsdk.IGnMusicIdFileEvents;
 import java.io.File;
 import java.util.HashMap;
 
+import mx.dev.franco.automusictagfixer.room.Track;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
 import mx.dev.franco.automusictagfixer.utilities.Settings;
 
@@ -42,14 +43,14 @@ public class GnResponseListener implements IGnMusicIdFileEvents, IGnCancellable 
     }
 
     public interface GnListener{
-        void statusIdentification(String status, String trackName);
-        void gatheringFingerprint(String trackName);
-        void identificationError(String error);
-        void identificationNotFound(String trackName);
-        void identificationFound(IdentificationResults results);
-        void identificationCompleted(String trackName);
-        void onStartIdentification(String trackName);
-        void onIdentificationCancelled(String cancelledReason);
+        void statusIdentification(String status, Track track);
+        void gatheringFingerprint(Track track);
+        void identificationError(String error, Track track);
+        void identificationNotFound(Track track);
+        void identificationFound(IdentificationResults results, Track track);
+        void identificationCompleted(Track track);
+        void onStartIdentification(Track track);
+        void onIdentificationCancelled(String cancelledReason, Track track);
         void status(String message);
     }
 
@@ -104,7 +105,7 @@ public class GnResponseListener implements IGnMusicIdFileEvents, IGnCancellable 
 
                 mHandler.post(() -> {
                     if(mListener != null) {
-                        mListener.onIdentificationCancelled(Constants.State.STATUS_ERROR_MSG);//identificationError(Constants.State.STATUS_ERROR_MSG);
+                        mListener.onIdentificationCancelled(Constants.State.STATUS_ERROR_MSG, null);//identificationError(Constants.State.STATUS_ERROR_MSG);
                     }
                 });
         }
@@ -127,7 +128,7 @@ public class GnResponseListener implements IGnMusicIdFileEvents, IGnCancellable 
             if (GnAudioFile.isFileFormatSupported(path)) {
                 mHandler.post(() -> {
                     if(mListener != null) {
-                        mListener.gatheringFingerprint("Generando huella...");
+                        mListener.gatheringFingerprint(null);
                     }
                 });
                 fileInfo.fingerprintFromSource(gnAudioFile);
@@ -138,7 +139,7 @@ public class GnResponseListener implements IGnMusicIdFileEvents, IGnCancellable 
             if (!GnError.isErrorEqual(e.errorCode(), GnError.GNSDKERR_Aborted)) {
                     mHandler.post(() -> {
                         if(mListener != null) {
-                            mListener.identificationError("IdentificationError in fingerprinting file: " + e.errorAPI() + ", " + e.errorModule() + ", " + e.errorDescription());
+                            mListener.identificationError("IdentificationError in fingerprinting file: " + e.errorAPI() + ", " + e.errorModule() + ", " + e.errorDescription(), null);
                             clear();
                         }
                     });
@@ -311,7 +312,7 @@ public class GnResponseListener implements IGnMusicIdFileEvents, IGnCancellable 
 
         mHandler.post(() -> {
             if(mListener != null)
-                mListener.identificationFound(identificationResults);
+                mListener.identificationFound(identificationResults, null);
         });
 
     }
@@ -327,13 +328,9 @@ public class GnResponseListener implements IGnMusicIdFileEvents, IGnCancellable 
             return;
 
             mHandler.post(() -> {
-                try {
-                    if(mListener != null)
-                        mListener.identificationNotFound(gnMusicIdFileInfo.fileName());
-                    clear();
-                } catch (GnException e) {
-                    e.printStackTrace();
-                }
+                if(mListener != null)
+                    mListener.identificationNotFound(null);
+                clear();
             });
     }
 
@@ -343,7 +340,7 @@ public class GnResponseListener implements IGnMusicIdFileEvents, IGnCancellable 
 
             mHandler.post(() -> {
                 if(mListener != null) {
-                    mListener.identificationCompleted("");
+                    mListener.identificationCompleted(null);
                     clear();
                 }
                 });

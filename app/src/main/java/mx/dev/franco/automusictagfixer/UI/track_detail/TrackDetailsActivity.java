@@ -38,7 +38,7 @@ import mx.dev.franco.automusictagfixer.services.Identifier;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
 import mx.dev.franco.automusictagfixer.utilities.GlideApp;
 import mx.dev.franco.automusictagfixer.utilities.SimpleMediaPlayer;
-import mx.dev.franco.automusictagfixer.utilities.ViewUtils;
+import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 
 /**
  * Created by franco on 22/07/17.
@@ -253,7 +253,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements SimpleMed
     @Override
     public void onDataError() {
         addToolbarButtonsListeners();
-        Toast t = ViewUtils.getToast(getApplicationContext());
+        Toast t = AndroidUtils.getToast(getApplicationContext());
         t.setText(R.string.could_not_read_file);
         t.setDuration(Toast.LENGTH_SHORT);
         t.show();
@@ -648,7 +648,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements SimpleMed
         switch (action) {
             //API is no initialized
             case Constants.GnServiceActions.ACTION_API_INITIALIZED:
-                snackbar = ViewUtils.getSnackbar(mViewDetailsTrack, getApplicationContext());
+                snackbar = AndroidUtils.getSnackbar(mViewDetailsTrack, getApplicationContext());
                 snackbar.setText(R.string.api_initialized2);
                 snackbar.show();
                 break;

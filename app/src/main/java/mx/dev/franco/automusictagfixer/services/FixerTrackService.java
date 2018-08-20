@@ -134,8 +134,12 @@ AsyncFileReader.IRetriever, ResponseReceiver.OnResponse{
     private void setupReceiver(){
         //create filters to listen for response from FixerTrackService
         IntentFilter mConnectionLost = new IntentFilter(Constants.Actions.ACTION_CONNECTION_LOST);
+        IntentFilter mediaMounted = new IntentFilter(Intent.ACTION_MEDIA_MOUNTED);
+        IntentFilter mediaUnmounted = new IntentFilter(Intent.ACTION_MEDIA_UNMOUNTED);
         mReceiver = new ResponseReceiver(this, new Handler());
         LocalBroadcastManager.getInstance(getApplicationContext()).registerReceiver(mReceiver, mConnectionLost);
+        LocalBroadcastManager.getInstance(getApplicationContext()).registerReceiver(mReceiver, mediaMounted);
+        LocalBroadcastManager.getInstance(getApplicationContext()).registerReceiver(mReceiver, mediaUnmounted);
 
     }
 
@@ -200,7 +204,7 @@ AsyncFileReader.IRetriever, ResponseReceiver.OnResponse{
         stopIdentification();
         stopCorrection();
         stopRetrievingTrack();
-        stopUpdatingTrack();
+        //stopUpdatingTrack();
         notifyCompleteCorrection();
         stopForeground(true);
         LocalBroadcastManager.getInstance(getApplicationContext()).unregisterReceiver(mReceiver);
@@ -295,23 +299,24 @@ AsyncFileReader.IRetriever, ResponseReceiver.OnResponse{
         LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcastSync(results);
     }
 
-    /**************************IDENTIFICATION CALLBACKS************************/
+    /**************************IDENTIFICATION CALLBACKS
+     * @param track************************/
     @Override
-    public void onStartIdentification(String trackName) {
+    public void onStartIdentification(Track track) {
         isRunning = true;
         Intent intent = new Intent(Constants.Actions.START_PROCESSING_FOR);
-        intent.putExtra(Constants.MEDIA_STORE_ID, mIds.get(0));
+        intent.putExtra(Constants.MEDIA_STORE_ID, track.getMediaStoreId());
         intent.putExtra("processing", true);
         LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcastSync(intent);
         if(mCurrentTrack != null)
             mCurrentTrack.setChecked(1);
         if(mTrackRepository != null)
             mTrackRepository.update(mCurrentTrack);
-        startNotification("Corrección en progreso", trackName, "Identificando...");
+        startNotification(AudioItem.getPath(track.getPath()),"Corrección en progreso", "Identificando...");
     }
 
     @Override
-    public void statusIdentification(String status, String trackName) {
+    public void statusIdentification(String status, Track track) {
         //Intent intent = new Intent(Constants.Actions.STATUS);
         //intent.putExtra(Constants.TRACK_NAME, trackName);
         //intent.putExtra(Constants.STATUS, status);
@@ -319,22 +324,22 @@ AsyncFileReader.IRetriever, ResponseReceiver.OnResponse{
     }
 
     @Override
-    public void gatheringFingerprint(String trackName) {
+    public void gatheringFingerprint(Track track) {
         //Intent intent = new Intent(Constants.Actions.STATUS);
         //intent.putExtra(Constants.STATUS, String.format(getString(R.string.gathering_fingerprint),trackName) );
         //LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcastSync(intent);
-        startNotification("Corrección en progreso", trackName, "Generando huella...");
+        startNotification(AudioItem.getPath(track.getPath()),"Identificación en progreso", "Generando huella...");
     }
 
     @Override
-    public void identificationError(String error) {
+    public void identificationError(String error, Track track) {
         if(sIdentifier != null){
             sIdentifier = null;
         }
         startNotification("Corrección en progreso", "", error);
 
         Intent intent = new Intent(Constants.Actions.FINISH_TRACK_PROCESSING);
-        intent.putExtra(Constants.MEDIA_STORE_ID, mIds.get(0));
+        intent.putExtra(Constants.MEDIA_STORE_ID, track.getMediaStoreId());
         intent.putExtra("processing", false);
         LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcastSync(intent);
 
@@ -350,14 +355,14 @@ AsyncFileReader.IRetriever, ResponseReceiver.OnResponse{
     }
 
     @Override
-    public void identificationNotFound(String trackName) {
+    public void identificationNotFound(Track track) {
         if(sIdentifier != null){
             sIdentifier = null;
         }
-        startNotification("Corrección en progreso", trackName, "No se encontró ninguna coincidencia.");
+        startNotification(AudioItem.getPath(track.getPath()),"Identificación en progreso", "No se encontró ninguna coincidencia.");
 
         Intent intent = new Intent(Constants.Actions.FINISH_TRACK_PROCESSING);
-        intent.putExtra(Constants.MEDIA_STORE_ID, mIds.get(0));
+        intent.putExtra(Constants.MEDIA_STORE_ID, track.getMediaStoreId());
         intent.putExtra("processing", false);
         LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcastSync(intent);
 
@@ -373,11 +378,11 @@ AsyncFileReader.IRetriever, ResponseReceiver.OnResponse{
     }
 
     @Override
-    public void identificationFound(GnResponseListener.IdentificationResults results) {
+    public void identificationFound(GnResponseListener.IdentificationResults results, Track track) {
         if(sIdentifier != null){
             sIdentifier = null;
         }
-        startNotification("Corrección en progreso", "Coincidencia encontrada", "Iniciando corrección...");
+        startNotification(AudioItem.getPath(track.getPath()), "Coincidencia encontrada", "Iniciando corrección...");
         sFixer = new Fixer(this);
         boolean shouldRename = PreferenceManager.
                 getDefaultSharedPreferences(getApplicationContext()).
@@ -389,29 +394,29 @@ AsyncFileReader.IRetriever, ResponseReceiver.OnResponse{
 
         sFixer.setShouldRename(shouldRename);
         sFixer.setTask(task);
-        sFixer.setTrack(mCurrentTrack);
+        sFixer.setTrack(track);
         sFixer.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, results);
     }
 
     @Override
-    public void identificationCompleted(String trackName) {
+    public void identificationCompleted(Track track) {
         //Intent intent = new Intent(Constants.Actions.IDENTIFICATION_COMPLETE);
         //LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcastSync(intent);
     }
 
     @Override
-    public void onIdentificationCancelled(String cancelledReason) {
+    public void onIdentificationCancelled(String cancelledReason, Track track) {
 
         Intent intent = new Intent(Constants.Actions.FINISH_TRACK_PROCESSING);
         intent.putExtra("should_reload_cover", true);
-        intent.putExtra(Constants.MEDIA_STORE_ID, mIds.get(0));
+        intent.putExtra(Constants.MEDIA_STORE_ID, track.getMediaStoreId());
         intent.putExtra("processing", false);
         LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcastSync(intent);
 
         if(mCurrentTrack != null)
             mCurrentTrack.setChecked(0);
         if(mTrackRepository != null)
-            mTrackRepository.update(mCurrentTrack);
+            mTrackRepository.update(track);
 
         isRunning = false;
         if(mIds != null && mIds.size()>0) {
@@ -428,24 +433,23 @@ AsyncFileReader.IRetriever, ResponseReceiver.OnResponse{
 
 
     @Override
-    public void onCorrectionStarted(String trackName) {
-        startNotification("Corrección en progreso", "Coincidencia encontrada", "Aplicando cambios, espera por favor...");
+    public void onCorrectionStarted(Track track) {
+        startNotification(AudioItem.getFilename(track.getPath()), getString(R.string.starting_correction), getString(R.string.applying_tags));
     }
 
     @Override
-    public void onCorrectionCompleted(Tagger.ResultCorrection resultCorrection) {
-        startNotification("Corrección en progreso", "Etiquetas aplicadas", "Etiquetas aplicadas existosamente.");
+    public void onCorrectionCompleted(Tagger.ResultCorrection resultCorrection, Track track) {
+        startNotification(AudioItem.getFilename(track.getPath()), getString(R.string.success), "");
 
         Intent intent = new Intent(Constants.Actions.FINISH_TRACK_PROCESSING);
         intent.putExtra("should_reload_cover", true);
-        intent.putExtra(Constants.MEDIA_STORE_ID, mIds.get(0));
+        intent.putExtra(Constants.MEDIA_STORE_ID, track.getMediaStoreId());
         intent.putExtra("processing", false);
         LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcastSync(intent);
 
-        if(mCurrentTrack != null)
-            mCurrentTrack.setChecked(0);
+
         if(mTrackRepository != null)
-            mTrackRepository.update(mCurrentTrack);
+            mTrackRepository.update(track);
 
         if(mIds != null && mIds.size()>0)
             mIds.remove(0);
@@ -455,18 +459,16 @@ AsyncFileReader.IRetriever, ResponseReceiver.OnResponse{
     }
 
     @Override
-    public void onCorrectionCancelled(String trackName) {
+    public void onCorrectionCancelled(Track track) {
 
         Intent intent = new Intent(Constants.Actions.FINISH_TRACK_PROCESSING);
         intent.putExtra("should_reload_cover", true);
-        intent.putExtra(Constants.MEDIA_STORE_ID, mIds.get(0));
+        intent.putExtra(Constants.MEDIA_STORE_ID, track.getMediaStoreId());
         intent.putExtra("processing", false);
         LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcastSync(intent);
 
-        if(mCurrentTrack != null)
-            mCurrentTrack.setChecked(0);
         if(mTrackRepository != null)
-            mTrackRepository.update(mCurrentTrack);
+            mTrackRepository.update(track);
 
         isRunning = false;
         if(mIds != null && mIds.size()>0) {
@@ -476,6 +478,20 @@ AsyncFileReader.IRetriever, ResponseReceiver.OnResponse{
         }
     }
 
+    @Override
+    public void onCorrectionError(Track track, String error) {
+        startNotification("Error", "Error", "No se pudo corregir el archivo.");
+
+        Intent intent = new Intent(Constants.Actions.ACTION_SD_CARD_ERROR);
+        intent.putExtra("should_reload_cover", true);
+        intent.putExtra(Constants.MEDIA_STORE_ID, track.getMediaStoreId());
+        intent.putExtra("processing", false);
+        intent.putExtra("error",error);
+        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcastSync(intent);
+    }
+
+
+    //CALLBACKS NOT IN USE
     @Override
     public void onStart() {
         startNotification("Corrección en progreso", "Actualizando lista", "Actualizando lista...");
@@ -491,8 +507,8 @@ AsyncFileReader.IRetriever, ResponseReceiver.OnResponse{
         intent.putExtra("processing", false);
         LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcastSync(intent);
 
-        if(mCurrentTrack != null)
-            mCurrentTrack.setChecked(0);
+        //if(mCurrentTrack != null)
+        //    mCurrentTrack.setChecked(0);
         if(mTrackRepository != null)
             mTrackRepository.update(mCurrentTrack);
 
@@ -519,7 +535,8 @@ AsyncFileReader.IRetriever, ResponseReceiver.OnResponse{
     @Override
     public void onResponse(Intent intent) {
         String action = intent.getAction();
-        if(action != null && action.equals(Constants.Actions.ACTION_CONNECTION_LOST)){
+        if(action != null && (action.equals(Constants.Actions.ACTION_CONNECTION_LOST) ||
+        action.equals(Intent.ACTION_MEDIA_MOUNTED) || action.equals(Intent.ACTION_MEDIA_UNMOUNTED))){
             stopSelf();
         }
     }
