@@ -345,7 +345,7 @@
     <string name="correction_in_progress">Corrección en progreso.</string>
     <string name="message_track">Selecciona modo de corrección para %1$s.</string>
     <string name="yes">Si</string>
-    <string name="gathering_fingerprint">Creando huella para %1$s</string>
+    <string name="gathering_fingerprint">Generando huella para %1$s</string>
     <string name="loading_tracks">Cargando lista…</string>
     <string name="more">Más</string>
     <string name="saf_denied">Permiso de lectura/escritura a SD denegado.</string>

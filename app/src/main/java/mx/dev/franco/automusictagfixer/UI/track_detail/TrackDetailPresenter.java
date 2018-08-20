@@ -300,8 +300,9 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
 
     @Override
     public void gatheringFingerprint(Track track) {
+        String msg = String.format(resourceManager.getString(R.string.gathering_fingerprint), AudioItem.getPath(track.getPath()));
         if(mView != null)
-            mView.setMessageStatus(AudioItem.getPath(track.getPath()));
+            mView.setMessageStatus(msg);
     }
 
     @Override
