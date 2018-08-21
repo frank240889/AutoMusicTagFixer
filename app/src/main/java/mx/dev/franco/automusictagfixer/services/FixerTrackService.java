@@ -3,6 +3,7 @@ package mx.dev.franco.automusictagfixer.services;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Bitmap;
@@ -395,7 +396,7 @@ AsyncFileReader.IRetriever, ResponseReceiver.OnResponse{
         sFixer.setShouldRename(shouldRename);
         sFixer.setTask(task);
         sFixer.setTrack(track);
-        sFixer.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, results);
+        sFixer.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, results);
     }
 
     @Override
@@ -448,8 +449,11 @@ AsyncFileReader.IRetriever, ResponseReceiver.OnResponse{
         LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcastSync(intent);
 
 
-        if(mTrackRepository != null)
+        if(mTrackRepository != null) {
+            track.setProcessing(false);
+            track.setChecked(0);
             mTrackRepository.update(track);
+        }
 
         if(mIds != null && mIds.size()>0)
             mIds.remove(0);
@@ -467,8 +471,11 @@ AsyncFileReader.IRetriever, ResponseReceiver.OnResponse{
         intent.putExtra("processing", false);
         LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcastSync(intent);
 
-        if(mTrackRepository != null)
+        if(mTrackRepository != null) {
+            track.setProcessing(false);
+            track.setChecked(0);
             mTrackRepository.update(track);
+        }
 
         isRunning = false;
         if(mIds != null && mIds.size()>0) {
@@ -479,15 +486,27 @@ AsyncFileReader.IRetriever, ResponseReceiver.OnResponse{
     }
 
     @Override
-    public void onCorrectionError(Track track, String error) {
+    public void onCorrectionError(Tagger.ResultCorrection resultCorrection, Track track) {
         startNotification("Error", "Error", "No se pudo corregir el archivo.");
-
+        Log.d("Error", "eRROR");
         Intent intent = new Intent(Constants.Actions.ACTION_SD_CARD_ERROR);
         intent.putExtra("should_reload_cover", true);
         intent.putExtra(Constants.MEDIA_STORE_ID, track.getMediaStoreId());
         intent.putExtra("processing", false);
-        intent.putExtra("error",error);
+        intent.putExtra("error", Fixer.ERROR_CODES.getErrorMessage(this, resultCorrection.code));
         LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcastSync(intent);
+
+        if(mTrackRepository != null) {
+            track.setChecked(0);
+            track.setProcessing(false);
+            mTrackRepository.update(track);
+        }
+
+        if(mIds != null && mIds.size()>0)
+            mIds.remove(0);
+        isRunning = false;
+
+        shouldContinue();
     }
 
 

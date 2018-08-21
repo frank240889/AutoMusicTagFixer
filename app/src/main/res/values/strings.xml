@@ -5,9 +5,9 @@
     <string name="nextSlide">SIGUIENTE</string>
 
     <string name="welcome">¡Bienvenido!</string>
-    <string name="step_1">AutoMusicTagFixer te ayuda a mantener más organizada tu biblioteca musical.</string>
-    <string name="step_2">¿Cómo te ayuda? Corrigiendo el nombre del archivo, título de canción, artista, álbum, etc, incluso la imagen del álbum.</string>
-    <string name="step_3">Solo déjala buscar y listar las canciones de tu smartphone.</string>
+    <string name="step_1">AutoMusicTagFixer te ayudará a mantener más organizada tu biblioteca musical.</string>
+    <string name="step_2">¿Cómo lo hará? Corrigiendo el nombre del archivo, título de canción, artista, álbum, etc, incluso la imagen del álbum.</string>
+    <string name="step_3">Solo déjala escanear tu biblioteca musical.</string>
     <string name="step_4">Luego toca una cancion para corregirla en modo manual, semiautomático o automático.</string>
     <string name="step_5">O selecciona varias canciones para corregirlas automaticamente, una tras otra sin que hagas algo más, solo esperar.</string>
     <string name="ok_button_last_slide">ENTENDIDO</string>
@@ -377,6 +377,8 @@
     <string name="starting_correction">Corrigiendo...</string>
     <string name="applying_tags">Aplicando cambios, espera por favor...</string>
     <string name="success">Corrección terminada.</string>
+    <string name="get_permission">Permiso</string>
+    <string name="could_not_get_permission">No se pudo obtener el permiso.</string>
 
 
 </resources>

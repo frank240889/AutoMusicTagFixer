@@ -347,6 +347,7 @@ public class MainActivity extends AppCompatActivity
         IntentFilter showProgressFilter = new IntentFilter(Constants.Actions.START_PROCESSING_FOR);
         IntentFilter finishProcessingFilter = new IntentFilter(Constants.Actions.FINISH_TRACK_PROCESSING);
         IntentFilter completedTaskFilter = new IntentFilter(Constants.Actions.ACTION_COMPLETE_TASK);
+        IntentFilter errorTask = new IntentFilter(Constants.Actions.ACTION_SD_CARD_ERROR);
 
         mReceiver = new ResponseReceiver(this, new Handler());
 
@@ -358,6 +359,7 @@ public class MainActivity extends AppCompatActivity
         localBroadcastManager.registerReceiver(mReceiver, finishProcessingFilter);
         localBroadcastManager.registerReceiver(mReceiver, apiInitializedFilter);
         localBroadcastManager.registerReceiver(mReceiver, startTaskFilter);
+        localBroadcastManager.registerReceiver(mReceiver, errorTask);
 
     }
 

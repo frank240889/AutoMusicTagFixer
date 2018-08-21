@@ -52,7 +52,7 @@ public interface EditableView {
 
     void onSuccessfullyCorrection(String message);
     void onSuccessfullyFileSaved(String message);
-    void onCorrectionError(String message);
+    void onCorrectionError(String message, String action);
 
     void enableEditMode();
     void disableEditMode();

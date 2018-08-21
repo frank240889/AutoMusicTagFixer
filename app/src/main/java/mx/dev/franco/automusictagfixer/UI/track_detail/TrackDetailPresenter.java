@@ -176,7 +176,7 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
             cover = mView.getCover();
             if(cover == null){
                 if(mView != null){
-                    mView.onCorrectionError(resourceManager.getString(R.string.can_not_extract_null_cover));
+                    mView.onCorrectionError(resourceManager.getString(R.string.can_not_extract_null_cover), null);
                 }
                 return;
             }
@@ -245,7 +245,7 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
             }
             else{
                 if(results.cover == null)
-                    mView.onCorrectionError(resourceManager.getString(R.string.no_cover_art_found));
+                    mView.onCorrectionError(resourceManager.getString(R.string.no_cover_art_found), null);
                 else
                     mView.loadCoverIdentificationResults(results);
             }
@@ -266,14 +266,14 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
                 }
 
                 if(mView != null)
-                    mView.onCorrectionError(message);
+                    mView.onCorrectionError(message, null);
                 connectivityDetector.onStartTestingNetwork();
                 return;
             }
 
             if(!GnService.sApiInitialized || GnService.sIsInitializing) {
                 if(mView != null)
-                    mView.onCorrectionError(resourceManager.getString(R.string.initializing_recognition_api));
+                    mView.onCorrectionError(resourceManager.getString(R.string.initializing_recognition_api), null);
 
                 gnService.initializeAPI();
                 return;
@@ -319,7 +319,7 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
     @Override
     public void identificationNotFound(Track track) {
         if(mView != null) {
-            mView.onCorrectionError(resourceManager.getString(R.string.no_found_tags));
+            mView.onCorrectionError(resourceManager.getString(R.string.no_found_tags), null);
             mView.setMessageStatus("");
             mView.hideProgress();
             mView.identificationNotFound();
@@ -337,7 +337,7 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
             }
             else {
                 if(results.cover == null){
-                    mView.onCorrectionError(resourceManager.getString(R.string.no_cover_art_found));
+                    mView.onCorrectionError(resourceManager.getString(R.string.no_cover_art_found), null);
                 }
                 else {
                     mView.loadCoverIdentificationResults(results);
@@ -401,14 +401,14 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
         else {
             results = createResultsFromInputData();
         }
-        sFixer.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, results);
+        sFixer.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, results);
     }
 
     public void removeCover(){
         sFixer = new Fixer(this);
         sFixer.setTrack(mCurrentTrack);
         sFixer.setTask(Tagger.MODE_REMOVE_COVER);
-        sFixer.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, null);
+        sFixer.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, null);
     }
 
 
@@ -429,7 +429,6 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
             mView.hideProgress();
         }
         sFixer = null;
-        String errorMessage = null;
         switch (resultCorrection.code){
             case Tagger.APPLIED_SAME_COVER:
             case Tagger.NEW_COVER_APPLIED:
@@ -444,43 +443,9 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
                 break;
             case Tagger.APPLIED_SAME_TAGS:
                 updateAppliedAllTagsView(resultCorrection);
-                //mView.onSuccessfullyCorrection(resourceManager.getString(R.string.message_same_tags_applied));
                 break;
-            case Tagger.COULD_NOT_APPLY_COVER:
-                errorMessage = resourceManager.getString(R.string.message_could_not_apply_cover);
-                mView.onCorrectionError(errorMessage);
-                break;
-            case Tagger.COULD_NOT_APPLY_TAGS:
-                errorMessage = resourceManager.getString(R.string.message_could_not_apply_tags);
-                mView.onCorrectionError(errorMessage);
-                break;
-            case Tagger.COULD_NOT_COPY_BACK_TO_ORIGINAL_LOCATION:
-                errorMessage = resourceManager.getString(R.string.message_could_copy_back);
-                mView.onCorrectionError(errorMessage);
-                break;
-            case Tagger.COULD_NOT_CREATE_AUDIOFILE:
-                errorMessage = resourceManager.getString(R.string.message_could_not_create_audio_file);
-                mView.onCorrectionError(errorMessage);
-                break;
-            case Tagger.COULD_NOT_CREATE_TEMP_FILE:
-                errorMessage = resourceManager.getString(R.string.message_could_not_create_temp_file);
-                mView.onCorrectionError(errorMessage);
-                break;
-            case Tagger.COULD_NOT_GET_URI_SD_ROOT_TREE:
-                errorMessage = resourceManager.getString(R.string.message_uri_tree_not_set);
-                mView.onCorrectionError(errorMessage);
-                break;
-            case Tagger.COULD_NOT_READ_TAGS:
-                errorMessage = resourceManager.getString(R.string.message_could_not_read_tags);
-                mView.onCorrectionError(errorMessage);
-                break;
-            case Tagger.COULD_NOT_REMOVE_COVER:
-                errorMessage = resourceManager.getString(R.string.message_could_not_remove_cover);
-            //case Tagger.COULD_NOT_REMOVE_OLD_ID3_VERSION:
-                mView.onCorrectionError(errorMessage);
-                break;
-
         }
+        mCurrentTrack.setChecked(0);
     }
 
     @Override
@@ -490,13 +455,22 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
             mView.hideStatus();
             mView.hideProgress();
         }
+        mCurrentTrack.setChecked(0);
         sFixer = null;
     }
 
     @Override
-    public void onCorrectionError(Track track, String error) {
-        if(mView != null)
-            mView.onCorrectionError(error);
+    public void onCorrectionError(Tagger.ResultCorrection resultCorrection, Track track) {
+        String errorMessage = Fixer.ERROR_CODES.getErrorMessage(resourceManager,resultCorrection.code);
+        String action = resultCorrection.code == Tagger.COULD_NOT_GET_URI_SD_ROOT_TREE ?
+                resourceManager.getString(R.string.get_permission):null;
+        if(mView != null) {
+            mView.setMessageStatus("");
+            mView.hideStatus();
+            mView.hideProgress();
+            mView.onCorrectionError(errorMessage, action);
+        }
+        mCurrentTrack.setChecked(0);
     }
 
     /***********************************************************/
@@ -775,7 +749,7 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
     @Override
     public void onSavingError(String error) {
         if(mView != null){
-            mView.onCorrectionError(resourceManager.getString(R.string.cover_not_saved));
+            mView.onCorrectionError(resourceManager.getString(R.string.cover_not_saved), null);
         }
     }
 }

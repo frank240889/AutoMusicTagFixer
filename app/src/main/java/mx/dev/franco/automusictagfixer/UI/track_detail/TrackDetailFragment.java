@@ -41,12 +41,13 @@ import java.util.ArrayList;
 import javax.inject.Inject;
 
 import mx.dev.franco.automusictagfixer.R;
+import mx.dev.franco.automusictagfixer.UI.sd_card_instructions.TransparentActivity;
 import mx.dev.franco.automusictagfixer.list.AudioItem;
 import mx.dev.franco.automusictagfixer.services.Fixer.Fixer;
 import mx.dev.franco.automusictagfixer.services.gnservice.GnResponseListener;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
 import mx.dev.franco.automusictagfixer.utilities.RequiredPermissions;
-import mx.dev.franco.automusictagfixer.utilities.Settings;
+import mx.dev.franco.automusictagfixer.utilities.StorageHelper;
 import mx.dev.franco.automusictagfixer.utilities.Tagger;
 import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 import mx.dev.franco.automusictagfixer.utilities.shared_preferences.AbstractSharedPreferences;
@@ -221,15 +222,17 @@ public class TrackDetailFragment extends Fragment implements EditableView, Resul
                         else {
                             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
                             bitmap.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStream);
-                            if(mListener != null)
-                                mListener.onCoverChanged(byteArrayOutputStream.toByteArray());
 
                             if (requestCode == INTENT_GET_AND_UPDATE_FROM_GALLERY) {
-                                mCurrentCoverArt = byteArrayOutputStream.toByteArray();
+                                //mCurrentCoverArt = byteArrayOutputStream.toByteArray();
                                 Fixer.CorrectionParams correctionParams = new Fixer.CorrectionParams();
                                 correctionParams.dataFrom = Constants.MANUAL;
                                 correctionParams.mode = Tagger.MODE_ADD_COVER;
                                 mTrackDetailPresenter.performCorrection(correctionParams);
+                            }
+                            else {
+                                if(mListener != null)
+                                    mListener.onCoverChanged(byteArrayOutputStream.toByteArray());
                             }
                         }
                     } catch(IOException e){
@@ -249,10 +252,12 @@ public class TrackDetailFragment extends Fragment implements EditableView, Resul
                     // The document selected by the user won't be returned in the intent.
                     // Instead, a URI to that document will be contained in the return intent
                     // provided to this method as a parameter.  Pull that uri using "resultData.getData()"
-                    if (data!= null) {
-                        //Save root Uri of SD card
-                        AndroidUtils.grantPermissionSD(getActivity().getApplicationContext(), data);
+                    boolean res = AndroidUtils.grantPermissionSD(getActivity().getApplicationContext(), data);;
+                    if (res) {
                         msg = getString(R.string.toast_apply_tags_again);
+                    }
+                    else {
+                        msg = getString(R.string.could_not_get_permission);
                     }
                 }
                 else {
@@ -829,8 +834,18 @@ public class TrackDetailFragment extends Fragment implements EditableView, Resul
     }
 
     @Override
-    public void onCorrectionError(String message) {
+    public void onCorrectionError(String message, String action) {
         Snackbar snackbar = AndroidUtils.getSnackbar(mLayout, getActivity().getApplicationContext());
+        if(action != null && action.equals(getString(R.string.get_permission)))
+            snackbar.setAction(action, new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    getActivity().startActivity(new Intent(getActivity(), TransparentActivity.class));
+                    //Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+                    //startActivityForResult(intent, RequiredPermissions.REQUEST_PERMISSION_SAF);
+                }
+            });
+
         snackbar.setText(message);
         snackbar.show();
         if(mListener != null)

@@ -54,22 +54,25 @@ public class TransparentActivity extends AppCompatActivity {
             // The document selected by the user won't be returned in the intent.
             // Instead, a URI to that document will be contained in the return intent
             // provided to this method as a parameter.  Pull that uri using "resultData.getData()"
-            if (resultData != null) {
-                //Save root Uri of SD card
-                AndroidUtils.grantPermissionSD(getApplicationContext(), resultData);
+            boolean res = AndroidUtils.grantPermissionSD(getApplicationContext(), resultData);
+            if (res) {
                 mSuccess = true;
+            }
+            else {
+                mSuccess = false;
             }
         }
         else {
             mSuccess = false;
         }
+
         finish();
     }
 
     @Override
     public void onDestroy(){
         Toast toast = AndroidUtils.getToast(this);
-        toast.setDuration(Toast.LENGTH_SHORT);
+        toast.setDuration(Toast.LENGTH_LONG);
 
         String msg;
         if(mSuccess){
@@ -80,7 +83,6 @@ public class TransparentActivity extends AppCompatActivity {
         }
         toast.setText(msg);
         toast.show();
-
         super.onDestroy();
     }
 }

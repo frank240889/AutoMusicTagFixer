@@ -186,27 +186,33 @@ public class Tagger {
 
     private ResultCorrection applyTags(File file, HashMap<FieldKey, Object> tags, int overWriteTags) throws ReadOnlyFileException, IOException, TagException, InvalidAudioFrameException, CannotReadException {
         boolean isStoredInSd = sStorageHelper.isStoredInSD(file);
-
-        if(isStoredInSd && AndroidUtils.getUriSD(sContext) == null) {
-            ResultCorrection resultCorrection = new ResultCorrection();
-            resultCorrection.code = COULD_NOT_GET_URI_SD_ROOT_TREE;
-            return resultCorrection;
-        }
-
-        HashMap<FieldKey, Object> tagsToUpdate = isNeededUpdateTags(overWriteTags,file, tags);
-
-        if(tagsToUpdate.isEmpty()){
-            ResultCorrection resultCorrection = new ResultCorrection();
-            resultCorrection.code = APPLIED_SAME_TAGS;
-            return resultCorrection;
-        }
+        ResultCorrection resultCorrection = new ResultCorrection();
 
         if(isStoredInSd){
-            return applyTagsForDocumentFileObject(file, tagsToUpdate, overWriteTags);
+            if(AndroidUtils.getUriSD(sContext) == null) {
+                resultCorrection.code = COULD_NOT_GET_URI_SD_ROOT_TREE;
+            }
+            else {
+                HashMap<FieldKey, Object> tagsToUpdate = isNeededUpdateTags(overWriteTags,file, tags);
+                if(tagsToUpdate.isEmpty()){
+                    resultCorrection.code = APPLIED_SAME_TAGS;
+                }
+                else {
+                    resultCorrection = applyTagsForDocumentFileObject(file, tagsToUpdate, overWriteTags);
+                }
+            }
         }
         else {
-            return applyTagsForFileObject(file, tagsToUpdate, overWriteTags);
+            HashMap<FieldKey, Object> tagsToUpdate = isNeededUpdateTags(overWriteTags,file, tags);
+            if(tagsToUpdate.isEmpty()){
+                resultCorrection.code = APPLIED_SAME_TAGS;
+            }
+            else {
+                resultCorrection = applyTagsForFileObject(file, tagsToUpdate, overWriteTags);
+            }
         }
+
+        return resultCorrection;
     }
 
     private HashMap<FieldKey, Object> isNeededUpdateTags(int mOverrideAllTags, File file, HashMap<FieldKey, Object> newTags) throws TagException, ReadOnlyFileException, CannotReadException, InvalidAudioFrameException, IOException {
@@ -707,26 +713,30 @@ public class Tagger {
         ResultCorrection resultCorrection = new ResultCorrection();
         TrackDataLoader.TrackDataItem trackDataItem = readFile(file);
 
-        if(trackDataItem.cover != null && coverToApply != null && (coverToApply.length == trackDataItem.cover.length)){
-            resultCorrection.code = APPLIED_SAME_COVER;
-            return resultCorrection;
-        }
-
-        if(isStoredInSd && AndroidUtils.getUriSD(sContext) == null) {
-            resultCorrection.code = COULD_NOT_GET_URI_SD_ROOT_TREE;
-            return resultCorrection;
-        }
 
         if(isStoredInSd) {
-            //File is stored in SD card
-            return applyCoverForDocumentFileObject(coverToApply, file);
-
+            if(AndroidUtils.getUriSD(sContext) == null) {
+                resultCorrection.code = COULD_NOT_GET_URI_SD_ROOT_TREE;
+            }
+            else{
+                if(trackDataItem.cover != null && coverToApply != null && (coverToApply.length == trackDataItem.cover.length)){
+                    resultCorrection.code = APPLIED_SAME_COVER;
+                }
+                else {
+                    resultCorrection = applyCoverForDocumentFileObject(coverToApply, file);
+                }
+            }
         }
         else {
-            //File is stored in internal memory
-            return applyCoverForFileObject(coverToApply, file);
+            if(trackDataItem.cover != null && coverToApply != null && (coverToApply.length == trackDataItem.cover.length)){
+                resultCorrection.code = APPLIED_SAME_COVER;
+            }
+            else {
+                resultCorrection = applyCoverForFileObject(coverToApply, file);
+            }
         }
 
+        return resultCorrection;
     }
 
     /**

@@ -230,6 +230,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity{
             Toast toast = AndroidUtils.getToast(getApplicationContext());Toast.makeText(getApplicationContext(), getString(R.string.permission_revoked), Toast.LENGTH_LONG);
             toast.setText(getString(R.string.permission_revoked));
             toast.setDuration(Toast.LENGTH_SHORT);
+            toast.show();
             mSDCardAccess.setChecked(false);
         }
     }
@@ -274,7 +275,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity{
         public boolean onOptionsItemSelected(MenuItem item) {
             int id = item.getItemId();
             if (id == android.R.id.home) {
-                getActivity().finish();//startActivity(new Intent(getActivity(), SettingsActivity.class));
+                getActivity().finish();
                 return true;
             }
             return super.onOptionsItemSelected(item);
@@ -304,7 +305,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity{
         public boolean onOptionsItemSelected(MenuItem item) {
             int id = item.getItemId();
             if (id == android.R.id.home) {
-                getActivity().finish();//startActivity(new Intent(getActivity(), SettingsActivity.class));
+                getActivity().finish();
                 return true;
             }
             return super.onOptionsItemSelected(item);
@@ -319,26 +320,22 @@ public class SettingsActivity extends AppCompatPreferenceActivity{
             // Instead, a URI to that document will be contained in the return intent
             // provided to this method as a parameter.  Pull that uri using "resultData.getData()"
                 //Save root Uri of SD card
-                AndroidUtils.grantPermissionSD(getApplicationContext(), resultData);
-                mSDCardAccess.setChecked(true);
-                msg = getString(R.string.permission_granted);
+                boolean res = AndroidUtils.grantPermissionSD(getApplicationContext(), resultData);
+                if(res){
+                    mSDCardAccess.setChecked(true);
+                    msg = getString(R.string.permission_granted);
+                }
+                else {
+                    msg = getString(R.string.could_not_get_permission);
+                }
         }
         else {
             msg = getString(R.string.permission_denied);
             mSDCardAccess.setChecked(false);
         }
 
-        Toast toast = Toast.makeText(this.getApplicationContext(),msg , Toast.LENGTH_LONG);
-        View view = toast.getView();
-        TextView text = view.findViewById(android.R.id.message);
-        text.setTextColor(ContextCompat.getColor(this.getApplicationContext(), R.color.grey_900));
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            text.setTextAppearance(R.style.CustomToast);
-        } else {
-            text.setTextAppearance(this.getApplicationContext(), R.style.CustomToast);
-        }
-        view.setBackground(ContextCompat.getDrawable(this.getApplicationContext(), R.drawable.background_custom_toast));
-        toast.setGravity(Gravity.CENTER, 0, 0);
+        Toast toast = AndroidUtils.getToast(this);
+        toast.setText(msg);
         toast.show();
 
     }

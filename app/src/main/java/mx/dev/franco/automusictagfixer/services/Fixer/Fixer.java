@@ -32,7 +32,7 @@ public class Fixer extends AsyncTask<GnResponseListener.IdentificationResults,Vo
         void onCorrectionStarted(Track track);
         void onCorrectionCompleted(Tagger.ResultCorrection resultCorrection, Track track);
         void onCorrectionCancelled(Track track);
-        void onCorrectionError(Track track, String error);
+        void onCorrectionError(Tagger.ResultCorrection resultCorrection, Track track);
     }
 
     private static final String TAG = Fixer.class.getName();
@@ -87,7 +87,7 @@ public class Fixer extends AsyncTask<GnResponseListener.IdentificationResults,Vo
             case Tagger.MODE_ADD_COVER:
             case Tagger.MODE_REMOVE_COVER:
                 try {
-                    updateCoverArt(results == null ? null : results[0]);
+                    result = updateCoverArt(results == null ? null : results[0]);
                 } catch (ReadOnlyFileException | CannotReadException | TagException | InvalidAudioFrameException | IOException e) {
                     e.printStackTrace();
                 }
@@ -95,7 +95,7 @@ public class Fixer extends AsyncTask<GnResponseListener.IdentificationResults,Vo
             case Tagger.MODE_WRITE_ONLY_MISSING:
             case Tagger.MODE_OVERWRITE_ALL_TAGS:
                 try {
-                    updateTags(results[0], mTask);
+                    result = updateTags(results[0], mTask);
                 } catch (TagException | ReadOnlyFileException | CannotReadException | IOException | InvalidAudioFrameException e) {
                     e.printStackTrace();
                 }
@@ -112,9 +112,7 @@ public class Fixer extends AsyncTask<GnResponseListener.IdentificationResults,Vo
             if(booleans)
                 mListener.onCorrectionCompleted(mResultsCorrection, mTrack);
             else
-                mListener.onCorrectionError(
-                        mTrack,
-                        String.format(resourceManager.getString(R.string.file_status_in_sd_without_permission), AudioItem.getPath(mTrack.getPath())));
+                mListener.onCorrectionError(mResultsCorrection, mTrack);
         }
         clear();
     }
@@ -197,7 +195,7 @@ public class Fixer extends AsyncTask<GnResponseListener.IdentificationResults,Vo
 
         mResultsCorrection = taggerHelper.saveTags(mTrack.getPath(), tagsToApply, overwriteTags);
 
-        if(mResultsCorrection.code == Tagger.COULD_NOT_GET_URI_SD_ROOT_TREE)
+        if(hasError(mResultsCorrection.code))
             return false;
 
         mResultsCorrection.track = mTrack;
@@ -247,13 +245,6 @@ public class Fixer extends AsyncTask<GnResponseListener.IdentificationResults,Vo
                     Log.d(TAG, "success media store update: " + successMediaStore);
                 }
                 mResultsCorrection.track.setPath(newAbsolutePath);
-            /*MediaScannerConnection.scanFile(context, new String[]{newAbsolutePath}, null, new MediaScannerConnection.OnScanCompletedListener() {
-                @Override
-                public void onScanCompleted(String path, Uri uri) {
-                    Log.d(TAG,"success media store scnned: " + path);
-                }
-            });*/
-
             }
         }
         return true;
@@ -268,12 +259,29 @@ public class Fixer extends AsyncTask<GnResponseListener.IdentificationResults,Vo
         else {
             mResultsCorrection = taggerHelper.applyCover(null, mTrack.getPath());
         }
-        mResultsCorrection.track = mTrack;
 
-        if(mResultsCorrection.code == Tagger.COULD_NOT_GET_URI_SD_ROOT_TREE)
+        if(hasError(mResultsCorrection.code))
             return false;
 
+        mResultsCorrection.track = mTrack;
+
         return true;
+    }
+
+    private boolean hasError(int result){
+        switch (result) {
+            case Tagger.COULD_NOT_APPLY_COVER:
+            case Tagger.COULD_NOT_APPLY_TAGS:
+            case Tagger.COULD_NOT_COPY_BACK_TO_ORIGINAL_LOCATION:
+            case Tagger.COULD_NOT_CREATE_AUDIOFILE:
+            case Tagger.COULD_NOT_CREATE_TEMP_FILE:
+            case Tagger.COULD_NOT_GET_URI_SD_ROOT_TREE:
+            case Tagger.COULD_NOT_READ_TAGS:
+            case Tagger.COULD_NOT_REMOVE_COVER:
+                return true;
+        }
+
+        return false;
     }
 
 
@@ -282,5 +290,78 @@ public class Fixer extends AsyncTask<GnResponseListener.IdentificationResults,Vo
         public int mode;
         public boolean shouldRename = false;
         public String newName = "";
+    }
+
+
+    public static class ERROR_CODES{
+        public static String getErrorMessage(ResourceManager resourceManager, int errorCode){
+            String errorMessage;
+            switch (errorCode){
+                case Tagger.COULD_NOT_APPLY_COVER:
+                    errorMessage = resourceManager.getString(R.string.message_could_not_apply_cover);
+                    break;
+                case Tagger.COULD_NOT_APPLY_TAGS:
+                    errorMessage = resourceManager.getString(R.string.message_could_not_apply_tags);
+                    break;
+                case Tagger.COULD_NOT_COPY_BACK_TO_ORIGINAL_LOCATION:
+                    errorMessage = resourceManager.getString(R.string.message_could_copy_back);
+                    break;
+                case Tagger.COULD_NOT_CREATE_AUDIOFILE:
+                    errorMessage = resourceManager.getString(R.string.message_could_not_create_audio_file);
+                    break;
+                case Tagger.COULD_NOT_CREATE_TEMP_FILE:
+                    errorMessage = resourceManager.getString(R.string.message_could_not_create_temp_file);
+                    break;
+                case Tagger.COULD_NOT_GET_URI_SD_ROOT_TREE:
+                    errorMessage = resourceManager.getString(R.string.message_uri_tree_not_set);
+                    break;
+                case Tagger.COULD_NOT_READ_TAGS:
+                    errorMessage = resourceManager.getString(R.string.message_could_not_read_tags);
+                    break;
+                case Tagger.COULD_NOT_REMOVE_COVER:
+                    errorMessage = resourceManager.getString(R.string.message_could_not_remove_cover);
+                    break;
+                default:
+                    errorMessage = resourceManager.getString(R.string.error);
+                    break;
+            }
+
+            return errorMessage;
+        }
+
+        public static String getErrorMessage(Context context, int errorCode){
+            String errorMessage;
+            switch (errorCode){
+                case Tagger.COULD_NOT_APPLY_COVER:
+                    errorMessage = context.getString(R.string.message_could_not_apply_cover);
+                    break;
+                case Tagger.COULD_NOT_APPLY_TAGS:
+                    errorMessage = context.getString(R.string.message_could_not_apply_tags);
+                    break;
+                case Tagger.COULD_NOT_COPY_BACK_TO_ORIGINAL_LOCATION:
+                    errorMessage = context.getString(R.string.message_could_copy_back);
+                    break;
+                case Tagger.COULD_NOT_CREATE_AUDIOFILE:
+                    errorMessage = context.getString(R.string.message_could_not_create_audio_file);
+                    break;
+                case Tagger.COULD_NOT_CREATE_TEMP_FILE:
+                    errorMessage = context.getString(R.string.message_could_not_create_temp_file);
+                    break;
+                case Tagger.COULD_NOT_GET_URI_SD_ROOT_TREE:
+                    errorMessage = context.getString(R.string.message_uri_tree_not_set);
+                    break;
+                case Tagger.COULD_NOT_READ_TAGS:
+                    errorMessage = context.getString(R.string.message_could_not_read_tags);
+                    break;
+                case Tagger.COULD_NOT_REMOVE_COVER:
+                    errorMessage = context.getString(R.string.message_could_not_remove_cover);
+                    break;
+                default:
+                    errorMessage = context.getString(R.string.error);
+                    break;
+            }
+
+            return errorMessage;
+        }
     }
 }

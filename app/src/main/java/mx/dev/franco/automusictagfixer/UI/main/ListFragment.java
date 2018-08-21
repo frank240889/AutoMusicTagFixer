@@ -42,6 +42,7 @@ import javax.inject.Inject;
 
 import mx.dev.franco.automusictagfixer.AutoMusicTagFixer;
 import mx.dev.franco.automusictagfixer.R;
+import mx.dev.franco.automusictagfixer.UI.sd_card_instructions.TransparentActivity;
 import mx.dev.franco.automusictagfixer.UI.track_detail.TrackDetailsActivity;
 import mx.dev.franco.automusictagfixer.datasource.AudioItemHolder;
 import mx.dev.franco.automusictagfixer.datasource.TrackAdapter;
@@ -52,6 +53,7 @@ import mx.dev.franco.automusictagfixer.services.ServiceHelper;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
 import mx.dev.franco.automusictagfixer.utilities.RequiredPermissions;
 import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
+import mx.dev.franco.automusictagfixer.utilities.StorageHelper;
 
 public class ListFragment extends Fragment implements AudioItemHolder.ClickListener,Observer<List<Track>> {
     private static final String TAG = ListFragment.class.getName();
@@ -170,7 +172,7 @@ public class ListFragment extends Fragment implements AudioItemHolder.ClickListe
         mListViewModel.actionCanRunService().observe(this, this::showMessage);
         mListViewModel.actionCanOpenDetails().observe(this, this::openDetails);
         mListViewModel.actionCanStartAutomaticMode().observe(this, this::startCorrection);
-        mListViewModel.actionIsTrackInaccessible().observe(this, this::showInnaccesibleTrack);
+        mListViewModel.actionIsTrackInaccessible().observe(this, this::showInaccessibleTrack);
         mListViewModel.showProgress().observe(this, this::showProgress);
         mListViewModel.getAllTracks().observeForever(this);
         mListViewModel.getAllTracks().observeForever(mAdapter);
@@ -192,10 +194,19 @@ public class ListFragment extends Fragment implements AudioItemHolder.ClickListe
 
         setHasOptionsMenu(true);
         setRetainInstance(true);
+        //App is opened again
         int id = getActivity().getIntent().getIntExtra(Constants.MEDIA_STORE_ID, -1);
         if(id != -1){
             updateItem(id, getActivity().getIntent());
         }
+
+        if(Build.VERSION.SDK_INT <= Build.VERSION_CODES.M)
+            mListViewModel.getInfoForTracks();
+
+        boolean isPresentSD = StorageHelper.getInstance(getActivity().getApplicationContext()).isPresentRemovableStorage();
+        if(AndroidUtils.getUriSD(getActivity().getApplicationContext()) == null && isPresentSD)
+            getActivity().startActivity(new Intent(getActivity(), TransparentActivity.class));
+
         return mLayout;
     }
 
@@ -371,7 +382,10 @@ public class ListFragment extends Fragment implements AudioItemHolder.ClickListe
         } else if (code == 3) {
             message = getActivity().getString(R.string.correction_in_progress);
         }
-        Snackbar.make(mRecyclerView,message,Snackbar.LENGTH_LONG).show();
+        Snackbar snackbar = AndroidUtils.getSnackbar(mRecyclerView, getActivity());
+        snackbar.setText(message);
+        snackbar.setDuration(Snackbar.LENGTH_LONG);
+        snackbar.show();
     }
 
 
@@ -394,6 +408,7 @@ public class ListFragment extends Fragment implements AudioItemHolder.ClickListe
      */
     @Override
     public void onChanged(@Nullable List<Track> tracks) {
+
         mListViewModel.setProgress(false);
         if(tracks != null) {
             if(tracks.isEmpty()) {
@@ -431,7 +446,7 @@ public class ListFragment extends Fragment implements AudioItemHolder.ClickListe
         dialog.show();
     }
 
-    private void showInnaccesibleTrack(ViewWrapper viewWrapper) {
+    private void showInaccessibleTrack(ViewWrapper viewWrapper) {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         builder.setMessage(String.format(getString(R.string.file_error), viewWrapper.track.getPath())).
                 setPositiveButton(R.string.remove_from_list, (dialog, which) -> {
