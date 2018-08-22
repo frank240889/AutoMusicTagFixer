@@ -45,10 +45,9 @@ import mx.dev.franco.automusictagfixer.receivers.ResponseReceiver;
 import mx.dev.franco.automusictagfixer.room.database.TrackContract;
 import mx.dev.franco.automusictagfixer.services.FixerTrackService;
 import mx.dev.franco.automusictagfixer.services.ServiceHelper;
+import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
 import mx.dev.franco.automusictagfixer.utilities.RequiredPermissions;
-import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
-import mx.dev.franco.automusictagfixer.utilities.StorageHelper;
 
 public class MainActivity extends AppCompatActivity
         implements ResponseReceiver.OnResponse, ListFragment.OnInteractionFragment, NavigationView.OnNavigationItemSelectedListener{
@@ -410,19 +409,7 @@ public class MainActivity extends AppCompatActivity
 
 
     private String getPlayStoreLink(){
-        final String appPackageName = getApplicationContext().getPackageName();
-        //String strAppLink = null;
-
-        /*try {
-            strAppLink = "market://details?id=" + appPackageName;
-        }
-        catch (ActivityNotFoundException e) {
-            e.printStackTrace();
-            strAppLink = "https://play.google.com/store/apps/details?id=" + appPackageName;
-        }*/
-        //finally {
-        return "https://play.google.com/store/apps/details?id=" + appPackageName;
-        //}
+        return Constants.PLAY_STORE_URL + getApplicationContext().getPackageName();
     }
 
     private void rateApp(){
@@ -435,7 +422,7 @@ public class MainActivity extends AppCompatActivity
         try {
             startActivity(goToMarket);
         } catch (ActivityNotFoundException e) {
-            startActivity(new Intent(Intent.ACTION_VIEW,  Uri.parse("http://play.google.com/store/apps/details?id=" + packageName)));
+            startActivity(new Intent(Intent.ACTION_VIEW,  Uri.parse(Constants.PLAY_STORE_URL + packageName)));
         }
     }
 

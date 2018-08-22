@@ -100,8 +100,6 @@ public class GnService{
                 sGnLocale = new GnLocale(GnLocaleGroup.kLocaleGroupMusic, GnLanguage.kLanguageSpanish, GnRegion.kRegionGlobal, GnDescriptor.kDescriptorDetailed, sGnUser);
                 sGnLocale.setGroupDefault();
                 GnStorageSqlite.enable();
-                //When api could not be initialized since SplashActivity,
-                //inform to user after MainActivity starts
                 sIsInitializing = false;
                 return sApiInitialized = true;
             } catch (GnException e) {

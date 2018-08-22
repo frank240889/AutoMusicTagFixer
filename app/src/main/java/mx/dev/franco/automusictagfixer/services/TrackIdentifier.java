@@ -1,11 +1,5 @@
 package mx.dev.franco.automusictagfixer.services;
 
-import android.os.AsyncTask;
-import android.os.Handler;
-import android.os.Looper;
-import android.util.Log;
-
-import com.crashlytics.android.Crashlytics;
 import com.gracenote.gnsdk.GnException;
 import com.gracenote.gnsdk.GnLanguage;
 import com.gracenote.gnsdk.GnLookupData;
@@ -15,142 +9,67 @@ import com.gracenote.gnsdk.GnMusicIdFileInfoManager;
 import com.gracenote.gnsdk.GnMusicIdFileProcessType;
 import com.gracenote.gnsdk.GnMusicIdFileResponseType;
 
-import javax.inject.Inject;
-
-import mx.dev.franco.automusictagfixer.repository.TrackRepository;
 import mx.dev.franco.automusictagfixer.room.Track;
 import mx.dev.franco.automusictagfixer.services.gnservice.GnResponseListener;
 import mx.dev.franco.automusictagfixer.services.gnservice.GnService;
 
-public class Identifier extends AsyncTask<Void, Void, Void> implements GnResponseListener.GnListener {
-
+public class TrackIdentifier implements  GnResponseListener.GnListener{
     public static final int ALL_TAGS = 0;
     public static final int JUST_COVER = 1;
-    private static final String TAG = Identifier.class.getName();
+    private static final String TAG = TrackIdentifier.class.getName();
     private volatile GnMusicIdFile mGnMusicIdFile;
     private GnResponseListener.GnListener mGnListener;
     private GnResponseListener mGnResponseListener;
     private GnMusicIdFileInfoManager mGnMusicIdFileInfoManager;
     private GnMusicIdFileInfo mGnMusicIdFileInfo;
     private Track mTrack;
-    private volatile boolean mFinished = false;
-    @Inject
-    TrackRepository trackRepository;
-
-    public Identifier(GnResponseListener.GnListener listener) {
+    public TrackIdentifier(GnResponseListener.GnListener listener) {
         mGnListener = listener;
+        mGnResponseListener = new GnResponseListener(this);
+        mGnListener.onStartIdentification(mTrack);
     }
 
     public void setTrack(Track track){
         mTrack = track;
     }
 
-    @Override
-    protected void onPreExecute(){
-        mGnResponseListener = new GnResponseListener(this);
-        mGnListener.onStartIdentification(mTrack);
+    public void execute(){
+        mTrack.setChecked(1);
+        //set options of track id process
         try {
             mGnMusicIdFile = new GnMusicIdFile(GnService.sGnUser, mGnResponseListener);
-            mTrack.setChecked(1);
-        } catch (GnException e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Override
-    protected Void doInBackground(Void... voids) {
-        //GnMusicIdFile object provides identification service
-        try {
-
-            if(isCancelled()){
-                return null;
-            }
-            //set options of track id process
             mGnMusicIdFile.options().lookupData(GnLookupData.kLookupDataContent, true);
-            if(isCancelled()){
-                return null;
-            }
             mGnMusicIdFile.options().preferResultLanguage(GnLanguage.kLanguageSpanish);
             //queue will be processed one by one
-            if(isCancelled()){
-                return null;
-            }
             mGnMusicIdFile.options().batchSize(1);
-            if(isCancelled()){
-                return null;
-            }
             //get the fileInfoManager
             mGnMusicIdFileInfoManager = mGnMusicIdFile.fileInfos();
-            if(isCancelled()){
-                return null;
-            }
             mGnMusicIdFile.waitForComplete();
-            if(isCancelled()){
-                return null;
-            }
             //add all info available for more accurate results.
             //Check if file already was previously added.
             mGnMusicIdFileInfo = mGnMusicIdFileInfoManager.add(mTrack.getPath());
-            if(isCancelled()){
-                return null;
-            }
             mGnMusicIdFileInfo.fileName(mTrack.getPath());
-            if(isCancelled()){
-                return null;
-            }
             mGnMusicIdFileInfo.trackTitle(mTrack.getTitle());
-            if(isCancelled()){
-                return null;
-            }
             mGnMusicIdFileInfo.trackArtist(mTrack.getArtist());
-            if(isCancelled()){
-                return null;
-            }
             mGnMusicIdFileInfo.albumTitle(mTrack.getAlbum());
             mGnMusicIdFileInfo.mediaId(mTrack.getMediaStoreId()+"");
-
             mGnMusicIdFile.doAlbumIdAsync(GnMusicIdFileProcessType.kQueryReturnSingle, GnMusicIdFileResponseType.kResponseAlbums);
-
-            while (true){
-                //Log.d("LOOP","LOOPING");
-                if(mFinished) {
-                    mGnMusicIdFile.delete();
-                    mGnMusicIdFile = null;
-                    Log.d(TAG,"FINISHED LOOPING");
-                    break;
-                }
-
-                if(isCancelled()) {
-                    mGnMusicIdFile.cancel();
-                    mGnMusicIdFile.delete();
-                    mGnMusicIdFile = null;
-                    Log.d(TAG,"CANCELLED LOOPING");
-                    break;
-                }
-            }
-        }
-        catch (GnException e) {
+        } catch (GnException e) {
             e.printStackTrace();
-            Crashlytics.logException(e);
-                Handler handler = new Handler(Looper.getMainLooper());
-                handler.post(() -> {
-                    if(mGnListener != null)
-                        mGnListener.identificationError(e.getMessage(), mTrack);
-                });
+            mGnListener.identificationError(e.errorDescription(), mTrack);
         }
-        return null;
     }
 
-    @Override
-    protected void onPostExecute(Void voids){
-        Log.d(TAG, "POSTEXECUTE");
-        clear();
-    }
+    public void cancelIdentification(){
+        if(mGnMusicIdFile != null)
+            mGnMusicIdFile.cancel();
 
-
-    @Override
-    public void onCancelled(){
-        Log.d(TAG, "CANCELLED");
+        try {
+            mGnMusicIdFileInfoManager.remove(mGnMusicIdFileInfo);
+        } catch (GnException e) {
+            e.printStackTrace();
+        }
+        mGnMusicIdFile = null;
         if(mGnListener != null) {
             mGnListener.onIdentificationCancelled(null, mTrack);
         }
@@ -159,20 +78,10 @@ public class Identifier extends AsyncTask<Void, Void, Void> implements GnRespons
         clear();
     }
 
-    public void cancelIdentification(){
-        cancel(true);
-    }
-
-    private void clear(){
-        mGnResponseListener = null;
-        mGnListener = null;
-        mTrack = null;
-    }
-
     @Override
     public void statusIdentification(String status, Track track) {
         if(mGnListener != null)
-            mGnListener.statusIdentification(status, track);
+            mGnListener.statusIdentification(status, mTrack);
     }
 
     @Override
@@ -183,51 +92,53 @@ public class Identifier extends AsyncTask<Void, Void, Void> implements GnRespons
 
     @Override
     public void identificationError(String error, Track track) {
-        if(mGnListener != null) {
+        if(mGnListener != null)
             mGnListener.identificationError(error, mTrack);
-        }
     }
 
     @Override
     public void identificationNotFound(Track track) {
-        mFinished = true;
-        if(mGnListener != null) {
+        if(mGnListener != null)
             mGnListener.identificationNotFound(mTrack);
-        }
     }
 
     @Override
     public void identificationFound(GnResponseListener.IdentificationResults results, Track track) {
-        if(mGnListener != null) {
+        if(mGnListener != null)
             mGnListener.identificationFound(results, mTrack);
-        }
     }
 
     @Override
     public void identificationCompleted(Track track) {
-        mFinished = true;
         if(mGnListener != null) {
+            mGnMusicIdFile.delete();
+            mGnMusicIdFile = null;
             mGnListener.identificationCompleted(mTrack);
         }
+        clear();
     }
 
     @Override
     public void onStartIdentification(Track track) {
-        if(mGnListener != null) {
+        if(mGnListener != null)
             mGnListener.onStartIdentification(mTrack);
-        }
     }
 
     @Override
     public void onIdentificationCancelled(String cancelledReason, Track track) {
-        //mGnMusicIdFile.cancel();
-        //mGnMusicIdFile.delete();
-        //mGnMusicIdFile = null;
+        if(mGnListener != null)
+            mGnListener.onIdentificationCancelled(cancelledReason, mTrack);
     }
 
     @Override
     public void status(String message) {
         if(mGnListener != null)
             mGnListener.status(message);
+    }
+
+    private void clear(){
+        mGnResponseListener = null;
+        mGnListener = null;
+        mTrack = null;
     }
 }

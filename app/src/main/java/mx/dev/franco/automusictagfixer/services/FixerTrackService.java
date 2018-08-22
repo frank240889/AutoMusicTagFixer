@@ -55,7 +55,7 @@ AsyncFileReader.IRetriever, ResponseReceiver.OnResponse{
     //Notification on status bar
     private Notification mNotification;
     private HashMap<Integer, Track> mPendingTracks = new HashMap<>();
-    private static Identifier sIdentifier;
+    private static TrackIdentifier sIdentifier;
     private static Fixer sFixer;
     private static TrackLoader sTrackDataLoader;
     @Inject
@@ -176,11 +176,11 @@ AsyncFileReader.IRetriever, ResponseReceiver.OnResponse{
     public void onTrackDataLoaded(List<Track> data) {
         sTrackDataLoader = null;
         mCurrentTrack = data.get(0);
-        sIdentifier = new Identifier(this);
+        sIdentifier = new TrackIdentifier(this);
         sIdentifier.setTrack(mCurrentTrack);
         isRunning = true;
         startNotification("Corrección en progreso", "Corrigiendo " + AudioItem.getFilename(mCurrentTrack.getPath()), "Iniciando corrección...");
-        sIdentifier.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+        sIdentifier.execute();//executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
 
     /**
@@ -217,8 +217,7 @@ AsyncFileReader.IRetriever, ResponseReceiver.OnResponse{
     }
 
     private void stopIdentification(){
-        if(sIdentifier != null && (sIdentifier.getStatus() == AsyncTask.Status.PENDING
-        || sIdentifier.getStatus() == AsyncTask.Status.RUNNING)){
+        if(sIdentifier != null){
             sIdentifier.cancelIdentification();
         }
         sIdentifier = null;
@@ -543,7 +542,7 @@ AsyncFileReader.IRetriever, ResponseReceiver.OnResponse{
     }
 
     private void shouldContinue(){
-        if(!mIds.isEmpty()){
+        if(mIds != null &&!mIds.isEmpty()){
             startCorrection();
         }
         else {

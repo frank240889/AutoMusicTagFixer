@@ -16,7 +16,7 @@ import mx.dev.franco.automusictagfixer.network.ConnectivityDetector;
 import mx.dev.franco.automusictagfixer.repository.TrackRepository;
 import mx.dev.franco.automusictagfixer.room.Track;
 import mx.dev.franco.automusictagfixer.services.Fixer.Fixer;
-import mx.dev.franco.automusictagfixer.services.Identifier;
+import mx.dev.franco.automusictagfixer.services.TrackIdentifier;
 import mx.dev.franco.automusictagfixer.services.gnservice.GnResponseListener;
 import mx.dev.franco.automusictagfixer.services.gnservice.GnService;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
@@ -32,13 +32,13 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
     private TrackDetailInteractor mInteractor;
     private TrackDataLoader.TrackDataItem mCurrentTrackDataItem;
     private Track mCurrentTrack;
-    private static Identifier sIdentifier;
+    private static TrackIdentifier sIdentifier;
     private int mCurrentId;
     private Cache<Integer, GnResponseListener.IdentificationResults> mCache = new DownloadedTrackDataCacheImpl.Builder().build();
     private static Fixer sFixer;
     private static AsyncFileSaver sFileSaver;
     private int mCorrectionMode = Constants.CorrectionModes.VIEW_INFO;
-    private int mRecognition = Identifier.ALL_TAGS;
+    private int mRecognition = TrackIdentifier.ALL_TAGS;
     private int mDataFrom;
     @Inject
     ResourceManager resourceManager;
@@ -81,7 +81,7 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
             mView.enableEditMode();
         }
         else if(mCorrectionMode == Constants.CorrectionModes.SEMI_AUTOMATIC){
-            startIdentification(Identifier.ALL_TAGS);
+            startIdentification(TrackIdentifier.ALL_TAGS);
         }
 
     }
@@ -240,7 +240,7 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
             mView.setMessageStatus("");
             mView.hideStatus();
             mView.hideProgress();
-            if(mRecognition == Identifier.ALL_TAGS) {
+            if(mRecognition == TrackIdentifier.ALL_TAGS) {
                 mView.loadIdentificationResults(results);
             }
             else{
@@ -257,7 +257,7 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
             if(!ConnectivityDetector.sIsConnected){
                 String message;
 
-                if(mRecognition == Identifier.ALL_TAGS) {
+                if(mRecognition == TrackIdentifier.ALL_TAGS) {
                     message = resourceManager.getString(R.string.no_internet_connection_semi_automatic_mode);
 
                 }
@@ -279,9 +279,9 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
                 return;
             }
 
-            sIdentifier = new Identifier(this);
+            sIdentifier = new TrackIdentifier(this);
             sIdentifier.setTrack(mCurrentTrack);
-            sIdentifier.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR);
+            sIdentifier.execute();//executeOnExecutor(AsyncTask.SERIAL_EXECUTOR);
         }
     }
 
@@ -332,7 +332,7 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
         if(mView != null) {
             mCache.getCache().add(mCurrentId, results);
             mView.hideProgress();
-            if(mRecognition == Identifier.ALL_TAGS){
+            if(mRecognition == TrackIdentifier.ALL_TAGS){
                 mView.loadIdentificationResults(results);
             }
             else {

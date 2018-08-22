@@ -34,7 +34,7 @@ import mx.dev.franco.automusictagfixer.AutoMusicTagFixer;
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.list.AudioItem;
 import mx.dev.franco.automusictagfixer.receivers.ResponseReceiver;
-import mx.dev.franco.automusictagfixer.services.Identifier;
+import mx.dev.franco.automusictagfixer.services.TrackIdentifier;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
 import mx.dev.franco.automusictagfixer.utilities.GlideApp;
 import mx.dev.franco.automusictagfixer.utilities.SimpleMediaPlayer;
@@ -184,6 +184,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements SimpleMed
      */
     @Override
     public void onDestroy(){
+        super.onDestroy();
         mPlayer.stopPreview();
         mPlayer.removeListener();
         mViewDetailsTrack = null;
@@ -205,7 +206,6 @@ public class TrackDetailsActivity extends AppCompatActivity implements SimpleMed
         mActionBar = null;
 
         System.gc();
-        super.onDestroy();
     }
 
     /**
@@ -475,7 +475,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements SimpleMed
             public void onClick(View v) {
                 closeFABMenu();
                 enableMiniFabs(false);
-                mTrackDetailFragment.startIdentification(Identifier.ALL_TAGS);
+                mTrackDetailFragment.startIdentification(TrackIdentifier.ALL_TAGS);
             }
         });
 
@@ -483,7 +483,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements SimpleMed
             @Override
             public void onClick(View v) {
                 closeFABMenu();
-                mTrackDetailFragment.startIdentification(Identifier.JUST_COVER);
+                mTrackDetailFragment.startIdentification(TrackIdentifier.JUST_COVER);
             }
         });
 

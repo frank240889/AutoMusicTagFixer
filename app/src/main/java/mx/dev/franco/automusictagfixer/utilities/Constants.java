@@ -20,6 +20,7 @@ public class Constants {
     public static final String LAST_SELECTED_ITEM = "last_selected_item";
     public static final int CACHED = 0;
     public static final int MANUAL = 1;
+    public static final String PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=";
 
     public static class Application{
         public static String FULL_QUALIFIED_NAME = BuildConfig.APPLICATION_ID;

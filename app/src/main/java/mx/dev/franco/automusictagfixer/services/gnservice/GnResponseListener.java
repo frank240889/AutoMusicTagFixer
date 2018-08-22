@@ -71,16 +71,14 @@ public class GnResponseListener implements IGnMusicIdFileEvents, IGnCancellable 
 
     @Override
     public void musicIdFileStatusEvent(GnMusicIdFileInfo gnMusicIdFileInfo, GnMusicIdFileCallbackStatus gnMusicIdFileCallbackStatus, long currentFile, long totalFiles, IGnCancellable iGnCancellable) {
-        if(iGnCancellable.isCancelled())
-            return;
         //Retrieve current status of current tracked id song
         //check the current state
+
         String status = gnMusicIdFileCallbackStatus.toString();
         Log.d(TAG,gnMusicIdFileCallbackStatus.toString());
         if (mGnStatusToDisplay.containsKey(status)) {
             //report status to notification
             mHandler.post(() -> {
-                if(mListener != null) {
                     String msg;
                     switch (status){
                         case Constants.State.BEGIN_PROCESSING:
@@ -96,6 +94,7 @@ public class GnResponseListener implements IGnMusicIdFileEvents, IGnCancellable 
                             msg = "";
                             break;
                     }
+                if(mListener != null) {
                     mListener.status(msg);
                 }
             });
@@ -109,17 +108,11 @@ public class GnResponseListener implements IGnMusicIdFileEvents, IGnCancellable 
                     }
                 });
         }
-
-        /*else if(status.equals("kMusicIdFileCallbackStatusProcessingComplete")){
-
-        }*/
     }
 
     @Override
     public void gatherFingerprint(GnMusicIdFileInfo fileInfo, long l, long l1, IGnCancellable iGnCancellable) {
         Log.d(TAG,"gatherFingerprint");
-        if(iGnCancellable.isCancelled())
-            return;
         try {
             String path = fileInfo.fileName();
             File file = new File(path);
@@ -127,9 +120,8 @@ public class GnResponseListener implements IGnMusicIdFileEvents, IGnCancellable 
             Log.d("gatherFingerprint",file.getAbsolutePath());
             if (GnAudioFile.isFileFormatSupported(path)) {
                 mHandler.post(() -> {
-                    if(mListener != null) {
+                    if(mListener != null)
                         mListener.gatheringFingerprint(null);
-                    }
                 });
                 fileInfo.fingerprintFromSource(gnAudioFile);
             }
@@ -157,9 +149,6 @@ public class GnResponseListener implements IGnMusicIdFileEvents, IGnCancellable 
 
     @Override
     public void musicIdFileAlbumResult(GnResponseAlbums gnResponseAlbums, long l, long l1, IGnCancellable iGnCancellable) {
-        if(iGnCancellable.isCancelled())
-            return;
-
         final IdentificationResults identificationResults = new IdentificationResults();
         String title = "";
         String artist = "";
@@ -258,6 +247,8 @@ public class GnResponseListener implements IGnMusicIdFileEvents, IGnCancellable 
         } catch (GnException e) {
             e.printStackTrace();
         }
+
+
         try {
             //Get the first level identificationFound of genre, first from track matched if exist, if not, then from album identificationFound.
 
@@ -307,8 +298,6 @@ public class GnResponseListener implements IGnMusicIdFileEvents, IGnCancellable 
         } catch (GnException e) {
             e.printStackTrace();
         }
-        if(iGnCancellable.isCancelled())
-            return;
 
         mHandler.post(() -> {
             if(mListener != null)
@@ -324,8 +313,6 @@ public class GnResponseListener implements IGnMusicIdFileEvents, IGnCancellable 
 
     @Override
     public void musicIdFileResultNotFound(GnMusicIdFileInfo gnMusicIdFileInfo, long l, long l1, IGnCancellable iGnCancellable) {
-        if(iGnCancellable.isCancelled())
-            return;
 
             mHandler.post(() -> {
                 if(mListener != null)
@@ -339,18 +326,15 @@ public class GnResponseListener implements IGnMusicIdFileEvents, IGnCancellable 
         //triggered when all files were processed by doTrackId method
 
             mHandler.post(() -> {
-                if(mListener != null) {
+                if(mListener != null)
                     mListener.identificationCompleted(null);
-                    clear();
-                }
-                });
+            clear();
+            });
         Log.d("musicIdFileComplete","complete");
     }
 
     @Override
     public void statusEvent(GnStatus gnStatus, long percentComplete, long bytesTotalSent, long bytesTotalReceived, IGnCancellable iGnCancellable) {
-        if(iGnCancellable.isCancelled())
-            return;
         Log.d("gnStatus","gnStatus");
     }
 

@@ -45,11 +45,10 @@ import mx.dev.franco.automusictagfixer.UI.sd_card_instructions.TransparentActivi
 import mx.dev.franco.automusictagfixer.list.AudioItem;
 import mx.dev.franco.automusictagfixer.services.Fixer.Fixer;
 import mx.dev.franco.automusictagfixer.services.gnservice.GnResponseListener;
+import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
 import mx.dev.franco.automusictagfixer.utilities.RequiredPermissions;
-import mx.dev.franco.automusictagfixer.utilities.StorageHelper;
 import mx.dev.franco.automusictagfixer.utilities.Tagger;
-import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 import mx.dev.franco.automusictagfixer.utilities.shared_preferences.AbstractSharedPreferences;
 import mx.dev.franco.automusictagfixer.utilities.shared_preferences.DefaultSharedPreferencesImpl;
 
@@ -279,7 +278,9 @@ public class TrackDetailFragment extends Fragment implements EditableView, Resul
      */
     @Override
     public void onDestroy(){
+        super.onDestroy();
         mTrackDetailPresenter.destroy();
+        mTrackDetailPresenter = null;
         mTitleField = null;
         mArtistField = null;
         mAlbumField = null;
@@ -301,11 +302,9 @@ public class TrackDetailFragment extends Fragment implements EditableView, Resul
         mBitrate = null;
         mStatus = null;
         mProgressBar = null;
-        mTrackDetailPresenter = null;
         if(mResultsDialog != null)
             mResultsDialog.dismiss();
         System.gc();
-        super.onDestroy();
     }
 
     /**
@@ -665,14 +664,15 @@ public class TrackDetailFragment extends Fragment implements EditableView, Resul
 
     @Override
     public void hideProgress() {
-        mListener.onFinishedTask();
+
         mProgressContainer.setVisibility(View.GONE);
     }
 
     @Override
     public void onLoadError(String error) {
-        if(mListener != null)
+        if(mListener != null) {
             mListener.onDataError();
+        }
     }
 
     @Override

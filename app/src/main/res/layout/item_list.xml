@@ -18,6 +18,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:stateListAnimator="@animator/default_z_transformation_card_view"
+        app:cardCornerRadius="8dp"
         app:cardElevation="@dimen/cardview_default_elevation">
         <ImageView
             android:id="@+id/cover_art"

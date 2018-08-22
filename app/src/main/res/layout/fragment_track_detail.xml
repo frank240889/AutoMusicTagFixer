@@ -3,7 +3,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/root_container_details"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:padding="4dp">
         <android.support.v7.widget.CardView
             android:id="@+id/cardview_content"
             android:layout_width="match_parent"
@@ -12,6 +13,7 @@
             android:padding="8dp"
             app:cardElevation="@dimen/cardview_default_radius"
             app:cardUseCompatPadding="true"
+            app:cardCornerRadius="8dp"
             app:contentPadding="8dp">
             <RelativeLayout
                 android:id="@+id/editable_data_container"
@@ -56,14 +58,13 @@
 
                     <ImageButton
                         android:id="@+id/cancel_identification"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
                         android:layout_gravity="center_vertical"
                         android:layout_marginEnd="8dp"
                         android:layout_marginStart="8dp"
                         android:layout_weight="0.1"
                         android:background="?android:attr/selectableItemBackgroundBorderless"
-                        android:foreground="?android:attr/selectableItemBackgroundBorderless"
                         android:src="@drawable/ic_clear_black_24dp" />
                 </LinearLayout>
 
