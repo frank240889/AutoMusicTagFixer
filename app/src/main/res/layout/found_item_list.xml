@@ -19,6 +19,7 @@
         android:layout_margin="8dp"
         android:clickable="true"
         android:focusable="true"
+        app:cardCornerRadius="8dp"
         android:stateListAnimator="@animator/default_z_transformation_card_view"
         app:cardElevation="@dimen/cardview_default_elevation">
 

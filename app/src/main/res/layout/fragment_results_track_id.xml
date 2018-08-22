@@ -20,6 +20,7 @@
         android:stateListAnimator="@animator/default_z_transformation_card_view"
         android:elevation="@dimen/cardview_default_elevation"
         app:cardElevation="@dimen/cardview_default_elevation"
+        app:cardCornerRadius="8dp"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
         <ImageView
