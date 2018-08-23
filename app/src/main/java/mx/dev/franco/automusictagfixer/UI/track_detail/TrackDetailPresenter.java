@@ -401,14 +401,14 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
         else {
             results = createResultsFromInputData();
         }
-        sFixer.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, results);
+        sFixer.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, results);
     }
 
     public void removeCover(){
         sFixer = new Fixer(this);
         sFixer.setTrack(mCurrentTrack);
         sFixer.setTask(Tagger.MODE_REMOVE_COVER);
-        sFixer.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, null);
+        sFixer.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, null);
     }
 
 

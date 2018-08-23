@@ -57,6 +57,7 @@ import mx.dev.franco.automusictagfixer.utilities.StorageHelper;
 
 public class ListFragment extends Fragment implements AudioItemHolder.ClickListener,Observer<List<Track>> {
     private static final String TAG = ListFragment.class.getName();
+
     public interface OnInteractionFragment{
         void onClickCover();
     }
@@ -455,6 +456,10 @@ public class ListFragment extends Fragment implements AudioItemHolder.ClickListe
 
         AlertDialog alertDialog = builder.create();
         alertDialog.show();
+    }
+
+    public void stopScroll() {
+        mRecyclerView.stopScroll();
     }
 
     private void startCorrection(int id) {

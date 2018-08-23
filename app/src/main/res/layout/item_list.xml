@@ -10,8 +10,7 @@
     android:layout_marginTop="4dp"
     android:layout_marginBottom="4dp"
     android:paddingStart="8dp"
-    android:paddingEnd="8dp"
-    android:transitionName="openDetails">
+    android:paddingEnd="8dp">
     <android.support.v7.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto"
         android:id="@+id/card_thumb_cover"
@@ -35,12 +34,14 @@
 
     <TextView
         android:id="@+id/track_name"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_alignParentEnd="false"
         android:layout_alignParentStart="false"
         android:layout_alignTop="@id/card_thumb_cover"
+        android:layout_alignWithParentIfMissing="false"
         android:layout_toEndOf="@id/card_thumb_cover"
-        android:layout_toStartOf="@+id/status_mark"
+        android:layout_toStartOf="@+id/progress"
         android:drawableStart="@drawable/ic_music_note_white_24px"
         android:ellipsize="end"
         android:gravity="center_vertical"
@@ -51,12 +52,12 @@
 
     <TextView
         android:id="@+id/artist_name"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignStart="@+id/track_name"
         android:layout_below="@id/track_name"
         android:layout_toEndOf="@id/card_thumb_cover"
-        android:layout_toStartOf="@id/check_box"
+        android:layout_toStartOf="@+id/progress"
         android:drawableStart="@drawable/ic_account_circle_white_24px"
         android:ellipsize="end"
         android:gravity="center_vertical"
@@ -75,7 +76,7 @@
         android:layout_alignStart="@+id/artist_name"
         android:layout_below="@+id/artist_name"
         android:layout_toEndOf="@id/card_thumb_cover"
-        android:layout_toStartOf="@+id/status_mark"
+        android:layout_toStartOf="@+id/progress"
         android:drawableStart="@drawable/ic_album_white_24px"
         android:ellipsize="end"
         android:gravity="center_vertical"

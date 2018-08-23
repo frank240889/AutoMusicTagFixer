@@ -144,7 +144,8 @@
         android:text="@string/track_year"
         android:textSize="14sp"
         android:paddingStart="8dp"
-        android:paddingEnd="8dp" />
+        android:paddingEnd="8dp"
+        android:visibility="gone" />
 
     <CheckBox
         android:id="@+id/checkbox_rename"

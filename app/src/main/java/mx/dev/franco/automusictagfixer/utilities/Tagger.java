@@ -1007,11 +1007,11 @@ public class Tagger {
     }
 
     public static boolean checkFileIntegrity(DocumentFile file){
-        return file.exists() && file.isFile() && file.length() > 0 && file.canRead() && file.canWrite();
+        return file.exists() && file.isFile() && file.canRead() && file.canWrite();
     }
 
     public static boolean checkFileIntegrity(File file) {
-        return file.exists() && file.isFile() && file.length() > 0 && file.canRead() && file.canWrite();
+        return file.exists() && file.isFile() && file.canRead() && file.canWrite();
     }
 
     public static boolean checkFileIntegrity(String path) {

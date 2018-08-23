@@ -132,7 +132,7 @@ public class SearchTrackAdapter extends RecyclerView.Adapter<FoundItemHolder> im
                     mAsyncTaskQueue.remove(asyncLoaderCover);
             }
         });
-        asyncLoaderCover.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, track.getPath());
+        asyncLoaderCover.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, track.getPath());
 
         holder.trackName.setText(track.getTitle());
         holder.artistName.setText(track.getArtist());

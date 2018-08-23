@@ -229,7 +229,7 @@ public class TrackAdapter extends RecyclerView.Adapter<mx.dev.franco.automusicta
             holder.checkBox.setChecked(track.checked() == 1);
         }
         Log.d(TAG, "size asynctaskqueue: " + mAsyncTaskQueue.size());
-        if(mAsyncTaskQueue.size() < 16){
+        if(mAsyncTaskQueue.size() < 9){
             final AsyncLoaderCover asyncLoaderCover = new AsyncLoaderCover();
             mAsyncTaskQueue.add(asyncLoaderCover);
             asyncLoaderCover.setListener(new CoverLoaderListener() {
@@ -298,7 +298,7 @@ public class TrackAdapter extends RecyclerView.Adapter<mx.dev.franco.automusicta
                         mAsyncTaskQueue.remove(asyncLoaderCover);
                 }
             });
-            asyncLoaderCover.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, track.getPath());
+            asyncLoaderCover.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, track.getPath());
         }
 
         switch (track.getState()) {

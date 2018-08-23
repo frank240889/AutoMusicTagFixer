@@ -26,7 +26,6 @@ public class TrackIdentifier implements  GnResponseListener.GnListener{
     public TrackIdentifier(GnResponseListener.GnListener listener) {
         mGnListener = listener;
         mGnResponseListener = new GnResponseListener(this);
-        mGnListener.onStartIdentification(mTrack);
     }
 
     public void setTrack(Track track){
@@ -35,6 +34,7 @@ public class TrackIdentifier implements  GnResponseListener.GnListener{
 
     public void execute(){
         mTrack.setChecked(1);
+        mGnListener.onStartIdentification(mTrack);
         //set options of track id process
         try {
             mGnMusicIdFile = new GnMusicIdFile(GnService.sGnUser, mGnResponseListener);

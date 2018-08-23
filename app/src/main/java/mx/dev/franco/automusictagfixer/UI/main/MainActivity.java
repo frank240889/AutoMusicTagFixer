@@ -185,6 +185,7 @@ public class MainActivity extends AppCompatActivity
     public boolean onOptionsItemSelected(MenuItem menuItem) {
         int id = menuItem.getItemId();
         boolean sorted = false;
+        mListFragment.stopScroll();
         switch (id){
             case R.id.action_select_all:
                 if(mListFragment.getDatasource() == null || mListFragment.getDatasource().size() == 0){
@@ -473,6 +474,13 @@ public class MainActivity extends AppCompatActivity
                 toast.show();
             case Constants.Actions.START_PROCESSING_FOR:
             case Constants.Actions.FINISH_TRACK_PROCESSING:
+                String error = intent.getStringExtra("error");
+                if(error != null){
+                    toast = AndroidUtils.getToast(getApplicationContext());
+                    toast.setText(error);
+                    toast.setDuration(Toast.LENGTH_SHORT);
+                    toast.show();
+                }
                 mListFragment.updateItem(id, intent);
                 break;
             case Constants.Actions.ACTION_COMPLETE_TASK:

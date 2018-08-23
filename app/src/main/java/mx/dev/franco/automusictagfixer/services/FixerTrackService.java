@@ -3,7 +3,6 @@ package mx.dev.franco.automusictagfixer.services;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
-import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Bitmap;
@@ -18,6 +17,15 @@ import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
+import org.jaudiotagger.audio.AudioFile;
+import org.jaudiotagger.audio.AudioFileIO;
+import org.jaudiotagger.audio.exceptions.CannotReadException;
+import org.jaudiotagger.audio.exceptions.InvalidAudioFrameException;
+import org.jaudiotagger.audio.exceptions.ReadOnlyFileException;
+import org.jaudiotagger.tag.TagException;
+
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -54,7 +62,6 @@ AsyncFileReader.IRetriever, ResponseReceiver.OnResponse{
     public static String CLASS_NAME = FixerTrackService.class.getName();
     //Notification on status bar
     private Notification mNotification;
-    private HashMap<Integer, Track> mPendingTracks = new HashMap<>();
     private static TrackIdentifier sIdentifier;
     private static Fixer sFixer;
     private static TrackLoader sTrackDataLoader;
@@ -66,7 +73,6 @@ AsyncFileReader.IRetriever, ResponseReceiver.OnResponse{
     private boolean isRunning = false;
     private List<Integer> mIds = new ArrayList<>();
     private static AsyncFileReader sAsyncFileReader;
-    private Track mCurrentTrack;
     private ResponseReceiver mReceiver;
 
 
@@ -174,13 +180,20 @@ AsyncFileReader.IRetriever, ResponseReceiver.OnResponse{
 
     @Override
     public void onTrackDataLoaded(List<Track> data) {
-        sTrackDataLoader = null;
-        mCurrentTrack = data.get(0);
+        //mCurrentTrack = data.get(0);
         sIdentifier = new TrackIdentifier(this);
-        sIdentifier.setTrack(mCurrentTrack);
+        sIdentifier.setTrack(data.get(0));
         isRunning = true;
-        startNotification("Corrección en progreso", "Corrigiendo " + AudioItem.getFilename(mCurrentTrack.getPath()), "Iniciando corrección...");
-        sIdentifier.execute();//executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+        try {
+            AudioFileIO.read(new File(data.get(0).getPath()));
+            startNotification("Corrección en progreso", "Corrigiendo " + AudioItem.getFilename(data.get(0).getPath()), "Iniciando corrección...", data.get(0).getMediaStoreId() );
+            sIdentifier.execute();//executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+        } catch (CannotReadException | IOException | ReadOnlyFileException | TagException | InvalidAudioFrameException e) {
+            e.printStackTrace();
+            identificationError("Formato de audio no soportado.", data.get(0));
+        }
+
+        sTrackDataLoader = null;
     }
 
     /**
@@ -254,13 +267,14 @@ AsyncFileReader.IRetriever, ResponseReceiver.OnResponse{
      * @param contentText the content text o notification
      * @param contentTitle the title of notification
      * @param status the status string to show in notification
+     * @param mediaStoreId
      */
-    private void startNotification(String contentText, String contentTitle, String status) {
+    private void startNotification(String contentText, String contentTitle, String status, int mediaStoreId) {
 
         Intent notificationIntent = new Intent(this,MainActivity.class);
         notificationIntent.setAction(Constants.ACTION_OPEN_MAIN_ACTIVITY);
         notificationIntent.setFlags(Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT | Intent.FLAG_ACTIVITY_NEW_TASK);
-        notificationIntent.putExtra(Constants.MEDIA_STORE_ID, mCurrentTrack.getMediaStoreId());
+        notificationIntent.putExtra(Constants.MEDIA_STORE_ID, mediaStoreId);
         notificationIntent.putExtra("processing", true);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
 
@@ -308,11 +322,11 @@ AsyncFileReader.IRetriever, ResponseReceiver.OnResponse{
         intent.putExtra(Constants.MEDIA_STORE_ID, track.getMediaStoreId());
         intent.putExtra("processing", true);
         LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcastSync(intent);
-        if(mCurrentTrack != null)
-            mCurrentTrack.setChecked(1);
+        if(track != null)
+            track.setChecked(1);
         if(mTrackRepository != null)
-            mTrackRepository.update(mCurrentTrack);
-        startNotification(AudioItem.getPath(track.getPath()),"Corrección en progreso", "Identificando...");
+            mTrackRepository.update(track);
+        startNotification(AudioItem.getPath(track.getPath()),"Corrección en progreso", "Identificando...", track.getMediaStoreId()  );
     }
 
     @Override
@@ -328,7 +342,7 @@ AsyncFileReader.IRetriever, ResponseReceiver.OnResponse{
         //Intent intent = new Intent(Constants.Actions.STATUS);
         //intent.putExtra(Constants.STATUS, String.format(getString(R.string.gathering_fingerprint),trackName) );
         //LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcastSync(intent);
-        startNotification(AudioItem.getPath(track.getPath()),"Identificación en progreso", "Generando huella...");
+        startNotification(AudioItem.getPath(track.getPath()),"Identificación en progreso", "Generando huella...", track.getMediaStoreId() );
     }
 
     @Override
@@ -336,17 +350,18 @@ AsyncFileReader.IRetriever, ResponseReceiver.OnResponse{
         if(sIdentifier != null){
             sIdentifier = null;
         }
-        startNotification("Corrección en progreso", "", error);
+        startNotification("Corrección en progreso", "", error, track.getMediaStoreId() );
 
         Intent intent = new Intent(Constants.Actions.FINISH_TRACK_PROCESSING);
         intent.putExtra(Constants.MEDIA_STORE_ID, track.getMediaStoreId());
         intent.putExtra("processing", false);
+        intent.putExtra("error", error);
         LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcastSync(intent);
 
-        if(mCurrentTrack != null)
-            mCurrentTrack.setChecked(0);
+        if(track != null)
+            track.setChecked(0);
         if(mTrackRepository != null)
-            mTrackRepository.update(mCurrentTrack);
+            mTrackRepository.update(track);
 
         isRunning = false;
         if(mIds!= null && mIds.size()>0)
@@ -359,17 +374,17 @@ AsyncFileReader.IRetriever, ResponseReceiver.OnResponse{
         if(sIdentifier != null){
             sIdentifier = null;
         }
-        startNotification(AudioItem.getPath(track.getPath()),"Identificación en progreso", "No se encontró ninguna coincidencia.");
+        startNotification(AudioItem.getPath(track.getPath()),"Identificación en progreso", "No se encontró ninguna coincidencia.", track.getMediaStoreId() );
 
         Intent intent = new Intent(Constants.Actions.FINISH_TRACK_PROCESSING);
         intent.putExtra(Constants.MEDIA_STORE_ID, track.getMediaStoreId());
         intent.putExtra("processing", false);
         LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcastSync(intent);
 
-        if(mCurrentTrack != null)
-            mCurrentTrack.setChecked(0);
+        if(track != null)
+            track.setChecked(0);
         if(mTrackRepository != null)
-            mTrackRepository.update(mCurrentTrack);
+            mTrackRepository.update(track);
 
         isRunning = false;
         if(mIds != null && mIds.size()>0)
@@ -382,7 +397,7 @@ AsyncFileReader.IRetriever, ResponseReceiver.OnResponse{
         if(sIdentifier != null){
             sIdentifier = null;
         }
-        startNotification(AudioItem.getPath(track.getPath()), "Coincidencia encontrada", "Iniciando corrección...");
+        startNotification(AudioItem.getPath(track.getPath()), "Coincidencia encontrada", "Iniciando corrección...", track.getMediaStoreId() );
         sFixer = new Fixer(this);
         boolean shouldRename = PreferenceManager.
                 getDefaultSharedPreferences(getApplicationContext()).
@@ -395,7 +410,7 @@ AsyncFileReader.IRetriever, ResponseReceiver.OnResponse{
         sFixer.setShouldRename(shouldRename);
         sFixer.setTask(task);
         sFixer.setTrack(track);
-        sFixer.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, results);
+        sFixer.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, results);
     }
 
     @Override
@@ -413,8 +428,8 @@ AsyncFileReader.IRetriever, ResponseReceiver.OnResponse{
         intent.putExtra("processing", false);
         LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcastSync(intent);
 
-        if(mCurrentTrack != null)
-            mCurrentTrack.setChecked(0);
+        if(track != null)
+            track.setChecked(0);
         if(mTrackRepository != null)
             mTrackRepository.update(track);
 
@@ -434,12 +449,12 @@ AsyncFileReader.IRetriever, ResponseReceiver.OnResponse{
 
     @Override
     public void onCorrectionStarted(Track track) {
-        startNotification(AudioItem.getFilename(track.getPath()), getString(R.string.starting_correction), getString(R.string.applying_tags));
+        startNotification(AudioItem.getFilename(track.getPath()), getString(R.string.starting_correction), getString(R.string.applying_tags), track.getMediaStoreId() );
     }
 
     @Override
     public void onCorrectionCompleted(Tagger.ResultCorrection resultCorrection, Track track) {
-        startNotification(AudioItem.getFilename(track.getPath()), getString(R.string.success), "");
+        startNotification(AudioItem.getFilename(track.getPath()), getString(R.string.success), "", track.getMediaStoreId() );
 
         Intent intent = new Intent(Constants.Actions.FINISH_TRACK_PROCESSING);
         intent.putExtra("should_reload_cover", true);
@@ -486,7 +501,7 @@ AsyncFileReader.IRetriever, ResponseReceiver.OnResponse{
 
     @Override
     public void onCorrectionError(Tagger.ResultCorrection resultCorrection, Track track) {
-        startNotification("Error", "Error", "No se pudo corregir el archivo.");
+        startNotification("Error", "Error", "No se pudo corregir el archivo.", track.getMediaStoreId()  );
         Log.d("Error", "eRROR");
         Intent intent = new Intent(Constants.Actions.ACTION_SD_CARD_ERROR);
         intent.putExtra("should_reload_cover", true);
@@ -508,39 +523,6 @@ AsyncFileReader.IRetriever, ResponseReceiver.OnResponse{
         shouldContinue();
     }
 
-
-    //CALLBACKS NOT IN USE
-    @Override
-    public void onStart() {
-        startNotification("Corrección en progreso", "Actualizando lista", "Actualizando lista...");
-    }
-
-    @Override
-    public void onFinish() {
-        startNotification("Corrección en progreso", "Terminado", "Lista actualizada.");
-
-        Intent intent = new Intent(Constants.Actions.FINISH_TRACK_PROCESSING);
-        intent.putExtra("should_reload_cover", true);
-        intent.putExtra(Constants.MEDIA_STORE_ID, mIds.get(0));
-        intent.putExtra("processing", false);
-        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcastSync(intent);
-
-        //if(mCurrentTrack != null)
-        //    mCurrentTrack.setChecked(0);
-        if(mTrackRepository != null)
-            mTrackRepository.update(mCurrentTrack);
-
-        if(mIds != null && mIds.size()>0)
-            mIds.remove(0);
-        isRunning = false;
-        shouldContinue();
-    }
-
-    @Override
-    public void onCancel() {
-        sAsyncFileReader = null;
-    }
-
     private void shouldContinue(){
         if(mIds != null &&!mIds.isEmpty()){
             startCorrection();
@@ -558,6 +540,39 @@ AsyncFileReader.IRetriever, ResponseReceiver.OnResponse{
             stopSelf();
         }
     }
+
+    //CALLBACKS NOT IN USE
+    @Override
+    public void onStart() {
+        //startNotification("Corrección en progreso", "Actualizando lista", "Actualizando lista...");
+    }
+
+    @Override
+    public void onFinish() {
+        /*startNotification("Corrección en progreso", "Terminado", "Lista actualizada.");
+
+        Intent intent = new Intent(Constants.Actions.FINISH_TRACK_PROCESSING);
+        intent.putExtra("should_reload_cover", true);
+        intent.putExtra(Constants.MEDIA_STORE_ID, mIds.get(0));
+        intent.putExtra("processing", false);
+        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcastSync(intent);
+
+        //if(mCurrentTrack != null)
+        //    mCurrentTrack.setChecked(0);
+        if(mTrackRepository != null)
+            mTrackRepository.update(mCurrentTrack);
+
+        if(mIds != null && mIds.size()>0)
+            mIds.remove(0);
+        isRunning = false;
+        shouldContinue();*/
+    }
+
+    @Override
+    public void onCancel() {
+        sAsyncFileReader = null;
+    }
+/*************************/
 }
 
 
