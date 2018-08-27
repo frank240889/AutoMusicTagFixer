@@ -710,7 +710,7 @@ public class TrackDetailFragment extends Fragment implements EditableView, Resul
             correctionParams.mode = Tagger.MODE_WRITE_ONLY_MISSING;
             mTrackDetailPresenter.performCorrection(correctionParams);
         };
-        View view = LayoutInflater.from(getActivity()).inflate(R.layout.fragment_results_track_id, null);
+        View view = LayoutInflater.from(getActivity()).inflate(R.layout.layout_results_track_id, null);
 
         final CheckBox checkBox = view.findViewById(R.id.checkbox_rename);
         TextInputLayout textInputLayout = view.findViewById(R.id.label_rename_to);

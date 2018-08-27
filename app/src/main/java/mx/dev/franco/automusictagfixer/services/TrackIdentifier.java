@@ -52,11 +52,10 @@ public class TrackIdentifier implements  GnResponseListener.GnListener{
             mGnMusicIdFileInfo.trackTitle(mTrack.getTitle());
             mGnMusicIdFileInfo.trackArtist(mTrack.getArtist());
             mGnMusicIdFileInfo.albumTitle(mTrack.getAlbum());
-            mGnMusicIdFileInfo.mediaId(mTrack.getMediaStoreId()+"");
-            mGnMusicIdFile.doAlbumIdAsync(GnMusicIdFileProcessType.kQueryReturnSingle, GnMusicIdFileResponseType.kResponseAlbums);
+            mGnMusicIdFile.doTrackIdAsync(GnMusicIdFileProcessType.kQueryReturnAll,GnMusicIdFileResponseType.kResponseAlbums);
         } catch (GnException e) {
             e.printStackTrace();
-            mGnListener.identificationError(e.errorDescription(), mTrack);
+            identificationError(e.errorDescription(), mTrack);
         }
     }
 
@@ -64,8 +63,10 @@ public class TrackIdentifier implements  GnResponseListener.GnListener{
         if(mGnMusicIdFile != null)
             mGnMusicIdFile.cancel();
 
+
         try {
-            mGnMusicIdFileInfoManager.remove(mGnMusicIdFileInfo);
+            if(mGnMusicIdFileInfoManager != null)
+                mGnMusicIdFileInfoManager.remove(mGnMusicIdFileInfo);
         } catch (GnException e) {
             e.printStackTrace();
         }
@@ -92,6 +93,13 @@ public class TrackIdentifier implements  GnResponseListener.GnListener{
 
     @Override
     public void identificationError(String error, Track track) {
+        try {
+            if(mGnMusicIdFileInfoManager != null)
+                mGnMusicIdFileInfoManager.remove(mGnMusicIdFileInfo);
+        } catch (GnException e) {
+            e.printStackTrace();
+        }
+
         if(mGnListener != null)
             mGnListener.identificationError(error, mTrack);
     }

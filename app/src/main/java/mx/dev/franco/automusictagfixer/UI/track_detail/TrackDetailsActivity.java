@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
 import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.design.widget.FloatingActionButton;
@@ -621,7 +622,10 @@ public class TrackDetailsActivity extends AppCompatActivity implements SimpleMed
             @Override
             public boolean onMenuItemClick(MenuItem item) {
                 try {
+                if(PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getBoolean("key_use_embed_player",true))
                     mPlayer.playPreview(mCurrentPath);
+                else
+                    AndroidUtils.openInExternalApp(mCurrentPath, getApplicationContext());
                 } catch (IOException e) {
                     e.printStackTrace();
                 }

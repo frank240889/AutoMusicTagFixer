@@ -23,7 +23,7 @@ public class ResultsView extends FrameLayout{
         LayoutInflater layoutInflater = (LayoutInflater) context.
                 getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
-        layoutInflater.inflate(R.layout.fragment_results_track_id,this, true);
+        layoutInflater.inflate(R.layout.layout_results_track_id,this, true);
 
         TextView title = (TextView) getChildAt(0);
         title.setText(mResults.title);

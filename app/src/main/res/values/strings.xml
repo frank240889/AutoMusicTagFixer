@@ -103,11 +103,11 @@
     <string name="pref_automatically_replace_strange_chars">Remover caracteres inválidos</string>
     <string name="pref_automatically_replace_strange_chars_description">Se eliminan automaticamente al guardar los cambios.</string>
     <string name="pref_title_background">Usar corrección en segundo plano</string>
-    <string name="pref_title_background_description">La corrección de canciones no se cancelerá aún cuando cierres la aplicación, sino hasta que termine o la detengas; se mostrara una notificación con el progreso.</string>
+    <string name="pref_title_background_description">La corrección de canciones no se cancelerá aún cuando cierres la aplicación, sino hasta que termine o la detengas; se mostrará una notificación con el progreso.</string>
 
     <string name="enable_embed_player">Multimedia</string>
     <string name="pref_title_enable_embed_player">Usar reproductor integrado</string>
-    <string name="pref_enable_embed_player_description">Escuchar canción en el reproductor integrado.</string>
+    <string name="pref_enable_embed_player_description">Escuchar canción en el reproductor integrado o usa uno externo.</string>
 
     <string name="pref_title_replace_all_tags">Sobreescribir etiquetas</string>
     <string name="pref_replace_auto_all_tags_description">Si esta activa esta opción se reemplazarán todas las etiquetas por las encontradas, sino, solo se añadiran las faltantes.</string>
@@ -257,7 +257,7 @@
     <string-array name="answers">
         <item>De cada canción que tienes en tu smartphone, se genera una huella digital del audio, posteriormente, se consulta en un base de datos esa huella digital y se obtiene la información correspondiente a la huella encontrada más parecida.</item>
         <item>Debido a que las canciones se almacenan en la memoria (interna o SD) de tu smartphone, es necesario el permiso para poder leerlas; es el único permiso requerido, de lo contrario, la app no tendrá funcionalidad útil.</item>
-        <item>Por restricciones de seguridad de Android, no se pueden modificar los archivos de la SD sin que concedas el permiso explícito de hacerlo; este permiso solo aplica si tu smartphone tiene insertada una SD. Puedes activarlo o desactivarlo desde la {gmd-settings}Configuración {gmd-arrow-forward} {gmd-build}General.</item>
+        <item>Por restricciones de seguridad de Android, no se pueden modificar los archivos de la SD sin que concedas el permiso explícito de hacerlo; este permiso solo aplica si tu smartphone tiene ranura de SD y esta insertada una. Puedes activarlo o desactivarlo desde la {gmd-settings}Configuración {gmd-arrow-forward} {gmd-build}General.</item>
         <item>Solo toca una canción de la lista y elige el modo de corrección, o si prefieres, puedes hacerles check a las que quieras corregir tocando el {gmd-check-box} de cada una y después oprimes {gmd-photo-filter} en la esquina inferior derecha en la pantalla principal para corregir esas canciones en modo automático.</item>
         <item>Es el modo en el cual tu haces check a las canciones que quieres corregir, oprimes {gmd-photo-filter} en la pantalla principal, y AutoMusicTagFixer corrige por ti cada canción, incluido el nombre del archivo (puedes desactivar esta opción en la {gmd-settings}Configuración), no tienes que hacer nada, solo esperar a que termine. Este modo no requiere tu intervención, incluso puedes cerrar la app.</item>
         <item>Es el modo que obtiene la información de la canción, pero no la modificará hasta que tu la apliques oprimiendo {gmd-save} en la pantalla de detalle.</item>
@@ -266,7 +266,7 @@
         <item>Ninguno.</item>
         <item>Debido a que la app utiliza una licencia de uso gratuito del servicio de reconocimiento de audio, la cantidad de canciones que puedes corregir en los modos semiautomático, automático y descarga de carátula es variable, desde unas decenas hasta probablemente miles.</item>
         <item>Por rendimiento y velocidad de apertura, para generar la lista por primera vez(la lista es informativa y punto de partida para las operaciones), AutoMusicTagFixer lee la información de cada archivo de audio de la MediaStore (una BD interna de Android), por lo tanto, la información obtenida de aquí no siempre es muy precisa. AutoMusicTagFixer cuando muestra la información detallada de cada canción, lee directamente el archivo de audio, lo cual esta información leída si es precisa; no te preocupes, AutoMusicTagFixer hace las correcciones sobre el archivo en sí, por lo que los cambios hechos serán visibles a otros reproductores de audio, sean de la plataforma Android o no, y que soporten la lectura de etiquetas.</item>
-        <item>Son más de 35 etiquetas estándar, una cantidad considerable y fuera del alcance de este proyecto, por lo que se ofrece corrección a las más comunes.</item>
+        <item>Son más de 35 etiquetas estándar, una cantidad considerable y que puede ser tediosa para el usuario corregir, por lo que se ofrece corrección a las más comunes.</item>
         <item>Puede deberse a que no concediste el permiso de acceso al almacenamiento interno/externo ó, el tipo de audio no es uno soportado por Android y/ó la librería ó, el archivo no tiene una extension en el nombre.</item>
         <item>La app consulta una base de datos con información de aproximadamente 200 millones de canciones (http://www.gracenote.com/music/music-recognition/), por lo que es probable
         que la canción que estas tratando de corregir, haya sido descargada/convertida de una fuente de audio de baja calidad y su huella digital generada no coincide con ninguna de la base de datos, por favor intenta descargar/convertir con mayor

@@ -32,6 +32,8 @@ import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.list.AudioItem;
 import mx.dev.franco.automusictagfixer.services.gnservice.GnResponseListener;
 
+import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
+
 public class AndroidUtils {
 
     public static Toast getToast(Context context){
@@ -69,6 +71,7 @@ public class AndroidUtils {
                 intent.setDataAndType(contentUri, type);
             } else {
                 intent.setDataAndType(Uri.fromFile(file), type);
+                intent.setFlags(FLAG_ACTIVITY_NEW_TASK);
             }
             context.startActivity(intent);
         } catch (ActivityNotFoundException e) {
@@ -164,7 +167,7 @@ public class AndroidUtils {
 
     private static AlertDialog.Builder getBuilder(Context context, GnResponseListener.IdentificationResults results, boolean showAll){
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        View view = LayoutInflater.from(context).inflate(R.layout.fragment_results_track_id, null);
+        View view = LayoutInflater.from(context).inflate(R.layout.layout_results_track_id, null);
         builder.setView(view);
         view.findViewById(R.id.checkbox_rename).setVisibility(View.GONE);
         view.findViewById(R.id.label_rename_to).setVisibility(View.GONE);

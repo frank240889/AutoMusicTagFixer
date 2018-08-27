@@ -25,8 +25,8 @@
 
         <ImageView
             android:id="@+id/trackid_cover"
-            android:layout_width="200dp"
-            android:layout_height="200dp"
+            android:layout_width="120dp"
+            android:layout_height="120dp"
             android:layout_alignParentTop="true"
             android:layout_centerHorizontal="true"
             android:clickable="true"
@@ -61,9 +61,9 @@
         android:ellipsize="end"
         android:gravity="center_vertical"
         android:maxLines="1"
-        android:text="@string/title"
-        android:paddingStart="8dp"
         android:paddingEnd="8dp"
+        android:paddingStart="8dp"
+        android:text="@string/title"
         android:visibility="gone" />
 
     <TextView
@@ -76,10 +76,10 @@
         android:ellipsize="end"
         android:gravity="center_vertical"
         android:maxLines="1"
+        android:paddingEnd="8dp"
+        android:paddingStart="8dp"
         android:singleLine="true"
         android:text="@string/artist"
-        android:paddingStart="8dp"
-        android:paddingEnd="8dp"
         android:visibility="gone" />
 
     <TextView
@@ -92,10 +92,10 @@
         android:ellipsize="end"
         android:gravity="center_vertical"
         android:maxLines="1"
+        android:paddingEnd="8dp"
+        android:paddingStart="8dp"
         android:singleLine="true"
         android:text="@string/album"
-        android:paddingStart="8dp"
-        android:paddingEnd="8dp"
         android:visibility="gone" />
 
     <TextView
@@ -108,81 +108,81 @@
         android:ellipsize="end"
         android:gravity="center_vertical"
         android:maxLines="1"
+        android:paddingEnd="8dp"
+        android:paddingStart="8dp"
         android:singleLine="true"
         android:text="@string/genre"
-        android:paddingStart="8dp"
-        android:paddingEnd="8dp"
         android:visibility="gone" />
 
     <TextView
         android:id="@+id/track_id_number"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignStart="@+id/trackid_genre"
-        android:layout_below="@+id/trackid_genre"
+        android:layout_alignTop="@+id/trackid_genre"
+        android:layout_toEndOf="@+id/trackid_genre"
         android:drawableStart="@drawable/ic_format_list_numbered_white_24px"
         android:ellipsize="end"
         android:gravity="center_vertical"
         android:maxLines="1"
-        android:singleLine="true"
-        android:text="@string/track_number"
-        android:paddingStart="8dp"
         android:paddingEnd="8dp"
-        android:visibility="gone" />
+        android:paddingStart="8dp"
+        android:singleLine="true"
+        android:text="@string/track_number" />
 
     <TextView
         android:id="@+id/track_id_year"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignStart="@+id/track_id_number"
-        android:layout_below="@+id/track_id_number"
+        android:layout_alignTop="@+id/trackid_genre"
+        android:layout_toEndOf="@+id/track_id_number"
         android:drawableStart="@drawable/ic_date_range_white_24px"
         android:ellipsize="end"
         android:gravity="center_vertical"
         android:maxLines="1"
+        android:paddingEnd="8dp"
+        android:paddingStart="8dp"
         android:singleLine="true"
         android:text="@string/track_year"
         android:textSize="14sp"
-        android:paddingStart="8dp"
-        android:paddingEnd="8dp"
         android:visibility="gone" />
 
     <CheckBox
         android:id="@+id/checkbox_rename"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@id/track_id_year"
+        android:layout_below="@+id/trackid_genre"
         android:layout_marginStart="4dp"
         android:layout_marginTop="8dp"
         android:text="@string/message_checkbox_rename" />
 
     <android.support.design.widget.TextInputLayout
         android:id="@+id/label_rename_to"
-        android:labelFor="@id/rename_to"
-        android:layout_below="@id/checkbox_rename"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingStart="8dp"
+        android:layout_below="@id/checkbox_rename"
+        android:labelFor="@id/rename_to"
         android:paddingEnd="8dp"
-        android:visibility="gone"
-        android:theme="@style/CustomEditTextHint">
+        android:paddingStart="8dp"
+        android:theme="@style/CustomEditTextHint"
+        android:visibility="gone">
+
         <EditText
             android:id="@+id/rename_to"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="@string/hint_rename"/>
+            android:hint="@string/hint_rename" />
     </android.support.design.widget.TextInputLayout>
 
 
     <TextView
         android:id="@+id/message_rename_hint"
-        android:layout_below="@id/label_rename_to"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_below="@id/label_rename_to"
         android:gravity="center_horizontal"
-        android:paddingStart="8dp"
         android:paddingEnd="8dp"
+        android:paddingStart="8dp"
+        android:text="@string/message_rename"
         android:textSize="12sp"
-        android:visibility="gone"
-        android:text="@string/message_rename"/>
+        android:visibility="gone" />
 </RelativeLayout>

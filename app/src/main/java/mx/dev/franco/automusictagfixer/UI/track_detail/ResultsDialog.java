@@ -39,7 +39,7 @@ public class ResultsDialog extends AlertDialog {
     @Override
     public void onCreate(Bundle savedInstanceState){
         requestWindowFeature(Window.FEATURE_NO_TITLE);
-        setContentView(R.layout.fragment_results_track_id);
+        setContentView(R.layout.layout_results_track_id);
 
         TextView coverDimensions = findViewById(R.id.trackid_cover_dimensions);
         coverDimensions.setText(AudioItem.getStringImageSize(mResults.cover)) ;
