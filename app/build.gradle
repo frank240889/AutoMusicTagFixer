@@ -85,7 +85,7 @@ android {
         }
 
         debug {
-            ext.enableCrashlytics = false
+            ext.enableCrashlytics = true
         }
 
 

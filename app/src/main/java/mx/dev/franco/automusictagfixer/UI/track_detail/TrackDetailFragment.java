@@ -222,8 +222,8 @@ public class TrackDetailFragment extends Fragment implements EditableView, Resul
                             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
                             bitmap.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStream);
 
+                            mCurrentCoverArt = byteArrayOutputStream.toByteArray();
                             if (requestCode == INTENT_GET_AND_UPDATE_FROM_GALLERY) {
-                                //mCurrentCoverArt = byteArrayOutputStream.toByteArray();
                                 Fixer.CorrectionParams correctionParams = new Fixer.CorrectionParams();
                                 correctionParams.dataFrom = Constants.MANUAL;
                                 correctionParams.mode = Tagger.MODE_ADD_COVER;
@@ -859,6 +859,11 @@ public class TrackDetailFragment extends Fragment implements EditableView, Resul
 
     @Override
     public void disableEditMode() {
+        disableFields();
+    }
+
+    @Override
+    public void disableEditModeAndRestore() {
         disableFields();
         mTrackDetailPresenter.restorePreviousValues();
     }

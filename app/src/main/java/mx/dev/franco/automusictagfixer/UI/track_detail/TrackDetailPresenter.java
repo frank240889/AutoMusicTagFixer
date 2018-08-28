@@ -598,7 +598,7 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
                 mCurrentTrackDataItem.cover = results.cover;
 
             } else {
-                mView.setCover(mView.getCover());
+                //mView.setCover(mView.getCover());
                 mView.setImageSize(AudioItem.getStringImageSize(mView.getCover()));
                 mCurrentTrackDataItem.cover = mView.getCover();
                 mView.disableEditMode();

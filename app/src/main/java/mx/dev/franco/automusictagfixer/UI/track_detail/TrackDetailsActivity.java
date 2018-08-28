@@ -164,18 +164,16 @@ public class TrackDetailsActivity extends AppCompatActivity implements SimpleMed
     public void onBackPressed() {
         //hides fabs if are open
         if(mEditMode){
-            mTrackDetailFragment.disableEditMode();
-            return;
+            mTrackDetailFragment.disableEditModeAndRestore();
         }
-
-        if(mIsFloatingActionMenuOpen){
+        else if(mIsFloatingActionMenuOpen){
             closeFABMenu();
-            return;
         }
-
-        //destroys activity
-        dismiss();
-        super.onBackPressed();
+        else {
+            //destroys activity
+            dismiss();
+            super.onBackPressed();
+        }
     }
 
     /**
@@ -295,6 +293,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements SimpleMed
     @Override
     public void onCoverChanged(byte[] cover) {
         Log.d(TAG, "cover is null " + (cover == null));
+        mAppBarLayout.setExpanded(true);
         GlideApp.with(this).
                 load(cover)
                 .error(R.drawable.ic_album_white_48px)

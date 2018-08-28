@@ -56,6 +56,7 @@ public interface EditableView {
 
     void enableEditMode();
     void disableEditMode();
+    void disableEditModeAndRestore();
     void alertInvalidData(String message, int field);
     void onDataValid();
 }

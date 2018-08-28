@@ -43,15 +43,15 @@ public class TrackIdentifier implements  GnResponseListener.GnListener{
             //queue will be processed one by one
             mGnMusicIdFile.options().batchSize(1);
             //get the fileInfoManager
-            mGnMusicIdFileInfoManager = mGnMusicIdFile.fileInfos();
-            mGnMusicIdFile.waitForComplete();
+            GnMusicIdFileInfoManager gnMusicIdFileInfoManager = mGnMusicIdFile.fileInfos();
+            //mGnMusicIdFile.waitForComplete();
             //add all info available for more accurate results.
             //Check if file already was previously added.
-            mGnMusicIdFileInfo = mGnMusicIdFileInfoManager.add(mTrack.getPath());
-            mGnMusicIdFileInfo.fileName(mTrack.getPath());
-            mGnMusicIdFileInfo.trackTitle(mTrack.getTitle());
-            mGnMusicIdFileInfo.trackArtist(mTrack.getArtist());
-            mGnMusicIdFileInfo.albumTitle(mTrack.getAlbum());
+            GnMusicIdFileInfo gnMusicIdFileInfo = gnMusicIdFileInfoManager.add(mTrack.getPath());
+            gnMusicIdFileInfo.fileName(mTrack.getPath());
+            gnMusicIdFileInfo.trackTitle(mTrack.getTitle());
+            gnMusicIdFileInfo.trackArtist(mTrack.getArtist());
+            gnMusicIdFileInfo.albumTitle(mTrack.getAlbum());
             mGnMusicIdFile.doTrackIdAsync(GnMusicIdFileProcessType.kQueryReturnAll,GnMusicIdFileResponseType.kResponseAlbums);
         } catch (GnException e) {
             e.printStackTrace();
@@ -60,17 +60,10 @@ public class TrackIdentifier implements  GnResponseListener.GnListener{
     }
 
     public void cancelIdentification(){
-        if(mGnMusicIdFile != null)
+        if(mGnMusicIdFile != null){
             mGnMusicIdFile.cancel();
-
-
-        try {
-            if(mGnMusicIdFileInfoManager != null)
-                mGnMusicIdFileInfoManager.remove(mGnMusicIdFileInfo);
-        } catch (GnException e) {
-            e.printStackTrace();
         }
-        mGnMusicIdFile = null;
+
         if(mGnListener != null) {
             mGnListener.onIdentificationCancelled(null, mTrack);
         }
@@ -93,13 +86,6 @@ public class TrackIdentifier implements  GnResponseListener.GnListener{
 
     @Override
     public void identificationError(String error, Track track) {
-        try {
-            if(mGnMusicIdFileInfoManager != null)
-                mGnMusicIdFileInfoManager.remove(mGnMusicIdFileInfo);
-        } catch (GnException e) {
-            e.printStackTrace();
-        }
-
         if(mGnListener != null)
             mGnListener.identificationError(error, mTrack);
     }
@@ -119,8 +105,6 @@ public class TrackIdentifier implements  GnResponseListener.GnListener{
     @Override
     public void identificationCompleted(Track track) {
         if(mGnListener != null) {
-            mGnMusicIdFile.delete();
-            mGnMusicIdFile = null;
             mGnListener.identificationCompleted(mTrack);
         }
         clear();
@@ -148,5 +132,6 @@ public class TrackIdentifier implements  GnResponseListener.GnListener{
         mGnResponseListener = null;
         mGnListener = null;
         mTrack = null;
+        mGnMusicIdFile = null;
     }
 }
