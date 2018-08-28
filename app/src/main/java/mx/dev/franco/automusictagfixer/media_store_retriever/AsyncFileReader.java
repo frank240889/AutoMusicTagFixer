@@ -138,7 +138,7 @@ public class AsyncFileReader extends AsyncTask<Void, Void, Void> {
     private void removeInexistentTracks(){
         List<Track> tracksToRemove = new ArrayList<>();
         TrackDAO trackDAO = trackRoomDatabase.trackDao();
-        List<Track> currentTracks = trackDAO.getSelectedTracks();
+        List<Track> currentTracks = trackDAO.getTracks();
         if(currentTracks == null || currentTracks.size() == 0)
             return;
 

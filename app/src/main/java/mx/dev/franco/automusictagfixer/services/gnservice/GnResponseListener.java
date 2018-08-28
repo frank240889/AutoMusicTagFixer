@@ -27,21 +27,6 @@ import mx.dev.franco.automusictagfixer.utilities.Constants;
 import mx.dev.franco.automusictagfixer.utilities.Settings;
 
 public class GnResponseListener implements IGnMusicIdFileEvents, IGnCancellable {
-    private static final String TAG = GnResponseListener.class.getName();
-
-    private boolean mCancelled = false;
-
-    @Override
-    public void setCancel(boolean b) {
-        mCancelled = b;
-    }
-
-    @Override
-    public boolean isCancelled() {
-        Log.d(TAG,"isCancelled() " + mCancelled);
-        return mCancelled;
-    }
-
     public interface GnListener{
         void statusIdentification(String status, Track track);
         void gatheringFingerprint(Track track);
@@ -54,9 +39,10 @@ public class GnResponseListener implements IGnMusicIdFileEvents, IGnCancellable 
         void status(String message);
     }
 
-    private GnListener mListener;
+    private static final String TAG = GnResponseListener.class.getName();
+    private boolean mCancelled = false;
+    private volatile GnListener mListener;
     private HashMap<String,String> mGnStatusToDisplay;
-    private Handler mHandler;
 
     public GnResponseListener(GnListener listener){
         mListener = listener;
@@ -73,6 +59,9 @@ public class GnResponseListener implements IGnMusicIdFileEvents, IGnCancellable 
     public void musicIdFileStatusEvent(GnMusicIdFileInfo gnMusicIdFileInfo, GnMusicIdFileCallbackStatus gnMusicIdFileCallbackStatus, long currentFile, long totalFiles, IGnCancellable iGnCancellable) {
         //Retrieve current status of current tracked id song
         //check the current state
+        if(isCancelled())
+            return;
+
         Log.d(TAG,"isCancelled musicidfilesstatusevent() " + iGnCancellable.isCancelled());
         Handler handler = new Handler(Looper.getMainLooper());
         String status = gnMusicIdFileCallbackStatus.toString();
@@ -114,6 +103,8 @@ public class GnResponseListener implements IGnMusicIdFileEvents, IGnCancellable 
     @Override
     public void gatherFingerprint(GnMusicIdFileInfo fileInfo, long l, long l1, IGnCancellable iGnCancellable) {
         Log.d(TAG,"isCancelled gatherFingerprint" + iGnCancellable.isCancelled());
+        if(isCancelled())
+            return;
         Handler handler = new Handler(Looper.getMainLooper());
         try {
             String path = fileInfo.fileName();
@@ -148,10 +139,15 @@ public class GnResponseListener implements IGnMusicIdFileEvents, IGnCancellable 
         Log.d(TAG,"isCancelled gathermetadata" + iGnCancellable.isCancelled());
         //Log.d("cancelled8",iGnCancellable.isCancelled()+"");
         //Log.d("gatherMetadata", "gatherMetadata");
+
+        if(isCancelled())
+            return;
     }
 
     @Override
     public void musicIdFileAlbumResult(GnResponseAlbums gnResponseAlbums, long l, long l1, IGnCancellable iGnCancellable) {
+        if(isCancelled())
+            return;
         Log.d(TAG,"isCancelled musicIdFIleALbum" + iGnCancellable.isCancelled());
         Handler handler = new Handler(Looper.getMainLooper());
         final IdentificationResults identificationResults = new IdentificationResults();
@@ -162,7 +158,8 @@ public class GnResponseListener implements IGnMusicIdFileEvents, IGnCancellable 
         String number = "";
         String year = "";
         String genre = "";
-
+        if(isCancelled())
+            return;
         //retrieve title results identificationFound
         try {
             title = gnResponseAlbums.albums().at(0).next().trackMatched().title().display();
@@ -170,7 +167,8 @@ public class GnResponseListener implements IGnMusicIdFileEvents, IGnCancellable 
         } catch (GnException e) {
             e.printStackTrace();
         }
-
+        if(isCancelled())
+            return;
         try {
             //get artist name of song if exist
             //otherwise get artist album
@@ -184,12 +182,19 @@ public class GnResponseListener implements IGnMusicIdFileEvents, IGnCancellable 
         } catch (GnException e) {
             e.printStackTrace();
         }
+
+        if(isCancelled())
+            return;
+
         try {
             album = gnResponseAlbums.albums().at(0).next().title().display();
             identificationResults.album = album;
         } catch (GnException e) {
             e.printStackTrace();
         }
+
+        if(isCancelled())
+            return;
 
         try {
             //If is selected "No descargar imagen"
@@ -200,6 +205,9 @@ public class GnResponseListener implements IGnMusicIdFileEvents, IGnCancellable 
             //If is selected "De mejor calidad disponible"
             //iterate from higher to lower quality and select the first higher quality identificationFound.
             else if (Settings.SETTING_SIZE_ALBUM_ART == GnImageSize.kImageSizeXLarge) {
+                if(isCancelled())
+                    return;
+
                 GnContent gnContent = gnResponseAlbums.albums().at(0).next().coverArt();
                 GnImageSize[] values = GnImageSize.values();
                 for (int sizes = values.length - 1; sizes >= 0; --sizes) {
@@ -210,9 +218,12 @@ public class GnResponseListener implements IGnMusicIdFileEvents, IGnCancellable 
                     }
                 }
             }
+
             //If is selected "De menor calidad disponible"
             //iterate from lower to higher quality and select the first lower quality identificationFound.
             else if (Settings.SETTING_SIZE_ALBUM_ART == GnImageSize.kImageSizeThumbnail) {
+                if(isCancelled())
+                    return;
                 GnContent gnContent = gnResponseAlbums.albums().at(0).next().coverArt();
                 GnImageSize[] values = GnImageSize.values();
                 for (int sizes = 0; sizes < values.length ; sizes++) {
@@ -226,6 +237,8 @@ public class GnResponseListener implements IGnMusicIdFileEvents, IGnCancellable 
             //get the first identificationFound in any of those predefined sizes:
             //"De baja calidad", "De media calidad", "De alta calidad", "De muy alta calidad"
             else {
+                if(isCancelled())
+                    return;
                 GnContent gnContent = gnResponseAlbums.albums().at(0).next().coverArt();
                 cover = gnContent.asset(Settings.SETTING_SIZE_ALBUM_ART).url();
                 identificationResults.cover = new GnAssetFetch(GnService.sGnUser, cover).data();
@@ -235,12 +248,19 @@ public class GnResponseListener implements IGnMusicIdFileEvents, IGnCancellable 
             e.printStackTrace();
         }
 
+        if(isCancelled())
+            return;
+
         try {
             number = gnResponseAlbums.albums().at(0).next().trackMatchNumber() + "";
             identificationResults.trackNumber = number;
         } catch (GnException e) {
             e.printStackTrace();
         }
+
+        if(isCancelled())
+            return;
+
         try {
             if(!gnResponseAlbums.albums().at(0).next().trackMatched().year().isEmpty()){
                 year = gnResponseAlbums.albums().at(0).next().trackMatched().year();
@@ -253,6 +273,8 @@ public class GnResponseListener implements IGnMusicIdFileEvents, IGnCancellable 
             e.printStackTrace();
         }
 
+        if(isCancelled())
+            return;
 
         try {
             //Get the first level identificationFound of genre, first from track matched if exist, if not, then from album identificationFound.
@@ -304,6 +326,9 @@ public class GnResponseListener implements IGnMusicIdFileEvents, IGnCancellable 
             e.printStackTrace();
         }
 
+        if(isCancelled())
+            return;
+
         handler.post(() -> {
             if(mListener != null)
                 mListener.identificationFound(identificationResults, null);
@@ -319,6 +344,8 @@ public class GnResponseListener implements IGnMusicIdFileEvents, IGnCancellable 
     @Override
     public void musicIdFileResultNotFound(GnMusicIdFileInfo gnMusicIdFileInfo, long l, long l1, IGnCancellable iGnCancellable) {
         Log.d(TAG,"isCancelled resultnotfound" + iGnCancellable.isCancelled());
+        if(isCancelled())
+            return;
         Handler handler = new Handler(Looper.getMainLooper());
             handler.post(() -> {
                 if(mListener != null)
@@ -330,6 +357,8 @@ public class GnResponseListener implements IGnMusicIdFileEvents, IGnCancellable 
     @Override
     public void musicIdFileComplete(GnError gnError) {
         //triggered when all files were processed by doTrackId method
+        if(isCancelled())
+            return;
         Handler handler = new Handler(Looper.getMainLooper());
             handler.post(() -> {
                 if(mListener != null)
@@ -350,6 +379,17 @@ public class GnResponseListener implements IGnMusicIdFileEvents, IGnCancellable 
         //if(mGnStatusToDisplay != null)
         //    this.mGnStatusToDisplay.clear();
         //this.mGnStatusToDisplay = null;
+    }
+
+    @Override
+    public void setCancel(boolean b) {
+        mCancelled = b;
+    }
+
+    @Override
+    public boolean isCancelled() {
+        Log.d(TAG,"isCancelled() " + mCancelled);
+        return mCancelled;
     }
 
     public static class IdentificationResults{

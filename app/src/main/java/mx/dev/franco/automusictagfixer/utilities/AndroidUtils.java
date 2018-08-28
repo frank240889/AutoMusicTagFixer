@@ -282,6 +282,11 @@ public class AndroidUtils {
     public static void revokePermissionSD(Context context){
         SharedPreferences sharedPreferences = context.getSharedPreferences(Constants.Application.FULL_QUALIFIED_NAME, Context.MODE_PRIVATE);
         String uriString = sharedPreferences.getString(Constants.URI_TREE, null);
+
+        // Writable permission to URI SD Card had not been granted yet, so uriString is null
+        if(uriString == null)
+            return;
+
         Uri uri = Uri.parse(uriString);
 
         //Revoke permission to write to SD card and remove URI from shared preferences.

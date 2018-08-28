@@ -57,8 +57,8 @@ import mx.dev.franco.automusictagfixer.utilities.Tagger;
  */
 
 public class FixerTrackService extends Service implements GnResponseListener.GnListener,
-        Fixer.OnCorrectionListener, DataLoader<List<Integer>>, DataTrackLoader<List<Track>>,
-AsyncFileReader.IRetriever, ResponseReceiver.OnResponse{
+        Fixer.OnCorrectionListener, DataLoader<List<Integer>>, DataTrackLoader<List<Track>>
+        ,ResponseReceiver.OnResponse{
     public static String CLASS_NAME = FixerTrackService.class.getName();
     //Notification on status bar
     private Notification mNotification;
@@ -190,7 +190,7 @@ AsyncFileReader.IRetriever, ResponseReceiver.OnResponse{
             sIdentifier.execute();//executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
         } catch (CannotReadException | IOException | ReadOnlyFileException | TagException | InvalidAudioFrameException e) {
             e.printStackTrace();
-            identificationError("Formato de audio no soportado.", data.get(0));
+            identificationError(getString(R.string.could_not_read_file), data.get(0));
         }
 
         sTrackDataLoader = null;
@@ -358,8 +358,7 @@ AsyncFileReader.IRetriever, ResponseReceiver.OnResponse{
         intent.putExtra("error", error);
         LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcastSync(intent);
 
-        if(track != null)
-            track.setChecked(0);
+        track.setChecked(0);
         if(mTrackRepository != null)
             mTrackRepository.update(track);
 
@@ -381,8 +380,7 @@ AsyncFileReader.IRetriever, ResponseReceiver.OnResponse{
         intent.putExtra("processing", false);
         LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcastSync(intent);
 
-        if(track != null)
-            track.setChecked(0);
+        track.setChecked(0);
         if(mTrackRepository != null)
             mTrackRepository.update(track);
 
@@ -428,8 +426,7 @@ AsyncFileReader.IRetriever, ResponseReceiver.OnResponse{
         intent.putExtra("processing", false);
         LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcastSync(intent);
 
-        if(track != null)
-            track.setChecked(0);
+        track.setChecked(0);
         if(mTrackRepository != null)
             mTrackRepository.update(track);
 
@@ -540,39 +537,6 @@ AsyncFileReader.IRetriever, ResponseReceiver.OnResponse{
             stopSelf();
         }
     }
-
-    //CALLBACKS NOT IN USE
-    @Override
-    public void onStart() {
-        //startNotification("Corrección en progreso", "Actualizando lista", "Actualizando lista...");
-    }
-
-    @Override
-    public void onFinish() {
-        /*startNotification("Corrección en progreso", "Terminado", "Lista actualizada.");
-
-        Intent intent = new Intent(Constants.Actions.FINISH_TRACK_PROCESSING);
-        intent.putExtra("should_reload_cover", true);
-        intent.putExtra(Constants.MEDIA_STORE_ID, mIds.get(0));
-        intent.putExtra("processing", false);
-        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcastSync(intent);
-
-        //if(mCurrentTrack != null)
-        //    mCurrentTrack.setChecked(0);
-        if(mTrackRepository != null)
-            mTrackRepository.update(mCurrentTrack);
-
-        if(mIds != null && mIds.size()>0)
-            mIds.remove(0);
-        isRunning = false;
-        shouldContinue();*/
-    }
-
-    @Override
-    public void onCancel() {
-        sAsyncFileReader = null;
-    }
-/*************************/
 }
 
 

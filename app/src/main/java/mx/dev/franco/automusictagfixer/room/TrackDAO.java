@@ -60,4 +60,7 @@ public interface TrackDAO {
     @Query("SELECT * FROM track_table WHERE title LIKE :param" + " OR artist LIKE :param" + " OR album like :param")
     List<Track> search(String param);
 
+    @Query("SELECT * FROM track_table")
+    List<Track> getTracks();
+
 }

@@ -10,10 +10,10 @@ import mx.dev.franco.automusictagfixer.room.Track;
 
 public class DiffCallback extends DiffUtil.Callback{
 
-    List<Track> oldTracks;
-    List<Track> newTracks;
+    private List<Track> oldTracks;
+    private List<Track> newTracks;
 
-    public DiffCallback(List<Track> newTracks, List<Track> oldTracks) {
+    public DiffCallback(List<Track> oldTracks, List<Track> newTracks) {
         this.newTracks = newTracks;
         this.oldTracks = oldTracks;
     }
@@ -73,6 +73,5 @@ public class DiffCallback extends DiffUtil.Callback{
             return null;
         }
         return diff;
-        //return super.getChangePayload(oldItemPosition, newItemPosition);
     }
 }

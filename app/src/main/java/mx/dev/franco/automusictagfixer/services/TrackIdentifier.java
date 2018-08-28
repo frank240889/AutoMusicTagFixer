@@ -17,7 +17,7 @@ public class TrackIdentifier implements  GnResponseListener.GnListener{
     public static final int ALL_TAGS = 0;
     public static final int JUST_COVER = 1;
     private static final String TAG = TrackIdentifier.class.getName();
-    private volatile GnMusicIdFile mGnMusicIdFile;
+    private GnMusicIdFile mGnMusicIdFile;
     private GnResponseListener.GnListener mGnListener;
     private GnResponseListener mGnResponseListener;
     private GnMusicIdFileInfoManager mGnMusicIdFileInfoManager;
@@ -61,6 +61,7 @@ public class TrackIdentifier implements  GnResponseListener.GnListener{
 
     public void cancelIdentification(){
         if(mGnMusicIdFile != null){
+            mGnResponseListener.setCancel(true);
             mGnMusicIdFile.cancel();
         }
 
