@@ -322,8 +322,7 @@ public class FixerTrackService extends Service implements GnResponseListener.GnL
         intent.putExtra(Constants.MEDIA_STORE_ID, track.getMediaStoreId());
         intent.putExtra("processing", true);
         LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcastSync(intent);
-        if(track != null)
-            track.setChecked(1);
+        track.setChecked(1);
         if(mTrackRepository != null)
             mTrackRepository.update(track);
         startNotification(AudioItem.getPath(track.getPath()),"Corrección en progreso", "Identificando...", track.getMediaStoreId()  );
@@ -521,7 +520,7 @@ public class FixerTrackService extends Service implements GnResponseListener.GnL
     }
 
     private void shouldContinue(){
-        if(mIds != null &&!mIds.isEmpty()){
+        if(mIds != null && !mIds.isEmpty()){
             startCorrection();
         }
         else {

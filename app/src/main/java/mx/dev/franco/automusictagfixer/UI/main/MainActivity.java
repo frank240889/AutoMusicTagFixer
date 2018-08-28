@@ -465,13 +465,15 @@ public class MainActivity extends AppCompatActivity
                 break;
 
             case Constants.Actions.ACTION_START_TASK:
-                mListFragment.correctionStarted();
+                    mListFragment.correctionStarted();
                 break;
             case Constants.Actions.ACTION_SD_CARD_ERROR:
-                toast = AndroidUtils.getToast(getApplicationContext());
-                toast.setText(intent.getStringExtra("error"));
-                toast.setDuration(Toast.LENGTH_SHORT);
-                toast.show();
+                    toast = AndroidUtils.getToast(getApplicationContext());
+                    toast.setText(intent.getStringExtra("error"));
+                    toast.setDuration(Toast.LENGTH_SHORT);
+                    toast.show();
+                    mListFragment.updateItem(id, intent);
+                    break;
             case Constants.Actions.START_PROCESSING_FOR:
             case Constants.Actions.FINISH_TRACK_PROCESSING:
                 String error = intent.getStringExtra("error");

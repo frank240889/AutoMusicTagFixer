@@ -485,6 +485,7 @@ public class ListFragment extends Fragment implements AudioItemHolder.ClickListe
     }
 
     public void updateItem(int id, Intent intent) {
+        Log.d("Actualiza item","Actualiza item");
         Track track = mAdapter.getTrackById(id);
         int position = mAdapter.getDatasource().indexOf(track);
         mRecyclerView.smoothScrollToPosition(position);

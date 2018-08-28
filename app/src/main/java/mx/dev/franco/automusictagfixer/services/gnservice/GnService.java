@@ -86,7 +86,7 @@ public class GnService{
 
 
     public static class AsyncApiInitialization extends AsyncTask<Integer,Void,Boolean> {
-        private String mMsg = "";
+        private volatile String mMsg = "";
 
         public AsyncApiInitialization(){
             sIsInitializing = true;
@@ -99,6 +99,7 @@ public class GnService{
                 sGnUser = new GnUser(new GnUserStore(sContext), sGnsdkClientId, sGnsdkClientTag, sAppString);
                 sGnLocale = new GnLocale(GnLocaleGroup.kLocaleGroupMusic, GnLanguage.kLanguageSpanish, GnRegion.kRegionGlobal, GnDescriptor.kDescriptorDetailed, sGnUser);
                 sGnLocale.setGroupDefault();
+                //sGnUser.options().networkLoadBalance(true);
                 GnStorageSqlite.enable();
                 sIsInitializing = false;
                 return sApiInitialized = true;

@@ -446,7 +446,9 @@ public class TrackAdapter extends RecyclerView.Adapter<mx.dev.franco.automusicta
 
     private void updateInBackground(List<Track> newItems){
         mPendingUpdates.push(newItems);
+        Log.d(TAG, "trying to execute pending updates");
         if (mPendingUpdates.size() > 1) {
+            Log.d(TAG, "not executing pending updates");
             return;
         }
 
@@ -468,7 +470,7 @@ public class TrackAdapter extends RecyclerView.Adapter<mx.dev.franco.automusicta
 
     @Override
     public void onStartDiff() {
-
+        Log.d(TAG, "onStartDiff");
     }
 
     @Override
@@ -478,8 +480,10 @@ public class TrackAdapter extends RecyclerView.Adapter<mx.dev.franco.automusicta
 
     @Override
     public void onFinishedDiff(DiffExecutor.DiffResults diffResults) {
+        Log.d(TAG, "onFinishedDiff");
         mPendingUpdates.remove();
         if (diffResults.diffResult != null) {
+            Log.d(TAG, "dispatching results");
             diffResults.diffResult.dispatchUpdatesTo(this);
             mTrackList.clear();
             mTrackList.addAll(diffResults.list);

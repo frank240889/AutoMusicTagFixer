@@ -161,17 +161,14 @@ public class Fixer extends AsyncTask<GnResponseListener.IdentificationResults,Vo
         if(results.title != null && !results.title.equals("")){
             tagsToApply.put(FieldKey.TITLE, results.title);
             dataTitle = true;
-            mTrack.setTitle(results.title);
         }
         if(results.artist != null && !results.artist.equals("")){
             tagsToApply.put(FieldKey.ARTIST, results.artist );
             dataArtist = true;
-            mTrack.setArtist(results.artist);
         }
         if(results.album != null && !results.album.equals("")){
             tagsToApply.put(FieldKey.ALBUM, results.album);
             dataAlbum = true;
-            mTrack.setAlbum(results.album);
         }
         if(results.cover != null){
             tagsToApply.put(FieldKey.COVER_ART, results.cover);
@@ -198,6 +195,16 @@ public class Fixer extends AsyncTask<GnResponseListener.IdentificationResults,Vo
         if(hasError(mResultsCorrection.code))
             return false;
 
+        if(dataTitle){
+            mTrack.setTitle(results.title);
+        }
+        if(dataArtist){
+            mTrack.setArtist(results.artist);
+        }
+        if(dataAlbum){
+            mTrack.setAlbum(results.album);
+        }
+
         mResultsCorrection.track = mTrack;
         //If some info was not identificationFound, mark its state as INCOMPLETE
         if (!dataTitle || !dataArtist || !dataAlbum || !dataImage || !dataTrackNumber || !dataYear || !dataGenre) {
@@ -217,7 +224,6 @@ public class Fixer extends AsyncTask<GnResponseListener.IdentificationResults,Vo
         if (mShouldRename) {
 
             if (mRenameTo.isEmpty()) {
-
                 newAbsolutePath = taggerHelper.renameFile(new File(mTrack.getPath()),
                         results.title,
                         results.artist,
