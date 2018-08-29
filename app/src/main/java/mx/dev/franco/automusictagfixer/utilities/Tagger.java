@@ -82,7 +82,7 @@ public class Tagger {
 
     private static Tagger sTaggerHelper;
     private static Context sContext;
-    private static final int BUFFER_SIZE = 1024;
+    private static final int BUFFER_SIZE = 131072;//->128Kb
 
     private static StorageHelper sStorageHelper;
 
@@ -338,7 +338,7 @@ public class Tagger {
         }
 
         //Try to copy temp file with its news tags to its original location
-        int resultOfCopy = copyBack(tempFile);
+        int resultOfCopy = copyBack(tempFile, file);
 
         if (resultOfCopy != SUCCESS_COPY_BACK) {
             resultCorrection.code = resultOfCopy;
@@ -494,18 +494,19 @@ public class Tagger {
      * Copy temp file to its original location in SD card
      * @return true if was correctly copied the file to its original
      *                  location, false otherwise
+     * @param correctedFile
+     * @param originalFile
      */
-    private int copyBack(File outputFile) {
-        DocumentFile sourceDocumentFile = getDocumentFile(outputFile);
+    private int copyBack(File correctedFile, File originalFile) {
+        DocumentFile sourceDocumentFile = getDocumentFile(originalFile);
         if(sourceDocumentFile == null)
-            return COULD_NOT_GET_URI_SD_ROOT_TREE;
+            return COULD_NOT_COPY_BACK_TO_ORIGINAL_LOCATION;
         //Check if current file already exist and delete it
         //to replace it by the corrected file
         boolean exist = sourceDocumentFile.exists();
         boolean success = false;
         if(exist){
             boolean deleted = sourceDocumentFile.delete();
-            //Log.d("borrado actual",deleted+"");
         }
 
         InputStream in = null;
@@ -514,12 +515,11 @@ public class Tagger {
         //Copy file with new tags to its original location
         try {
             //First create a DocumentFile object referencing to its original path that it was stored
-            DocumentFile newFile =  sourceDocumentFile.getParentFile().createFile(AudioItem.getMimeType(outputFile), outputFile.getName() );
-            //Log.d("newFile uri",newFile.getUri().toString());
+            DocumentFile newFile =  sourceDocumentFile.getParentFile().createFile(AudioItem.getMimeType(correctedFile), correctedFile.getName() );
             //Destination data
             out = sContext.getContentResolver().openOutputStream(newFile.getUri());
             //Input data
-            in = new FileInputStream(outputFile);
+            in = new FileInputStream(correctedFile);
 
             byte[] buffer = new byte[BUFFER_SIZE];
             int read;
@@ -801,7 +801,7 @@ public class Tagger {
         }
 
         //Try to copy file to its original SD location
-        int resultOfCopyBack = copyBack(tempFile);
+        int resultOfCopyBack = copyBack(tempFile, file);
 
         if(resultOfCopyBack != SUCCESS_COPY_BACK){
             resultCorrection.code = COULD_NOT_COPY_BACK_TO_ORIGINAL_LOCATION;
