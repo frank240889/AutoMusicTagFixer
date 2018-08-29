@@ -414,6 +414,8 @@ public class TrackDetailFragment extends Fragment implements EditableView, Resul
         imm.showSoftInput(mTitleField,InputMethodManager.SHOW_IMPLICIT);
         if(mListener != null)
             mListener.onEditMode();
+
+        mEditMode = true;
     }
 
     /**
@@ -469,6 +471,8 @@ public class TrackDetailFragment extends Fragment implements EditableView, Resul
 
         if(mListener != null)
             mListener.onUnedit();
+
+        mEditMode = false;
 
     }
 
@@ -633,12 +637,13 @@ public class TrackDetailFragment extends Fragment implements EditableView, Resul
 
     @Override
     public void setFilesize(String value) {
-        mFileSize.setText(value);
+            mFileSize.setText(value);
     }
 
     @Override
     public void setImageSize(String value) {
-        mImageSize.setText(value);
+        if(!mEditMode)
+            mImageSize.setText(value);
     }
 
     @Override
@@ -808,13 +813,15 @@ public class TrackDetailFragment extends Fragment implements EditableView, Resul
         snackbar.setText(message);
         snackbar.show();
 
-        Intent intent = new Intent(Constants.Actions.FINISH_TRACK_PROCESSING);
-        intent.putExtra("should_reload_cover", true);
-        intent.putExtra(Constants.MEDIA_STORE_ID, mCurrentItemId);
-        LocalBroadcastManager.getInstance(getActivity().getApplicationContext()).sendBroadcast(intent);
+        if(!mEditMode) {
+            Intent intent = new Intent(Constants.Actions.FINISH_TRACK_PROCESSING);
+            intent.putExtra("should_reload_cover", true);
+            intent.putExtra(Constants.MEDIA_STORE_ID, mCurrentItemId);
+            LocalBroadcastManager.getInstance(getActivity().getApplicationContext()).sendBroadcast(intent);
 
-        if(mListener != null)
-            mListener.onFinishedTask();
+            if (mListener != null)
+                mListener.onFinishedTask();
+        }
     }
 
     @Override

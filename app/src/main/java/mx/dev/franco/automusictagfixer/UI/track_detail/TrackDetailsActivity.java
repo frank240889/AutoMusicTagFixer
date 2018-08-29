@@ -275,6 +275,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements SimpleMed
 
     @Override
     public void onPerformingTask() {
+        mPlayer.stopPreview();
         enableMiniFabs(false);
     }
 

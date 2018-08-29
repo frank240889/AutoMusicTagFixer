@@ -442,26 +442,26 @@ public class MainActivity extends AppCompatActivity
         Log.d(TAG, action);
         switch (action) {
             case Constants.GnServiceActions.ACTION_API_INITIALIZED:
-                snackbar = AndroidUtils.getSnackbar(this.mToolbar, this);
-                if(mListFragment.getDatasource().size() > 0) {
-                    snackbar.setText(R.string.api_initialized);
-                }
-                else {
-                    if(ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED){
-                        snackbar.setText(R.string.title_dialog_permision);
+                    snackbar = AndroidUtils.getSnackbar(this.mToolbar, this);
+                    if(mListFragment.getDatasource().size() > 0) {
+                        snackbar.setText(R.string.api_initialized);
                     }
                     else {
-                        snackbar.setText(R.string.add_some_tracks);
+                        if(ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED){
+                            snackbar.setText(R.string.title_dialog_permision);
+                        }
+                        else {
+                            snackbar.setText(R.string.add_some_tracks);
+                        }
                     }
-                }
-                snackbar.show();
+                    snackbar.show();
 
                 break;
             case Constants.Actions.ACTION_CONNECTION_LOST:
-                toast = AndroidUtils.getToast(this);
-                toast.setText(R.string.connection_lost);
-                toast.setDuration(Toast.LENGTH_SHORT);
-                toast.show();
+                    toast = AndroidUtils.getToast(this);
+                    toast.setText(R.string.connection_lost);
+                    toast.setDuration(Toast.LENGTH_SHORT);
+                    toast.show();
                 break;
 
             case Constants.Actions.ACTION_START_TASK:
@@ -473,20 +473,24 @@ public class MainActivity extends AppCompatActivity
                     toast.setDuration(Toast.LENGTH_SHORT);
                     toast.show();
                     mListFragment.updateItem(id, intent);
-                    break;
+                break;
             case Constants.Actions.START_PROCESSING_FOR:
             case Constants.Actions.FINISH_TRACK_PROCESSING:
-                String error = intent.getStringExtra("error");
-                if(error != null){
-                    toast = AndroidUtils.getToast(getApplicationContext());
-                    toast.setText(error);
-                    toast.setDuration(Toast.LENGTH_SHORT);
-                    toast.show();
-                }
-                mListFragment.updateItem(id, intent);
+                    String error = intent.getStringExtra("error");
+                    if(error != null){
+                        toast = AndroidUtils.getToast(getApplicationContext());
+                        toast.setText(error);
+                        toast.setDuration(Toast.LENGTH_SHORT);
+                        toast.show();
+                    }
+                    mListFragment.updateItem(id, intent);
                 break;
             case Constants.Actions.ACTION_COMPLETE_TASK:
-                mListFragment.correctionCompleted();
+                    mListFragment.correctionCompleted();
+                    toast = AndroidUtils.getToast(getApplicationContext());
+                    toast.setText(R.string.complete_task);
+                    toast.setDuration(Toast.LENGTH_SHORT);
+                    toast.show();
                 break;
         }
 

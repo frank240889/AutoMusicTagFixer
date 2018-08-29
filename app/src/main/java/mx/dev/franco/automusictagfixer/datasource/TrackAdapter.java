@@ -389,7 +389,8 @@ public class TrackAdapter extends RecyclerView.Adapter<mx.dev.franco.automusicta
     public void onChanged(@Nullable List<Track> tracks) {
         if(tracks != null) {
             Log.d(TAG, tracks.size()+"");
-            if (getItemCount() != 0) {
+            //Update only if exist items
+            if (getItemCount() > 0) {
                 updateInBackground(tracks);
             } else {
                 mTrackList = tracks;
@@ -457,17 +458,6 @@ public class TrackAdapter extends RecyclerView.Adapter<mx.dev.franco.automusicta
 
     }
 
-    public void clearLoads() {
-        if(mAsyncTaskQueue != null && mAsyncTaskQueue.size() > 0 ){
-            for(AsyncLoaderCover asyncLoaderCover: mAsyncTaskQueue){
-                if(asyncLoaderCover.getStatus() == AsyncTask.Status.PENDING || asyncLoaderCover.getStatus() == AsyncTask.Status.RUNNING)
-                asyncLoaderCover.cancel(true);
-            }
-
-            mAsyncTaskQueue.clear();
-        }
-    }
-
     @Override
     public void onStartDiff() {
         Log.d(TAG, "onStartDiff");
@@ -485,13 +475,26 @@ public class TrackAdapter extends RecyclerView.Adapter<mx.dev.franco.automusicta
         if (diffResults.diffResult != null) {
             Log.d(TAG, "dispatching results");
             diffResults.diffResult.dispatchUpdatesTo(this);
-            mTrackList.clear();
-            mTrackList.addAll(diffResults.list);
+            //mTrackList.clear();
+            mTrackList = diffResults.list;
+            //mTrackList.addAll(diffResults.list);
             sDiffExecutor = null;
 
+            //Try to perform next update.
             if (mPendingUpdates.size() > 0) {
                 updateInBackground(mPendingUpdates.peek());
             }
+        }
+    }
+
+    private void clearLoads() {
+        if(mAsyncTaskQueue != null && mAsyncTaskQueue.size() > 0 ){
+            for(AsyncLoaderCover asyncLoaderCover: mAsyncTaskQueue){
+                if(asyncLoaderCover.getStatus() == AsyncTask.Status.PENDING || asyncLoaderCover.getStatus() == AsyncTask.Status.RUNNING)
+                    asyncLoaderCover.cancel(true);
+            }
+
+            mAsyncTaskQueue.clear();
         }
     }
 }
