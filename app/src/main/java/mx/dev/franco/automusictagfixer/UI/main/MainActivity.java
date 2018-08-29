@@ -472,9 +472,10 @@ public class MainActivity extends AppCompatActivity
                     toast.setText(intent.getStringExtra("error"));
                     toast.setDuration(Toast.LENGTH_SHORT);
                     toast.show();
-                    mListFragment.updateItem(id, intent);
                 break;
             case Constants.Actions.START_PROCESSING_FOR:
+                    mListFragment.scrollTo(id);
+                break;
             case Constants.Actions.FINISH_TRACK_PROCESSING:
                     String error = intent.getStringExtra("error");
                     if(error != null){
@@ -483,12 +484,12 @@ public class MainActivity extends AppCompatActivity
                         toast.setDuration(Toast.LENGTH_SHORT);
                         toast.show();
                     }
-                    mListFragment.updateItem(id, intent);
                 break;
             case Constants.Actions.ACTION_COMPLETE_TASK:
                     mListFragment.correctionCompleted();
+                    String message = intent.getStringExtra("message");
                     toast = AndroidUtils.getToast(getApplicationContext());
-                    toast.setText(R.string.complete_task);
+                    toast.setText(message);
                     toast.setDuration(Toast.LENGTH_SHORT);
                     toast.show();
                 break;

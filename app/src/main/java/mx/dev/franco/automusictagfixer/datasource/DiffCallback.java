@@ -60,6 +60,7 @@ public class DiffCallback extends DiffUtil.Callback{
 
         if(newModel.getState() != oldModel.getState()){
             diff.putInt("state", newModel.getState());
+            diff.putBoolean("should_reload_cover", true);
         }
 
         if(!newModel.getPath().equals(oldModel.getPath())){
@@ -67,6 +68,7 @@ public class DiffCallback extends DiffUtil.Callback{
         }
 
         diff.putInt("checked", newModel.checked());
+        diff.putInt("processing", newModel.processing());
 
 
         if (diff.size() == 0) {

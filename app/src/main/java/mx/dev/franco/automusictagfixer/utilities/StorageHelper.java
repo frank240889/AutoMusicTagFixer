@@ -6,6 +6,8 @@ import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.util.SparseArray;
 
+import com.crashlytics.android.Crashlytics;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -109,6 +111,7 @@ public class StorageHelper{
             outChannel = new FileOutputStream(fileDest).getChannel();
         } catch (FileNotFoundException e) {
             e.printStackTrace();
+            Crashlytics.logException(e);
             return null;
         }
 
@@ -124,12 +127,14 @@ public class StorageHelper{
                     inChannel.close();
                 } catch (IOException e) {
                     e.printStackTrace();
+                    Crashlytics.logException(e);
                 }
             if (outChannel != null)
                 try {
                     outChannel.close();
                 } catch (IOException e) {
                     e.printStackTrace();
+                    Crashlytics.logException(e);
                 }
         }
         return fileDest;

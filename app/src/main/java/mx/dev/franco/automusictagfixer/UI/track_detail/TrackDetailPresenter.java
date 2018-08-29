@@ -281,7 +281,7 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
 
             sIdentifier = new TrackIdentifier(this);
             sIdentifier.setTrack(mCurrentTrack);
-            sIdentifier.execute();//executeOnExecutor(AsyncTask.SERIAL_EXECUTOR);
+            sIdentifier.execute();
         }
     }
 
@@ -312,6 +312,7 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
             mView.setMessageStatus("");
             mView.hideProgress();
             mView.identificationError(error);
+
         }
         sIdentifier = null;
     }
@@ -442,10 +443,9 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
                     updateAppliedMissingTagsView(resultCorrection);
                 break;
             case Tagger.APPLIED_SAME_TAGS:
-                updateAppliedAllTagsView(resultCorrection);
+                    updateAppliedAllTagsView(resultCorrection);
                 break;
         }
-        mCurrentTrack.setChecked(0);
     }
 
     @Override
@@ -455,7 +455,6 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
             mView.hideStatus();
             mView.hideProgress();
         }
-        mCurrentTrack.setChecked(0);
         sFixer = null;
     }
 
@@ -470,7 +469,6 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
             mView.hideProgress();
             mView.onCorrectionError(errorMessage, action);
         }
-        mCurrentTrack.setChecked(0);
     }
 
     /***********************************************************/
@@ -613,8 +611,7 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
             mView.onSuccessfullyCorrection(resourceManager.getString(R.string.cover_removed));
         }
 
-
-        trackRepository.update(mCurrentTrack);
+        trackRepository.update(resultCorrection.track);
     }
 
     private void updateAppliedAllTagsView(Tagger.ResultCorrection resultCorrection){
@@ -669,7 +666,7 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
             mCurrentTrack.setAlbum(resultCorrection.track.getAlbum());
 
         mView.onSuccessfullyCorrection(resourceManager.getString(R.string.apply_tags));
-        trackRepository.update(mCurrentTrack);
+        trackRepository.update(resultCorrection.track);
     }
 
 
@@ -723,7 +720,7 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
         mCurrentTrack.setAlbum(resultCorrection.track.getAlbum());
 
         mView.onSuccessfullyCorrection(resourceManager.getString(R.string.apply_tags));
-        trackRepository.update(mCurrentTrack);
+        trackRepository.update(resultCorrection.track);
 
     }
 

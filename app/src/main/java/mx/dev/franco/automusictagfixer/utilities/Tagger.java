@@ -379,6 +379,7 @@ public class Tagger {
         }
         catch (CannotWriteException e) {
             e.printStackTrace();
+            Crashlytics.logException(e);
             resultCorrection.code = COULD_NOT_APPLY_TAGS;
             return resultCorrection;
         }
@@ -402,6 +403,7 @@ public class Tagger {
         }
         catch (IOException | CannotReadException | TagException | ReadOnlyFileException | InvalidAudioFrameException e) {
             e.printStackTrace();
+            Crashlytics.logException(e);
         }
 
         return audioTaggerFile;
@@ -423,6 +425,7 @@ public class Tagger {
                 ((MP3File) audioFile).delete(((MP3File) audioFile).getID3v1Tag());
             } catch (IOException e) {
                 e.printStackTrace();
+                Crashlytics.logException(e);
             }
         }
         //WRITE ONLY MISSING TAGS
@@ -456,6 +459,7 @@ public class Tagger {
                         }
                     } catch (FieldDataInvalidException e) {
                         e.printStackTrace();
+                        Crashlytics.logException(e);
                     }
                 }
 
@@ -474,6 +478,7 @@ public class Tagger {
                         currentTag.setField(artwork);
                     } catch (FieldDataInvalidException e) {
                         e.printStackTrace();
+                        Crashlytics.logException(e);
                     }
                 }
                 else {
@@ -482,6 +487,7 @@ public class Tagger {
 
                     } catch (FieldDataInvalidException e) {
                         e.printStackTrace();
+                        Crashlytics.logException(e);
                     }
                 }
 
@@ -534,6 +540,7 @@ public class Tagger {
 
         } catch (Exception e) {
             e.getMessage();
+            Crashlytics.logException(e);
             successCopy = COULD_NOT_COPY_BACK_TO_ORIGINAL_LOCATION;
 
         }
@@ -605,6 +612,7 @@ public class Tagger {
             relativePath = fullPath.substring(baseFolder.length() + 1);
             Log.d("relativepath",relativePath);
         } catch (IOException e) {
+            Crashlytics.logException(e);
             return null;
         }
 
@@ -632,6 +640,7 @@ public class Tagger {
                 }
             }
         } catch (IOException e) {
+            Crashlytics.logException(e);
             return null;
         }
         return null;
@@ -662,6 +671,7 @@ public class Tagger {
                             path = new File(path).getCanonicalPath();
                             Log.w(TAG, "getting canonical path: " + path);
                         } catch (IOException e) {
+                            Crashlytics.logException(e);
                             // Keep non-canonical path.
                         }
                         paths.add(path);

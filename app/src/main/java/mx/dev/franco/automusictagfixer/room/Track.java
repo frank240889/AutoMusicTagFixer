@@ -2,7 +2,6 @@ package mx.dev.franco.automusictagfixer.room;
 
 import android.arch.persistence.room.ColumnInfo;
 import android.arch.persistence.room.Entity;
-import android.arch.persistence.room.Ignore;
 import android.arch.persistence.room.PrimaryKey;
 import android.support.annotation.NonNull;
 
@@ -35,8 +34,8 @@ public class Track {
     @ColumnInfo(name = "state")
     private int mState = TrackState.NO_TAGS_SEARCHED_YET;
 
-    @Ignore
-    private boolean mIsProcessing = false;
+    @ColumnInfo(name = "processing")
+    private int mProcessing = 0;
 
     public Track(String title, String artist, String album, String path){
         mTitle = title;
@@ -101,12 +100,12 @@ public class Track {
         mState = state;
     }
 
-    public boolean isProcessing(){
-        return mIsProcessing;
+    public int processing(){
+        return mProcessing;
     }
 
-    public void setProcessing(boolean isProccessing){
-        mIsProcessing = isProccessing;
+    public void setProcessing(int isProcessing){
+        mProcessing = isProcessing;
     }
 
 }

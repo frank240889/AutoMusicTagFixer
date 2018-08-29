@@ -65,13 +65,14 @@ public final class AutoMusicTagFixer extends Application {
 
         registerReceiver(mDetectorRemovableMediaStorages, filterMediaMounted);
         registerReceiver(mDetectorRemovableMediaStorages, filterMediaUnmounted);
+
         StorageHelper.getInstance(getApplicationContext()).detectStorages();
 
-        if (LeakCanary.isInAnalyzerProcess(this)) {
+        //if (LeakCanary.isInAnalyzerProcess(this)) {
             // This process is dedicated to LeakCanary for heap analysis.
             // You should not init your app in this process.
-            return;
-        }
+        //    return;
+        //}
         LeakCanary.install(this);
         Stetho.initializeWithDefaults(this);
         AppCompatDelegate.setCompatVectorFromResourcesEnabled(true);

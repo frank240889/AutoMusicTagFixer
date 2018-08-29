@@ -20,8 +20,6 @@ public class TrackIdentifier implements  GnResponseListener.GnListener{
     private GnMusicIdFile mGnMusicIdFile;
     private GnResponseListener.GnListener mGnListener;
     private GnResponseListener mGnResponseListener;
-    private GnMusicIdFileInfoManager mGnMusicIdFileInfoManager;
-    private GnMusicIdFileInfo mGnMusicIdFileInfo;
     private Track mTrack;
     public TrackIdentifier(GnResponseListener.GnListener listener) {
         mGnListener = listener;
@@ -33,7 +31,6 @@ public class TrackIdentifier implements  GnResponseListener.GnListener{
     }
 
     public void execute(){
-        mTrack.setChecked(1);
         mGnListener.onStartIdentification(mTrack);
         //set options of track id process
         try {
@@ -68,8 +65,6 @@ public class TrackIdentifier implements  GnResponseListener.GnListener{
         if(mGnListener != null) {
             mGnListener.onIdentificationCancelled(null, mTrack);
         }
-        if(mTrack != null)
-            mTrack.setChecked(0);
         clear();
     }
 

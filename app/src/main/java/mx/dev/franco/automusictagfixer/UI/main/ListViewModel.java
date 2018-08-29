@@ -3,7 +3,6 @@ package mx.dev.franco.automusictagfixer.UI.main;
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MutableLiveData;
 import android.arch.lifecycle.ViewModel;
-import android.content.Context;
 
 import java.util.List;
 
@@ -18,7 +17,6 @@ import mx.dev.franco.automusictagfixer.repository.TrackRepository;
 import mx.dev.franco.automusictagfixer.room.Track;
 import mx.dev.franco.automusictagfixer.services.ServiceHelper;
 import mx.dev.franco.automusictagfixer.services.gnservice.GnService;
-import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
 import mx.dev.franco.automusictagfixer.utilities.Tagger;
 import mx.dev.franco.automusictagfixer.utilities.resource_manager.ResourceManager;
@@ -198,7 +196,7 @@ public class ListViewModel extends ViewModel {
         if(!isAccessible){
             mTrackInaccessible.setValue(viewWrapper);
         }
-        else if(viewWrapper.track.isProcessing()){
+        else if(viewWrapper.track.processing() == 1){
             mTrackIsProcessing.setValue(resourceManager.getString(R.string.current_file_processing));
         }
         else {
@@ -261,7 +259,7 @@ public class ListViewModel extends ViewModel {
             return false;
         }
 
-        if(viewWrapper.track.isProcessing()){
+        if(viewWrapper.track.processing() == 1){
             mTrackIsProcessing.setValue(resourceManager.getString(R.string.current_file_processing));
             return false;
         }

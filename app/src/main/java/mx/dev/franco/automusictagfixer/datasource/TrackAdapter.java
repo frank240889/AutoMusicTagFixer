@@ -100,11 +100,11 @@ public class TrackAdapter extends RecyclerView.Adapter<mx.dev.franco.automusicta
                 if (key.equals("album")) {
                     holder.albumName.setText(track.getAlbum());
                 }
-                if(key.equals("checked")){
+                if (key.equals("checked")) {
                     holder.checkBox.setChecked(track.checked() == 1);
                 }
 
-                if(key.equals("state")){
+                if (key.equals("state")) {
                     switch (track.getState()) {
                         case TrackState.TAGS_CORRECTED_BY_SEMIAUTOMATIC_MODE:
                         case TrackState.ALL_TAGS_FOUND:
@@ -136,26 +136,22 @@ public class TrackAdapter extends RecyclerView.Adapter<mx.dev.franco.automusicta
                     }
                 }
 
-                if(key.equals("processing")){
-                    boolean processing = o.getBoolean("processing");
-                    if(processing){
+                if (key.equals("processing")) {
+                    if (track.processing() == 1) {
                         holder.progressBar.setVisibility(VISIBLE);
                         holder.checkBox.setVisibility(View.INVISIBLE);
-                    }
-                    else {
+                    } else {
                         holder.progressBar.setVisibility(GONE);
                         holder.checkBox.setVisibility(VISIBLE);
                     }
-                    track.setProcessing(processing);
                 }
 
-                //We need to extracts cover arts in other thread,
-                //because this operation is going to reduce performance
-                //in main thread, making the scroll very laggy
-                Log.d(TAG,"Reloading data" + key.equals("should_reload_cover"));
-                if(key.equals("should_reload_cover")) {
-                    Log.d(TAG,"should_reload_cover");
-                    if(mAsyncTaskQueue.size() < 9) {
+                if (key.equals("should_reload_cover")){
+                    //We need to extracts cover arts in other thread,
+                    //because this operation is going to reduce performance
+                    //in main thread, making the scroll very laggy
+                    Log.d(TAG, "should_reload_cover");
+                    if (mAsyncTaskQueue.size() < 9) {
                         final AsyncLoaderCover asyncLoaderCover = new AsyncLoaderCover();
                         asyncLoaderCover.setListener(new CoverLoaderListener() {
                             @Override
@@ -222,7 +218,7 @@ public class TrackAdapter extends RecyclerView.Adapter<mx.dev.franco.automusicta
     @Override
     public void onBindViewHolder(final mx.dev.franco.automusictagfixer.datasource.AudioItemHolder holder, final int position) {
         Track track = mTrackList.get(position);
-        if (track.isProcessing()) {
+        if (track.processing() == 1) {
             holder.checkBox.setVisibility(View.GONE);
             holder.progressBar.setVisibility(View.VISIBLE);
         } else {
@@ -475,9 +471,8 @@ public class TrackAdapter extends RecyclerView.Adapter<mx.dev.franco.automusicta
         if (diffResults.diffResult != null) {
             Log.d(TAG, "dispatching results");
             diffResults.diffResult.dispatchUpdatesTo(this);
-            //mTrackList.clear();
-            mTrackList = diffResults.list;
-            //mTrackList.addAll(diffResults.list);
+            mTrackList.clear();
+            mTrackList.addAll(diffResults.list);
             sDiffExecutor = null;
 
             //Try to perform next update.

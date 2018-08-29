@@ -197,12 +197,8 @@ public class ListFragment extends Fragment implements AudioItemHolder.ClickListe
         setRetainInstance(true);
         //App is opened again
         int id = getActivity().getIntent().getIntExtra(Constants.MEDIA_STORE_ID, -1);
-        if(id != -1){
-            Track track = mAdapter.getTrackById(id);
-            int position = mAdapter.getDatasource().indexOf(track);
-            mRecyclerView.scrollToPosition(position);
-            updateItem(id, getActivity().getIntent());
-        }
+        scrollTo(id);
+
 
         if(Build.VERSION.SDK_INT <= Build.VERSION_CODES.M)
             mListViewModel.getInfoForTracks();
@@ -487,12 +483,13 @@ public class ListFragment extends Fragment implements AudioItemHolder.ClickListe
         public int mode;
     }
 
-    public void updateItem(int id, Intent intent) {
-        Log.d("Actualiza item","Actualiza item");
+    public void scrollTo(int id) {
+        if(id == -1)
+            return;
+
         Track track = mAdapter.getTrackById(id);
         int position = mAdapter.getDatasource().indexOf(track);
         mRecyclerView.scrollToPosition(position);
-        mAdapter.notifyItemChanged(position, intent.getExtras());
     }
 
     public List<Track> getDatasource() {

@@ -191,6 +191,7 @@ public class Fixer extends AsyncTask<GnResponseListener.IdentificationResults,Vo
             return true;
 
         mResultsCorrection = taggerHelper.saveTags(mTrack.getPath(), tagsToApply, overwriteTags);
+        mResultsCorrection.track = mTrack;
 
         if(hasError(mResultsCorrection.code))
             return false;
@@ -204,8 +205,6 @@ public class Fixer extends AsyncTask<GnResponseListener.IdentificationResults,Vo
         if(dataAlbum){
             mTrack.setAlbum(results.album);
         }
-
-        mResultsCorrection.track = mTrack;
         //If some info was not identificationFound, mark its state as INCOMPLETE
         if (!dataTitle || !dataArtist || !dataAlbum || !dataImage || !dataTrackNumber || !dataYear || !dataGenre) {
             mResultsCorrection.allTagsApplied = AudioItem.STATUS_ALL_TAGS_NOT_FOUND;
@@ -260,16 +259,18 @@ public class Fixer extends AsyncTask<GnResponseListener.IdentificationResults,Vo
         if(mTask == Tagger.MODE_ADD_COVER){
             //Here we update cover
             mResultsCorrection = taggerHelper.applyCover(results.cover, mTrack.getPath());
+            mResultsCorrection.track = mTrack;
+            mTrack.setState(AudioItem.STATUS_ALL_TAGS_FOUND);
         }
         //remove cover
         else {
             mResultsCorrection = taggerHelper.applyCover(null, mTrack.getPath());
+            mResultsCorrection.track = mTrack;
+            mTrack.setState(AudioItem.STATUS_ALL_TAGS_NOT_FOUND);
         }
 
         if(hasError(mResultsCorrection.code))
             return false;
-
-        mResultsCorrection.track = mTrack;
 
         return true;
     }

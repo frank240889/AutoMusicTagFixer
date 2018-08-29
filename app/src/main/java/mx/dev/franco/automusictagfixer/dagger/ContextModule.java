@@ -45,7 +45,7 @@ public class ContextModule {
 
     public ContextModule(Application application){
         mApp = application;
-        mTrackRoomDatabase = Room.databaseBuilder(mApp, TrackRoomDatabase.class, "track_database").build();
+        mTrackRoomDatabase = TrackRoomDatabase.getDatabase(mApp);//Room.databaseBuilder(mApp, TrackRoomDatabase.class, "track_database").build();
         mResourceManager =  new AndroidResourceManager(mApp);
         mAbstractSharedPreferences = new SharedPreferencesImpl(mApp);
         mDefaultAbstractSharedPreferences = new DefaultSharedPreferencesImpl(mApp);

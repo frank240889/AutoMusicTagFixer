@@ -813,14 +813,8 @@ public class TrackDetailFragment extends Fragment implements EditableView, Resul
         snackbar.setText(message);
         snackbar.show();
 
-        if(!mEditMode) {
-            Intent intent = new Intent(Constants.Actions.FINISH_TRACK_PROCESSING);
-            intent.putExtra("should_reload_cover", true);
-            intent.putExtra(Constants.MEDIA_STORE_ID, mCurrentItemId);
-            LocalBroadcastManager.getInstance(getActivity().getApplicationContext()).sendBroadcast(intent);
-
-            if (mListener != null)
-                mListener.onFinishedTask();
+        if(!mEditMode && mListener != null) {
+            mListener.onFinishedTask();
         }
     }
 

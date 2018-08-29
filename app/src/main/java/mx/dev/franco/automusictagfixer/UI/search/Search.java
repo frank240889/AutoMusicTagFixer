@@ -11,7 +11,6 @@ import android.os.Bundle;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.View;
@@ -170,7 +169,7 @@ public class Search extends AppCompatActivity implements AsyncSearch.ResultsSear
     public void onItemClick(int position, View view) {
         mRecyclerView.stopScroll();
         Track track = mAdapter.getDatasource().get(position);
-        if(!track.isProcessing()) {
+        if(track.processing() == 0) {
             Intent intent = new Intent(this, TrackDetailsActivity.class);
             intent.putExtra(Constants.MEDIA_STORE_ID, track.getMediaStoreId());
             intent.putExtra(Constants.CorrectionModes.MODE, Constants.CorrectionModes.VIEW_INFO);
