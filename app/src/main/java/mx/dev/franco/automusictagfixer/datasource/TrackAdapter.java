@@ -151,8 +151,10 @@ public class TrackAdapter extends RecyclerView.Adapter<mx.dev.franco.automusicta
                     //because this operation is going to reduce performance
                     //in main thread, making the scroll very laggy
                     Log.d(TAG, "should_reload_cover");
+                    Log.d(TAG, "size asynctaskqueue: " + mAsyncTaskQueue.size());
                     if (mAsyncTaskQueue.size() < 9) {
                         final AsyncLoaderCover asyncLoaderCover = new AsyncLoaderCover();
+                        mAsyncTaskQueue.add(asyncLoaderCover);
                         asyncLoaderCover.setListener(new CoverLoaderListener() {
                             @Override
                             public void onLoadingStart() {
@@ -161,8 +163,10 @@ public class TrackAdapter extends RecyclerView.Adapter<mx.dev.franco.automusicta
 
                             @Override
                             public void onLoadingFinished(byte[] cover) {
-                                if (holder.itemView.getContext() != null && cover != null) {
+                                Log.d(TAG, "on finish should_reload_cover");
+                                if (holder.itemView.getContext() != null) {
                                     try {
+                                        Log.d(TAG, "on finish should_reload_cover2");
                                         GlideApp.with(context).
                                                 load(cover)
                                                 .thumbnail(0.5f)
@@ -174,6 +178,7 @@ public class TrackAdapter extends RecyclerView.Adapter<mx.dev.franco.automusicta
                                                 .listener(new RequestListener<Drawable>() {
                                                     @Override
                                                     public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
+                                                        Log.d(TAG, "on finish should_reload_cover3");
                                                         if (mAsyncTaskQueue != null)
                                                             mAsyncTaskQueue.remove(asyncLoaderCover);
                                                         return false;
@@ -181,6 +186,7 @@ public class TrackAdapter extends RecyclerView.Adapter<mx.dev.franco.automusicta
 
                                                     @Override
                                                     public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) {
+                                                        Log.d(TAG, "on finish should_reload_cover4");
                                                         if (mAsyncTaskQueue != null)
                                                             mAsyncTaskQueue.remove(asyncLoaderCover);
                                                         return false;
@@ -225,7 +231,7 @@ public class TrackAdapter extends RecyclerView.Adapter<mx.dev.franco.automusicta
             holder.progressBar.setVisibility(View.GONE);
             holder.checkBox.setChecked(track.checked() == 1);
         }
-        Log.d(TAG, "size asynctaskqueue: " + mAsyncTaskQueue.size());
+
         if(mAsyncTaskQueue.size() < 9){
             final AsyncLoaderCover asyncLoaderCover = new AsyncLoaderCover();
             mAsyncTaskQueue.add(asyncLoaderCover);
@@ -241,7 +247,7 @@ public class TrackAdapter extends RecyclerView.Adapter<mx.dev.franco.automusicta
 
                 @Override
                 public void onLoadingFinished(byte[] cover) {
-                    if (holder.itemView.getContext() != null && cover != null) {
+                    if (holder.itemView.getContext() != null) {
                         try {
                             GlideApp.with(holder.itemView.getContext()).
                                     load(cover)
@@ -442,9 +448,10 @@ public class TrackAdapter extends RecyclerView.Adapter<mx.dev.franco.automusicta
     }
 
     private void updateInBackground(List<Track> newItems){
-        mPendingUpdates.push(newItems);
+        if(mPendingUpdates != null)
+            mPendingUpdates.push(newItems);
         Log.d(TAG, "trying to execute pending updates");
-        if (mPendingUpdates.size() > 1) {
+        if (mPendingUpdates != null && mPendingUpdates.size() > 1) {
             Log.d(TAG, "not executing pending updates");
             return;
         }
@@ -467,16 +474,19 @@ public class TrackAdapter extends RecyclerView.Adapter<mx.dev.franco.automusicta
     @Override
     public void onFinishedDiff(DiffExecutor.DiffResults diffResults) {
         Log.d(TAG, "onFinishedDiff");
-        mPendingUpdates.remove();
+        if (mPendingUpdates != null)
+            mPendingUpdates.remove();
+
         if (diffResults.diffResult != null) {
             Log.d(TAG, "dispatching results");
             diffResults.diffResult.dispatchUpdatesTo(this);
             mTrackList.clear();
             mTrackList.addAll(diffResults.list);
+
             sDiffExecutor = null;
 
             //Try to perform next update.
-            if (mPendingUpdates.size() > 0) {
+            if (mPendingUpdates != null && mPendingUpdates.size() > 0) {
                 updateInBackground(mPendingUpdates.peek());
             }
         }

@@ -154,11 +154,14 @@ public class ListFragment extends Fragment implements AudioItemHolder.ClickListe
 
         //Color of progress bar of refresh layout
         mSwipeRefreshLayout.setColorSchemeColors(
-                ContextCompat.getColor(getActivity(), R.color.primaryColor),
-                ContextCompat.getColor(getActivity(), R.color.primaryDarkColor),
-                ContextCompat.getColor(getActivity(), R.color.primaryLightColor)
+                /*ContextCompat.getColor(getActivity(), R.color.primaryDarkColor),
+                ContextCompat.getColor(getActivity(), R.color.primaryLightColor),*/
+                ContextCompat.getColor(getActivity(), R.color.grey_900),
+                ContextCompat.getColor(getActivity(), R.color.grey_800),
+                ContextCompat.getColor(getActivity(), R.color.grey_700)
+
         );
-        mSwipeRefreshLayout.setProgressBackgroundColorSchemeColor(getActivity().getResources().getColor(R.color.grey_900));
+        mSwipeRefreshLayout.setProgressBackgroundColorSchemeColor(getActivity().getResources().getColor(R.color.primaryColor));
 
         mFabStartTask.setOnClickListener(v -> startCorrection(-1));
         mFabStopTask.setOnClickListener(v -> stopCorrection());
@@ -175,8 +178,9 @@ public class ListFragment extends Fragment implements AudioItemHolder.ClickListe
         mListViewModel.actionCanStartAutomaticMode().observe(this, this::startCorrection);
         mListViewModel.actionIsTrackInaccessible().observe(this, this::showInaccessibleTrack);
         mListViewModel.showProgress().observe(this, this::showProgress);
-        mListViewModel.getAllTracks().observeForever(this);
-        mListViewModel.getAllTracks().observeForever(mAdapter);
+        mListViewModel.getAllTracks().observe(this, this);
+        mListViewModel.getAllTracks().observe(this,mAdapter);
+
         mSwipeRefreshLayout.setOnRefreshListener(()->{
                 if(!hasPermission) {
                     requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, RequiredPermissions.WRITE_EXTERNAL_STORAGE_PERMISSION);
@@ -219,10 +223,7 @@ public class ListFragment extends Fragment implements AudioItemHolder.ClickListe
     }
 
     private void showProgress(Boolean showProgress) {
-        if(showProgress)
-            mSwipeRefreshLayout.setRefreshing(true);
-        else
-            mSwipeRefreshLayout.setRefreshing(false);
+        mSwipeRefreshLayout.setRefreshing(showProgress);
     }
 
     @Override
@@ -300,6 +301,9 @@ public class ListFragment extends Fragment implements AudioItemHolder.ClickListe
     public void onPause(){
         super.onPause();
         mRecyclerView.stopScroll();
+        //mListViewModel.getAllTracks().removeObserver(this);
+        //mListViewModel.getAllTracks().removeObserver(mAdapter);
+        //mListViewModel.getAllTracks().removeObserver(mAdapter);
     }
 
     @Override

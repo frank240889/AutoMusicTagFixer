@@ -20,12 +20,16 @@ import java.lang.ref.WeakReference;
  */
 public class AsyncLoaderCover extends AsyncTask<String, Void, byte[]> {
     private CoverLoaderListener mListener;
-    //private WeakReference<CoverLoaderListener> mWeakRef;
     public AsyncLoaderCover() {}
 
     public void setListener(CoverLoaderListener listener){
-        //mWeakRef = new WeakReference<>(listener);
         mListener = listener;
+    }
+
+    @Override
+    protected void onPreExecute(){
+        if(mListener != null)
+            mListener.onLoadingStart();
     }
 
     @Override
@@ -68,10 +72,6 @@ public class AsyncLoaderCover extends AsyncTask<String, Void, byte[]> {
         if(mListener != null)
             mListener.onLoadingFinished(cover);
         mListener = null;
-        /*if(mWeakRef.get() != null)
-            mWeakRef.get().onLoadingFinished(cover);
-        mWeakRef.clear();
-        mWeakRef = null;*/
     }
 
     @Override
@@ -79,9 +79,5 @@ public class AsyncLoaderCover extends AsyncTask<String, Void, byte[]> {
         if(mListener != null)
             mListener.onLoadingCancelled();
         mListener = null;
-        /*if(mWeakRef.get() != null)
-            mWeakRef.get().onLoadingCancelled();
-        mWeakRef.clear();
-        mWeakRef = null;*/
     }
 }
