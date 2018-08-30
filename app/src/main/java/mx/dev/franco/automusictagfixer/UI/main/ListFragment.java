@@ -334,8 +334,10 @@ public class ListFragment extends Fragment implements AudioItemHolder.ClickListe
         ViewWrapper viewWrapper = new ViewWrapper();
         viewWrapper.view = view;
         viewWrapper.track = mAdapter.getDatasource().get(position);
-        viewWrapper.mode = Constants.CorrectionModes.VIEW_INFO;
-        mListViewModel.onClickCover(viewWrapper);
+        //viewWrapper.mode = Constants.CorrectionModes.VIEW_INFO;
+        //mListViewModel.onClickCover(viewWrapper);
+        viewWrapper.mode = Constants.CorrectionModes.MANUAL;
+        openDetails(viewWrapper);
     }
 
     @Override
@@ -357,6 +359,8 @@ public class ListFragment extends Fragment implements AudioItemHolder.ClickListe
         ViewWrapper viewWrapper = new ViewWrapper();
         viewWrapper.track = mAdapter.getDatasource().get(position);
         viewWrapper.view = view;
+        viewWrapper.mode = Constants.CorrectionModes.SEMI_AUTOMATIC;
+        openDetails(viewWrapper);
         mListViewModel.onItemClick(viewWrapper);
     }
 

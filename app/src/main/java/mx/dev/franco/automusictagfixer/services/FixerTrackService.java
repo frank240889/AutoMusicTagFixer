@@ -111,7 +111,12 @@ public class FixerTrackService extends Service implements GnResponseListener.GnL
         if(action != null && action.equals(Constants.Actions.ACTION_COMPLETE_TASK)){
             messageFinishTask = getString(R.string.task_cancelled);
             mIsCancelled = true;
-            stopAsyncTasks();
+            if(isRunning)
+                stopAsyncTasks();
+            else {
+                notifyFinished();
+                stopSelf();
+            }
         }
         else {
             int id = intent.getIntExtra(Constants.MEDIA_STORE_ID, -1);
@@ -132,6 +137,7 @@ public class FixerTrackService extends Service implements GnResponseListener.GnL
     public void onDataLoaded(List<Integer> tracks) {
         if(tracks.isEmpty()) {
             messageFinishTask = getString(R.string.no_songs_to_correct);
+            notifyFinished();
             stopSelf();
         }
         else {
@@ -425,13 +431,8 @@ public class FixerTrackService extends Service implements GnResponseListener.GnL
             mTrackRepository.update(track);
         }
         notifyFinished();
-        isRunning = false;
         stopSelf();
-        /*if(mIds != null && mIds.size()>0) {
-            mIds.remove(0);
-            mIds.clear();
-            mIds = null;
-        }*/
+        isRunning = false;
     }
 
     @Override
@@ -457,6 +458,7 @@ public class FixerTrackService extends Service implements GnResponseListener.GnL
 
         if(mIds != null && mIds.size()>0)
             mIds.remove(0);
+
         isRunning = false;
 
         shouldContinue();
@@ -474,11 +476,6 @@ public class FixerTrackService extends Service implements GnResponseListener.GnL
         isRunning = false;
         notifyFinished();
         stopSelf();
-        /*if(mIds != null && mIds.size()>0) {
-            mIds.remove(0);
-            mIds.clear();
-            mIds = null;
-        }*/
     }
 
     @Override

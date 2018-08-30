@@ -78,7 +78,7 @@
     <string name="file_status_no_processed">Aún no se han buscado etiquetas para esta canción.</string>
     <string name="file_status_edit_by_user">Canción corregida en modo manual.</string>
 
-    <string name="no_songs_to_correct">Selecciona canciones para usar el modo automático.</string>
+    <string name="no_songs_to_correct">Selecciona canciones para usar el modo automático o pulsa sobre cualquiera.</string>
     <string name="begin_processing">Iniciando corrección…</string>
     <string name="querying_info_">Solicitando información de canción…</string>
     <string name="complete_identification">Identificación completa.</string>

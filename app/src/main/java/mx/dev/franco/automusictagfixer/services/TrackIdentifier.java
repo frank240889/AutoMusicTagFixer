@@ -47,7 +47,6 @@ public class TrackIdentifier implements  GnResponseListener.GnListener{
             gnMusicIdFile.waitForComplete();
             //get the fileInfoManager
             GnMusicIdFileInfoManager gnMusicIdFileInfoManager = gnMusicIdFile.fileInfos();
-            //mGnMusicIdFile.waitForComplete();
             //add all info available for more accurate results.
             //Check if file already was previously added.
             GnMusicIdFileInfo gnMusicIdFileInfo = gnMusicIdFileInfoManager.add(mTrack.getPath());
@@ -65,9 +64,10 @@ public class TrackIdentifier implements  GnResponseListener.GnListener{
     }
 
     public void cancelIdentification(){
-        if(mGnMusicIdFile != null){
+        if(mDequeue.peek() != null){
             mDequeue.poll().cancel();
             mGnResponseListener.setCancel(true);
+            mGnListener.onIdentificationCancelled("Cancelled", mTrack);
         }
     }
 

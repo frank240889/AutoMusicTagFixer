@@ -37,16 +37,6 @@ public class TrackDetailInteractor implements TrackDataLoader.TrackLoader, Async
         }
     }
 
-    public void updateTrack(int id){
-        sAsyncFileReader = new AsyncFileReader();
-        sAsyncFileReader.setTask(AsyncFileReader.UPDATE_SINGLE);
-        sAsyncFileReader.setListener(this);
-        sAsyncFileReader.setIdToUpdate(id);
-        sAsyncFileReader.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-    }
-
-
-
     @Override
     public void onStartedLoad() {
         if(mLoaderListener != null)

@@ -107,7 +107,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onStart() {
         super.onStart();
-        Log.d(TAG,"onStartSearch");
+        Log.d(TAG,"onStart");
 
     }
 
