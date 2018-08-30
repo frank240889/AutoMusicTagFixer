@@ -334,10 +334,10 @@ public class ListFragment extends Fragment implements AudioItemHolder.ClickListe
         ViewWrapper viewWrapper = new ViewWrapper();
         viewWrapper.view = view;
         viewWrapper.track = mAdapter.getDatasource().get(position);
-        //viewWrapper.mode = Constants.CorrectionModes.VIEW_INFO;
-        //mListViewModel.onClickCover(viewWrapper);
-        viewWrapper.mode = Constants.CorrectionModes.MANUAL;
-        openDetails(viewWrapper);
+        viewWrapper.mode = Constants.CorrectionModes.VIEW_INFO;
+        //viewWrapper.mode = Constants.CorrectionModes.MANUAL;
+        mListViewModel.onClickCover(viewWrapper);
+        //openDetails(viewWrapper);
     }
 
     @Override
@@ -360,12 +360,12 @@ public class ListFragment extends Fragment implements AudioItemHolder.ClickListe
         viewWrapper.track = mAdapter.getDatasource().get(position);
         viewWrapper.view = view;
         viewWrapper.mode = Constants.CorrectionModes.SEMI_AUTOMATIC;
-        openDetails(viewWrapper);
         mListViewModel.onItemClick(viewWrapper);
     }
 
     public void showDialog(ViewWrapper viewWrapper){
-        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        openDetails(viewWrapper);
+        /*AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         builder.setMessage(String.format(getString(R.string.message_track), AudioItem.getPath(viewWrapper.track.getPath()))).
         setPositiveButton(R.string.automatic, (dialog, which) -> mListViewModel.onAutomaticMode(viewWrapper)).
         setNegativeButton(R.string.semiautomatic, (dialog, which) -> {
@@ -378,7 +378,7 @@ public class ListFragment extends Fragment implements AudioItemHolder.ClickListe
         });
 
         AlertDialog alertDialog = builder.create();
-        alertDialog.show();
+        alertDialog.show();*/
     }
 
     private void showMessage(int code){
