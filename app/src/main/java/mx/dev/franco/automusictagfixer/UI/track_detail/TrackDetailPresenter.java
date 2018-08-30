@@ -32,7 +32,7 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
     private TrackDetailInteractor mInteractor;
     private TrackDataLoader.TrackDataItem mCurrentTrackDataItem;
     private Track mCurrentTrack;
-    private static TrackIdentifier sIdentifier;
+    private static volatile TrackIdentifier sIdentifier;
     private int mCurrentId;
     private Cache<Integer, GnResponseListener.IdentificationResults> mCache = new DownloadedTrackDataCacheImpl.Builder().build();
     private static Fixer sFixer;

@@ -52,7 +52,6 @@ public class GnResponseListener implements IGnMusicIdFileEvents, IGnCancellable 
         mGnStatusToDisplay.put(Constants.State.COMPLETE_IDENTIFICATION,Constants.State.COMPLETE_IDENTIFICATION_MSG);
         mGnStatusToDisplay.put(Constants.State.STATUS_ERROR,Constants.State.STATUS_ERROR_MSG);
         mGnStatusToDisplay.put(Constants.State.STATUS_PROCESSING_ERROR,Constants.State.STATUS_PROCESSING_ERROR_MSG);
-        //mHandler = new Handler(Looper.getMainLooper());
     }
 
     @Override
@@ -62,6 +61,8 @@ public class GnResponseListener implements IGnMusicIdFileEvents, IGnCancellable 
         Log.d(TAG,"isCancelled musicidfilesstatusevent() " + mCancelled);
         if(mCancelled){
             clear();
+            if(!Thread.currentThread().isInterrupted())
+                Thread.currentThread().interrupt();
             return;
         }
 
@@ -107,6 +108,8 @@ public class GnResponseListener implements IGnMusicIdFileEvents, IGnCancellable 
         Log.d(TAG,"isCancelled gatherFingerprint" + mCancelled);
         if(mCancelled){
             clear();
+            if(!Thread.currentThread().isInterrupted())
+                Thread.currentThread().interrupt();
             return;
         }
 
@@ -165,8 +168,10 @@ public class GnResponseListener implements IGnMusicIdFileEvents, IGnCancellable 
         String year = "";
         String genre = "";
         Log.d(TAG,"isCancelled musicidfilesstatusevent() " + mCancelled);
-        if(mCancelled) {
+        if(mCancelled){
             clear();
+            if(!Thread.currentThread().isInterrupted())
+                Thread.currentThread().interrupt();
             return;
         }
         //retrieve title results identificationFound
@@ -180,6 +185,8 @@ public class GnResponseListener implements IGnMusicIdFileEvents, IGnCancellable 
 
         if(mCancelled){
             clear();
+            if(!Thread.currentThread().isInterrupted())
+                Thread.currentThread().interrupt();
             return;
         }
 
@@ -199,6 +206,8 @@ public class GnResponseListener implements IGnMusicIdFileEvents, IGnCancellable 
         Log.d(TAG,"isCancelled musicidfilesstatusevent() " + mCancelled);
         if(mCancelled){
             clear();
+            if(!Thread.currentThread().isInterrupted())
+                Thread.currentThread().interrupt();
             return;
         }
 
@@ -211,6 +220,8 @@ public class GnResponseListener implements IGnMusicIdFileEvents, IGnCancellable 
         Log.d(TAG,"isCancelled musicidfilesstatusevent() " + mCancelled);
         if(mCancelled){
             clear();
+            if(!Thread.currentThread().isInterrupted())
+                Thread.currentThread().interrupt();
             return;
         }
 
@@ -226,6 +237,8 @@ public class GnResponseListener implements IGnMusicIdFileEvents, IGnCancellable 
                 Log.d(TAG,"isCancelled musicidfilesstatusevent() " + mCancelled);
                 if(mCancelled){
                     clear();
+                    if(!Thread.currentThread().isInterrupted())
+                        Thread.currentThread().interrupt();
                     return;
                 }
 
@@ -246,6 +259,8 @@ public class GnResponseListener implements IGnMusicIdFileEvents, IGnCancellable 
                 Log.d(TAG,"isCancelled musicidfilesstatusevent() " + mCancelled);
                 if(mCancelled){
                     clear();
+                    if(!Thread.currentThread().isInterrupted())
+                        Thread.currentThread().interrupt();
                     return;
                 }
                 GnContent gnContent = gnResponseAlbums.albums().at(0).next().coverArt();
@@ -264,6 +279,8 @@ public class GnResponseListener implements IGnMusicIdFileEvents, IGnCancellable 
                 Log.d(TAG,"isCancelled musicidfilesstatusevent() " + mCancelled);
                 if(mCancelled){
                     clear();
+                    if(!Thread.currentThread().isInterrupted())
+                        Thread.currentThread().interrupt();
                     return;
                 }
                 GnContent gnContent = gnResponseAlbums.albums().at(0).next().coverArt();
@@ -278,6 +295,8 @@ public class GnResponseListener implements IGnMusicIdFileEvents, IGnCancellable 
         Log.d(TAG,"isCancelled musicidfilesstatusevent() " + mCancelled);
         if(mCancelled){
             clear();
+            if(!Thread.currentThread().isInterrupted())
+                Thread.currentThread().interrupt();
             return;
         }
 
@@ -291,6 +310,8 @@ public class GnResponseListener implements IGnMusicIdFileEvents, IGnCancellable 
         Log.d(TAG,"isCancelled musicidfilesstatusevent() " + mCancelled);
         if(mCancelled){
             clear();
+            if(!Thread.currentThread().isInterrupted())
+                Thread.currentThread().interrupt();
             return;
         }
 
@@ -309,6 +330,8 @@ public class GnResponseListener implements IGnMusicIdFileEvents, IGnCancellable 
         Log.d(TAG,"isCancelled musicidfilesstatusevent() " + mCancelled);
         if(mCancelled){
             clear();
+            if(!Thread.currentThread().isInterrupted())
+                Thread.currentThread().interrupt();
             return;
         }
 
@@ -365,6 +388,8 @@ public class GnResponseListener implements IGnMusicIdFileEvents, IGnCancellable 
         Log.d(TAG,"isCancelled musicidfilesstatusevent() " + mCancelled);
         if(mCancelled){
             clear();
+            if(!Thread.currentThread().isInterrupted())
+                Thread.currentThread().interrupt();
             return;
         }
 
@@ -385,6 +410,8 @@ public class GnResponseListener implements IGnMusicIdFileEvents, IGnCancellable 
         Log.d(TAG,"isCancelled resultnotfound" + mCancelled);
         if(mCancelled){
             clear();
+            if(!Thread.currentThread().isInterrupted())
+                Thread.currentThread().interrupt();
             return;
         }
 
@@ -402,6 +429,8 @@ public class GnResponseListener implements IGnMusicIdFileEvents, IGnCancellable 
         Log.d(TAG,"isCancelled musicidfilesstatusevent() " + mCancelled);
         if(mCancelled){
             clear();
+            if(!Thread.currentThread().isInterrupted())
+                Thread.currentThread().interrupt();
             return;
         }
 
@@ -430,7 +459,6 @@ public class GnResponseListener implements IGnMusicIdFileEvents, IGnCancellable 
     public void setCancel(boolean b) {
         mCancelled = b;
         Log.d(TAG,"isCancelled() " + mCancelled);
-        Thread.currentThread().interrupt();
     }
 
     @Override

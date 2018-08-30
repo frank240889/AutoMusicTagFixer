@@ -447,8 +447,11 @@ public class TrackAdapter extends RecyclerView.Adapter<mx.dev.franco.automusicta
     }
 
     private void updateInBackground(List<Track> newItems){
-        if(mPendingUpdates != null)
+        if(mPendingUpdates != null) {
             mPendingUpdates.push(newItems);
+            Log.d(TAG, "Pushing incoming list... pushed");
+        }
+
         Log.d(TAG, "trying to execute pending updates");
         if (mPendingUpdates != null && mPendingUpdates.size() > 1) {
             Log.d(TAG, "not executing pending updates");

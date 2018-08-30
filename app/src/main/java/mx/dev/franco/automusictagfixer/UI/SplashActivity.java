@@ -41,7 +41,6 @@ public class SplashActivity extends AppCompatActivity{
         Intent intent;
             if (firstTime) {
                 //Is first app use
-                //Intent intent = new Intent(this, ScreenSlidePagerActivity.class);
                 intent = new Intent(this, IntroActivity.class);
             }
             else {

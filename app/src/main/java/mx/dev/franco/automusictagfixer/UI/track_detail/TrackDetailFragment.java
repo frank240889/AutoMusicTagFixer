@@ -11,7 +11,6 @@ import android.provider.MediaStore;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TextInputLayout;
 import android.support.v4.app.Fragment;
-import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
@@ -41,7 +40,7 @@ import java.util.ArrayList;
 import javax.inject.Inject;
 
 import mx.dev.franco.automusictagfixer.R;
-import mx.dev.franco.automusictagfixer.UI.sd_card_instructions.TransparentActivity;
+import mx.dev.franco.automusictagfixer.UI.sd_card_instructions.SdCardInstructionsActivity;
 import mx.dev.franco.automusictagfixer.list.AudioItem;
 import mx.dev.franco.automusictagfixer.services.Fixer.Fixer;
 import mx.dev.franco.automusictagfixer.services.gnservice.GnResponseListener;
@@ -840,7 +839,7 @@ public class TrackDetailFragment extends Fragment implements EditableView, Resul
             snackbar.setAction(action, new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    getActivity().startActivity(new Intent(getActivity(), TransparentActivity.class));
+                    getActivity().startActivity(new Intent(getActivity(), SdCardInstructionsActivity.class));
                     //Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
                     //startActivityForResult(intent, RequiredPermissions.REQUEST_PERMISSION_SAF);
                 }
@@ -885,7 +884,7 @@ public class TrackDetailFragment extends Fragment implements EditableView, Resul
     public void onDataValid() {
         Fixer.CorrectionParams correctionParams = new Fixer.CorrectionParams();
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-        View view = LayoutInflater.from(getActivity()).inflate(R.layout.manual_correction_layout, null);
+        View view = LayoutInflater.from(getActivity()).inflate(R.layout.rename_file_layout, null);
         builder.setView(view);
 
         final CheckBox checkBox = view.findViewById(R.id.manual_checkbox_rename);

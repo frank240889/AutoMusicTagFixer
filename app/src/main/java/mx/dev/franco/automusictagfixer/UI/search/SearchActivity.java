@@ -36,8 +36,8 @@ import mx.dev.franco.automusictagfixer.room.Track;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
 import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 
-public class Search extends AppCompatActivity implements AsyncSearch.ResultsSearchListener, FoundItemHolder.ClickListener {
-    private static final String TAG = Search.class.getName();
+public class SearchActivity extends AppCompatActivity implements AsyncSearch.ResultsSearchListener, FoundItemHolder.ClickListener {
+    private static final String TAG = SearchActivity.class.getName();
     private static AsyncSearch mAsyncSearch;
     @Inject
     TrackRepository mTrackRepository;
@@ -95,10 +95,10 @@ public class Search extends AppCompatActivity implements AsyncSearch.ResultsSear
             @Override
             public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
                 if (newState == RecyclerView.SCROLL_STATE_IDLE && !isDestroyed()) {
-                    Glide.with(Search.this).resumeRequests();
+                    Glide.with(SearchActivity.this).resumeRequests();
                 }
                 if (newState == RecyclerView.SCROLL_STATE_DRAGGING || newState == RecyclerView.SCROLL_STATE_SETTLING && !isDestroyed()) {
-                    Glide.with(Search.this).pauseRequests();
+                    Glide.with(SearchActivity.this).pauseRequests();
                 }
                 super.onScrollStateChanged(recyclerView, newState);
             }

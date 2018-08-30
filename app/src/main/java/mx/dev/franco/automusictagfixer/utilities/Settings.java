@@ -40,6 +40,9 @@ public class Settings {
             case "1000":
                 size= GnImageSize.kImageSizeXLarge;
                 break;
+                default:
+                    size = GnImageSize.kImageSize1080;
+                    break;
         }
         return size;
     }

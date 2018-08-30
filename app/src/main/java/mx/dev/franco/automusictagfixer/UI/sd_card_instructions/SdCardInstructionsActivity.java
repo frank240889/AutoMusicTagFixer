@@ -1,34 +1,25 @@
 package mx.dev.franco.automusictagfixer.UI.sd_card_instructions;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.os.Build;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
-import mx.dev.franco.automusictagfixer.utilities.Constants;
 import mx.dev.franco.automusictagfixer.utilities.RequiredPermissions;
-import mx.dev.franco.automusictagfixer.utilities.Settings;
 
-public class TransparentActivity extends AppCompatActivity {
+public class SdCardInstructionsActivity extends AppCompatActivity {
     private boolean mSuccess = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_transparent);
+        setContentView(R.layout.activity_sd_card_instructions);
         Button button = findViewById(R.id.request_permission_button);
         button.setOnClickListener(new View.OnClickListener() {
             @Override

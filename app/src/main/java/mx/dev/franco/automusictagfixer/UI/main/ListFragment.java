@@ -42,11 +42,10 @@ import javax.inject.Inject;
 
 import mx.dev.franco.automusictagfixer.AutoMusicTagFixer;
 import mx.dev.franco.automusictagfixer.R;
-import mx.dev.franco.automusictagfixer.UI.sd_card_instructions.TransparentActivity;
+import mx.dev.franco.automusictagfixer.UI.sd_card_instructions.SdCardInstructionsActivity;
 import mx.dev.franco.automusictagfixer.UI.track_detail.TrackDetailsActivity;
 import mx.dev.franco.automusictagfixer.datasource.AudioItemHolder;
 import mx.dev.franco.automusictagfixer.datasource.TrackAdapter;
-import mx.dev.franco.automusictagfixer.list.AudioItem;
 import mx.dev.franco.automusictagfixer.room.Track;
 import mx.dev.franco.automusictagfixer.services.FixerTrackService;
 import mx.dev.franco.automusictagfixer.services.ServiceHelper;
@@ -209,7 +208,7 @@ public class ListFragment extends Fragment implements AudioItemHolder.ClickListe
 
         boolean isPresentSD = StorageHelper.getInstance(getActivity().getApplicationContext()).isPresentRemovableStorage();
         if(AndroidUtils.getUriSD(getActivity().getApplicationContext()) == null && isPresentSD)
-            getActivity().startActivity(new Intent(getActivity(), TransparentActivity.class));
+            getActivity().startActivity(new Intent(getActivity(), SdCardInstructionsActivity.class));
 
         return mLayout;
     }

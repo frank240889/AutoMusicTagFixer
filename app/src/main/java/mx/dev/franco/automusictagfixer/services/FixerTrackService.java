@@ -59,7 +59,7 @@ public class FixerTrackService extends Service implements GnResponseListener.GnL
     public static String CLASS_NAME = FixerTrackService.class.getName();
     //Notification on status bar
     private Notification mNotification;
-    private static TrackIdentifier sIdentifier;
+    private static volatile TrackIdentifier sIdentifier;
     private static Fixer sFixer;
     private static TrackLoader sTrackDataLoader;
     @Inject
@@ -165,6 +165,8 @@ public class FixerTrackService extends Service implements GnResponseListener.GnL
 
     private void startCorrection(){
         if(!canContinue()){
+            messageFinishTask = getString(R.string.initializing_recognition_api);
+            notifyFinished();
             stopSelf();
             return;
         }

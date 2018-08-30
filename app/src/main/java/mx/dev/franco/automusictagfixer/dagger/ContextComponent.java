@@ -5,7 +5,7 @@ import javax.inject.Singleton;
 import mx.dev.franco.automusictagfixer.UI.SplashActivity;
 import mx.dev.franco.automusictagfixer.UI.main.ListFragment;
 import mx.dev.franco.automusictagfixer.UI.main.ListViewModel;
-import mx.dev.franco.automusictagfixer.UI.search.Search;
+import mx.dev.franco.automusictagfixer.UI.search.SearchActivity;
 import mx.dev.franco.automusictagfixer.UI.search.SearchTrackAdapter;
 import mx.dev.franco.automusictagfixer.UI.track_detail.AsyncFileSaver;
 import mx.dev.franco.automusictagfixer.UI.track_detail.TrackDataLoader;
@@ -41,5 +41,5 @@ public interface ContextComponent {
     void inject(SplashActivity splashActivity);
     void inject(TrackDetailPresenter trackDetailPresenter);
     void inject(SearchTrackAdapter searchTrackAdapter);
-    void inject(Search search);
+    void inject(SearchActivity searchActivity);
 }
