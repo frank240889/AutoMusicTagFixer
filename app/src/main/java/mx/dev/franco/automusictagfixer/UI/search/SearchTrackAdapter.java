@@ -188,7 +188,6 @@ public class SearchTrackAdapter extends RecyclerView.Adapter<FoundItemHolder> im
         mTrackList.clear();
         mTrackList = null;
         mListener = null;
-        System.gc();
     }
 
     public void swapData(List<Track> tracks){

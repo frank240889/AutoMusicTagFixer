@@ -203,8 +203,6 @@ public class TrackDetailsActivity extends AppCompatActivity implements SimpleMed
         mCollapsingToolbarLayout = null;
         mAppBarLayout = null;
         mActionBar = null;
-
-        System.gc();
     }
 
     /**
@@ -412,7 +410,6 @@ public class TrackDetailsActivity extends AppCompatActivity implements SimpleMed
         LocalBroadcastManager.getInstance(getApplicationContext()).unregisterReceiver(mReceiver);
         mReceiver = null;
         finishAfterTransition();
-        System.gc();
     }
 
     /**

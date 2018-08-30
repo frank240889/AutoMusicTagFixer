@@ -86,7 +86,6 @@ public class TrackDetailInteractor implements TrackDataLoader.TrackLoader, Async
         }
         mTrackDataLoader = null;
         mLoaderListener = null;
-        System.gc();
     }
 
     @Override

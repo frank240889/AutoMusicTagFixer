@@ -384,7 +384,6 @@ public class TrackAdapter extends RecyclerView.Adapter<mx.dev.franco.automusicta
         }
         sDiffExecutor = null;
         mListener = null;
-        System.gc();
     }
 
     @Override

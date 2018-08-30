@@ -17,7 +17,6 @@ import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
-import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.audio.AudioFileIO;
 import org.jaudiotagger.audio.exceptions.CannotReadException;
 import org.jaudiotagger.audio.exceptions.InvalidAudioFrameException;
@@ -27,7 +26,6 @@ import org.jaudiotagger.tag.TagException;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -36,12 +34,10 @@ import mx.dev.franco.automusictagfixer.AutoMusicTagFixer;
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.UI.main.MainActivity;
 import mx.dev.franco.automusictagfixer.list.AudioItem;
-import mx.dev.franco.automusictagfixer.media_store_retriever.AsyncFileReader;
 import mx.dev.franco.automusictagfixer.network.ConnectivityDetector;
 import mx.dev.franco.automusictagfixer.receivers.ResponseReceiver;
 import mx.dev.franco.automusictagfixer.repository.TrackRepository;
 import mx.dev.franco.automusictagfixer.room.Track;
-import mx.dev.franco.automusictagfixer.room.TrackDAO;
 import mx.dev.franco.automusictagfixer.room.TrackRoomDatabase;
 import mx.dev.franco.automusictagfixer.services.Fixer.DataLoader;
 import mx.dev.franco.automusictagfixer.services.Fixer.DataTrackLoader;
@@ -74,8 +70,8 @@ public class FixerTrackService extends Service implements GnResponseListener.GnL
     private boolean isRunning = false;
     private List<Integer> mIds = new ArrayList<>();
     private ResponseReceiver mReceiver;
-    private boolean mEmptyTrackList = false;
     private String messageFinishTask = "";
+    private boolean mIsCancelled = false;
 
 
     /**
@@ -85,6 +81,7 @@ public class FixerTrackService extends Service implements GnResponseListener.GnL
         super();
         Log.d(CLASS_NAME, "Constructor");
         AutoMusicTagFixer.getContextComponent().inject(this);
+        Log.d("THREAD ID: ", Thread.currentThread().getId()+"");
     }
 
     @Override
@@ -113,7 +110,8 @@ public class FixerTrackService extends Service implements GnResponseListener.GnL
         String action = intent.getAction();
         if(action != null && action.equals(Constants.Actions.ACTION_COMPLETE_TASK)){
             messageFinishTask = getString(R.string.task_cancelled);
-            stopSelf();
+            mIsCancelled = true;
+            stopAsyncTasks();
         }
         else {
             int id = intent.getIntExtra(Constants.MEDIA_STORE_ID, -1);
@@ -189,7 +187,6 @@ public class FixerTrackService extends Service implements GnResponseListener.GnL
 
     @Override
     public void onTrackDataLoaded(List<Track> data) {
-        //mCurrentTrack = data.get(0);
         sIdentifier = new TrackIdentifier(this);
         sIdentifier.setTrack(data.get(0));
         isRunning = true;
@@ -223,19 +220,25 @@ public class FixerTrackService extends Service implements GnResponseListener.GnL
      */
     @Override
     public void onDestroy(){
+        super.onDestroy();
         //remove this service from foreground and close the notification
-        stopIdentification();
-        stopCorrection();
-        stopRetrievingTrack();
-        //stopUpdatingTrack();
-        notifyCompleteCorrection();
-        stopForeground(true);
         LocalBroadcastManager.getInstance(getApplicationContext()).unregisterReceiver(mReceiver);
         mReceiver.clearReceiver();
         mReceiver = null;
-        System.gc();
+        mIds.clear();
+        mIds = null;
         Log.d("destroy","releasing resources...");
-        super.onDestroy();
+    }
+
+    private void stopAsyncTasks(){
+        stopIdentification();
+        stopCorrection();
+        stopRetrievingTrack();
+    }
+
+    private void notifyFinished(){
+        notifyCompleteCorrection();
+        stopForeground(true);
     }
 
     private void stopIdentification(){
@@ -276,7 +279,6 @@ public class FixerTrackService extends Service implements GnResponseListener.GnL
         notificationIntent.setAction(Constants.ACTION_OPEN_MAIN_ACTIVITY);
         notificationIntent.setFlags(Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT | Intent.FLAG_ACTIVITY_NEW_TASK);
         notificationIntent.putExtra(Constants.MEDIA_STORE_ID, mediaStoreId);
-        notificationIntent.putExtra("processing", true);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
 
         Intent stopTaskIntent = new Intent(this, FixerTrackService.class);
@@ -383,7 +385,7 @@ public class FixerTrackService extends Service implements GnResponseListener.GnL
         }
         isRunning = false;
         if(mIds != null && mIds.size()>0)
-        mIds.remove(0);
+            mIds.remove(0);
         shouldContinue();
     }
 
@@ -415,25 +417,21 @@ public class FixerTrackService extends Service implements GnResponseListener.GnL
 
     @Override
     public void onIdentificationCancelled(String cancelledReason, Track track) {
-
-        /*Intent intent = new Intent(Constants.Actions.FINISH_TRACK_PROCESSING);
-        intent.putExtra("should_reload_cover", true);
-        intent.putExtra(Constants.MEDIA_STORE_ID, track.getMediaStoreId());
-        intent.putExtra("processing", false);
-        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcastSync(intent);*/
+        messageFinishTask = getString(R.string.task_cancelled);
 
         if(mTrackRepository != null) {
             track.setChecked(0);
             track.setProcessing(0);
             mTrackRepository.update(track);
         }
-
+        notifyFinished();
         isRunning = false;
-        if(mIds != null && mIds.size()>0) {
+        stopSelf();
+        /*if(mIds != null && mIds.size()>0) {
             mIds.remove(0);
             mIds.clear();
             mIds = null;
-        }
+        }*/
     }
 
     @Override
@@ -451,26 +449,6 @@ public class FixerTrackService extends Service implements GnResponseListener.GnL
     public void onCorrectionCompleted(Tagger.ResultCorrection resultCorrection, Track track) {
         startNotification(AudioItem.getFilename(track.getPath()), getString(R.string.success), "", track.getMediaStoreId() );
 
-        /*Intent intent = new Intent(Constants.Actions.FINISH_TRACK_PROCESSING);
-        intent.putExtra(Constants.MEDIA_STORE_ID, track.getMediaStoreId());
-        intent.putExtra("processing", false);
-        intent.putExtra("checked", 0);
-        if(!track.getTitle().isEmpty()) {
-            intent.putExtra("title", track.getTitle());
-            intent.putExtra("should_reload_cover", true);
-        }
-        if(!track.getArtist().isEmpty()) {
-            intent.putExtra("artist", track.getArtist());
-            intent.putExtra("should_reload_cover", true);
-        }
-        if(!track.getAlbum().isEmpty()) {
-            intent.putExtra("album", track.getAlbum());
-            intent.putExtra("should_reload_cover", true);
-        }
-
-        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcastSync(intent);*/
-
-
         if(mTrackRepository != null) {
             track.setChecked(0);
             track.setProcessing(0);
@@ -486,13 +464,7 @@ public class FixerTrackService extends Service implements GnResponseListener.GnL
 
     @Override
     public void onCorrectionCancelled(Track track) {
-
-        /*Intent intent = new Intent(Constants.Actions.FINISH_TRACK_PROCESSING);
-        intent.putExtra("should_reload_cover", true);
-        intent.putExtra(Constants.MEDIA_STORE_ID, track.getMediaStoreId());
-        intent.putExtra("processing", false);
-        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcastSync(intent);*/
-
+        messageFinishTask = getString(R.string.task_cancelled);
         if(mTrackRepository != null) {
             track.setChecked(0);
             track.setProcessing(0);
@@ -500,11 +472,13 @@ public class FixerTrackService extends Service implements GnResponseListener.GnL
         }
 
         isRunning = false;
-        if(mIds != null && mIds.size()>0) {
+        notifyFinished();
+        stopSelf();
+        /*if(mIds != null && mIds.size()>0) {
             mIds.remove(0);
             mIds.clear();
             mIds = null;
-        }
+        }*/
     }
 
     @Override
@@ -512,9 +486,6 @@ public class FixerTrackService extends Service implements GnResponseListener.GnL
         startNotification("Error", "Error", "No se pudo corregir el archivo.", track.getMediaStoreId()  );
         Log.d("Error", "eRROR");
         Intent intent = new Intent(Constants.Actions.ACTION_SD_CARD_ERROR);
-        //intent.putExtra("should_reload_cover", true);
-        //intent.putExtra(Constants.MEDIA_STORE_ID, track.getMediaStoreId());
-        //intent.putExtra("processing", false);
         intent.putExtra("error", Fixer.ERROR_CODES.getErrorMessage(this, resultCorrection.code));
         LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcastSync(intent);
 
@@ -532,11 +503,18 @@ public class FixerTrackService extends Service implements GnResponseListener.GnL
     }
 
     private void shouldContinue(){
+        if(mIsCancelled){
+            notifyFinished();
+            stopSelf();
+            return;
+        }
+
         if(mIds != null && !mIds.isEmpty()){
             startCorrection();
         }
         else {
             messageFinishTask = getString(R.string.complete_task);
+            notifyFinished();
             stopSelf();
         }
     }
@@ -546,6 +524,8 @@ public class FixerTrackService extends Service implements GnResponseListener.GnL
         String action = intent.getAction();
         if(action != null && (action.equals(Constants.Actions.ACTION_CONNECTION_LOST) ||
         action.equals(Intent.ACTION_MEDIA_MOUNTED) || action.equals(Intent.ACTION_MEDIA_UNMOUNTED))){
+            messageFinishTask = getString(R.string.task_cancelled);
+            notifyFinished();
             stopSelf();
         }
     }

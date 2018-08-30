@@ -443,8 +443,14 @@ public class ListFragment extends Fragment implements AudioItemHolder.ClickListe
         builder.setMessage(R.string.cancel_task)
                 .setPositiveButton(R.string.yes, (dialog, which) -> {
                     //stops service, and sets starting state to FAB
-                    Intent intent = new Intent(getActivity(),FixerTrackService.class);
-                    getActivity().getApplicationContext().stopService(intent);
+
+                    Intent stopIntent = new Intent(getActivity(), FixerTrackService.class);
+                    stopIntent.setAction(Constants.Actions.ACTION_COMPLETE_TASK);
+                    getActivity().getApplicationContext().startService(stopIntent);
+                    Toast t = AndroidUtils.getToast(getContext());
+                    t.setText(R.string.cancelling);
+                    t.show();
+                    mFabStopTask.setEnabled(false);
                 });
         final AlertDialog dialog = builder.create();
         dialog.show();
@@ -478,6 +484,7 @@ public class ListFragment extends Fragment implements AudioItemHolder.ClickListe
 
     public void correctionCompleted(){
         mFabStartTask.show();
+        mFabStopTask.setEnabled(true);
         mFabStopTask.hide();
     }
 

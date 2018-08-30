@@ -304,7 +304,6 @@ public class TrackDetailFragment extends Fragment implements EditableView, Resul
         mProgressBar = null;
         if(mResultsDialog != null)
             mResultsDialog.dismiss();
-        System.gc();
     }
 
     /**

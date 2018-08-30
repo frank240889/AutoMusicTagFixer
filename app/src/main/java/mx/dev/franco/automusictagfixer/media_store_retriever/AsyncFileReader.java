@@ -94,7 +94,6 @@ public class AsyncFileReader extends AsyncTask<Void, Void, Void> {
         if(mListener != null)
             mListener.onFinish();
         mListener = null;
-        System.gc();
     }
 
     @Override
@@ -102,7 +101,6 @@ public class AsyncFileReader extends AsyncTask<Void, Void, Void> {
         if(mListener != null)
             mListener.onCancel();
         mListener = null;
-        System.gc();
     }
 
     private void insertAll(Cursor cursor){
