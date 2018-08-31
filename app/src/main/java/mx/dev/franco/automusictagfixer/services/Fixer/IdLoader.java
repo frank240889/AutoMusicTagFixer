@@ -6,7 +6,7 @@ import java.util.List;
 
 import mx.dev.franco.automusictagfixer.room.TrackRoomDatabase;
 
-public class IdLoader extends AsyncTask<Integer, Void, List<Integer>> {
+public class IdLoader extends AsyncTask<Void, Void, List<Integer>> {
     private DataLoader<List<Integer>> mDataLoader;
     private TrackRoomDatabase mTrackRoomDatabase;
 
@@ -16,7 +16,7 @@ public class IdLoader extends AsyncTask<Integer, Void, List<Integer>> {
     }
 
     @Override
-    protected List<Integer> doInBackground(Integer... integers) {
+    protected List<Integer> doInBackground(Void... voids) {
         return mTrackRoomDatabase.trackDao().getCheckedTracks();
     }
 

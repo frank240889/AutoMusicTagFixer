@@ -132,6 +132,8 @@ dependencies {
     androidTestImplementation('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
+    testImplementation 'junit:junit:4.12'
+
     implementation files('libs/gnsdk.jar')
     implementation files('libs/gnsdk_helpers.jar')
     implementation files('libs/jaudiotagger-2.2.4.jar')
@@ -145,8 +147,6 @@ dependencies {
         transitive = true
     }
 
-    //implementation 'com.google.android.gms:play-services-gcm:12.0.0'
-    testImplementation 'junit:junit:4.12'
     annotationProcessor 'com.github.bumptech.glide:compiler:4.6.1'
 
     debugImplementation 'com.squareup.leakcanary:leakcanary-android:1.5.4'

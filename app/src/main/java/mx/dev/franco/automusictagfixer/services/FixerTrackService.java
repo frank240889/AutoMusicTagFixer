@@ -119,22 +119,16 @@ public class FixerTrackService extends Service implements GnResponseListener.GnL
             }
         }
         else {
-            int id = intent.getIntExtra(Constants.MEDIA_STORE_ID, -1);
-            if (id == -1) {
-                sIdLoader = new IdLoader(this, trackRoomDatabase);
-                sIdLoader.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, id);
-            } else {
-                mIds.add(id);
-                startCorrection();
-            }
-
+            sIdLoader = new IdLoader(this, trackRoomDatabase);
+            sIdLoader.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
         }
-        return START_NOT_STICKY;//
+        return START_NOT_STICKY;
     }
 
 
     @Override
     public void onDataLoaded(List<Integer> tracks) {
+        sIdLoader = null;
         if(tracks.isEmpty()) {
             messageFinishTask = getString(R.string.no_songs_to_correct);
             notifyFinished();
@@ -142,7 +136,6 @@ public class FixerTrackService extends Service implements GnResponseListener.GnL
         }
         else {
             mIds.addAll(tracks);
-            sIdLoader = null;
             shouldContinue();
         }
     }
@@ -168,14 +161,16 @@ public class FixerTrackService extends Service implements GnResponseListener.GnL
             messageFinishTask = getString(R.string.initializing_recognition_api);
             notifyFinished();
             stopSelf();
-            return;
         }
-
-        if(isRunning)
-            return;
-
-        sTrackDataLoader = new TrackLoader(this, trackRoomDatabase);
-        sTrackDataLoader.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, mIds.get(0));
+        else if(mIsCancelled){
+            messageFinishTask = getString(R.string.task_cancelled);
+            notifyFinished();
+            stopSelf();
+        }
+        else if (!isRunning){
+            sTrackDataLoader = new TrackLoader(this, trackRoomDatabase);
+            sTrackDataLoader.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, mIds.get(0));
+        }
     }
 
 
@@ -195,18 +190,24 @@ public class FixerTrackService extends Service implements GnResponseListener.GnL
 
     @Override
     public void onTrackDataLoaded(List<Track> data) {
-        sIdentifier = new TrackIdentifier(this);
-        sIdentifier.setTrack(data.get(0));
-        isRunning = true;
-        try {
-            AudioFileIO.read(new File(data.get(0).getPath()));
-            startNotification("Corrección en progreso", "Corrigiendo " + AudioItem.getFilename(data.get(0).getPath()), "Iniciando corrección...", data.get(0).getMediaStoreId() );
-            sIdentifier.execute();
-        } catch (CannotReadException | IOException | ReadOnlyFileException | TagException | InvalidAudioFrameException e) {
-            e.printStackTrace();
-            identificationError(getString(R.string.could_not_read_file), data.get(0));
+        if(mIsCancelled){
+            messageFinishTask = getString(R.string.task_cancelled);
+            notifyFinished();
+            stopSelf();
         }
-
+        else {
+            sIdentifier = new TrackIdentifier(this);
+            sIdentifier.setTrack(data.get(0));
+            isRunning = true;
+            try {
+                AudioFileIO.read(new File(data.get(0).getPath()));
+                startNotification("Corrección en progreso", "Corrigiendo " + AudioItem.getFilename(data.get(0).getPath()), "Iniciando corrección...", data.get(0).getMediaStoreId());
+                sIdentifier.execute();
+            } catch (CannotReadException | IOException | ReadOnlyFileException | TagException | InvalidAudioFrameException e) {
+                e.printStackTrace();
+                identificationError(getString(R.string.could_not_read_file), data.get(0));
+            }
+        }
         sTrackDataLoader = null;
     }
 
@@ -505,16 +506,16 @@ public class FixerTrackService extends Service implements GnResponseListener.GnL
         if(mIsCancelled){
             notifyFinished();
             stopSelf();
-            return;
-        }
-
-        if(mIds != null && !mIds.isEmpty()){
-            startCorrection();
         }
         else {
-            messageFinishTask = getString(R.string.complete_task);
-            notifyFinished();
-            stopSelf();
+            if(mIds != null && !mIds.isEmpty()){
+                startCorrection();
+            }
+            else {
+                messageFinishTask = getString(R.string.complete_task);
+                notifyFinished();
+                stopSelf();
+            }
         }
     }
 
