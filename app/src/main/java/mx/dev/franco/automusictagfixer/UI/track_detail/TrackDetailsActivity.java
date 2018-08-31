@@ -2,6 +2,7 @@ package mx.dev.franco.automusictagfixer.UI.track_detail;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
+import android.app.Activity;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
@@ -33,6 +34,7 @@ import java.io.IOException;
 
 import mx.dev.franco.automusictagfixer.AutoMusicTagFixer;
 import mx.dev.franco.automusictagfixer.R;
+import mx.dev.franco.automusictagfixer.UI.search.SearchActivity;
 import mx.dev.franco.automusictagfixer.list.AudioItem;
 import mx.dev.franco.automusictagfixer.receivers.ResponseReceiver;
 import mx.dev.franco.automusictagfixer.services.TrackIdentifier;
@@ -409,6 +411,12 @@ public class TrackDetailsActivity extends AppCompatActivity implements SimpleMed
         mPlayer.stopPreview();
         LocalBroadcastManager.getInstance(getApplicationContext()).unregisterReceiver(mReceiver);
         mReceiver = null;
+        Intent data = new Intent();
+        data.putExtra(Constants.MEDIA_STORE_ID, mCurrentItemId);
+        data.putExtra("title", mTrackDetailFragment.getTrackTitle());
+        data.putExtra("artist", mTrackDetailFragment.getArtist());
+        data.putExtra("album", mTrackDetailFragment.getAlbum());
+        setResult(Activity.RESULT_OK, data);
         finishAfterTransition();
     }
 

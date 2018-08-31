@@ -158,7 +158,17 @@ public class ListViewModel extends ViewModel {
 
 
     public void onItemClick(ListFragment.ViewWrapper viewWrapper){
-        mTrack.setValue(viewWrapper);
+        boolean isAccessible = Tagger.checkFileIntegrity(viewWrapper.track.getPath());
+        if(!isAccessible){
+            mTrackInaccessible.setValue(viewWrapper);
+        }
+        else if(viewWrapper.track.processing() == 1){
+            mTrackIsProcessing.setValue(resourceManager.getString(R.string.current_file_processing));
+        }
+        else {
+            mTrack.setValue(viewWrapper);
+        }
+
     }
 
     public void setChecked(Track track){

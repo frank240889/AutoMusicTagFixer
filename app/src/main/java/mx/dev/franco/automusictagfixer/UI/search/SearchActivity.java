@@ -1,6 +1,7 @@
 package mx.dev.franco.automusictagfixer.UI.search;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.app.SearchManager;
 import android.content.Context;
 import android.content.Intent;
@@ -11,6 +12,7 @@ import android.os.Bundle;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.View;
@@ -38,6 +40,7 @@ import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 
 public class SearchActivity extends AppCompatActivity implements AsyncSearch.ResultsSearchListener, FoundItemHolder.ClickListener {
     private static final String TAG = SearchActivity.class.getName();
+    public static final int UPDATE_ITEM_ON_RETURN = 0;
     private static AsyncSearch mAsyncSearch;
     @Inject
     TrackRepository mTrackRepository;
@@ -172,8 +175,8 @@ public class SearchActivity extends AppCompatActivity implements AsyncSearch.Res
         if(track.processing() == 0) {
             Intent intent = new Intent(this, TrackDetailsActivity.class);
             intent.putExtra(Constants.MEDIA_STORE_ID, track.getMediaStoreId());
-            intent.putExtra(Constants.CorrectionModes.MODE, Constants.CorrectionModes.VIEW_INFO);
-            startActivity(intent);
+            intent.putExtra(Constants.CorrectionModes.MODE, Constants.CorrectionModes.SEMI_AUTOMATIC);
+            startActivityForResult(intent, UPDATE_ITEM_ON_RETURN);
         }
         else {
             Snackbar snackbar = AndroidUtils.getSnackbar(mToolbar, this);
@@ -181,6 +184,15 @@ public class SearchActivity extends AppCompatActivity implements AsyncSearch.Res
             snackbar.show();
         }
     }
+
+    @Override
+    public void onActivityResult(int requestCode,int resultCode, Intent data){
+        super.onActivityResult(requestCode,resultCode,data);
+        if(resultCode == Activity.RESULT_OK && data != null){
+            mAdapter.updateTrack(data);
+        }
+    }
+
 
 
     @Override

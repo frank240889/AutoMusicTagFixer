@@ -334,9 +334,7 @@ public class ListFragment extends Fragment implements AudioItemHolder.ClickListe
         viewWrapper.view = view;
         viewWrapper.track = mAdapter.getDatasource().get(position);
         viewWrapper.mode = Constants.CorrectionModes.VIEW_INFO;
-        //viewWrapper.mode = Constants.CorrectionModes.MANUAL;
         mListViewModel.onClickCover(viewWrapper);
-        //openDetails(viewWrapper);
     }
 
     @Override

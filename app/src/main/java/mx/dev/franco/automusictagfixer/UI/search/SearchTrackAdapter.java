@@ -1,8 +1,10 @@
 package mx.dev.franco.automusictagfixer.UI.search;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -31,6 +33,7 @@ import mx.dev.franco.automusictagfixer.datasource.cover_loader.CoverLoaderListen
 import mx.dev.franco.automusictagfixer.interfaces.Destructible;
 import mx.dev.franco.automusictagfixer.room.Track;
 import mx.dev.franco.automusictagfixer.services.ServiceHelper;
+import mx.dev.franco.automusictagfixer.utilities.Constants;
 import mx.dev.franco.automusictagfixer.utilities.GlideApp;
 
 public class SearchTrackAdapter extends RecyclerView.Adapter<FoundItemHolder> implements Destructible{
@@ -64,76 +67,76 @@ public class SearchTrackAdapter extends RecyclerView.Adapter<FoundItemHolder> im
         Track track = mTrackList.get(position);
 
         final AsyncLoaderCover asyncLoaderCover = new AsyncLoaderCover();
-        mAsyncTaskQueue.add(asyncLoaderCover);
-        asyncLoaderCover.setListener(new CoverLoaderListener() {
-            @Override
-            public void onLoadingStart() {
-                holder.cover.setImageDrawable(holder.
-                        itemView.
-                        getContext().
-                        getResources().
-                        getDrawable(R.drawable.ic_album_white_48px));
-            }
-
-            @Override
-            public void onLoadingFinished(byte[] cover) {
-                if(holder.itemView.getContext() != null && cover != null) {
-                    try {
-                        GlideApp.with(holder.itemView.getContext()).
-                                load(cover)
-                                .thumbnail(0.5f)
-                                .error(R.drawable.ic_album_white_48px)
-                                .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.NONE))
-                                .apply(RequestOptions.skipMemoryCacheOf(true))
-                                .transition(DrawableTransitionOptions.withCrossFade(150))
-                                .fitCenter()
-                                .listener(new RequestListener<Drawable>() {
-                                    @Override
-                                    public boolean onLoadFailed(@Nullable GlideException e,
-                                                                Object model,
-                                                                Target<Drawable> target,
-                                                                boolean isFirstResource) {
-                                        if(mAsyncTaskQueue != null)
-                                            mAsyncTaskQueue.remove(asyncLoaderCover);
-                                        return false;
-                                    }
-
-                                    @Override
-                                    public boolean onResourceReady(Drawable resource,
-                                                                   Object model,
-                                                                   Target<Drawable> target,
-                                                                   DataSource dataSource,
-                                                                   boolean isFirstResource) {
-                                        if(mAsyncTaskQueue != null)
-                                            mAsyncTaskQueue.remove(asyncLoaderCover);
-                                        return false;
-                                    }
-                                })
-                                .placeholder(R.drawable.ic_album_white_48px)
-                                .into(holder.cover);
-                    }
-                    catch (Exception e){
-                        e.printStackTrace();
-                    }
+        if(mAsyncTaskQueue.size() < 8) {
+            mAsyncTaskQueue.add(asyncLoaderCover);
+            asyncLoaderCover.setListener(new CoverLoaderListener() {
+                @Override
+                public void onLoadingStart() {
+                    holder.cover.setImageDrawable(holder.
+                            itemView.
+                            getContext().
+                            getResources().
+                            getDrawable(R.drawable.ic_album_white_48px));
                 }
-                if(mAsyncTaskQueue != null)
-                    mAsyncTaskQueue.remove(asyncLoaderCover);
-            }
 
-            @Override
-            public void onLoadingCancelled() {
-                if(mAsyncTaskQueue != null)
-                    mAsyncTaskQueue.remove(asyncLoaderCover);
-            }
+                @Override
+                public void onLoadingFinished(byte[] cover) {
+                    if (holder.itemView.getContext() != null) {
+                        try {
+                            GlideApp.with(holder.itemView.getContext()).
+                                    load(cover)
+                                    .thumbnail(0.5f)
+                                    .error(R.drawable.ic_album_white_48px)
+                                    .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.NONE))
+                                    .apply(RequestOptions.skipMemoryCacheOf(true))
+                                    .transition(DrawableTransitionOptions.withCrossFade(150))
+                                    .fitCenter()
+                                    .listener(new RequestListener<Drawable>() {
+                                        @Override
+                                        public boolean onLoadFailed(@Nullable GlideException e,
+                                                                    Object model,
+                                                                    Target<Drawable> target,
+                                                                    boolean isFirstResource) {
+                                            if (mAsyncTaskQueue != null)
+                                                mAsyncTaskQueue.remove(asyncLoaderCover);
+                                            return false;
+                                        }
 
-            @Override
-            public void onLoadingError(String error) {
-                if(mAsyncTaskQueue != null)
-                    mAsyncTaskQueue.remove(asyncLoaderCover);
-            }
-        });
-        asyncLoaderCover.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, track.getPath());
+                                        @Override
+                                        public boolean onResourceReady(Drawable resource,
+                                                                       Object model,
+                                                                       Target<Drawable> target,
+                                                                       DataSource dataSource,
+                                                                       boolean isFirstResource) {
+                                            if (mAsyncTaskQueue != null)
+                                                mAsyncTaskQueue.remove(asyncLoaderCover);
+                                            return false;
+                                        }
+                                    })
+                                    .placeholder(R.drawable.ic_album_white_48px)
+                                    .into(holder.cover);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    if (mAsyncTaskQueue != null)
+                        mAsyncTaskQueue.remove(asyncLoaderCover);
+                }
 
+                @Override
+                public void onLoadingCancelled() {
+                    if (mAsyncTaskQueue != null)
+                        mAsyncTaskQueue.remove(asyncLoaderCover);
+                }
+
+                @Override
+                public void onLoadingError(String error) {
+                    if (mAsyncTaskQueue != null)
+                        mAsyncTaskQueue.remove(asyncLoaderCover);
+                }
+            });
+            asyncLoaderCover.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, track.getPath());
+        }
         holder.trackName.setText(track.getTitle());
         holder.artistName.setText(track.getArtist());
         holder.albumName.setText(track.getAlbum());
@@ -141,7 +144,7 @@ public class SearchTrackAdapter extends RecyclerView.Adapter<FoundItemHolder> im
     }
 
     @Override
-    public void onViewRecycled(FoundItemHolder holder) {
+    public void onViewRecycled(@NonNull FoundItemHolder holder) {
         if(holder.itemView.getContext() != null)
             Glide.with(holder.itemView.getContext()).clear(holder.cover);
     }
@@ -195,6 +198,38 @@ public class SearchTrackAdapter extends RecyclerView.Adapter<FoundItemHolder> im
         notifyDataSetChanged();
     }
 
+    public Track getTrackById(int id){
+        if(getItemCount() > 0){
+            for(Track track: mTrackList){
+                if(track.getMediaStoreId() == id)
+                    return track;
+            }
+
+        }
+
+        return null;
+
+    }
+
+    public void updateTrack(Intent data) {
+        Track track = getTrackById(data.getIntExtra(Constants.MEDIA_STORE_ID, -1));
+        if(track != null){
+            String title = data.getStringExtra("title");
+            if(title != null && !title.equals(""))
+                track.setTitle(title);
+
+            String artist = data.getStringExtra("artist");
+            if(artist != null && !artist.equals(""))
+                track.setArtist(artist);
+
+            String album = data.getStringExtra("album");
+            if(album != null && !album.equals(""))
+                track.setAlbum(album);
+
+            int position = mTrackList.indexOf(track);
+            notifyItemChanged(position);
+        }
+    }
 }
 
 

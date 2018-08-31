@@ -46,7 +46,7 @@
             android:theme="@style/MainActivityTheme"
             android:launchMode="singleTop">
             <meta-data android:name="android.app.default_searchable"
-                android:value=".UI.searchActivity.Search" />
+                android:value=".UI.search.SearchActivity" />
         </activity>
         <activity
             android:name=".UI.track_detail.TrackDetailsActivity"
@@ -111,16 +111,6 @@
             android:name=".services.FixerTrackService"
             android:exported="false"
             android:label="FixerTrackService" />
-
-        <!--
- ATTENTION: This was auto-generated to add Google Play services to your project for
-     App Indexing.  See https://g.co/AppIndexing/AndroidStudio for more information.
-        -->
-        <!--
-            meta-data
-            android:name="com.google.android.gms.version"
-            android:value="@integer/google_play_services_version" /
-        -->
         <meta-data
             android:name="io.fabric.ApiKey"
             android:value="3d4995f2cd3e5757faec4a2dadce6e00f2d0814e" />
