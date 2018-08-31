@@ -106,9 +106,9 @@ public class TrackAdapter extends RecyclerView.Adapter<mx.dev.franco.automusicta
 
                 if (key.equals("state")) {
                     switch (track.getState()) {
-                        case TrackState.TAGS_CORRECTED_BY_SEMIAUTOMATIC_MODE:
+                        //case TrackState.TAGS_CORRECTED_BY_SEMIAUTOMATIC_MODE:
                         case TrackState.ALL_TAGS_FOUND:
-                        case TrackState.TAGS_EDITED_BY_USER:
+                        //case TrackState.TAGS_EDITED_BY_USER:
                             holder.stateMark.setImageResource(R.drawable.ic_done_all_white);
                             holder.stateMark.setVisibility(VISIBLE);
                             break;
@@ -116,7 +116,7 @@ public class TrackAdapter extends RecyclerView.Adapter<mx.dev.franco.automusicta
                             holder.stateMark.setImageResource(R.drawable.ic_done_white);
                             holder.stateMark.setVisibility(VISIBLE);
                             break;
-                        case TrackState.NO_TAGS_FOUND:
+                        /*case TrackState.NO_TAGS_FOUND:
                             holder.stateMark.setImageResource(R.drawable.ic_error_outline_white);
                             holder.stateMark.setVisibility(VISIBLE);
                             break;
@@ -128,7 +128,7 @@ public class TrackAdapter extends RecyclerView.Adapter<mx.dev.franco.automusicta
                         case TrackState.FILE_IN_SD_WITHOUT_PERMISSION:
                             holder.stateMark.setImageResource(R.drawable.ic_highlight_off_white_material);
                             holder.stateMark.setVisibility(VISIBLE);
-                            break;
+                            break;*/
                         default:
                             holder.stateMark.setImageResource(0);
                             holder.stateMark.setVisibility(GONE);
@@ -305,9 +305,9 @@ public class TrackAdapter extends RecyclerView.Adapter<mx.dev.franco.automusicta
         }
 
         switch (track.getState()) {
-            case TrackState.TAGS_CORRECTED_BY_SEMIAUTOMATIC_MODE:
+            //case TrackState.TAGS_CORRECTED_BY_SEMIAUTOMATIC_MODE:
             case TrackState.ALL_TAGS_FOUND:
-            case TrackState.TAGS_EDITED_BY_USER:
+            //case TrackState.TAGS_EDITED_BY_USER:
                 holder.stateMark.setImageResource(R.drawable.ic_done_all_white);
                 holder.stateMark.setVisibility(VISIBLE);
                 break;
@@ -315,7 +315,7 @@ public class TrackAdapter extends RecyclerView.Adapter<mx.dev.franco.automusicta
                 holder.stateMark.setImageResource(R.drawable.ic_done_white);
                 holder.stateMark.setVisibility(VISIBLE);
                 break;
-            case TrackState.NO_TAGS_FOUND:
+            /*case TrackState.NO_TAGS_FOUND:
                 holder.stateMark.setImageResource(R.drawable.ic_error_outline_white);
                 holder.stateMark.setVisibility(VISIBLE);
                 break;
@@ -327,7 +327,7 @@ public class TrackAdapter extends RecyclerView.Adapter<mx.dev.franco.automusicta
             case TrackState.FILE_IN_SD_WITHOUT_PERMISSION:
                 holder.stateMark.setImageResource(R.drawable.ic_highlight_off_white_material);
                 holder.stateMark.setVisibility(VISIBLE);
-                break;
+                break;*/
             default:
                 holder.stateMark.setImageResource(0);
                 holder.stateMark.setVisibility(GONE);

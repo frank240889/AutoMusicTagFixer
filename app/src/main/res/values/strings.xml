@@ -72,8 +72,8 @@
     <string name="no_items_found">No se encontrarón canciones.</string>
     <string name="no_found_tags">No se encontró ninguna coincidencia.</string>
 
-    <string name="file_status_ok">Todas las etiquetas se encontraron y aplicaron.</string>
-    <string name="file_status_incomplete">Faltaron algunas etiquetas, prueba a añadirlas manualmente.</string>
+    <string name="file_status_ok">Todas las etiquetas aplicadas.</string>
+    <string name="file_status_incomplete">Faltan algunas etiquetas, prueba a añadirlas manualmente.</string>
     <string name="file_status_bad">Sin etiquetas disponibles, intenta añadirlas manualmente.</string>
     <string name="file_status_no_processed">Aún no se han buscado etiquetas para esta canción.</string>
     <string name="file_status_edit_by_user">Canción corregida en modo manual.</string>
@@ -262,7 +262,7 @@
         <item>Es el modo en el cual tu haces check a las canciones que quieres corregir, oprimes {gmd-photo-filter} en la pantalla principal, y AutoMusicTagFixer corrige por ti cada canción, incluido el nombre del archivo (puedes desactivar esta opción en la {gmd-settings}Configuración), no tienes que hacer nada, solo esperar a que termine. Este modo no requiere tu intervención, incluso puedes cerrar la app.</item>
         <item>Es el modo que obtiene la información de la canción, pero no la modificará hasta que tu la apliques oprimiendo {gmd-save} en la pantalla de detalle.</item>
         <item>Es el modo que te permite corregir por ti mismo las etiquetas de cada canción, incluida la caŕatula, si es que tienes la información a la mano. Toca la carátula de cada canción en la lista de la pantalla principal para más opciones.</item>
-        <item>Actualmente Mp3, Mp4 (Mp4 audio, M4a y M4p audio) Ogg Vorbis, Flac, Wma y limitado soporte a Wav y Real audio, que son los que soporta la librería JAudioTagger. Aunque podrían ser menos formatos ya que Android no soporta algunos tipos de audio de manera nativa, por ejemplo Wma; en futuras actualizaciones se soportará la totalidad de tipos de archivo.</item>
+        <item>Actualmente Mp3, Mp4 (Mp4 audio, M4a y M4p audio) Ogg Vorbis, Flac, Wma y limitado soporte a Wav y Real audio, que son los que soporta la librería JAudioTagger. Aunque podrían ser menos formatos ya que Android no soporta algunos tipos de audio de manera nativa, por ejemplo Wma; en futuras actualizaciones se ampliará el soporte.</item>
         <item>Ninguno.</item>
         <item>Debido a que la app utiliza una licencia de uso gratuito del servicio de reconocimiento de audio, la cantidad de canciones que puedes corregir en los modos semiautomático, automático y descarga de carátula es variable, desde unas decenas hasta probablemente miles.</item>
         <item>Por rendimiento y velocidad de apertura, para generar la lista por primera vez(la lista es informativa y punto de partida para las operaciones), AutoMusicTagFixer lee la información de cada archivo de audio de la MediaStore (una BD interna de Android), por lo tanto, la información obtenida de aquí no siempre es muy precisa. AutoMusicTagFixer cuando muestra la información detallada de cada canción, lee directamente el archivo de audio, lo cual esta información leída si es precisa; no te preocupes, AutoMusicTagFixer hace las correcciones sobre el archivo en sí, por lo que los cambios hechos serán visibles a otros reproductores de audio, sean de la plataforma Android o no, y que soporten la lectura de etiquetas.</item>

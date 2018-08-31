@@ -153,8 +153,6 @@ public class ListFragment extends Fragment implements AudioItemHolder.ClickListe
 
         //Color of progress bar of refresh layout
         mSwipeRefreshLayout.setColorSchemeColors(
-                /*ContextCompat.getColor(getActivity(), R.color.primaryDarkColor),
-                ContextCompat.getColor(getActivity(), R.color.primaryLightColor),*/
                 ContextCompat.getColor(getActivity(), R.color.grey_900),
                 ContextCompat.getColor(getActivity(), R.color.grey_800),
                 ContextCompat.getColor(getActivity(), R.color.grey_700)
@@ -300,16 +298,11 @@ public class ListFragment extends Fragment implements AudioItemHolder.ClickListe
     public void onPause(){
         super.onPause();
         mRecyclerView.stopScroll();
-        //mListViewModel.getAllTracks().removeObserver(this);
-        //mListViewModel.getAllTracks().removeObserver(mAdapter);
-        //mListViewModel.getAllTracks().removeObserver(mAdapter);
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        mListViewModel.getAllTracks().removeObserver(mAdapter);
-        mListViewModel.getAllTracks().removeObserver(this);
     }
 
     @Override
@@ -362,20 +355,6 @@ public class ListFragment extends Fragment implements AudioItemHolder.ClickListe
 
     public void showDialog(ViewWrapper viewWrapper){
         openDetails(viewWrapper);
-        /*AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-        builder.setMessage(String.format(getString(R.string.message_track), AudioItem.getPath(viewWrapper.track.getPath()))).
-        setPositiveButton(R.string.automatic, (dialog, which) -> mListViewModel.onAutomaticMode(viewWrapper)).
-        setNegativeButton(R.string.semiautomatic, (dialog, which) -> {
-            viewWrapper.mode = Constants.CorrectionModes.SEMI_AUTOMATIC;
-            openDetails(viewWrapper);
-        }).
-        setNeutralButton(R.string.manual, (dialog, which) -> {
-            viewWrapper.mode = Constants.CorrectionModes.MANUAL;
-            openDetails(viewWrapper);
-        });
-
-        AlertDialog alertDialog = builder.create();
-        alertDialog.show();*/
     }
 
     private void showMessage(int code){
