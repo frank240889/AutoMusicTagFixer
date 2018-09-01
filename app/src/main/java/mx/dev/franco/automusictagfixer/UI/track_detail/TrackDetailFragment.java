@@ -399,7 +399,7 @@ public class TrackDetailFragment extends Fragment implements EditableView, Resul
         mGenreField.setEnabled(true);
 
         mImageSize.setText(getString(R.string.edit_cover));
-        mImageSize.setCompoundDrawablesWithIntrinsicBounds(getActivity().getDrawable(R.drawable.ic_autorenew_black_24dp),null,null,null);
+        mImageSize.setCompoundDrawablesWithIntrinsicBounds(getActivity().getDrawable(R.drawable.ic_photo_library_black_24dp),null,null,null);
         //Enabled "Añadir carátula de galería" to add cover when is pressed
         mImageSize.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -454,7 +454,7 @@ public class TrackDetailFragment extends Fragment implements EditableView, Resul
         mGenreField.setEnabled(false);
 
         mImageSize.setText(AudioItem.getStringImageSize(mCurrentCoverArt));
-        mImageSize.setCompoundDrawablesWithIntrinsicBounds(getActivity().getDrawable(R.drawable.ic_photo_white_24px),null,null,null);
+        mImageSize.setCompoundDrawablesWithIntrinsicBounds(getActivity().getDrawable(R.drawable.ic_photo_size_select_large_white_24px),null,null,null);
         mImageSize.setOnClickListener(null);
 
         //to hide it, call the method again

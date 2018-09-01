@@ -116,7 +116,6 @@ public class ListFragment extends Fragment implements AudioItemHolder.ClickListe
         mRecyclerView = mLayout.findViewById(R.id.tracks_recycler_view);
         mSwipeRefreshLayout = mLayout.findViewById(R.id.refresh_layout);
         mMessage = mLayout.findViewById(R.id.message);
-        // setup menu icon
         mActionBar = ((MainActivity)getActivity()).getSupportActionBar();
 
 
@@ -278,15 +277,6 @@ public class ListFragment extends Fragment implements AudioItemHolder.ClickListe
 
     public void updateList(){
         mListViewModel.updateTrackList();
-    }
-
-    public static Animator createRevealWithDelay(View view, int centerX, int centerY, float startRadius, float endRadius) {
-        Animator delayAnimator = ViewAnimationUtils.createCircularReveal(view, centerX, centerY, startRadius, startRadius);
-        delayAnimator.setDuration(100);
-        Animator revealAnimator = ViewAnimationUtils.createCircularReveal(view, centerX, centerY, startRadius, endRadius);
-        AnimatorSet set = new AnimatorSet();
-        set.playSequentially(delayAnimator, revealAnimator);
-        return set;
     }
 
     @Override

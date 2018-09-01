@@ -1,5 +1,7 @@
 package mx.dev.franco.automusictagfixer.utilities;
 
+import android.animation.Animator;
+import android.animation.AnimatorSet;
 import android.annotation.SuppressLint;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
@@ -16,6 +18,7 @@ import android.support.v7.app.AlertDialog;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewAnimationUtils;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -306,6 +309,15 @@ public class AndroidUtils {
         if(uriString == null)
             return null;
         return Uri.parse(uriString);
+    }
+
+    public static Animator createRevealWithDelay(View view, int centerX, int centerY, float startRadius, float endRadius) {
+        Animator delayAnimator = ViewAnimationUtils.createCircularReveal(view, centerX, centerY, startRadius, startRadius);
+        delayAnimator.setDuration(100);
+        Animator revealAnimator = ViewAnimationUtils.createCircularReveal(view, centerX, centerY, startRadius, endRadius);
+        AnimatorSet set = new AnimatorSet();
+        set.playSequentially(delayAnimator, revealAnimator);
+        return set;
     }
 
 }

@@ -64,6 +64,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements SimpleMed
     FloatingActionButton mEditButton;
     FloatingActionButton mDownloadCoverButton;
     FloatingActionButton mAutoFixButton;
+    MenuItem mUpdateCoverButton;
     MenuItem mExtractCoverButton;
     FloatingActionButton mSaveButton;
     FloatingActionButton mFloatingActionMenu;
@@ -143,6 +144,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements SimpleMed
         getMenuInflater().inflate(R.menu.menu_details_track_dialog, menu);
         mPlayPreviewButton = menu.findItem(R.id.action_play);
         mExtractCoverButton = menu.findItem(R.id.action_extract_cover);
+        mUpdateCoverButton = menu.findItem(R.id.action_update_cover);
         removeItem = menu.findItem(R.id.action_remove_cover);
         searchInWebItem = menu.findItem(R.id.action_web_search);
         mTrackDetailFragment = TrackDetailFragment.newInstance(mCurrentItemId, mCorrectionMode);
@@ -191,6 +193,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements SimpleMed
         mViewDetailsTrack = null;
         mEditButton = null;
         mExtractCoverButton = null;
+        mUpdateCoverButton = null;
         mDownloadCoverButton = null;
         mAutoFixButton = null;
         mSaveButton = null;
@@ -372,6 +375,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements SimpleMed
                     }
                 });
                 mToolbarCover.setEnabled(false);
+                mUpdateCoverButton.setEnabled(false);
                 editMode();
                 mEditMode = true;
             }
@@ -384,6 +388,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements SimpleMed
      */
 
     private void disableFields(){
+        mUpdateCoverButton.setEnabled(true);
         mToolbarCover.setEnabled(true);
         mAppBarLayout.setExpanded(true);
         mEditMode = false;
@@ -567,6 +572,15 @@ public class TrackDetailsActivity extends AppCompatActivity implements SimpleMed
             }
         });
 
+        mUpdateCoverButton.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem menuItem) {
+                closeFABMenu();
+                editCover(TrackDetailFragment.INTENT_GET_AND_UPDATE_FROM_GALLERY);
+                return false;
+            }
+        });
+
         addPlayAction();
 
         removeItem.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
@@ -593,6 +607,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements SimpleMed
      * @param enable true for enable, false to disable
      */
     private void enableMiniFabs(boolean enable){
+        mUpdateCoverButton.setEnabled(enable);
         mToolbarCover.setEnabled(enable);
         mDownloadCoverButton.setEnabled(enable);
         mEditButton.setEnabled(enable);

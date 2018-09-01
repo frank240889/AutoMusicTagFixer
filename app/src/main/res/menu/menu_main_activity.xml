@@ -7,44 +7,37 @@
         android:title="@string/search_song"
         android:icon="@drawable/ic_search_white_24px"
         app:showAsAction="ifRoom|collapseActionView"
-        android:orderInCategory="0"
         app:actionViewClass="android.support.v7.widget.SearchView" />
 
     <item
         android:id="@+id/action_refresh"
         app:showAsAction="never"
         android:title="@string/update_list"
-        android:orderInCategory="1"
         android:icon="@drawable/ic_refresh_white_24px"/>
 
     <item
         android:id="@+id/action_select_all"
         app:showAsAction="never"
         android:title="@string/select_all_items"
-        android:orderInCategory="2"
         android:icon="@drawable/ic_check_box_white_24px" />
     <item
         android:id="@+id/sortBy"
         app:showAsAction="never"
-        android:orderInCategory="3"
         android:title="@string/sort_by">
         <menu>
             <item
                 android:id="@+id/action_sort_by_path"
                 app:showAsAction="never"
-                android:title="@string/location"
-                android:orderInCategory="1">
+                android:title="@string/location">
                 <menu>
                     <item
                         android:id="@+id/path_asc"
                         app:showAsAction="never"
-                        android:title="@string/ascendent"
-                        android:orderInCategory="1"/>
+                        android:title="@string/ascendent" />
                     <item
                         android:id="@+id/path_desc"
                         app:showAsAction="never"
-                        android:title="@string/descendent"
-                        android:orderInCategory="1"/>
+                        android:title="@string/descendent" />
                 </menu>
             </item>
 
@@ -52,56 +45,47 @@
             <item
                 android:id="@+id/action_sort_by_title"
                 app:showAsAction="never"
-                android:title="@string/title"
-                android:orderInCategory="2">
+                android:title="@string/title">
                 <menu>
                     <item
                         android:id="@+id/title_asc"
                         app:showAsAction="never"
-                        android:title="@string/ascendent"
-                        android:orderInCategory="1"/>
+                        android:title="@string/ascendent" />
                     <item
                         android:id="@+id/title_desc"
                         app:showAsAction="never"
-                        android:title="@string/descendent"
-                        android:orderInCategory="1"/>
+                        android:title="@string/descendent" />
                 </menu>
             </item>
             <item
                 android:id="@+id/action_sort_by_artist"
                 app:showAsAction="never"
-                android:orderInCategory="3"
                 android:title="@string/artist">
                 <menu>
                     <item
                         android:id="@+id/artist_asc"
                         app:showAsAction="never"
-                        android:title="@string/ascendent"
-                        android:orderInCategory="1"/>
+                        android:title="@string/ascendent" />
                     <item
                         android:id="@+id/artist_desc"
                         app:showAsAction="never"
-                        android:title="@string/descendent"
-                        android:orderInCategory="1"/>
+                        android:title="@string/descendent" />
                 </menu>
             </item>
 
             <item
                 android:id="@+id/action_sort_by_album"
                 app:showAsAction="never"
-                android:orderInCategory="4"
                 android:title="@string/album">
                 <menu>
                     <item
                         android:id="@+id/album_asc"
                         app:showAsAction="never"
-                        android:title="@string/ascendent"
-                        android:orderInCategory="1"/>
+                        android:title="@string/ascendent" />
                     <item
                         android:id="@+id/album_desc"
                         app:showAsAction="never"
-                        android:title="@string/descendent"
-                        android:orderInCategory="1"/>
+                        android:title="@string/descendent" />
                 </menu>
             </item>
         </menu>

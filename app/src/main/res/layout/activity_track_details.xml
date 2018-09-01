@@ -34,15 +34,8 @@
                 app:layout_collapseMode="parallax"
                 app:layout_collapseParallaxMultiplier="0.7">
             </ImageView>
-            <ImageView
-                android:id="@+id/message_cover"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:padding="8dp"
-                android:src="@drawable/ic_autorenew_black_24dp" />
             <FrameLayout
-                android:id="@+id/topTransparentLayer"
+                android:id="@+id/transparent_bottom_toolbar"
                 android:layout_width="match_parent"
                 android:layout_height="?android:attr/actionBarSize"
                 android:layout_gravity="top"

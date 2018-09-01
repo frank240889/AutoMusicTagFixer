@@ -1,6 +1,9 @@
 package mx.dev.franco.automusictagfixer.UI.main;
 
 import android.Manifest;
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.animation.LayoutTransition;
 import android.app.SearchManager;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
@@ -18,10 +21,14 @@ import android.support.annotation.RequiresApi;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
+import android.support.transition.Fade;
+import android.support.transition.Transition;
+import android.support.transition.TransitionManager;
 import android.support.v4.app.ShareCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.GravityCompat;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -32,8 +39,15 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewAnimationUtils;
 import android.view.Window;
 import android.view.WindowManager;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.Animation;
+import android.view.animation.AnimationSet;
+import android.view.animation.TranslateAnimation;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import mx.dev.franco.automusictagfixer.R;
@@ -170,7 +184,77 @@ public class MainActivity extends AppCompatActivity
         SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
         SearchView searchView = (SearchView) menu.findItem(R.id.action_search).getActionView();
         searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
-        searchView.setIconifiedByDefault(true);
+        searchView.setIconifiedByDefault(false);
+
+        searchView.setOnSearchClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                int x = v.getRight();
+                int y = v.getBottom();
+                int endRadius = mToolbar.getWidth()*2;
+
+                Animator animator = AndroidUtils.createRevealWithDelay(searchView, x, y, 0, endRadius);
+                animator.addListener(new Animator.AnimatorListener() {
+                    @Override
+                    public void onAnimationStart(Animator animation) {
+
+                    }
+
+                    @Override
+                    public void onAnimationEnd(Animator animation) {
+
+                    }
+
+                    @Override
+                    public void onAnimationCancel(Animator animation) {
+
+                    }
+
+                    @Override
+                    public void onAnimationRepeat(Animator animation) {
+
+                    }
+                });
+                animator.start();
+
+            }
+        });
+
+        searchView.setOnCloseListener(new SearchView.OnCloseListener() {
+            @Override
+            public boolean onClose() {
+                int x = mToolbar.getRight();
+                int y = mToolbar.getBottom();
+                int startRadius = mToolbar.getWidth()*2;
+
+                Animator animator = AndroidUtils.createRevealWithDelay(searchView, x, y, startRadius, 0);
+                animator.addListener(new Animator.AnimatorListener() {
+                    @Override
+                    public void onAnimationStart(Animator animation) {
+                        searchView.setIconified(false);
+                    }
+
+                    @Override
+                    public void onAnimationEnd(Animator animation) {
+                        searchView.setIconified(true);
+                    }
+
+                    @Override
+                    public void onAnimationCancel(Animator animation) {
+
+                    }
+
+                    @Override
+                    public void onAnimationRepeat(Animator animation) {
+
+                    }
+                });
+                animator.start();
+
+                return false;
+            }
+        });
+
         return true;
     }
 
@@ -262,7 +346,7 @@ public class MainActivity extends AppCompatActivity
                 checkItem(id);
                 break;
             case R.id.artist_desc:
-                sorted =mListFragment.sort(TrackContract.TrackData.ARTIST, TrackAdapter.DESC);
+                sorted = mListFragment.sort(TrackContract.TrackData.ARTIST, TrackAdapter.DESC);
                 if(!sorted){
                     Snackbar snackbar = AndroidUtils.getSnackbar(mToolbar, getApplicationContext());
                     snackbar.setText(R.string.no_available);
@@ -272,7 +356,7 @@ public class MainActivity extends AppCompatActivity
                 checkItem(id);
                 break;
             case R.id.album_asc:
-                sorted =mListFragment.sort(TrackContract.TrackData.ALBUM, TrackAdapter.ASC);
+                sorted = mListFragment.sort(TrackContract.TrackData.ALBUM, TrackAdapter.ASC);
                 if(!sorted){
                     Snackbar snackbar = AndroidUtils.getSnackbar(mToolbar, getApplicationContext());
                     snackbar.setText(R.string.no_available);
@@ -291,7 +375,6 @@ public class MainActivity extends AppCompatActivity
                 }
                 checkItem(id);
                 break;
-
         }
         return super.onOptionsItemSelected(menuItem);
     }
