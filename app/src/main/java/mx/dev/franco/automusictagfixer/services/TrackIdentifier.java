@@ -16,6 +16,7 @@ import java.util.Deque;
 import mx.dev.franco.automusictagfixer.room.Track;
 import mx.dev.franco.automusictagfixer.services.gnservice.GnResponseListener;
 import mx.dev.franco.automusictagfixer.services.gnservice.GnService;
+import mx.dev.franco.automusictagfixer.utilities.Constants;
 
 public class TrackIdentifier implements  GnResponseListener.GnListener{
     public static final int ALL_TAGS = 0;
@@ -127,8 +128,23 @@ public class TrackIdentifier implements  GnResponseListener.GnListener{
 
     @Override
     public void status(String message) {
+        final String msg;
+        switch (message) {
+            case Constants.State.BEGIN_PROCESSING:
+                msg = Constants.State.BEGIN_PROCESSING_MSG;
+                break;
+            case Constants.State.QUERYING_INFO:
+                msg = Constants.State.QUERYING_INFO_MSG;
+                break;
+            case Constants.State.COMPLETE_IDENTIFICATION:
+                msg = Constants.State.COMPLETE_IDENTIFICATION_MSG;
+                break;
+            default:
+                msg = "";
+                break;
+        }
         if(mGnListener != null)
-            mGnListener.status(message);
+            mGnListener.status(msg);
     }
 
     private void clear(){
@@ -136,7 +152,8 @@ public class TrackIdentifier implements  GnResponseListener.GnListener{
         mGnListener = null;
         mTrack = null;
         mGnMusicIdFile = null;
-        mDequeue.clear();
+        if(mDequeue != null)
+            mDequeue.clear();
         mDequeue = null;
     }
 }

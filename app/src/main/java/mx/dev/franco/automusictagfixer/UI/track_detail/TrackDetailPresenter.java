@@ -199,12 +199,12 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
     private GnResponseListener.IdentificationResults createResultsFromInputData(){
         GnResponseListener.IdentificationResults results = new GnResponseListener.IdentificationResults();
 
-        results.title = mView.getTrackTitle();
-        results.artist = mView.getArtist();
-        results.album = mView.getAlbum();
-        results.trackNumber = mView.getTrackNumber();
-        results.trackYear = mView.getTrackYear();
-        results.genre = mView.getGenre();
+        results.title = StringUtilities.trimString(mView.getTrackTitle());
+        results.artist = StringUtilities.trimString(mView.getArtist());
+        results.album = StringUtilities.trimString(mView.getAlbum());
+        results.trackNumber = StringUtilities.trimString(mView.getTrackNumber());
+        results.trackYear = StringUtilities.trimString(mView.getTrackYear());
+        results.genre = StringUtilities.trimString(mView.getGenre());
         results.cover = mView.getCover();
         return results;
     }
@@ -443,7 +443,7 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
                     updateAppliedMissingTagsView(resultCorrection);
                 break;
             case Tagger.APPLIED_SAME_TAGS:
-                    updateAppliedAllTagsView(resultCorrection);
+                    updateAppliedSameTagsView(resultCorrection);
                 break;
         }
     }
@@ -573,7 +573,7 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
     }
 
     @Override
-    public void onFinish() {
+    public void onFinish(boolean emptyList) {
         if(mView != null) {
             mView.hideProgress();
             mView.setMessageStatus("");
@@ -667,6 +667,13 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
 
         mView.onSuccessfullyCorrection(resourceManager.getString(R.string.apply_tags));
         trackRepository.update(resultCorrection.track);
+    }
+
+    private void updateAppliedSameTagsView(Tagger.ResultCorrection resultCorrection){
+        setEditableInfo(mCurrentTrackDataItem);
+        setAdditionalInfo(mCurrentTrackDataItem);
+        mView.disableEditMode();
+        mView.onSuccessfullyCorrection(resourceManager.getString(R.string.apply_tags));
     }
 
 

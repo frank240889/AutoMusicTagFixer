@@ -35,7 +35,7 @@
     <string name="as_file">Imagen</string>
     <string name="no_cover_art_found">No se encontró carátula.</string>
     <string name="no_cover_art">No se encontró carátula</string>
-    <string name="cover_art_found">Se encontró la siguiente carátula.</string>
+    <string name="cover_art_found">Carátula encontrada</string>
     <string name="cover_updated">Carátula actualizada.</string>
     <string name="cover_removed">Carátula removida.</string>
 
@@ -222,7 +222,7 @@
     <string name="share_message">corrigio mis canciones de manera fácil, rápida y automática!</string>
     <string name="correction_mode">Modo de corrección</string>
     <string name="select_correction_mode">Selecciona modo de corrección para</string>
-    <string name="manual">Manual</string>
+    <string name="manual">Corrección manual</string>
     <string name="automatic">Auto</string>
     <string name="semiautomatic">Semiauto</string>
     <string name="file_status_error_read">Formato de audio no compatible.</string>
@@ -359,8 +359,8 @@
     <string name="file_size">Tamaño</string>
     <string name="size_cover">Tamaño de carátula</string>
     <string name="identification_interrupted">Identificación interrumpida.</string>
-    <string name="message_results">Aplicar las etiquetas.</string>
-    <string name="message_results_cover">Guardar carátula como:</string>
+    <string name="message_results">Se encontraron las siguientes etiquetas, ¿Sobreescribir todas o sólo las faltantes?</string>
+    <string name="message_results_cover">Se encontró la siguiente carátula, guardarla como:</string>
     <string name="file_name">Nombre de archivo</string>
     <string name="saving_cover">Guardando carátula…</string>
     <string name="watch">Ver</string>

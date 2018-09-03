@@ -43,6 +43,7 @@ public class GnResponseListener implements IGnMusicIdFileEvents, IGnCancellable 
     private boolean mCancelled = false;
     private volatile GnListener mListener;
     private volatile HashMap<String,String> mGnStatusToDisplay;
+    private Object mLock = new Object();
 
     public GnResponseListener(GnListener listener){
         mListener = listener;
@@ -71,37 +72,21 @@ public class GnResponseListener implements IGnMusicIdFileEvents, IGnCancellable 
         String status = gnMusicIdFileCallbackStatus.toString();
         Handler handler = new Handler(Looper.getMainLooper());
         Log.d(TAG,gnMusicIdFileCallbackStatus.toString());
-        if (mGnStatusToDisplay != null && mGnStatusToDisplay.containsKey(status)) {
-            final String msg;
-            switch (status){
-                case Constants.State.BEGIN_PROCESSING:
-                    msg = Constants.State.BEGIN_PROCESSING_MSG;
-                    break;
-                case Constants.State.QUERYING_INFO:
-                    msg = Constants.State.QUERYING_INFO_MSG;
-                    break;
-                case Constants.State.COMPLETE_IDENTIFICATION:
-                    msg = Constants.State.COMPLETE_IDENTIFICATION_MSG;
-                    break;
-                default:
-                    msg = "";
-                    break;
-            }
-            //report status to notification
+
+        synchronized (this) {
             handler.post(() -> {
-                if(mListener != null) {
-                    mListener.status(msg);
+                if (mGnStatusToDisplay != null && mGnStatusToDisplay.containsKey(status)) {
+                    //report status to notification
+                    if (mListener != null) {
+                        mListener.status(status);
+                    }
+                }
+                else if (status.equals(Constants.State.STATUS_ERROR) || status.equals(Constants.State.STATUS_PROCESSING_ERROR)) {
+                    if (mListener != null) {
+                        mListener.onIdentificationCancelled(Constants.State.STATUS_ERROR_MSG, null);
+                    }
                 }
             });
-        }
-
-        else if(status.equals(Constants.State.STATUS_ERROR) || status.equals(Constants.State.STATUS_PROCESSING_ERROR)){
-
-                handler.post(() -> {
-                    if(mListener != null) {
-                        mListener.onIdentificationCancelled(Constants.State.STATUS_ERROR_MSG, null);//identificationError(Constants.State.STATUS_ERROR_MSG);
-                    }
-                });
         }
     }
 

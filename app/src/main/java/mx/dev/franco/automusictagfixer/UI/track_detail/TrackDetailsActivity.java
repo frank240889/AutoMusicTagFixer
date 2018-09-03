@@ -421,6 +421,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements SimpleMed
         data.putExtra("title", mTrackDetailFragment.getTrackTitle());
         data.putExtra("artist", mTrackDetailFragment.getArtist());
         data.putExtra("album", mTrackDetailFragment.getAlbum());
+        data.putExtra("path",mCurrentPath);
         setResult(Activity.RESULT_OK, data);
         finishAfterTransition();
     }

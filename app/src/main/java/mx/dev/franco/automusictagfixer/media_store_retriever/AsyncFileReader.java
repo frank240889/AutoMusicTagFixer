@@ -21,7 +21,7 @@ import mx.dev.franco.automusictagfixer.utilities.shared_preferences.AbstractShar
 public class AsyncFileReader extends AsyncTask<Void, Void, Void> {
     public interface IRetriever {
         void onStart();
-        void onFinish();
+        void onFinish(boolean emptyList);
         void onCancel();
     }
 
@@ -39,6 +39,7 @@ public class AsyncFileReader extends AsyncTask<Void, Void, Void> {
     private IRetriever mListener;
     private int mTask;
     private int mMediaStoreId;
+    private boolean mEmptyList = true;
 
     public AsyncFileReader(){
         AutoMusicTagFixer.getContextComponent().inject(this);
@@ -92,7 +93,7 @@ public class AsyncFileReader extends AsyncTask<Void, Void, Void> {
     @Override
     protected void onPostExecute(Void result) {
         if(mListener != null)
-            mListener.onFinish();
+            mListener.onFinish(mEmptyList);
         mListener = null;
     }
 
@@ -111,8 +112,13 @@ public class AsyncFileReader extends AsyncTask<Void, Void, Void> {
             tracks.add(track);
         }
 
-        if(tracks.size() > 0)
+        if(tracks.size() > 0) {
             trackDAO.insertAll(tracks);
+            mEmptyList = false;
+        }
+        else {
+            mEmptyList = true;
+        }
 
         cursor.close();
     }
@@ -128,8 +134,13 @@ public class AsyncFileReader extends AsyncTask<Void, Void, Void> {
             }
 
         }
-        if(tracks.size() > 0)
+        if(tracks.size() > 0) {
             trackDAO.insertAll(tracks);
+            mEmptyList = false;
+        }
+        else {
+            mEmptyList = true;
+        }
         cursor.close();
     }
 

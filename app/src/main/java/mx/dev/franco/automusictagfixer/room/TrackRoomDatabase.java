@@ -18,8 +18,8 @@ public abstract class TrackRoomDatabase extends RoomDatabase {
             synchronized (TrackRoomDatabase.class){
                 if(INSTANCE == null){
                     INSTANCE = Room.databaseBuilder(context.getApplicationContext(),
-                            TrackRoomDatabase.class,"track_database").
-                            addMigrations(MIGRATION_1_2).
+                            TrackRoomDatabase.class,"DataTrack.db").
+                            addMigrations(MIGRATION_7_8).
                             //addCallback(sRoomDatabaseCallback).
                             build();
                 }
@@ -33,6 +33,13 @@ public abstract class TrackRoomDatabase extends RoomDatabase {
         public void migrate(@NonNull SupportSQLiteDatabase database) {
             database.execSQL("ALTER TABLE track_table " +
                     "ADD COLUMN processing INTEGER DEFAULT 0 NOT NULL");
+        }
+    };
+
+    static final Migration MIGRATION_7_8 = new Migration(7,8) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("DROP TABLE IF EXISTS tracks_table");
         }
     };
 }

@@ -198,6 +198,7 @@ public class Tagger {
                     resultCorrection.code = APPLIED_SAME_TAGS;
                 }
                 else {
+                    resultCorrection.tagsUpdated = tagsToUpdate;
                     resultCorrection = applyTagsForDocumentFileObject(file, tagsToUpdate, overWriteTags);
                 }
             }
@@ -208,6 +209,7 @@ public class Tagger {
                 resultCorrection.code = APPLIED_SAME_TAGS;
             }
             else {
+                resultCorrection.tagsUpdated = tagsToUpdate;
                 resultCorrection = applyTagsForFileObject(file, tagsToUpdate, overWriteTags);
             }
         }
@@ -1043,5 +1045,6 @@ public class Tagger {
         public int code = -1;
         public int allTagsApplied;
         public Track track;
+        public HashMap<FieldKey, Object> tagsUpdated;
     }
 }

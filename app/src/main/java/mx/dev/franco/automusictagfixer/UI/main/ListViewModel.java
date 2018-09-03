@@ -3,6 +3,7 @@ package mx.dev.franco.automusictagfixer.UI.main;
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MutableLiveData;
 import android.arch.lifecycle.ViewModel;
+import android.util.Log;
 
 import java.util.List;
 
@@ -28,7 +29,7 @@ public class ListViewModel extends ViewModel {
     private MutableLiveData<Integer> mCanRunService = new MutableLiveData<>();
     private MutableLiveData<String> mTrackIsProcessing = new MutableLiveData<>();
     private MutableLiveData<ListFragment.ViewWrapper> mTrackInaccessible = new MutableLiveData<>();
-    private MutableLiveData<Boolean> mHasFinishedRetrieving = new MutableLiveData<>();
+    private MutableLiveData<Boolean> mEmptyList = new MutableLiveData<>();
     private LiveData<List<Track>> mTracks;
     private MutableLiveData<ListFragment.ViewWrapper> mCanOpenDetails = new MutableLiveData<>();
     private MutableLiveData<Integer> mStartAutomaticMode = new MutableLiveData<>();
@@ -49,6 +50,7 @@ public class ListViewModel extends ViewModel {
 
     public ListViewModel() {
         AutoMusicTagFixer.getContextComponent().inject(this);
+        mEmptyList.setValue(false);
         mTracks = trackRepository.getAllTracks();
     }
 
@@ -69,10 +71,14 @@ public class ListViewModel extends ViewModel {
             }
 
             @Override
-            public void onFinish() {
+            public void onFinish(boolean emptyList) {
+                Log.d("first_time_read","first_time_read");
                 mShowProgress.setValue(false);
-                mHasFinishedRetrieving.setValue(true);
                 sharedPreferences.putBoolean("first_time_read", true);
+                if(emptyList){
+                    mEmptyList.setValue(true);
+                }
+
             }
 
             @Override
@@ -190,8 +196,9 @@ public class ListViewModel extends ViewModel {
             }
 
             @Override
-            public void onFinish() {
+            public void onFinish(boolean emptyList) {
                 mShowProgress.setValue(false);
+
             }
 
             @Override
@@ -214,14 +221,6 @@ public class ListViewModel extends ViewModel {
         }
     }
 
-    public void onAutomaticMode(ListFragment.ViewWrapper viewWrapper){
-        boolean canOpenDetail = evaluateTrack(viewWrapper);
-        if(canOpenDetail){
-            mStartAutomaticMode.setValue(viewWrapper.track.getMediaStoreId());
-        }
-    }
-
-
     public void setProgress(boolean showProgress){
         mShowProgress.setValue(showProgress);
     }
@@ -242,8 +241,8 @@ public class ListViewModel extends ViewModel {
         return mTrackInaccessible;
     }
 
-    public LiveData<Boolean> hasFinishedRetrievedTracks(){
-        return mHasFinishedRetrieving;
+    public LiveData<Boolean> noFilesFound(){
+        return mEmptyList;
     }
 
     public LiveData<Boolean> showProgress(){

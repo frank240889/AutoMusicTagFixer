@@ -86,9 +86,9 @@ public class TrackDetailInteractor implements TrackDataLoader.TrackLoader, Async
     }
 
     @Override
-    public void onFinish() {
+    public void onFinish(boolean emptyList) {
         if(mUpdaterListener != null){
-            mUpdaterListener.onFinish();
+            mUpdaterListener.onFinish(false);
             sAsyncFileReader.setListener(null);
         }
         sAsyncFileReader = null;

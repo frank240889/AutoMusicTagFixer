@@ -757,6 +757,7 @@ public class TrackDetailFragment extends Fragment implements EditableView, Resul
 
         mResultsDialog = AndroidUtils.createResultsDialog(getActivity(),results, R.string.message_results, true, view, positiveButtonListener,negativeButtonListener );
         mResultsDialog.show();
+        mResultsDialog.setTitle(R.string.message_apply_new_tags);
     }
 
     @Override
@@ -926,9 +927,9 @@ public class TrackDetailFragment extends Fragment implements EditableView, Resul
                 }
             }
         });
-
+        builder.setTitle(R.string.manual);
         builder.setMessage(R.string.message_apply_new_tags);
-        builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
+        builder.setNegativeButton(R.string.cancel_button, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 dialog.dismiss();
@@ -936,7 +937,7 @@ public class TrackDetailFragment extends Fragment implements EditableView, Resul
                 mTrackDetailPresenter.restorePreviousValues();
             }
         });
-        builder.setPositiveButton("Si", new DialogInterface.OnClickListener() {
+        builder.setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 correctionParams.dataFrom = Constants.MANUAL;

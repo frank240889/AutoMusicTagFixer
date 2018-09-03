@@ -103,10 +103,6 @@ public class MainActivity extends AppCompatActivity
 
         setupReceivers();
 
-        mListFragment = ListFragment.newInstance();
-        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, mListFragment)
-                .commit();
-
         mDrawer = findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, mDrawer, mToolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         mDrawer.addDrawerListener(toggle);
@@ -115,6 +111,9 @@ public class MainActivity extends AppCompatActivity
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
+        mListFragment = ListFragment.newInstance();
+        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, mListFragment)
+                .commit();
         Log.d(TAG,"onCreate");
     }
 
@@ -186,7 +185,7 @@ public class MainActivity extends AppCompatActivity
         searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
         searchView.setIconifiedByDefault(false);
 
-        searchView.setOnSearchClickListener(new View.OnClickListener() {
+        /*searchView.setOnSearchClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 int x = v.getRight();
@@ -253,7 +252,7 @@ public class MainActivity extends AppCompatActivity
 
                 return false;
             }
-        });
+        });*/
 
         return true;
     }

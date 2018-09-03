@@ -70,16 +70,20 @@ public final class StringUtilities {
         boolean isTooLong = false;
         switch (id){
             case R.id.track_name_details:
+                isTooLong = str.length() >= 101;
+                break;
             case R.id.artist_name_details:
+                isTooLong = str.length() >= 101;
+                break;
             case R.id.album_name_details:
-                isTooLong = str.length() >= 81;
+                isTooLong = str.length() >= 151;
                 break;
             case R.id.track_number:
             case R.id.track_year:
                 isTooLong = str.length() >= 5;
                 break;
             case R.id.track_genre:
-                isTooLong = str.length() >=31;
+                isTooLong = str.length() >= 81;
                 break;
         }
         return isTooLong;

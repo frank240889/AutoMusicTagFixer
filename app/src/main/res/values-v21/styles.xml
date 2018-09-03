@@ -31,7 +31,7 @@
     <!--Style details track dialog activity-->
     <style name="AboutTheme" parent="AppTheme">
         <item name="colorAccent">@color/primaryColor</item>
-        <item name="colorPrimaryDark">@color/primary_material_dark</item>
+        <item name="colorPrimaryDark">@color/grey_900</item>
     </style>
 
     <!--Style details questions activity-->

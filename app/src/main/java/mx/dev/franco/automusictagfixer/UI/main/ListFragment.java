@@ -173,12 +173,13 @@ public class ListFragment extends Fragment implements AudioItemHolder.ClickListe
         mListViewModel.actionCanOpenDetails().observe(this, this::openDetails);
         mListViewModel.actionCanStartAutomaticMode().observe(this, this::startCorrection);
         mListViewModel.actionIsTrackInaccessible().observe(this, this::showInaccessibleTrack);
+        mListViewModel.noFilesFound().observe(this, this::noFilesFoundMessage);
         mListViewModel.showProgress().observe(this, this::showProgress);
         mListViewModel.getAllTracks().observe(this, this);
         mListViewModel.getAllTracks().observe(this,mAdapter);
 
         mSwipeRefreshLayout.setOnRefreshListener(()->{
-                if(!hasPermission) {
+                if(ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
                     requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, RequiredPermissions.WRITE_EXTERNAL_STORAGE_PERMISSION);
                 }
                 else {
@@ -194,7 +195,7 @@ public class ListFragment extends Fragment implements AudioItemHolder.ClickListe
         }
 
         setHasOptionsMenu(true);
-        setRetainInstance(true);
+        //setRetainInstance(true);
         //App is opened again
         int id = getActivity().getIntent().getIntExtra(Constants.MEDIA_STORE_ID, -1);
         scrollTo(id);
@@ -210,6 +211,12 @@ public class ListFragment extends Fragment implements AudioItemHolder.ClickListe
         return mLayout;
     }
 
+    private void noFilesFoundMessage(Boolean aBoolean) {
+        mFabStopTask.hide();
+        mFabStartTask.hide();
+        mMessage.setVisibility(View.VISIBLE);
+        mMessage.setText(R.string.no_items_found);
+    }
 
 
     private void showMessageError(String s) {
@@ -384,6 +391,7 @@ public class ListFragment extends Fragment implements AudioItemHolder.ClickListe
     public void onChanged(@Nullable List<Track> tracks) {
 
         mListViewModel.setProgress(false);
+        Log.d("tracks != null", (tracks != null) + "");
         if(tracks != null) {
             if(tracks.isEmpty()) {
                 mFabStopTask.hide();

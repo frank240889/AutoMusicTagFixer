@@ -42,7 +42,7 @@ public class TrackRepository {
             asyncFileReader.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
         }
         else {
-            iRetriever.onFinish();
+            iRetriever.onFinish(false);
         }
     }
 
@@ -53,16 +53,8 @@ public class TrackRepository {
             asyncFileReader.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
 
-    public LiveData<List<Track>> getById(int id){
-        return mTrackDao.getTrackById(id);
-    }
-
     public void update(Track track){
         new updateTrack(mTrackDao).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,track);
-    }
-
-    public void insert(Track track){
-        mTrackDao.insert(track);
     }
 
     public void checkAll(){

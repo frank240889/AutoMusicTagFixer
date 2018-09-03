@@ -196,14 +196,17 @@ public class Fixer extends AsyncTask<GnResponseListener.IdentificationResults,Vo
         if(hasError(mResultsCorrection.code))
             return false;
 
-        if(dataTitle){
-            mTrack.setTitle(results.title);
-        }
-        if(dataArtist){
-            mTrack.setArtist(results.artist);
-        }
-        if(dataAlbum){
-            mTrack.setAlbum(results.album);
+        //Get tags that were updated to updated item in SearchActivity.
+        if(mResultsCorrection.tagsUpdated != null) {
+            if (mResultsCorrection.tagsUpdated.containsKey(FieldKey.TITLE)) {
+                mTrack.setTitle((String) mResultsCorrection.tagsUpdated.get(FieldKey.TITLE));
+            }
+            if (mResultsCorrection.tagsUpdated.containsKey(FieldKey.ARTIST)) {
+                mTrack.setArtist((String) mResultsCorrection.tagsUpdated.get(FieldKey.ARTIST));
+            }
+            if (mResultsCorrection.tagsUpdated.containsKey(FieldKey.ALBUM)) {
+                mTrack.setAlbum((String) mResultsCorrection.tagsUpdated.get(FieldKey.ALBUM));
+            }
         }
         //If some info was not identificationFound, mark its state as INCOMPLETE
         if (!dataTitle || !dataArtist || !dataAlbum || !dataImage || !dataTrackNumber || !dataYear || !dataGenre) {

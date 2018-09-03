@@ -226,6 +226,10 @@ public class SearchTrackAdapter extends RecyclerView.Adapter<FoundItemHolder> im
             if(album != null && !album.equals(""))
                 track.setAlbum(album);
 
+            String path = data.getStringExtra("path");
+            if(path != null && !path.equals(""))
+                track.setPath(path);
+
             int position = mTrackList.indexOf(track);
             notifyItemChanged(position);
         }
