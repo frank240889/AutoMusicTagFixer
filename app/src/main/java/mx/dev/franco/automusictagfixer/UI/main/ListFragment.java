@@ -426,6 +426,7 @@ public class ListFragment extends Fragment implements AudioItemHolder.ClickListe
                     stopIntent.setAction(Constants.Actions.ACTION_COMPLETE_TASK);
                     getActivity().getApplicationContext().startService(stopIntent);
                     Toast t = AndroidUtils.getToast(getContext());
+                    t.setDuration(Toast.LENGTH_SHORT);
                     t.setText(R.string.cancelling);
                     t.show();
                     mFabStopTask.setEnabled(false);

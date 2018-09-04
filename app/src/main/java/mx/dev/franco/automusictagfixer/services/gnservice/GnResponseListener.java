@@ -420,9 +420,6 @@ public class GnResponseListener implements IGnMusicIdFileEvents, IGnCancellable 
 
     private void clear(){
         this.mListener = null;
-        //if(mGnStatusToDisplay != null)
-        //    this.mGnStatusToDisplay.clear();
-        //this.mGnStatusToDisplay = null;
     }
 
     @Override

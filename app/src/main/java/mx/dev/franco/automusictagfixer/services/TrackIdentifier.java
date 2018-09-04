@@ -1,5 +1,7 @@
 package mx.dev.franco.automusictagfixer.services;
 
+import android.util.Log;
+
 import com.crashlytics.android.Crashlytics;
 import com.gracenote.gnsdk.GnException;
 import com.gracenote.gnsdk.GnLanguage;
@@ -9,6 +11,7 @@ import com.gracenote.gnsdk.GnMusicIdFileInfo;
 import com.gracenote.gnsdk.GnMusicIdFileInfoManager;
 import com.gracenote.gnsdk.GnMusicIdFileProcessType;
 import com.gracenote.gnsdk.GnMusicIdFileResponseType;
+import com.gracenote.gnsdk.GnThreadPriority;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -23,7 +26,6 @@ public class TrackIdentifier implements  GnResponseListener.GnListener{
     public static final int ALL_TAGS = 0;
     public static final int JUST_COVER = 1;
     private static final String TAG = TrackIdentifier.class.getName();
-    private GnMusicIdFile mGnMusicIdFile;
     private GnResponseListener.GnListener mGnListener;
     private GnResponseListener mGnResponseListener;
     private Track mTrack;
@@ -53,7 +55,8 @@ public class TrackIdentifier implements  GnResponseListener.GnListener{
             gnMusicIdFile.options().preferResultLanguage(GnLanguage.kLanguageSpanish);
             //queue will be processed one by one
             gnMusicIdFile.options().batchSize(1);
-            gnMusicIdFile.waitForComplete();
+            //gnMusicIdFile.waitForComplete();
+            gnMusicIdFile.options().threadPriority(GnThreadPriority.kThreadPriorityNormal);
             //get the fileInfoManager
             GnMusicIdFileInfoManager gnMusicIdFileInfoManager = gnMusicIdFile.fileInfos();
             //add all info available for more accurate results.
@@ -83,15 +86,7 @@ public class TrackIdentifier implements  GnResponseListener.GnListener{
 
     @Override
     public void statusIdentification(String status, Track track) {
-        if(mGnListener != null) {
-            if (mGnStatusToDisplay != null && mGnStatusToDisplay.containsKey(status)) {
-                //report status to notification
-                mGnListener.status(status);
-            }
-            else if (status.equals(Constants.State.STATUS_ERROR) || status.equals(Constants.State.STATUS_PROCESSING_ERROR)) {
-                mGnListener.onIdentificationCancelled(Constants.State.STATUS_ERROR_MSG, null);
-            }
-        }
+
     }
 
     @Override
@@ -144,30 +139,44 @@ public class TrackIdentifier implements  GnResponseListener.GnListener{
 
     @Override
     public void status(String message) {
-        final String msg;
+        Log.d("el status", message);
+        String msg;
+
         switch (message) {
             case Constants.State.BEGIN_PROCESSING:
                 msg = Constants.State.BEGIN_PROCESSING_MSG;
+                //report status to notification
+                if(mGnListener != null)
+                    mGnListener.status(msg);
                 break;
             case Constants.State.QUERYING_INFO:
                 msg = Constants.State.QUERYING_INFO_MSG;
+                //report status to notification
+                if(mGnListener != null)
+                    mGnListener.status(msg);
                 break;
             case Constants.State.COMPLETE_IDENTIFICATION:
                 msg = Constants.State.COMPLETE_IDENTIFICATION_MSG;
+                //report status to notification
+                if(mGnListener != null)
+                    mGnListener.status(msg);
+                break;
+            case Constants.State.STATUS_ERROR:
+            case Constants.State.STATUS_PROCESSING_ERROR:
+                msg = Constants.State.STATUS_ERROR_MSG;
+                if(mGnListener != null)
+                    mGnListener.onIdentificationCancelled(msg, null);
                 break;
             default:
                 msg = "";
                 break;
         }
-        if(mGnListener != null)
-            mGnListener.status(msg);
     }
 
     private void clear(){
         mGnResponseListener = null;
         mGnListener = null;
         mTrack = null;
-        mGnMusicIdFile = null;
         if(mDequeue != null)
             mDequeue.clear();
         mDequeue = null;
