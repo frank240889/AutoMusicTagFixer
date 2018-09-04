@@ -359,7 +359,7 @@
     <string name="file_size">Tamaño</string>
     <string name="size_cover">Tamaño de carátula</string>
     <string name="identification_interrupted">Identificación interrumpida.</string>
-    <string name="message_results">Se encontraron las siguientes etiquetas, ¿Sobreescribir todas o sólo las faltantes?</string>
+    <string name="message_results">¿Sobreescribir todas o sólo las faltantes?</string>
     <string name="message_results_cover">Se encontró la siguiente carátula, guardarla como:</string>
     <string name="file_name">Nombre de archivo</string>
     <string name="saving_cover">Guardando carátula…</string>

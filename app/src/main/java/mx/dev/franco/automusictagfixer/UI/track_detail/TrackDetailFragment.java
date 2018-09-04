@@ -757,7 +757,6 @@ public class TrackDetailFragment extends Fragment implements EditableView, Resul
 
         mResultsDialog = AndroidUtils.createResultsDialog(getActivity(),results, R.string.message_results, true, view, positiveButtonListener,negativeButtonListener );
         mResultsDialog.show();
-        mResultsDialog.setTitle(R.string.message_apply_new_tags);
     }
 
     @Override

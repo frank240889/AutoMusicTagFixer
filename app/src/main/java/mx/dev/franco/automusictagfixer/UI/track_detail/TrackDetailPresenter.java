@@ -670,10 +670,21 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
     }
 
     private void updateAppliedSameTagsView(Tagger.ResultCorrection resultCorrection){
+        boolean shouldUpdate = false;
+        //File was renamed
+        if(resultCorrection.pathTofileUpdated != null) {
+            mView.setFilename(resultCorrection.pathTofileUpdated);
+            mView.setFilesize(AudioItem.getFileSize(resultCorrection.pathTofileUpdated));
+            mCurrentTrack.setPath(resultCorrection.pathTofileUpdated);
+            shouldUpdate = true;
+        }
+
         setEditableInfo(mCurrentTrackDataItem);
         setAdditionalInfo(mCurrentTrackDataItem);
         mView.disableEditMode();
         mView.onSuccessfullyCorrection(resourceManager.getString(R.string.apply_tags));
+        if(shouldUpdate)
+            trackRepository.update(resultCorrection.track);
     }
 
 

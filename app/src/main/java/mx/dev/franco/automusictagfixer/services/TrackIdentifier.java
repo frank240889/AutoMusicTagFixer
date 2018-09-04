@@ -12,6 +12,7 @@ import com.gracenote.gnsdk.GnMusicIdFileResponseType;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.HashMap;
 
 import mx.dev.franco.automusictagfixer.room.Track;
 import mx.dev.franco.automusictagfixer.services.gnservice.GnResponseListener;
@@ -27,9 +28,16 @@ public class TrackIdentifier implements  GnResponseListener.GnListener{
     private GnResponseListener mGnResponseListener;
     private Track mTrack;
     private Deque<GnMusicIdFile> mDequeue = new ArrayDeque<>();
+    private HashMap<String,String> mGnStatusToDisplay;
     public TrackIdentifier(GnResponseListener.GnListener listener) {
         mGnListener = listener;
         mGnResponseListener = new GnResponseListener(this);
+        mGnStatusToDisplay = new HashMap<>();
+        mGnStatusToDisplay.put(Constants.State.BEGIN_PROCESSING,Constants.State.BEGIN_PROCESSING_MSG);
+        mGnStatusToDisplay.put(Constants.State.QUERYING_INFO,Constants.State.QUERYING_INFO_MSG);
+        mGnStatusToDisplay.put(Constants.State.COMPLETE_IDENTIFICATION,Constants.State.COMPLETE_IDENTIFICATION_MSG);
+        mGnStatusToDisplay.put(Constants.State.STATUS_ERROR,Constants.State.STATUS_ERROR_MSG);
+        mGnStatusToDisplay.put(Constants.State.STATUS_PROCESSING_ERROR,Constants.State.STATUS_PROCESSING_ERROR_MSG);
     }
 
     public void setTrack(Track track){
@@ -66,16 +74,24 @@ public class TrackIdentifier implements  GnResponseListener.GnListener{
 
     public void cancelIdentification(){
         if(mDequeue.peek() != null){
-            mDequeue.poll().cancel();
             mGnResponseListener.setCancel(true);
+            mDequeue.poll().cancel();
             mGnListener.onIdentificationCancelled("Cancelled", mTrack);
         }
+        clear();
     }
 
     @Override
     public void statusIdentification(String status, Track track) {
-        if(mGnListener != null)
-            mGnListener.statusIdentification(status, mTrack);
+        if(mGnListener != null) {
+            if (mGnStatusToDisplay != null && mGnStatusToDisplay.containsKey(status)) {
+                //report status to notification
+                mGnListener.status(status);
+            }
+            else if (status.equals(Constants.State.STATUS_ERROR) || status.equals(Constants.State.STATUS_PROCESSING_ERROR)) {
+                mGnListener.onIdentificationCancelled(Constants.State.STATUS_ERROR_MSG, null);
+            }
+        }
     }
 
     @Override
@@ -155,5 +171,9 @@ public class TrackIdentifier implements  GnResponseListener.GnListener{
         if(mDequeue != null)
             mDequeue.clear();
         mDequeue = null;
+
+        if(mGnStatusToDisplay != null)
+            this.mGnStatusToDisplay.clear();
+        this.mGnStatusToDisplay = null;
     }
 }
