@@ -51,12 +51,6 @@ public class TrackAdapter extends RecyclerView.Adapter<mx.dev.franco.automusicta
         Destructible,
         Observer<List<Track>>,
         DiffExecutor.DiffCallbackListener{
-    public interface OnDataSourceChangeListener{
-        void onEmptyDatasource();
-        void onChangeDatasource(int items);
-        void onCurrentProcessing();
-
-    }
 
     //constants for indicate the sort order
     public static final int ASC = 0;
@@ -70,7 +64,6 @@ public class TrackAdapter extends RecyclerView.Adapter<mx.dev.franco.automusicta
     AbstractSharedPreferences sharedPreferences;
     private List<Track> mTrackList = new ArrayList<>();
     private AudioItemHolder.ClickListener mListener;
-    private OnDataSourceChangeListener mOnDataSourceChangeListener;
     private List<AsyncLoaderCover> mAsyncTaskQueue =  new ArrayList<>();
     private static Sorter sSorter = Sorter.getInstance();
     private Deque<List<Track>> mPendingUpdates = new ArrayDeque<>();
@@ -78,10 +71,6 @@ public class TrackAdapter extends RecyclerView.Adapter<mx.dev.franco.automusicta
 
     public TrackAdapter(AudioItemHolder.ClickListener listener){
         mListener = listener;
-        if(listener instanceof ListFragment){
-            mOnDataSourceChangeListener = (OnDataSourceChangeListener) listener;
-        }
-
         AutoMusicTagFixer.getContextComponent().inject(this);
         Log.d(TAG, "context is null: "+ (context == null));
     }
@@ -397,34 +386,11 @@ public class TrackAdapter extends RecyclerView.Adapter<mx.dev.franco.automusicta
         }
         sDiffExecutor = null;
         mListener = null;
-        mOnDataSourceChangeListener = null;
     }
 
     @Override
     public void onChanged(@Nullable List<Track> tracks) {
-        if(mOnDataSourceChangeListener != null){
-            if(tracks != null) {
-                Log.d(TAG, tracks.size()+"");
-                //Update current list if has items
-                if (getItemCount() > 0) {
-                    updateInBackground(tracks);
-                }
-                //If has not items, then reassigned the list
-                else {
-                    mTrackList = tracks;
-                    notifyDataSetChanged();
-                    mOnDataSourceChangeListener.onChangeDatasource(getItemCount());
-                }
-
-                boolean isServiceRunning = serviceHelper.checkIfServiceIsRunning(FixerTrackService.CLASS_NAME);
-                if(isServiceRunning)
-                    mOnDataSourceChangeListener.onCurrentProcessing();
-            }
-            else {
-                mOnDataSourceChangeListener.onEmptyDatasource();
-            }
-        }
-        /*if(tracks != null) {
+        if(tracks != null) {
             Log.d(TAG, tracks.size()+"");
             //Update only if exist items
             if (getItemCount() > 0) {
@@ -433,7 +399,7 @@ public class TrackAdapter extends RecyclerView.Adapter<mx.dev.franco.automusicta
                 mTrackList = tracks;
                 notifyDataSetChanged();
             }
-        }*/
+        }
     }
 
     public Track getTrackById(int id){
@@ -517,13 +483,10 @@ public class TrackAdapter extends RecyclerView.Adapter<mx.dev.franco.automusicta
             mPendingUpdates.remove();
 
         if (diffResults.diffResult != null) {
-            Log.d(TAG, "dispatching results");
+            Log.d(TAG, "dispatching results... list" + diffResults.list.size());
             diffResults.diffResult.dispatchUpdatesTo(this);
             mTrackList.clear();
             mTrackList.addAll(diffResults.list);
-
-            //Inform the how may items exist after update.
-            mOnDataSourceChangeListener.onChangeDatasource(getItemCount());
 
             sDiffExecutor = null;
 

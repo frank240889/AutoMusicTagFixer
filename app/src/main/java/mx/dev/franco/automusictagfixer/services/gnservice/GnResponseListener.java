@@ -4,6 +4,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 
+import com.gracenote.gnsdk.GnAlbumIterator;
 import com.gracenote.gnsdk.GnAssetFetch;
 import com.gracenote.gnsdk.GnAudioFile;
 import com.gracenote.gnsdk.GnContent;
@@ -40,7 +41,7 @@ public class GnResponseListener implements IGnMusicIdFileEvents, IGnCancellable 
     }
 
     public static final String TAG = GnResponseListener.class.getName();
-    private boolean mCancelled = false;
+    private volatile boolean mCancelled = false;
     private volatile GnListener mListener;
 
     public GnResponseListener(GnListener listener){
@@ -212,7 +213,37 @@ public class GnResponseListener implements IGnMusicIdFileEvents, IGnCancellable 
                     return;
                 }
 
-                GnContent gnContent = gnResponseAlbums.albums().at(0).next().coverArt();
+                if(gnResponseAlbums.albums().count() > 0){
+                    Log.d("Albums", gnResponseAlbums.albums().count()+"");
+                    if(gnResponseAlbums.albums().count() == 1){
+                        GnContent gnContent = gnResponseAlbums.albums().at(0).next().coverArt();
+                        Log.d("Albums", gnResponseAlbums.albums().count()+"");
+                        GnImageSize[] values = GnImageSize.values();
+                        for (int sizes = values.length - 1; sizes >= 0; --sizes) {
+                            String url = gnContent.asset(values[sizes]).url();
+                            if (!gnContent.asset(values[sizes]).url().equals("")) {
+                                identificationResults.cover = new GnAssetFetch(GnService.sGnUser, url).data();
+                                break;
+                            }
+                        }
+                    }
+                    else {
+                        GnAlbumIterator iterator = gnResponseAlbums.albums().getIterator();
+                        while(iterator.hasNext()){
+                            GnContent gnContent = iterator.next().coverArt();
+                            GnImageSize[] values = GnImageSize.values();
+                            for (int sizes = values.length - 1; sizes >= 0; --sizes) {
+                                String url = gnContent.asset(values[sizes]).url();
+                                if (!gnContent.asset(values[sizes]).url().equals("")) {
+                                    identificationResults.cover = new GnAssetFetch(GnService.sGnUser, url).data();
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                /*GnContent gnContent = gnResponseAlbums.albums().at(0).next().coverArt();
                 GnImageSize[] values = GnImageSize.values();
                 for (int sizes = values.length - 1; sizes >= 0; --sizes) {
                     String url = gnContent.asset(values[sizes]).url();
@@ -220,7 +251,7 @@ public class GnResponseListener implements IGnMusicIdFileEvents, IGnCancellable 
                         identificationResults.cover = new GnAssetFetch(GnService.sGnUser, url).data();
                         break;
                     }
-                }
+                }*/
             }
 
             //If is selected "De menor calidad disponible"
@@ -376,7 +407,7 @@ public class GnResponseListener implements IGnMusicIdFileEvents, IGnCancellable 
     }
 
     @Override
-    public synchronized void musicIdFileResultNotFound(GnMusicIdFileInfo gnMusicIdFileInfo, long l, long l1, IGnCancellable iGnCancellable) {
+    public void musicIdFileResultNotFound(GnMusicIdFileInfo gnMusicIdFileInfo, long l, long l1, IGnCancellable iGnCancellable) {
         Log.d(TAG,"isCancelled resultnotfound" + mCancelled);
         if(mCancelled){
             if(!Thread.currentThread().isInterrupted())
@@ -423,13 +454,13 @@ public class GnResponseListener implements IGnMusicIdFileEvents, IGnCancellable 
     }
 
     @Override
-    public void setCancel(boolean b) {
+    public synchronized void setCancel(boolean b) {
         mCancelled = b;
         this.mListener = null;
     }
 
     @Override
-    public boolean isCancelled() {
+    public synchronized boolean isCancelled() {
         return mCancelled;
     }
 

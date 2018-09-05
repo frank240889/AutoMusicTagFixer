@@ -100,7 +100,7 @@ public class GnService{
                 sGnLocale = new GnLocale(GnLocaleGroup.kLocaleGroupMusic, GnLanguage.kLanguageSpanish, GnRegion.kRegionGlobal, GnDescriptor.kDescriptorDetailed, sGnUser);
                 sGnLocale.setGroupDefault();
                 //sGnUser.options().networkLoadBalance(true);
-                GnStorageSqlite.enable();
+                //GnStorageSqlite.enable();
                 sIsInitializing = false;
                 return sApiInitialized = true;
             } catch (GnException e) {

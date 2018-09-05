@@ -55,7 +55,7 @@ import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 import mx.dev.franco.automusictagfixer.utilities.StorageHelper;
 
 public class ListFragment extends Fragment implements
-        AudioItemHolder.ClickListener/*,Observer<List<Track>>*/, TrackAdapter.OnDataSourceChangeListener {
+        AudioItemHolder.ClickListener,Observer<List<Track>> {
     private static final String TAG = ListFragment.class.getName();
 
     private GridLayoutManager mGridLayoutManager;
@@ -170,7 +170,7 @@ public class ListFragment extends Fragment implements
         mListViewModel.actionIsTrackInaccessible().observe(this, this::showInaccessibleTrack);
         mListViewModel.noFilesFound().observe(this, this::noFilesFoundMessage);
         mListViewModel.showProgress().observe(this, this::showProgress);
-        //mListViewModel.getAllTracks().observe(this, this);
+        mListViewModel.getAllTracks().observe(this, this);
         mListViewModel.getAllTracks().observe(this,mAdapter);
 
         mSwipeRefreshLayout.setOnRefreshListener(()->{
@@ -269,13 +269,13 @@ public class ListFragment extends Fragment implements
         return super.onOptionsItemSelected(menuItem);
     }
 
-    /*public boolean sort(String by, int order){
-        return mAdapter.sortBy(by, order);
-    }*/
-
     public boolean sort(String by, int order){
-        return mListViewModel.sortTracks(by, order);
+        return mAdapter.sortBy(by, order);
     }
+
+    /*public boolean sort(String by, int order){
+        return mListViewModel.sortTracks(by, order);
+    }*/
 
     public void checkAll(){
         mListViewModel.checkAllItems();
@@ -385,7 +385,7 @@ public class ListFragment extends Fragment implements
      * occurred
         The list with the new data.
      */
-    /*@Override
+    @Override
     public void onChanged(@Nullable List<Track> tracks) {
 
         //mListViewModel.setProgress(false);
@@ -411,37 +411,7 @@ public class ListFragment extends Fragment implements
                 mMessage.setVisibility(View.GONE);
             }
         }
-    }*/
-
-    @Override
-    public void onEmptyDatasource() {
-        mFabStopTask.hide();
-        mFabStartTask.hide();
-        mMessage.setVisibility(View.VISIBLE);
-        mMessage.setText(R.string.no_items_found);
     }
-
-    @Override
-    public void onChangeDatasource(int items) {
-        boolean isServiceRunning = serviceHelper.checkIfServiceIsRunning(FixerTrackService.CLASS_NAME);
-        if(!isServiceRunning){
-            mFabStartTask.show();
-            mFabStopTask.hide();
-        }
-        else {
-            mFabStartTask.hide();
-            mFabStopTask.show();
-        }
-        mActionBar.setTitle(items+ " " +getString(R.string.tracks));
-        mMessage.setVisibility(View.GONE);
-    }
-
-    @Override
-    public void onCurrentProcessing() {
-        mFabStartTask.hide();
-        mFabStopTask.show();
-    }
-
 
     private void stopCorrection() {
         final AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());

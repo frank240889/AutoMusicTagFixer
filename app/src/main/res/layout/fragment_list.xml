@@ -37,7 +37,7 @@
                 android:clipToPadding="false"/>
         </android.support.v4.widget.SwipeRefreshLayout>
 
-        <android.support.design.widget.FloatingActionButton
+        <!--android.support.design.widget.FloatingActionButton
             android:id="@+id/fab_start"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -56,5 +56,5 @@
             android:tint="@color/grey_800"
             app:useCompatPadding="true"
             android:visibility="gone"
-            android:src="@drawable/ic_stop_white_24dp" />
+            android:src="@drawable/ic_stop_white_24dp" /-->
 </FrameLayout>

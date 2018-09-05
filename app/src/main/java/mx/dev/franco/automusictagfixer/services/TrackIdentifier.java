@@ -31,6 +31,7 @@ public class TrackIdentifier implements  GnResponseListener.GnListener{
     private Track mTrack;
     private Deque<GnMusicIdFile> mDequeue = new ArrayDeque<>();
     private HashMap<String,String> mGnStatusToDisplay;
+    private GnMusicIdFile mGnMusicIdFile;
     public TrackIdentifier(GnResponseListener.GnListener listener) {
         mGnListener = listener;
         mGnResponseListener = new GnResponseListener(this);
@@ -50,15 +51,13 @@ public class TrackIdentifier implements  GnResponseListener.GnListener{
         mGnListener.onStartIdentification(mTrack);
         //set options of track id process
         try {
-            GnMusicIdFile gnMusicIdFile = new GnMusicIdFile(GnService.sGnUser, mGnResponseListener);
-            gnMusicIdFile.options().lookupData(GnLookupData.kLookupDataContent, true);
-            gnMusicIdFile.options().preferResultLanguage(GnLanguage.kLanguageSpanish);
+            mGnMusicIdFile = new GnMusicIdFile(GnService.sGnUser, mGnResponseListener);
+            mGnMusicIdFile.options().lookupData(GnLookupData.kLookupDataContent, true);
+            mGnMusicIdFile.options().preferResultLanguage(GnLanguage.kLanguageSpanish);
             //queue will be processed one by one
-            gnMusicIdFile.options().batchSize(1);
-            //gnMusicIdFile.waitForComplete();
-            gnMusicIdFile.options().threadPriority(GnThreadPriority.kThreadPriorityNormal);
+            //mGnMusicIdFile.options().batchSize(1);
             //get the fileInfoManager
-            GnMusicIdFileInfoManager gnMusicIdFileInfoManager = gnMusicIdFile.fileInfos();
+            GnMusicIdFileInfoManager gnMusicIdFileInfoManager = mGnMusicIdFile.fileInfos();
             //add all info available for more accurate results.
             //Check if file already was previously added.
             GnMusicIdFileInfo gnMusicIdFileInfo = gnMusicIdFileInfoManager.add(mTrack.getPath());
@@ -66,8 +65,9 @@ public class TrackIdentifier implements  GnResponseListener.GnListener{
             gnMusicIdFileInfo.trackTitle(mTrack.getTitle());
             gnMusicIdFileInfo.trackArtist(mTrack.getArtist());
             gnMusicIdFileInfo.albumTitle(mTrack.getAlbum());
-            mDequeue.add(gnMusicIdFile);
-            gnMusicIdFile.doTrackIdAsync(GnMusicIdFileProcessType.kQueryReturnSingle,GnMusicIdFileResponseType.kResponseAlbums);
+            //mDequeue.add(gnMusicIdFile);
+            mGnMusicIdFile.doTrackIdAsync(GnMusicIdFileProcessType.kQueryReturnSingle,GnMusicIdFileResponseType.kResponseAlbums);
+            //mGnMusicIdFile.doLibraryIdAsync(GnMusicIdFileResponseType.kResponseAlbums);
         } catch (GnException e) {
             e.printStackTrace();
             Crashlytics.logException(e);
@@ -76,11 +76,14 @@ public class TrackIdentifier implements  GnResponseListener.GnListener{
     }
 
     public void cancelIdentification(){
-        if(mDequeue.peek() != null){
-            mGnResponseListener.setCancel(true);
-            mDequeue.poll().cancel();
-            mGnListener.onIdentificationCancelled("Cancelled", mTrack);
+        //if(mDequeue.peek() != null){
+        if(mGnMusicIdFile != null){
+            //mDequeue.poll().cancel();
+            mGnMusicIdFile.cancel();
         }
+        mGnResponseListener.setCancel(true);
+        mGnListener.onIdentificationCancelled("Cancelled", mTrack);
+
         clear();
     }
 

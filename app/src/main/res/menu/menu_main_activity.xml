@@ -23,7 +23,8 @@
     <item
         android:id="@+id/sortBy"
         app:showAsAction="never"
-        android:title="@string/sort_by">
+        android:title="@string/sort_by"
+        android:visible="false">
         <menu>
             <item
                 android:id="@+id/action_sort_by_path"

@@ -32,7 +32,7 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
     private TrackDetailInteractor mInteractor;
     private TrackDataLoader.TrackDataItem mCurrentTrackDataItem;
     private Track mCurrentTrack;
-    private static volatile TrackIdentifier sIdentifier;
+    private TrackIdentifier mIdentifier;
     private int mCurrentId;
     private Cache<Integer, GnResponseListener.IdentificationResults> mCache = new DownloadedTrackDataCacheImpl.Builder().build();
     private static Fixer sFixer;
@@ -213,8 +213,8 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
     @Override
     public void destroy() {
         mCache.getCache().delete(mCurrentId);
-        if(sIdentifier != null){
-            sIdentifier.cancelIdentification();
+        if(mIdentifier != null){
+            mIdentifier.cancelIdentification();
         }
 
         if(sFixer != null){
@@ -222,7 +222,7 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
         }
         mCache = null;
         sFixer = null;
-        sIdentifier = null;
+        mIdentifier = null;
         mView = null;
         resourceManager = null;
         connectivityDetector = null;
@@ -279,17 +279,17 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
                 return;
             }
 
-            sIdentifier = new TrackIdentifier(this);
-            sIdentifier.setTrack(mCurrentTrack);
-            sIdentifier.execute();
+            mIdentifier = new TrackIdentifier(this);
+            mIdentifier.setTrack(mCurrentTrack);
+            mIdentifier.execute();
         }
     }
 
     public void cancelIdentification(){
-        if(sIdentifier != null){
-            sIdentifier.cancelIdentification();
+        if(mIdentifier != null){
+            mIdentifier.cancelIdentification();
         }
-        sIdentifier = null;
+        mIdentifier = null;
     }
 
     @Override
@@ -314,7 +314,7 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
             mView.identificationError(error);
 
         }
-        sIdentifier = null;
+        mIdentifier = null;
     }
 
     @Override
@@ -325,7 +325,7 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
             mView.hideProgress();
             mView.identificationNotFound();
         }
-        sIdentifier = null;
+        mIdentifier = null;
     }
 
     @Override
@@ -347,14 +347,14 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
             mView.identificationComplete(results);
 
         }
-        sIdentifier = null;
+        mIdentifier = null;
     }
 
     @Override
     public void identificationCompleted(Track track) {
         if(mView != null)
             mView.hideProgress();
-        sIdentifier = null;
+        mIdentifier = null;
     }
 
     @Override
@@ -375,7 +375,7 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
             mView.hideStatus();
             mView.identificationCancelled();
         }
-        sIdentifier = null;
+        mIdentifier = null;
     }
 
     @Override
