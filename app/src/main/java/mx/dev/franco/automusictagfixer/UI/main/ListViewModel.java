@@ -16,6 +16,7 @@ import mx.dev.franco.automusictagfixer.media_store_retriever.AsyncFileReader;
 import mx.dev.franco.automusictagfixer.network.ConnectivityDetector;
 import mx.dev.franco.automusictagfixer.repository.TrackRepository;
 import mx.dev.franco.automusictagfixer.room.Track;
+import mx.dev.franco.automusictagfixer.services.FixerTrackService;
 import mx.dev.franco.automusictagfixer.services.ServiceHelper;
 import mx.dev.franco.automusictagfixer.services.gnservice.GnService;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
@@ -285,6 +286,16 @@ public class ListViewModel extends ViewModel {
             return false;
         }
 
+        return true;
+    }
+
+    public boolean sortTracks(String by, int order) {
+        //wait for sorting while correction task is running
+        if(serviceHelper.checkIfServiceIsRunning(FixerTrackService.class.getName())){
+            return false;
+        }
+
+        mTracks = trackRepository.getAllTracks(by, order);
         return true;
     }
 }

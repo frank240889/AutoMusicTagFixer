@@ -1,6 +1,8 @@
 package mx.dev.franco.automusictagfixer.repository;
 
 import android.arch.lifecycle.LiveData;
+import android.arch.persistence.db.SimpleSQLiteQuery;
+import android.arch.persistence.db.SupportSQLiteQuery;
 import android.content.Context;
 import android.os.AsyncTask;
 
@@ -18,18 +20,34 @@ public class TrackRepository {
     private TrackDAO mTrackDao;
     private LiveData<List<Track>> mAllTrack;
     private AbstractSharedPreferences mAbstractSharedPreferences;
-    private Context mContext;
     public TrackRepository(TrackRoomDatabase db, AbstractSharedPreferences abstractSharedPreferences, Context context){
         mTrackDao = db.trackDao();
         mAbstractSharedPreferences = abstractSharedPreferences;
-        mContext = context;
         String order = mAbstractSharedPreferences.getString(Constants.SORT_KEY);
         if(order == null)
-            order = " TITLE ASC ";
-        mAllTrack = mTrackDao.getAllTracks(order);
+            order = " title ASC ";
+        String query = "SELECT * FROM track_table ORDER BY ?";
+        SupportSQLiteQuery  sqLiteQuery = new SimpleSQLiteQuery(query, new Object[]{order});
+        mAllTrack = mTrackDao.getAllTracks(sqLiteQuery);
     }
 
     public LiveData<List<Track>> getAllTracks(){
+        return mAllTrack;
+    }
+
+    public LiveData<List<Track>> getAllTracks(String orderBy, int mode){
+        String sortMode;
+        if(mode == 0){
+            sortMode = " ASC";
+        }
+        else {
+            sortMode = " DESC";
+        }
+        String sortBy = orderBy + sortMode;
+        String query = "SELECT * FROM track_table ORDER BY ?";
+        SupportSQLiteQuery sqLiteQuery = new SimpleSQLiteQuery(query, new Object[]{sortBy});
+        mAllTrack = mTrackDao.getAllTracks(sqLiteQuery);
+        mAbstractSharedPreferences.putString(Constants.SORT_KEY,orderBy);
         return mAllTrack;
     }
 
@@ -72,11 +90,6 @@ public class TrackRepository {
     public List<Track> search(String query){
         return mTrackDao.search(query);
     }
-
-    private LiveData<List<Track>> updateTrackList() {
-        return mAllTrack;
-    }
-
 
     private static class checkAll extends AsyncTask<Void, Void, Void> {
 

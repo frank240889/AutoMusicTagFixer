@@ -64,7 +64,7 @@ import mx.dev.franco.automusictagfixer.utilities.Constants;
 import mx.dev.franco.automusictagfixer.utilities.RequiredPermissions;
 
 public class MainActivity extends AppCompatActivity
-        implements ResponseReceiver.OnResponse, ListFragment.OnInteractionFragment, NavigationView.OnNavigationItemSelectedListener{
+        implements ResponseReceiver.OnResponse, NavigationView.OnNavigationItemSelectedListener{
     public static String TAG = MainActivity.class.getName();
 
     //the receiver that handles the intents from FixerTrackService
@@ -443,15 +443,6 @@ public class MainActivity extends AppCompatActivity
         localBroadcastManager.registerReceiver(mReceiver, startTaskFilter);
         localBroadcastManager.registerReceiver(mReceiver, errorTask);
 
-    }
-
-    @Override
-    public void onClickCover() {
-        /*TrackDetailFragment trackDetailFragment = TrackDetailFragment.newInstance("","");
-        getSupportFragmentManager().beginTransaction().
-                replace(R.id.fragment_container, trackDetailFragment).
-                addToBackStack(TrackDetailFragment.TAG).
-                commit();*/
     }
 
     @Override

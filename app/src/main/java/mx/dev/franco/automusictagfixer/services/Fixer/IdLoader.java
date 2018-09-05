@@ -1,12 +1,15 @@
 package mx.dev.franco.automusictagfixer.services.Fixer;
 
+import android.arch.persistence.db.SimpleSQLiteQuery;
+import android.arch.persistence.db.SupportSQLiteQuery;
 import android.os.AsyncTask;
 
 import java.util.List;
 
 import mx.dev.franco.automusictagfixer.room.TrackRoomDatabase;
+import mx.dev.franco.automusictagfixer.utilities.Constants;
 
-public class IdLoader extends AsyncTask<Void, Void, List<Integer>> {
+public class IdLoader extends AsyncTask<String, Void, List<Integer>> {
     private DataLoader<List<Integer>> mDataLoader;
     private TrackRoomDatabase mTrackRoomDatabase;
 
@@ -16,8 +19,13 @@ public class IdLoader extends AsyncTask<Void, Void, List<Integer>> {
     }
 
     @Override
-    protected List<Integer> doInBackground(Void... voids) {
-        return mTrackRoomDatabase.trackDao().getCheckedTracks();
+    protected List<Integer> doInBackground(String... sort) {
+        String order = sort[0];
+        if(order == null)
+            order = " title ASC ";
+        String query = "SELECT mediastore_id FROM track_table WHERE selected = 1 ORDER BY ?";
+        SupportSQLiteQuery sqLiteQuery = new SimpleSQLiteQuery(query, new Object[]{order});
+        return mTrackRoomDatabase.trackDao().getCheckedTracks(sqLiteQuery);
     }
 
     @Override

@@ -54,12 +54,9 @@ import mx.dev.franco.automusictagfixer.utilities.RequiredPermissions;
 import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 import mx.dev.franco.automusictagfixer.utilities.StorageHelper;
 
-public class ListFragment extends Fragment implements AudioItemHolder.ClickListener,Observer<List<Track>> {
+public class ListFragment extends Fragment implements
+        AudioItemHolder.ClickListener/*,Observer<List<Track>>*/, TrackAdapter.OnDataSourceChangeListener {
     private static final String TAG = ListFragment.class.getName();
-
-    public interface OnInteractionFragment{
-        void onClickCover();
-    }
 
     private GridLayoutManager mGridLayoutManager;
     //A simple texview to show a message when no songs were identificationFound
@@ -78,7 +75,6 @@ public class ListFragment extends Fragment implements AudioItemHolder.ClickListe
     private ListViewModel mListViewModel;
     private ActionBar mActionBar;
     private View mLayout;
-    private OnInteractionFragment mListener;
 
     @Inject
     ServiceHelper serviceHelper;
@@ -95,7 +91,6 @@ public class ListFragment extends Fragment implements AudioItemHolder.ClickListe
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        mListener = (OnInteractionFragment) context;
     }
 
     @Override
@@ -175,7 +170,7 @@ public class ListFragment extends Fragment implements AudioItemHolder.ClickListe
         mListViewModel.actionIsTrackInaccessible().observe(this, this::showInaccessibleTrack);
         mListViewModel.noFilesFound().observe(this, this::noFilesFoundMessage);
         mListViewModel.showProgress().observe(this, this::showProgress);
-        mListViewModel.getAllTracks().observe(this, this);
+        //mListViewModel.getAllTracks().observe(this, this);
         mListViewModel.getAllTracks().observe(this,mAdapter);
 
         mSwipeRefreshLayout.setOnRefreshListener(()->{
@@ -274,8 +269,12 @@ public class ListFragment extends Fragment implements AudioItemHolder.ClickListe
         return super.onOptionsItemSelected(menuItem);
     }
 
-    public boolean sort(String by, int order){
+    /*public boolean sort(String by, int order){
         return mAdapter.sortBy(by, order);
+    }*/
+
+    public boolean sort(String by, int order){
+        return mListViewModel.sortTracks(by, order);
     }
 
     public void checkAll(){
@@ -305,7 +304,6 @@ public class ListFragment extends Fragment implements AudioItemHolder.ClickListe
     @Override
     public void onDetach() {
         super.onDetach();
-        mListener = null;
     }
 
     public void showViewPermissionMessage() {
@@ -385,12 +383,12 @@ public class ListFragment extends Fragment implements AudioItemHolder.ClickListe
     /**
      * Runs when a modification in database
      * occurred
-     * @param tracks The list with the new data.
+        The list with the new data.
      */
-    @Override
+    /*@Override
     public void onChanged(@Nullable List<Track> tracks) {
 
-        mListViewModel.setProgress(false);
+        //mListViewModel.setProgress(false);
         Log.d("tracks != null", (tracks != null) + "");
         if(tracks != null) {
             if(tracks.isEmpty()) {
@@ -413,6 +411,35 @@ public class ListFragment extends Fragment implements AudioItemHolder.ClickListe
                 mMessage.setVisibility(View.GONE);
             }
         }
+    }*/
+
+    @Override
+    public void onEmptyDatasource() {
+        mFabStopTask.hide();
+        mFabStartTask.hide();
+        mMessage.setVisibility(View.VISIBLE);
+        mMessage.setText(R.string.no_items_found);
+    }
+
+    @Override
+    public void onChangeDatasource(int items) {
+        boolean isServiceRunning = serviceHelper.checkIfServiceIsRunning(FixerTrackService.CLASS_NAME);
+        if(!isServiceRunning){
+            mFabStartTask.show();
+            mFabStopTask.hide();
+        }
+        else {
+            mFabStartTask.hide();
+            mFabStopTask.show();
+        }
+        mActionBar.setTitle(items+ " " +getString(R.string.tracks));
+        mMessage.setVisibility(View.GONE);
+    }
+
+    @Override
+    public void onCurrentProcessing() {
+        mFabStartTask.hide();
+        mFabStopTask.show();
     }
 
 
@@ -453,7 +480,12 @@ public class ListFragment extends Fragment implements AudioItemHolder.ClickListe
     private void startCorrection(int id) {
         Intent intent = new Intent(getActivity(),FixerTrackService.class);
         intent.putExtra(Constants.MEDIA_STORE_ID, id);
-        getContext().startService(intent);
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
+            getContext().startForegroundService(intent);
+        }
+        else {
+            getContext().startService(intent);
+        }
     }
 
     public void correctionStarted() {
