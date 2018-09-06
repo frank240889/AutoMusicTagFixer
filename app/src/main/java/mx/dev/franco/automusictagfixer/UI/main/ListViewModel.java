@@ -122,6 +122,7 @@ public class ListViewModel extends ViewModel {
     }
 
     public void checkAllItems(){
+
         boolean allChecked = sharedPreferences.getBoolean(Constants.ALL_ITEMS_CHECKED);
         if(allChecked){
             sharedPreferences.putBoolean(Constants.ALL_ITEMS_CHECKED, false);
@@ -194,16 +195,6 @@ public class ListViewModel extends ViewModel {
             mTrack.setValue(viewWrapper);
         }
 
-    }
-
-    public void setChecked(Track track){
-        if(track.checked() == 1){
-            track.setChecked(0);
-        }
-        else {
-            track.setChecked(1);
-        }
-        trackRepository.update(track);
     }
 
     public void updateTrackList(){

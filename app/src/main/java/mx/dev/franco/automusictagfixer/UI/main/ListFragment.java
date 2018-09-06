@@ -444,12 +444,12 @@ public class ListFragment extends Fragment implements
     private void startCorrection(int id) {
         Intent intent = new Intent(getActivity(),FixerTrackService.class);
         intent.putExtra(Constants.MEDIA_STORE_ID, id);
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
-            getContext().startForegroundService(intent);
-        }
-        else {
+        //if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
+        //    getContext().startForegroundService(intent);
+        //}
+        //else {
             getContext().startService(intent);
-        }
+        //}
     }
 
     public void correctionStarted() {

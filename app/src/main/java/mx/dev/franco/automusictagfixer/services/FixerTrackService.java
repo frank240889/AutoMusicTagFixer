@@ -1,6 +1,8 @@
 package mx.dev.franco.automusictagfixer.services;
 
 import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
@@ -9,11 +11,14 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
+import android.support.annotation.RequiresApi;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
@@ -33,6 +38,7 @@ import java.util.List;
 import javax.inject.Inject;
 
 import mx.dev.franco.automusictagfixer.AutoMusicTagFixer;
+import mx.dev.franco.automusictagfixer.BuildConfig;
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.UI.main.MainActivity;
 import mx.dev.franco.automusictagfixer.list.AudioItem;
@@ -90,6 +96,7 @@ public class FixerTrackService extends Service implements GnResponseListener.GnL
     public void onCreate(){
         super.onCreate();
         setupReceiver();
+
         notifyStartingCorrection();
     }
 
@@ -251,7 +258,8 @@ public class FixerTrackService extends Service implements GnResponseListener.GnL
 
     private void notifyFinished(){
         notifyCompleteCorrection();
-        stopForeground(true);
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O)
+            stopForeground(true);
     }
 
     private void stopIdentification(){
@@ -298,11 +306,20 @@ public class FixerTrackService extends Service implements GnResponseListener.GnL
         stopTaskIntent.setAction(Constants.Actions.ACTION_COMPLETE_TASK);
         PendingIntent pendingStopIntent = PendingIntent.getService(this, 0, stopTaskIntent, 0);
 
+        NotificationCompat.Builder builder;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            String channelId = createNotificationChannel();
+            builder = new NotificationCompat.Builder(this, channelId);
+        }
+        else {
+            builder = new NotificationCompat.Builder(this, Constants.Application.FULL_QUALIFIED_NAME);
+        }
+
         Bitmap icon = BitmapFactory.decodeResource(getResources(),
                 R.mipmap.ic_launcher);
 
-            mNotification = new NotificationCompat.Builder(this, Constants.Application.FULL_QUALIFIED_NAME)
-                    .setContentTitle(title != null ? title : "")
+
+                    mNotification = builder.setContentTitle(title != null ? title : "")
                     .setContentText(status != null ? status : "")
                     .setSubText(contentText != null ? contentText : getString(R.string.fixing_task))
                     .setAutoCancel(true)
@@ -315,8 +332,27 @@ public class FixerTrackService extends Service implements GnResponseListener.GnL
                     .addAction(R.drawable.ic_stat_name, getString(R.string.stop), pendingStopIntent)
                     .build();
 
-        startForeground(R.string.app_name, mNotification);
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            startForeground(1, mNotification);
+        }
+        else {
+            startForeground(R.string.app_name, mNotification);
+        }
 
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private String createNotificationChannel(){
+        String channelId = BuildConfig.APPLICATION_ID + "." + FixerTrackService.CLASS_NAME;
+        String channelName = FixerTrackService.CLASS_NAME;
+        NotificationChannel chan = new NotificationChannel(channelId,channelName, NotificationManager.IMPORTANCE_NONE);
+        chan.setLightColor(Color.BLUE);
+        chan.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
+        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        if (notificationManager != null) {
+            notificationManager.createNotificationChannel(chan);
+        }
+        return channelId;
     }
 
     private void notifyCompleteCorrection(){

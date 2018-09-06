@@ -6,6 +6,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 
 import java.io.File;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -175,9 +176,27 @@ public class AsyncFileReader extends AsyncTask<Void, Void, Void> {
 
     private Track buildTrack(Cursor cursor){
         int mediaStoreId = cursor.getInt(0);//mediastore id
-        String title = cursor.getString(1);
-        String artist = cursor.getString(2);
-        String album = cursor.getString(3);
+        String title = null;
+        try {
+            title = new String(cursor.getString(1).getBytes(), "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            title = cursor.getString(1);
+            e.printStackTrace();
+        }
+        String artist = null;
+        try {
+            artist = new String(cursor.getString(2).getBytes(), "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+            artist = cursor.getString(2);
+        }
+        String album = null;
+        try {
+            album = new String(cursor.getString(3).getBytes(), "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+            album = cursor.getString(3);
+        }
         String fullPath = Uri.parse(cursor.getString(4)).toString(); //MediaStore.Audio.Media.DATA column is the path of file
         Track track = new Track(title,artist,album,fullPath);
         track.setMediaStoreId(mediaStoreId);

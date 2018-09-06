@@ -26,8 +26,8 @@ public class TrackRepository {
         String order = mAbstractSharedPreferences.getString(Constants.SORT_KEY);
         if(order == null)
             order = " title ASC ";
-        String query = "SELECT * FROM track_table ORDER BY ?";
-        SupportSQLiteQuery  sqLiteQuery = new SimpleSQLiteQuery(query, new Object[]{order});
+        String query = "SELECT * FROM track_table ORDER BY" + order;
+        SupportSQLiteQuery  sqLiteQuery = new SimpleSQLiteQuery(query);
         mAllTrack = mTrackDao.getAllTracks(sqLiteQuery);
     }
 

@@ -106,38 +106,6 @@ public class TrackAdapter extends RecyclerView.Adapter<mx.dev.franco.automusicta
                     holder.checkBox.setChecked(track.checked() == 1);
                 }
 
-                if (key.equals("state")) {
-                    switch (track.getState()) {
-                        //case TrackState.TAGS_CORRECTED_BY_SEMIAUTOMATIC_MODE:
-                        case TrackState.ALL_TAGS_FOUND:
-                        //case TrackState.TAGS_EDITED_BY_USER:
-                            holder.stateMark.setImageResource(R.drawable.ic_done_all_white);
-                            holder.stateMark.setVisibility(VISIBLE);
-                            break;
-                        case TrackState.ALL_TAGS_NOT_FOUND:
-                            holder.stateMark.setImageResource(R.drawable.ic_done_white);
-                            holder.stateMark.setVisibility(VISIBLE);
-                            break;
-                        /*case TrackState.NO_TAGS_FOUND:
-                            holder.stateMark.setImageResource(R.drawable.ic_error_outline_white);
-                            holder.stateMark.setVisibility(VISIBLE);
-                            break;
-                        case TrackState.FILE_ERROR_READ:
-                        case TrackState.COULD_NOT_APPLIED_CHANGES:
-                        case TrackState.COULD_RESTORE_FILE_TO_ITS_LOCATION:
-                        case TrackState.COULD_NOT_CREATE_AUDIOFILE:
-                        case TrackState.COULD_NOT_CREATE_TEMP_FILE:
-                        case TrackState.FILE_IN_SD_WITHOUT_PERMISSION:
-                            holder.stateMark.setImageResource(R.drawable.ic_highlight_off_white_material);
-                            holder.stateMark.setVisibility(VISIBLE);
-                            break;*/
-                        default:
-                            holder.stateMark.setImageResource(0);
-                            holder.stateMark.setVisibility(GONE);
-                            break;
-                    }
-                }
-
                 if (key.equals("processing")) {
                     if (track.processing() == 1) {
                         holder.progressBar.setVisibility(VISIBLE);
@@ -217,6 +185,38 @@ public class TrackAdapter extends RecyclerView.Adapter<mx.dev.franco.automusicta
                             }
                         });
                         asyncLoaderCover.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, track.getPath());
+                    }
+                }
+
+                if (key.equals("state")) {
+                    switch (track.getState()) {
+                        //case TrackState.TAGS_CORRECTED_BY_SEMIAUTOMATIC_MODE:
+                        case TrackState.ALL_TAGS_FOUND:
+                            //case TrackState.TAGS_EDITED_BY_USER:
+                            holder.stateMark.setImageResource(R.drawable.ic_done_all_white);
+                            holder.stateMark.setVisibility(VISIBLE);
+                            break;
+                        case TrackState.ALL_TAGS_NOT_FOUND:
+                            holder.stateMark.setImageResource(R.drawable.ic_done_white);
+                            holder.stateMark.setVisibility(VISIBLE);
+                            break;
+                        /*case TrackState.NO_TAGS_FOUND:
+                            holder.stateMark.setImageResource(R.drawable.ic_error_outline_white);
+                            holder.stateMark.setVisibility(VISIBLE);
+                            break;
+                        case TrackState.FILE_ERROR_READ:
+                        case TrackState.COULD_NOT_APPLIED_CHANGES:
+                        case TrackState.COULD_RESTORE_FILE_TO_ITS_LOCATION:
+                        case TrackState.COULD_NOT_CREATE_AUDIOFILE:
+                        case TrackState.COULD_NOT_CREATE_TEMP_FILE:
+                        case TrackState.FILE_IN_SD_WITHOUT_PERMISSION:
+                            holder.stateMark.setImageResource(R.drawable.ic_highlight_off_white_material);
+                            holder.stateMark.setVisibility(VISIBLE);
+                            break;*/
+                        default:
+                            holder.stateMark.setImageResource(0);
+                            holder.stateMark.setVisibility(GONE);
+                            break;
                     }
                 }
             }
