@@ -270,12 +270,8 @@ public class ListFragment extends Fragment implements
     }
 
     public boolean sort(String by, int order){
-        return mAdapter.sortBy(by, order);
+        return mListViewModel.sortTracks(by, order, mAdapter.getDatasource());
     }
-
-    /*public boolean sort(String by, int order){
-        return mListViewModel.sortTracks(by, order);
-    }*/
 
     public void checkAll(){
         mListViewModel.checkAllItems();
@@ -387,8 +383,6 @@ public class ListFragment extends Fragment implements
      */
     @Override
     public void onChanged(@Nullable List<Track> tracks) {
-
-        //mListViewModel.setProgress(false);
         Log.d("tracks != null", (tracks != null) + "");
         if(tracks != null) {
             if(tracks.isEmpty()) {

@@ -35,22 +35,6 @@ public class TrackRepository {
         return mAllTrack;
     }
 
-    public LiveData<List<Track>> getAllTracks(String orderBy, int mode){
-        String sortMode;
-        if(mode == 0){
-            sortMode = " ASC";
-        }
-        else {
-            sortMode = " DESC";
-        }
-        String sortBy = orderBy + sortMode;
-        String query = "SELECT * FROM track_table ORDER BY ?";
-        SupportSQLiteQuery sqLiteQuery = new SimpleSQLiteQuery(query, new Object[]{sortBy});
-        mAllTrack = mTrackDao.getAllTracks(sqLiteQuery);
-        mAbstractSharedPreferences.putString(Constants.SORT_KEY,orderBy);
-        return mAllTrack;
-    }
-
     public void getDataFromTracksFirst(final AsyncFileReader.IRetriever iRetriever){
         boolean databaseCreationCompleted = mAbstractSharedPreferences.getBoolean(Constants.COMPLETE_READ);
         if(!databaseCreationCompleted) {

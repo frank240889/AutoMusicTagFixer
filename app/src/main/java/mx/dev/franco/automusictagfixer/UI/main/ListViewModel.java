@@ -1,16 +1,24 @@
 package mx.dev.franco.automusictagfixer.UI.main;
 
+import android.arch.core.util.Function;
 import android.arch.lifecycle.LiveData;
+import android.arch.lifecycle.MediatorLiveData;
 import android.arch.lifecycle.MutableLiveData;
+import android.arch.lifecycle.Observer;
+import android.arch.lifecycle.Transformations;
 import android.arch.lifecycle.ViewModel;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import javax.inject.Inject;
 
 import mx.dev.franco.automusictagfixer.AutoMusicTagFixer;
 import mx.dev.franco.automusictagfixer.R;
+import mx.dev.franco.automusictagfixer.datasource.Sorter;
 import mx.dev.franco.automusictagfixer.list.AudioItem;
 import mx.dev.franco.automusictagfixer.media_store_retriever.AsyncFileReader;
 import mx.dev.franco.automusictagfixer.network.ConnectivityDetector;
@@ -24,6 +32,8 @@ import mx.dev.franco.automusictagfixer.utilities.Tagger;
 import mx.dev.franco.automusictagfixer.utilities.resource_manager.ResourceManager;
 import mx.dev.franco.automusictagfixer.utilities.shared_preferences.AbstractSharedPreferences;
 
+import static mx.dev.franco.automusictagfixer.datasource.TrackAdapter.ASC;
+
 public class ListViewModel extends ViewModel {
     private static final String TAG = ListViewModel.class.getName();
     private MutableLiveData<ListFragment.ViewWrapper> mTrack = new MutableLiveData<>();
@@ -31,7 +41,8 @@ public class ListViewModel extends ViewModel {
     private MutableLiveData<String> mTrackIsProcessing = new MutableLiveData<>();
     private MutableLiveData<ListFragment.ViewWrapper> mTrackInaccessible = new MutableLiveData<>();
     private MutableLiveData<Boolean> mEmptyList = new MutableLiveData<>();
-    private LiveData<List<Track>> mTracks;
+    private MediatorLiveData<List<Track>> mTracks = new MediatorLiveData<>();
+    private LiveData<List<Track>> mOrderedData;
     private MutableLiveData<ListFragment.ViewWrapper> mCanOpenDetails = new MutableLiveData<>();
     private MutableLiveData<Integer> mStartAutomaticMode = new MutableLiveData<>();
     private MutableLiveData<Boolean> mShowProgress = new MutableLiveData<>();
@@ -52,7 +63,14 @@ public class ListViewModel extends ViewModel {
     public ListViewModel() {
         AutoMusicTagFixer.getContextComponent().inject(this);
         mEmptyList.setValue(false);
-        mTracks = trackRepository.getAllTracks();
+        mOrderedData = trackRepository.getAllTracks();
+        //mTracks = trackRepository.getAllTracks();
+        mTracks.addSource(mOrderedData, new Observer<List<Track>>() {
+            @Override
+            public void onChanged(@Nullable List<Track> tracks) {
+                mTracks.setValue(tracks);
+            }
+        });
     }
 
     public LiveData<List<Track>> getAllTracks(){
@@ -262,40 +280,42 @@ public class ListViewModel extends ViewModel {
         return mStartAutomaticMode;
     }
 
-    private boolean evaluateTrack(ListFragment.ViewWrapper viewWrapper){
-        boolean isAccessible = Tagger.checkFileIntegrity(viewWrapper.track.getPath());
-        if(!isAccessible){
-            mTrackInaccessible.setValue(viewWrapper);
-            return false;
-        }
-
-        if(viewWrapper.track.processing() == 1){
-            mTrackIsProcessing.setValue(resourceManager.getString(R.string.current_file_processing));
-            return false;
-        }
-
-        if(!ConnectivityDetector.sIsConnected){
-            mShowMessage.setValue(resourceManager.getString(R.string.no_internet_connection_automatic_mode));
-            connectivityDetector.onStartTestingNetwork();
-            return false;
-        }
-
-        if(!GnService.sApiInitialized || GnService.sIsInitializing) {
-            mShowMessage.setValue(resourceManager.getString(R.string.initializing_recognition_api));
-            gnService.initializeAPI();
-            return false;
-        }
-
-        return true;
-    }
-
-    public boolean sortTracks(String by, int order) {
+    /**
+     * Sort list in desired order
+     * @param by the field/column to sort by
+     * @param orderType the sort type, may be ascendant or descendant
+     * @param tracks Current tracks in adapter.
+     */
+    public boolean sortTracks(String by, int orderType, List<Track> tracks) {
         //wait for sorting while correction task is running
         if(serviceHelper.checkIfServiceIsRunning(FixerTrackService.class.getName())){
             return false;
         }
 
-        mTracks = trackRepository.getAllTracks(by, order);
+        if(tracks == null || tracks.isEmpty())
+            return false;
+
+        String orderBy;
+        if(orderType == ASC){
+            orderBy = " " + by + " ASC ";
+        }
+        else {
+            orderBy = " " + by + " DESC ";
+        }
+
+        String currentOrder = sharedPreferences.getString(Constants.SORT_KEY);
+        //No need to re sort if is the same order
+        if(currentOrder != null && orderBy.equals(currentOrder))
+            return true;
+
+        List<Track> currentList = new ArrayList<>(tracks);
+        Sorter sSorter = Sorter.getInstance();
+        sSorter.setSortParams(by, orderType);
+        Collections.sort(currentList, sSorter);
+
+
+        sharedPreferences.putString(Constants.SORT_KEY,orderBy);
+        mTracks.setValue(currentList);
         return true;
     }
 }

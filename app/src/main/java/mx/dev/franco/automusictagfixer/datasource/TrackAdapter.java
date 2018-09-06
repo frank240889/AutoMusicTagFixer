@@ -415,39 +415,6 @@ public class TrackAdapter extends RecyclerView.Adapter<mx.dev.franco.automusicta
 
     }
 
-    /**
-     * Sort list in desired order
-     * @param sortBy the field/column to sort by
-     * @param sortType the sort type, may be ascendant or descendant
-     */
-    public boolean sortBy(String sortBy, int sortType){
-
-        //if no songs, no case sort anything
-        if(mTrackList.size() == 0 ){
-            return false;
-        }
-
-        //wait for sorting while correction task is running
-        if(serviceHelper.checkIfServiceIsRunning(FixerTrackService.class.getName())){
-            return false;
-        }
-
-        sSorter.setSortParams(sortBy, sortType);
-        Collections.sort(mTrackList, sSorter);
-        notifyDataSetChanged();
-
-        String order;
-        if(sortType == ASC){
-            order = " " + sortBy + " ASC ";
-        }
-        else {
-            order = " " + sortBy + " DESC ";
-        }
-
-        sharedPreferences.putString(Constants.SORT_KEY,order);
-        return true;
-    }
-
     private void updateInBackground(List<Track> newItems){
         if(mPendingUpdates != null) {
             mPendingUpdates.push(newItems);

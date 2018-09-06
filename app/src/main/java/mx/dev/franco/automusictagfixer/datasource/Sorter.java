@@ -12,7 +12,7 @@ import mx.dev.franco.automusictagfixer.room.Track;
 public class Sorter implements Comparator<Track> {
     //Comparator for ordering list
     private static Sorter mSorter;
-    //constants for indacate the sort order
+    //constants for indicate the sort order
     public static final int ASC = 0;
     public static final int DESC = 1;
     //default sort if no provided
