@@ -41,8 +41,7 @@ public class ListViewModel extends ViewModel {
     private MutableLiveData<String> mTrackIsProcessing = new MutableLiveData<>();
     private MutableLiveData<ListFragment.ViewWrapper> mTrackInaccessible = new MutableLiveData<>();
     private MutableLiveData<Boolean> mEmptyList = new MutableLiveData<>();
-    private MediatorLiveData<List<Track>> mTracks = new MediatorLiveData<>();
-    private LiveData<List<Track>> mOrderedData;
+    private LiveData<List<Track>> mTracks;
     private MutableLiveData<ListFragment.ViewWrapper> mCanOpenDetails = new MutableLiveData<>();
     private MutableLiveData<Integer> mStartAutomaticMode = new MutableLiveData<>();
     private MutableLiveData<Boolean> mShowProgress = new MutableLiveData<>();
@@ -63,14 +62,7 @@ public class ListViewModel extends ViewModel {
     public ListViewModel() {
         AutoMusicTagFixer.getContextComponent().inject(this);
         mEmptyList.setValue(false);
-        mOrderedData = trackRepository.getAllTracks();
-        //mTracks = trackRepository.getAllTracks();
-        mTracks.addSource(mOrderedData, new Observer<List<Track>>() {
-            @Override
-            public void onChanged(@Nullable List<Track> tracks) {
-                mTracks.setValue(tracks);
-            }
-        });
+        mTracks = trackRepository.getAllTracks();
     }
 
     public LiveData<List<Track>> getAllTracks(){
@@ -286,27 +278,16 @@ public class ListViewModel extends ViewModel {
         if(tracks == null || tracks.isEmpty())
             return false;
 
-        String orderBy;
-        if(orderType == ASC){
-            orderBy = " " + by + " ASC ";
-        }
-        else {
-            orderBy = " " + by + " DESC ";
-        }
+        trackRepository.sortTracks(by, orderType, tracks);
 
-        String currentOrder = sharedPreferences.getString(Constants.SORT_KEY);
-        //No need to re sort if is the same order
-        if(currentOrder != null && orderBy.equals(currentOrder))
-            return true;
-
-        List<Track> currentList = new ArrayList<>(tracks);
+        /*List<Track> currentList = new ArrayList<>(tracks);
         Sorter sSorter = Sorter.getInstance();
         sSorter.setSortParams(by, orderType);
         Collections.sort(currentList, sSorter);
 
 
         sharedPreferences.putString(Constants.SORT_KEY,orderBy);
-        mTracks.setValue(currentList);
+        mTracks.setValue(currentList);*/
         return true;
     }
 }
