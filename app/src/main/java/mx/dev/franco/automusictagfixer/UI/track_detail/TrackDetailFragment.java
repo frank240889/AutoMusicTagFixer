@@ -787,8 +787,11 @@ public class TrackDetailFragment extends Fragment implements EditableView, Resul
     @Override
     public void identificationCancelled() {
         Snackbar snackbar = AndroidUtils.getSnackbar(mLayout, getActivity().getApplicationContext());
-        snackbar.setText(R.string.identification_interrupted);
-        snackbar.show();
+        if (snackbar != null) {
+            snackbar.setText(R.string.identification_interrupted);
+            snackbar.show();
+        }
+
         if(mListener != null)
             mListener.onFinishedTask();
     }

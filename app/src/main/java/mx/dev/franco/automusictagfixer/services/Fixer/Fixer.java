@@ -196,16 +196,37 @@ public class Fixer extends AsyncTask<GnResponseListener.IdentificationResults,Vo
         if(hasError(mResultsCorrection.code))
             return false;
 
-        //Get tags that were updated to updated item in SearchActivity.
+        //Get tags that were updated to update item in internal app DB and MediaStore.
         if(mResultsCorrection.tagsUpdated != null) {
+            ContentValues updatedValues = new ContentValues();
+             boolean shouldUpdateMediaStore = false;
             if (mResultsCorrection.tagsUpdated.containsKey(FieldKey.TITLE)) {
                 mTrack.setTitle((String) mResultsCorrection.tagsUpdated.get(FieldKey.TITLE));
+                updatedValues.put(MediaStore.Audio.Media.TITLE, mTrack.getTitle());
+                shouldUpdateMediaStore = true;
             }
             if (mResultsCorrection.tagsUpdated.containsKey(FieldKey.ARTIST)) {
                 mTrack.setArtist((String) mResultsCorrection.tagsUpdated.get(FieldKey.ARTIST));
+                updatedValues.put(MediaStore.Audio.Media.ARTIST, mTrack.getArtist());
+                shouldUpdateMediaStore = true;
             }
             if (mResultsCorrection.tagsUpdated.containsKey(FieldKey.ALBUM)) {
                 mTrack.setAlbum((String) mResultsCorrection.tagsUpdated.get(FieldKey.ALBUM));
+                updatedValues.put(MediaStore.Audio.Media.ALBUM, mTrack.getAlbum());
+                shouldUpdateMediaStore = true;
+            }
+
+            if(shouldUpdateMediaStore && mTrack.getMediaStoreId() != -1){
+                String select = MediaStore.Audio.Media._ID + "= ?";
+                String[] selectArgs = new String[]{mTrack.getMediaStoreId() + ""};
+                boolean successMediaStore = context.getContentResolver().
+                        update(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                                updatedValues,
+                                select,
+                                selectArgs) == 1;
+
+                Log.d(TAG, "success media store update item: " + successMediaStore);
+
             }
         }
         //If some info was not identificationFound, mark its state as INCOMPLETE
@@ -219,12 +240,12 @@ public class Fixer extends AsyncTask<GnResponseListener.IdentificationResults,Vo
             mTrack.setState(AudioItem.STATUS_ALL_TAGS_FOUND);
         }
 
-        String selection = null;
-        String[] selectionArgs = null; //this is the old path
+
         String newAbsolutePath = null;
         //Rename file if this option is enabled in Settings
         if (mShouldRename) {
 
+            //User did no provide a name, so use title, artist and album
             if (mRenameTo.isEmpty()) {
                 newAbsolutePath = taggerHelper.renameFile(new File(mTrack.getPath()),
                         results.title,
@@ -237,10 +258,11 @@ public class Fixer extends AsyncTask<GnResponseListener.IdentificationResults,Vo
                         results.album);
             }
 
+            //Renamed successfully, so updat MediaStore
             if (newAbsolutePath != null) {
                 ContentValues newValuesToMediaStore = new ContentValues();
-                selection = MediaStore.Audio.Media._ID + "= ?";
-                selectionArgs = new String[]{mTrack.getMediaStoreId() + ""}; //this is the old path
+                String selection = MediaStore.Audio.Media._ID + "= ?";
+                String[] selectionArgs = new String[]{mTrack.getMediaStoreId() + ""}; //this is the old path
                 mResultsCorrection.pathTofileUpdated = newAbsolutePath;
                 newValuesToMediaStore.put(MediaStore.MediaColumns.DATA, newAbsolutePath);
                 if (mTrack.getMediaStoreId() != -1) {

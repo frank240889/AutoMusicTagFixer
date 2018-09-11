@@ -90,6 +90,8 @@ public class AndroidUtils {
     }
 
     public static Snackbar getSnackbar(View viewToAttach, Context context){
+        if(viewToAttach == null)
+            return null;
         Snackbar snackbar = Snackbar.make(viewToAttach,"",Snackbar.LENGTH_SHORT);
         TextView tv = snackbar.getView().findViewById(android.support.design.R.id.snackbar_text);
         snackbar.getView().setBackgroundColor(ContextCompat.getColor(context.getApplicationContext(),R.color.primaryLightColor));

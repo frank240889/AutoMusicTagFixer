@@ -198,8 +198,8 @@ public class Tagger {
                     resultCorrection.code = APPLIED_SAME_TAGS;
                 }
                 else {
-                    resultCorrection.tagsUpdated = tagsToUpdate;
                     resultCorrection = applyTagsForDocumentFileObject(file, tagsToUpdate, overWriteTags);
+                    resultCorrection.tagsUpdated = tagsToUpdate;
                 }
             }
         }
@@ -209,8 +209,8 @@ public class Tagger {
                 resultCorrection.code = APPLIED_SAME_TAGS;
             }
             else {
-                resultCorrection.tagsUpdated = tagsToUpdate;
                 resultCorrection = applyTagsForFileObject(file, tagsToUpdate, overWriteTags);
+                resultCorrection.tagsUpdated = tagsToUpdate;
             }
         }
 
