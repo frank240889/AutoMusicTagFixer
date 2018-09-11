@@ -278,16 +278,6 @@ public class ListViewModel extends ViewModel {
         if(tracks == null || tracks.isEmpty())
             return false;
 
-        trackRepository.sortTracks(by, orderType, tracks);
-
-        /*List<Track> currentList = new ArrayList<>(tracks);
-        Sorter sSorter = Sorter.getInstance();
-        sSorter.setSortParams(by, orderType);
-        Collections.sort(currentList, sSorter);
-
-
-        sharedPreferences.putString(Constants.SORT_KEY,orderBy);
-        mTracks.setValue(currentList);*/
-        return true;
+       return trackRepository.sortTracks(by, orderType);
     }
 }

@@ -65,7 +65,6 @@ public class TrackAdapter extends RecyclerView.Adapter<mx.dev.franco.automusicta
     private List<Track> mTrackList = new ArrayList<>();
     private AudioItemHolder.ClickListener mListener;
     private List<AsyncLoaderCover> mAsyncTaskQueue =  new ArrayList<>();
-    private static Sorter sSorter = Sorter.getInstance();
     private Deque<List<Track>> mPendingUpdates = new ArrayDeque<>();
     private static DiffExecutor sDiffExecutor;
 
@@ -190,9 +189,7 @@ public class TrackAdapter extends RecyclerView.Adapter<mx.dev.franco.automusicta
 
                 if (key.equals("state")) {
                     switch (track.getState()) {
-                        //case TrackState.TAGS_CORRECTED_BY_SEMIAUTOMATIC_MODE:
                         case TrackState.ALL_TAGS_FOUND:
-                            //case TrackState.TAGS_EDITED_BY_USER:
                             holder.stateMark.setImageResource(R.drawable.ic_done_all_white);
                             holder.stateMark.setVisibility(VISIBLE);
                             break;
@@ -200,19 +197,6 @@ public class TrackAdapter extends RecyclerView.Adapter<mx.dev.franco.automusicta
                             holder.stateMark.setImageResource(R.drawable.ic_done_white);
                             holder.stateMark.setVisibility(VISIBLE);
                             break;
-                        /*case TrackState.NO_TAGS_FOUND:
-                            holder.stateMark.setImageResource(R.drawable.ic_error_outline_white);
-                            holder.stateMark.setVisibility(VISIBLE);
-                            break;
-                        case TrackState.FILE_ERROR_READ:
-                        case TrackState.COULD_NOT_APPLIED_CHANGES:
-                        case TrackState.COULD_RESTORE_FILE_TO_ITS_LOCATION:
-                        case TrackState.COULD_NOT_CREATE_AUDIOFILE:
-                        case TrackState.COULD_NOT_CREATE_TEMP_FILE:
-                        case TrackState.FILE_IN_SD_WITHOUT_PERMISSION:
-                            holder.stateMark.setImageResource(R.drawable.ic_highlight_off_white_material);
-                            holder.stateMark.setVisibility(VISIBLE);
-                            break;*/
                         default:
                             holder.stateMark.setImageResource(0);
                             holder.stateMark.setVisibility(GONE);
@@ -307,9 +291,7 @@ public class TrackAdapter extends RecyclerView.Adapter<mx.dev.franco.automusicta
         }
 
         switch (track.getState()) {
-            //case TrackState.TAGS_CORRECTED_BY_SEMIAUTOMATIC_MODE:
             case TrackState.ALL_TAGS_FOUND:
-            //case TrackState.TAGS_EDITED_BY_USER:
                 holder.stateMark.setImageResource(R.drawable.ic_done_all_white);
                 holder.stateMark.setVisibility(VISIBLE);
                 break;
@@ -317,26 +299,11 @@ public class TrackAdapter extends RecyclerView.Adapter<mx.dev.franco.automusicta
                 holder.stateMark.setImageResource(R.drawable.ic_done_white);
                 holder.stateMark.setVisibility(VISIBLE);
                 break;
-            /*case TrackState.NO_TAGS_FOUND:
-                holder.stateMark.setImageResource(R.drawable.ic_error_outline_white);
-                holder.stateMark.setVisibility(VISIBLE);
-                break;
-            case TrackState.FILE_ERROR_READ:
-            case TrackState.COULD_NOT_APPLIED_CHANGES:
-            case TrackState.COULD_RESTORE_FILE_TO_ITS_LOCATION:
-            case TrackState.COULD_NOT_CREATE_AUDIOFILE:
-            case TrackState.COULD_NOT_CREATE_TEMP_FILE:
-            case TrackState.FILE_IN_SD_WITHOUT_PERMISSION:
-                holder.stateMark.setImageResource(R.drawable.ic_highlight_off_white_material);
-                holder.stateMark.setVisibility(VISIBLE);
-                break;*/
             default:
                 holder.stateMark.setImageResource(0);
                 holder.stateMark.setVisibility(GONE);
                 break;
         }
-
-
 
         holder.trackName.setText(track.getTitle());
         holder.artistName.setText(track.getArtist());
@@ -452,9 +419,13 @@ public class TrackAdapter extends RecyclerView.Adapter<mx.dev.franco.automusicta
         if (diffResults.diffResult != null) {
             Log.d(TAG, "dispatching results... list" + diffResults.list.size());
             diffResults.diffResult.dispatchUpdatesTo(this);
+            Log.d(TAG, "results dispatched.");
+            Log.d(TAG, "clearing...");
             mTrackList.clear();
+            Log.d(TAG, "cleared.");
+            Log.d(TAG, "Adding all.");
             mTrackList.addAll(diffResults.list);
-
+            Log.d(TAG, "Added all.");
             sDiffExecutor = null;
 
             //Try to perform next latest update.
