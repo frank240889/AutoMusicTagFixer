@@ -70,12 +70,7 @@ public class SearchActivity extends AppCompatActivity implements AsyncSearch.Res
         mActionBar = getSupportActionBar();
         mActionBar.setDisplayHomeAsUpEnabled(true);
         //pressing back from toolbar, close activity
-        mToolbar.setNavigationOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                finish();
-            }
-        });
+        mToolbar.setNavigationOnClickListener(v -> finish());
 
         //attach adapter to our recyclerview
         mRecyclerView = findViewById(R.id.found_tracks_recycler_view);
@@ -97,13 +92,13 @@ public class SearchActivity extends AppCompatActivity implements AsyncSearch.Res
         mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
+                super.onScrollStateChanged(recyclerView, newState);
                 if (newState == RecyclerView.SCROLL_STATE_IDLE && !isDestroyed()) {
                     Glide.with(SearchActivity.this).resumeRequests();
                 }
                 if (newState == RecyclerView.SCROLL_STATE_DRAGGING || newState == RecyclerView.SCROLL_STATE_SETTLING && !isDestroyed()) {
                     Glide.with(SearchActivity.this).pauseRequests();
                 }
-                super.onScrollStateChanged(recyclerView, newState);
             }
 
             @Override
@@ -135,7 +130,6 @@ public class SearchActivity extends AppCompatActivity implements AsyncSearch.Res
 
     @Override
     public boolean onSearchRequested() {
-
         return true;
     }
 
@@ -143,6 +137,7 @@ public class SearchActivity extends AppCompatActivity implements AsyncSearch.Res
     @Override
     public void onStartSearch() {
         mRecyclerView.stopScroll();
+        mAdapter.reset();
     }
 
     @SuppressLint({"StringFormatMatches", "StringFormatInvalid"})
@@ -161,6 +156,7 @@ public class SearchActivity extends AppCompatActivity implements AsyncSearch.Res
         }
 
         mAsyncSearch = null;
+        mRecyclerView.scrollToPosition(0);
     }
 
     @Override
@@ -197,17 +193,17 @@ public class SearchActivity extends AppCompatActivity implements AsyncSearch.Res
 
     @Override
     public void onDestroy(){
+        super.onDestroy();
         mRecyclerView.stopScroll();
         if(mAsyncSearch != null && (mAsyncSearch.getStatus() == AsyncSearch.Status.PENDING || mAsyncSearch.getStatus() == AsyncSearch.Status.RUNNING)){
             mAsyncSearch.cancel(true);
         }
+        mAdapter.destroy();
         mAsyncSearch = null;
         mTrackRepository = null;
         mMessage = null;
         mRecyclerView = null;
-        mAdapter.destroy();
         mAdapter = null;
-        super.onDestroy();
     }
 
     @Override

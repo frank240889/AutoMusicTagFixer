@@ -212,7 +212,7 @@ public class TrackDetailFragment extends Fragment implements EditableView, Resul
                         Bitmap bitmap = MediaStore.Images.Media.getBitmap(getActivity().getContentResolver(), imageData);
 
                         if (bitmap.getHeight() > 2000 || bitmap.getWidth() > 2000) {
-                            Snackbar snackbar = AndroidUtils.getSnackbar(mLayout, getActivity().getApplicationContext());
+                            Snackbar snackbar = AndroidUtils.getSnackbar(mEditableFieldsContainer, getActivity().getApplicationContext());
                             snackbar.setText(getString(R.string.image_too_big));
                             snackbar.setDuration(Snackbar.LENGTH_LONG);
                             snackbar.show();
@@ -235,7 +235,7 @@ public class TrackDetailFragment extends Fragment implements EditableView, Resul
                         }
                     } catch(IOException e){
                         e.printStackTrace();
-                        Snackbar snackbar = AndroidUtils.getSnackbar(mLayout, getActivity().getApplicationContext());
+                        Snackbar snackbar = AndroidUtils.getSnackbar(mEditableFieldsContainer, getActivity().getApplicationContext());
                         snackbar.setText(getString(R.string.error_load_image));
                         snackbar.setDuration(Snackbar.LENGTH_SHORT);
                         snackbar.show();
@@ -279,7 +279,6 @@ public class TrackDetailFragment extends Fragment implements EditableView, Resul
     public void onDestroy(){
         super.onDestroy();
         mTrackDetailPresenter.destroy();
-        mTrackDetailPresenter = null;
         mTitleField = null;
         mArtistField = null;
         mAlbumField = null;
@@ -303,6 +302,8 @@ public class TrackDetailFragment extends Fragment implements EditableView, Resul
         mProgressBar = null;
         if(mResultsDialog != null)
             mResultsDialog.dismiss();
+
+        mTrackDetailPresenter = null;
     }
 
     /**
@@ -347,7 +348,7 @@ public class TrackDetailFragment extends Fragment implements EditableView, Resul
 
     public void removeCover(){
         if(getCover() == null){
-            Snackbar snackbar = AndroidUtils.getSnackbar(mLayout, getActivity().getApplicationContext());
+            Snackbar snackbar = AndroidUtils.getSnackbar(mEditableFieldsContainer, getActivity().getApplicationContext());
             snackbar.setText(getString(R.string.does_not_exist_cover));
             snackbar.setDuration(Snackbar.LENGTH_SHORT);
             snackbar.show();
@@ -786,7 +787,7 @@ public class TrackDetailFragment extends Fragment implements EditableView, Resul
 
     @Override
     public void identificationCancelled() {
-        Snackbar snackbar = AndroidUtils.getSnackbar(mLayout, getActivity().getApplicationContext());
+        Snackbar snackbar = AndroidUtils.getSnackbar(mEditableFieldsContainer, getActivity().getApplicationContext());
         if (snackbar != null) {
             snackbar.setText(R.string.identification_interrupted);
             snackbar.show();
@@ -812,7 +813,7 @@ public class TrackDetailFragment extends Fragment implements EditableView, Resul
 
     @Override
     public void onSuccessfullyCorrection(String message) {
-        Snackbar snackbar = AndroidUtils.getSnackbar(mLayout, getActivity().getApplicationContext());
+        Snackbar snackbar = AndroidUtils.getSnackbar(mEditableFieldsContainer, getActivity().getApplicationContext());
         snackbar.setText(message);
         snackbar.show();
 
@@ -823,7 +824,7 @@ public class TrackDetailFragment extends Fragment implements EditableView, Resul
 
     @Override
     public void onSuccessfullyFileSaved(final String message) {
-        Snackbar snackbar = AndroidUtils.getSnackbar(mLayout, getActivity().getApplicationContext());
+        Snackbar snackbar = AndroidUtils.getSnackbar(mEditableFieldsContainer, getActivity().getApplicationContext());
         snackbar.setDuration(Snackbar.LENGTH_LONG);
         snackbar.setText(String.format(getString(R.string.cover_saved), message));
         snackbar.setAction(R.string.watch, new View.OnClickListener() {
@@ -839,7 +840,7 @@ public class TrackDetailFragment extends Fragment implements EditableView, Resul
 
     @Override
     public void onCorrectionError(String message, String action) {
-        Snackbar snackbar = AndroidUtils.getSnackbar(mLayout, getActivity().getApplicationContext());
+        Snackbar snackbar = AndroidUtils.getSnackbar(mEditableFieldsContainer, getActivity().getApplicationContext());
         if (action != null && action.equals(getString(R.string.get_permission))){
             snackbar.setAction(action, new View.OnClickListener() {
                 @Override

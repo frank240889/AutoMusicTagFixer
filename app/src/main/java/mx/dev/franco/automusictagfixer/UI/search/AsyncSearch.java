@@ -31,13 +31,11 @@ public class AsyncSearch extends AsyncTask<String, Void, List<Track>> {
     }
     @Override
     protected List<Track> doInBackground(String... params) {
-        Log.d(TAG, "Searching..." + params[0]);
         return mTrackRepository.search(params[0]);
     }
 
     @Override
     protected void onPostExecute(List<Track> results){
-        Log.d(TAG, "Results size:" + results.size());
         if(mListener != null)
             mListener.onFinished(results);
         clear();
@@ -45,11 +43,11 @@ public class AsyncSearch extends AsyncTask<String, Void, List<Track>> {
 
     @Override
     public void onCancelled(List<Track> results){
+        super.onCancelled(results);
         if(mListener != null)
             mListener.onCancelled();
 
         clear();
-        super.onCancelled(results);
     }
 
     private void clear(){

@@ -11,6 +11,7 @@ import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Build;
 import android.preference.PreferenceManager;
+import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.FileProvider;
@@ -89,9 +90,7 @@ public class AndroidUtils {
         context.startActivity(intent);
     }
 
-    public static Snackbar getSnackbar(View viewToAttach, Context context){
-        if(viewToAttach == null)
-            return null;
+    public static Snackbar getSnackbar(@NonNull View viewToAttach, @NonNull Context context){
         Snackbar snackbar = Snackbar.make(viewToAttach,"",Snackbar.LENGTH_SHORT);
         TextView tv = snackbar.getView().findViewById(android.support.design.R.id.snackbar_text);
         snackbar.getView().setBackgroundColor(ContextCompat.getColor(context.getApplicationContext(),R.color.primaryLightColor));

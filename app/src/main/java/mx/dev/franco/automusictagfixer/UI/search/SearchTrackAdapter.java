@@ -177,13 +177,7 @@ public class SearchTrackAdapter extends RecyclerView.Adapter<FoundItemHolder> im
 
     @Override
     public void destroy() {
-        if(mAsyncTaskQueue != null && mAsyncTaskQueue.size() > 0 ){
-            for(AsyncLoaderCover asyncLoaderCover: mAsyncTaskQueue){
-                asyncLoaderCover.cancel(true);
-            }
-
-            mAsyncTaskQueue.clear();
-        }
+        reset();
 
         mAsyncTaskQueue = null;
         serviceHelper = null;
@@ -194,8 +188,21 @@ public class SearchTrackAdapter extends RecyclerView.Adapter<FoundItemHolder> im
     }
 
     public void swapData(List<Track> tracks){
-        mTrackList = tracks;
-        notifyDataSetChanged();
+        if(tracks.size() > 0){
+            if(!mTrackList.isEmpty()) {
+                int top = mTrackList.size();
+                mTrackList.clear();
+                notifyItemRangeRemoved(0, top);
+            }
+            mTrackList.addAll(tracks);
+            notifyItemRangeInserted(0, mTrackList.size());
+
+        }
+        else {
+            int top = mTrackList.size();
+            mTrackList.clear();
+            notifyItemRangeRemoved(0, top);
+        }
     }
 
     public Track getTrackById(int id){
@@ -206,9 +213,7 @@ public class SearchTrackAdapter extends RecyclerView.Adapter<FoundItemHolder> im
             }
 
         }
-
         return null;
-
     }
 
     public void updateTrack(Intent data) {
@@ -232,6 +237,15 @@ public class SearchTrackAdapter extends RecyclerView.Adapter<FoundItemHolder> im
 
             int position = mTrackList.indexOf(track);
             notifyItemChanged(position);
+        }
+    }
+
+    public void reset() {
+        if(mAsyncTaskQueue != null && mAsyncTaskQueue.size() > 0 ){
+            for(AsyncLoaderCover asyncLoaderCover: mAsyncTaskQueue){
+                asyncLoaderCover.cancel(true);
+            }
+            mAsyncTaskQueue.clear();
         }
     }
 }

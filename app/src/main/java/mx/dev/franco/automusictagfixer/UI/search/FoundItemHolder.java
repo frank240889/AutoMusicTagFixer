@@ -47,7 +47,6 @@ public class FoundItemHolder extends RecyclerView.ViewHolder implements View.OnC
     public void onClick(View v) {
         if (mListener != null) {
             mListener.onItemClick(getLayoutPosition(), v);
-
         }
     }
 

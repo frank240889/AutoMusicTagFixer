@@ -21,21 +21,13 @@ public class SdCardInstructionsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sd_card_instructions);
         Button button = findViewById(R.id.request_permission_button);
-        button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
-                startActivityForResult(intent, RequiredPermissions.REQUEST_PERMISSION_SAF);
-            }
+        button.setOnClickListener(v -> {
+            Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+            startActivityForResult(intent, RequiredPermissions.REQUEST_PERMISSION_SAF);
         });
 
         ImageButton closeInstructions = findViewById(R.id.close_instructions);
-        closeInstructions.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                finish();
-            }
-        });
+        closeInstructions.setOnClickListener(v -> finish());
 
     }
 
@@ -62,6 +54,7 @@ public class SdCardInstructionsActivity extends AppCompatActivity {
 
     @Override
     public void onDestroy(){
+        super.onDestroy();
         Toast toast = AndroidUtils.getToast(this);
         toast.setDuration(Toast.LENGTH_LONG);
 
@@ -74,6 +67,5 @@ public class SdCardInstructionsActivity extends AppCompatActivity {
         }
         toast.setText(msg);
         toast.show();
-        super.onDestroy();
     }
 }
