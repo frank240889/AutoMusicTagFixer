@@ -27,7 +27,7 @@ public class DiffExecutor extends AsyncTask<List<Track>, Void, DiffExecutor.Diff
     @Override
     protected DiffResults doInBackground(List<Track>... lists) {
         DiffUtil.DiffResult diffResult = DiffUtil.
-                calculateDiff(new DiffCallback(lists[0], lists[1]));
+                calculateDiff(new DiffCallback(lists[0], lists[1]),false);
         DiffResults diffResults = new DiffResults();
         diffResults.diffResult = diffResult;
         diffResults.list = lists[1];

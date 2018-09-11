@@ -52,6 +52,10 @@ public class TrackAdapter extends RecyclerView.Adapter<mx.dev.franco.automusicta
         Observer<List<Track>>,
         DiffExecutor.DiffCallbackListener{
 
+    public interface OnSortingListener{
+        void onStartSorting();
+        void onFinishSorting();
+    }
     //constants for indicate the sort order
     public static final int ASC = 0;
     public static final int DESC = 1;
@@ -64,6 +68,7 @@ public class TrackAdapter extends RecyclerView.Adapter<mx.dev.franco.automusicta
     AbstractSharedPreferences sharedPreferences;
     private List<Track> mTrackList = new ArrayList<>();
     private AudioItemHolder.ClickListener mListener;
+    private OnSortingListener mOnSortingListener;
     private List<AsyncLoaderCover> mAsyncTaskQueue =  new ArrayList<>();
     private Deque<List<Track>> mPendingUpdates = new ArrayDeque<>();
     private static DiffExecutor sDiffExecutor;
@@ -71,6 +76,8 @@ public class TrackAdapter extends RecyclerView.Adapter<mx.dev.franco.automusicta
     public TrackAdapter(AudioItemHolder.ClickListener listener){
         mListener = listener;
         AutoMusicTagFixer.getContextComponent().inject(this);
+        if(listener instanceof OnSortingListener)
+            mOnSortingListener = (OnSortingListener) listener;
         Log.d(TAG, "context is null: "+ (context == null));
     }
 
@@ -86,6 +93,7 @@ public class TrackAdapter extends RecyclerView.Adapter<mx.dev.franco.automusicta
     @Override
     public void onBindViewHolder(@NonNull final AudioItemHolder holder, int position, List<Object> payloads) {
         Track track = mTrackList.get(position);
+        Log.d(TAG, "onBindViewHolderPayload");
         if(payloads.isEmpty()) {
             super.onBindViewHolder(holder,position,payloads);
         }
@@ -210,6 +218,7 @@ public class TrackAdapter extends RecyclerView.Adapter<mx.dev.franco.automusicta
     @Override
     public void onBindViewHolder(final mx.dev.franco.automusictagfixer.datasource.AudioItemHolder holder, final int position) {
         Track track = mTrackList.get(position);
+        Log.d(TAG, "onBindViewHolder");
         if (track.processing() == 1) {
             holder.checkBox.setVisibility(View.GONE);
             holder.progressBar.setVisibility(View.VISIBLE);
@@ -353,6 +362,7 @@ public class TrackAdapter extends RecyclerView.Adapter<mx.dev.franco.automusicta
         }
         sDiffExecutor = null;
         mListener = null;
+        mOnSortingListener = null;
     }
 
     @Override
@@ -402,6 +412,9 @@ public class TrackAdapter extends RecyclerView.Adapter<mx.dev.franco.automusicta
     @Override
     public void onStartDiff() {
         //Do nothing
+        if(sharedPreferences.getBoolean("sorting") && mOnSortingListener != null)
+            mOnSortingListener.onStartSorting();
+
         Log.d(TAG, "onStartDiff");
     }
 
@@ -416,22 +429,31 @@ public class TrackAdapter extends RecyclerView.Adapter<mx.dev.franco.automusicta
         if (mPendingUpdates != null)
             mPendingUpdates.remove();
 
+        boolean dispatchListener = sharedPreferences.getBoolean("sorting") && mOnSortingListener != null;
+
         if (diffResults.diffResult != null) {
+            if(dispatchListener)
+                clearLoads();
             Log.d(TAG, "dispatching results... list" + diffResults.list.size());
             diffResults.diffResult.dispatchUpdatesTo(this);
             Log.d(TAG, "results dispatched.");
+
             Log.d(TAG, "clearing...");
             mTrackList.clear();
             Log.d(TAG, "cleared.");
             Log.d(TAG, "Adding all.");
             mTrackList.addAll(diffResults.list);
             Log.d(TAG, "Added all.");
-            sDiffExecutor = null;
 
+
+            sDiffExecutor = null;
             //Try to perform next latest update.
             if (mPendingUpdates != null && mPendingUpdates.size() > 0) {
                 updateInBackground(mPendingUpdates.peek());
             }
+
+            if(dispatchListener)
+                mOnSortingListener.onFinishSorting();
         }
     }
 

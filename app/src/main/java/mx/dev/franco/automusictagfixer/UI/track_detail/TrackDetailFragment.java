@@ -797,6 +797,8 @@ public class TrackDetailFragment extends Fragment implements EditableView, Resul
     public void identificationNotFound() {
         if(mListener != null)
             mListener.onFinishedTask();
+
+
     }
 
     @Override
@@ -835,15 +837,23 @@ public class TrackDetailFragment extends Fragment implements EditableView, Resul
     @Override
     public void onCorrectionError(String message, String action) {
         Snackbar snackbar = AndroidUtils.getSnackbar(mLayout, getActivity().getApplicationContext());
-        if(action != null && action.equals(getString(R.string.get_permission)))
+        if (action != null && action.equals(getString(R.string.get_permission))){
             snackbar.setAction(action, new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     getActivity().startActivity(new Intent(getActivity(), SdCardInstructionsActivity.class));
-                    //Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
-                    //startActivityForResult(intent, RequiredPermissions.REQUEST_PERMISSION_SAF);
                 }
             });
+        }
+        else if(action != null && action.equals(getString(R.string.add_manual))){
+            snackbar.setAction(action, new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if(mListener != null)
+                        mListener.onEditMode();
+                }
+            });
+        }
 
         snackbar.setText(message);
         snackbar.show();

@@ -320,7 +320,7 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
     @Override
     public void identificationNotFound(Track track) {
         if(mView != null) {
-            mView.onCorrectionError(resourceManager.getString(R.string.no_found_tags), null);
+            mView.onCorrectionError(resourceManager.getString(R.string.no_found_tags), resourceManager.getString(R.string.add_manual));
             mView.setMessageStatus("");
             mView.hideProgress();
             mView.identificationNotFound();
@@ -659,32 +659,29 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
         }
 
         if(!resultCorrection.track.getTitle().isEmpty())
-            mCurrentTrack.setTitle(resultCorrection.track.getTitle());
+            mCurrentTrack.setTitle(mCurrentTrackDataItem.title);
         if(!resultCorrection.track.getArtist().isEmpty())
-            mCurrentTrack.setArtist(resultCorrection.track.getArtist());
+            mCurrentTrack.setArtist(mCurrentTrackDataItem.artist);
         if(!resultCorrection.track.getAlbum().isEmpty())
-            mCurrentTrack.setAlbum(resultCorrection.track.getAlbum());
+            mCurrentTrack.setAlbum(mCurrentTrackDataItem.album);
 
         mView.onSuccessfullyCorrection(resourceManager.getString(R.string.apply_tags));
         trackRepository.update(resultCorrection.track);
     }
 
     private void updateAppliedSameTagsView(Tagger.ResultCorrection resultCorrection){
-        boolean shouldUpdate = false;
         //File was renamed
         if(resultCorrection.pathTofileUpdated != null) {
             mView.setFilename(resultCorrection.pathTofileUpdated);
             mView.setFilesize(AudioItem.getFileSize(resultCorrection.pathTofileUpdated));
             mCurrentTrack.setPath(resultCorrection.pathTofileUpdated);
-            shouldUpdate = true;
         }
 
         setEditableInfo(mCurrentTrackDataItem);
         setAdditionalInfo(mCurrentTrackDataItem);
         mView.disableEditMode();
         mView.onSuccessfullyCorrection(resourceManager.getString(R.string.apply_tags));
-        if(shouldUpdate)
-            trackRepository.update(resultCorrection.track);
+        trackRepository.update(resultCorrection.track);
     }
 
 

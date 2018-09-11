@@ -381,6 +381,7 @@
     <string name="could_not_get_permission">No se pudo obtener el permiso.</string>
     <string name="complete_task">Corrección terminada exitosamente.</string>
     <string name="title_update_cover">Actualizar carátula</string>
+    <string name="add_manual">Manual</string>
 
 
 </resources>

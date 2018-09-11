@@ -55,7 +55,8 @@ import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 import mx.dev.franco.automusictagfixer.utilities.StorageHelper;
 
 public class ListFragment extends Fragment implements
-        AudioItemHolder.ClickListener,Observer<List<Track>> {
+        AudioItemHolder.ClickListener,Observer<List<Track>>,
+        TrackAdapter.OnSortingListener{
     private static final String TAG = ListFragment.class.getName();
 
     private GridLayoutManager mGridLayoutManager;
@@ -461,6 +462,17 @@ public class ListFragment extends Fragment implements
         mFabStartTask.show();
         mFabStopTask.setEnabled(true);
         mFabStopTask.hide();
+    }
+
+    @Override
+    public void onStartSorting() {
+        mSwipeRefreshLayout.setEnabled(false);
+    }
+
+    @Override
+    public void onFinishSorting() {
+        mSwipeRefreshLayout.setEnabled(true);
+        mRecyclerView.scrollToPosition(0);
     }
 
     public static class ViewWrapper{

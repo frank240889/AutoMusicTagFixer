@@ -10,7 +10,7 @@
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#cc424242"
+        android:background="#ee212121"
         android:nestedScrollingEnabled="true"
         android:overScrollMode="always"
         android:scrollbarStyle="outsideOverlay"
@@ -24,7 +24,7 @@
             android:layout_alignParentEnd="true"
             android:padding="8dp"
             android:tint="@color/primaryColor"
-            android:background="?attr/selectableItemBackgroundBorderless"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_close_white_24px"/>
         <TextView
             android:id="@+id/instructions"
@@ -33,7 +33,6 @@
             android:padding="16dp"
             android:text="@string/instructions_request_permission"
             android:textAlignment="center"
-            android:textColor="@color/primaryLightColor"
             android:textSize="18sp"
             android:layout_marginTop="24dp"/>
 
@@ -45,7 +44,6 @@
             android:padding="16dp"
             android:text="@string/step1"
             android:textAlignment="center"
-            android:textColor="@color/primaryLightColor"
             android:textSize="18sp" />
 
         <Button
@@ -55,6 +53,7 @@
             android:layout_below="@id/instructions_step1"
             android:layout_centerHorizontal="true"
             android:padding="8dp"
+            android:theme="@style/Button.Yellow"
             android:text="@string/enable" />
 
 
@@ -65,7 +64,6 @@
             android:layout_height="wrap_content"
             android:padding="16dp"
             android:textSize="18sp"
-            android:textColor="@color/primaryLightColor"
             android:text="@string/step2"/>
 
 
@@ -97,7 +95,6 @@
             android:layout_height="wrap_content"
             android:padding="16dp"
             android:textSize="18sp"
-            android:textColor="@color/primaryLightColor"
             android:text="@string/step3"/>
 
         <ImageView
@@ -117,7 +114,6 @@
             android:layout_height="wrap_content"
             android:padding="16dp"
             android:textSize="18sp"
-            android:textColor="@color/primaryLightColor"
             android:text="@string/step4"/>
 
         <ImageView

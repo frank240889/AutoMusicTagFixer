@@ -364,7 +364,6 @@ public class TrackDetailsActivity extends AppCompatActivity implements SimpleMed
         mFloatingActionMenu.animate().rotation(0).setListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationEnd(Animator animation) {
-                super.onAnimationEnd(animation);
                 mFloatingActionMenu.hide();
                 mSaveButton.show();
                 mSaveButton.setOnClickListener(null);

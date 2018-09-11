@@ -38,7 +38,7 @@ public class TrackRepository {
         mAbstractSharedPreferences = abstractSharedPreferences;
         mCurrentOrder = mAbstractSharedPreferences.getString(Constants.SORT_KEY);
         if(mCurrentOrder == null)
-            mCurrentOrder = " title ASC ";
+            mCurrentOrder = " title COLLATE NOCASE ASC ";
 
         String query = "SELECT * FROM track_table ORDER BY" + mCurrentOrder;
 
@@ -77,18 +77,22 @@ public class TrackRepository {
     }
 
     public void update(Track track){
+        mAbstractSharedPreferences.putBoolean("sorting", false);
         new updateTrack(mTrackDao).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,track);
     }
 
     public void checkAll(){
+        mAbstractSharedPreferences.putBoolean("sorting", false);
         new checkAll(mTrackDao).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
 
     public void uncheckAll(){
+        mAbstractSharedPreferences.putBoolean("sorting", false);
         new uncheckAll(mTrackDao).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
 
     public void delete(Track track){
+        mAbstractSharedPreferences.putBoolean("sorting", false);
         new removeTrack(mTrackDao).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, track);
     }
 
@@ -99,31 +103,25 @@ public class TrackRepository {
     public boolean sortTracks(String order, int orderType) {
         String orderBy;
         if(orderType == ASC){
-            orderBy = " " + order + " ASC ";
+            orderBy = " " + order + " COLLATE NOCASE ASC ";
         }
         else {
-            orderBy = " " + order + " DESC ";
+            orderBy = " " + order + " COLLATE NOCASE DESC ";
         }
 
         //No need to re sort if is the same order
         if(orderBy.equals(mCurrentOrder))
             return true;
 
+        mAbstractSharedPreferences.putBoolean("sorting", true);
+        mCurrentOrder = orderBy;
         String query = "SELECT * FROM track_table ORDER BY" + mCurrentOrder;
         SupportSQLiteQuery  sqLiteQuery = new SimpleSQLiteQuery(query);
+        mAbstractSharedPreferences.putString(Constants.SORT_KEY,mCurrentOrder);
         mMediatorTrackData.removeSource(mAllTrack);
         mAllTrack = mTrackDao.getAllTracks(sqLiteQuery);
 
-        mMediatorTrackData.addSource(mAllTrack, new Observer<List<Track>>() {
-            @Override
-            public void onChanged(@Nullable List<Track> tracks) {
-                mAbstractSharedPreferences.putString(Constants.SORT_KEY,orderBy);
-                Sorter sSorter = Sorter.getInstance();
-                sSorter.setSortParams(orderBy, orderType);
-                Collections.sort(tracks, sSorter);
-                mMediatorTrackData.setValue(tracks);
-            }
-        });
+        mMediatorTrackData.addSource(mAllTrack, tracks -> mMediatorTrackData.setValue(tracks));
         return true;
     }
 

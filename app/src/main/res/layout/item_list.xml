@@ -26,7 +26,6 @@
             android:layout_centerVertical="true"
             android:clickable="true"
             android:focusable="true"
-            android:scaleType="centerCrop"
             android:transitionName="transitionFragment"
             android:visibility="visible"
             app:srcCompat="@drawable/ic_album_white_48px" />
