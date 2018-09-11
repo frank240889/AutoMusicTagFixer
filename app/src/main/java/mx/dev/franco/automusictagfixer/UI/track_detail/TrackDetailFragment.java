@@ -41,13 +41,16 @@ import javax.inject.Inject;
 
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.UI.sd_card_instructions.SdCardInstructionsActivity;
-import mx.dev.franco.automusictagfixer.list.AudioItem;
-import mx.dev.franco.automusictagfixer.services.Fixer.Fixer;
-import mx.dev.franco.automusictagfixer.services.gnservice.GnResponseListener;
+import mx.dev.franco.automusictagfixer.fixer.Fixer;
+import mx.dev.franco.automusictagfixer.identifier.GnResponseListener;
+import mx.dev.franco.automusictagfixer.interfaces.EditableView;
+import mx.dev.franco.automusictagfixer.modelsUI.track_detail.TrackDetailInteractor;
+import mx.dev.franco.automusictagfixer.modelsUI.track_detail.TrackDetailPresenter;
 import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
 import mx.dev.franco.automusictagfixer.utilities.RequiredPermissions;
 import mx.dev.franco.automusictagfixer.utilities.Tagger;
+import mx.dev.franco.automusictagfixer.utilities.TrackUtils;
 import mx.dev.franco.automusictagfixer.utilities.shared_preferences.AbstractSharedPreferences;
 import mx.dev.franco.automusictagfixer.utilities.shared_preferences.DefaultSharedPreferencesImpl;
 
@@ -55,14 +58,14 @@ import mx.dev.franco.automusictagfixer.utilities.shared_preferences.DefaultShare
  * Use the {@link TrackDetailFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class TrackDetailFragment extends Fragment implements EditableView, ResultsTrackIdFragment.OnResultsTrackIdFragmentInteractionListener {
+public class TrackDetailFragment extends Fragment implements EditableView {
     private OnFragmentInteractionListener mListener;
     public interface OnFragmentInteractionListener {
         void onDataReady(String path);
         void onDataError();
         void onCancel();
-        void onEditMode();
-        void onUnedit();
+        void onEnterEditMode();
+        void onExitEditMode();
         void onPerformingTask();
         void onFinishedTask();
 
@@ -119,16 +122,15 @@ public class TrackDetailFragment extends Fragment implements EditableView, Resul
     private TrackDetailPresenter mTrackDetailPresenter;
     private ImageButton mCancelIdentification;
     @Inject
-    AbstractSharedPreferences abstractSharedPreferences;
+    public AbstractSharedPreferences abstractSharedPreferences;
     @Inject
-    DefaultSharedPreferencesImpl defaultSharedPreferences;
+    public DefaultSharedPreferencesImpl defaultSharedPreferences;
     private RelativeLayout mEditableFieldsContainer;
 
     public TrackDetailFragment() {
         // Required empty public constructor
     }
 
-    // TODO: Rename and change types and number of parameters
     public static TrackDetailFragment newInstance(int idTrack, int correctionMode) {
         TrackDetailFragment fragment = new TrackDetailFragment();
 
@@ -226,6 +228,7 @@ public class TrackDetailFragment extends Fragment implements EditableView, Resul
                                 Fixer.CorrectionParams correctionParams = new Fixer.CorrectionParams();
                                 correctionParams.dataFrom = Constants.MANUAL;
                                 correctionParams.mode = Tagger.MODE_ADD_COVER;
+                                cancelIdentification();
                                 mTrackDetailPresenter.performCorrection(correctionParams);
                             }
                             else {
@@ -354,7 +357,7 @@ public class TrackDetailFragment extends Fragment implements EditableView, Resul
             snackbar.show();
         }
         else {
-
+            mTrackDetailPresenter.cancelIdentification();
             final AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
             builder.setMessage(R.string.message_remove_cover_art_dialog);
             builder.setNegativeButton(R.string.cancel_button, new DialogInterface.OnClickListener() {
@@ -412,7 +415,7 @@ public class TrackDetailFragment extends Fragment implements EditableView, Resul
         InputMethodManager imm =(InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
         imm.showSoftInput(mTitleField,InputMethodManager.SHOW_IMPLICIT);
         if(mListener != null)
-            mListener.onEditMode();
+            mListener.onEnterEditMode();
 
         mEditMode = true;
     }
@@ -454,7 +457,7 @@ public class TrackDetailFragment extends Fragment implements EditableView, Resul
         mGenreField.clearFocus();
         mGenreField.setEnabled(false);
 
-        mImageSize.setText(AudioItem.getStringImageSize(mCurrentCoverArt));
+        mImageSize.setText(TrackUtils.getStringImageSize(mCurrentCoverArt));
         mImageSize.setCompoundDrawablesWithIntrinsicBounds(getActivity().getDrawable(R.drawable.ic_photo_size_select_large_white_24px),null,null,null);
         mImageSize.setOnClickListener(null);
 
@@ -469,7 +472,7 @@ public class TrackDetailFragment extends Fragment implements EditableView, Resul
         }
 
         if(mListener != null)
-            mListener.onUnedit();
+            mListener.onExitEditMode();
 
         mEditMode = false;
 
@@ -854,7 +857,7 @@ public class TrackDetailFragment extends Fragment implements EditableView, Resul
                 @Override
                 public void onClick(View v) {
                     if(mListener != null)
-                        mListener.onEditMode();
+                        mListener.onEnterEditMode();
                 }
             });
         }
@@ -961,12 +964,6 @@ public class TrackDetailFragment extends Fragment implements EditableView, Resul
         AlertDialog alertDialog = builder.create();
         alertDialog.show();
     }
-
-    @Override
-    public void onFragmentInteraction(Uri uri) {
-
-    }
-
 
     public void validateInputData(){
         mTrackDetailPresenter.validateInputData();

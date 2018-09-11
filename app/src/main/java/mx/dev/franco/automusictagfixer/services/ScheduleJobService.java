@@ -4,8 +4,8 @@ import android.app.job.JobParameters;
 import android.app.job.JobService;
 import android.util.Log;
 
+import mx.dev.franco.automusictagfixer.identifier.GnService;
 import mx.dev.franco.automusictagfixer.network.ConnectivityDetector;
-import mx.dev.franco.automusictagfixer.services.gnservice.GnService;
 
 /**
  * Created by franco on 6/07/17.

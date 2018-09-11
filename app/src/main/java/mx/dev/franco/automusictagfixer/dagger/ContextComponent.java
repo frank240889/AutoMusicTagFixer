@@ -4,19 +4,19 @@ import javax.inject.Singleton;
 
 import mx.dev.franco.automusictagfixer.UI.SplashActivity;
 import mx.dev.franco.automusictagfixer.UI.main.ListFragment;
-import mx.dev.franco.automusictagfixer.UI.main.ListViewModel;
+import mx.dev.franco.automusictagfixer.UI.main.TrackAdapter;
 import mx.dev.franco.automusictagfixer.UI.search.SearchActivity;
 import mx.dev.franco.automusictagfixer.UI.search.SearchTrackAdapter;
-import mx.dev.franco.automusictagfixer.UI.track_detail.AsyncFileSaver;
-import mx.dev.franco.automusictagfixer.UI.track_detail.TrackDataLoader;
-import mx.dev.franco.automusictagfixer.UI.track_detail.TrackDetailInteractor;
-import mx.dev.franco.automusictagfixer.UI.track_detail.TrackDetailPresenter;
 import mx.dev.franco.automusictagfixer.UI.track_detail.TrackDetailsActivity;
-import mx.dev.franco.automusictagfixer.datasource.TrackAdapter;
-import mx.dev.franco.automusictagfixer.media_store_retriever.AsyncFileReader;
+import mx.dev.franco.automusictagfixer.fixer.Fixer;
+import mx.dev.franco.automusictagfixer.modelsUI.main.ListViewModel;
+import mx.dev.franco.automusictagfixer.modelsUI.track_detail.AsyncFileSaver;
+import mx.dev.franco.automusictagfixer.modelsUI.track_detail.TrackDataLoader;
+import mx.dev.franco.automusictagfixer.modelsUI.track_detail.TrackDetailInteractor;
+import mx.dev.franco.automusictagfixer.modelsUI.track_detail.TrackDetailPresenter;
 import mx.dev.franco.automusictagfixer.network.AsyncConnectivityDetector;
-import mx.dev.franco.automusictagfixer.repository.TrackRepository;
-import mx.dev.franco.automusictagfixer.services.Fixer.Fixer;
+import mx.dev.franco.automusictagfixer.persistence.mediastore.AsyncFileReader;
+import mx.dev.franco.automusictagfixer.persistence.repository.TrackRepository;
 import mx.dev.franco.automusictagfixer.services.FixerTrackService;
 
 /**

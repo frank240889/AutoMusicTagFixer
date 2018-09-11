@@ -34,14 +34,13 @@ import java.io.IOException;
 
 import mx.dev.franco.automusictagfixer.AutoMusicTagFixer;
 import mx.dev.franco.automusictagfixer.R;
-import mx.dev.franco.automusictagfixer.UI.search.SearchActivity;
-import mx.dev.franco.automusictagfixer.list.AudioItem;
+import mx.dev.franco.automusictagfixer.identifier.TrackIdentifier;
 import mx.dev.franco.automusictagfixer.receivers.ResponseReceiver;
-import mx.dev.franco.automusictagfixer.services.TrackIdentifier;
+import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
 import mx.dev.franco.automusictagfixer.utilities.GlideApp;
 import mx.dev.franco.automusictagfixer.utilities.SimpleMediaPlayer;
-import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
+import mx.dev.franco.automusictagfixer.utilities.TrackUtils;
 
 /**
  * Created by franco on 22/07/17.
@@ -267,12 +266,12 @@ public class TrackDetailsActivity extends AppCompatActivity implements SimpleMed
     }
 
     @Override
-    public void onEditMode() {
+    public void onEnterEditMode() {
         enableFieldsToEdit();
     }
 
     @Override
-    public void onUnedit() {
+    public void onExitEditMode() {
         viewMode();
     }
 
@@ -290,7 +289,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements SimpleMed
     @Override
     public void onTitleToolbarChanged(String filename) {
         mCurrentPath = filename;
-        mLayerFileName.setText(AudioItem.getFilename(filename));
+        mLayerFileName.setText(TrackUtils.getFilename(filename));
 
     }
 

@@ -1,9 +1,6 @@
 package mx.dev.franco.automusictagfixer.UI.main;
 
 import android.Manifest;
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
-import android.animation.LayoutTransition;
 import android.app.SearchManager;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
@@ -21,14 +18,10 @@ import android.support.annotation.RequiresApi;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
-import android.support.transition.Fade;
-import android.support.transition.Transition;
-import android.support.transition.TransitionManager;
 import android.support.v4.app.ShareCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.GravityCompat;
-import android.support.v4.view.MenuItemCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -39,29 +32,21 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.View;
-import android.view.ViewAnimationUtils;
 import android.view.Window;
 import android.view.WindowManager;
-import android.view.animation.AlphaAnimation;
-import android.view.animation.Animation;
-import android.view.animation.AnimationSet;
-import android.view.animation.TranslateAnimation;
-import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.UI.about.ScrollingAboutActivity;
 import mx.dev.franco.automusictagfixer.UI.faq.QuestionsActivity;
 import mx.dev.franco.automusictagfixer.UI.settings.SettingsActivity;
-import mx.dev.franco.automusictagfixer.datasource.TrackAdapter;
+import mx.dev.franco.automusictagfixer.persistence.room.database.TrackContract;
 import mx.dev.franco.automusictagfixer.receivers.ResponseReceiver;
-import mx.dev.franco.automusictagfixer.room.database.TrackContract;
 import mx.dev.franco.automusictagfixer.services.FixerTrackService;
-import mx.dev.franco.automusictagfixer.services.ServiceHelper;
 import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
 import mx.dev.franco.automusictagfixer.utilities.RequiredPermissions;
+import mx.dev.franco.automusictagfixer.utilities.ServiceUtils;
 
 public class MainActivity extends AppCompatActivity
         implements ResponseReceiver.OnResponse, NavigationView.OnNavigationItemSelectedListener{
@@ -214,7 +199,7 @@ public class MainActivity extends AppCompatActivity
                 if(!hasPermission) {
                     mListFragment.requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, RequiredPermissions.WRITE_EXTERNAL_STORAGE_PERMISSION);
                 }
-                else if(ServiceHelper.getInstance(getApplicationContext()).checkIfServiceIsRunning(FixerTrackService.class.getName())){
+                else if(ServiceUtils.getInstance(getApplicationContext()).checkIfServiceIsRunning(FixerTrackService.class.getName())){
                     Snackbar snackbar = AndroidUtils.getSnackbar(mToolbar, getApplicationContext());
                     snackbar.setText(R.string.no_available);
                     snackbar.show();

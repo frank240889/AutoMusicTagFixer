@@ -40,11 +40,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import mx.dev.franco.automusictagfixer.UI.track_detail.TrackDataLoader;
-import mx.dev.franco.automusictagfixer.list.AudioItem;
-import mx.dev.franco.automusictagfixer.room.Track;
+import mx.dev.franco.automusictagfixer.modelsUI.track_detail.TrackDataLoader;
+import mx.dev.franco.automusictagfixer.persistence.room.Track;
 
-import static mx.dev.franco.automusictagfixer.list.AudioItem.getExtension;
+import static mx.dev.franco.automusictagfixer.utilities.TrackUtils.getExtension;
 
 public class Tagger {
     private static final String TAG = Tagger.class.getName();
@@ -189,8 +188,8 @@ public class Tagger {
         TrackDataLoader.TrackDataItem trackDataItem = new TrackDataLoader.TrackDataItem();
 
         File file = audioFile.getFile();
-        String extension = AudioItem.getExtension(file);
-        String mimeType = AudioItem.getMimeType(file);
+        String extension = TrackUtils.getExtension(file);
+        String mimeType = TrackUtils.getMimeType(file);
 
         trackDataItem.extension = extension;
         trackDataItem.fileName = file.getName();
@@ -199,13 +198,13 @@ public class Tagger {
         Tag tag = getTag(audioFile);
         AudioHeader audioHeader = audioFile.getAudioHeader();
         //Get header info and current tags
-        trackDataItem.duration = AudioItem.getHumanReadableDuration(audioHeader.getTrackLength() + "");
-        trackDataItem.bitrate = AudioItem.getBitrate(audioHeader.getBitRate());
-        trackDataItem.frequency = AudioItem.getFrequency(audioHeader.getSampleRate());
-        trackDataItem.resolution = AudioItem.getResolution(audioHeader.getBitsPerSample());
+        trackDataItem.duration = TrackUtils.getHumanReadableDuration(audioHeader.getTrackLength() + "");
+        trackDataItem.bitrate = TrackUtils.getBitrate(audioHeader.getBitRate());
+        trackDataItem.frequency = TrackUtils.getFrequency(audioHeader.getSampleRate());
+        trackDataItem.resolution = TrackUtils.getResolution(audioHeader.getBitsPerSample());
         trackDataItem.channels = audioHeader.getChannels();
         trackDataItem.fileType = audioHeader.getFormat();
-        trackDataItem.fileSize = AudioItem.getFileSize(file.length());
+        trackDataItem.fileSize = TrackUtils.getFileSize(file.length());
 
         trackDataItem.title = tag.getFirst(FieldKey.TITLE);
         trackDataItem.artist = tag.getFirst(FieldKey.ARTIST);
@@ -217,7 +216,7 @@ public class Tagger {
         trackDataItem.cover = (tag.getFirstArtwork() != null && tag.getFirstArtwork().getBinaryData() != null) ?
                 tag.getFirstArtwork().getBinaryData() :
                 null;
-        trackDataItem.imageSize = AudioItem.getStringImageSize(trackDataItem.cover);
+        trackDataItem.imageSize = TrackUtils.getStringImageSize(trackDataItem.cover);
 
         return trackDataItem;
     }
@@ -359,8 +358,8 @@ public class Tagger {
     private Tag getTag(AudioFile audioFile){
 
         Tag tag = null;
-        String mimeType = AudioItem.getMimeType(audioFile.getFile());
-        String extension = AudioItem.getExtension(audioFile.getFile());
+        String mimeType = TrackUtils.getMimeType(audioFile.getFile());
+        String extension = TrackUtils.getExtension(audioFile.getFile());
 
         if((mimeType.equals("audio/mpeg_mp3") || mimeType.equals("audio/mpeg") ) && extension.toLowerCase().equals("mp3")){
             if(((MP3File)audioFile).hasID3v1Tag() && !((MP3File) audioFile).hasID3v2Tag()){
@@ -512,8 +511,8 @@ public class Tagger {
      */
     private void setNewTags(AudioFile audioFile,HashMap<FieldKey, Object> tagsToApply, int overwriteAllTags){
         Tag currentTag = getTag(audioFile);
-        String mimeType = AudioItem.getMimeType(audioFile.getFile());
-        String extension = AudioItem.getExtension(audioFile.getFile());
+        String mimeType = TrackUtils.getMimeType(audioFile.getFile());
+        String extension = TrackUtils.getExtension(audioFile.getFile());
         boolean isMp3 = ((mimeType.equals("audio/mpeg_mp3") || mimeType.equals("audio/mpeg") ) && extension.toLowerCase().equals("mp3"));
         //remove old version of ID3 tags
         if (isMp3 && ((MP3File) audioFile).hasID3v1Tag()) {
@@ -619,7 +618,7 @@ public class Tagger {
         //Copy file with new tags to its original location
         try {
             //First create a DocumentFile object referencing to its original path that it was stored
-            DocumentFile newFile =  sourceDocumentFile.getParentFile().createFile(AudioItem.getMimeType(correctedFile), correctedFile.getName() );
+            DocumentFile newFile =  sourceDocumentFile.getParentFile().createFile(TrackUtils.getMimeType(correctedFile), correctedFile.getName() );
             //Destination data
             out = sContext.getContentResolver().openOutputStream(newFile.getUri());
             //Input data

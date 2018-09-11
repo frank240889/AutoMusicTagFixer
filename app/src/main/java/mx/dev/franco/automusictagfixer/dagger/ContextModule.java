@@ -1,18 +1,17 @@
 package mx.dev.franco.automusictagfixer.dagger;
 
 import android.app.Application;
-import android.arch.persistence.room.Room;
 import android.content.Context;
 
 import javax.inject.Singleton;
 
 import dagger.Module;
 import dagger.Provides;
+import mx.dev.franco.automusictagfixer.identifier.GnService;
 import mx.dev.franco.automusictagfixer.network.ConnectivityDetector;
-import mx.dev.franco.automusictagfixer.repository.TrackRepository;
-import mx.dev.franco.automusictagfixer.room.TrackRoomDatabase;
-import mx.dev.franco.automusictagfixer.services.ServiceHelper;
-import mx.dev.franco.automusictagfixer.services.gnservice.GnService;
+import mx.dev.franco.automusictagfixer.persistence.repository.TrackRepository;
+import mx.dev.franco.automusictagfixer.persistence.room.TrackRoomDatabase;
+import mx.dev.franco.automusictagfixer.utilities.ServiceUtils;
 import mx.dev.franco.automusictagfixer.utilities.SimpleMediaPlayer;
 import mx.dev.franco.automusictagfixer.utilities.StorageHelper;
 import mx.dev.franco.automusictagfixer.utilities.Tagger;
@@ -36,7 +35,7 @@ public class ContextModule {
     private DefaultSharedPreferencesImpl mDefaultAbstractSharedPreferences;
     private TrackRoomDatabase mTrackRoomDatabase;
     private TrackRepository mTrackRepository;
-    private ServiceHelper mServiceHelper;
+    private ServiceUtils mServiceUtils;
     private SimpleMediaPlayer mSimpleMediaPlayer;
     private StorageHelper mStorageHelper;
     private Tagger mTagger;
@@ -50,7 +49,7 @@ public class ContextModule {
         mAbstractSharedPreferences = new SharedPreferencesImpl(mApp);
         mDefaultAbstractSharedPreferences = new DefaultSharedPreferencesImpl(mApp);
         mTrackRepository = new TrackRepository(provideTrackRoomDatabase(), mAbstractSharedPreferences, mApp);
-        mServiceHelper = ServiceHelper.getInstance(mApp);
+        mServiceUtils = ServiceUtils.getInstance(mApp);
         mSimpleMediaPlayer = SimpleMediaPlayer.getInstance(mApp);
         mStorageHelper = StorageHelper.getInstance(mApp);
         mTagger = Tagger.getInstance(mApp, mStorageHelper);
@@ -99,8 +98,8 @@ public class ContextModule {
     }
 
     @Provides
-    ServiceHelper provideServiceHelper(){
-        return mServiceHelper;
+    ServiceUtils provideServiceHelper(){
+        return mServiceUtils;
     }
 
     @Provides

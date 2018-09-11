@@ -33,8 +33,7 @@ import java.util.Objects;
 
 import mx.dev.franco.automusictagfixer.BuildConfig;
 import mx.dev.franco.automusictagfixer.R;
-import mx.dev.franco.automusictagfixer.list.AudioItem;
-import mx.dev.franco.automusictagfixer.services.gnservice.GnResponseListener;
+import mx.dev.franco.automusictagfixer.identifier.GnResponseListener;
 
 import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
 
@@ -61,7 +60,7 @@ public class AndroidUtils {
      */
     public static void openInExternalApp(String path, Context context){
         File file = new File(path);
-        String type = AudioItem.getMimeType(path);
+        String type = TrackUtils.getMimeType(path);
         try {
 
             Intent intent = new Intent();
@@ -195,7 +194,7 @@ public class AndroidUtils {
                 fitCenter().
                 into(cover);
         TextView coverDimensions = view.findViewById(R.id.trackid_cover_dimensions);
-        coverDimensions.setText(AudioItem.getStringImageSize(results.cover)) ;
+        coverDimensions.setText(TrackUtils.getStringImageSize(results.cover)) ;
         if(!results.title.isEmpty()) {
             TextView title = view.findViewById(R.id.track_id_title);
             title.setVisibility(View.VISIBLE);
@@ -245,7 +244,7 @@ public class AndroidUtils {
                 fitCenter().
                 into(cover);
         TextView coverDimensions = view.findViewById(R.id.trackid_cover_dimensions);
-        coverDimensions.setText(AudioItem.getStringImageSize(results.cover)) ;
+        coverDimensions.setText(TrackUtils.getStringImageSize(results.cover)) ;
 
         TextView title = view.findViewById(R.id.track_id_title);
         title.setVisibility(View.GONE);

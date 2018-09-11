@@ -4,12 +4,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.support.v4.content.LocalBroadcastManager;
-import android.util.Log;
 
 import mx.dev.franco.automusictagfixer.R;
+import mx.dev.franco.automusictagfixer.identifier.GnService;
 import mx.dev.franco.automusictagfixer.interfaces.OnTestingNetwork;
 import mx.dev.franco.automusictagfixer.services.Job;
-import mx.dev.franco.automusictagfixer.services.gnservice.GnService;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
 
 /**

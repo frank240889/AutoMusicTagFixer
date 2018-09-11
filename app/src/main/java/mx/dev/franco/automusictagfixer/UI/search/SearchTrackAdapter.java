@@ -28,20 +28,20 @@ import javax.inject.Inject;
 
 import mx.dev.franco.automusictagfixer.AutoMusicTagFixer;
 import mx.dev.franco.automusictagfixer.R;
-import mx.dev.franco.automusictagfixer.datasource.cover_loader.AsyncLoaderCover;
-import mx.dev.franco.automusictagfixer.datasource.cover_loader.CoverLoaderListener;
+import mx.dev.franco.automusictagfixer.interfaces.CoverLoaderListener;
 import mx.dev.franco.automusictagfixer.interfaces.Destructible;
-import mx.dev.franco.automusictagfixer.room.Track;
-import mx.dev.franco.automusictagfixer.services.ServiceHelper;
+import mx.dev.franco.automusictagfixer.modelsUI.main.AsyncLoaderCover;
+import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
 import mx.dev.franco.automusictagfixer.utilities.GlideApp;
+import mx.dev.franco.automusictagfixer.utilities.ServiceUtils;
 
 public class SearchTrackAdapter extends RecyclerView.Adapter<FoundItemHolder> implements Destructible{
     private static final String TAG = SearchTrackAdapter.class.getName();
     @Inject
     Context context;
     @Inject
-    ServiceHelper serviceHelper;
+    ServiceUtils serviceUtils;
     private List<Track> mTrackList = new ArrayList<>();
     private FoundItemHolder.ClickListener mListener;
     private List<AsyncLoaderCover> mAsyncTaskQueue =  new ArrayList<>();
@@ -180,7 +180,7 @@ public class SearchTrackAdapter extends RecyclerView.Adapter<FoundItemHolder> im
         reset();
 
         mAsyncTaskQueue = null;
-        serviceHelper = null;
+        serviceUtils = null;
         context = null;
         mTrackList.clear();
         mTrackList = null;

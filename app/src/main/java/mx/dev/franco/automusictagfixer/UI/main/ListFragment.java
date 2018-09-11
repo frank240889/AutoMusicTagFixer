@@ -21,7 +21,6 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.SearchView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -41,14 +40,13 @@ import mx.dev.franco.automusictagfixer.AutoMusicTagFixer;
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.UI.sd_card_instructions.SdCardInstructionsActivity;
 import mx.dev.franco.automusictagfixer.UI.track_detail.TrackDetailsActivity;
-import mx.dev.franco.automusictagfixer.datasource.AudioItemHolder;
-import mx.dev.franco.automusictagfixer.datasource.TrackAdapter;
-import mx.dev.franco.automusictagfixer.room.Track;
+import mx.dev.franco.automusictagfixer.modelsUI.main.ListViewModel;
+import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.services.FixerTrackService;
-import mx.dev.franco.automusictagfixer.services.ServiceHelper;
 import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
 import mx.dev.franco.automusictagfixer.utilities.RequiredPermissions;
+import mx.dev.franco.automusictagfixer.utilities.ServiceUtils;
 import mx.dev.franco.automusictagfixer.utilities.StorageHelper;
 
 public class ListFragment extends Fragment implements
@@ -73,7 +71,7 @@ public class ListFragment extends Fragment implements
     private View mLayout;
 
     @Inject
-    ServiceHelper serviceHelper;
+    ServiceUtils serviceUtils;
 
     public static ListFragment newInstance() {
         ListFragment fragment = new ListFragment();
@@ -386,7 +384,7 @@ public class ListFragment extends Fragment implements
                 mMessage.setText(R.string.no_items_found);
             }
             else {
-                boolean isServiceRunning = serviceHelper.checkIfServiceIsRunning(FixerTrackService.CLASS_NAME);
+                boolean isServiceRunning = serviceUtils.checkIfServiceIsRunning(FixerTrackService.CLASS_NAME);
                 if(!isServiceRunning){
                     mFabStartTask.show();
                     mFabStopTask.hide();

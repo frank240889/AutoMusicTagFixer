@@ -5,8 +5,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;
 
-import mx.dev.franco.automusictagfixer.services.gnservice.GnService;
-
 /**
  * Created by franco on 26/12/17.
  * Checks changes in connectivity state and make
