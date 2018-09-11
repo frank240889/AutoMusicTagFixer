@@ -112,6 +112,18 @@ public class Tagger {
         return sTaggerHelper;
     }
 
+    /**
+     * @param pathToFile The path of the file to apply new tags.
+     * @param tags Tags to apply.
+     * @param overWriteTags Option to indicate if current tags must overwrite
+     *                      or only apply those missing.
+     * @return resultCorrection object containing the state of operation.
+     * @throws ReadOnlyFileException
+     * @throws CannotReadException
+     * @throws TagException
+     * @throws InvalidAudioFrameException
+     * @throws IOException
+     */
     public ResultCorrection saveTags(String pathToFile, HashMap<FieldKey, Object> tags, int overWriteTags) throws ReadOnlyFileException, CannotReadException, TagException, InvalidAudioFrameException, IOException {
 
         if(pathToFile == null)
@@ -120,6 +132,18 @@ public class Tagger {
         return saveTags(new File(pathToFile), tags, overWriteTags);
     }
 
+    /**
+     * @param file The file to apply new tags.
+     * @param tags Tags to apply.
+     * @param overWriteTags Option to indicate if current tags must overwrite
+     *                      or only apply those missing.
+     * @return resultCorrection object containing the state of operation.
+     * @throws ReadOnlyFileException
+     * @throws CannotReadException
+     * @throws TagException
+     * @throws InvalidAudioFrameException
+     * @throws IOException
+     */
     public ResultCorrection saveTags(File file, HashMap<FieldKey, Object> tags, int overWriteTags) throws ReadOnlyFileException, CannotReadException, TagException, InvalidAudioFrameException, IOException {
 
         if(file == null)
@@ -128,6 +152,16 @@ public class Tagger {
         return applyTags(file, tags, overWriteTags);
     }
 
+    /**
+     * Creates the AudioFile object required by the library to read its tags.
+     * @param file The file to read it tags.
+     * @return trackDataItem containing the information of read tags.
+     * @throws IOException
+     * @throws TagException
+     * @throws ReadOnlyFileException
+     * @throws CannotReadException
+     * @throws InvalidAudioFrameException
+     */
     public TrackDataLoader.TrackDataItem readFile(File file) throws IOException, TagException, ReadOnlyFileException, CannotReadException, InvalidAudioFrameException {
         if(file == null)
             throw new NullPointerException("Source file has not been set yet.");
@@ -136,11 +170,21 @@ public class Tagger {
 
         //AudioFile handled by jAudioTagger library
         AudioFile audioFile = AudioFileIO.read(file);
+        if(audioFile == null)
+            return null;
 
         return getData(audioFile);
     }
 
-
+    /**
+     * @param audioFile The object required by the library to read its tags.
+     * @return trackDataItem object containing the info of track.
+     * @throws ReadOnlyFileException
+     * @throws CannotReadException
+     * @throws TagException
+     * @throws InvalidAudioFrameException
+     * @throws IOException
+     */
     private TrackDataLoader.TrackDataItem getData(AudioFile audioFile){
         TrackDataLoader.TrackDataItem trackDataItem = new TrackDataLoader.TrackDataItem();
 
@@ -178,12 +222,36 @@ public class Tagger {
         return trackDataItem;
     }
 
+    /**
+     * Calls {@link #readFile(File)}
+     * @param path The path to the file to read it tags.
+     * @return trackDataItem containing the information of read tags.
+     * @throws IOException
+     * @throws TagException
+     * @throws ReadOnlyFileException
+     * @throws CannotReadException
+     * @throws InvalidAudioFrameException
+     */
     public TrackDataLoader.TrackDataItem readFile(String path) throws ReadOnlyFileException, CannotReadException, TagException, InvalidAudioFrameException, IOException {
         if(path == null)
             throw new NullPointerException("Path to file has not been set yet.");
         return readFile(new File(path));
     }
 
+    /**
+     * Tries to apply new tags doing before validations to know
+     * if file is stored in SD, or if current tags are same than news.
+     * @param file The file to apply new tags.
+     * @param tags New tags to apply.
+     * @param overWriteTags Indicates if current tags must be overwrote or
+     *                      only apply those missing.
+     * @return
+     * @throws ReadOnlyFileException
+     * @throws IOException
+     * @throws TagException
+     * @throws InvalidAudioFrameException
+     * @throws CannotReadException
+     */
     private ResultCorrection applyTags(File file, HashMap<FieldKey, Object> tags, int overWriteTags) throws ReadOnlyFileException, IOException, TagException, InvalidAudioFrameException, CannotReadException {
         boolean isStoredInSd = sStorageHelper.isStoredInSD(file);
         ResultCorrection resultCorrection = new ResultCorrection();
@@ -193,6 +261,7 @@ public class Tagger {
                 resultCorrection.code = COULD_NOT_GET_URI_SD_ROOT_TREE;
             }
             else {
+                //Hold which tags were applied to return in results.
                 HashMap<FieldKey, Object> tagsToUpdate = isNeededUpdateTags(overWriteTags,file, tags);
                 if(tagsToUpdate.isEmpty()){
                     resultCorrection.code = APPLIED_SAME_TAGS;
@@ -217,7 +286,24 @@ public class Tagger {
         return resultCorrection;
     }
 
-    private HashMap<FieldKey, Object> isNeededUpdateTags(int mOverrideAllTags, File file, HashMap<FieldKey, Object> newTags) throws TagException, ReadOnlyFileException, CannotReadException, InvalidAudioFrameException, IOException {
+    /**
+     * Check which tags needs to update, comparing current
+     * tags of file and new tags.
+     * @param overrideAllTags Indicates the mode of comparision, if
+     *                         mOverrideAllTags is true, will set all tags as needed to update,
+     *                         only if are not equal current than new; if mOverrideAllTags is false
+     *                         will set only those missing in file.
+     * @param file The file to apply tags.
+     * @param newTags The new tags to apply.
+     * @return A hashmap containing the tags that will be update; it will be empty
+     *          if all current tags and news are equals.
+     * @throws TagException
+     * @throws ReadOnlyFileException
+     * @throws CannotReadException
+     * @throws InvalidAudioFrameException
+     * @throws IOException
+     */
+    private HashMap<FieldKey, Object> isNeededUpdateTags(int overrideAllTags, File file, HashMap<FieldKey, Object> newTags) throws TagException, ReadOnlyFileException, CannotReadException, InvalidAudioFrameException, IOException {
         AudioFile audioFile = AudioFileIO.read(file);
         Tag currentTags = getTag(audioFile);
 
@@ -233,7 +319,7 @@ public class Tagger {
             //For case of field cover, we need to compare the length of byte array
             if(entry.getKey() == FieldKey.COVER_ART){
                 //Write missing tags only
-                if(mOverrideAllTags == MODE_WRITE_ONLY_MISSING) {
+                if(overrideAllTags == MODE_WRITE_ONLY_MISSING) {
                     if ((currentCover == null) || currentCover.length == 0) {
                         tagsToUpdate.put((FieldKey) entry.getKey(), entry.getValue());
                     }
@@ -247,7 +333,7 @@ public class Tagger {
 
             //Compare for other fields if current value tag exist, and if current value tags is different that new
             else {
-                if(mOverrideAllTags == MODE_WRITE_ONLY_MISSING){
+                if(overrideAllTags == MODE_WRITE_ONLY_MISSING){
                     if ( ( currentTags.getFirst((FieldKey) entry.getKey()) == null ) ||
                             currentTags.getFirst((FieldKey) entry.getKey()).isEmpty() ){
                         tagsToUpdate.put((FieldKey) entry.getKey(), entry.getValue());
@@ -264,6 +350,12 @@ public class Tagger {
         return tagsToUpdate;
     }
 
+    /**
+     * Gets the tag of audio file object, this tag contains the information
+     * like title, artist, etc.
+     * @param audioFile The file to read its tag.
+     * @return The tag object of the file.
+     */
     private Tag getTag(AudioFile audioFile){
 
         Tag tag = null;
@@ -306,7 +398,7 @@ public class Tagger {
      * but only through the SAF framework that works with
      * DocumentFile objects, and JAudioTagger library
      * only works with File objects.
-     * @return true if tags were successful applied, false otherwise
+     * @return resultCorrection with the state of correction
      */
     private ResultCorrection applyTagsForDocumentFileObject(File file, HashMap<FieldKey, Object> tagsToApply, int overwriteTags) {
         ResultCorrection resultCorrection = new ResultCorrection();
@@ -412,8 +504,11 @@ public class Tagger {
     }
 
     /**
-     * Put new tag values into current tag of current audio file
-     * @param audioFile
+     * Sets new tag values into current tag of current audio file
+     * @param audioFile The audio file to apply tags.
+     * @param tagsToApply The tags to apply to he audio file object.
+     * @param overwriteAllTags Indicates if all current tags ust be overwrote or write
+     *                         only those missing.
      */
     private void setNewTags(AudioFile audioFile,HashMap<FieldKey, Object> tagsToApply, int overwriteAllTags){
         Tag currentTag = getTag(audioFile);
@@ -499,11 +594,12 @@ public class Tagger {
     }
 
     /**
-     * Copy temp file to its original location in SD card
-     * @return true if was correctly copied the file to its original
-     *                  location, false otherwise
-     * @param correctedFile
-     * @param originalFile
+     * Copy temp file that was created in internal storage
+     * to its original location in SD card
+     * @return The code corresponding to the state of copy the file to its original
+     *                  location
+     * @param correctedFile The file with new tags applied.
+     * @param originalFile Original file that was corrected.
      */
     private int copyBack(File correctedFile, File originalFile) {
         DocumentFile sourceDocumentFile = getDocumentFile(originalFile);
@@ -552,8 +648,8 @@ public class Tagger {
 
     /**
      * Gets document file corresponding to source file
-     * @return DocumentFIle of source file stored in SD location
-     * @param sourceFile The file to generate its DocumentFile object
+     * @return sourceDocumentFile repressenting the original final in SD card.
+     * @param sourceFile The file to search its name in SD card.
      */
     private DocumentFile getDocumentFile(File sourceFile){
         DocumentFile sourceDocumentFile = getUriTree();
@@ -581,9 +677,10 @@ public class Tagger {
     }
 
     /**
-     *  Gets the document file object corresponding to
-     *  SD card
-     * @return SD card document file
+     *  Gets the root document file object
+     *  using the Uri of SD card.
+     * @return The root Uri of SD card, if exist
+     *         or null otherwise.
      */
     private DocumentFile getUriTree(){
         Uri uri = AndroidUtils.getUriSD(sContext);
@@ -624,9 +721,9 @@ public class Tagger {
     /**
      * Returns the relative path of
      * storage device in which is
-     * located this file
+     * located this file.
      * @param file The file to process
-     * @return a string of the relative path of its
+     * @return a string of the relative path of the
      *                  device in which is stored
      */
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
@@ -650,9 +747,9 @@ public class Tagger {
 
     /**
      * Returns an array of strings of
-     * folders app, from non removable storage
-     * and removable storage
-     * @return
+     * internal app folders, those that are stored id DATA directory,
+     * from non removable storage and removable storage
+     * @return An array of internal folders of app.
      */
     @TargetApi(Build.VERSION_CODES.KITKAT)
     private String[] getExtSdCardPaths() {
@@ -688,9 +785,9 @@ public class Tagger {
     /**
      * Exposes single method to apply new cover
      * or remove existent one
-     * @param cover new cover to apply, pass null
+     * @param cover new cover to apply, set null
      *              to remove current cover.
-     * @return true if successful, false otherwise
+     * @return resultCorrection containing the result of operation.
      */
     public ResultCorrection applyCover(@Nullable byte[] cover, String pathToFile) throws ReadOnlyFileException, IOException, TagException, InvalidAudioFrameException, CannotReadException {
         if(pathToFile == null)
@@ -707,18 +804,17 @@ public class Tagger {
      * or remove existent one
      * @param cover new cover to apply, pass null
      *              to remove current cover.
-     * @return true if successful, false otherwise
+     * @return resultCorrection containing the result of operation.
      */
     public ResultCorrection applyCover(@Nullable byte[] cover, File file) throws TagException, ReadOnlyFileException, CannotReadException, InvalidAudioFrameException, IOException {
         return internalApplyCover(file,cover);
     }
 
     /**
-     * Encapsulates the method to apply new cover,
-     * taking care if file is store in SD or internal storage.
+     * Applies new cover, taking care if file is store in SD or internal storage.
      * @param coverToApply new cover to apply, pass null
      *              to remove current cover.
-     * @return true if successful, false otherwise
+     * @return resultCorrection containing the result of operation.
      */
     private ResultCorrection internalApplyCover(File file, byte[] coverToApply) throws ReadOnlyFileException, CannotReadException, TagException, InvalidAudioFrameException, IOException {
         boolean isStoredInSd = sStorageHelper.isStoredInSD(file);
@@ -754,8 +850,8 @@ public class Tagger {
     /**
      * Apply cover art for file stored in SD card
      * @param cover New cover as byte array, if null is passed, then
-     *              delete current cover.
-     * @return true if was succesful applied, false otherwise;
+     *              it will be deleted current cover.
+     * @return resultCorrection containing the result of operation.
      */
     private ResultCorrection applyCoverForDocumentFileObject(byte[] cover, File file){
         //Tries to creates a temp file in non removable storage to work with it
@@ -830,7 +926,7 @@ public class Tagger {
      * (better known as internal storage).
      * @param cover New cover as byte array, if null is passed, then
      *              delete current cover.
-     * @return true if was succesful applied, false otherwise;
+     * @return resultCorrection containing the result of operation.
      */
     private ResultCorrection applyCoverForFileObject(byte[] cover, File file){
         ResultCorrection resultCorrection = new ResultCorrection();
@@ -871,10 +967,9 @@ public class Tagger {
     /**
      * Public common method to exposes rename file functionality both for files
      * stored in SD card or files stores in internal memory
-     * @param currentFile The file toi rename
-     * @param metadata The data to use for renaming
+     * @param currentFile The file to rename
+     * @param metadata The string or strings to use as name.
      * @return new absolute path to file;
-     * @throws NullPointerException
      */
     @Nullable
     public String renameFile(File currentFile, String... metadata){
@@ -894,7 +989,7 @@ public class Tagger {
 
     /**
      * Rename file object using the data passed in the array
-     * @param sourceFile FIle to rename
+     * @param sourceFile File to rename
      * @param metadata Data to use as name, if is not empty
      * @return New complete file path as string
      */
@@ -1030,19 +1125,23 @@ public class Tagger {
         return checkFileIntegrity(new File(path));
     }
 
-        /**
-         * Deletes file passed in paramete if exist.
-         * @param file
-         */
+    /**
+     * Deletes file passed as parameter.
+     * @param file The file to delete.
+     */
     private void deleteTempFile(File file){
         if(file != null && file.exists()){
             file.delete();
         }
     }
 
+    /**
+     * Container class that holds
+     * the result of correction
+     */
     public static class ResultCorrection{
         public String pathTofileUpdated = null;
-        public int code = -1;
+        public int code = NOT_SET;
         public int allTagsApplied;
         public Track track;
         public HashMap<FieldKey, Object> tagsUpdated;
