@@ -28,8 +28,6 @@ public class AsyncFileReader extends AsyncTask<Void, Void, Void> {
 
     public static final int INSERT_ALL = 0;
     public static final int UPDATE_LIST = 1;
-    public static final int UPDATE_SINGLE = 2;
-    public static final int GET_TRACK = 3;
 
     @Inject
     TrackRoomDatabase trackRoomDatabase;
@@ -39,7 +37,6 @@ public class AsyncFileReader extends AsyncTask<Void, Void, Void> {
     Context context;
     private IRetriever mListener;
     private int mTask;
-    private int mMediaStoreId;
     private boolean mEmptyList = true;
 
     public AsyncFileReader(){
@@ -53,10 +50,6 @@ public class AsyncFileReader extends AsyncTask<Void, Void, Void> {
     public AsyncFileReader setTask(int task){
         mTask = task;
         return this;
-    }
-
-    public void setIdToUpdate(int mediaStoreId){
-        mMediaStoreId = mediaStoreId;
     }
 
     @Override
@@ -78,10 +71,6 @@ public class AsyncFileReader extends AsyncTask<Void, Void, Void> {
             Cursor cursor = MediaStoreRetriever.getAllFromDevice(context);
             addNewTracks(cursor);
             removeInexistentTracks();
-        }
-        else {
-            Cursor cursor = MediaStoreRetriever.getFromDevice(context, mMediaStoreId);
-            updateSingleTrack(cursor);
         }
 
         return null;
@@ -161,18 +150,6 @@ public class AsyncFileReader extends AsyncTask<Void, Void, Void> {
         if(tracksToRemove.size() > 0)
             trackDAO.deleteBatch(tracksToRemove);
     }
-
-    private void updateSingleTrack(Cursor cursor){
-        TrackDAO trackDAO = trackRoomDatabase.trackDao();
-        if(cursor.moveToFirst()){
-            Track track = buildTrack(cursor);
-            trackDAO.update(track);
-        }
-
-        cursor.close();
-
-    }
-
 
     private Track buildTrack(Cursor cursor){
         int mediaStoreId = cursor.getInt(0);//mediastore id

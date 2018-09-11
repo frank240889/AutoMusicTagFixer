@@ -7,10 +7,7 @@ package mx.dev.franco.automusictagfixer.utilities;
 import com.gracenote.gnsdk.GnImageSize;
 
 /**
- * This class help us to store the values from settings in order to
- * do not call SharedPreferences every time we need to check the value.
- * Some have been declared as volatiles because they are accessed by more than
- *  1 thread.
+ * This class help us to store the values og ImageSize from settings.
  */
 public class Settings {
     //Determine the size of downloaded cover art, default value is not download cover art.

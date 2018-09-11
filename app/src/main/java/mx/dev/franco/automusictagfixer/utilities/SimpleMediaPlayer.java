@@ -46,7 +46,7 @@ public final class SimpleMediaPlayer extends MediaPlayer implements MediaPlayer.
 
     /**
      *
-     * @param context
+     * @param context The context, needed for access Android resources
      * @return An unique instance of SimpleMediaPlayer.
      */
     public static SimpleMediaPlayer getInstance(Context context){
@@ -58,7 +58,7 @@ public final class SimpleMediaPlayer extends MediaPlayer implements MediaPlayer.
 
     /**
      * Play a preview of audiofile.
-     * @param path
+     * @param path The path of the file to play
      * @throws IOException
      * @throws InterruptedException
      */
