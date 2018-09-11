@@ -17,8 +17,7 @@ public class DefaultSharedPreferencesImpl extends AbstractSharedPreferences {
 
     @Override
     public void putInt(String key, int value) {
-        mDefaultSharedPreferences.edit().putInt(key,value);
-        mDefaultSharedPreferences.edit().apply();
+        mDefaultSharedPreferences.edit().putInt(key,value).apply();
     }
 
     @Override

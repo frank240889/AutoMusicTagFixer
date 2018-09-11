@@ -26,12 +26,7 @@ public class QuestionsActivity extends AppCompatActivity implements FaqAdapter.O
         //Set an action bar
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                QuestionsActivity.super.onBackPressed();
-            }
-        });
+        toolbar.setNavigationOnClickListener(v -> QuestionsActivity.super.onBackPressed());
 
         //Get action bar from toolbar
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -72,11 +67,11 @@ public class QuestionsActivity extends AppCompatActivity implements FaqAdapter.O
 
     @Override
     protected void onDestroy(){
+        super.onDestroy();
         mQuestionItems.clear();
         mQuestionItems = null;
         mFaqAdapter = null;
         mRecyclerView = null;
-        super.onDestroy();
     }
 
 
