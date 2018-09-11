@@ -1,8 +1,6 @@
 package mx.dev.franco.automusictagfixer.UI.main;
 
 import android.Manifest;
-import android.animation.Animator;
-import android.animation.AnimatorSet;
 import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
@@ -29,7 +27,6 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewAnimationUtils;
 import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -49,9 +46,9 @@ import mx.dev.franco.automusictagfixer.datasource.TrackAdapter;
 import mx.dev.franco.automusictagfixer.room.Track;
 import mx.dev.franco.automusictagfixer.services.FixerTrackService;
 import mx.dev.franco.automusictagfixer.services.ServiceHelper;
+import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
 import mx.dev.franco.automusictagfixer.utilities.RequiredPermissions;
-import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 import mx.dev.franco.automusictagfixer.utilities.StorageHelper;
 
 public class ListFragment extends Fragment implements
@@ -60,7 +57,7 @@ public class ListFragment extends Fragment implements
     private static final String TAG = ListFragment.class.getName();
 
     private GridLayoutManager mGridLayoutManager;
-    //A simple texview to show a message when no songs were identificationFound
+    //A simple text view to show a message when no songs were identificationFound
     private TextView mMessage;
     //swipe refresh mLayout for give to user the
     //ability to re scan the library making a swipe down gesture.
@@ -69,8 +66,6 @@ public class ListFragment extends Fragment implements
     //better performance with huge data sources
     private RecyclerView mRecyclerView;
     private TrackAdapter mAdapter;
-    private Menu mMenu;
-    private SearchView mSearchViewWidget;
     private FloatingActionButton mFabStartTask;
     private FloatingActionButton mFabStopTask;
     private ListViewModel mListViewModel;
@@ -234,14 +229,13 @@ public class ListFragment extends Fragment implements
     @Override
     public void onStop(){
         super.onStop();
-
     }
 
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
         mRecyclerView.stopScroll();
         mGridLayoutManager.setSpanCount(newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE ? 2 : 1);
-        super.onConfigurationChanged(newConfig);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
@@ -380,11 +374,10 @@ public class ListFragment extends Fragment implements
     /**
      * Runs when a modification in database
      * occurred
-        The list with the new data.
+     * @param tracks The list with the new data.
      */
     @Override
     public void onChanged(@Nullable List<Track> tracks) {
-        Log.d("tracks != null", (tracks != null) + "");
         if(tracks != null) {
             if(tracks.isEmpty()) {
                 mFabStopTask.hide();

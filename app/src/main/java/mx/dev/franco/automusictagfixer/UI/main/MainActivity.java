@@ -152,16 +152,16 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onDestroy() {
+        super.onDestroy();
         Log.d(TAG, "destroy");
         LocalBroadcastManager.getInstance(getApplicationContext()).unregisterReceiver(mReceiver);
         mReceiver.clearReceiver();
         mReceiver = null;
+        //Stop correction task if "Usar corrección en segundo plano" from Settings is off.
         if(!PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getBoolean("key_background_service", true)){
             Intent intent = new Intent(this,FixerTrackService.class);
             stopService(intent);
         }
-
-        super.onDestroy();
     }
 
     @Override
@@ -184,76 +184,6 @@ public class MainActivity extends AppCompatActivity
         SearchView searchView = (SearchView) menu.findItem(R.id.action_search).getActionView();
         searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
         searchView.setIconifiedByDefault(false);
-
-        /*searchView.setOnSearchClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                int x = v.getRight();
-                int y = v.getBottom();
-                int endRadius = mToolbar.getWidth()*2;
-
-                Animator animator = AndroidUtils.createRevealWithDelay(searchView, x, y, 0, endRadius);
-                animator.addListener(new Animator.AnimatorListener() {
-                    @Override
-                    public void onAnimationStart(Animator animation) {
-
-                    }
-
-                    @Override
-                    public void onAnimationEnd(Animator animation) {
-
-                    }
-
-                    @Override
-                    public void onAnimationCancel(Animator animation) {
-
-                    }
-
-                    @Override
-                    public void onAnimationRepeat(Animator animation) {
-
-                    }
-                });
-                animator.start();
-
-            }
-        });
-
-        searchView.setOnCloseListener(new SearchView.OnCloseListener() {
-            @Override
-            public boolean onClose() {
-                int x = mToolbar.getRight();
-                int y = mToolbar.getBottom();
-                int startRadius = mToolbar.getWidth()*2;
-
-                Animator animator = AndroidUtils.createRevealWithDelay(searchView, x, y, startRadius, 0);
-                animator.addListener(new Animator.AnimatorListener() {
-                    @Override
-                    public void onAnimationStart(Animator animation) {
-                        searchView.setIconified(false);
-                    }
-
-                    @Override
-                    public void onAnimationEnd(Animator animation) {
-                        searchView.setIconified(true);
-                    }
-
-                    @Override
-                    public void onAnimationCancel(Animator animation) {
-
-                    }
-
-                    @Override
-                    public void onAnimationRepeat(Animator animation) {
-
-                    }
-                });
-                animator.start();
-
-                return false;
-            }
-        });*/
-
         return true;
     }
 
@@ -378,8 +308,14 @@ public class MainActivity extends AppCompatActivity
         return super.onOptionsItemSelected(menuItem);
     }
 
+    /**
+     * Sets the item with an icon and saves to
+     * shared preferences to persist its value, to indicate what sort type is selected.
+     * @param selectedItem The id of item selected.
+     */
     private void checkItem(int selectedItem) {
         SharedPreferences sharedPreferences = getSharedPreferences(Constants.Application.FULL_QUALIFIED_NAME, Context.MODE_PRIVATE);
+        //No previous value was found.
         if(selectedItem == -1){
             int currentSelectedItem = sharedPreferences.getInt(Constants.SELECTED_ITEM, -1);
             if(currentSelectedItem == -1){
@@ -399,11 +335,13 @@ public class MainActivity extends AppCompatActivity
         }
         else {
             int lastItemSelected = sharedPreferences.getInt(Constants.LAST_SELECTED_ITEM, -1);
+            //User selected the same item.
             if(selectedItem == lastItemSelected)
                 return;
 
             MenuItem menuItemSelected = mMenu.findItem(selectedItem);
             MenuItem lastMenuItemSelected = mMenu.findItem(lastItemSelected);
+            //Clear last selected
             lastMenuItemSelected.setIcon(null);
             menuItemSelected.setIcon(ContextCompat.getDrawable(getApplicationContext(), R.drawable.ic_done_white));
             sharedPreferences.edit().putInt(Constants.SELECTED_ITEM, menuItemSelected.getItemId()).apply();
