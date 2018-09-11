@@ -23,11 +23,12 @@ public class StorageHelper{
     private static Context sContext;
     private static StorageHelper sStorage;
     private SparseArray<String> mBasePaths = new SparseArray<>();
+    private static final String PRIVATE_TEMP_FOLDER = "temp_tagged_files";
     private StorageHelper(Context context){
         sContext = context.getApplicationContext();
     }
 
-    public static StorageHelper getInstance(Context context){
+    public static synchronized StorageHelper getInstance(Context context){
         if(sStorage == null) {
             sStorage = new StorageHelper(context);
         }
@@ -47,7 +48,7 @@ public class StorageHelper{
      * Detect number of storage available.
      */
     public StorageHelper detectStorages(){
-        File[] storage = ContextCompat.getExternalFilesDirs(sContext, "temp_tagged_files");
+        File[] storage = ContextCompat.getExternalFilesDirs(sContext, PRIVATE_TEMP_FOLDER);
 
         int numberMountedStorage = 0;
 
@@ -66,6 +67,10 @@ public class StorageHelper{
         return this;
     }
 
+    /**
+     * Returns the base path of available storage.
+     * @return An {@link SparseArray} containing the base paths.
+     */
     public SparseArray<String> getBasePaths(){
         return mBasePaths;
     }
@@ -75,19 +80,19 @@ public class StorageHelper{
      * @return available size of current storage
      */
     private static long getInternalAvailableSize(){
-        return Environment.getExternalStorageDirectory().getTotalSpace();//ContextCompat.getExternalFilesDirs(sContext, "temp_tagged_files")[0].getUsableSpace();
+        return Environment.getExternalStorageDirectory().getTotalSpace();
     }
 
     /**
-     * Creates a temo file in external non-removable storage,
+     * Creates a temp file in external non-removable storage,
      * more known as shared Storage or internal storage
-     * @param sourceFile
-     * @return
+     * @param sourceFile The source file to copy.
+     * @return The copy of file or null if could not be created.
      */
     public File createTempFileFrom(File sourceFile) {
 
         //Before create temp file, check if exist enough space,
-        //to ensure iwe can perform correctly the operations, lets take the triple size of source file
+        //to ensure we can perform correctly the operations, lets take the triple size of source file
         //because operations of AudioTagger library.
         long availableSize = getInternalAvailableSize();
         long fileSize = sourceFile.getTotalSpace();
@@ -99,7 +104,7 @@ public class StorageHelper{
 
         // Create a path where we will place our private file on non removable external
         // storage.
-        File externalNonRemovableDevicePath = ContextCompat.getExternalFilesDirs(sContext, "temp_tagged_files")[0];
+        File externalNonRemovableDevicePath = ContextCompat.getExternalFilesDirs(sContext, PRIVATE_TEMP_FOLDER)[0];
 
         File fileDest = new File(externalNonRemovableDevicePath, sourceFile.getName());
 
@@ -146,7 +151,7 @@ public class StorageHelper{
 
     /**
      * Check if file is stored on SD card or Non removable storage.
-     * @return
+     * @return True if file is stored in SD, false otherwise.
      */
     private boolean internalIsStoredInSD(File file){
         SparseArray<String> basePaths =  StorageHelper.getInstance(sContext).getBasePaths();
