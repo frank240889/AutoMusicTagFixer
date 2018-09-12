@@ -73,14 +73,14 @@ public class TrackIdentifier implements  GnResponseListener.GnListener{
     }
 
     public void cancelIdentification(){
-        //if(mDequeue.peek() != null){
+        if(mGnListener != null)
+            mGnListener.onIdentificationCancelled("Cancelled", mTrack);
+
         if(mGnMusicIdFile != null){
             //mDequeue.poll().cancel();
             mGnMusicIdFile.cancel();
         }
         mGnResponseListener.setCancel(true);
-        mGnListener.onIdentificationCancelled("Cancelled", mTrack);
-
         clear();
     }
 

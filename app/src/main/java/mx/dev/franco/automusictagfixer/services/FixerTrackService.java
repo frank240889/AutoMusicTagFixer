@@ -565,9 +565,7 @@ public class FixerTrackService extends Service implements GnResponseListener.GnL
         String action = intent.getAction();
         if(action != null && (action.equals(Constants.Actions.ACTION_CONNECTION_LOST) ||
         action.equals(Intent.ACTION_MEDIA_MOUNTED) || action.equals(Intent.ACTION_MEDIA_UNMOUNTED))){
-            messageFinishTask = getString(R.string.task_cancelled);
-            notifyFinished();
-            stopSelf();
+            stopAsyncTasks();
         }
     }
 }
