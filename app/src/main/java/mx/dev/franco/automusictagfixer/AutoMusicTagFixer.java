@@ -1,14 +1,10 @@
 package mx.dev.franco.automusictagfixer;
 
 import android.app.Application;
-import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.Configuration;
 import android.net.ConnectivityManager;
-import android.os.Build;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatDelegate;
 
 import com.crashlytics.android.Crashlytics;
@@ -68,11 +64,6 @@ public final class AutoMusicTagFixer extends Application {
 
         StorageHelper.getInstance(getApplicationContext()).detectStorages();
 
-        //if (LeakCanary.isInAnalyzerProcess(this)) {
-            // This process is dedicated to LeakCanary for heap analysis.
-            // You should not init your app in this process.
-        //    return;
-        //}
         LeakCanary.install(this);
         Stetho.initializeWithDefaults(this);
         AppCompatDelegate.setCompatVectorFromResourcesEnabled(true);

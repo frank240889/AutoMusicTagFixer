@@ -1,7 +1,5 @@
 package mx.dev.franco.automusictagfixer.utilities;
 
-import android.net.Uri;
-
 import mx.dev.franco.automusictagfixer.BuildConfig;
 
 /**
@@ -45,6 +43,7 @@ public class Constants {
 
         public static final String START_PROCESSING_FOR = BuildConfig.APPLICATION_ID + ".start_identification_for";
         public static final String FINISH_TRACK_PROCESSING = BuildConfig.APPLICATION_ID + ".action_finish_track_processing";
+        public static final String ACTION_RESCAN = BuildConfig.APPLICATION_ID + ".action_rescan";
     }
 
     public static class GnServiceActions{

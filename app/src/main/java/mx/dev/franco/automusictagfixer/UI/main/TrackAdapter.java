@@ -368,7 +368,15 @@ public class TrackAdapter extends RecyclerView.Adapter<AudioItemHolder> implemen
             Log.d(TAG, tracks.size()+"");
             //Update only if exist items
             if (getItemCount() > 0) {
-                updateInBackground(tracks);
+                boolean dispatchListener = sharedPreferences.getBoolean("sorting") && mOnSortingListener != null;
+                if(dispatchListener){
+                    mTrackList = tracks;
+                    notifyDataSetChanged();
+                    mOnSortingListener.onFinishSorting();
+                }
+                else {
+                    updateInBackground(tracks);
+                }
             } else {
                 mTrackList = tracks;
                 notifyDataSetChanged();
@@ -426,11 +434,9 @@ public class TrackAdapter extends RecyclerView.Adapter<AudioItemHolder> implemen
         if (mPendingUpdates != null)
             mPendingUpdates.remove();
 
-        boolean dispatchListener = sharedPreferences.getBoolean("sorting") && mOnSortingListener != null;
+
 
         if (diffResults.diffResult != null) {
-            if(dispatchListener)
-                clearLoads();
             Log.d(TAG, "dispatching results... list" + diffResults.list.size());
             diffResults.diffResult.dispatchUpdatesTo(this);
             Log.d(TAG, "results dispatched.");
@@ -448,9 +454,6 @@ public class TrackAdapter extends RecyclerView.Adapter<AudioItemHolder> implemen
             if (mPendingUpdates != null && mPendingUpdates.size() > 0) {
                 updateInBackground(mPendingUpdates.peek());
             }
-
-            if(dispatchListener)
-                mOnSortingListener.onFinishSorting();
         }
     }
 

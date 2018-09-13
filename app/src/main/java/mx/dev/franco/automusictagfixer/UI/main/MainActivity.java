@@ -120,14 +120,6 @@ public class MainActivity extends AppCompatActivity
     protected void onResume(){
         super.onResume();
         Log.d(TAG,"onResume");
-        SharedPreferences sharedPreferences = getSharedPreferences(
-                Constants.Application.FULL_QUALIFIED_NAME, Context.MODE_PRIVATE);
-
-        boolean reSearch = sharedPreferences.getBoolean("research", false);
-        if(reSearch){
-            rescan();
-            sharedPreferences.edit().remove("research").apply();
-        }
     }
 
     @Override
@@ -176,7 +168,7 @@ public class MainActivity extends AppCompatActivity
         SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
         SearchView searchView = (SearchView) menu.findItem(R.id.action_search).getActionView();
         searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
-        searchView.setIconifiedByDefault(false);
+        searchView.setIconifiedByDefault(true);
         return true;
     }
 
@@ -365,6 +357,7 @@ public class MainActivity extends AppCompatActivity
         IntentFilter finishProcessingFilter = new IntentFilter(Constants.Actions.FINISH_TRACK_PROCESSING);
         IntentFilter completedTaskFilter = new IntentFilter(Constants.Actions.ACTION_COMPLETE_TASK);
         IntentFilter errorTask = new IntentFilter(Constants.Actions.ACTION_SD_CARD_ERROR);
+        IntentFilter rescanFilter = new IntentFilter(Constants.Actions.ACTION_RESCAN);
 
         mReceiver = new ResponseReceiver(this, new Handler());
 
@@ -377,6 +370,7 @@ public class MainActivity extends AppCompatActivity
         localBroadcastManager.registerReceiver(mReceiver, apiInitializedFilter);
         localBroadcastManager.registerReceiver(mReceiver, startTaskFilter);
         localBroadcastManager.registerReceiver(mReceiver, errorTask);
+        localBroadcastManager.registerReceiver(mReceiver, rescanFilter);
 
     }
 
@@ -500,6 +494,9 @@ public class MainActivity extends AppCompatActivity
                     toast.setText(message);
                     toast.setDuration(Toast.LENGTH_SHORT);
                     toast.show();
+                break;
+            case Constants.Actions.ACTION_RESCAN:
+                    rescan();
                 break;
         }
 
