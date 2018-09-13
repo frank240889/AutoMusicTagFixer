@@ -177,7 +177,9 @@ public class ListFragment extends Fragment implements
             });
 
         if(!hasPermission) {
-            requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, RequiredPermissions.WRITE_EXTERNAL_STORAGE_PERMISSION);
+            requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                            Manifest.permission.READ_EXTERNAL_STORAGE},
+                    RequiredPermissions.WRITE_EXTERNAL_STORAGE_PERMISSION);
         }
         else {
             mMessage.setText(R.string.loading_tracks);
@@ -190,7 +192,7 @@ public class ListFragment extends Fragment implements
         scrollTo(id);
 
 
-        if(Build.VERSION.SDK_INT <= Build.VERSION_CODES.M)
+        if(Build.VERSION.SDK_INT < Build.VERSION_CODES.M)
             mListViewModel.getInfoForTracks();
 
         boolean isPresentSD = StorageHelper.getInstance(getActivity().getApplicationContext()).isPresentRemovableStorage();
