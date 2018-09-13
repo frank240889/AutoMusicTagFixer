@@ -120,6 +120,14 @@ public class MainActivity extends AppCompatActivity
     protected void onResume(){
         super.onResume();
         Log.d(TAG,"onResume");
+        SharedPreferences sharedPreferences = getSharedPreferences(
+                Constants.Application.FULL_QUALIFIED_NAME, Context.MODE_PRIVATE);
+
+        boolean reSearch = sharedPreferences.getBoolean("research", false);
+        if(reSearch){
+            rescan();
+            sharedPreferences.edit().remove("research").apply();
+        }
     }
 
     @Override
@@ -195,18 +203,7 @@ public class MainActivity extends AppCompatActivity
                 mListFragment.checkAll();
                 break;
             case R.id.action_refresh:
-                boolean hasPermission = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
-                if(!hasPermission) {
-                    mListFragment.requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, RequiredPermissions.WRITE_EXTERNAL_STORAGE_PERMISSION);
-                }
-                else if(ServiceUtils.getInstance(getApplicationContext()).checkIfServiceIsRunning(FixerTrackService.class.getName())){
-                    Snackbar snackbar = AndroidUtils.getSnackbar(mToolbar, getApplicationContext());
-                    snackbar.setText(R.string.no_available);
-                    snackbar.show();
-                }
-                else {
-                    mListFragment.updateList();
-                }
+                    rescan();
                 break;
 
             case R.id.path_asc:
@@ -291,6 +288,21 @@ public class MainActivity extends AppCompatActivity
                 break;
         }
         return super.onOptionsItemSelected(menuItem);
+    }
+
+    private void rescan(){
+        boolean hasPermission = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
+        if(!hasPermission) {
+            mListFragment.requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, RequiredPermissions.WRITE_EXTERNAL_STORAGE_PERMISSION);
+        }
+        else if(ServiceUtils.getInstance(getApplicationContext()).checkIfServiceIsRunning(FixerTrackService.class.getName())){
+            Snackbar snackbar = AndroidUtils.getSnackbar(mToolbar, getApplicationContext());
+            snackbar.setText(R.string.no_available);
+            snackbar.show();
+        }
+        else {
+            mListFragment.updateList();
+        }
     }
 
     /**

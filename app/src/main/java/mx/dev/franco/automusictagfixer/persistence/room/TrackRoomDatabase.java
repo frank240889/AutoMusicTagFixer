@@ -6,7 +6,10 @@ import android.arch.persistence.room.Room;
 import android.arch.persistence.room.RoomDatabase;
 import android.arch.persistence.room.migration.Migration;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.support.annotation.NonNull;
+
+import mx.dev.franco.automusictagfixer.utilities.Constants;
 
 @Database(entities = {Track.class}, version = 2)
 public abstract class TrackRoomDatabase extends RoomDatabase {
@@ -19,8 +22,23 @@ public abstract class TrackRoomDatabase extends RoomDatabase {
                 if(INSTANCE == null){
                     INSTANCE = Room.databaseBuilder(context.getApplicationContext(),
                             TrackRoomDatabase.class,"DataTrack.db").
-                            addMigrations(MIGRATION_1_2).
-                            //addCallback(sRoomDatabaseCallback).
+                            fallbackToDestructiveMigration().
+                            addCallback(new Callback() {
+                                @Override
+                                public void onCreate(@NonNull SupportSQLiteDatabase db) {
+                                    super.onCreate(db);
+                                    SharedPreferences sharedPreferences =
+                                            context.getSharedPreferences(
+                                                    Constants.Application.FULL_QUALIFIED_NAME,
+                                                    Context.MODE_PRIVATE);
+                                    sharedPreferences.edit().putBoolean("research", true).apply();
+                                }
+
+                                @Override
+                                public void onOpen(@NonNull SupportSQLiteDatabase db) {
+                                    super.onOpen(db);
+                                }
+                            }).
                             build();
                 }
             }
@@ -31,6 +49,7 @@ public abstract class TrackRoomDatabase extends RoomDatabase {
     static final Migration MIGRATION_1_2 = new Migration(1,2) {
         @Override
         public void migrate(@NonNull SupportSQLiteDatabase database) {
-            database.execSQL("DROP TABLE IF EXISTS tracks_table");        }
+            database.execSQL("DROP TABLE IF EXISTS tracks_table");
+        }
     };
 }
