@@ -41,7 +41,7 @@
         <activity
             android:name=".UI.main.MainActivity"
             android:configChanges="orientation|screenSize"
-            android:label="@string/title_activity_folder_choser"
+            android:label="@string/title_activity_main"
             android:screenOrientation="portrait"
             android:theme="@style/MainActivityTheme"
             android:launchMode="singleTop">

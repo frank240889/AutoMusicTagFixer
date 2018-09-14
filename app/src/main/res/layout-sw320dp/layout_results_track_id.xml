@@ -49,7 +49,7 @@
         android:gravity="center_vertical"
         android:maxLines="1"
         android:padding="8dp"
-        android:text="@string/no_cover_art" />
+        android:text="@string/no_cover_art_found" />
 
     <TextView
         android:id="@+id/track_id_title"

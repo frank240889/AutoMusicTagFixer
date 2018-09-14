@@ -9,7 +9,6 @@ import android.support.v7.app.AppCompatDelegate;
 
 import com.crashlytics.android.Crashlytics;
 import com.crashlytics.android.core.CrashlyticsCore;
-import com.facebook.stetho.Stetho;
 import com.squareup.leakcanary.LeakCanary;
 
 import io.fabric.sdk.android.Fabric;
@@ -65,7 +64,7 @@ public final class AutoMusicTagFixer extends Application {
         StorageHelper.getInstance(getApplicationContext()).detectStorages();
 
         LeakCanary.install(this);
-        Stetho.initializeWithDefaults(this);
+        //Stetho.initializeWithDefaults(this);
         AppCompatDelegate.setCompatVectorFromResourcesEnabled(true);
     }
 

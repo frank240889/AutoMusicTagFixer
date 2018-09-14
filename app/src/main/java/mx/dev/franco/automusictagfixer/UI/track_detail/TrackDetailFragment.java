@@ -844,6 +844,7 @@ public class TrackDetailFragment extends Fragment implements EditableView {
     @Override
     public void onCorrectionError(String message, String action) {
         Snackbar snackbar = AndroidUtils.getSnackbar(mEditableFieldsContainer, getActivity().getApplicationContext());
+        snackbar.setDuration(Snackbar.LENGTH_LONG);
         if (action != null && action.equals(getString(R.string.get_permission))){
             snackbar.setAction(action, new View.OnClickListener() {
                 @Override
@@ -856,8 +857,7 @@ public class TrackDetailFragment extends Fragment implements EditableView {
             snackbar.setAction(action, new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    if(mListener != null)
-                        mListener.onEnterEditMode();
+                    enableFieldsToEdit();
                 }
             });
         }

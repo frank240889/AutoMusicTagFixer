@@ -178,7 +178,7 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
             cover = mView.getCover();
             if(cover == null){
                 if(mView != null){
-                    mView.onCorrectionError(resourceManager.getString(R.string.can_not_extract_null_cover), null);
+                    mView.onCorrectionError(resourceManager.getString(R.string.does_not_exist_cover), null);
                 }
                 return;
             }
@@ -247,7 +247,8 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
             }
             else{
                 if(results.cover == null)
-                    mView.onCorrectionError(resourceManager.getString(R.string.no_cover_art_found), null);
+                    mView.onCorrectionError(resourceManager.getString(R.string.no_cover_art_found),
+                            resourceManager.getString(R.string.add_manual));
                 else
                     mView.loadCoverIdentificationResults(results);
             }
@@ -268,7 +269,7 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
                 }
 
                 if(mView != null)
-                    mView.onCorrectionError(message, null);
+                    mView.onCorrectionError(message, resourceManager.getString(R.string.add_manual));
                 connectivityDetector.onStartTestingNetwork();
                 return;
             }
@@ -667,7 +668,7 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
         if(!resultCorrection.track.getAlbum().isEmpty())
             mCurrentTrack.setAlbum(mCurrentTrackDataItem.album);
 
-        mView.onSuccessfullyCorrection(resourceManager.getString(R.string.apply_tags));
+        mView.onSuccessfullyCorrection(resourceManager.getString(R.string.successfully_applied_tags));
         trackRepository.update(resultCorrection.track);
     }
 
@@ -682,7 +683,7 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
         setEditableInfo(mCurrentTrackDataItem);
         setAdditionalInfo(mCurrentTrackDataItem);
         mView.disableEditMode();
-        mView.onSuccessfullyCorrection(resourceManager.getString(R.string.apply_tags));
+        mView.onSuccessfullyCorrection(resourceManager.getString(R.string.successfully_applied_tags));
         trackRepository.update(resultCorrection.track);
     }
 
@@ -736,7 +737,7 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
         mCurrentTrack.setArtist(resultCorrection.track.getArtist());
         mCurrentTrack.setAlbum(resultCorrection.track.getAlbum());
 
-        mView.onSuccessfullyCorrection(resourceManager.getString(R.string.apply_tags));
+        mView.onSuccessfullyCorrection(resourceManager.getString(R.string.successfully_applied_tags));
         trackRepository.update(resultCorrection.track);
 
     }
