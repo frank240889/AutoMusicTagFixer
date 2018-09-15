@@ -164,7 +164,6 @@ public class MainActivity extends AppCompatActivity
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.menu_main_activity, menu);
-
         SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
         SearchView searchView = (SearchView) menu.findItem(R.id.action_search).getActionView();
         searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
@@ -331,10 +330,16 @@ public class MainActivity extends AppCompatActivity
             MenuItem menuItemSelected = mMenu.findItem(selectedItem);
             MenuItem lastMenuItemSelected = mMenu.findItem(lastItemSelected);
             //Clear last selected
-            lastMenuItemSelected.setIcon(null);
-            menuItemSelected.setIcon(ContextCompat.getDrawable(getApplicationContext(), R.drawable.ic_done_white));
-            sharedPreferences.edit().putInt(Constants.SELECTED_ITEM, menuItemSelected.getItemId()).apply();
-            sharedPreferences.edit().putInt(Constants.LAST_SELECTED_ITEM, menuItemSelected.getItemId()).apply();
+            if(lastMenuItemSelected != null)
+                lastMenuItemSelected.setIcon(null);
+
+            int selectedMenuItem = -1;
+            if(menuItemSelected != null) {
+                menuItemSelected.setIcon(ContextCompat.getDrawable(getApplicationContext(), R.drawable.ic_done_white));
+                selectedMenuItem = menuItemSelected.getItemId();
+            }
+            sharedPreferences.edit().putInt(Constants.SELECTED_ITEM, selectedMenuItem).apply();
+            sharedPreferences.edit().putInt(Constants.LAST_SELECTED_ITEM, selectedMenuItem).apply();
         }
     }
 
@@ -404,9 +409,7 @@ public class MainActivity extends AppCompatActivity
             startActivity(intent);
         }
 
-
-        DrawerLayout drawer = findViewById(R.id.drawer_layout);
-        drawer.closeDrawer(GravityCompat.START);
+        mDrawer.closeDrawer(GravityCompat.START);
         return true;
     }
 
