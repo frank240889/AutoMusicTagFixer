@@ -208,8 +208,9 @@ public class FixerTrackService extends Service implements GnResponseListener.GnL
             stopSelf();
         }
         else {
-            sIdentifier = new TrackIdentifier(this);
+            sIdentifier = new TrackIdentifier();
             sIdentifier.setTrack(data.get(0));
+            sIdentifier.setGnListener(this);
             isRunning = true;
             try {
                 AudioFileIO.read(new File(data.get(0).getPath()));

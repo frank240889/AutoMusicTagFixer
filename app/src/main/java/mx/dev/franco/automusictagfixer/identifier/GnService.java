@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.os.AsyncTask;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
+import android.util.SparseArray;
 import android.widget.Toast;
 
 import com.crashlytics.android.Crashlytics;
@@ -17,6 +18,7 @@ import com.gracenote.gnsdk.GnLicenseInputMode;
 import com.gracenote.gnsdk.GnLocale;
 import com.gracenote.gnsdk.GnLocaleGroup;
 import com.gracenote.gnsdk.GnManager;
+import com.gracenote.gnsdk.GnMusicIdFile;
 import com.gracenote.gnsdk.GnRegion;
 import com.gracenote.gnsdk.GnUser;
 import com.gracenote.gnsdk.GnUserStore;
@@ -33,6 +35,8 @@ import mx.dev.franco.automusictagfixer.utilities.Constants;
 public class GnService{
     private static int sCountAttempts = 0;
     private static final java.lang.String TAG = GnService.class.getName();
+    public static final int AUTOMATIC = 0;
+    public static final int SEMI_AUTOMATIC = 1;
     //We can set a Context in static field while we call getApplicationContext() to avoid memory leaks, because
     //if we use the activity Context, this activity can remain in memory due is still in use its Context
     private static Context sContext;
@@ -50,6 +54,7 @@ public class GnService{
     /***************************/
     public static volatile boolean sApiInitialized = false;
     public static volatile boolean sIsInitializing = false;
+    public static SparseArray<GnMusicIdFile> gnMusicIdFiles = new SparseArray<>();
     private static AsyncApiInitialization sAsyncApiInitialization;
 
     /**
@@ -101,6 +106,7 @@ public class GnService{
                 //sGnUser.options().networkLoadBalance(true);
                 //GnStorageSqlite.enable();
                 sIsInitializing = false;
+                //initializeGnIdObjects();
                 return sApiInitialized = true;
             } catch (GnException e) {
                 e.printStackTrace();
@@ -146,6 +152,21 @@ public class GnService{
             }
 
             sAsyncApiInitialization = null;
+        }
+
+    }
+
+    public static void initializeGnIdObjects() throws GnException{
+        if(gnMusicIdFiles == null) {
+            gnMusicIdFiles = new SparseArray<>();
+        }
+
+        if(gnMusicIdFiles.size() != 2){
+            gnMusicIdFiles.clear();
+            GnMusicIdFile gnMusicIdFile = new GnMusicIdFile(sGnUser, new GnResponseListener());
+            gnMusicIdFiles.put(AUTOMATIC, gnMusicIdFile);
+            GnMusicIdFile gnMusicIdFile2 = new GnMusicIdFile(sGnUser, new GnResponseListener());
+            gnMusicIdFiles.put(SEMI_AUTOMATIC, gnMusicIdFile2);
         }
 
     }

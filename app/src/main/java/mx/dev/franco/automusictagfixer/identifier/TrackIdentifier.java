@@ -12,8 +12,6 @@ import com.gracenote.gnsdk.GnMusicIdFileInfoManager;
 import com.gracenote.gnsdk.GnMusicIdFileProcessType;
 import com.gracenote.gnsdk.GnMusicIdFileResponseType;
 
-import java.util.ArrayDeque;
-import java.util.Deque;
 import java.util.HashMap;
 
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
@@ -26,18 +24,24 @@ public class TrackIdentifier implements  GnResponseListener.GnListener{
     private GnResponseListener.GnListener mGnListener;
     private GnResponseListener mGnResponseListener;
     private Track mTrack;
-    private Deque<GnMusicIdFile> mDequeue = new ArrayDeque<>();
     private HashMap<String,String> mGnStatusToDisplay;
     private GnMusicIdFile mGnMusicIdFile;
-    public TrackIdentifier(GnResponseListener.GnListener listener) {
-        mGnListener = listener;
-        mGnResponseListener = new GnResponseListener(this);
+    private GnMusicIdFileInfo gnMusicIdFileInfo;
+    private GnMusicIdFileInfoManager gnMusicIdFileInfoManager;
+
+    public TrackIdentifier(){
         mGnStatusToDisplay = new HashMap<>();
         mGnStatusToDisplay.put(Constants.State.BEGIN_PROCESSING,Constants.State.BEGIN_PROCESSING_MSG);
         mGnStatusToDisplay.put(Constants.State.QUERYING_INFO,Constants.State.QUERYING_INFO_MSG);
         mGnStatusToDisplay.put(Constants.State.COMPLETE_IDENTIFICATION,Constants.State.COMPLETE_IDENTIFICATION_MSG);
         mGnStatusToDisplay.put(Constants.State.STATUS_ERROR,Constants.State.STATUS_ERROR_MSG);
         mGnStatusToDisplay.put(Constants.State.STATUS_PROCESSING_ERROR,Constants.State.STATUS_PROCESSING_ERROR_MSG);
+    }
+
+    public void setGnListener(GnResponseListener.GnListener listener){
+        mGnListener = listener;
+        mGnResponseListener = new GnResponseListener();
+        mGnResponseListener.addListener(this);
     }
 
     public void setTrack(Track track){
@@ -51,13 +55,16 @@ public class TrackIdentifier implements  GnResponseListener.GnListener{
             mGnMusicIdFile = new GnMusicIdFile(GnService.sGnUser, mGnResponseListener);
             mGnMusicIdFile.options().lookupData(GnLookupData.kLookupDataContent, true);
             mGnMusicIdFile.options().preferResultLanguage(GnLanguage.kLanguageSpanish);
+
+            mGnMusicIdFile.options().lookupData(GnLookupData.kLookupDataContent, true);
+            mGnMusicIdFile.options().preferResultLanguage(GnLanguage.kLanguageSpanish);
             //queue will be processed one by one
             //mGnMusicIdFile.options().batchSize(1);
             //get the fileInfoManager
-            GnMusicIdFileInfoManager gnMusicIdFileInfoManager = mGnMusicIdFile.fileInfos();
+            gnMusicIdFileInfoManager = mGnMusicIdFile.fileInfos();
             //add all info available for more accurate results.
             //Check if file already was previously added.
-            GnMusicIdFileInfo gnMusicIdFileInfo = gnMusicIdFileInfoManager.add(mTrack.getPath());
+            gnMusicIdFileInfo = gnMusicIdFileInfoManager.add(mTrack.getPath());
             gnMusicIdFileInfo.fileName(mTrack.getPath());
             gnMusicIdFileInfo.trackTitle(mTrack.getTitle());
             gnMusicIdFileInfo.trackArtist(mTrack.getArtist());
@@ -77,10 +84,13 @@ public class TrackIdentifier implements  GnResponseListener.GnListener{
             mGnListener.onIdentificationCancelled("Cancelled", mTrack);
 
         if(mGnMusicIdFile != null){
-            //mDequeue.poll().cancel();
             mGnMusicIdFile.cancel();
         }
-        mGnResponseListener.setCancel(true);
+        if(mGnResponseListener != null) {
+            mGnResponseListener.removeListener();
+            mGnResponseListener.setCancel(true);
+        }
+
         clear();
     }
 
@@ -177,9 +187,8 @@ public class TrackIdentifier implements  GnResponseListener.GnListener{
         mGnResponseListener = null;
         mGnListener = null;
         mTrack = null;
-        if(mDequeue != null)
-            mDequeue.clear();
-        mDequeue = null;
+        gnMusicIdFileInfoManager = null;
+        gnMusicIdFileInfo = null;
 
         if(mGnStatusToDisplay != null)
             this.mGnStatusToDisplay.clear();

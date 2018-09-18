@@ -282,8 +282,9 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
                 return;
             }
 
-            mIdentifier = new TrackIdentifier(this);
+            mIdentifier = new TrackIdentifier();
             mIdentifier.setTrack(mCurrentTrack);
+            mIdentifier.setGnListener(this);
             mIdentifier.execute();
         }
     }
