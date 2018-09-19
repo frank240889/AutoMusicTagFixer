@@ -44,11 +44,11 @@ public class GnResponseListener implements IGnMusicIdFileEvents, IGnCancellable 
 
     public GnResponseListener(){}
 
-    public void addListener(GnListener gnListener){
+    public synchronized void addListener(GnListener gnListener){
         mListener = gnListener;
     }
 
-    public void removeListener(){
+    public synchronized void removeListener(){
         mListener = null;
     }
 
@@ -128,7 +128,7 @@ public class GnResponseListener implements IGnMusicIdFileEvents, IGnCancellable 
     }
 
     @Override
-    public synchronized void musicIdFileAlbumResult(GnResponseAlbums gnResponseAlbums, long l, long l1, IGnCancellable iGnCancellable) {
+    public void musicIdFileAlbumResult(GnResponseAlbums gnResponseAlbums, long l, long l1, IGnCancellable iGnCancellable) {
         Log.d(TAG,"isCancelled musicidfilesstatusevent() " + mCancelled);
         if(mCancelled){
             //if(!Thread.currentThread().isInterrupted())
@@ -415,7 +415,7 @@ public class GnResponseListener implements IGnMusicIdFileEvents, IGnCancellable 
     }
 
     @Override
-    public void musicIdFileResultNotFound(GnMusicIdFileInfo gnMusicIdFileInfo, long l, long l1, IGnCancellable iGnCancellable) {
+    public synchronized void musicIdFileResultNotFound(GnMusicIdFileInfo gnMusicIdFileInfo, long l, long l1, IGnCancellable iGnCancellable) {
         Log.d(TAG,"isCancelled resultnotfound" + mCancelled);
         if(mCancelled){
             //if(!Thread.currentThread().isInterrupted())

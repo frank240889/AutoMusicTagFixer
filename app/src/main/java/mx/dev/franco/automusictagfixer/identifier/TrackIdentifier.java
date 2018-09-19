@@ -69,9 +69,7 @@ public class TrackIdentifier implements  GnResponseListener.GnListener{
             gnMusicIdFileInfo.trackTitle(mTrack.getTitle());
             gnMusicIdFileInfo.trackArtist(mTrack.getArtist());
             gnMusicIdFileInfo.albumTitle(mTrack.getAlbum());
-            //mDequeue.add(gnMusicIdFile);
             mGnMusicIdFile.doTrackIdAsync(GnMusicIdFileProcessType.kQueryReturnSingle,GnMusicIdFileResponseType.kResponseAlbums);
-            //mGnMusicIdFile.doLibraryIdAsync(GnMusicIdFileResponseType.kResponseAlbums);
         } catch (GnException e) {
             e.printStackTrace();
             Crashlytics.logException(e);
@@ -148,7 +146,7 @@ public class TrackIdentifier implements  GnResponseListener.GnListener{
     }
 
     @Override
-    public void status(String message) {
+    public synchronized void status(String message) {
         Log.d("el status", message);
         String msg;
 
