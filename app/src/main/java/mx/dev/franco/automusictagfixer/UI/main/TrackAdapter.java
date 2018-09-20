@@ -37,6 +37,7 @@ import mx.dev.franco.automusictagfixer.modelsUI.main.AsyncLoaderCover;
 import mx.dev.franco.automusictagfixer.modelsUI.main.DiffExecutor;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.persistence.room.TrackState;
+import mx.dev.franco.automusictagfixer.services.FixerTrackService;
 import mx.dev.franco.automusictagfixer.utilities.GlideApp;
 import mx.dev.franco.automusictagfixer.utilities.ServiceUtils;
 import mx.dev.franco.automusictagfixer.utilities.shared_preferences.AbstractSharedPreferences;
@@ -69,6 +70,7 @@ public class TrackAdapter extends RecyclerView.Adapter<AudioItemHolder> implemen
     private List<AsyncLoaderCover> mAsyncTaskQueue =  new ArrayList<>();
     private Deque<List<Track>> mPendingUpdates = new ArrayDeque<>();
     private static DiffExecutor sDiffExecutor;
+    private int mCounterUpdates = 0;
 
     public TrackAdapter(AudioItemHolder.ClickListener listener){
         mListener = listener;
@@ -90,7 +92,7 @@ public class TrackAdapter extends RecyclerView.Adapter<AudioItemHolder> implemen
     @Override
     public void onBindViewHolder(@NonNull final AudioItemHolder holder, int position, List<Object> payloads) {
         Track track = mTrackList.get(position);
-        Log.d(TAG, "onBindViewHolderPayload");
+        //Log.d(TAG, "onBindViewHolderPayload");
         if(payloads.isEmpty()) {
             super.onBindViewHolder(holder,position,payloads);
         }
@@ -106,26 +108,34 @@ public class TrackAdapter extends RecyclerView.Adapter<AudioItemHolder> implemen
                 if (key.equals("album")) {
                     holder.albumName.setText(track.getAlbum());
                 }
-                if (key.equals("checked")) {
-                    holder.checkBox.setChecked(track.checked() == 1);
-                }
-
-                if (key.equals("processing")) {
-                    if (track.processing() == 1) {
-                        holder.progressBar.setVisibility(VISIBLE);
-                        holder.checkBox.setVisibility(View.INVISIBLE);
-                    } else {
-                        holder.progressBar.setVisibility(GONE);
-                        holder.checkBox.setVisibility(VISIBLE);
+                if(!serviceUtils.checkIfServiceIsRunning(FixerTrackService.CLASS_NAME)) {
+                    holder.checkBox.setVisibility(VISIBLE);
+                    holder.progressBar.setVisibility(GONE);
+                    if (key.equals("checked")) {
+                        holder.checkBox.setChecked(track.checked() == 1);
                     }
                 }
+                else {
+                    holder.checkBox.setVisibility(GONE);
+                    if (key.equals("processing")) {
+                        if (track.processing() == 1) {
+                            holder.progressBar.setVisibility(VISIBLE);
+                            //holder.checkBox.setVisibility(View.INVISIBLE);
+                        } else {
+                            holder.progressBar.setVisibility(GONE);
+                            //holder.checkBox.setVisibility(VISIBLE);
+                        }
+                    }
+                }
+
+
 
                 if (key.equals("should_reload_cover")){
                     //We need to extracts cover arts in other thread,
                     //because this operation is going to reduce performance
                     //in main thread, making the scroll very laggy
-                    Log.d(TAG, "should_reload_cover");
-                    Log.d(TAG, "size asynctaskqueue: " + mAsyncTaskQueue.size());
+                    //Log.d(TAG, "should_reload_cover");
+                    //Log.d(TAG, "size asynctaskqueue: " + mAsyncTaskQueue.size());
                     if (mAsyncTaskQueue.size() < 9) {
                         final AsyncLoaderCover asyncLoaderCover = new AsyncLoaderCover();
                         mAsyncTaskQueue.add(asyncLoaderCover);
@@ -140,7 +150,7 @@ public class TrackAdapter extends RecyclerView.Adapter<AudioItemHolder> implemen
                                 Log.d(TAG, "on finish should_reload_cover");
                                 if (holder.itemView.getContext() != null) {
                                     try {
-                                        Log.d(TAG, "on finish should_reload_cover2");
+                                        //Log.d(TAG, "on finish should_reload_cover2");
                                         GlideApp.with(context).
                                                 load(cover)
                                                 .thumbnail(0.5f)
@@ -215,15 +225,21 @@ public class TrackAdapter extends RecyclerView.Adapter<AudioItemHolder> implemen
     @Override
     public void onBindViewHolder(final AudioItemHolder holder, final int position) {
         Track track = mTrackList.get(position);
-        Log.d(TAG, "onBindViewHolder");
-        if (track.processing() == 1) {
-            holder.checkBox.setVisibility(View.GONE);
-            holder.progressBar.setVisibility(View.VISIBLE);
-        } else {
-            holder.progressBar.setVisibility(View.GONE);
-            holder.checkBox.setChecked(track.checked() == 1);
+        //Log.d(TAG, "onBindViewHolder");
+        if(!serviceUtils.checkIfServiceIsRunning(FixerTrackService.CLASS_NAME)) {
+            holder.checkBox.setVisibility(VISIBLE);
+            holder.progressBar.setVisibility(GONE);
         }
-
+        else {
+            holder.checkBox.setVisibility(GONE);
+            if (track.processing() == 1) {
+                //holder.checkBox.setVisibility(View.GONE);
+                holder.progressBar.setVisibility(View.VISIBLE);
+            } else {
+                holder.progressBar.setVisibility(View.GONE);
+                //holder.checkBox.setChecked(track.checked() == 1);
+            }
+        }
         if(mAsyncTaskQueue.size() < 9){
             final AsyncLoaderCover asyncLoaderCover = new AsyncLoaderCover();
             mAsyncTaskQueue.add(asyncLoaderCover);
@@ -375,6 +391,10 @@ public class TrackAdapter extends RecyclerView.Adapter<AudioItemHolder> implemen
                     mOnSortingListener.onFinishSorting();
                 }
                 else {
+                    if(mPendingUpdates != null) {
+                        mPendingUpdates.push(tracks);
+                        Log.d(TAG, "Pushing new incoming list... pushed");
+                    }
                     updateInBackground(tracks);
                 }
             } else {
@@ -398,12 +418,7 @@ public class TrackAdapter extends RecyclerView.Adapter<AudioItemHolder> implemen
     }
 
     private void updateInBackground(List<Track> newItems){
-        if(mPendingUpdates != null) {
-            mPendingUpdates.push(newItems);
-            Log.d(TAG, "Pushing new incoming list... pushed");
-        }
-
-        Log.d(TAG, "trying to execute pending updates");
+        Log.d(TAG, "trying to execute; pending updates " + mPendingUpdates.size());
         if (mPendingUpdates != null && mPendingUpdates.size() > 1) {
             Log.d(TAG, "not executing pending updates");
             return;
@@ -416,11 +431,10 @@ public class TrackAdapter extends RecyclerView.Adapter<AudioItemHolder> implemen
 
     @Override
     public void onStartDiff() {
-        //Do nothing
         if(sharedPreferences.getBoolean("sorting") && mOnSortingListener != null)
             mOnSortingListener.onStartSorting();
 
-        Log.d(TAG, "onStartDiff");
+        //Log.d(TAG, "onStartDiff");
     }
 
     @Override
@@ -435,18 +449,19 @@ public class TrackAdapter extends RecyclerView.Adapter<AudioItemHolder> implemen
             mPendingUpdates.remove();
 
 
-
         if (diffResults.diffResult != null) {
-            Log.d(TAG, "dispatching results... list" + diffResults.list.size());
+            //Log.d(TAG, "dispatching results... list" + diffResults.list.size());
             diffResults.diffResult.dispatchUpdatesTo(this);
-            Log.d(TAG, "results dispatched.");
+            //Log.d(TAG, "results dispatched.");
 
-            Log.d(TAG, "clearing...");
+            //Log.d(TAG, "clearing...");
             mTrackList.clear();
-            Log.d(TAG, "cleared.");
-            Log.d(TAG, "Adding all.");
+            //Log.d(TAG, "cleared.");
+            //Log.d(TAG, "Adding all.");
             mTrackList.addAll(diffResults.list);
-            Log.d(TAG, "Added all.");
+            //Log.d(TAG, "Added all.");
+            mCounterUpdates++;
+            Log.d(TAG, "times list updated: " + mCounterUpdates);
 
 
             sDiffExecutor = null;

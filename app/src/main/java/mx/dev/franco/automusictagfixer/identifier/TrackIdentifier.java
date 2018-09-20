@@ -1,7 +1,5 @@
 package mx.dev.franco.automusictagfixer.identifier;
 
-import android.util.Log;
-
 import com.crashlytics.android.Crashlytics;
 import com.gracenote.gnsdk.GnException;
 import com.gracenote.gnsdk.GnLanguage;
@@ -147,7 +145,7 @@ public class TrackIdentifier implements  GnResponseListener.GnListener{
 
     @Override
     public synchronized void status(String message) {
-        Log.d("el status", message);
+        //Log.d("el status", message);
         String msg;
 
         switch (message) {
@@ -182,7 +180,7 @@ public class TrackIdentifier implements  GnResponseListener.GnListener{
     }
 
     private void clear(){
-        mGnResponseListener = null;
+        //mGnResponseListener = null;
         mGnListener = null;
         mTrack = null;
         gnMusicIdFileInfoManager = null;

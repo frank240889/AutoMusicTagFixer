@@ -107,6 +107,8 @@ public class ListViewModel extends ViewModel {
     }
 
     public void checkAllItems(){
+        if(serviceUtils.checkIfServiceIsRunning(FixerTrackService.CLASS_NAME))
+            return;
 
         boolean allChecked = sharedPreferences.getBoolean(Constants.ALL_ITEMS_CHECKED);
         if(allChecked){

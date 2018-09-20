@@ -497,6 +497,9 @@ public class MainActivity extends AppCompatActivity
                     toast.setText(message);
                     toast.setDuration(Toast.LENGTH_SHORT);
                     toast.show();
+                    getSharedPreferences(Constants.Application.FULL_QUALIFIED_NAME,
+                        Context.MODE_PRIVATE).edit().putBoolean(Constants.ALL_ITEMS_CHECKED, false).
+                            apply();
                 break;
             case Constants.Actions.ACTION_RESCAN:
                     rescan();

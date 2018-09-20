@@ -17,6 +17,9 @@ public interface TrackDAO {
     @RawQuery(observedEntities = Track.class)
     LiveData<List<Track>> getAllTracks(SupportSQLiteQuery query);
 
+    @RawQuery(observedEntities = Track.class)
+    List<Integer> getCheckedTracks(SupportSQLiteQuery sqLiteQuery);
+
     @Query("SELECT * FROM track_table WHERE selected = 1 ORDER BY title ASC")
     List<Track> getSelectedTracks();
 
@@ -43,9 +46,6 @@ public interface TrackDAO {
 
     @Query("UPDATE track_table SET selected = 0 WHERE selected = 1 ")
     void uncheckAll();
-
-    @RawQuery(observedEntities = Track.class)
-    List<Integer> getCheckedTracks(SupportSQLiteQuery sqLiteQuery);
 
     @Query("SELECT mediastore_id FROM track_table where mediastore_id = :id")
     boolean findTrackById(int id);

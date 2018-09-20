@@ -111,6 +111,12 @@ public class SearchActivity extends AppCompatActivity implements AsyncSearch.Res
     }
 
     @Override
+    public void onPause(){
+        super.onPause();
+        mRecyclerView.stopScroll();
+    }
+
+    @Override
     public void onNewIntent(Intent intent){
         super.onNewIntent(intent);
         performSearch(intent);

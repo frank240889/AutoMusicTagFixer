@@ -22,9 +22,9 @@ public class IdLoader extends AsyncTask<String, Void, List<Integer>> {
     protected List<Integer> doInBackground(String... sort) {
         String order = sort[0];
         if(order == null)
-            order = " title ASC ";
-        String query = "SELECT mediastore_id FROM track_table WHERE selected = 1 ORDER BY ?";
-        SupportSQLiteQuery sqLiteQuery = new SimpleSQLiteQuery(query, new Object[]{order});
+            order = " title COLLATE NOCASE ASC ";
+        String query = "SELECT mediastore_id FROM track_table WHERE selected = 1 ORDER BY" + order;
+        SupportSQLiteQuery sqLiteQuery = new SimpleSQLiteQuery(query);
         return mTrackRoomDatabase.trackDao().getCheckedTracks(sqLiteQuery);
     }
 
