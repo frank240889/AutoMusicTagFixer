@@ -17,9 +17,11 @@ import com.gracenote.gnsdk.GnLanguage;
 import com.gracenote.gnsdk.GnLicenseInputMode;
 import com.gracenote.gnsdk.GnLocale;
 import com.gracenote.gnsdk.GnLocaleGroup;
+import com.gracenote.gnsdk.GnLookupLocalStream;
 import com.gracenote.gnsdk.GnManager;
 import com.gracenote.gnsdk.GnMusicIdFile;
 import com.gracenote.gnsdk.GnRegion;
+import com.gracenote.gnsdk.GnStorageSqlite;
 import com.gracenote.gnsdk.GnUser;
 import com.gracenote.gnsdk.GnUserStore;
 
@@ -105,6 +107,8 @@ public class GnService{
                 sGnLocale.setGroupDefault();
                 //sGnUser.options().networkLoadBalance(true);
                 //GnStorageSqlite.enable();
+                GnStorageSqlite.enable();
+                GnLookupLocalStream.enable();
                 sIsInitializing = false;
                 //initializeGnIdObjects();
                 return sApiInitialized = true;
