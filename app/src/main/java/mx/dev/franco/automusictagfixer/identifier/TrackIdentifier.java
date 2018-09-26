@@ -12,8 +12,10 @@ import com.gracenote.gnsdk.GnMusicIdFileResponseType;
 
 import java.util.HashMap;
 
+import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
+import mx.dev.franco.automusictagfixer.utilities.resource_manager.ResourceManager;
 
 public class TrackIdentifier implements  GnResponseListener.GnListener{
     public static final int ALL_TAGS = 0;
@@ -26,6 +28,7 @@ public class TrackIdentifier implements  GnResponseListener.GnListener{
     private GnMusicIdFile mGnMusicIdFile;
     private GnMusicIdFileInfo gnMusicIdFileInfo;
     private GnMusicIdFileInfoManager gnMusicIdFileInfoManager;
+    private ResourceManager mResourceManager;
 
     public TrackIdentifier(){
         mGnStatusToDisplay = new HashMap<>();
@@ -34,6 +37,10 @@ public class TrackIdentifier implements  GnResponseListener.GnListener{
         mGnStatusToDisplay.put(Constants.State.COMPLETE_IDENTIFICATION,Constants.State.COMPLETE_IDENTIFICATION_MSG);
         mGnStatusToDisplay.put(Constants.State.STATUS_ERROR,Constants.State.STATUS_ERROR_MSG);
         mGnStatusToDisplay.put(Constants.State.STATUS_PROCESSING_ERROR,Constants.State.STATUS_PROCESSING_ERROR_MSG);
+    }
+
+    public void setResourceManager(ResourceManager resourceManager){
+        mResourceManager = resourceManager;
     }
 
     public void setGnListener(GnResponseListener.GnListener listener){
@@ -77,7 +84,7 @@ public class TrackIdentifier implements  GnResponseListener.GnListener{
 
     public void cancelIdentification(){
         if(mGnListener != null)
-            mGnListener.onIdentificationCancelled("Cancelled", mTrack);
+            mGnListener.onIdentificationCancelled(mResourceManager.getString(R.string.task_cancelled), mTrack);
 
         if(mGnMusicIdFile != null){
             mGnMusicIdFile.cancel();
@@ -150,26 +157,26 @@ public class TrackIdentifier implements  GnResponseListener.GnListener{
 
         switch (message) {
             case Constants.State.BEGIN_PROCESSING:
-                msg = Constants.State.BEGIN_PROCESSING_MSG;
+                msg = mResourceManager.getString(R.string.begin_processing);
                 //report status to notification
                 if(mGnListener != null)
                     mGnListener.status(msg);
                 break;
             case Constants.State.QUERYING_INFO:
-                msg = Constants.State.QUERYING_INFO_MSG;
+                msg = mResourceManager.getString(R.string.querying_info);
                 //report status to notification
                 if(mGnListener != null)
                     mGnListener.status(msg);
                 break;
             case Constants.State.COMPLETE_IDENTIFICATION:
-                msg = Constants.State.COMPLETE_IDENTIFICATION_MSG;
+                msg = mResourceManager.getString(R.string.complete_identification);
                 //report status to notification
                 if(mGnListener != null)
                     mGnListener.status(msg);
                 break;
             case Constants.State.STATUS_ERROR:
             case Constants.State.STATUS_PROCESSING_ERROR:
-                msg = Constants.State.STATUS_ERROR_MSG;
+                msg = mResourceManager.getString(R.string.processing_error);
                 if(mGnListener != null)
                     mGnListener.onIdentificationCancelled(msg, null);
                 break;
@@ -189,5 +196,6 @@ public class TrackIdentifier implements  GnResponseListener.GnListener{
         if(mGnStatusToDisplay != null)
             this.mGnStatusToDisplay.clear();
         this.mGnStatusToDisplay = null;
+        mResourceManager = null;
     }
 }

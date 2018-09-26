@@ -1,0 +1,297 @@
+<resources>
+    <string name="app_name" translatable="false">AutoMusicTagFixer</string>
+
+    <string name="welcome">¡Welcome!</string>
+    <string name="step_1">AutoMusicTagFixer will help you to keep your music library more organized.</string>
+    <string name="step_2">How will it do? Correcting the file name, song title, artist, album, etc., including the cover art image.</string>
+    <string name="step_3">Just let it scan your music library.</string>
+    <string name="step_4">Then click any song to correct it in manual, semi-automatic or automatic mode.</string>
+    <string name="step_5">Or select several songs to correct them automatically, one after another without you doing something else, just wait.</string>
+
+
+    <string name="title_activity_main">Music library</string>
+    <string name="title_dialog_permision">Permission to access files required</string>
+
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="options">Configuration</string>
+    <string name="rate">Rate</string>
+    <string name="share">Share</string>
+    <string name="search_song">Search song</string>
+    <string name="select_all_items">Select all</string>
+
+    <string name="image_too_big">Image too big, reduce its size.</string>
+    <string name="error_load_image">Error while trying to read image.</string>
+    <string name="as_cover_art">Cover</string>
+    <string name="as_file">Image</string>
+    <string name="no_cover_art_found">Cover art not found</string>
+
+    <string name="cover_updated">Cover art updated.</string>
+    <string name="cover_removed">Cover art removed.</string>
+
+    <string name="no_available">No available</string>
+    <string name="explanation_permission_access_files">To find your songs automatically, you must grant the permission requested by the dialog box that will appear after you click OK.</string>
+    <string name="ok_button">Ok</string>
+    <string name="cancel_button">Cancel</string>
+
+    <string name="file_error">Cannot read %1$s because it was moved, deleted or renamed, do you wish to remove from list?</string>
+
+    <string name="faq">FAQ</string>
+
+    <string name="play_track">Listen</string>
+
+    <string name="permission_denied">The permission required to scan your library was not granted, swipe down to try again.</string>
+    <string name="permission_granted_fail">The permission was not granted, enable it in Configuration -> General, to be able to correct the songs of the SD card.</string>
+    <string name="permission_granted">Permission granted to correct SD songs.</string>
+    <string name="current_file_processing">This song is being corrected.</string>
+    <string name="initializing_recognition_api">Connecting to the recognition service, one moment please…</string>
+    <string name="no_internet_connection_download_cover">To download the cover, connect to the internet.</string>
+    <string name="no_internet_connection_automatic_mode">To use the automatic mode, connect to the internet.</string>
+    <string name="no_internet_connection_semi_automatic_mode">To use the semi-automatic mode, connect to the internet.</string>
+    <string name="no_items_found">No songs found.</string>
+    <string name="no_found_tags">No match was found.</string>
+
+    <string name="file_status_ok">All tags applied.</string>
+    <string name="file_status_incomplete">Missing some tags, try adding them manually.</string>
+    <string name="file_status_no_processed">No tags have yet been searched for this song.</string>
+
+    <string name="no_songs_to_correct">Select songs to use automatic mode or click on any.</string>
+    <string name="title_activity_settings">Configuration</string>
+
+
+    <!-- Strings related to Settings -->
+
+    <!-- General settings -->
+    <string name="pref_header_general">General</string>
+
+    <string name="pref_title_change">Rename file</string>
+    <string name="pref_title_change_description">The title (if found) will be applied as the file name; the name of the artist plus/or a random number will be added as suffix, in case a file with the same name already exists.
+    </string>
+
+    <string name="pref_title_background">Use background correction</string>
+    <string name="pref_title_background_description">Song correction will not be canceled even when you close the application, but until it finishes or you stop it; a notification will be displayed with the progress.</string>
+
+    <string name="enable_embed_player">Multimedia</string>
+    <string name="pref_title_enable_embed_player">Use integrated player</string>
+    <string name="pref_enable_embed_player_description">Listen song in the integrated player; disable this option to use an external one.</string>
+
+    <string name="pref_title_replace_all_tags">Overwrite tags</string>
+    <string name="pref_replace_auto_all_tags_description">If this option is enabled, all current tags will be replaced by those found; disable this option to add only the missing ones.</string>
+
+    <!--This is going to be in seconds-->
+
+    <!-- Settings for Data save -->
+    <string name="pref_header_size_album_art">Data usage</string>
+
+    <string name="pref_title_size_album_art">Download cover</string>
+    <string-array name="pref_size_album_art_titles">
+        <item>Do not download</item>
+        <item>Of the lowest quality available</item>
+        <item>Of low quality</item>
+        <item>Of medium quality</item>
+        <item>Of high quality</item>
+        <item>Of very high quality</item>
+        <item>Of the best quality available</item>
+    </string-array>
+    <string-array name="pref_size_album_art_values">
+        <item>-1</item>
+        <item>0</item>
+        <item>1</item>
+        <item>5</item>
+        <item>7</item>
+        <item>10</item>
+        <item>1000</item>
+    </string-array>
+
+    <string name="cancel_task">Do you want to cancel current correction?</string>
+    <string name="cancelling">Cancelling correction…</string>
+    <string name="api_initialized">Click on any song to correct it.</string>
+    <string name="api_initialized2">Click + to see more options.</string>
+    <string name="remove_from_list">Remove</string>
+
+    <string name="title_remove_cover_art_dialog">Remove cover art</string>
+    <string name="message_remove_cover_art_dialog">Are you sure you want to remove the current cover art?</string>
+
+    <string name="automatic_mode">Automatic mode</string>
+    <string name="edit_cover">Update cover art</string>
+    <string name="update_list">Rescan</string>
+
+    <string name="album">Album</string>
+    <string name="genre">Genre</string>
+    <string name="track_number">Track number</string>
+    <string name="title">Title</string>
+    <string name="artist">Artist</string>
+    <string name="track_year">Publication year</string>
+    <string name="dimensions">Size</string>
+    <string name="successfully_applied_tags">Tags applied successfully.</string>
+
+    <string name="message_apply_new_tags">¿Apply changes?</string>
+    <string name="swipe_up_search">Swipe down to search again.</string>
+
+    <string name="tracks">songs</string>
+    <string name="fixing_task">Correcting songs.</string>
+    <string name="cover_saved">Image saved it in %1$s</string>
+    <string name="cover_extracted">Cover art extracted.</string>
+    <string name="cover_not_saved">Could not save cover art.</string>
+    <string name="web_search">Search on Internet</string>
+    <string name="view_cover">Watch it</string>
+
+    <string name="sort_by">Sort by</string>
+    <string name="location">Location</string>
+
+    <string name="could_not_read_file">Unsupported audio file.</string>
+    <string name="does_not_exist_cover">Song does not have cover art.</string>
+
+    <string name="error">An error has occurred, try again.</string>
+
+    <string name="share_message">corrected my songs in a easy, fast and automatic way!</string>
+
+
+    <string name="manual">Manual correction</string>
+
+    <string name="descendent">Descendant</string>
+    <string name="ascendent">Ascendant</string>
+    <string name="about">About AutoMusicTagFixer</string>
+    <string name="technologies_used">Credits:</string>
+
+    <string-array name="questions">
+        <item>1. How does it work?</item>
+        <item>2. Why does it ask me to access my photos and other content on my smartphone?</item>
+        <item>3. Why do I have to enable the writing permission to the SD?</item>
+        <item>4. How is it used?</item>
+        <item>5. What is the automatic mode?</item>
+        <item>6. What is the semi automatic mode?</item>
+        <item>7. What is the manual mode?</item>
+        <item>8. What types of audio files can I correct?</item>
+        <item>9. How much does it cost?</item>
+        <item>10. How many songs can I correct?</item>
+        <item>11. Why does not the information of some songs on the list match the detail?</item>
+        <item>12. Why can I only edit 8 tags (including the cover)?</item>
+        <item>13. The app does not detect my songs</item>
+        <item>14. The app does not find the data of my song or the ones found are probably not correct.</item>
+        <item>15. The app does not find the cover art of my song.</item>
+        <item>16. How long does it take to identify a song?</item>
+        <item>17. What happens if I close the app while I'm editing several songs?</item>
+        <item>18. What happens if I run out of internet?</item>
+    </string-array>
+    <string-array name="answers">
+        <item>Of each song that you have in your smartphone, an audio fingerprint is generated, later, that fingerprint is consulted in a database and the corresponding information is obtained for the fingerprint more similar found.</item>
+        <item>Because the songs are stored in the memory (internal or SD) of your smartphone, it is needed the permission to reading them; is the only permission required, otherwise, the app will not have useful functionality.</item>
+        <item>Due to Android security restrictions, you can not modify the SD files without explicit permission to do so; This permission only applies if your smartphone has an SD slot and an SD memory card is inserted. You can enable or disable it from the {gmd-settings} Configuration {gmd-arrow-forward} {gmd-build} General.</item>
+        <item>Just click a song from the list and the semiautomatic mode will open, or if you prefer, you can check the ones you want to correct by touching the {gmd-check-box} of each one and then press {gmd-photo-filter} in the lower right corner on the main screen to correct those songs in automatic mode.</item>
+        <item>It is the mode in which you check the songs you want to correct, press {gmd-photo-filter} on the main screen, and AutoMusicTagFixer corrects for you each song, including the file name (you can disable this option in {gmd-settings} Configuration), you do not have to do anything, just wait for it to finish. This mode does not require your intervention, you can even close the app.</item>
+        <item>It is the mode that obtains the information of the song, but it will not modify it until you apply it.</item>
+        <item>It is the mode that allows you to correct by yourself the tags of each song, including the cover art, if you have the information at hand. Click the cover of each song in the list on the main screen for more options.</item>
+        <item>Currently Mp3, Mp4 (Mp4 audio, M4a and M4p audio) Ogg Vorbis, Flac, Wma and limited support for Wav and Real audio. Some songs will not be able to be read since Android does not support certain types of audio in a native way, for example Wma; in future updates the support will be expanded.</item>
+        <item>None.</item>
+        <item>Because the app uses a license for free use of the audio recognition service, the number of daily songs that you can correct in semiautomatic, automatic and download-cover modes is variable, from a few tens to thousands.</item>
+        <item>For performance and speed of opening, to generate the list for the first time (the list is informative and starting point for operations), AutoMusicTagFixer reads the information of each audio file of the MediaStore (an internal BD of Android), so therefore, the information obtained here is not always very accurate. AutoMusicTagFixer when it shows the detailed information of each song, directly reads the audio file, which this information read it is accurate; do not worry, AutoMusicTagFixer makes the corrections on the file itself, so the changes made will be visible to other audio players, whether Android or not, and that support the reading of tags.</item>
+        <item>They are more than 35 standard tags, a considerable amount and that can be tedious for the user to correct, so correction is offered to the most common.</item>
+        <item>It may be because you did not grant access permission to internal/external storage or the audio type is not one supported by Android natively or the file does not have an extension in the name. Also, if it's the first time you copy songs to your smartphone you have to wait a few minutes for Android to update the MediaStore.</item>
+        <item>The app consults a database with information of approximately 200 million songs (http://www.gracenote.com/music/music-recognition/), so it is likely that the song you are trying to correct has been downloaded/converted from a low quality audio source and the generated fingerprint does not match any of the database, please try to download/convert your songs with higher quality or correct it manually.</item>
+        <item>Check the options of {gmd-settings} Configuration {gmd-arrow-forward} {gmd-data-usage} Data usage and select another cover size; keep in mind that not all sizes are available for each song.</item>
+        <item>If the connection to the network is good, it will take between 5 to 10 seconds; if the connection is slow, it may take longer, and even the current identification may be canceled if the internet connection is lost.</item>
+        <item>Song correction can work in the background for automatic mode (you can disable this option in {gmd-settings} Configuration), and so the correction will continue until it finishes or you stop it. If this option is disabled, the correction process will be cancelled when you close the app. For other modes, the correction will be interrupted if you close the application.</item>
+        <item>AutoMusicTagFixer checks the status of the network and the internet connection, so if it does not detect an active connection to the internet, it will not work the automatic, semiautomatic and download-cover mode; if a correction is in progress the correction will simply stop. Manual mode does not require internet.</item>
+    </string-array>
+    <string name="title_activity_scrolling_about">About AutoMusicTagFixer</string>
+
+
+    <string name="connection_lost">There is no internet connection.</string>
+    <string name="connection_recovered">Connection restored.</string>
+    <string name="task_cancelled">Correction cancelled.</string>
+
+    <string name="stop">Stop</string>
+
+    <string name="title_extract_cover">Extract cover art</string>
+    <string name="could_not_init_api">Could not initialize API:</string>
+    <string name="media_mounted">A removable memory has been mounted, try to update the list in some moments.</string>
+    <string name="media_unmounted">A removable memory has been unmounted, try to update the list in some moments.</string>
+
+    <string name="enable_sd_card_access">Removable storage</string>
+    <string name="pref_title_enable_sd_card_access">Enable writing permission to SD</string>
+    <string name="pref_enable_sd_card_access_description">It is necessary that you grant this permission explicitly in order to correct the songs stored in the SD.</string>
+
+    <string name="message_could_not_apply_cover">Could not applied cover art.</string>
+    <string name="message_could_not_apply_tags">Could not applied cover tags.</string>
+    <string name="message_could_copy_back">Could not copy back to its original location.</string>
+    <string name="message_could_not_create_audio_file">Could not created audio file object.</string>
+    <string name="message_could_not_create_temp_file">Could not created temporal file.</string>
+    <string name="message_could_not_read_tags">Could not read current tags.</string>
+    <string name="message_could_not_remove_cover">Could not removed current cover art.</string>
+
+    <string name="message_uri_tree_not_set">It is required writing permission to the SD.</string>
+    <string name="enable">Enable</string>
+    <string name="toast_apply_tags_again">Permission enabled, try to apply tags again.</string>
+    <string name="removable_media_no_detected">No removable memory detected.</string>
+    <string name="all_tags">All</string>
+    <string name="missing_tags">Missing</string>
+    <string name="message_same_tags_applied">Applied same tags.</string>
+
+
+    <string name="instructions_request_permission">If you have songs in the SD, it is necessary to enable the permission as shown below, otherwise the songs you have in the SD can not be corrected:</string>
+    <string name="step1">Click \"Enable\"\ and follow the instructions as in the following images.</string>
+    <string name="step2">In the window that will appear select the SD as indicated in the image.</string>
+    <string name="step3">Open the upper left side menu and select the SD.</string>
+    <string name="step4">Finally, click the bottom button that will appear.</string>
+
+    <string name="permission_revoked">SD writing permission revoked.</string>
+
+    <string name="contact_dev">Questions or comments? Contact the developer by clicking {gmd-email}.</string>
+
+    <string name="correction_in_progress">Correction in progress…</string>
+
+    <string name="yes">Yes</string>
+    <string name="gathering_fingerprint">Generating fingerprint for %1$s</string>
+    <string name="generating_fingerprint">Generating fingerprint…</string>
+    <string name="loading_tracks">Loading list…</string>
+    <string name="more">More</string>
+    <string name="saf_denied">SD writing/reading permission denied.</string>
+    <string name="path_to_file">Path to file</string>
+    <string name="duration">Duration</string>
+    <string name="bitrate">Bitrate</string>
+    <string name="frequency">Frequency</string>
+    <string name="resolution">Resolution</string>
+    <string name="file_type">File type</string>
+    <string name="channels">Channels</string>
+    <string name="file_size">Size</string>
+    <string name="size_cover">Cover art size</string>
+    <string name="identification_interrupted">Identification interrupted.</string>
+    <string name="message_results">¿Overwrite all tags or only missing?</string>
+    <string name="message_results_cover">Cover art found, save it as:</string>
+    <string name="file_name">File name</string>
+    <string name="saving_cover">Saving cover art…</string>
+    <string name="watch">Watch</string>
+    <string name="accept">Accept</string>
+    <string name="add_some_tracks">To start, add songs to your smartphone.</string>
+    <string name="no_found_items">No results for \"%1$s\"</string>
+    <string name="search_results">%1$s songs for \"%2$s\"</string>
+    <string name="no_results">No results.</string>
+    <string name="hint_rename">Name without extension</string>
+    <string name="message_checkbox_rename">Rename file</string>
+    <string name="message_rename">Leave empty to use the title(if available) as file name.</string>
+    <string name="found">Match found</string>
+    <string name="starting_correction">Starting correction…</string>
+    <string name="applying_tags">Applying changes, please wait…</string>
+    <string name="success">Correction finished.</string>
+    <string name="get_permission">Permission</string>
+    <string name="could_not_get_permission">Could not get permission.</string>
+    <string name="complete_task">Correction successfully finished.</string>
+    <string name="title_update_cover">Update cover art</string>
+    <string name="add_manual">Manual</string>
+    <string name="correcting">Correcting</string>
+    <string name="identifying">Identifying…</string>
+    <string name="no_match_found">No match found.</string>
+    <string name="match_found">Match found.</string>
+    <string name="could_not_correct_file">Could not correct file.</string>
+    <string name="error_in_correction">Error</string>
+    <string name="empty_tag">Empty tag</string>
+    <string name="tag_too_long">Tag to long</string>
+    <string name="updating_list">Updating list…</string>
+    <string name="begin_processing">Starting identification…</string>
+    <string name="querying_info">Identifying, please wait…</string>
+    <string name="complete_identification">Complete identification</string>
+    <string name="processing_error">Identification error</string>
+    <string name="identification_cancelled">Identification cancelled</string>
+
+</resources>

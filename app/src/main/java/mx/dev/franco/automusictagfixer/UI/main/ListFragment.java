@@ -9,6 +9,7 @@ import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.os.Build;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
@@ -290,6 +291,12 @@ public class ListFragment extends Fragment implements
     @Override
     public void onDestroy() {
         super.onDestroy();
+
+        //Stop correction task if "Usar corrección en segundo plano" from Settings is off.
+        if(!PreferenceManager.getDefaultSharedPreferences(getActivity().getApplicationContext()).getBoolean("key_background_service", true)){
+            Intent intent = new Intent(getActivity(),FixerTrackService.class);
+            getActivity().stopService(intent);
+        }
     }
 
     @Override

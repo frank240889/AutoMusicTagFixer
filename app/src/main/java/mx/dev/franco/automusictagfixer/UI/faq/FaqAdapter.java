@@ -51,7 +51,7 @@ public class FaqAdapter extends RecyclerView.Adapter<FaqAdapter.QuestionItemHold
         return 0;
     }
 
-    public class QuestionItemHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
+    public static class QuestionItemHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
         public TextView mQuestion;
         public TextView mAnswer;
         public LinearLayout mContainer;

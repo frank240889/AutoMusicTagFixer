@@ -63,5 +63,6 @@ public class Constants {
         public static final String STATUS_ERROR_MSG = "Error";
         public static final String STATUS_PROCESSING_ERROR_MSG = "Error al procesar ";
         public static final String CANCELLED = "Cancelado";
+
     }
 }

@@ -16,7 +16,6 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -295,7 +294,6 @@ public class TrackDetailsActivity extends AppCompatActivity implements SimpleMed
 
     @Override
     public void onCoverChanged(byte[] cover) {
-        Log.d(TAG, "cover is null " + (cover == null));
         mAppBarLayout.setExpanded(true);
         GlideApp.with(this).
                 load(cover)
@@ -366,12 +364,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements SimpleMed
                 mFloatingActionMenu.hide();
                 mSaveButton.show();
                 mSaveButton.setOnClickListener(null);
-                mSaveButton.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        mTrackDetailFragment.validateInputData();
-                    }
-                });
+                mSaveButton.setOnClickListener(v -> mTrackDetailFragment.validateInputData());
                 mToolbarCover.setEnabled(false);
                 mUpdateCoverButton.setEnabled(false);
                 editMode();
@@ -439,7 +432,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements SimpleMed
      */
     private void setupFields(){
 
-        //collapsable toolbar
+        //collapsible toolbar
         mToolbar = findViewById(R.id.toolbar);
         setSupportActionBar(mToolbar);
         mCollapsingToolbarLayout = findViewById(R.id.collapsingToolbarLayout);
@@ -471,88 +464,65 @@ public class TrackDetailsActivity extends AppCompatActivity implements SimpleMed
 
     private void addActionListeners(){
         //enable manual mode
-        mEditButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                closeFABMenu();
-                mTrackDetailFragment.enableEditMode();
-            }
+        mEditButton.setOnClickListener(v -> {
+            closeFABMenu();
+            mTrackDetailFragment.enableEditMode();
         });
 
         //runs track id
-        mAutoFixButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                closeFABMenu();
-                enableMiniFabs(false);
-                mTrackDetailFragment.startIdentification(TrackIdentifier.ALL_TAGS);
-            }
+        mAutoFixButton.setOnClickListener(v -> {
+            closeFABMenu();
+            enableMiniFabs(false);
+            mTrackDetailFragment.startIdentification(TrackIdentifier.ALL_TAGS);
         });
 
-        mDownloadCoverButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                closeFABMenu();
-                mTrackDetailFragment.startIdentification(TrackIdentifier.JUST_COVER);
-            }
+        mDownloadCoverButton.setOnClickListener(v -> {
+            closeFABMenu();
+            mTrackDetailFragment.startIdentification(TrackIdentifier.JUST_COVER);
         });
 
         //shows or hides mini fabs
-        mFloatingActionMenu.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if(!mIsFloatingActionMenuOpen){
-                    showFABMenu();
-                }else{
-                    closeFABMenu();
-                }
+        mFloatingActionMenu.setOnClickListener(view -> {
+            if(!mIsFloatingActionMenuOpen){
+                showFABMenu();
+            }else{
+                closeFABMenu();
             }
         });
 
         //updates only cover art
-        mToolbarCover.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if(mIsFloatingActionMenuOpen)
-                    closeFABMenu();
+        mToolbarCover.setOnClickListener(v -> {
+            if(mIsFloatingActionMenuOpen)
+                closeFABMenu();
 
-                editCover(TrackDetailFragment.INTENT_GET_AND_UPDATE_FROM_GALLERY);
-            }
+            editCover(TrackDetailFragment.INTENT_GET_AND_UPDATE_FROM_GALLERY);
         });
 
     }
 
     private void addToolbarButtonsListeners(){
-        mAppBarLayout.addOnOffsetChangedListener(new AppBarLayout.OnOffsetChangedListener() {
-            @Override
-            public void onOffsetChanged(AppBarLayout appBarLayout, int verticalOffset) {
-                //set alpha of cover depending on offset of expanded toolbar cover height,
-                mToolbarCover.setAlpha(1.0f - Math.abs(verticalOffset/(float)appBarLayout.getTotalScrollRange()));
-                //when toolbar is fully collapsed show name of audio file in toolbar and back button
-                if(Math.abs(verticalOffset)-appBarLayout.getTotalScrollRange() == 0) {
-                    mCollapsingToolbarLayout.setTitleEnabled(true);
-                    mCollapsingToolbarLayout.setTitle(mLayerFileName.getText().toString());
-                    mActionBar.setDisplayShowTitleEnabled(true);
-                    mActionBar.setDisplayHomeAsUpEnabled(true);
-                    mActionBar.setDisplayShowHomeEnabled(true);
-                }
-                //hides title of toolbar and back button if toolbar is fully expanded
-                else {
-                    mCollapsingToolbarLayout.setTitleEnabled(false);
-                    mActionBar.setDisplayShowTitleEnabled(false);
-                    mActionBar.setDisplayHomeAsUpEnabled(false);
-                    mActionBar.setDisplayShowHomeEnabled(false);
-                }
+        mAppBarLayout.addOnOffsetChangedListener((appBarLayout, verticalOffset) -> {
+            //set alpha of cover depending on offset of expanded toolbar cover height,
+            mToolbarCover.setAlpha(1.0f - Math.abs(verticalOffset/(float)appBarLayout.getTotalScrollRange()));
+            //when toolbar is fully collapsed show name of audio file in toolbar and back button
+            if(Math.abs(verticalOffset)-appBarLayout.getTotalScrollRange() == 0) {
+                mCollapsingToolbarLayout.setTitleEnabled(true);
+                mCollapsingToolbarLayout.setTitle(mLayerFileName.getText().toString());
+                mActionBar.setDisplayShowTitleEnabled(true);
+                mActionBar.setDisplayHomeAsUpEnabled(true);
+                mActionBar.setDisplayShowHomeEnabled(true);
+            }
+            //hides title of toolbar and back button if toolbar is fully expanded
+            else {
+                mCollapsingToolbarLayout.setTitleEnabled(false);
+                mActionBar.setDisplayShowTitleEnabled(false);
+                mActionBar.setDisplayHomeAsUpEnabled(false);
+                mActionBar.setDisplayShowHomeEnabled(false);
             }
         });
 
         //pressing back from toolbar, close activity
-        mToolbar.setNavigationOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                dismiss();
-            }
-        });
+        mToolbar.setNavigationOnClickListener(v -> dismiss());
     }
 
     @Override
@@ -562,42 +532,30 @@ public class TrackDetailsActivity extends AppCompatActivity implements SimpleMed
     }
 
     private void additionalToolbarListeners(){
-        mExtractCoverButton.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
-            @Override
-            public boolean onMenuItemClick(MenuItem menuItem) {
-                closeFABMenu();
-                mTrackDetailFragment.extractCover();
-                return false;
-            }
+        mExtractCoverButton.setOnMenuItemClickListener(menuItem -> {
+            closeFABMenu();
+            mTrackDetailFragment.extractCover();
+            return false;
         });
 
-        mUpdateCoverButton.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
-            @Override
-            public boolean onMenuItemClick(MenuItem menuItem) {
-                closeFABMenu();
-                editCover(TrackDetailFragment.INTENT_GET_AND_UPDATE_FROM_GALLERY);
-                return false;
-            }
+        mUpdateCoverButton.setOnMenuItemClickListener(menuItem -> {
+            closeFABMenu();
+            editCover(TrackDetailFragment.INTENT_GET_AND_UPDATE_FROM_GALLERY);
+            return false;
         });
 
         addPlayAction();
 
-        removeItem.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
-            @Override
-            public boolean onMenuItemClick(MenuItem item) {
-                mTrackDetailFragment.removeCover();
-                return false;
-            }
+        removeItem.setOnMenuItemClickListener(item -> {
+            mTrackDetailFragment.removeCover();
+            return false;
         });
 
         //performs a web search in navigator
         //using the title and artist name
-        searchInWebItem.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
-            @Override
-            public boolean onMenuItemClick(MenuItem item) {
-                mTrackDetailFragment.searchInfoForTrack();
-                return false;
-            }
+        searchInWebItem.setOnMenuItemClickListener(item -> {
+            mTrackDetailFragment.searchInfoForTrack();
+            return false;
         });
     }
 
@@ -637,30 +595,24 @@ public class TrackDetailsActivity extends AppCompatActivity implements SimpleMed
 
     private void addPlayAction(){
         mPlayPreviewButton.setOnMenuItemClickListener(null);
-        mPlayPreviewButton.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
-            @Override
-            public boolean onMenuItemClick(MenuItem item) {
-                try {
-                if(PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getBoolean("key_use_embed_player",true))
-                    mPlayer.playPreview(mCurrentPath);
-                else
-                    AndroidUtils.openInExternalApp(mCurrentPath, getApplicationContext());
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                return false;
+        mPlayPreviewButton.setOnMenuItemClickListener(item -> {
+            try {
+            if(PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getBoolean("key_use_embed_player",true))
+                mPlayer.playPreview(mCurrentPath);
+            else
+                AndroidUtils.openInExternalApp(mCurrentPath, getApplicationContext());
+            } catch (IOException e) {
+                e.printStackTrace();
             }
+            return false;
         });
     }
 
     private void addStopAction(){
         mPlayPreviewButton.setOnMenuItemClickListener(null);
-        mPlayPreviewButton.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
-            @Override
-            public boolean onMenuItemClick(MenuItem item) {
-                mPlayer.stopPreview();
-                return false;
-            }
+        mPlayPreviewButton.setOnMenuItemClickListener(item -> {
+            mPlayer.stopPreview();
+            return false;
         });
     }
 

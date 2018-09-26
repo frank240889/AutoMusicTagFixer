@@ -1,7 +1,6 @@
 package mx.dev.franco.automusictagfixer.modelsUI.track_detail;
 
 import android.os.AsyncTask;
-import android.util.Log;
 
 import javax.inject.Inject;
 
@@ -77,7 +76,6 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
         if(mView != null)
             setTags(trackDataItem);
 
-        Log.d(TAG, "Coorrection mode: " + mCorrectionMode);
         if(mCorrectionMode == Constants.CorrectionModes.MANUAL){
             mView.enableEditMode();
         }
@@ -85,10 +83,6 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
             startIdentification(TrackIdentifier.ALL_TAGS);
         }
 
-    }
-
-    public void updateCover(byte[] cover){
-        mView.setCover(cover);
     }
 
     @Override
@@ -283,6 +277,7 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
             }
 
             mIdentifier = new TrackIdentifier();
+            mIdentifier.setResourceManager(resourceManager);
             mIdentifier.setTrack(mCurrentTrack);
             mIdentifier.setGnListener(this);
             mIdentifier.execute();
@@ -367,7 +362,7 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
             mView.setMessageStatus("");
             mView.showStatus();
             mView.showProgress();
-            mView.setMessageStatus("Iniciando identificación...");
+            mView.setMessageStatus(resourceManager.getString(R.string.starting_correction));
         }
     }
 
@@ -420,7 +415,7 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
     @Override
     public void onCorrectionStarted(Track track) {
         if(mView != null) {
-            mView.setMessageStatus("Corrigiendo, espera por favor...");
+            mView.setMessageStatus(resourceManager.getString(R.string.correction_in_progress));
             mView.showStatus();
             mView.showProgress();
         }
@@ -490,11 +485,11 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
         if(title != null){
             field = R.id.track_name_details;
            if(StringUtilities.isFieldEmpty(title)) {
-                mView.alertInvalidData("Etiqueta vacía", field);
+                mView.alertInvalidData(resourceManager.getString(R.string.empty_tag), field);
                 return false;
             }
             if(StringUtilities.isTooLong(field, title)) {
-                mView.alertInvalidData("Etiqueta muy larga.", field);
+                mView.alertInvalidData(resourceManager.getString(R.string.tag_too_long), field);
                 return false;
             }
             title = StringUtilities.trimString(title);
@@ -503,11 +498,11 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
         if(artist != null){
             field = R.id.artist_name_details;
             if(StringUtilities.isFieldEmpty(artist)) {
-                mView.alertInvalidData("Etiqueta vacía", field);
+                mView.alertInvalidData(resourceManager.getString(R.string.empty_tag), field);
                 return false;
             }
             if(StringUtilities.isTooLong(field, artist)) {
-                mView.alertInvalidData("Etiqueta muy larga.", field);
+                mView.alertInvalidData(resourceManager.getString(R.string.tag_too_long), field);
                 return false;
             }
             artist = StringUtilities.trimString(artist);
@@ -516,11 +511,11 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
         if(album != null){
             field = R.id.album_name_details;
             if(StringUtilities.isFieldEmpty(album)) {
-                mView.alertInvalidData("Etiqueta vacía", field);
+                mView.alertInvalidData(resourceManager.getString(R.string.empty_tag), field);
                 return false;
             }
             if(StringUtilities.isTooLong(field, album)) {
-                mView.alertInvalidData("Etiqueta muy larga.", field);
+                mView.alertInvalidData(resourceManager.getString(R.string.tag_too_long), field);
                 return false;
             }
             album = StringUtilities.trimString(album);
@@ -529,11 +524,11 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
         if(trackYear != null){
             field = R.id.track_year;
             if(StringUtilities.isFieldEmpty(trackYear)) {
-                mView.alertInvalidData("Etiqueta vacía", field);
+                mView.alertInvalidData(resourceManager.getString(R.string.empty_tag), field);
                 return false;
             }
             if(StringUtilities.isTooLong(field, trackYear)) {
-                mView.alertInvalidData("Etiqueta muy larga.", field);
+                mView.alertInvalidData(resourceManager.getString(R.string.tag_too_long), field);
                 return false;
             }
             trackYear = StringUtilities.trimString(trackYear);
@@ -542,11 +537,11 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
         if(trackNumber != null){
             field = R.id.track_number;
             if(StringUtilities.isFieldEmpty(trackNumber)) {
-                mView.alertInvalidData("Etiqueta vacía", field);
+                mView.alertInvalidData(resourceManager.getString(R.string.empty_tag), field);
                 return false;
             }
             if(StringUtilities.isTooLong(field, trackNumber)) {
-                mView.alertInvalidData("Etiqueta muy larga.", field);
+                mView.alertInvalidData(resourceManager.getString(R.string.tag_too_long), field);
                 return false;
             }
             trackNumber = StringUtilities.trimString(trackNumber);
@@ -555,11 +550,11 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
         if(genre != null){
             field = R.id.track_genre;
             if(StringUtilities.isFieldEmpty(genre)) {
-                mView.alertInvalidData("Etiqueta vacía", field);
+                mView.alertInvalidData(resourceManager.getString(R.string.empty_tag), field);
                 return false;
             }
             if(StringUtilities.isTooLong(field, genre)) {
-                mView.alertInvalidData("Etiqueta muy larga.", field);
+                mView.alertInvalidData(resourceManager.getString(R.string.tag_too_long), field);
                 return false;
             }
             genre = StringUtilities.trimString(genre);
@@ -572,7 +567,7 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
     public void onStart() {
         if(mView != null){
             mView.showProgress();
-            mView.setMessageStatus("Actualizando lista...");
+            mView.setMessageStatus(resourceManager.getString(R.string.updating_list));
         }
     }
 
@@ -582,7 +577,7 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
             mView.hideProgress();
             mView.setMessageStatus("");
             mView.hideStatus();
-            mView.onSuccessfullyCorrection("Etiquetas aplicadas correctamente.");
+            mView.onSuccessfullyCorrection(resourceManager.getString(R.string.successfully_applied_tags));
         }
     }
 

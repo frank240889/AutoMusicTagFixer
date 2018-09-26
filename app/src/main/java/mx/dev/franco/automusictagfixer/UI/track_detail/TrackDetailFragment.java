@@ -12,12 +12,9 @@ import android.support.design.widget.Snackbar;
 import android.support.design.widget.TextInputLayout;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
-import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
@@ -28,7 +25,6 @@ import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
-import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -97,8 +93,7 @@ public class TrackDetailFragment extends Fragment implements EditableView {
     private EditText mGenreField;
 
     private TextView mBitrateField;
-    private MenuItem mPlayPreviewButton;
-    private TextView mLayerFileName, mSubtitleLayer;
+    private TextView mSubtitleLayer;
     private TextView mImageSize;
     private TextView mFileSize;
     private TextView mTrackLength;
@@ -106,10 +101,7 @@ public class TrackDetailFragment extends Fragment implements EditableView {
     private TextView mResolution;
     private TextView mChannels;
     private TextView mTrackType;
-    private String mBitrate;
     private TextView mStatus;
-    private ProgressBar mProgressBar;
-    private Toolbar mToolbar;
     private AlertDialog mResultsDialog;
 
 
@@ -118,7 +110,6 @@ public class TrackDetailFragment extends Fragment implements EditableView {
 
     private LinearLayout mProgressContainer;
 
-    private static final int CROSS_FADE_DURATION = 200;
     private TrackDetailPresenter mTrackDetailPresenter;
     private ImageButton mCancelIdentification;
     @Inject
@@ -203,8 +194,6 @@ public class TrackDetailFragment extends Fragment implements EditableView {
      */
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        Log.d(TAG, "request code " + requestCode + " - resultCode" + resultCode + " resultData is null " + (data == null));
-
         switch (requestCode){
             case INTENT_GET_AND_UPDATE_FROM_GALLERY:
             case INTENT_OPEN_GALLERY:
@@ -290,8 +279,6 @@ public class TrackDetailFragment extends Fragment implements EditableView {
         mGenreField = null;
         mCurrentCoverArt = null;
         mBitrateField = null;
-        mPlayPreviewButton = null;
-        mLayerFileName = null;
         mSubtitleLayer = null;
         mImageSize = null;
         mFileSize = null;
@@ -300,9 +287,7 @@ public class TrackDetailFragment extends Fragment implements EditableView {
         mResolution = null;
         mChannels = null;
         mTrackType = null;
-        mBitrate = null;
         mStatus = null;
-        mProgressBar = null;
         if(mResultsDialog != null)
             mResultsDialog.dismiss();
 
@@ -314,8 +299,6 @@ public class TrackDetailFragment extends Fragment implements EditableView {
      * in layout
      */
     private void setupFields(){
-
-        mProgressBar = mLayout.findViewById(R.id.progress_bar);
         //editable edit texts from song
         mTitleField = mLayout.findViewById(R.id.track_name_details);
         mArtistField = mLayout.findViewById(R.id.artist_name_details);
@@ -325,7 +308,6 @@ public class TrackDetailFragment extends Fragment implements EditableView {
         mGenreField = mLayout.findViewById(R.id.track_genre);
 
         //Additional data fields
-        mLayerFileName = mLayout.findViewById(R.id.titleTransparentLayer);
         mSubtitleLayer = mLayout.findViewById(R.id.subtitleTransparentLayer);
         mImageSize = mLayout.findViewById(R.id.imageSize);
         mFileSize = mLayout.findViewById(R.id.fileSize);
@@ -360,18 +342,8 @@ public class TrackDetailFragment extends Fragment implements EditableView {
             mTrackDetailPresenter.cancelIdentification();
             final AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
             builder.setMessage(R.string.message_remove_cover_art_dialog);
-            builder.setNegativeButton(R.string.cancel_button, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    dialog.cancel();
-                }
-            });
-            builder.setPositiveButton(R.string.accept, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    mTrackDetailPresenter.removeCover();
-                }
-            });
+            builder.setNegativeButton(R.string.cancel_button, (dialog, which) -> dialog.cancel());
+            builder.setPositiveButton(R.string.accept, (dialog, which) -> mTrackDetailPresenter.removeCover());
             AlertDialog alertDialog = builder.create();
             alertDialog.show();
         }
@@ -405,12 +377,7 @@ public class TrackDetailFragment extends Fragment implements EditableView {
         mImageSize.setText(getString(R.string.edit_cover));
         mImageSize.setCompoundDrawablesWithIntrinsicBounds(getActivity().getDrawable(R.drawable.ic_photo_library_black_24dp),null,null,null);
         //Enabled "Añadir carátula de galería" to add cover when is pressed
-        mImageSize.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                editCover(INTENT_OPEN_GALLERY);
-            }
-        });
+        mImageSize.setOnClickListener(v -> editCover(INTENT_OPEN_GALLERY));
         mTitleField.requestFocus();
         InputMethodManager imm =(InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
         imm.showSoftInput(mTitleField,InputMethodManager.SHOW_IMPLICIT);
@@ -688,12 +655,7 @@ public class TrackDetailFragment extends Fragment implements EditableView {
         if(mListener != null)
             mListener.onDataReady(path);
 
-        mCancelIdentification.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mTrackDetailPresenter.cancelIdentification();
-            }
-        });
+        mCancelIdentification.setOnClickListener(v -> mTrackDetailPresenter.cancelIdentification());
 
         //when intent brings correction mode  == MANUAL, enable fields
         //to start immediately editing it
@@ -742,7 +704,6 @@ public class TrackDetailFragment extends Fragment implements EditableView {
         checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                //Log.d("checked", (isChecked) + "");
                 if(!isChecked){
                     textInputLayout.setVisibility(View.GONE);
                     textView.setVisibility(View.GONE);
@@ -830,12 +791,7 @@ public class TrackDetailFragment extends Fragment implements EditableView {
         Snackbar snackbar = AndroidUtils.getSnackbar(mEditableFieldsContainer, getActivity().getApplicationContext());
         snackbar.setDuration(Snackbar.LENGTH_LONG);
         snackbar.setText(String.format(getString(R.string.cover_saved), message));
-        snackbar.setAction(R.string.watch, new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                AndroidUtils.openInExternalApp(message, getActivity().getApplicationContext());
-            }
-        });
+        snackbar.setAction(R.string.watch, v -> AndroidUtils.openInExternalApp(message, getActivity().getApplicationContext()));
         snackbar.show();
         if(mListener != null)
             mListener.onFinishedTask();
@@ -846,20 +802,10 @@ public class TrackDetailFragment extends Fragment implements EditableView {
         Snackbar snackbar = AndroidUtils.getSnackbar(mEditableFieldsContainer, getActivity().getApplicationContext());
         snackbar.setDuration(Snackbar.LENGTH_LONG);
         if (action != null && action.equals(getString(R.string.get_permission))){
-            snackbar.setAction(action, new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    getActivity().startActivity(new Intent(getActivity(), SdCardInstructionsActivity.class));
-                }
-            });
+            snackbar.setAction(action, v -> getActivity().startActivity(new Intent(getActivity(), SdCardInstructionsActivity.class)));
         }
         else if(action != null && action.equals(getString(R.string.add_manual))){
-            snackbar.setAction(action, new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    enableFieldsToEdit();
-                }
-            });
+            snackbar.setAction(action, v -> enableFieldsToEdit());
         }
 
         snackbar.setText(message);
@@ -924,42 +870,32 @@ public class TrackDetailFragment extends Fragment implements EditableView {
             }
         });
         TextView textView = view.findViewById(R.id.manual_message_rename_hint);
-        checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                //Log.d("checked", (isChecked) + "");
-                if(!isChecked){
-                    textInputLayout.setVisibility(View.GONE);
-                    textView.setVisibility(View.GONE);
-                    editText.setText("");
-                    correctionParams.newName = "";
-                    correctionParams.shouldRename = false;
-                }
-                else{
-                    textInputLayout.setVisibility(View.VISIBLE);
-                    textView.setVisibility(View.VISIBLE);
-                    correctionParams.newName = editText.getText().toString();
-                    correctionParams.shouldRename = true;
-                }
+        checkBox.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if(!isChecked){
+                textInputLayout.setVisibility(View.GONE);
+                textView.setVisibility(View.GONE);
+                editText.setText("");
+                correctionParams.newName = "";
+                correctionParams.shouldRename = false;
+            }
+            else{
+                textInputLayout.setVisibility(View.VISIBLE);
+                textView.setVisibility(View.VISIBLE);
+                correctionParams.newName = editText.getText().toString();
+                correctionParams.shouldRename = true;
             }
         });
         builder.setTitle(R.string.manual);
         builder.setMessage(R.string.message_apply_new_tags);
-        builder.setNegativeButton(R.string.cancel_button, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.dismiss();
-                disableFields();
-                mTrackDetailPresenter.restorePreviousValues();
-            }
+        builder.setNegativeButton(R.string.cancel_button, (dialog, which) -> {
+            dialog.dismiss();
+            disableFields();
+            mTrackDetailPresenter.restorePreviousValues();
         });
-        builder.setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                correctionParams.dataFrom = Constants.MANUAL;
-                correctionParams.mode = Tagger.MODE_OVERWRITE_ALL_TAGS;
-                mTrackDetailPresenter.performCorrection(correctionParams);
-            }
+        builder.setPositiveButton(R.string.yes, (dialog, which) -> {
+            correctionParams.dataFrom = Constants.MANUAL;
+            correctionParams.mode = Tagger.MODE_OVERWRITE_ALL_TAGS;
+            mTrackDetailPresenter.performCorrection(correctionParams);
         });
         AlertDialog alertDialog = builder.create();
         alertDialog.show();

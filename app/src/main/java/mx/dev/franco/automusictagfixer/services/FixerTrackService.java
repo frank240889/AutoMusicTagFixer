@@ -57,6 +57,7 @@ import mx.dev.franco.automusictagfixer.receivers.ResponseReceiver;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
 import mx.dev.franco.automusictagfixer.utilities.Tagger;
 import mx.dev.franco.automusictagfixer.utilities.TrackUtils;
+import mx.dev.franco.automusictagfixer.utilities.resource_manager.ResourceManager;
 
 /**
  * Created by franco on 17/08/17.
@@ -75,6 +76,8 @@ public class FixerTrackService extends Service implements GnResponseListener.GnL
     TrackRepository mTrackRepository;
     @Inject
     TrackRoomDatabase trackRoomDatabase;
+    @Inject
+    ResourceManager resourceManager;
     private static IdLoader sIdLoader;
     private boolean isRunning = false;
     private List<Integer> mIds = new ArrayList<>();
@@ -209,12 +212,15 @@ public class FixerTrackService extends Service implements GnResponseListener.GnL
         }
         else {
             sIdentifier = new TrackIdentifier();
+            sIdentifier.setResourceManager(resourceManager);
             sIdentifier.setTrack(data.get(0));
             sIdentifier.setGnListener(this);
             isRunning = true;
             try {
                 AudioFileIO.read(new File(data.get(0).getPath()));
-                startNotification("Corrección en progreso", "Corrigiendo " + TrackUtils.getFilename(data.get(0).getPath()), "Iniciando corrección...", data.get(0).getMediaStoreId());
+                startNotification(getString(R.string.correction_in_progress),
+                        getString(R.string.correcting) +" " +
+                                TrackUtils.getFilename(data.get(0).getPath()), getString(R.string.starting_correction), data.get(0).getMediaStoreId());
                 sIdentifier.execute();
             } catch (CannotReadException | IOException | ReadOnlyFileException | TagException | InvalidAudioFrameException e) {
                 e.printStackTrace();
@@ -249,6 +255,7 @@ public class FixerTrackService extends Service implements GnResponseListener.GnL
         mReceiver = null;
         mIds.clear();
         mIds = null;
+        resourceManager = null;
         Log.d("destroy","releasing resources...");
     }
 
@@ -381,7 +388,9 @@ public class FixerTrackService extends Service implements GnResponseListener.GnL
             track.setProcessing(1);
             mTrackRepository.update(track);
         }
-        startNotification(TrackUtils.getPath(track.getPath()),"Corrección en progreso", "Identificando...", track.getMediaStoreId()  );
+        startNotification(TrackUtils.getPath(track.getPath()),
+                getString(R.string.correction_in_progress),
+                getString(R.string.identifying), track.getMediaStoreId());
     }
 
     @Override
@@ -391,7 +400,9 @@ public class FixerTrackService extends Service implements GnResponseListener.GnL
 
     @Override
     public void gatheringFingerprint(Track track) {
-        startNotification(TrackUtils.getPath(track.getPath()),"Identificación en progreso", "Generando huella...", track.getMediaStoreId() );
+        startNotification(TrackUtils.getPath(track.getPath()),
+                getString(R.string.correction_in_progress),
+                getString(R.string.generating_fingerprint), track.getMediaStoreId());
     }
 
     @Override
@@ -399,7 +410,7 @@ public class FixerTrackService extends Service implements GnResponseListener.GnL
         if(sIdentifier != null){
             sIdentifier = null;
         }
-        startNotification("Corrección en progreso", "", error, track.getMediaStoreId() );
+        startNotification(getString(R.string.correction_in_progress), "", error, track.getMediaStoreId() );
 
         Intent intent = new Intent(Constants.Actions.FINISH_TRACK_PROCESSING);
         intent.putExtra("error", error);
@@ -422,7 +433,8 @@ public class FixerTrackService extends Service implements GnResponseListener.GnL
         if(sIdentifier != null){
             sIdentifier = null;
         }
-        startNotification(TrackUtils.getPath(track.getPath()),"Identificación en progreso", "No se encontró ninguna coincidencia.", track.getMediaStoreId() );
+        startNotification(TrackUtils.getPath(track.getPath()),getString(R.string.correction_in_progress),
+                getString(R.string.no_match_found), track.getMediaStoreId() );
 
         Intent intent = new Intent(Constants.Actions.FINISH_TRACK_PROCESSING);
         intent.putExtra(Constants.MEDIA_STORE_ID, track.getMediaStoreId());
@@ -445,7 +457,7 @@ public class FixerTrackService extends Service implements GnResponseListener.GnL
         if(sIdentifier != null){
             sIdentifier = null;
         }
-        startNotification(TrackUtils.getPath(track.getPath()), "Coincidencia encontrada", "Iniciando corrección...", track.getMediaStoreId() );
+        startNotification(TrackUtils.getPath(track.getPath()), getString(R.string.match_found), getString(R.string.starting_correction), track.getMediaStoreId() );
         sFixer = new Fixer(this);
         boolean shouldRename = PreferenceManager.
                 getDefaultSharedPreferences(getApplicationContext()).
@@ -525,8 +537,9 @@ public class FixerTrackService extends Service implements GnResponseListener.GnL
 
     @Override
     public void onCorrectionError(Tagger.ResultCorrection resultCorrection, Track track) {
-        startNotification("Error", "Error", "No se pudo corregir el archivo.", track.getMediaStoreId()  );
-        Log.d("Error", "eRROR");
+        startNotification(getString(R.string.error_in_correction), getString(R.string.error_in_correction),
+                getString(R.string.could_not_correct_file), track.getMediaStoreId()  );
+
         Intent intent = new Intent(Constants.Actions.ACTION_SD_CARD_ERROR);
         intent.putExtra("error", Fixer.ERROR_CODES.getErrorMessage(this, resultCorrection.code));
         LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcastSync(intent);

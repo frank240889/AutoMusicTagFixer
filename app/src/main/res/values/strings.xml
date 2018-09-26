@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">AutoMusicTagFixer</string>
+    <string name="app_name" translatable="false">AutoMusicTagFixer</string>
 
     <string name="welcome">¡Bienvenido!</string>
     <string name="step_1">AutoMusicTagFixer te ayudará a mantener más organizada tu biblioteca musical.</string>
@@ -67,13 +67,7 @@
     <string name="pref_title_change">Renombrar archivo</string>
     <string name="pref_title_change_description">El título (si se encuentra) se aplicará como nombre del archivo; se añadirá el nombre del artista más/ó un número aleatorio, en caso que un archivo con nombre igual ya exista.
     </string>
-    <string name="pref_manual_title_change">Renombrar archivo</string>
-    <string name="pref_manual_title_change_description">El título que hayas escrito se aplicará como nombre del archivo; se añadirá el nombre del artista más/ó un número aleatorio, en caso que un archivo con nombre igual ya exista.
-    </string>
-    <string name="pref_semi_automatic_title_change">Renombrar archivo</string>
-    <string name="pref_semi_automatic_title_change_description">El título (si se encuentra) se aplicará como nombre del archivo cuando guardes los cambios; se añadirá el nombre del artista más/ó un número aleatorio, en caso que un archivo con nombre igual ya exista.
 
-    </string>
     <string name="pref_title_background">Usar corrección en segundo plano</string>
     <string name="pref_title_background_description">La corrección de canciones no se cancelará aún cuando cierres la aplicación, sino hasta que termine o la detengas; se mostrará una notificación con el progreso.</string>
 
@@ -249,10 +243,11 @@
 
     <string name="contact_dev">¿Dudas o comentarios? Contacta al desarrollador tocando {gmd-email}.</string>
 
-    <string name="correction_in_progress">Corrección en progreso.</string>
+    <string name="correction_in_progress">Corrección en progreso…</string>
 
     <string name="yes">Si</string>
     <string name="gathering_fingerprint">Generando huella para %1$s</string>
+    <string name="generating_fingerprint">Generando huella…</string>
     <string name="loading_tracks">Cargando lista…</string>
     <string name="more">Más</string>
     <string name="saf_denied">Permiso de lectura/escritura a SD denegado.</string>
@@ -280,7 +275,7 @@
     <string name="message_checkbox_rename">Renombrar archivo</string>
     <string name="message_rename">Dejar vacío para usar el título(si esta disponible) como nombre.</string>
     <string name="found">Coincidencia encontrada</string>
-    <string name="starting_correction">Corrigiendo…</string>
+    <string name="starting_correction">Iniciando corrección…</string>
     <string name="applying_tags">Aplicando cambios, espera por favor…</string>
     <string name="success">Corrección terminada.</string>
     <string name="get_permission">Permiso</string>
@@ -288,5 +283,19 @@
     <string name="complete_task">Corrección terminada exitosamente.</string>
     <string name="title_update_cover">Actualizar carátula</string>
     <string name="add_manual">Manual</string>
+    <string name="correcting">Corrigiendo</string>
+    <string name="identifying">Identificando…</string>
+    <string name="no_match_found">No se encontró ninguna coincidencia.</string>
+    <string name="match_found">Coincidencia encontrada.</string>
+    <string name="could_not_correct_file">No se pudo corregir el archivo.</string>
+    <string name="error_in_correction">Error</string>
+    <string name="empty_tag">Etiqueta vacía</string>
+    <string name="tag_too_long">Etiqueta muy larga</string>
+    <string name="updating_list">Actualizando lista…</string>
+    <string name="begin_processing">Iniciando identificación…</string>
+    <string name="querying_info">Identificando, espere por favor…</string>
+    <string name="complete_identification">Identificación completa</string>
+    <string name="processing_error">Error de identificación</string>
+    <string name="identification_cancelled">Identificación cancelada</string>
 
 </resources>
