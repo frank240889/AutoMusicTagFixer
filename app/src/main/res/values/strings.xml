@@ -77,7 +77,15 @@
 
     <string name="pref_title_replace_all_tags">Sobreescribir etiquetas</string>
     <string name="pref_replace_auto_all_tags_description">Si esta activa esta opción se reemplazarán todas las etiquetas actuales por las encontradas; desactívala para añadir solo las faltantes.</string>
-
+    <string name="pref_title_language">Idioma de resultados de identificación</string>
+    <string-array name="pref_language_titles">
+        <item>Español</item>
+        <item>Ingles</item>
+    </string-array>
+    <string-array name="pref_languages_values">
+        <item>0</item>
+        <item>1</item>
+    </string-array>
     <!--This is going to be in seconds-->
 
     <!-- Settings for Data save -->
@@ -297,5 +305,9 @@
     <string name="complete_identification">Identificación completa</string>
     <string name="processing_error">Error de identificación</string>
     <string name="identification_cancelled">Identificación cancelada</string>
+    <string name="image_drawer_credits">Imagen en drawer.</string>
+    <string name="identification_results_language">Idioma</string>
+    <string name="pixels">Pixeles</string>
+    <string name="missing_cover">Sin carátula</string>
 
 </resources>

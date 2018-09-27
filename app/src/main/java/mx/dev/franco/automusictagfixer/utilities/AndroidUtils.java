@@ -151,9 +151,9 @@ public class AndroidUtils {
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder.setView(customView);
         if(showAll)
-            setValues(results, customView);
+            setValues(results, customView, context);
         else
-            setCover(results,customView);
+            setCover(results,customView, context);
         return builder;
     }
 
@@ -177,13 +177,13 @@ public class AndroidUtils {
         view.findViewById(R.id.rename_to).setVisibility(View.GONE);
         view.findViewById(R.id.message_rename_hint).setVisibility(View.GONE);
         if(showAll)
-            setValues(results, view);
+            setValues(results, view, context);
         else
-            setCover(results,view);
+            setCover(results,view, context);
         return builder;
     }
 
-    private static void setValues(GnResponseListener.IdentificationResults results, View view){
+    private static void setValues(GnResponseListener.IdentificationResults results, View view, Context context){
         ImageView cover = view.findViewById(R.id.trackid_cover);
         GlideApp.with(view.getContext()).
                 load(results.cover).
@@ -194,7 +194,7 @@ public class AndroidUtils {
                 fitCenter().
                 into(cover);
         TextView coverDimensions = view.findViewById(R.id.trackid_cover_dimensions);
-        coverDimensions.setText(TrackUtils.getStringImageSize(results.cover)) ;
+        coverDimensions.setText(TrackUtils.getStringImageSize(results.cover, context)) ;
         if(!results.title.isEmpty()) {
             TextView title = view.findViewById(R.id.track_id_title);
             title.setVisibility(View.VISIBLE);
@@ -233,7 +233,7 @@ public class AndroidUtils {
         }
     }
 
-    private static void setCover(GnResponseListener.IdentificationResults results, View view){
+    private static void setCover(GnResponseListener.IdentificationResults results, View view, Context context){
         ImageView cover = view.findViewById(R.id.trackid_cover);
         GlideApp.with(view.getContext()).
                 load(results.cover).
@@ -244,7 +244,7 @@ public class AndroidUtils {
                 fitCenter().
                 into(cover);
         TextView coverDimensions = view.findViewById(R.id.trackid_cover_dimensions);
-        coverDimensions.setText(TrackUtils.getStringImageSize(results.cover)) ;
+        coverDimensions.setText(TrackUtils.getStringImageSize(results.cover, context)) ;
 
         TextView title = view.findViewById(R.id.track_id_title);
         title.setVisibility(View.GONE);

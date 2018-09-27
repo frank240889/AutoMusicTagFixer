@@ -51,8 +51,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity{
      * to reflect its new value.
      */
 
-    private boolean updateUI = false;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -70,59 +68,56 @@ public class SettingsActivity extends AppCompatPreferenceActivity{
         }
     }
 
-    private static Preference.OnPreferenceChangeListener sBindPreferenceSummaryToValueListener = new Preference.OnPreferenceChangeListener() {
-        @Override
-        public boolean onPreferenceChange(Preference preference, Object value) {
-            String stringValue = "";
+    private static Preference.OnPreferenceChangeListener sBindPreferenceSummaryToValueListener = (preference, value) -> {
+        String stringValue = "";
 
-            if (preference instanceof ListPreference) {
-                stringValue = value.toString();
-                // For list preferences, look up the correct display value in
-                // the preference's 'entries' list.
-                ListPreference listPreference = (ListPreference) preference;
-                int index = listPreference.findIndexOfValue(stringValue);
-                // Set the summary to reflect the new value.
-                preference.setSummary( index >= 0 ? listPreference.getEntries()[index] : null);
-            }
-            else if(preference instanceof MultiSelectListPreference) {
-                MultiSelectListPreference multiSelectListPreference = (MultiSelectListPreference) preference;
-                String summary = "";
-                String separator = "";
-                //Get the current values selected, convert to string and replace braces
-                String str = value.toString().replace("[", "").replace("]", "");
-                //if no values were selected, then we have empty character so set summary to "Ninguno",
-                //otherwise split this string to string array and get every value
-                if(!str.equals("")){
-                String[] strArr = str.split(",");
-                    for (String val : strArr) {
-                        // For each value retrieve index
-                        //trim the string, because after first element, there is a space before the element
-                        //for example "value, value2", before value2 there is one space
-                        int index = multiSelectListPreference.findIndexOfValue(val.trim());
-                        // Retrieve entry from index
-                        CharSequence mEntry = index >= 0 ? multiSelectListPreference.getEntries()[index] : null;
-                        if (mEntry != null) {
-                            summary = summary + separator + mEntry;
-                            separator = ", ";
-                        }
+        if (preference instanceof ListPreference) {
+            stringValue = value.toString();
+            // For list preferences, look up the correct display value in
+            // the preference's 'entries' list.
+            ListPreference listPreference = (ListPreference) preference;
+            int index = listPreference.findIndexOfValue(stringValue);
+            // Set the summary to reflect the new value.
+            preference.setSummary( index >= 0 ? listPreference.getEntries()[index] : null);
+        }
+        else if(preference instanceof MultiSelectListPreference) {
+            MultiSelectListPreference multiSelectListPreference = (MultiSelectListPreference) preference;
+            String summary = "";
+            String separator = "";
+            //Get the current values selected, convert to string and replace braces
+            String str = value.toString().replace("[", "").replace("]", "");
+            //if no values were selected, then we have empty character so set summary to "Ninguno",
+            //otherwise split this string to string array and get every value
+            if(!str.equals("")){
+            String[] strArr = str.split(",");
+                for (String val : strArr) {
+                    // For each value retrieve index
+                    //trim the string, because after first element, there is a space before the element
+                    //for example "value, value2", before value2 there is one space
+                    int index = multiSelectListPreference.findIndexOfValue(val.trim());
+                    // Retrieve entry from index
+                    CharSequence mEntry = index >= 0 ? multiSelectListPreference.getEntries()[index] : null;
+                    if (mEntry != null) {
+                        summary = summary + separator + mEntry;
+                        separator = ", ";
                     }
                 }
-                else{
-                    summary = "Ninguno";
-                }
-
-
-                multiSelectListPreference.setSummary(summary);
+            }
+            else{
+                summary = "";//"Ninguno" ;
             }
 
-            else {
-                stringValue = value.toString();
-                // For all other preferences, set the summary to the value's
-                // simple string representation.
-                preference.setSummary(stringValue);
-            }
-            return true;
+
+            multiSelectListPreference.setSummary(summary);
         }
+
+        else {
+            stringValue = value.toString();
+            // For all other preferences, set the summary to the value's
+            // simple string representation.
+            preference.setSummary(stringValue);
+        }
+        return true;
     };
 
     /**
@@ -148,7 +143,9 @@ public class SettingsActivity extends AppCompatPreferenceActivity{
         preference.setOnPreferenceChangeListener(sBindPreferenceSummaryToValueListener);
         // Trigger the listener immediately with the preference's
         // current value.
-        sBindPreferenceSummaryToValueListener.onPreferenceChange(preference, PreferenceManager.getDefaultSharedPreferences(preference.getContext()).getString(preference.getKey(), ""));
+        sBindPreferenceSummaryToValueListener.onPreferenceChange(preference,
+                PreferenceManager.getDefaultSharedPreferences(preference.getContext()).
+                        getString(preference.getKey(), ""));
 
     }
 
@@ -185,7 +182,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity{
             case "key_size_album_art":
                 String opt = sharedPreferences.getString(key, "-1");
                 Settings.SETTING_SIZE_ALBUM_ART = Settings.setValueImageSize(opt);
-                Log.d(key, opt);
                 break;
             case "key_rename_file_automatic_mode":
                 break;
@@ -213,6 +209,11 @@ public class SettingsActivity extends AppCompatPreferenceActivity{
                 else {
                     revokePermission();
                 }
+                break;
+            case "key_language":
+                String language = sharedPreferences.getString(key, "0");
+                Settings.SETTING_LANGUAGE = Settings.setValueLanguage(language);
+                Log.d("Lenguaje", Settings.SETTING_LANGUAGE.name());
                 break;
         }
     }
@@ -259,6 +260,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity{
                 ((SettingsActivity)getActivity()).mSDCardAccess.setChecked((AndroidUtils.getUriSD(getActivity().getApplicationContext()) != null));
             }
             setHasOptionsMenu(true);
+            bindPreferenceSummaryToValue(findPreference("key_language"));
             // Bind the summaries of EditText/List/Dialog/Ringtone preferences
             // to their values. When their values change, their summaries are
             // updated to reflect the new value, per the Android Design

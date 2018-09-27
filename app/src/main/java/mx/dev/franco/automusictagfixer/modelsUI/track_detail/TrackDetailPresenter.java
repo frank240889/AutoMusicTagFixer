@@ -591,11 +591,11 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
             if (mDataFrom == Constants.CACHED) {
                 GnResponseListener.IdentificationResults results = mCache.getCache().load(mCurrentId);
                 mView.setCover(results.cover);
-                mView.setImageSize(TrackUtils.getStringImageSize(results.cover));
+                mView.setImageSize(TrackUtils.getStringImageSize(results.cover, resourceManager));
                 mCurrentTrackDataItem.cover = results.cover;
 
             } else {
-                mView.setImageSize(TrackUtils.getStringImageSize(mView.getCover()));
+                mView.setImageSize(TrackUtils.getStringImageSize(mView.getCover(), resourceManager));
                 mView.setCover(mView.getCover());
                 mCurrentTrackDataItem.cover = mView.getCover();
                 mView.disableEditMode();
@@ -605,7 +605,7 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
         else {
             mView.setCover(null);
             mCurrentTrackDataItem.cover = null;
-            mView.setImageSize(TrackUtils.getStringImageSize(null));
+            mView.setImageSize(TrackUtils.getStringImageSize(null, resourceManager));
             mView.setFilesize(TrackUtils.getFileSize(mCurrentTrack.getPath()));
             mView.onSuccessfullyCorrection(resourceManager.getString(R.string.cover_removed));
         }
@@ -639,14 +639,14 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
             if(results.cover != null) {
                 mCurrentTrackDataItem.cover = results.cover;
                 mView.setCover(results.cover);
-                mView.setImageSize(TrackUtils.getStringImageSize(results.cover));
+                mView.setImageSize(TrackUtils.getStringImageSize(results.cover, resourceManager));
             }
             setEditableInfo(mCurrentTrackDataItem);
             setAdditionalInfo(mCurrentTrackDataItem);
         }
         else {
             mView.setCover(mView.getCover());
-            mView.setImageSize(TrackUtils.getStringImageSize(mView.getCover()));
+            mView.setImageSize(TrackUtils.getStringImageSize(mView.getCover(), resourceManager));
             mCurrentTrackDataItem.title = mView.getTrackTitle();
             mCurrentTrackDataItem.artist = mView.getArtist();
             mCurrentTrackDataItem.album = mView.getAlbum();
@@ -711,7 +711,7 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
             if(results.cover != null && mView.getCover() == null) {
                 mCurrentTrackDataItem.cover = results.cover;
                 mView.setCover(results.cover);
-                mView.setImageSize(TrackUtils.getStringImageSize(results.cover));
+                mView.setImageSize(TrackUtils.getStringImageSize(results.cover, resourceManager));
             }
             setEditableInfo(mCurrentTrackDataItem);
             setAdditionalInfo(mCurrentTrackDataItem);
@@ -719,7 +719,7 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
         }
         else {
             mView.setCover(mView.getCover());
-            mView.setImageSize(TrackUtils.getStringImageSize(mView.getCover()));
+            mView.setImageSize(TrackUtils.getStringImageSize(mView.getCover(), resourceManager));
             mCurrentTrackDataItem.title = mView.getTrackTitle();
             mCurrentTrackDataItem.artist = mView.getArtist();
             mCurrentTrackDataItem.album = mView.getAlbum();

@@ -33,6 +33,8 @@ public class SplashActivity extends AppCompatActivity{
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         String imageSizeSaved = preferences.getString("key_size_album_art","1000");
         Settings.SETTING_SIZE_ALBUM_ART = Settings.setValueImageSize(imageSizeSaved);
+        String language = preferences.getString("key_language","0");
+        Settings.SETTING_LANGUAGE = Settings.setValueLanguage(language);
 
         //Is first use of app?
         preferences =  getSharedPreferences(Constants.Application.FULL_QUALIFIED_NAME, Context.MODE_PRIVATE);

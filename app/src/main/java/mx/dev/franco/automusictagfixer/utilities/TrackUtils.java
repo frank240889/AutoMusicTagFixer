@@ -1,10 +1,14 @@
 package mx.dev.franco.automusictagfixer.utilities;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.webkit.MimeTypeMap;
 
 import java.io.File;
+
+import mx.dev.franco.automusictagfixer.R;
+import mx.dev.franco.automusictagfixer.utilities.resource_manager.ResourceManager;
 
 /**
  * Created by franco on 14/04/17.
@@ -22,12 +26,11 @@ public final class TrackUtils {
         if(duration == null || duration.isEmpty())
             return "0";
         int d = Integer.parseInt(duration);
-        int totalSeconds = d;
         int minutes = 0;
         int seconds = 0;
         String readableDuration = "\'" + "00" +  "\"" + "00";
-        minutes = (int) Math.floor(totalSeconds / 60);
-        seconds = totalSeconds%60;
+        minutes = (int) Math.floor(d / 60);
+        seconds = d % 60;
         readableDuration = minutes + "\'" + (seconds<10?("0"+seconds):seconds) + "\"";
         return readableDuration;
     }
@@ -67,20 +70,41 @@ public final class TrackUtils {
      * @param cover Cover art data
      * @return formatted string image size
      */
-    public static String getStringImageSize(byte[] cover){
-        String msg;
+    public static String getStringImageSize(byte[] cover, Context context){
+        String msg = context.getString(R.string.missing_cover);
         if(cover != null && cover.length > 0) {
             try {
                 Bitmap bitmapDrawable = BitmapFactory.decodeByteArray(cover, 0, cover.length);
-                msg = bitmapDrawable.getHeight() + " * " + bitmapDrawable.getWidth() + " pixeles";
-                return msg;
+                msg = bitmapDrawable.getHeight() + " * " + bitmapDrawable.getWidth() +" " +
+                        context.getString(R.string.pixels);
             }
             catch (Exception e){
-                msg = "Sin carátula";
+                msg = context.getString(R.string.missing_cover);
             }
         }
-        return "Sin carátula";
+        return msg;
     }
+
+    /**
+     * Gets image dimensions information
+     * @param cover Cover art data
+     * @return formatted string image size
+     */
+    public static String getStringImageSize(byte[] cover, ResourceManager resourceManager){
+        String msg = resourceManager.getString(R.string.missing_cover);
+        if(cover != null && cover.length > 0) {
+            try {
+                Bitmap bitmapDrawable = BitmapFactory.decodeByteArray(cover, 0, cover.length);
+                msg = bitmapDrawable.getHeight() + " * " + bitmapDrawable.getWidth() + " " +
+                        resourceManager.getString(R.string.pixels);
+            }
+            catch (Exception e){
+                msg = resourceManager.getString(R.string.missing_cover);
+            }
+        }
+        return msg;
+    }
+
 
     /**
      * Returns only the last part of absolute path,

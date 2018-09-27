@@ -7,21 +7,16 @@ import android.content.Intent;
 import android.os.AsyncTask;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
-import android.util.SparseArray;
 import android.widget.Toast;
 
 import com.crashlytics.android.Crashlytics;
 import com.gracenote.gnsdk.GnDescriptor;
 import com.gracenote.gnsdk.GnException;
-import com.gracenote.gnsdk.GnLanguage;
 import com.gracenote.gnsdk.GnLicenseInputMode;
 import com.gracenote.gnsdk.GnLocale;
 import com.gracenote.gnsdk.GnLocaleGroup;
-import com.gracenote.gnsdk.GnLookupLocalStream;
 import com.gracenote.gnsdk.GnManager;
-import com.gracenote.gnsdk.GnMusicIdFile;
 import com.gracenote.gnsdk.GnRegion;
-import com.gracenote.gnsdk.GnStorageSqlite;
 import com.gracenote.gnsdk.GnUser;
 import com.gracenote.gnsdk.GnUserStore;
 
@@ -29,6 +24,7 @@ import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.services.Job;
 import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
+import mx.dev.franco.automusictagfixer.utilities.Settings;
 
 /**
  * Created by franco on 5/07/17.
@@ -56,7 +52,6 @@ public class GnService{
     /***************************/
     public static volatile boolean sApiInitialized = false;
     public static volatile boolean sIsInitializing = false;
-    public static SparseArray<GnMusicIdFile> gnMusicIdFiles = new SparseArray<>();
     private static AsyncApiInitialization sAsyncApiInitialization;
 
     /**
@@ -103,14 +98,13 @@ public class GnService{
             try {
                 sGnManager = new GnManager(sContext, sGnsdkLicenseString, GnLicenseInputMode.kLicenseInputModeString);
                 sGnUser = new GnUser(new GnUserStore(sContext), sGnsdkClientId, sGnsdkClientTag, sAppString);
-                sGnLocale = new GnLocale(GnLocaleGroup.kLocaleGroupMusic, GnLanguage.kLanguageSpanish, GnRegion.kRegionGlobal, GnDescriptor.kDescriptorDetailed, sGnUser);
+                sGnLocale = new GnLocale(GnLocaleGroup.kLocaleGroupMusic,
+                        Settings.SETTING_LANGUAGE,
+                        GnRegion.kRegionGlobal,
+                        GnDescriptor.kDescriptorDetailed,
+                        sGnUser);
                 sGnLocale.setGroupDefault();
-                //sGnUser.options().networkLoadBalance(true);
-                //GnStorageSqlite.enable();
-                GnStorageSqlite.enable();
-                GnLookupLocalStream.enable();
                 sIsInitializing = false;
-                //initializeGnIdObjects();
                 return sApiInitialized = true;
             } catch (GnException e) {
                 e.printStackTrace();
@@ -160,18 +154,13 @@ public class GnService{
 
     }
 
-    public static void initializeGnIdObjects() throws GnException{
-        if(gnMusicIdFiles == null) {
-            gnMusicIdFiles = new SparseArray<>();
-        }
-
-        if(gnMusicIdFiles.size() != 2){
-            gnMusicIdFiles.clear();
-            GnMusicIdFile gnMusicIdFile = new GnMusicIdFile(sGnUser, new GnResponseListener());
-            gnMusicIdFiles.put(AUTOMATIC, gnMusicIdFile);
-            GnMusicIdFile gnMusicIdFile2 = new GnMusicIdFile(sGnUser, new GnResponseListener());
-            gnMusicIdFiles.put(SEMI_AUTOMATIC, gnMusicIdFile2);
-        }
+    public static void changeLanguage() throws GnException{
+        sGnLocale = new GnLocale(GnLocaleGroup.kLocaleGroupMusic,
+                Settings.SETTING_LANGUAGE,
+                GnRegion.kRegionGlobal,
+                GnDescriptor.kDescriptorDetailed,
+                sGnUser);
+        sGnLocale.setGroupDefault();
 
     }
 }

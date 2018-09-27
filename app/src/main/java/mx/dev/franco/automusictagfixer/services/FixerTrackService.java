@@ -91,16 +91,13 @@ public class FixerTrackService extends Service implements GnResponseListener.GnL
      */
     public FixerTrackService() {
         super();
-        Log.d(CLASS_NAME, "Constructor");
-        AutoMusicTagFixer.getContextComponent().inject(this);
-        Log.d("THREAD ID: ", Thread.currentThread().getId()+"");
     }
 
     @Override
     public void onCreate(){
         super.onCreate();
+        AutoMusicTagFixer.getContextComponent().inject(this);
         setupReceiver();
-
         notifyStartingCorrection();
     }
 
@@ -114,8 +111,6 @@ public class FixerTrackService extends Service implements GnResponseListener.GnL
     @Override
     public int onStartCommand(final Intent intent, int flags, int startId){
         super.onStartCommand(intent,flags,startId);
-        //Log.d(CLASS_NAME,"onStartCommand");
-
         //When setting "Corrección en segundo plano" is on,
         //then the service will be able to run in background,
         //and a correction won't stop when app closes, but when you explicitly

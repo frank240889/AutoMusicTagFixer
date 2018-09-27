@@ -424,8 +424,9 @@ public class TrackDetailFragment extends Fragment implements EditableView {
         mGenreField.clearFocus();
         mGenreField.setEnabled(false);
 
-        mImageSize.setText(TrackUtils.getStringImageSize(mCurrentCoverArt));
-        mImageSize.setCompoundDrawablesWithIntrinsicBounds(getActivity().getDrawable(R.drawable.ic_photo_size_select_large_white_24px),null,null,null);
+        mImageSize.setText(TrackUtils.getStringImageSize(mCurrentCoverArt, getActivity().getApplicationContext()));
+        mImageSize.setCompoundDrawablesWithIntrinsicBounds(getActivity().
+                getDrawable(R.drawable.ic_photo_size_select_large_white_24px),null,null,null);
         mImageSize.setOnClickListener(null);
 
         //to hide it, call the method again

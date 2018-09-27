@@ -5,6 +5,7 @@ package mx.dev.franco.automusictagfixer.utilities;
  */
 
 import com.gracenote.gnsdk.GnImageSize;
+import com.gracenote.gnsdk.GnLanguage;
 
 /**
  * This class help us to store the values og ImageSize from settings.
@@ -12,6 +13,7 @@ import com.gracenote.gnsdk.GnImageSize;
 public class Settings {
     //Determine the size of downloaded cover art, default value is not download cover art.
     public static volatile GnImageSize SETTING_SIZE_ALBUM_ART = GnImageSize.kImageSizeUnknown;
+    public static volatile GnLanguage SETTING_LANGUAGE = GnLanguage.kLanguageSpanish;
 
     public static GnImageSize setValueImageSize(String preferenceSaved){
         GnImageSize size = null;
@@ -42,5 +44,21 @@ public class Settings {
                     break;
         }
         return size;
+    }
+
+    public static GnLanguage setValueLanguage(String preferenceSaved){
+        GnLanguage language= null;
+        switch (preferenceSaved){
+            case "0":
+                language = GnLanguage.kLanguageSpanish;
+                break;
+            case "1":
+                language = GnLanguage.kLanguageEnglish;
+                break;
+            default:
+                language = GnLanguage.kLanguageSpanish;
+                break;
+        }
+        return language;
     }
 }

@@ -78,6 +78,15 @@
     <string name="pref_title_replace_all_tags">Overwrite tags</string>
     <string name="pref_replace_auto_all_tags_description">If this option is enabled, all current tags will be replaced by those found; disable this option to add only the missing ones.</string>
 
+    <string name="pref_title_language">Identification results language</string>
+    <string-array name="pref_language_titles">
+        <item>Spanish</item>
+        <item>English</item>
+    </string-array>
+    <string-array name="pref_languages_values">
+        <item>0</item>
+        <item>1</item>
+    </string-array>
     <!--This is going to be in seconds-->
 
     <!-- Settings for Data save -->
@@ -293,5 +302,9 @@
     <string name="complete_identification">Complete identification</string>
     <string name="processing_error">Identification error</string>
     <string name="identification_cancelled">Identification cancelled</string>
+    <string name="image_drawer_credits">Drawer image.</string>
+    <string name="identification_results_language">Identification</string>
+    <string name="pixels">Pixels</string>
+    <string name="missing_cover">Missing cover</string>
 
 </resources>

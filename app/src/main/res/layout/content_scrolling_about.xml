@@ -78,7 +78,7 @@
             android:layout_marginTop="10dp"
             android:drawablePadding="8dp"
             android:drawableStart="@drawable/ic_public_white_24px"
-            android:text="Créditos imagen en drawer."
+            android:text="@string/image_drawer_credits"
             android:textSize="18sp"/>
 
     </LinearLayout>

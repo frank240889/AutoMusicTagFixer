@@ -216,7 +216,7 @@ public class Tagger {
         trackDataItem.cover = (tag.getFirstArtwork() != null && tag.getFirstArtwork().getBinaryData() != null) ?
                 tag.getFirstArtwork().getBinaryData() :
                 null;
-        trackDataItem.imageSize = TrackUtils.getStringImageSize(trackDataItem.cover);
+        trackDataItem.imageSize = TrackUtils.getStringImageSize(trackDataItem.cover, sContext);
 
         return trackDataItem;
     }

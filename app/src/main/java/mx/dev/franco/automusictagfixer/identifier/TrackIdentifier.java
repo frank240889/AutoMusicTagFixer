@@ -1,8 +1,9 @@
 package mx.dev.franco.automusictagfixer.identifier;
 
+import android.util.Log;
+
 import com.crashlytics.android.Crashlytics;
 import com.gracenote.gnsdk.GnException;
-import com.gracenote.gnsdk.GnLanguage;
 import com.gracenote.gnsdk.GnLookupData;
 import com.gracenote.gnsdk.GnMusicIdFile;
 import com.gracenote.gnsdk.GnMusicIdFileInfo;
@@ -15,6 +16,7 @@ import java.util.HashMap;
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
+import mx.dev.franco.automusictagfixer.utilities.Settings;
 import mx.dev.franco.automusictagfixer.utilities.resource_manager.ResourceManager;
 
 public class TrackIdentifier implements  GnResponseListener.GnListener{
@@ -59,10 +61,8 @@ public class TrackIdentifier implements  GnResponseListener.GnListener{
         try {
             mGnMusicIdFile = new GnMusicIdFile(GnService.sGnUser, mGnResponseListener);
             mGnMusicIdFile.options().lookupData(GnLookupData.kLookupDataContent, true);
-            mGnMusicIdFile.options().preferResultLanguage(GnLanguage.kLanguageSpanish);
-
-            mGnMusicIdFile.options().lookupData(GnLookupData.kLookupDataContent, true);
-            mGnMusicIdFile.options().preferResultLanguage(GnLanguage.kLanguageSpanish);
+            Log.d("Identifying Language",Settings.SETTING_LANGUAGE.name());
+            mGnMusicIdFile.options().preferResultLanguage(Settings.SETTING_LANGUAGE);
             //queue will be processed one by one
             //mGnMusicIdFile.options().batchSize(1);
             //get the fileInfoManager
