@@ -78,7 +78,7 @@
     <string name="pref_title_replace_all_tags">Overwrite tags</string>
     <string name="pref_replace_auto_all_tags_description">If this option is enabled, all current tags will be replaced by those found; disable this option to add only the missing ones.</string>
 
-    <string name="pref_title_language">Identification results language</string>
+    <string name="pref_title_language">Identification results language(app reboot required)</string>
     <string-array name="pref_language_titles">
         <item>Spanish</item>
         <item>English</item>
@@ -180,7 +180,7 @@
         <item>14. The app does not find the data of my song or the ones found are probably not correct.</item>
         <item>15. The app does not find the cover art of my song.</item>
         <item>16. How long does it take to identify a song?</item>
-        <item>17. What happens if I close the app while I'm editing several songs?</item>
+        <item>17. What happens if I close the app while I\'m editing several songs?</item>
         <item>18. What happens if I run out of internet?</item>
     </string-array>
     <string-array name="answers">
@@ -196,7 +196,7 @@
         <item>Because the app uses a license for free use of the audio recognition service, the number of daily songs that you can correct in semiautomatic, automatic and download-cover modes is variable, from a few tens to thousands.</item>
         <item>For performance and speed of opening, to generate the list for the first time (the list is informative and starting point for operations), AutoMusicTagFixer reads the information of each audio file of the MediaStore (an internal BD of Android), so therefore, the information obtained here is not always very accurate. AutoMusicTagFixer when it shows the detailed information of each song, directly reads the audio file, which this information read it is accurate; do not worry, AutoMusicTagFixer makes the corrections on the file itself, so the changes made will be visible to other audio players, whether Android or not, and that support the reading of tags.</item>
         <item>They are more than 35 standard tags, a considerable amount and that can be tedious for the user to correct, so correction is offered to the most common.</item>
-        <item>It may be because you did not grant access permission to internal/external storage or the audio type is not one supported by Android natively or the file does not have an extension in the name. Also, if it's the first time you copy songs to your smartphone you have to wait a few minutes for Android to update the MediaStore.</item>
+        <item>It may be because you did not grant access permission to internal/external storage or the audio type is not one supported by Android natively or the file does not have an extension in the name. Also, if it\'s the first time you copy songs to your smartphone you have to wait a few minutes for Android to update the MediaStore.</item>
         <item>The app consults a database with information of approximately 200 million songs (http://www.gracenote.com/music/music-recognition/), so it is likely that the song you are trying to correct has been downloaded/converted from a low quality audio source and the generated fingerprint does not match any of the database, please try to download/convert your songs with higher quality or correct it manually.</item>
         <item>Check the options of {gmd-settings} Configuration {gmd-arrow-forward} {gmd-data-usage} Data usage and select another cover size; keep in mind that not all sizes are available for each song.</item>
         <item>If the connection to the network is good, it will take between 5 to 10 seconds; if the connection is slow, it may take longer, and even the current identification may be canceled if the internet connection is lost.</item>
@@ -238,7 +238,7 @@
     <string name="message_same_tags_applied">Applied same tags.</string>
 
 
-    <string name="instructions_request_permission">If you have songs in the SD, it is necessary to enable the permission as shown below, otherwise the songs you have in the SD can not be corrected:</string>
+    <string name="instructions_request_permission">If you have songs in the SD, it is necessary to enable the permission as shown below, otherwise the songs you have in the SD will not be able to correct:</string>
     <string name="step1">Click \"Enable\"\ and follow the instructions as in the following images.</string>
     <string name="step2">In the window that will appear select the SD as indicated in the image.</string>
     <string name="step3">Open the upper left side menu and select the SD.</string>

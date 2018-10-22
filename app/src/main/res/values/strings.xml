@@ -77,7 +77,7 @@
 
     <string name="pref_title_replace_all_tags">Sobreescribir etiquetas</string>
     <string name="pref_replace_auto_all_tags_description">Si esta activa esta opción se reemplazarán todas las etiquetas actuales por las encontradas; desactívala para añadir solo las faltantes.</string>
-    <string name="pref_title_language">Idioma de resultados de identificación</string>
+    <string name="pref_title_language">Idioma de resultados de identificación (requiere reiniciar la app)</string>
     <string-array name="pref_language_titles">
         <item>Español</item>
         <item>Ingles</item>

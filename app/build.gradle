@@ -36,7 +36,7 @@ android {
      */
     lintOptions { checkReleaseBuilds true }
     compileSdkVersion 27
-    buildToolsVersion '27.0.3'
+    buildToolsVersion '28.0.2'
     /**
      * The defaultConfig {} block encapsulates default settings and entries for all
      * build variants, and can override some attributes in main/AndroidManifest.xml
@@ -53,8 +53,8 @@ android {
         applicationId 'mx.dev.franco.automusictagfixer'
         minSdkVersion 21
         targetSdkVersion 27
-        versionCode 12
-        versionName "1.1.2a"
+        versionCode 13
+        versionName "1.1.3a"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
         def documentsAuthorityValue = applicationId + ".documents"
