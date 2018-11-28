@@ -1,7 +1,5 @@
 package mx.dev.franco.automusictagfixer.UI.search;
 
-import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.app.SearchManager;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
@@ -29,15 +27,11 @@ import com.google.android.flexbox.JustifyContent;
 
 import java.util.List;
 
-import javax.inject.Inject;
-
 import mx.dev.franco.automusictagfixer.AutoMusicTagFixer;
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.UI.main.ListFragment;
 import mx.dev.franco.automusictagfixer.UI.track_detail.TrackDetailsActivity;
-import mx.dev.franco.automusictagfixer.modelsUI.search.AsyncSearch;
 import mx.dev.franco.automusictagfixer.modelsUI.search.SearchListViewModel;
-import mx.dev.franco.automusictagfixer.persistence.repository.TrackRepository;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
