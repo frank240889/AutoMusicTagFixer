@@ -51,7 +51,7 @@ public class MainActivity extends AppCompatActivity
         implements ResponseReceiver.OnResponse, NavigationView.OnNavigationItemSelectedListener{
     public static String TAG = MainActivity.class.getName();
 
-    //the receiver that handles the intents from FixerTrackService
+    //the receiver that handles the broadcasts from FixerTrackService
     private ResponseReceiver mReceiver;
 
     private ListFragment mListFragment;
@@ -70,7 +70,8 @@ public class MainActivity extends AppCompatActivity
         //it has a single Surface in which the contents of the window is rendered
         //A Surface is an object holding pixels that are being composited to the screen.
         Window window = getWindow();
-        window.setFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS,WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+        window.setFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS,
+                WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
         window.setAllowEnterTransitionOverlap(true);
         window.setAllowReturnTransitionOverlap(true);
         window.requestFeature(Window.FEATURE_ACTION_MODE_OVERLAY);
@@ -88,7 +89,8 @@ public class MainActivity extends AppCompatActivity
         setupReceivers();
 
         mDrawer = findViewById(R.id.drawer_layout);
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, mDrawer, mToolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this,
+                mDrawer, mToolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         mDrawer.addDrawerListener(toggle);
         toggle.syncState();
 
@@ -96,48 +98,14 @@ public class MainActivity extends AppCompatActivity
         navigationView.setNavigationItemSelectedListener(this);
 
         mListFragment = ListFragment.newInstance();
-        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, mListFragment, ListFragment.class.getName())
+        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,
+                mListFragment, ListFragment.class.getName())
                 .commit();
-        Log.d(TAG,"onCreate");
-    }
-
-    @Override
-    public void onStart() {
-        super.onStart();
-        Log.d(TAG,"onStart");
-
-    }
-
-    @Override
-    public void onRestoreInstanceState(Bundle savedInstanceState){
-        super.onRestoreInstanceState(savedInstanceState);
-
-    }
-
-
-    @Override
-    protected void onResume(){
-        super.onResume();
-        Log.d(TAG,"onResume");
-    }
-
-    @Override
-    protected void onPause(){
-        super.onPause();
-        Log.d(TAG,"onPause");
-    }
-
-
-    @Override
-    public void onStop() {
-        Log.d(TAG,"onStop");
-        super.onStop();
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        Log.d(TAG, "destroy");
         LocalBroadcastManager.getInstance(getApplicationContext()).unregisterReceiver(mReceiver);
         mReceiver.clearReceiver();
         mReceiver = null;
@@ -276,11 +244,15 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void rescan(){
-        boolean hasPermission = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
+        boolean hasPermission = ContextCompat.
+                checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                == PackageManager.PERMISSION_GRANTED;
         if(!hasPermission) {
-            mListFragment.requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, RequiredPermissions.WRITE_EXTERNAL_STORAGE_PERMISSION);
+            mListFragment.requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                    RequiredPermissions.WRITE_EXTERNAL_STORAGE_PERMISSION);
         }
-        else if(ServiceUtils.getInstance(getApplicationContext()).checkIfServiceIsRunning(FixerTrackService.class.getName())){
+        else if(ServiceUtils.getInstance(getApplicationContext()).
+                checkIfServiceIsRunning(FixerTrackService.class.getName())){
             Snackbar snackbar = AndroidUtils.getSnackbar(mToolbar, getApplicationContext());
             snackbar.setText(R.string.no_available);
             snackbar.show();
@@ -296,22 +268,29 @@ public class MainActivity extends AppCompatActivity
      * @param selectedItem The id of item selected.
      */
     private void checkItem(int selectedItem) {
-        SharedPreferences sharedPreferences = getSharedPreferences(Constants.Application.FULL_QUALIFIED_NAME, Context.MODE_PRIVATE);
+        SharedPreferences sharedPreferences = getSharedPreferences(
+                Constants.Application.FULL_QUALIFIED_NAME, Context.MODE_PRIVATE);
         //No previous value was found.
         if(selectedItem == -1){
             int currentSelectedItem = sharedPreferences.getInt(Constants.SELECTED_ITEM, -1);
             if(currentSelectedItem == -1){
                 MenuItem defaultMenuItemSelected = mMenu.findItem(R.id.title_asc);
-                defaultMenuItemSelected.setIcon(ContextCompat.getDrawable(getApplicationContext(), R.drawable.ic_done_white));
-                sharedPreferences.edit().putInt(Constants.SELECTED_ITEM, defaultMenuItemSelected.getItemId()).apply();
-                sharedPreferences.edit().putInt(Constants.LAST_SELECTED_ITEM, defaultMenuItemSelected.getItemId()).apply();
+                defaultMenuItemSelected.setIcon(ContextCompat.getDrawable(
+                        getApplicationContext(), R.drawable.ic_done_white));
+                sharedPreferences.edit().putInt(Constants.SELECTED_ITEM,
+                        defaultMenuItemSelected.getItemId()).apply();
+                sharedPreferences.edit().putInt(Constants.LAST_SELECTED_ITEM,
+                        defaultMenuItemSelected.getItemId()).apply();
             }
             else {
                 MenuItem menuItemSelected = mMenu.findItem(currentSelectedItem);
                 if(menuItemSelected != null) {
-                    menuItemSelected.setIcon(ContextCompat.getDrawable(getApplicationContext(), R.drawable.ic_done_white));
-                    sharedPreferences.edit().putInt(Constants.SELECTED_ITEM, menuItemSelected.getItemId()).apply();
-                    sharedPreferences.edit().putInt(Constants.LAST_SELECTED_ITEM, menuItemSelected.getItemId()).apply();
+                    menuItemSelected.setIcon(ContextCompat.
+                            getDrawable(getApplicationContext(), R.drawable.ic_done_white));
+                    sharedPreferences.edit().putInt(Constants.SELECTED_ITEM,
+                            menuItemSelected.getItemId()).apply();
+                    sharedPreferences.edit().putInt(Constants.LAST_SELECTED_ITEM,
+                            menuItemSelected.getItemId()).apply();
                 }
             }
         }
@@ -329,7 +308,8 @@ public class MainActivity extends AppCompatActivity
 
             int selectedMenuItem = -1;
             if(menuItemSelected != null) {
-                menuItemSelected.setIcon(ContextCompat.getDrawable(getApplicationContext(), R.drawable.ic_done_white));
+                menuItemSelected.setIcon(ContextCompat.getDrawable(getApplicationContext(),
+                        R.drawable.ic_done_white));
                 selectedMenuItem = menuItemSelected.getItemId();
             }
             sharedPreferences.edit().putInt(Constants.SELECTED_ITEM, selectedMenuItem).apply();
@@ -339,7 +319,9 @@ public class MainActivity extends AppCompatActivity
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[], @NonNull int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode,
+                                           @NonNull String permissions[],
+                                           @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode,permissions,grantResults);
     }
 
@@ -385,8 +367,11 @@ public class MainActivity extends AppCompatActivity
             String shareSubText = getString(R.string.app_name) + " " + getString(R.string.share_message);
             String shareBodyText = getPlayStoreLink();
 
-            Intent shareIntent = ShareCompat.IntentBuilder.from(this).setType("text/plain").setText(shareSubText +"\n"+ shareBodyText).getIntent();
-            shareIntent.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY | Intent.FLAG_ACTIVITY_NEW_DOCUMENT | Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
+            Intent shareIntent = ShareCompat.IntentBuilder.from(this).
+                    setType("text/plain").
+                    setText(shareSubText +"\n"+ shareBodyText).getIntent();
+            shareIntent.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY |
+                    Intent.FLAG_ACTIVITY_NEW_DOCUMENT | Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
             startActivity(shareIntent);
         }
         else if(id == R.id.settings){
@@ -418,11 +403,14 @@ public class MainActivity extends AppCompatActivity
         Intent goToMarket = new Intent(Intent.ACTION_VIEW, uri);
         // To count with Play market backstack, after pressing back button,
         // to taken back to our application, we need to add following flags to intent.
-        goToMarket.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY | Intent.FLAG_ACTIVITY_NEW_DOCUMENT | Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
+        goToMarket.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY |
+                Intent.FLAG_ACTIVITY_NEW_DOCUMENT |
+                Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
         try {
             startActivity(goToMarket);
         } catch (ActivityNotFoundException e) {
-            startActivity(new Intent(Intent.ACTION_VIEW,  Uri.parse(Constants.PLAY_STORE_URL + packageName)));
+            startActivity(new Intent(Intent.ACTION_VIEW,
+                    Uri.parse(Constants.PLAY_STORE_URL + packageName)));
         }
     }
 
@@ -446,7 +434,9 @@ public class MainActivity extends AppCompatActivity
                         snackbar.setText(R.string.api_initialized);
                     }
                     else {
-                        if(ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED){
+                        if(ContextCompat.checkSelfPermission(this,
+                                Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                                != PackageManager.PERMISSION_GRANTED){
                             snackbar.setText(R.string.title_dialog_permision);
                         }
                         else {

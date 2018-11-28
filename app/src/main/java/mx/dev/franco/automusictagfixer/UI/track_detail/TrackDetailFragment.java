@@ -172,6 +172,7 @@ public class TrackDetailFragment extends Fragment implements EditableView {
     public void onDetach() {
         super.onDetach();
         mListener = null;
+        mTrackDetailPresenter = null;
     }
 
     public void onBackPressed(){
@@ -290,8 +291,6 @@ public class TrackDetailFragment extends Fragment implements EditableView {
         mStatus = null;
         if(mResultsDialog != null)
             mResultsDialog.dismiss();
-
-        mTrackDetailPresenter = null;
     }
 
     /**
@@ -362,9 +361,8 @@ public class TrackDetailFragment extends Fragment implements EditableView {
      * the information about the song
      */
     private void enableFieldsToEdit(){
-        //shrink toolbar to make it easy to user
+        //Shrink toolbar to make it easy to user
         //focus in editing tags
-
 
         //Enable edit text for edit them
         mTitleField.setEnabled(true);
@@ -702,22 +700,19 @@ public class TrackDetailFragment extends Fragment implements EditableView {
 
             }
         });
-        checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if(!isChecked){
-                    textInputLayout.setVisibility(View.GONE);
-                    textView.setVisibility(View.GONE);
-                    editText.setText("");
-                    correctionParams.newName = "";
-                    correctionParams.shouldRename = false;
-                }
-                else{
-                    textInputLayout.setVisibility(View.VISIBLE);
-                    textView.setVisibility(View.VISIBLE);
-                    correctionParams.newName = editText.getText().toString();
-                    correctionParams.shouldRename = true;
-                }
+        checkBox.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if(!isChecked){
+                textInputLayout.setVisibility(View.GONE);
+                textView.setVisibility(View.GONE);
+                editText.setText("");
+                correctionParams.newName = "";
+                correctionParams.shouldRename = false;
+            }
+            else{
+                textInputLayout.setVisibility(View.VISIBLE);
+                textView.setVisibility(View.VISIBLE);
+                correctionParams.newName = editText.getText().toString();
+                correctionParams.shouldRename = true;
             }
         });
 

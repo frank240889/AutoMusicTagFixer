@@ -23,6 +23,7 @@ public final class FileSaver {
     public static final String NULL_DATA = "null data";
     public static final String NO_EXTERNAL_STORAGE_WRITABLE = "no external storage writable";
     public static final String INPUT_OUTPUT_ERROR = "i/o identificationError";
+    public static final String GENERIC_NAME = "Unknown_cover";
 
     /**
      *
@@ -48,17 +49,11 @@ public final class FileSaver {
 
 
         //Retrieve folder app, and if doesn't exist create it before
-        File pathToFile = getAlbumStorageDir(AUTO_MUSIC_TAG_FIXER_FOLDER_NAME);
+        File pathToFile = getAlbumStorageDir();
 
         //File object representing the new image file
         File imageFileCreated = null;
-        try {
-            imageFileCreated = createFile(pathToFile, title, artist, album);
-        }
-        catch (ParseException e){
-            e.printStackTrace();
-            return INPUT_OUTPUT_ERROR;
-        }
+        imageFileCreated = createFile(pathToFile, title, artist, album);
 
         //Stream to write
         FileOutputStream fos = null;
@@ -88,7 +83,7 @@ public final class FileSaver {
      * @param album The album of song if exist
      * @return File representing the image
      */
-    private static File createFile(File pathToFile, String title, String artist, String album) throws ParseException {
+    private static File createFile(File pathToFile, String title, String artist, String album) {
         //Get and format date
         Date date = new Date();
         DateFormat now = new SimpleDateFormat("yyyyMMdd_HHmmss");
@@ -105,7 +100,7 @@ public final class FileSaver {
         }
         else {
             //get only name without extension
-           newFileName = pathToFile.getName().split(".")[0] + "_" + now.format(date);
+           newFileName =  GENERIC_NAME + "_" + now.format(date);
         }
 
         return new File(pathToFile.getAbsolutePath() + SLASH + newFileName + DOT + EXTENSION);
@@ -129,16 +124,20 @@ public final class FileSaver {
 
     /**
      *  Get the directory for the user's public pictures directory.
-     * @param albumName Folder/subfolder name assigned to save covers as image files
      * @return File representing the absolute path where images
      *                  are going to be saved
      */
-    private static File getAlbumStorageDir(String albumName) {
+    private static File getAlbumStorageDir() {
+        return createFolderIfNotExist();
+    }
 
-        File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), albumName);
-        if (!file.mkdirs()) {
-            Log.d("info","folder already created");
-        }
+
+    private static File createFolderIfNotExist() {
+        File file = new File(Environment.getExternalStoragePublicDirectory(
+                Environment.DIRECTORY_PICTURES), AUTO_MUSIC_TAG_FIXER_FOLDER_NAME);
+        if(!file.exists())
+            file.mkdirs();
+
         return file;
     }
 }

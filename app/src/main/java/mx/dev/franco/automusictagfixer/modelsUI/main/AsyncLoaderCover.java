@@ -13,24 +13,24 @@ import org.jaudiotagger.tag.TagException;
 import java.io.File;
 import java.io.IOException;
 
-import mx.dev.franco.automusictagfixer.interfaces.CoverLoaderListener;
+import mx.dev.franco.automusictagfixer.interfaces.AsyncOperation;
 
 /**
  * Extracts a loads cover from audiofiles using
  * another thread.
  */
 public class AsyncLoaderCover extends AsyncTask<String, Void, byte[]> {
-    private CoverLoaderListener mListener;
+    private AsyncOperation<Void, byte[], byte[], Void> mListener;
     public AsyncLoaderCover() {}
 
-    public void setListener(CoverLoaderListener listener){
+    public void setListener(AsyncOperation<Void, byte[], byte[], Void> listener){
         mListener = listener;
     }
 
     @Override
     protected void onPreExecute(){
         if(mListener != null)
-            mListener.onLoadingStart();
+            mListener.onAsyncOperationStarted(null);
     }
 
     @Override
@@ -71,14 +71,16 @@ public class AsyncLoaderCover extends AsyncTask<String, Void, byte[]> {
     @Override
     protected void onPostExecute(byte[] cover){
         if(mListener != null)
-            mListener.onLoadingFinished(cover);
+            mListener.onAsyncOperationFinished(cover);
+        else
+            mListener.onAsyncOperationError(null);
         mListener = null;
     }
 
     @Override
     public void onCancelled(byte[] cover){
         if(mListener != null)
-            mListener.onLoadingCancelled();
+            mListener.onAsyncOperationCancelled(null);
         mListener = null;
     }
 }

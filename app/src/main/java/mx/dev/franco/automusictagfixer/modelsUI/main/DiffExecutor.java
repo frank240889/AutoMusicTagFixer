@@ -5,23 +5,18 @@ import android.support.v7.util.DiffUtil;
 
 import java.util.List;
 
+import mx.dev.franco.automusictagfixer.interfaces.AsyncOperation;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
 
-public class DiffExecutor extends AsyncTask<List<Track>, Void, DiffExecutor.DiffResults>{
-    public interface DiffCallbackListener {
-        void onStartDiff();
-        void onCancelledDiff();
-        void onFinishedDiff(DiffResults diffResults);
-    }
-    private DiffCallbackListener mListener;
-
-    public DiffExecutor(DiffCallbackListener diffExecutor){
+public class DiffExecutor extends AsyncTask<List<Track>, Void, DiffResults<Track>>{
+    private AsyncOperation<Void, DiffResults<Track>, Void, Void> mListener;
+    public DiffExecutor(AsyncOperation<Void, DiffResults<Track>, Void, Void> diffExecutor){
         mListener = diffExecutor;
     }
     @Override
     protected void onPreExecute(){
         if(mListener != null)
-            mListener.onStartDiff();
+            mListener.onAsyncOperationStarted(null);
     }
 
     @Override
@@ -37,13 +32,8 @@ public class DiffExecutor extends AsyncTask<List<Track>, Void, DiffExecutor.Diff
     @Override
     protected void onPostExecute(DiffResults diffResults){
         if(mListener != null)
-            mListener.onFinishedDiff(diffResults);
+            mListener.onAsyncOperationFinished(diffResults);
 
         mListener = null;
-    }
-
-    public static class DiffResults{
-        public List<Track> list;
-        public DiffUtil.DiffResult diffResult;
     }
 }

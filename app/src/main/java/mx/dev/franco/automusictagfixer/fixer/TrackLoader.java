@@ -4,15 +4,15 @@ import android.os.AsyncTask;
 
 import java.util.List;
 
-import mx.dev.franco.automusictagfixer.interfaces.DataTrackLoader;
+import mx.dev.franco.automusictagfixer.interfaces.InfoTrackLoader;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.persistence.room.TrackRoomDatabase;
 
 public class TrackLoader extends AsyncTask<Integer, Void, List<Track>> {
-    private DataTrackLoader<List<Track>> mDataLoader;
+    private InfoTrackLoader<List<Track>> mDataLoader;
     private TrackRoomDatabase mTrackRoomDatabase;
 
-    public TrackLoader(DataTrackLoader<List<Track>> dataLoader, TrackRoomDatabase trackRoomDatabase){
+    public TrackLoader(InfoTrackLoader<List<Track>> dataLoader, TrackRoomDatabase trackRoomDatabase){
         mDataLoader = dataLoader;
         mTrackRoomDatabase = trackRoomDatabase;
     }

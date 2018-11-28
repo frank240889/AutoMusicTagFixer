@@ -3,11 +3,13 @@ package mx.dev.franco.automusictagfixer.UI.search;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.SearchManager;
+import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.ActionBar;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
@@ -31,19 +33,18 @@ import javax.inject.Inject;
 
 import mx.dev.franco.automusictagfixer.AutoMusicTagFixer;
 import mx.dev.franco.automusictagfixer.R;
+import mx.dev.franco.automusictagfixer.UI.main.ListFragment;
 import mx.dev.franco.automusictagfixer.UI.track_detail.TrackDetailsActivity;
 import mx.dev.franco.automusictagfixer.modelsUI.search.AsyncSearch;
+import mx.dev.franco.automusictagfixer.modelsUI.search.SearchListViewModel;
 import mx.dev.franco.automusictagfixer.persistence.repository.TrackRepository;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
 
-public class SearchActivity extends AppCompatActivity implements AsyncSearch.ResultsSearchListener, FoundItemHolder.ClickListener {
+public class SearchActivity extends AppCompatActivity implements
+        FoundItemHolder.ClickListener {
     private static final String TAG = SearchActivity.class.getName();
-    public static final int UPDATE_ITEM_ON_RETURN = 0;
-    private static AsyncSearch mAsyncSearch;
-    @Inject
-    TrackRepository mTrackRepository;
     //A simple texview to show a message when no songs were identificationFound
     private TextView mMessage;
     //recycler view is a component that delivers
@@ -53,6 +54,7 @@ public class SearchActivity extends AppCompatActivity implements AsyncSearch.Res
     private Toolbar mToolbar;
     private ActionBar mActionBar;
     private String mQuery;
+    private SearchListViewModel mSearchListViewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -107,7 +109,52 @@ public class SearchActivity extends AppCompatActivity implements AsyncSearch.Res
             }
         });
         mRecyclerView.setAdapter(mAdapter);
+        mSearchListViewModel = ViewModelProviders.of(this).get(SearchListViewModel.class);
+        mSearchListViewModel.getSearchResults().observe(this, this::onSearchResults);
+        mSearchListViewModel.getSearchResults().observe(this, mAdapter);
+        mSearchListViewModel.isTrackProcessing().observe(this, this::showMessageError);
+        mSearchListViewModel.actionTrackEvaluatedSuccessfully().observe(this, this::showDialog);
+        mSearchListViewModel.actionIsTrackInaccessible().observe(this, this::showInaccessibleTrack);
+
         performSearch(getIntent());
+    }
+
+    private void showInaccessibleTrack(ListFragment.ViewWrapper viewWrapper) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage(String.format(getString(R.string.file_error), viewWrapper.track.getPath())).
+                setPositiveButton(R.string.remove_from_list, (dialog, which) -> {
+                    mSearchListViewModel.removeTrack(viewWrapper.track);
+                });
+
+        AlertDialog alertDialog = builder.create();
+        alertDialog.show();
+    }
+
+    private void showDialog(ListFragment.ViewWrapper viewWrapper) {
+        Intent intent = new Intent(this, TrackDetailsActivity.class);
+        intent.putExtra(Constants.MEDIA_STORE_ID, viewWrapper.track.getMediaStoreId());
+        intent.putExtra(Constants.CorrectionModes.MODE, viewWrapper.mode);
+        startActivity(intent);
+    }
+
+    private void showMessageError(String s) {
+        Snackbar snackbar = AndroidUtils.getSnackbar(mRecyclerView, getApplicationContext());
+        snackbar.setText(s);
+        snackbar.show();
+    }
+
+    private void onSearchResults(List<Track> tracks) {
+        if(tracks != null) {
+            if(tracks.size() > 0) {
+                mMessage.setVisibility(View.GONE);
+                mActionBar.setTitle( String.format(getString(R.string.search_results),tracks.size()+"",mQuery) );
+            }
+            else {
+                mActionBar.setTitle( String.format(getString(R.string.no_found_items),mQuery) );
+                mMessage.setVisibility(View.VISIBLE);
+            }
+        }
+        mRecyclerView.scrollToPosition(0);
     }
 
     @Override
@@ -127,86 +174,26 @@ public class SearchActivity extends AppCompatActivity implements AsyncSearch.Res
         if (Intent.ACTION_SEARCH.equals(intent.getAction())) {
             mQuery = intent.getStringExtra(SearchManager.QUERY);
             String q = "%"+intent.getStringExtra(SearchManager.QUERY)+"%";
-            if(mAsyncSearch == null){
-                mAsyncSearch = new AsyncSearch(this, mTrackRepository);
-                mAsyncSearch.execute(q);
-            }
+            mSearchListViewModel.search(q);
         }
-    }
-
-    @Override
-    public boolean onSearchRequested() {
-        return true;
-    }
-
-
-    @Override
-    public void onStartSearch() {
-        mRecyclerView.stopScroll();
-        mAdapter.reset();
-    }
-
-    @SuppressLint({"StringFormatMatches", "StringFormatInvalid"})
-    @Override
-    public void onFinished(List<Track> results) {
-        if(results != null) {
-            if(results.size() > 0) {
-                mMessage.setVisibility(View.GONE);
-                mActionBar.setTitle( String.format(getString(R.string.search_results),results.size()+"",mQuery) );
-            }
-            else {
-                mActionBar.setTitle( String.format(getString(R.string.no_found_items),mQuery) );
-                mMessage.setVisibility(View.VISIBLE);
-            }
-            mAdapter.swapData(results);
-        }
-
-        mAsyncSearch = null;
-        mRecyclerView.scrollToPosition(0);
-    }
-
-    @Override
-    public void onCancelled() {
-        mAsyncSearch = null;
     }
 
     @Override
     public void onItemClick(int position, View view) {
         mRecyclerView.stopScroll();
         Track track = mAdapter.getDatasource().get(position);
-        if(track.processing() == 0) {
-            Intent intent = new Intent(this, TrackDetailsActivity.class);
-            intent.putExtra(Constants.MEDIA_STORE_ID, track.getMediaStoreId());
-            intent.putExtra(Constants.CorrectionModes.MODE, Constants.CorrectionModes.SEMI_AUTOMATIC);
-            startActivityForResult(intent, UPDATE_ITEM_ON_RETURN);
-        }
-        else {
-            Snackbar snackbar = AndroidUtils.getSnackbar(mToolbar, this);
-            snackbar.setText(R.string.current_file_processing);
-            snackbar.show();
-        }
+        ListFragment.ViewWrapper viewWrapper = new ListFragment.ViewWrapper();
+        viewWrapper.track = track;
+        viewWrapper.view = view;
+        viewWrapper.mode = Constants.CorrectionModes.SEMI_AUTOMATIC;
+        mSearchListViewModel.onItemClick(viewWrapper);
     }
-
-    @Override
-    public void onActivityResult(int requestCode,int resultCode, Intent data){
-        super.onActivityResult(requestCode,resultCode,data);
-        if(resultCode == Activity.RESULT_OK && data != null){
-            mAdapter.updateTrack(data);
-        }
-    }
-
-
 
     @Override
     public void onDestroy(){
         super.onDestroy();
         mRecyclerView.stopScroll();
-        if(mAsyncSearch != null && (mAsyncSearch.getStatus() == AsyncSearch.Status.PENDING || mAsyncSearch.getStatus() == AsyncSearch.Status.RUNNING)){
-            mAsyncSearch.cancel(true);
-        }
         mAdapter.destroy();
-        mAsyncSearch = null;
-        mTrackRepository = null;
         mMessage = null;
         mRecyclerView = null;
         mAdapter = null;
