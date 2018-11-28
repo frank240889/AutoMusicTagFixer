@@ -47,8 +47,8 @@ import mx.dev.franco.automusictagfixer.fixer.TrackLoader;
 import mx.dev.franco.automusictagfixer.identifier.GnResponseListener;
 import mx.dev.franco.automusictagfixer.identifier.GnService;
 import mx.dev.franco.automusictagfixer.identifier.TrackIdentifier;
-import mx.dev.franco.automusictagfixer.interfaces.DataLoader;
-import mx.dev.franco.automusictagfixer.interfaces.DataTrackLoader;
+import mx.dev.franco.automusictagfixer.interfaces.TrackListLoader;
+import mx.dev.franco.automusictagfixer.interfaces.InfoTrackLoader;
 import mx.dev.franco.automusictagfixer.network.ConnectivityDetector;
 import mx.dev.franco.automusictagfixer.persistence.repository.TrackRepository;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
@@ -64,7 +64,7 @@ import mx.dev.franco.automusictagfixer.utilities.resource_manager.ResourceManage
  */
 
 public class FixerTrackService extends Service implements GnResponseListener.GnListener,
-        Fixer.OnCorrectionListener, DataLoader<List<Integer>>, DataTrackLoader<List<Track>>
+        Fixer.OnCorrectionListener, TrackListLoader<List<Integer>>, InfoTrackLoader<List<Track>>
         ,ResponseReceiver.OnResponse{
     public static String CLASS_NAME = FixerTrackService.class.getName();
     //Notification on status bar
@@ -485,7 +485,7 @@ public class FixerTrackService extends Service implements GnResponseListener.GnL
     public void onIdentificationCancelled(String cancelledReason, Track track) {
         messageFinishTask = getString(R.string.task_cancelled);
 
-        if(mTrackRepository != null) {
+        if(mTrackRepository != null && track != null) {
             track.setChecked(0);
             track.setProcessing(0);
             mTrackRepository.update(track);

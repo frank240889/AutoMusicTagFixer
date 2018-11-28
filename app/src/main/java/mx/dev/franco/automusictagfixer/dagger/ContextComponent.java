@@ -10,6 +10,7 @@ import mx.dev.franco.automusictagfixer.UI.search.SearchTrackAdapter;
 import mx.dev.franco.automusictagfixer.UI.track_detail.TrackDetailsActivity;
 import mx.dev.franco.automusictagfixer.fixer.Fixer;
 import mx.dev.franco.automusictagfixer.modelsUI.main.ListViewModel;
+import mx.dev.franco.automusictagfixer.modelsUI.search.SearchListViewModel;
 import mx.dev.franco.automusictagfixer.modelsUI.track_detail.AsyncFileSaver;
 import mx.dev.franco.automusictagfixer.modelsUI.track_detail.TrackDataLoader;
 import mx.dev.franco.automusictagfixer.modelsUI.track_detail.TrackDetailInteractor;
@@ -29,6 +30,7 @@ public interface ContextComponent {
     void inject(TrackRepository trackRepository);
     void inject(ListFragment listFragment);
     void inject(ListViewModel listViewModel);
+    void inject(SearchListViewModel searchListViewModel);
     void inject(AsyncFileReader asyncFileReader);
     void inject(FixerTrackService fixerTrackService);
     void inject(TrackAdapter trackAdapter);

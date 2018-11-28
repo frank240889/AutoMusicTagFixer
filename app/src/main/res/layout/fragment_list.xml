@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout
-        xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:app="http://schemas.android.com/apk/res-auto"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:id="@+id/frame_layout_container">
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:showIn="@layout/activity_main"
+    android:id="@+id/frame_layout_container">
 
         <TextView
             android:id="@+id/message"
@@ -27,34 +28,13 @@
                 android:id="@+id/tracks_recycler_view"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:divider="@null"
                 android:choiceMode="singleChoice"
                 android:overScrollMode="always"
                 android:scrollbarStyle="outsideOverlay"
                 android:scrollbarThumbVertical="@drawable/custom_scrollbar_thumb"
                 android:scrollbars="vertical"
                 android:paddingBottom="80dp"
-                android:clipToPadding="false"/>
+                android:clipToPadding="false"
+                tools:listitem="@layout/item_list"/>
         </android.support.v4.widget.SwipeRefreshLayout>
-
-        <!--android.support.design.widget.FloatingActionButton
-            android:id="@+id/fab_start"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom|end"
-            android:layout_margin="@dimen/fab_margin"
-            android:tint="@color/grey_800"
-            app:useCompatPadding="true"
-            android:visibility="gone"
-            android:src="@drawable/ic_photo_filter_white_24px" />
-        <android.support.design.widget.FloatingActionButton
-            android:id="@+id/fab_stop"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom|end"
-            android:layout_margin="@dimen/fab_margin"
-            android:tint="@color/grey_800"
-            app:useCompatPadding="true"
-            android:visibility="gone"
-            android:src="@drawable/ic_stop_white_24dp" /-->
 </FrameLayout>

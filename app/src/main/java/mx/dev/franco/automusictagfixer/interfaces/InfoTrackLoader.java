@@ -1,5 +1,5 @@
 package mx.dev.franco.automusictagfixer.interfaces;
 
-public interface DataTrackLoader<T> {
+public interface InfoTrackLoader<T> {
     void onTrackDataLoaded(T data);
 }

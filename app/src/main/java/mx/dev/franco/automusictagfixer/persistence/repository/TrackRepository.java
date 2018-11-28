@@ -2,10 +2,13 @@ package mx.dev.franco.automusictagfixer.persistence.repository;
 
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MediatorLiveData;
+import android.arch.lifecycle.MutableLiveData;
+import android.arch.lifecycle.Observer;
 import android.arch.persistence.db.SimpleSQLiteQuery;
 import android.arch.persistence.db.SupportSQLiteQuery;
 import android.content.Context;
 import android.os.AsyncTask;
+import android.support.annotation.Nullable;
 
 import java.util.List;
 
@@ -22,7 +25,9 @@ public class TrackRepository {
 
     private TrackDAO mTrackDao;
     private LiveData<List<Track>> mAllTrack;
+    private MediatorLiveData<List<Track>> mResultSearch = new MediatorLiveData<>();
     private MediatorLiveData<List<Track>> mMediatorTrackData = new MediatorLiveData<>();
+    private LiveData<List<Track>> liveDataTracks;
     private AbstractSharedPreferences mAbstractSharedPreferences;
     private String mCurrentOrder;
     public TrackRepository(TrackRoomDatabase db, AbstractSharedPreferences abstractSharedPreferences, Context context){
@@ -83,10 +88,6 @@ public class TrackRepository {
         new removeTrack(mTrackDao).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, track);
     }
 
-    public List<Track> search(String query){
-        return mTrackDao.search(query);
-    }
-
     public boolean sortTracks(String order, int orderType) {
         String orderBy;
         if(orderType == ASC){
@@ -110,6 +111,20 @@ public class TrackRepository {
 
         mMediatorTrackData.addSource(mAllTrack, tracks -> mMediatorTrackData.setValue(tracks));
         return true;
+    }
+
+    public LiveData<List<Track>> getSearchResults() {
+        return mResultSearch;
+    }
+
+    public void search(String query) {
+        if(liveDataTracks != null)
+            mResultSearch.removeSource(liveDataTracks);
+
+        liveDataTracks = mTrackDao.search(query);
+        mResultSearch.addSource(liveDataTracks, tracks -> {
+            mResultSearch.setValue(tracks);
+        });
     }
 
     private static class checkAll extends AsyncTask<Void, Void, Void> {
