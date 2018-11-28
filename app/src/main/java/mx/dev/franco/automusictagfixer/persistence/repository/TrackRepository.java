@@ -2,12 +2,10 @@ package mx.dev.franco.automusictagfixer.persistence.repository;
 
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MediatorLiveData;
-import android.arch.lifecycle.Observer;
 import android.arch.persistence.db.SimpleSQLiteQuery;
 import android.arch.persistence.db.SupportSQLiteQuery;
 import android.content.Context;
 import android.os.AsyncTask;
-import android.support.annotation.Nullable;
 
 import java.util.List;
 
@@ -38,12 +36,7 @@ public class TrackRepository {
 
         SupportSQLiteQuery sqLiteQuery = new SimpleSQLiteQuery(query);
         mAllTrack = mTrackDao.getAllTracks(sqLiteQuery);
-        mMediatorTrackData.addSource(mAllTrack, new Observer<List<Track>>() {
-            @Override
-            public void onChanged(@Nullable List<Track> tracks) {
-                mMediatorTrackData.setValue(tracks);
-            }
-        });
+        mMediatorTrackData.addSource(mAllTrack, tracks -> mMediatorTrackData.setValue(tracks));
     }
 
     public LiveData<List<Track>> getAllTracks(){

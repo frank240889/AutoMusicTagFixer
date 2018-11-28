@@ -309,5 +309,6 @@
     <string name="identification_results_language">Idioma</string>
     <string name="pixels">Pixeles</string>
     <string name="missing_cover">Sin carátula</string>
+    <string name="app_version" translatable="false">1.0</string>
 
 </resources>

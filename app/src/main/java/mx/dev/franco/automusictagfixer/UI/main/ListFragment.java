@@ -3,7 +3,6 @@ package mx.dev.franco.automusictagfixer.UI.main;
 import android.Manifest;
 import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
-import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
@@ -22,7 +21,6 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -84,14 +82,10 @@ public class ListFragment extends Fragment implements
     }
 
     @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-    }
-
-    @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         AutoMusicTagFixer.getContextComponent().inject(this);
+        setRetainInstance(true);
         mFabStartTask = ((MainActivity)getActivity()).mStartTaskFab;
         mFabStopTask = ((MainActivity)getActivity()).mStopTaskFab;
 
@@ -113,7 +107,6 @@ public class ListFragment extends Fragment implements
         mGridLayoutManager = new GridLayoutManager(getActivity(), 1);
         mRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(), 1));
         mAdapter = new TrackAdapter(this);
-        Log.d(TAG, mAdapter.getItemCount()+"");
         mRecyclerView.setHasFixedSize(true);
         mRecyclerView.setItemViewCacheSize(10);
         mRecyclerView.setDrawingCacheEnabled(true);
@@ -123,7 +116,6 @@ public class ListFragment extends Fragment implements
         mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
-                Log.d(TAG, "State: " + newState);
                 if (newState == RecyclerView.SCROLL_STATE_IDLE) {
                     Glide.with(getActivity()).resumeRequests();
                 }
@@ -147,12 +139,14 @@ public class ListFragment extends Fragment implements
                 ContextCompat.getColor(getActivity(), R.color.grey_700)
 
         );
-        mSwipeRefreshLayout.setProgressBackgroundColorSchemeColor(getActivity().getResources().getColor(R.color.primaryColor));
+        mSwipeRefreshLayout.setProgressBackgroundColorSchemeColor(getActivity().
+                getResources().getColor(R.color.primaryColor));
 
         mFabStartTask.setOnClickListener(v -> startCorrection(-1));
         mFabStopTask.setOnClickListener(v -> stopCorrection());
 
-        boolean hasPermission = ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
+        boolean hasPermission = ContextCompat.checkSelfPermission(getActivity(),
+                Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
 
         mListViewModel = ViewModelProviders.of(this).get(ListViewModel.class);
 
@@ -169,8 +163,10 @@ public class ListFragment extends Fragment implements
         mListViewModel.getAllTracks().observe(this,mAdapter);
 
         mSwipeRefreshLayout.setOnRefreshListener(()->{
-                if(ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                    requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, RequiredPermissions.WRITE_EXTERNAL_STORAGE_PERMISSION);
+                if(ContextCompat.checkSelfPermission(getActivity(),
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                    requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                            RequiredPermissions.WRITE_EXTERNAL_STORAGE_PERMISSION);
                 }
                 else {
                     mListViewModel.updateTrackList();
@@ -187,7 +183,6 @@ public class ListFragment extends Fragment implements
         }
 
         setHasOptionsMenu(true);
-        //setRetainInstance(true);
         //App is opened again
         int id = getActivity().getIntent().getIntExtra(Constants.MEDIA_STORE_ID, -1);
         scrollTo(id);
@@ -196,7 +191,8 @@ public class ListFragment extends Fragment implements
         if(Build.VERSION.SDK_INT < Build.VERSION_CODES.M)
             mListViewModel.getInfoForTracks();
 
-        boolean isPresentSD = StorageHelper.getInstance(getActivity().getApplicationContext()).isPresentRemovableStorage();
+        boolean isPresentSD = StorageHelper.getInstance(getActivity().
+                getApplicationContext()).isPresentRemovableStorage();
         if(AndroidUtils.getUriSD(getActivity().getApplicationContext()) == null && isPresentSD)
             getActivity().startActivity(new Intent(getActivity(), SdCardInstructionsActivity.class));
 
@@ -219,17 +215,6 @@ public class ListFragment extends Fragment implements
 
     private void showProgress(Boolean showProgress) {
         mSwipeRefreshLayout.setRefreshing(showProgress);
-    }
-
-    @Override
-    public void onResume(){
-        super.onResume();
-    }
-
-
-    @Override
-    public void onStop(){
-        super.onStop();
     }
 
     @Override
@@ -293,7 +278,8 @@ public class ListFragment extends Fragment implements
         super.onDestroy();
 
         //Stop correction task if "Usar corrección en segundo plano" from Settings is off.
-        if(!PreferenceManager.getDefaultSharedPreferences(getActivity().getApplicationContext()).getBoolean("key_background_service", true)){
+        if(!PreferenceManager.getDefaultSharedPreferences(getActivity().getApplicationContext()).
+                getBoolean("key_background_service", true)){
             Intent intent = new Intent(getActivity(),FixerTrackService.class);
             getActivity().stopService(intent);
         }
@@ -306,9 +292,11 @@ public class ListFragment extends Fragment implements
 
     public void showViewPermissionMessage() {
         final AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-        builder.setTitle(R.string.title_dialog_permision).setMessage(R.string.explanation_permission_access_files);
+        builder.setTitle(R.string.title_dialog_permision).
+                setMessage(R.string.explanation_permission_access_files);
         builder.setPositiveButton(R.string.ok_button, (dialog, which) -> {
-            requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, RequiredPermissions.WRITE_EXTERNAL_STORAGE_PERMISSION);
+            requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                    RequiredPermissions.WRITE_EXTERNAL_STORAGE_PERMISSION);
         });
         final AlertDialog dialog =  builder.create();
         dialog.show();
@@ -429,7 +417,9 @@ public class ListFragment extends Fragment implements
 
     private void showInaccessibleTrack(ViewWrapper viewWrapper) {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-        builder.setMessage(String.format(getString(R.string.file_error), viewWrapper.track.getPath())).
+        builder.setMessage(
+                String.format(
+                        getString(R.string.file_error), viewWrapper.track.getPath())).
                 setPositiveButton(R.string.remove_from_list, (dialog, which) -> {
                     mListViewModel.removeTrack(viewWrapper.track);
                 });

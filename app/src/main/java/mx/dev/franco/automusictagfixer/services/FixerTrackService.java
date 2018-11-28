@@ -127,7 +127,8 @@ public class FixerTrackService extends Service implements GnResponseListener.GnL
             }
         }
         else {
-            SharedPreferences sharedPreferences = getSharedPreferences(Constants.Application.FULL_QUALIFIED_NAME, Context.MODE_PRIVATE);
+            SharedPreferences sharedPreferences =
+                    getSharedPreferences(Constants.Application.FULL_QUALIFIED_NAME, Context.MODE_PRIVATE);
             String order = sharedPreferences.getString(Constants.SORT_KEY, null);
             sIdLoader = new IdLoader(this, trackRoomDatabase);
             sIdLoader.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, order);
@@ -215,9 +216,11 @@ public class FixerTrackService extends Service implements GnResponseListener.GnL
                 AudioFileIO.read(new File(data.get(0).getPath()));
                 startNotification(getString(R.string.correction_in_progress),
                         getString(R.string.correcting) +" " +
-                                TrackUtils.getFilename(data.get(0).getPath()), getString(R.string.starting_correction), data.get(0).getMediaStoreId());
+                                TrackUtils.getFilename(data.get(0).getPath()),
+                        getString(R.string.starting_correction), data.get(0).getMediaStoreId());
                 sIdentifier.execute();
-            } catch (CannotReadException | IOException | ReadOnlyFileException | TagException | InvalidAudioFrameException e) {
+            } catch (CannotReadException | IOException
+                    | ReadOnlyFileException | TagException | InvalidAudioFrameException e) {
                 e.printStackTrace();
                 identificationError(getString(R.string.could_not_read_file), data.get(0));
             }
@@ -304,11 +307,13 @@ public class FixerTrackService extends Service implements GnResponseListener.GnL
         notificationIntent.setAction(Constants.ACTION_OPEN_MAIN_ACTIVITY);
         notificationIntent.setFlags(Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT | Intent.FLAG_ACTIVITY_NEW_TASK);
         notificationIntent.putExtra(Constants.MEDIA_STORE_ID, mediaStoreId);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0,
+                notificationIntent, 0);
 
         Intent stopTaskIntent = new Intent(this, FixerTrackService.class);
         stopTaskIntent.setAction(Constants.Actions.ACTION_COMPLETE_TASK);
-        PendingIntent pendingStopIntent = PendingIntent.getService(this, 0, stopTaskIntent, 0);
+        PendingIntent pendingStopIntent = PendingIntent.getService(this, 0,
+                stopTaskIntent, 0);
 
         NotificationCompat.Builder builder;
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
@@ -349,10 +354,12 @@ public class FixerTrackService extends Service implements GnResponseListener.GnL
     private String createNotificationChannel(){
         String channelId = BuildConfig.APPLICATION_ID + "." + FixerTrackService.CLASS_NAME;
         String channelName = FixerTrackService.CLASS_NAME;
-        NotificationChannel chan = new NotificationChannel(channelId,channelName, NotificationManager.IMPORTANCE_NONE);
+        NotificationChannel chan = new NotificationChannel(channelId,channelName,
+                NotificationManager.IMPORTANCE_NONE);
         chan.setLightColor(Color.BLUE);
         chan.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
-        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        NotificationManager notificationManager = (NotificationManager)
+                getSystemService(Context.NOTIFICATION_SERVICE);
         if (notificationManager != null) {
             notificationManager.createNotificationChannel(chan);
         }
@@ -452,7 +459,8 @@ public class FixerTrackService extends Service implements GnResponseListener.GnL
         if(sIdentifier != null){
             sIdentifier = null;
         }
-        startNotification(TrackUtils.getPath(track.getPath()), getString(R.string.match_found), getString(R.string.starting_correction), track.getMediaStoreId() );
+        startNotification(TrackUtils.getPath(track.getPath()), getString(R.string.match_found),
+                getString(R.string.starting_correction), track.getMediaStoreId() );
         sFixer = new Fixer(this);
         boolean shouldRename = PreferenceManager.
                 getDefaultSharedPreferences(getApplicationContext()).
@@ -495,7 +503,8 @@ public class FixerTrackService extends Service implements GnResponseListener.GnL
 
     @Override
     public void onCorrectionStarted(Track track) {
-        startNotification(TrackUtils.getFilename(track.getPath()), getString(R.string.starting_correction), getString(R.string.applying_tags), track.getMediaStoreId() );
+        startNotification(TrackUtils.getFilename(track.getPath()), getString(R.string.starting_correction),
+                getString(R.string.applying_tags), track.getMediaStoreId() );
     }
 
     @Override
@@ -536,7 +545,8 @@ public class FixerTrackService extends Service implements GnResponseListener.GnL
                 getString(R.string.could_not_correct_file), track.getMediaStoreId()  );
 
         Intent intent = new Intent(Constants.Actions.ACTION_SD_CARD_ERROR);
-        intent.putExtra("error", Fixer.ERROR_CODES.getErrorMessage(this, resultCorrection.code));
+        intent.putExtra("error", Fixer.ERROR_CODES.
+                getErrorMessage(this, resultCorrection.code));
         LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcastSync(intent);
 
         if(mTrackRepository != null) {

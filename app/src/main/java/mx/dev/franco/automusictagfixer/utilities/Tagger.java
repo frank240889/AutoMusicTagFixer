@@ -251,7 +251,8 @@ public class Tagger {
      * @throws InvalidAudioFrameException
      * @throws CannotReadException
      */
-    private ResultCorrection applyTags(File file, HashMap<FieldKey, Object> tags, int overWriteTags) throws ReadOnlyFileException, IOException, TagException, InvalidAudioFrameException, CannotReadException {
+    private ResultCorrection applyTags(File file, HashMap<FieldKey, Object> tags, int overWriteTags)
+            throws ReadOnlyFileException, IOException, TagException, InvalidAudioFrameException, CannotReadException {
         boolean isStoredInSd = sStorageHelper.isStoredInSD(file);
         ResultCorrection resultCorrection = new ResultCorrection();
 

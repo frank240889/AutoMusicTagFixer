@@ -29,7 +29,7 @@
             android:theme="@style/SplashTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
+                <action android:name="android.intent.action.VIEW"/>
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
@@ -48,6 +48,10 @@
             <meta-data android:name="android.app.default_searchable"
                 android:value=".UI.search.SearchActivity" />
         </activity>
+        <activity
+            android:name=".UI.sd_card_instructions.SdCardInstructionsActivity"
+            android:parentActivityName=".UI.main.MainActivity"
+            android:theme="@style/MyTransparentTheme"/>
         <activity
             android:name=".UI.track_detail.TrackDetailsActivity"
             android:configChanges="orientation|screenSize"
@@ -88,6 +92,18 @@
             android:parentActivityName=".UI.main.MainActivity"
             android:screenOrientation="portrait"
             android:theme="@style/SettingsStyle" />
+        <activity android:name=".UI.search.SearchActivity"
+            android:configChanges="orientation|screenSize"
+            android:screenOrientation="portrait"
+            android:theme="@style/MainActivityTheme"
+            android:launchMode="singleTop">
+            <intent-filter>
+                <action android:name="android.intent.action.SEARCH"/>
+            </intent-filter>
+            <meta-data
+                android:name="android.app.searchable"
+                android:resource="@xml/searchable" />
+        </activity>
         <!-- "mx.dev.franco.automusictagfixer.fileProvider" -->
         <!-- This provider is necessary because in android >= 7 doesn't allow to access directly to files -->
         <provider
@@ -114,23 +130,6 @@
         <meta-data
             android:name="io.fabric.ApiKey"
             android:value="3d4995f2cd3e5757faec4a2dadce6e00f2d0814e" />
-
-        <activity
-            android:name=".UI.sd_card_instructions.SdCardInstructionsActivity"
-            android:screenOrientation="portrait"
-            android:theme="@style/MyTransparentTheme"/>
-        <activity android:name=".UI.search.SearchActivity"
-            android:configChanges="orientation|screenSize"
-            android:screenOrientation="portrait"
-            android:theme="@style/MainActivityTheme"
-            android:launchMode="singleTop">
-            <intent-filter>
-                <action android:name="android.intent.action.SEARCH"/>
-            </intent-filter>
-            <meta-data
-                android:name="android.app.searchable"
-                android:resource="@xml/searchable" />
-        </activity>
     </application>
 
 </manifest>

@@ -4,7 +4,6 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.provider.MediaStore;
-import android.util.Log;
 
 import org.jaudiotagger.audio.exceptions.CannotReadException;
 import org.jaudiotagger.audio.exceptions.InvalidAudioFrameException;
@@ -192,7 +191,6 @@ public class Fixer extends AsyncTask<GnResponseListener.IdentificationResults,Vo
 
         mResultsCorrection = taggerHelper.saveTags(mTrack.getPath(), tagsToApply, overwriteTags);
         mResultsCorrection.track = mTrack;
-
         if(hasError(mResultsCorrection.code))
             return false;
 
@@ -219,13 +217,11 @@ public class Fixer extends AsyncTask<GnResponseListener.IdentificationResults,Vo
             if(shouldUpdateMediaStore && mTrack.getMediaStoreId() != -1){
                 String select = MediaStore.Audio.Media._ID + "= ?";
                 String[] selectArgs = new String[]{mTrack.getMediaStoreId() + ""};
-                boolean successMediaStore = context.getContentResolver().
+                context.getContentResolver().
                         update(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
                                 updatedValues,
                                 select,
-                                selectArgs) == 1;
-
-                Log.d(TAG, "success media store update item: " + successMediaStore);
+                                selectArgs);
 
             }
         }
@@ -266,13 +262,12 @@ public class Fixer extends AsyncTask<GnResponseListener.IdentificationResults,Vo
                 mResultsCorrection.pathTofileUpdated = newAbsolutePath;
                 newValuesToMediaStore.put(MediaStore.MediaColumns.DATA, newAbsolutePath);
                 if (mTrack.getMediaStoreId() != -1) {
-                    boolean successMediaStore = context.getContentResolver().
+                    context.getContentResolver().
                             update(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
                                     newValuesToMediaStore,
                                     selection,
-                                    selectionArgs) == 1;
+                                    selectionArgs);
                     newValuesToMediaStore.clear();
-                    Log.d(TAG, "success media store update: " + successMediaStore);
                 }
                 mResultsCorrection.track.setPath(newAbsolutePath);
             }

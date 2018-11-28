@@ -3,7 +3,6 @@ package mx.dev.franco.automusictagfixer.modelsUI.main;
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MutableLiveData;
 import android.arch.lifecycle.ViewModel;
-import android.util.Log;
 
 import java.util.List;
 
@@ -76,7 +75,6 @@ public class ListViewModel extends ViewModel {
 
             @Override
             public void onFinish(boolean emptyList) {
-                Log.d("first_time_read","first_time_read");
                 mShowProgress.setValue(false);
                 sharedPreferences.putBoolean("first_time_read", true);
                 if(emptyList){

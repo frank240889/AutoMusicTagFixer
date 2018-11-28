@@ -27,7 +27,6 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -98,46 +97,11 @@ public class MainActivity extends AppCompatActivity
         mListFragment = ListFragment.newInstance();
         getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, mListFragment, ListFragment.class.getName())
                 .commit();
-        Log.d(TAG,"onCreate");
-    }
-
-    @Override
-    public void onStart() {
-        super.onStart();
-        Log.d(TAG,"onStart");
-
-    }
-
-    @Override
-    public void onRestoreInstanceState(Bundle savedInstanceState){
-        super.onRestoreInstanceState(savedInstanceState);
-
-    }
-
-
-    @Override
-    protected void onResume(){
-        super.onResume();
-        Log.d(TAG,"onResume");
-    }
-
-    @Override
-    protected void onPause(){
-        super.onPause();
-        Log.d(TAG,"onPause");
-    }
-
-
-    @Override
-    public void onStop() {
-        Log.d(TAG,"onStop");
-        super.onStop();
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        Log.d(TAG, "destroy");
         LocalBroadcastManager.getInstance(getApplicationContext()).unregisterReceiver(mReceiver);
         mReceiver.clearReceiver();
         mReceiver = null;
@@ -438,7 +402,6 @@ public class MainActivity extends AppCompatActivity
         int id = intent.getIntExtra(Constants.MEDIA_STORE_ID, -1);
         Snackbar snackbar;
         Toast toast;
-        Log.d(TAG, action);
         switch (action) {
             case Constants.GnServiceActions.ACTION_API_INITIALIZED:
                     snackbar = AndroidUtils.getSnackbar(this.mToolbar, this);
