@@ -2,16 +2,14 @@ package mx.dev.franco.automusictagfixer.persistence.repository;
 
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MediatorLiveData;
-import android.arch.lifecycle.MutableLiveData;
-import android.arch.lifecycle.Observer;
 import android.arch.persistence.db.SimpleSQLiteQuery;
 import android.arch.persistence.db.SupportSQLiteQuery;
 import android.content.Context;
 import android.os.AsyncTask;
-import android.support.annotation.Nullable;
 
 import java.util.List;
 
+import mx.dev.franco.automusictagfixer.interfaces.AsyncOperation;
 import mx.dev.franco.automusictagfixer.persistence.mediastore.AsyncFileReader;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.persistence.room.TrackDAO;
@@ -48,7 +46,7 @@ public class TrackRepository {
         return mMediatorTrackData;
     }
 
-    public void getDataFromTracksFirst(final AsyncFileReader.IRetriever iRetriever){
+    public void getDataFromTracksFirst(final AsyncOperation<Void, Boolean, Void, Void> iRetriever){
         boolean databaseCreationCompleted = mAbstractSharedPreferences.getBoolean(Constants.COMPLETE_READ);
         if(!databaseCreationCompleted) {
             AsyncFileReader asyncFileReader = new AsyncFileReader();
@@ -57,11 +55,11 @@ public class TrackRepository {
             asyncFileReader.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
         }
         else {
-            iRetriever.onFinish(false);
+            iRetriever.onAsyncOperationFinished(false);
         }
     }
 
-    public void getNewTracks(final AsyncFileReader.IRetriever iRetriever){
+    public void getNewTracks(final AsyncOperation<Void, Boolean, Void, Void> iRetriever){
             AsyncFileReader asyncFileReader = new AsyncFileReader();
             asyncFileReader.setTask(AsyncFileReader.UPDATE_LIST);
             asyncFileReader.setListener(iRetriever);

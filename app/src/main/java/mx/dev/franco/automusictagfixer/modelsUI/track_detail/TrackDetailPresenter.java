@@ -10,12 +10,12 @@ import mx.dev.franco.automusictagfixer.fixer.Fixer;
 import mx.dev.franco.automusictagfixer.identifier.GnResponseListener;
 import mx.dev.franco.automusictagfixer.identifier.GnService;
 import mx.dev.franco.automusictagfixer.identifier.TrackIdentifier;
+import mx.dev.franco.automusictagfixer.interfaces.AsyncOperation;
 import mx.dev.franco.automusictagfixer.interfaces.Cache;
 import mx.dev.franco.automusictagfixer.interfaces.Destructible;
 import mx.dev.franco.automusictagfixer.interfaces.EditableView;
 import mx.dev.franco.automusictagfixer.network.ConnectivityDetector;
 import mx.dev.franco.automusictagfixer.persistence.cache.DownloadedTrackDataCacheImpl;
-import mx.dev.franco.automusictagfixer.persistence.mediastore.AsyncFileReader;
 import mx.dev.franco.automusictagfixer.persistence.repository.TrackRepository;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
@@ -24,9 +24,12 @@ import mx.dev.franco.automusictagfixer.utilities.Tagger;
 import mx.dev.franco.automusictagfixer.utilities.TrackUtils;
 import mx.dev.franco.automusictagfixer.utilities.resource_manager.ResourceManager;
 
-public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
+public class TrackDetailPresenter implements
         Destructible, GnResponseListener.GnListener,
-        Fixer.OnCorrectionListener, AsyncFileReader.IRetriever, AsyncFileSaver.OnSaveListener {
+        AsyncOperation<Void, TrackDataLoader.TrackDataItem, Void, String>,
+        Fixer.OnCorrectionListener,
+        //AsyncFileReader.IRetriever,
+        AsyncFileSaver.OnSaveListener {
     private static final String TAG = TrackDetailPresenter.class.getName();
     private EditableView mView;
     private TrackDetailInteractor mInteractor;
@@ -65,16 +68,18 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
         mInteractor.loadInfoTrack(id);
     }
 
+    /**Loading track data callbacks**/
+
     @Override
-    public void onStartedLoad() {
+    public void onAsyncOperationStarted(Void params) {
         mView.showProgress();
     }
 
     @Override
-    public void onFinishedLoad(TrackDataLoader.TrackDataItem trackDataItem) {
-        mCurrentTrackDataItem = trackDataItem;
+    public void onAsyncOperationFinished(TrackDataLoader.TrackDataItem result) {
+        mCurrentTrackDataItem = result;
         if(mView != null)
-            setTags(trackDataItem);
+            setTags(result);
 
         if(mCorrectionMode == Constants.CorrectionModes.MANUAL){
             mView.enableEditMode();
@@ -82,23 +87,23 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
         else if(mCorrectionMode == Constants.CorrectionModes.SEMI_AUTOMATIC){
             startIdentification(TrackIdentifier.ALL_TAGS);
         }
-
     }
 
     @Override
-    public void onCancelledLoad() {
+    public void onAsyncOperationCancelled(Void cancellation) {
         if(mView != null) {
             mView.hideProgress();
         }
     }
 
     @Override
-    public void onLoadError(String error) {
+    public void onAsyncOperationError(String error) {
         if(mView != null) {
             mView.hideProgress();
             mView.onLoadError(error);
         }
     }
+    /*******************************************************************/
 
     private void setTags(TrackDataLoader.TrackDataItem trackDataItem){
         setInfoForError(trackDataItem);
@@ -563,7 +568,7 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
         return true;
     }
 
-    @Override
+    /*@Override
     public void onStart() {
         if(mView != null){
             mView.showProgress();
@@ -584,7 +589,7 @@ public class TrackDetailPresenter implements TrackDataLoader.TrackLoader,
     @Override
     public void onCancel() {
 
-    }
+    }*/
 
     private void updateTempCurrentTrackDataCover(Tagger.ResultCorrection resultCorrection ){
         if(resultCorrection.code != Tagger.CURRENT_COVER_REMOVED) {

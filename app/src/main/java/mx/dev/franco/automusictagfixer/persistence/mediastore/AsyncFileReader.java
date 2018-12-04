@@ -13,6 +13,7 @@ import java.util.List;
 import javax.inject.Inject;
 
 import mx.dev.franco.automusictagfixer.AutoMusicTagFixer;
+import mx.dev.franco.automusictagfixer.interfaces.AsyncOperation;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.persistence.room.TrackDAO;
 import mx.dev.franco.automusictagfixer.persistence.room.TrackRoomDatabase;
@@ -35,7 +36,7 @@ public class AsyncFileReader extends AsyncTask<Void, Void, Void> {
     AbstractSharedPreferences sharedPreferences;
     @Inject
     Context context;
-    private IRetriever mListener;
+    private AsyncOperation<Void, Boolean, Void, Void> mListener;
     private int mTask;
     private boolean mEmptyList = true;
 
@@ -43,7 +44,7 @@ public class AsyncFileReader extends AsyncTask<Void, Void, Void> {
         AutoMusicTagFixer.getContextComponent().inject(this);
     }
 
-    public void setListener(IRetriever mediaStoreRetrieverListener){
+    public void setListener(AsyncOperation<Void, Boolean, Void, Void> mediaStoreRetrieverListener){
         mListener = mediaStoreRetrieverListener;
     }
 
@@ -55,12 +56,11 @@ public class AsyncFileReader extends AsyncTask<Void, Void, Void> {
     @Override
     protected void onPreExecute() {
         if(mListener != null)
-            mListener.onStart();
+            mListener.onAsyncOperationStarted(null);
     }
 
     @Override
     protected Void doInBackground(Void... voids) {
-
         if(mTask == INSERT_ALL){
             Cursor cursor = MediaStoreRetriever.getAllFromDevice(context);
             insertAll(cursor);
@@ -77,23 +77,23 @@ public class AsyncFileReader extends AsyncTask<Void, Void, Void> {
     }
 
     @Override
-    protected void onProgressUpdate(Void... items) {
-    }
-
-    @Override
     protected void onPostExecute(Void result) {
         if(mListener != null)
-            mListener.onFinish(mEmptyList);
+            mListener.onAsyncOperationFinished(mEmptyList);
         mListener = null;
     }
 
     @Override
     public void onCancelled(){
         if(mListener != null)
-            mListener.onCancel();
+            mListener.onAsyncOperationCancelled(null);
         mListener = null;
     }
 
+    /**
+     * Inserts a bulk of data from media store to app Database
+     * @param cursor The data as a cursor
+     */
     private void insertAll(Cursor cursor){
         List<Track> tracks = new ArrayList<>();
         TrackDAO trackDAO = trackRoomDatabase.trackDao();
@@ -151,6 +151,11 @@ public class AsyncFileReader extends AsyncTask<Void, Void, Void> {
             trackDAO.deleteBatch(tracksToRemove);
     }
 
+    /**
+     * Builds a Track object from cursor input
+     * @param cursor The iterable data source
+     * @return A Track object
+     */
     private Track buildTrack(Cursor cursor){
         int mediaStoreId = cursor.getInt(0);//mediastore id
         String title = null;

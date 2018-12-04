@@ -12,8 +12,8 @@ import mx.dev.franco.automusictagfixer.AutoMusicTagFixer;
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.UI.main.ListFragment;
 import mx.dev.franco.automusictagfixer.identifier.GnService;
+import mx.dev.franco.automusictagfixer.interfaces.AsyncOperation;
 import mx.dev.franco.automusictagfixer.network.ConnectivityDetector;
-import mx.dev.franco.automusictagfixer.persistence.mediastore.AsyncFileReader;
 import mx.dev.franco.automusictagfixer.persistence.repository.TrackRepository;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.persistence.room.TrackState;
@@ -67,26 +67,29 @@ public class ListViewModel extends ViewModel {
             return;
 
         mShowProgress.setValue(true);
-        trackRepository.getDataFromTracksFirst(new AsyncFileReader.IRetriever() {
+        trackRepository.getDataFromTracksFirst(new AsyncOperation<Void, Boolean, Void, Void>() {
             @Override
-            public void onStart() {
+            public void onAsyncOperationStarted(Void params) {
                 mShowProgress.setValue(true);
             }
 
             @Override
-            public void onFinish(boolean emptyList) {
+            public void onAsyncOperationFinished(Boolean result) {
                 mShowProgress.setValue(false);
                 sharedPreferences.putBoolean("first_time_read", true);
-                if(emptyList){
+                if(result){
                     mEmptyList.setValue(true);
                 }
 
             }
 
             @Override
-            public void onCancel() {
+            public void onAsyncOperationCancelled(Void cancellation) {
                 mShowProgress.setValue(false);
             }
+
+            @Override
+            public void onAsyncOperationError(Void error) {}
         });
     }
 
@@ -157,22 +160,24 @@ public class ListViewModel extends ViewModel {
 
     public void updateTrackList(){
         mShowProgress.setValue(true);
-        trackRepository.getNewTracks(new AsyncFileReader.IRetriever() {
+        trackRepository.getNewTracks(new AsyncOperation<Void, Boolean, Void, Void>() {
             @Override
-            public void onStart() {
+            public void onAsyncOperationStarted(Void params) {
                 mShowProgress.setValue(true);
             }
 
             @Override
-            public void onFinish(boolean emptyList) {
+            public void onAsyncOperationFinished(Boolean result) {
                 mShowProgress.setValue(false);
-
             }
 
             @Override
-            public void onCancel() {
+            public void onAsyncOperationCancelled(Void cancellation) {
                 mShowProgress.setValue(false);
             }
+
+            @Override
+            public void onAsyncOperationError(Void error) {}
         });
     }
 

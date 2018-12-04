@@ -16,18 +16,13 @@ import java.io.IOException;
 import javax.inject.Inject;
 
 import mx.dev.franco.automusictagfixer.AutoMusicTagFixer;
+import mx.dev.franco.automusictagfixer.interfaces.AsyncOperation;
 import mx.dev.franco.automusictagfixer.persistence.room.TrackRoomDatabase;
 import mx.dev.franco.automusictagfixer.utilities.Tagger;
 
 public class TrackDataLoader extends AsyncTask<Integer, Void, TrackDataLoader.TrackDataItem> {
-    public interface TrackLoader{
-        void onStartedLoad();
-        void onFinishedLoad(TrackDataItem trackDataItem);
-        void onCancelledLoad();
-        void onLoadError(String error);
-    }
 
-    private TrackLoader mListener;
+    private AsyncOperation<Void, TrackDataItem, Void, String> mListener;
     @Inject
     public Tagger mTagger;
     @Inject
@@ -37,13 +32,13 @@ public class TrackDataLoader extends AsyncTask<Integer, Void, TrackDataLoader.Tr
         AutoMusicTagFixer.getContextComponent().inject(this);
     }
 
-    public void setListener(TrackLoader listener){
+    public void setListener(AsyncOperation<Void, TrackDataItem ,Void, String> listener){
         mListener = listener;
     }
 
     protected void onPreExecute(){
         if(mListener != null)
-            mListener.onStartedLoad();
+            mListener.onAsyncOperationStarted(null);
     }
 
     @Override
@@ -59,7 +54,7 @@ public class TrackDataLoader extends AsyncTask<Integer, Void, TrackDataLoader.Tr
             Handler handler = new Handler(Looper.getMainLooper());
             handler.post(() -> {
                 if(mListener != null)
-                    mListener.onLoadError(e.getMessage());
+                    mListener.onAsyncOperationError(e.getMessage());
                 mListener = null;
             });
         }
@@ -69,7 +64,7 @@ public class TrackDataLoader extends AsyncTask<Integer, Void, TrackDataLoader.Tr
     @Override
     protected void onPostExecute(TrackDataItem trackDataItem) {
         if(mListener != null) {
-            mListener.onFinishedLoad(trackDataItem);
+            mListener.onAsyncOperationFinished(trackDataItem);
         }
         mListener = null;
     }
@@ -78,7 +73,7 @@ public class TrackDataLoader extends AsyncTask<Integer, Void, TrackDataLoader.Tr
     protected void onCancelled(TrackDataItem trackDataItem) {
         super.onCancelled(trackDataItem);
         if(mListener != null)
-            mListener.onCancelledLoad();
+            mListener.onAsyncOperationCancelled(null);
         mListener = null;
     }
 

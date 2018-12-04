@@ -5,15 +5,14 @@ import android.os.AsyncTask;
 import javax.inject.Inject;
 
 import mx.dev.franco.automusictagfixer.AutoMusicTagFixer;
+import mx.dev.franco.automusictagfixer.interfaces.AsyncOperation;
 import mx.dev.franco.automusictagfixer.interfaces.Destructible;
-import mx.dev.franco.automusictagfixer.persistence.mediastore.AsyncFileReader;
 import mx.dev.franco.automusictagfixer.persistence.room.TrackRoomDatabase;
 
-public class TrackDetailInteractor implements TrackDataLoader.TrackLoader, AsyncFileReader.IRetriever, Destructible {
+public class TrackDetailInteractor implements
+        AsyncOperation<Void, TrackDataLoader.TrackDataItem, Void, String>, Destructible {
     private static TrackDataLoader mTrackDataLoader;
-    private TrackDataLoader.TrackLoader mLoaderListener;
-    private static AsyncFileReader sAsyncFileReader;
-    private AsyncFileReader.IRetriever mUpdaterListener;
+    private AsyncOperation<Void, TrackDataLoader.TrackDataItem, Void, String> mLoaderListener;
     @Inject
     public TrackRoomDatabase trackRoomDatabase;
 
@@ -21,12 +20,8 @@ public class TrackDetailInteractor implements TrackDataLoader.TrackLoader, Async
         AutoMusicTagFixer.getContextComponent().inject(this);
     }
 
-    public void setLoaderListener(TrackDataLoader.TrackLoader loader){
+    public void setLoaderListener(AsyncOperation<Void, TrackDataLoader.TrackDataItem, Void, String> loader){
         mLoaderListener = loader;
-    }
-
-    public void setUpdaterListener(AsyncFileReader.IRetriever iRetriever){
-        mUpdaterListener = iRetriever;
     }
 
     public void loadInfoTrack(int id){
@@ -38,32 +33,32 @@ public class TrackDetailInteractor implements TrackDataLoader.TrackLoader, Async
     }
 
     @Override
-    public void onStartedLoad() {
+    public void onAsyncOperationStarted(Void params) {
         if(mLoaderListener != null)
-            mLoaderListener.onStartedLoad();
+            mLoaderListener.onAsyncOperationStarted(null);
     }
 
     @Override
-    public void onFinishedLoad(TrackDataLoader.TrackDataItem trackDataItem) {
+    public void onAsyncOperationFinished(TrackDataLoader.TrackDataItem result) {
         if(mLoaderListener != null)
-            mLoaderListener.onFinishedLoad(trackDataItem);
+            mLoaderListener.onAsyncOperationFinished(result);
         mTrackDataLoader.setListener(null);
         mTrackDataLoader = null;
     }
 
     @Override
-    public void onCancelledLoad() {
+    public void onAsyncOperationCancelled(Void cancellation) {
         if(mLoaderListener != null) {
-            mLoaderListener.onCancelledLoad();
+            mLoaderListener.onAsyncOperationCancelled(null);
             mTrackDataLoader.setListener(null);
         }
         mTrackDataLoader = null;
     }
 
     @Override
-    public void onLoadError(String error) {
+    public void onAsyncOperationError(String error) {
         if(mLoaderListener != null)
-            mLoaderListener.onLoadError(error);
+            mLoaderListener.onAsyncOperationError(error);
 
         mTrackDataLoader.setListener(null);
         mTrackDataLoader = null;
@@ -74,32 +69,8 @@ public class TrackDetailInteractor implements TrackDataLoader.TrackLoader, Async
         if(mTrackDataLoader != null){
             mTrackDataLoader.cancel(true);
         }
+        onAsyncOperationCancelled(null);
         mTrackDataLoader = null;
-        mLoaderListener = null;
     }
 
-    @Override
-    public void onStart() {
-        if(mUpdaterListener != null){
-            mUpdaterListener.onStart();
-        }
-    }
-
-    @Override
-    public void onFinish(boolean emptyList) {
-        if(mUpdaterListener != null){
-            mUpdaterListener.onFinish(false);
-            sAsyncFileReader.setListener(null);
-        }
-        sAsyncFileReader = null;
-    }
-
-    @Override
-    public void onCancel() {
-        if(mUpdaterListener != null){
-            mUpdaterListener.onCancel();
-            sAsyncFileReader.setListener(null);
-        }
-        sAsyncFileReader = null;
-    }
 }

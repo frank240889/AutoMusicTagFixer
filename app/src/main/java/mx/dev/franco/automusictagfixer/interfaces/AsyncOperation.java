@@ -1,8 +1,8 @@
 package mx.dev.franco.automusictagfixer.interfaces;
 
-public interface AsyncOperation<P, T, C, E> {
+public interface AsyncOperation<P, R, C, E> {
     void onAsyncOperationStarted(P params);
-    void onAsyncOperationFinished(T result);
+    void onAsyncOperationFinished(R result);
     void onAsyncOperationCancelled(C cancellation);
     void onAsyncOperationError(E error);
 }

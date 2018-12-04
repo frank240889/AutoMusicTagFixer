@@ -55,7 +55,7 @@ public class SplashActivity extends AppCompatActivity{
 
     @Override
     public void onDestroy(){
-        connectivityDetector = null;
         super.onDestroy();
+        connectivityDetector = null;
     }
 }
