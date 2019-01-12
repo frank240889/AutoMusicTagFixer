@@ -8,7 +8,6 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -84,7 +83,6 @@ public class TrackAdapter extends RecyclerView.Adapter<AudioItemHolder> implemen
     public AudioItemHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View itemView = LayoutInflater.from(parent.getContext()).
                 inflate(R.layout.item_list, parent, false);
-        Log.d(TAG, "Creating viewHolder");
         return new AudioItemHolder(itemView, mListener);
     }
 

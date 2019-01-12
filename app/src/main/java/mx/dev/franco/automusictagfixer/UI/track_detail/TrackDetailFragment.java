@@ -11,6 +11,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.provider.MediaStore;
+import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.design.widget.FloatingActionButton;
@@ -35,7 +36,6 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -139,7 +139,7 @@ public class TrackDetailFragment extends BaseFragment implements EditableView,
     public AbstractSharedPreferences abstractSharedPreferences;
     @Inject
     public DefaultSharedPreferencesImpl defaultSharedPreferences;
-    private RelativeLayout mEditableFieldsContainer;
+    private ConstraintLayout mEditableFieldsContainer;
 
     public TrackDetailFragment() {}
 
@@ -188,6 +188,8 @@ public class TrackDetailFragment extends BaseFragment implements EditableView,
         mActionBar.setDisplayShowTitleEnabled(false);
 
         setHasOptionsMenu(true);
+        setupFields();
+        setupDataInfoFields();
         return mLayout;
     }
 
@@ -208,9 +210,6 @@ public class TrackDetailFragment extends BaseFragment implements EditableView,
         mUpdateCoverButton = menu.findItem(R.id.action_update_cover);
         removeItem = menu.findItem(R.id.action_remove_cover);
         searchInWebItem = menu.findItem(R.id.action_web_search);
-
-        setupFields();
-        setupDataInfoFields();
 
         Bundle bundle = getArguments();
         if(bundle != null)
@@ -659,7 +658,7 @@ public class TrackDetailFragment extends BaseFragment implements EditableView,
             snackbar.setAction(action, v -> getActivity().startActivity(new Intent(getActivity(), SdCardInstructionsActivity.class)));
         }
         else if(action != null && action.equals(getString(R.string.add_manual))){
-            snackbar.setAction(action, v -> enableFieldsToEdit());
+            snackbar.setAction(action, v -> mTrackDetailPresenter.enableEditMode());
         }
 
         snackbar.setText(message);
@@ -1012,7 +1011,7 @@ public class TrackDetailFragment extends BaseFragment implements EditableView,
         mSubtitleLayer = mLayout.findViewById(R.id.track_path);
         mImageSize = mLayout.findViewById(R.id.imageSize);
         mChangeImage = mLayout.findViewById(R.id.change_image_button);
-        mFileSize = mLayout.findViewById(R.id.fileSize);
+        mFileSize = mLayout.findViewById(R.id.file_size);
         mTrackLength = mLayout.findViewById(R.id.trackLength);
         mBitrateField = mLayout.findViewById(R.id.bitrate);
         mTrackType = mLayout.findViewById(R.id.track_type);
@@ -1100,7 +1099,7 @@ public class TrackDetailFragment extends BaseFragment implements EditableView,
 
         mImageSize.setVisibility(View.VISIBLE);
         mChangeImage.setVisibility(View.GONE);
-
+        mToolbarCover.setEnabled(true);
         //to hide it, call the method again
         InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
         try {

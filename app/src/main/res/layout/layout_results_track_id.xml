@@ -12,7 +12,7 @@
     android:splitMotionEvents="false">
 
     <TextView
-        android:id="@+id/textView"
+        android:id="@+id/title_results"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
@@ -39,7 +39,7 @@
         app:cardElevation="@dimen/cardview_default_elevation"
         app:layout_behavior="@string/appbar_scrolling_view_behavior"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView">
+        app:layout_constraintTop_toBottomOf="@+id/title_results">
 
         <ImageView
             android:id="@+id/trackid_cover"
@@ -90,6 +90,8 @@
         android:marqueeRepeatLimit="marquee_forever"
         android:scrollHorizontally="true"
         android:singleLine="true"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
         android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/cover_card"
@@ -106,10 +108,13 @@
         android:layout_marginStart="8dp"
         android:layout_marginEnd="8dp"
         android:drawableStart="@drawable/ic_account_circle_white_24px"
+        android:gravity="center_vertical"
         android:ellipsize="marquee"
         android:marqueeRepeatLimit="marquee_forever"
         android:scrollHorizontally="true"
         android:singleLine="true"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
         tools:text="GianlucaGrignani"
         android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
@@ -132,6 +137,8 @@
         android:marqueeRepeatLimit="marquee_forever"
         android:scrollHorizontally="true"
         android:singleLine="true"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
         tools:text="GianlucaGrignani"
         android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
@@ -152,6 +159,8 @@
         android:gravity="center_vertical"
         android:maxLines="1"
         android:singleLine="true"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
         tools:text="Pop Italiano"
         android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"

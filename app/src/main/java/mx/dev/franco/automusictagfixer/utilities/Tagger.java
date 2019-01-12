@@ -527,7 +527,6 @@ public class Tagger {
                 && extension.toLowerCase().equals("mp3"));
         //remove old version of ID3 tags
         if (isMp3 && ((MP3File) audioFile).hasID3v1Tag()) {
-            //Log.d("removed ID3v1","remove ID3v1");
             try {
                 ((MP3File) audioFile).delete(((MP3File) audioFile).getID3v1Tag());
             } catch (IOException e) {
@@ -680,7 +679,6 @@ public class Tagger {
                 sourceDocumentFile = nextDocument;
             }
         }
-        Log.d("document uri",sourceDocumentFile.getUri().toString());
         //this file is not a file so we can not apply tags
         if(!sourceDocumentFile.isFile())
             return null;
@@ -710,7 +708,6 @@ public class Tagger {
      */
     private String getRelativePath(File file){
         String baseFolder = getExtSdCardFolder(file);
-        Log.d("base folder",baseFolder);
 
         if (baseFolder == null) {
             return null;
@@ -719,9 +716,7 @@ public class Tagger {
         String relativePath;
         try {
             String fullPath = file.getCanonicalPath();
-            Log.d("fullpath",fullPath);
             relativePath = fullPath.substring(baseFolder.length() + 1);
-            Log.d("relativepath",relativePath);
         } catch (IOException e) {
             Crashlytics.logException(e);
             return null;
@@ -742,7 +737,6 @@ public class Tagger {
         String[] extSdPaths = getExtSdCardPaths();
         try {
             for (String extSdPath : extSdPaths) {
-                Log.d("starts with",file.getCanonicalPath() + "-" + extSdPath);
                 //Check where is located this file, in removable or non removable
                 if (file.getCanonicalPath().startsWith(extSdPath)) {
 

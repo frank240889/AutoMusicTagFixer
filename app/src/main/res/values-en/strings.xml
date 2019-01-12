@@ -307,5 +307,6 @@
     <string name="pixels">Pixels</string>
     <string name="missing_cover">Missing cover</string>
     <string name="results_found">Match found</string>
+    <string name="cover_found">Cover found</string>
 
 </resources>

@@ -163,6 +163,28 @@ public class ListFragment extends Fragment implements
         mSwipeRefreshLayout.setProgressBackgroundColorSchemeColor(getActivity().
                 getResources().getColor(R.color.primaryColor));
 
+        setHasOptionsMenu(true);
+        setRetainInstance(true);
+
+
+        if(Build.VERSION.SDK_INT < Build.VERSION_CODES.M)
+            mListViewModel.getInfoForTracks();
+
+        boolean isPresentSD = StorageHelper.getInstance(getActivity().getApplicationContext()).
+                isPresentRemovableStorage();
+        if(AndroidUtils.getUriSD(getActivity().getApplicationContext()) == null && isPresentSD)
+            getActivity().startActivity(new Intent(getActivity(), SdCardInstructionsActivity.class));
+
+    }
+
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        mFabStartTask = ((MainActivity)getActivity()).mStartTaskFab;
+        mFabStopTask = ((MainActivity)getActivity()).mStopTaskFab;
+        mFabStartTask.setOnClickListener(v -> startCorrection(-1));
+        mFabStopTask.setOnClickListener(v -> stopCorrection());
+
         boolean hasPermission = ContextCompat.
                 checkSelfPermission(getActivity(), Manifest.permission.WRITE_EXTERNAL_STORAGE)
                 == PackageManager.PERMISSION_GRANTED;
@@ -187,28 +209,6 @@ public class ListFragment extends Fragment implements
         else {
             mMessage.setText(R.string.loading_tracks);
         }
-
-        setHasOptionsMenu(true);
-        setRetainInstance(true);
-
-
-        if(Build.VERSION.SDK_INT < Build.VERSION_CODES.M)
-            mListViewModel.getInfoForTracks();
-
-        boolean isPresentSD = StorageHelper.getInstance(getActivity().getApplicationContext()).
-                isPresentRemovableStorage();
-        if(AndroidUtils.getUriSD(getActivity().getApplicationContext()) == null && isPresentSD)
-            getActivity().startActivity(new Intent(getActivity(), SdCardInstructionsActivity.class));
-
-    }
-
-    @Override
-    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
-        mFabStartTask = ((MainActivity)getActivity()).mStartTaskFab;
-        mFabStopTask = ((MainActivity)getActivity()).mStopTaskFab;
-        mFabStartTask.setOnClickListener(v -> startCorrection(-1));
-        mFabStopTask.setOnClickListener(v -> stopCorrection());
 
         //App is opened again
         int id = getActivity().getIntent().getIntExtra(Constants.MEDIA_STORE_ID, -1);

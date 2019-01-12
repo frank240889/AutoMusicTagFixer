@@ -6,18 +6,20 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="4dp">
+    android:padding="4dp"
+    tools:showIn="@layout/content_details_track">
+
     <android.support.v7.widget.CardView
         android:id="@+id/cardview_content"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:elevation="@dimen/cardview_default_elevation"
-        android:padding="8dp"
+        app:cardCornerRadius="8dp"
         app:cardElevation="@dimen/cardview_default_radius"
         app:cardUseCompatPadding="true"
-        app:cardCornerRadius="8dp"
-        app:contentPadding="8dp">
-        <RelativeLayout
+        app:contentPadding="4dp">
+
+        <android.support.constraint.ConstraintLayout
             android:id="@+id/editable_data_container"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -28,24 +30,37 @@
 
             <TextView
                 android:id="@+id/status_message"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_centerHorizontal="true"
-                android:layout_marginStart="4dp"
-                android:layout_marginTop="8dp"
-                android:gravity="center_vertical"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="4dp"
+                android:layout_marginEnd="8dp"
+                android:gravity="center_horizontal"
                 android:textColor="@color/true_white"
-                android:visibility="invisible" />
+                android:visibility="invisible"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:text="Identificando, espere por favor..."
+                tools:visibility="visible" />
 
             <LinearLayout
                 android:id="@+id/progress_container"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_centerHorizontal="true"
                 android:layout_below="@id/status_message"
+                android:layout_centerHorizontal="true"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="4dp"
+                android:layout_marginEnd="8dp"
                 android:orientation="horizontal"
                 android:visibility="invisible"
-                android:weightSum="1">
+                android:weightSum="1"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/status_message"
+                tools:visibility="visible">
 
                 <ProgressBar
                     android:id="@+id/progress_bar"
@@ -62,11 +77,11 @@
                     android:layout_width="32dp"
                     android:layout_height="32dp"
                     android:layout_gravity="center_vertical"
-                    android:layout_marginEnd="4dp"
                     android:layout_marginStart="4dp"
+                    android:layout_marginEnd="4dp"
                     android:layout_weight="0.1"
-                    android:scaleType="fitCenter"
                     android:background="?android:attr/selectableItemBackgroundBorderless"
+                    android:scaleType="fitCenter"
                     app:srcCompat="@drawable/ic_clear_black_24dp" />
             </LinearLayout>
 
@@ -76,8 +91,12 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/progress_container"
-                android:layout_marginTop="8dp"
-                android:theme="@style/CustomEditTextHint">
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
+                android:theme="@style/CustomEditTextHint"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/progress_container">
 
                 <android.support.design.widget.TextInputEditText
                     android:id="@+id/track_name_details"
@@ -97,9 +116,14 @@
                 android:id="@+id/artist_name_details_layout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_alignParentStart="true"
                 android:layout_below="@+id/track_name_details_layout"
-                android:theme="@style/CustomEditTextHint">
+                android:layout_alignParentStart="true"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
+                android:theme="@style/CustomEditTextHint"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/track_name_details_layout">
 
                 <android.support.design.widget.TextInputEditText
                     android:id="@+id/artist_name_details"
@@ -116,11 +140,16 @@
 
             <android.support.design.widget.TextInputLayout
                 android:id="@+id/album_name_details_layout"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_alignParentStart="true"
                 android:layout_below="@+id/artist_name_details_layout"
-                android:theme="@style/CustomEditTextHint">
+                android:layout_alignParentStart="true"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
+                android:theme="@style/CustomEditTextHint"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/artist_name_details_layout">
 
                 <android.support.design.widget.TextInputEditText
                     android:id="@+id/album_name_details"
@@ -140,9 +169,14 @@
                 android:id="@+id/track_genre_layout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_alignParentStart="true"
                 android:layout_below="@+id/album_name_details_layout"
-                android:theme="@style/CustomEditTextHint">
+                android:layout_alignParentStart="true"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
+                android:theme="@style/CustomEditTextHint"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/album_name_details_layout">
 
                 <android.support.design.widget.TextInputEditText
                     android:id="@+id/track_genre"
@@ -161,9 +195,14 @@
                 android:id="@+id/track_number_layout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_alignParentEnd="false"
                 android:layout_below="@+id/track_genre_layout"
-                android:theme="@style/CustomEditTextHint">
+                android:layout_alignParentEnd="false"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
+                android:theme="@style/CustomEditTextHint"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/track_genre_layout">
 
                 <android.support.design.widget.TextInputEditText
                     android:id="@+id/track_number"
@@ -182,9 +221,14 @@
                 android:id="@+id/track_year_layout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_alignParentStart="false"
                 android:layout_below="@+id/track_number_layout"
-                android:theme="@style/CustomEditTextHint">
+                android:layout_alignParentStart="false"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
+                android:theme="@style/CustomEditTextHint"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/track_number_layout">
 
                 <android.support.design.widget.TextInputEditText
                     android:id="@+id/track_year"
@@ -203,15 +247,20 @@
                 android:id="@+id/imageSize"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_alignParentStart="true"
                 android:layout_below="@+id/track_year_layout"
-                android:layout_marginTop="10dp"
+                android:layout_alignParentStart="true"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="8dp"
                 android:drawableStart="@drawable/ic_photo_size_select_large_white_24px"
                 android:gravity="center_vertical"
                 android:singleLine="true"
                 android:text="@string/size_cover"
                 android:textSize="16sp"
-                android:visibility="visible" />
+                android:visibility="visible"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/track_year_layout" />
 
             <TextView
                 android:id="@+id/change_image_button"
@@ -219,20 +268,25 @@
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/track_year_layout"
                 android:layout_alignParentStart="true"
-                android:layout_marginTop="10dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="8dp"
                 android:drawableStart="@drawable/ic_photo_library_black_24dp"
                 android:gravity="center_vertical"
                 android:singleLine="true"
                 android:text="@string/edit_cover"
                 android:textSize="16sp"
                 android:visibility="gone"
-                tools:visibility="visible"/>
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/track_year_layout"
+                tools:visibility="visible" />
 
-        </RelativeLayout>
+        </android.support.constraint.ConstraintLayout>
     </android.support.v7.widget.CardView>
 
     <android.support.v7.widget.CardView
-        android:id="@+id/cardview_extrainfo_content"
+        android:id="@+id/cardview_extra_info_content"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:elevation="@dimen/cardview_default_elevation"
@@ -240,62 +294,75 @@
         app:cardCornerRadius="8dp"
         app:cardElevation="@dimen/cardview_default_radius"
         app:cardUseCompatPadding="true"
-        app:contentPadding="8dp">
+        app:contentPadding="4dp">
 
-        <RelativeLayout
-            android:id="@+id/extraDataContainer"
+        <android.support.constraint.ConstraintLayout
+            android:id="@+id/extra_data_container"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_alignParentStart="true">
 
             <TextView
-                android:id="@+id/fileSize"
+                android:id="@+id/file_size"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="8dp"
                 android:drawableStart="@drawable/ic_sd_storage_white_24px"
                 android:gravity="center_vertical"
                 android:singleLine="true"
-                android:text="@string/file_size"
-                android:visibility="visible" />
+                android:visibility="visible"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:text="13mb" />
 
             <TextView
                 android:id="@+id/channels"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentTop="true"
-                android:layout_marginStart="10dp"
-                android:layout_toEndOf="@+id/fileSize"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="8dp"
+                android:layout_toEndOf="@+id/file_size"
                 android:drawableStart="@drawable/ic_speaker_white_24px"
                 android:gravity="center_vertical"
                 android:singleLine="true"
-                android:text="@string/channels"
-                android:visibility="visible" />
+                android:visibility="visible"
+                app:layout_constraintStart_toEndOf="@+id/file_size"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:text="Joint Stereo" />
 
             <TextView
                 android:id="@+id/track_type"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentTop="true"
-                android:layout_marginStart="10dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="8dp"
                 android:layout_toEndOf="@+id/channels"
                 android:drawableStart="@drawable/ic_description_white"
                 android:gravity="center_vertical"
                 android:singleLine="true"
-                android:text="@string/file_type"
-                android:visibility="visible" />
+                android:visibility="visible"
+                app:layout_constraintStart_toEndOf="@+id/channels"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:text="MPEG-1 Layer 3" />
 
             <TextView
                 android:id="@+id/resolution"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_alignParentStart="true"
                 android:layout_below="@+id/channels"
-                android:layout_marginTop="10dp"
+                android:layout_alignParentStart="true"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="8dp"
                 android:drawableStart="@drawable/ic_high_quality_white_24px"
                 android:gravity="center_vertical"
                 android:singleLine="true"
-                android:text="@string/resolution"
-                android:visibility="visible" />
+                android:visibility="visible"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/file_size"
+                tools:text="16 bits" />
 
             <TextView
                 android:id="@+id/frequency"
@@ -303,50 +370,68 @@
                 android:layout_height="wrap_content"
                 android:layout_alignBaseline="@+id/resolution"
                 android:layout_alignBottom="@+id/resolution"
-                android:layout_marginStart="10dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="8dp"
                 android:layout_toEndOf="@+id/resolution"
                 android:drawableStart="@drawable/ic_equalizer_white_24px"
                 android:gravity="center_vertical"
                 android:singleLine="true"
-                android:text="@string/frequency"
-                android:visibility="visible" />
+                android:visibility="visible"
+                app:layout_constraintStart_toEndOf="@+id/resolution"
+                app:layout_constraintTop_toBottomOf="@+id/channels"
+                tools:text="44.1 Khz" />
 
             <TextView
                 android:id="@+id/bitrate"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/channels"
-                android:layout_marginStart="10dp"
-                android:layout_marginTop="10dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="8dp"
                 android:layout_toEndOf="@+id/frequency"
                 android:drawableStart="@drawable/ic_hearing_white_24px"
                 android:gravity="center_vertical"
-                android:text="@string/bitrate" />
+                app:layout_constraintStart_toEndOf="@+id/frequency"
+                app:layout_constraintTop_toBottomOf="@+id/track_type"
+                tools:text="128 Kbps" />
 
             <TextView
                 android:id="@+id/trackLength"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_below="@id/track_type"
-                android:layout_marginStart="10dp"
-                android:layout_marginTop="10dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="8dp"
                 android:layout_toEndOf="@id/bitrate"
                 android:drawableStart="@drawable/ic_access_time_white_24px"
                 android:gravity="center_vertical"
                 android:singleLine="true"
-                android:text="@string/duration"
-                android:visibility="visible" />
+                android:visibility="visible"
+                app:layout_constraintStart_toEndOf="@+id/bitrate"
+                app:layout_constraintTop_toBottomOf="@+id/track_type"
+                tools:text="5'06''" />
 
             <TextView
                 android:id="@+id/track_path"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_below="@id/resolution"
-                android:layout_marginTop="10dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="8dp"
+                android:layout_marginBottom="8dp"
                 android:drawableStart="@drawable/ic_folder_white_24px"
+                android:ellipsize="marquee"
                 android:gravity="center_vertical"
-                android:text="@string/path_to_file" />
+                android:marqueeRepeatLimit="marquee_forever"
+                android:scrollHorizontally="true"
+                android:singleLine="true"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/resolution"
+                tools:text="/storage/emulated/0/Music" />
 
-        </RelativeLayout>
+        </android.support.constraint.ConstraintLayout>
     </android.support.v7.widget.CardView>
 </LinearLayout>

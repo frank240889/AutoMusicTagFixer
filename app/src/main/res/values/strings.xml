@@ -310,6 +310,7 @@
     <string name="pixels">Pixeles</string>
     <string name="missing_cover">Sin carátula</string>
     <string name="app_version" translatable="false">1.0</string>
-    <string name="results_found">Resultados encontrados</string>
+    <string name="results_found">Información encontrada</string>
+    <string name="cover_found">Carátula encontrada</string>
 
 </resources>

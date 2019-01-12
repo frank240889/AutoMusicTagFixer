@@ -277,79 +277,81 @@ public class TrackDetailPresenter implements
         closeFabMenu();
         mRecognition = recognitionType;
         GnResponseListener.IdentificationResults results = mCache.getCache().load(mCurrentId);
-        //If there are cached results
-        if(mView != null && results != null){
-            mView.setMessageStatus("");
-            mView.loading(false);
-            //Type of recognition: only cover, or search all tags.
-            if(mRecognition == TrackIdentifier.ALL_TAGS) {
-                if(mLifeCycleState == LifeCycleState.RESUMED) {
-                    mPendingResultsDelivery = false;
-                    mView.onLoadIdentificationResults(results);
-                }
-                else {
-                    mPendingResultsDelivery = true;
-                }
-            }
-            else{
-                if(results.cover == null) {
-                    mView.onCorrectionError(resourceManager.getString(R.string.no_cover_art_found),
-                            resourceManager.getString(R.string.add_manual));
-                    mView.onEnableFabs();
-                }
-                else {
+        if(mView != null) {
+            mView.onDisableFabs();
+            //If there are cached results
+            if(results != null){
+                mView.setMessageStatus("");
+                mView.loading(false);
+                //Type of recognition: only cover, or search all tags.
+                if(mRecognition == TrackIdentifier.ALL_TAGS) {
                     if(mLifeCycleState == LifeCycleState.RESUMED) {
                         mPendingResultsDelivery = false;
-                        mView.onLoadCoverIdentificationResults(results);
+                        mView.onLoadIdentificationResults(results);
                     }
                     else {
                         mPendingResultsDelivery = true;
                     }
                 }
+                else{
+                    if(results.cover == null) {
+                        mView.onCorrectionError(resourceManager.getString(R.string.no_cover_art_found),
+                                resourceManager.getString(R.string.add_manual));
+                        mView.onEnableFabs();
+                    }
+                    else {
+                        if(mLifeCycleState == LifeCycleState.RESUMED) {
+                            mPendingResultsDelivery = false;
+                            mView.onLoadCoverIdentificationResults(results);
+                        }
+                        else {
+                            mPendingResultsDelivery = true;
+                        }
+                    }
+                }
+                mView.onHideFabMenu();
+                mView.onIdentificationComplete(results);
+                mView.onEnableFabs();
             }
-            mView.onHideFabMenu();
-            mView.onIdentificationComplete(results);
-            mView.onEnableFabs();
-        }
-        //There are no cached results, make the request
-        else {
-            //Check connectivity
-            if(!ConnectivityDetector.sIsConnected){
-                String message;
+            //There are no cached results, make the request
+            else {
+                //Check connectivity
+                if(!ConnectivityDetector.sIsConnected){
+                    String message;
 
-                if(mRecognition == TrackIdentifier.ALL_TAGS) {
-                    message = resourceManager.getString(R.string.no_internet_connection_semi_automatic_mode);
-                }
-                else {
-                    message = resourceManager.getString(R.string.no_internet_connection_download_cover);
+                    if(mRecognition == TrackIdentifier.ALL_TAGS) {
+                        message = resourceManager.getString(R.string.no_internet_connection_semi_automatic_mode);
+                    }
+                    else {
+                        message = resourceManager.getString(R.string.no_internet_connection_download_cover);
+                    }
+
+                    if(mView != null) {
+                        mView.onCorrectionError(message, resourceManager.getString(R.string.add_manual));
+                        mView.onEnableFabs();
+                    }
+                    connectivityDetector.onStartTestingNetwork();
+                    mPendingIdentification = true;
+                    return;
                 }
 
-                if(mView != null) {
-                    mView.onCorrectionError(message, resourceManager.getString(R.string.add_manual));
-                    mView.onEnableFabs();
+                //Check if API is available
+                if(!GnService.sApiInitialized || GnService.sIsInitializing) {
+                    if(mView != null) {
+                        mView.onCorrectionError(resourceManager.getString(R.string.initializing_recognition_api), null);
+                        mView.onEnableFabs();
+                    }
+
+                    gnService.initializeAPI();
+                    mPendingIdentification = true;
+                    return;
                 }
-                connectivityDetector.onStartTestingNetwork();
-                mPendingIdentification = true;
-                return;
+                mIdentifier = new TrackIdentifier();
+                mIdentifier.setResourceManager(resourceManager);
+                mIdentifier.setTrack(mCurrentTrack);
+                mIdentifier.setGnListener(this);
+                mIdentifier.execute();
             }
-
-            //Check if API is available
-            if(!GnService.sApiInitialized || GnService.sIsInitializing) {
-                if(mView != null) {
-                    mView.onCorrectionError(resourceManager.getString(R.string.initializing_recognition_api), null);
-                    mView.onEnableFabs();
-                }
-
-                gnService.initializeAPI();
-                mPendingIdentification = true;
-                return;
-            }
-
-            mIdentifier = new TrackIdentifier();
-            mIdentifier.setResourceManager(resourceManager);
-            mIdentifier.setTrack(mCurrentTrack);
-            mIdentifier.setGnListener(this);
-            mIdentifier.execute();
         }
     }
 
@@ -393,6 +395,7 @@ public class TrackDetailPresenter implements
 
     @Override
     public void identificationFound(GnResponseListener.IdentificationResults results, Track track) {
+        hideFabMenu();
         if(mView != null) {
             mCache.getCache().add(mCurrentId, results);
             mView.loading(false);
@@ -980,7 +983,7 @@ public class TrackDetailPresenter implements
      * (rotation, language change, etc) changes.
      */
     public void handleConfigurationChange() {
-        mPendingResultsDelivery = true;
+        //mPendingResultsDelivery = true;
     }
 
     public void onStart() {
