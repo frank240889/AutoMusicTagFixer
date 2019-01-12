@@ -267,7 +267,7 @@
     <string name="size_cover">Cover art size</string>
     <string name="identification_interrupted">Identification interrupted.</string>
     <string name="message_results">¿Overwrite all tags or only missing?</string>
-    <string name="message_results_cover">Cover art found, save it as:</string>
+    <string name="message_results_cover">Save cover art as:</string>
     <string name="file_name">File name</string>
     <string name="saving_cover">Saving cover art…</string>
     <string name="watch">Watch</string>
@@ -306,5 +306,6 @@
     <string name="identification_results_language">Identification</string>
     <string name="pixels">Pixels</string>
     <string name="missing_cover">Missing cover</string>
+    <string name="results_found">Match found</string>
 
 </resources>

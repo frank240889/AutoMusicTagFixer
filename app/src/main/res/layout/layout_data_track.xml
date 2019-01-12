@@ -1,0 +1,352 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/root_container_details"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="4dp">
+    <android.support.v7.widget.CardView
+        android:id="@+id/cardview_content"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:elevation="@dimen/cardview_default_elevation"
+        android:padding="8dp"
+        app:cardElevation="@dimen/cardview_default_radius"
+        app:cardUseCompatPadding="true"
+        app:cardCornerRadius="8dp"
+        app:contentPadding="8dp">
+        <RelativeLayout
+            android:id="@+id/editable_data_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:elevation="@dimen/dialog_elevation"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:splitMotionEvents="false">
+
+            <TextView
+                android:id="@+id/status_message"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:layout_marginStart="4dp"
+                android:layout_marginTop="8dp"
+                android:gravity="center_vertical"
+                android:textColor="@color/true_white"
+                android:visibility="invisible" />
+
+            <LinearLayout
+                android:id="@+id/progress_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:layout_below="@id/status_message"
+                android:orientation="horizontal"
+                android:visibility="invisible"
+                android:weightSum="1">
+
+                <ProgressBar
+                    android:id="@+id/progress_bar"
+                    style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_weight="0.9"
+                    android:indeterminate="true"
+                    android:visibility="visible" />
+
+                <ImageButton
+                    android:id="@+id/cancel_identification"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginEnd="4dp"
+                    android:layout_marginStart="4dp"
+                    android:layout_weight="0.1"
+                    android:scaleType="fitCenter"
+                    android:background="?android:attr/selectableItemBackgroundBorderless"
+                    app:srcCompat="@drawable/ic_clear_black_24dp" />
+            </LinearLayout>
+
+
+            <android.support.design.widget.TextInputLayout
+                android:id="@+id/track_name_details_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/progress_container"
+                android:layout_marginTop="8dp"
+                android:theme="@style/CustomEditTextHint">
+
+                <android.support.design.widget.TextInputEditText
+                    android:id="@+id/track_name_details"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_centerHorizontal="true"
+                    android:enabled="false"
+                    android:hint="@string/title"
+                    android:imeOptions="actionNext"
+                    android:inputType="text|textNoSuggestions"
+                    android:maxLength="100"
+                    android:maxLines="1"
+                    android:text="" />
+            </android.support.design.widget.TextInputLayout>
+
+            <android.support.design.widget.TextInputLayout
+                android:id="@+id/artist_name_details_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_below="@+id/track_name_details_layout"
+                android:theme="@style/CustomEditTextHint">
+
+                <android.support.design.widget.TextInputEditText
+                    android:id="@+id/artist_name_details"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:enabled="false"
+                    android:hint="@string/artist"
+                    android:imeOptions="actionNext"
+                    android:inputType="text|textNoSuggestions"
+                    android:maxLength="100"
+                    android:maxLines="1"
+                    android:text="" />
+            </android.support.design.widget.TextInputLayout>
+
+            <android.support.design.widget.TextInputLayout
+                android:id="@+id/album_name_details_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_below="@+id/artist_name_details_layout"
+                android:theme="@style/CustomEditTextHint">
+
+                <android.support.design.widget.TextInputEditText
+                    android:id="@+id/album_name_details"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:enabled="false"
+                    android:hint="@string/album"
+                    android:imeOptions="actionNext"
+                    android:inputType="text|textNoSuggestions"
+                    android:maxLength="150"
+                    android:maxLines="1"
+                    android:text="" />
+            </android.support.design.widget.TextInputLayout>
+
+            <android.support.design.widget.TextInputLayout
+                android:id="@+id/track_genre_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_below="@+id/album_name_details_layout"
+                android:theme="@style/CustomEditTextHint">
+
+                <android.support.design.widget.TextInputEditText
+                    android:id="@+id/track_genre"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:enabled="false"
+                    android:hint="@string/genre"
+                    android:imeOptions="actionNext"
+                    android:inputType="text|textNoSuggestions"
+                    android:maxLength="80"
+                    android:maxLines="1"
+                    android:text="" />
+            </android.support.design.widget.TextInputLayout>
+
+            <android.support.design.widget.TextInputLayout
+                android:id="@+id/track_number_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="false"
+                android:layout_below="@+id/track_genre_layout"
+                android:theme="@style/CustomEditTextHint">
+
+                <android.support.design.widget.TextInputEditText
+                    android:id="@+id/track_number"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:enabled="false"
+                    android:hint="@string/track_number"
+                    android:imeOptions="actionNext"
+                    android:inputType="number"
+                    android:maxLength="4"
+                    android:maxLines="1"
+                    android:text="" />
+            </android.support.design.widget.TextInputLayout>
+
+            <android.support.design.widget.TextInputLayout
+                android:id="@+id/track_year_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="false"
+                android:layout_below="@+id/track_number_layout"
+                android:theme="@style/CustomEditTextHint">
+
+                <android.support.design.widget.TextInputEditText
+                    android:id="@+id/track_year"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:enabled="false"
+                    android:hint="@string/track_year"
+                    android:imeOptions="actionDone"
+                    android:inputType="number"
+                    android:maxLength="4"
+                    android:maxLines="1"
+                    android:text="" />
+            </android.support.design.widget.TextInputLayout>
+
+            <TextView
+                android:id="@+id/imageSize"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_below="@+id/track_year_layout"
+                android:layout_marginTop="10dp"
+                android:drawableStart="@drawable/ic_photo_size_select_large_white_24px"
+                android:gravity="center_vertical"
+                android:singleLine="true"
+                android:text="@string/size_cover"
+                android:textSize="16sp"
+                android:visibility="visible" />
+
+            <TextView
+                android:id="@+id/change_image_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/track_year_layout"
+                android:layout_alignParentStart="true"
+                android:layout_marginTop="10dp"
+                android:drawableStart="@drawable/ic_photo_library_black_24dp"
+                android:gravity="center_vertical"
+                android:singleLine="true"
+                android:text="@string/edit_cover"
+                android:textSize="16sp"
+                android:visibility="gone"
+                tools:visibility="visible"/>
+
+        </RelativeLayout>
+    </android.support.v7.widget.CardView>
+
+    <android.support.v7.widget.CardView
+        android:id="@+id/cardview_extrainfo_content"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:elevation="@dimen/cardview_default_elevation"
+        android:padding="8dp"
+        app:cardCornerRadius="8dp"
+        app:cardElevation="@dimen/cardview_default_radius"
+        app:cardUseCompatPadding="true"
+        app:contentPadding="8dp">
+
+        <RelativeLayout
+            android:id="@+id/extraDataContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true">
+
+            <TextView
+                android:id="@+id/fileSize"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:drawableStart="@drawable/ic_sd_storage_white_24px"
+                android:gravity="center_vertical"
+                android:singleLine="true"
+                android:text="@string/file_size"
+                android:visibility="visible" />
+
+            <TextView
+                android:id="@+id/channels"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentTop="true"
+                android:layout_marginStart="10dp"
+                android:layout_toEndOf="@+id/fileSize"
+                android:drawableStart="@drawable/ic_speaker_white_24px"
+                android:gravity="center_vertical"
+                android:singleLine="true"
+                android:text="@string/channels"
+                android:visibility="visible" />
+
+            <TextView
+                android:id="@+id/track_type"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentTop="true"
+                android:layout_marginStart="10dp"
+                android:layout_toEndOf="@+id/channels"
+                android:drawableStart="@drawable/ic_description_white"
+                android:gravity="center_vertical"
+                android:singleLine="true"
+                android:text="@string/file_type"
+                android:visibility="visible" />
+
+            <TextView
+                android:id="@+id/resolution"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_below="@+id/channels"
+                android:layout_marginTop="10dp"
+                android:drawableStart="@drawable/ic_high_quality_white_24px"
+                android:gravity="center_vertical"
+                android:singleLine="true"
+                android:text="@string/resolution"
+                android:visibility="visible" />
+
+            <TextView
+                android:id="@+id/frequency"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignBaseline="@+id/resolution"
+                android:layout_alignBottom="@+id/resolution"
+                android:layout_marginStart="10dp"
+                android:layout_toEndOf="@+id/resolution"
+                android:drawableStart="@drawable/ic_equalizer_white_24px"
+                android:gravity="center_vertical"
+                android:singleLine="true"
+                android:text="@string/frequency"
+                android:visibility="visible" />
+
+            <TextView
+                android:id="@+id/bitrate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/channels"
+                android:layout_marginStart="10dp"
+                android:layout_marginTop="10dp"
+                android:layout_toEndOf="@+id/frequency"
+                android:drawableStart="@drawable/ic_hearing_white_24px"
+                android:gravity="center_vertical"
+                android:text="@string/bitrate" />
+
+            <TextView
+                android:id="@+id/trackLength"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/track_type"
+                android:layout_marginStart="10dp"
+                android:layout_marginTop="10dp"
+                android:layout_toEndOf="@id/bitrate"
+                android:drawableStart="@drawable/ic_access_time_white_24px"
+                android:gravity="center_vertical"
+                android:singleLine="true"
+                android:text="@string/duration"
+                android:visibility="visible" />
+
+            <TextView
+                android:id="@+id/track_path"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/resolution"
+                android:layout_marginTop="10dp"
+                android:drawableStart="@drawable/ic_folder_white_24px"
+                android:gravity="center_vertical"
+                android:text="@string/path_to_file" />
+
+        </RelativeLayout>
+    </android.support.v7.widget.CardView>
+</LinearLayout>

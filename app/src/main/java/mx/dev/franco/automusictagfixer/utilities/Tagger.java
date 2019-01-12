@@ -78,7 +78,7 @@ public class Tagger {
     public static final int APPLIED_SAME_TAGS = 24;
     public static final int APPLIED_SAME_COVER = 25;
 
-    //No identificationError is set
+    //No onIdentificationError is set
     public static final int NOT_SET = -1;
 
     private static Tagger sTaggerHelper;

@@ -20,13 +20,10 @@ import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
-import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
@@ -35,6 +32,7 @@ import android.widget.Toast;
 import com.bumptech.glide.Glide;
 
 import java.util.List;
+import java.util.Objects;
 
 import javax.inject.Inject;
 
@@ -192,9 +190,6 @@ public class ListFragment extends Fragment implements
 
         setHasOptionsMenu(true);
         setRetainInstance(true);
-        //App is opened again
-        int id = getActivity().getIntent().getIntExtra(Constants.MEDIA_STORE_ID, -1);
-        scrollTo(id);
 
 
         if(Build.VERSION.SDK_INT < Build.VERSION_CODES.M)
@@ -214,6 +209,10 @@ public class ListFragment extends Fragment implements
         mFabStopTask = ((MainActivity)getActivity()).mStopTaskFab;
         mFabStartTask.setOnClickListener(v -> startCorrection(-1));
         mFabStopTask.setOnClickListener(v -> stopCorrection());
+
+        //App is opened again
+        int id = getActivity().getIntent().getIntExtra(Constants.MEDIA_STORE_ID, -1);
+        scrollTo(id);
     }
 
     private void noFilesFoundMessage(Boolean aBoolean) {
@@ -445,7 +444,7 @@ public class ListFragment extends Fragment implements
         //    getContext().startForegroundService(intent);
         //}
         //else {
-            getContext().startService(intent);
+            Objects.requireNonNull(getActivity()).startService(intent);
         //}
     }
 

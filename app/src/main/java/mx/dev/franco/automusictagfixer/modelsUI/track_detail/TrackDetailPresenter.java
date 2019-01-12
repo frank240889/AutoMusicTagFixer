@@ -1,5 +1,6 @@
 package mx.dev.franco.automusictagfixer.modelsUI.track_detail;
 
+import android.content.Context;
 import android.os.AsyncTask;
 
 import javax.inject.Inject;
@@ -18,31 +19,47 @@ import mx.dev.franco.automusictagfixer.network.ConnectivityDetector;
 import mx.dev.franco.automusictagfixer.persistence.cache.DownloadedTrackDataCacheImpl;
 import mx.dev.franco.automusictagfixer.persistence.repository.TrackRepository;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
+import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
 import mx.dev.franco.automusictagfixer.utilities.StringUtilities;
 import mx.dev.franco.automusictagfixer.utilities.Tagger;
 import mx.dev.franco.automusictagfixer.utilities.TrackUtils;
 import mx.dev.franco.automusictagfixer.utilities.resource_manager.ResourceManager;
 
+import static mx.dev.franco.automusictagfixer.UI.track_detail.TrackDetailFragment.INTENT_GET_AND_UPDATE_FROM_GALLERY;
+
 public class TrackDetailPresenter implements
         Destructible, GnResponseListener.GnListener,
         AsyncOperation<Void, TrackDataLoader.TrackDataItem, Void, String>,
         Fixer.OnCorrectionListener,
-        //AsyncFileReader.IRetriever,
         AsyncFileSaver.OnSaveListener {
+    public enum LifeCycleState {
+        RESUMED,
+        PAUSED
+    }
+
+
     private static final String TAG = TrackDetailPresenter.class.getName();
+    private LifeCycleState mLifeCycleState;
+    private boolean mPendingResultsDelivery = false;
     private EditableView mView;
     private TrackDetailInteractor mInteractor;
     private TrackDataLoader.TrackDataItem mCurrentTrackDataItem;
+    private TrackDataLoader.TrackDataItem mLastTrackDataItem;
+    //Required by TrackIdentifier
     private Track mCurrentTrack;
     private TrackIdentifier mIdentifier;
     private int mCurrentId;
     private Cache<Integer, GnResponseListener.IdentificationResults> mCache = new DownloadedTrackDataCacheImpl.Builder().build();
-    private static Fixer sFixer;
-    private static AsyncFileSaver sFileSaver;
+    private Fixer mFixer;
+    private AsyncFileSaver mFileSaver;
     private int mCorrectionMode = Constants.CorrectionModes.VIEW_INFO;
     private int mRecognition = TrackIdentifier.ALL_TAGS;
     private int mDataFrom;
+    private boolean mIsFloatingActionMenuOpen;
+    private boolean mIsInEditMode = false;
+    private boolean mPendingIdentification = false;
+    private byte[] mCurrentCover;
     @Inject
     public ResourceManager resourceManager;
     @Inject
@@ -68,51 +85,71 @@ public class TrackDetailPresenter implements
         mInteractor.loadInfoTrack(id);
     }
 
-    /**Loading track data callbacks**/
+    /*Loading track data callbacks*/
 
+    /**
+     * Callback when the track data reading starts.
+     * @param params Void params
+     */
     @Override
     public void onAsyncOperationStarted(Void params) {
-        mView.showProgress();
+        if(mView != null)
+            mView.loading(true);
     }
 
+    /**
+     * Callback when the track data reading finishes.
+     * @param result The info of track.
+     */
     @Override
     public void onAsyncOperationFinished(TrackDataLoader.TrackDataItem result) {
         mCurrentTrackDataItem = result;
-        if(mView != null)
-            setTags(result);
-
-        if(mCorrectionMode == Constants.CorrectionModes.MANUAL){
-            mView.enableEditMode();
+        try {
+            mLastTrackDataItem = (TrackDataLoader.TrackDataItem) mCurrentTrackDataItem.clone();
+        } catch (CloneNotSupportedException e) {
+            e.printStackTrace();
         }
-        else if(mCorrectionMode == Constants.CorrectionModes.SEMI_AUTOMATIC){
-            startIdentification(TrackIdentifier.ALL_TAGS);
+        setDataTempTrack(result);
+
+        if(mView != null) {
+            setTags(result);
+            if (mCorrectionMode == Constants.CorrectionModes.SEMI_AUTOMATIC) {
+                startIdentification(TrackIdentifier.ALL_TAGS);
+            }
         }
     }
 
+    /**
+     * Callback when the track data reading is cancelled.
+     * @param cancellation Void params.
+     */
     @Override
     public void onAsyncOperationCancelled(Void cancellation) {
-        if(mView != null) {
-            mView.hideProgress();
-        }
+        if(mView != null)
+            mView.loading(false);
     }
 
+    /**
+     * Callback when the track data reading has encountered an error..
+     * @param error Void params.
+     */
     @Override
     public void onAsyncOperationError(String error) {
         if(mView != null) {
-            mView.hideProgress();
+            mView.loading(false);
             mView.onLoadError(error);
         }
     }
     /*******************************************************************/
 
     private void setTags(TrackDataLoader.TrackDataItem trackDataItem){
-        setInfoForError(trackDataItem);
+        setToolbarBottomInfo(trackDataItem);
         setEditableInfo(trackDataItem);
         setAdditionalInfo(trackDataItem);
-        setDataTempTrack(trackDataItem);
         if(mView != null) {
-            mView.hideProgress();
-            mView.onSuccessLoad(trackDataItem.path + "/" + trackDataItem.fileName);
+            mView.loading(false);
+            mView.onSuccessLoad(mCurrentTrack.getPath());
+            mView.onEnableFabs();
         }
     }
 
@@ -129,7 +166,7 @@ public class TrackDetailPresenter implements
     }
 
     private void setDataTempTrack(TrackDataLoader.TrackDataItem trackDataItem){
-        String fullpath =trackDataItem.path + "/" + trackDataItem.fileName;
+        String fullpath = trackDataItem.path + "/" + trackDataItem.fileName;
         mCurrentTrack = new Track(trackDataItem.title, trackDataItem.artist, trackDataItem.album, fullpath);
         mCurrentTrack.setMediaStoreId(mCurrentId);
     }
@@ -149,7 +186,7 @@ public class TrackDetailPresenter implements
         }
     }
 
-    private void setInfoForError(TrackDataLoader.TrackDataItem trackDataItem){
+    private void setToolbarBottomInfo(TrackDataLoader.TrackDataItem trackDataItem){
         if(mView != null) {
             mView.setFilename(trackDataItem.fileName);
             mView.setPath(trackDataItem.path);
@@ -157,13 +194,14 @@ public class TrackDetailPresenter implements
     }
 
     public void restorePreviousValues(){
-        if(mView != null) {
+        if(mView != null && mIsInEditMode) {
             setEditableInfo(mCurrentTrackDataItem);
             setAdditionalInfo(mCurrentTrackDataItem);
         }
     }
 
     public void saveAsImageFileFrom(int from){
+        closeFabMenu();
         byte[] cover;
         String title, artist, album;
         cancelIdentification();
@@ -174,10 +212,11 @@ public class TrackDetailPresenter implements
             album = mCache.load(mCurrentId).album;
         }
         else {
-            cover = mView.getCover();
+            cover = mCurrentTrackDataItem.cover;
             if(cover == null){
                 if(mView != null){
                     mView.onCorrectionError(resourceManager.getString(R.string.does_not_exist_cover), null);
+                    mView.onEnableFabs();
                 }
                 return;
             }
@@ -185,9 +224,9 @@ public class TrackDetailPresenter implements
             artist = mView.getArtist();
             album = mView.getAlbum();
         }
-        sFileSaver = new AsyncFileSaver(cover, title, artist, album);
-        sFileSaver.setOnSavingListener(this);
-        sFileSaver.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+        mFileSaver = new AsyncFileSaver(cover, title, artist, album);
+        mFileSaver.setOnSavingListener(this);
+        mFileSaver.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
 
     public void validateInputData(){
@@ -206,7 +245,7 @@ public class TrackDetailPresenter implements
         results.trackNumber = StringUtilities.trimString(mView.getTrackNumber());
         results.trackYear = StringUtilities.trimString(mView.getTrackYear());
         results.genre = StringUtilities.trimString(mView.getGenre());
-        results.cover = mView.getCover();
+        results.cover = mCurrentCover;
         return results;
     }
 
@@ -218,11 +257,11 @@ public class TrackDetailPresenter implements
             mIdentifier.cancelIdentification();
         }
 
-        if(sFixer != null){
-            sFixer.cancel(true);
+        if(mFixer != null){
+            mFixer.cancel(true);
         }
         mCache = null;
-        sFixer = null;
+        mFixer = null;
         mIdentifier = null;
         mView = null;
         resourceManager = null;
@@ -235,49 +274,74 @@ public class TrackDetailPresenter implements
 
 
     public void startIdentification(int recognitionType){
+        closeFabMenu();
         mRecognition = recognitionType;
         GnResponseListener.IdentificationResults results = mCache.getCache().load(mCurrentId);
-        if(results != null && mView != null){
+        //If there are cached results
+        if(mView != null && results != null){
             mView.setMessageStatus("");
-            mView.hideStatus();
-            mView.hideProgress();
+            mView.loading(false);
+            //Type of recognition: only cover, or search all tags.
             if(mRecognition == TrackIdentifier.ALL_TAGS) {
-                mView.loadIdentificationResults(results);
+                if(mLifeCycleState == LifeCycleState.RESUMED) {
+                    mPendingResultsDelivery = false;
+                    mView.onLoadIdentificationResults(results);
+                }
+                else {
+                    mPendingResultsDelivery = true;
+                }
             }
             else{
-                if(results.cover == null)
+                if(results.cover == null) {
                     mView.onCorrectionError(resourceManager.getString(R.string.no_cover_art_found),
                             resourceManager.getString(R.string.add_manual));
-                else
-                    mView.loadCoverIdentificationResults(results);
+                    mView.onEnableFabs();
+                }
+                else {
+                    if(mLifeCycleState == LifeCycleState.RESUMED) {
+                        mPendingResultsDelivery = false;
+                        mView.onLoadCoverIdentificationResults(results);
+                    }
+                    else {
+                        mPendingResultsDelivery = true;
+                    }
+                }
             }
-
-            mView.identificationComplete(results);
+            mView.onHideFabMenu();
+            mView.onIdentificationComplete(results);
+            mView.onEnableFabs();
         }
+        //There are no cached results, make the request
         else {
-
+            //Check connectivity
             if(!ConnectivityDetector.sIsConnected){
                 String message;
 
                 if(mRecognition == TrackIdentifier.ALL_TAGS) {
                     message = resourceManager.getString(R.string.no_internet_connection_semi_automatic_mode);
-
                 }
                 else {
                     message = resourceManager.getString(R.string.no_internet_connection_download_cover);
                 }
 
-                if(mView != null)
+                if(mView != null) {
                     mView.onCorrectionError(message, resourceManager.getString(R.string.add_manual));
+                    mView.onEnableFabs();
+                }
                 connectivityDetector.onStartTestingNetwork();
+                mPendingIdentification = true;
                 return;
             }
 
+            //Check if API is available
             if(!GnService.sApiInitialized || GnService.sIsInitializing) {
-                if(mView != null)
+                if(mView != null) {
                     mView.onCorrectionError(resourceManager.getString(R.string.initializing_recognition_api), null);
+                    mView.onEnableFabs();
+                }
 
                 gnService.initializeAPI();
+                mPendingIdentification = true;
                 return;
             }
 
@@ -287,13 +351,6 @@ public class TrackDetailPresenter implements
             mIdentifier.setGnListener(this);
             mIdentifier.execute();
         }
-    }
-
-    public void cancelIdentification(){
-        if(mIdentifier != null){
-            mIdentifier.cancelIdentification();
-        }
-        mIdentifier = null;
     }
 
     @Override
@@ -314,8 +371,9 @@ public class TrackDetailPresenter implements
         if(mView != null) {
             mView.hideStatus();
             mView.setMessageStatus("");
-            mView.hideProgress();
-            mView.identificationError(error);
+            mView.loading(false);
+            mView.onIdentificationError(error);
+            mView.onEnableFabs();
 
         }
         mIdentifier = null;
@@ -326,8 +384,9 @@ public class TrackDetailPresenter implements
         if(mView != null) {
             mView.onCorrectionError(resourceManager.getString(R.string.no_found_tags), resourceManager.getString(R.string.add_manual));
             mView.setMessageStatus("");
-            mView.hideProgress();
-            mView.identificationNotFound();
+            mView.loading(false);
+            mView.onIdentificationNotFound();
+            mView.onEnableFabs();
         }
         mIdentifier = null;
     }
@@ -336,19 +395,33 @@ public class TrackDetailPresenter implements
     public void identificationFound(GnResponseListener.IdentificationResults results, Track track) {
         if(mView != null) {
             mCache.getCache().add(mCurrentId, results);
-            mView.hideProgress();
+            mView.loading(false);
             if(mRecognition == TrackIdentifier.ALL_TAGS){
-                mView.loadIdentificationResults(results);
+                if(mLifeCycleState == LifeCycleState.RESUMED) {
+                    mPendingResultsDelivery = false;
+                    mView.onLoadIdentificationResults(results);
+                }
+                else {
+                    mPendingResultsDelivery = true;
+                }
             }
             else {
                 if(results.cover == null){
                     mView.onCorrectionError(resourceManager.getString(R.string.no_cover_art_found), null);
+                    mView.onEnableFabs();
                 }
                 else {
-                    mView.loadCoverIdentificationResults(results);
+                    if(mLifeCycleState == LifeCycleState.RESUMED) {
+                        mPendingResultsDelivery = false;
+                        mView.onLoadCoverIdentificationResults(results);
+                    }
+                    else {
+                        mPendingResultsDelivery = true;
+                    }
                 }
             }
-            mView.identificationComplete(results);
+            mView.onIdentificationComplete(results);
+            mView.onEnableFabs();
 
         }
         mIdentifier = null;
@@ -357,7 +430,7 @@ public class TrackDetailPresenter implements
     @Override
     public void identificationCompleted(Track track) {
         if(mView != null)
-            mView.hideProgress();
+            mView.loading(false);
         mIdentifier = null;
     }
 
@@ -366,7 +439,7 @@ public class TrackDetailPresenter implements
         if(mView != null) {
             mView.setMessageStatus("");
             mView.showStatus();
-            mView.showProgress();
+            mView.loading(true);
             mView.setMessageStatus(resourceManager.getString(R.string.starting_correction));
         }
     }
@@ -374,10 +447,11 @@ public class TrackDetailPresenter implements
     @Override
     public void onIdentificationCancelled(String cancelledReason, Track track) {
         if(mView != null) {
-            mView.hideProgress();
+            mView.loading(false);
             mView.setMessageStatus("");
             mView.hideStatus();
-            mView.identificationCancelled();
+            mView.onIdentificationCancelled();
+            mView.onEnableFabs();
         }
         mIdentifier = null;
     }
@@ -388,16 +462,24 @@ public class TrackDetailPresenter implements
             mView.setMessageStatus(message);
     }
 
+    public void cancelIdentification(){
+        if(mIdentifier != null){
+            mIdentifier.cancelIdentification();
+        }
+        mIdentifier = null;
+    }
+
+    /**************************************************************************************/
+
     /************************Correction*************************/
-    //public void performCorrection(int dataFrom, int mode){
     public void performCorrection(Fixer.CorrectionParams correctionParams){
         GnResponseListener.IdentificationResults results;
-        sFixer = new Fixer(this);
+        mFixer = new Fixer(this);
 
-        sFixer.setTrack(mCurrentTrack);
-        sFixer.setTask(correctionParams.mode);
-        sFixer.setShouldRename(correctionParams.shouldRename);
-        sFixer.renameTo(correctionParams.newName);
+        mFixer.setTrack(mCurrentTrack);
+        mFixer.setTask(correctionParams.mode);
+        mFixer.setShouldRename(correctionParams.shouldRename);
+        mFixer.renameTo(correctionParams.newName);
 
         mDataFrom = correctionParams.dataFrom;
         if(mDataFrom == Constants.CACHED) {
@@ -406,23 +488,15 @@ public class TrackDetailPresenter implements
         else {
             results = createResultsFromInputData();
         }
-        sFixer.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, results);
+        mFixer.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, results);
     }
-
-    public void removeCover(){
-        sFixer = new Fixer(this);
-        sFixer.setTrack(mCurrentTrack);
-        sFixer.setTask(Tagger.MODE_REMOVE_COVER);
-        sFixer.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, null);
-    }
-
 
     @Override
     public void onCorrectionStarted(Track track) {
         if(mView != null) {
             mView.setMessageStatus(resourceManager.getString(R.string.correction_in_progress));
             mView.showStatus();
-            mView.showProgress();
+            mView.loading(true);
         }
     }
 
@@ -431,9 +505,10 @@ public class TrackDetailPresenter implements
         if(mView != null) {
             mView.setMessageStatus("");
             mView.hideStatus();
-            mView.hideProgress();
+            mView.loading(false);
         }
-        sFixer = null;
+        mFixer = null;
+        //loadInfoTrack(mCurrentId);
         switch (resultCorrection.code){
             case Tagger.APPLIED_SAME_COVER:
             case Tagger.NEW_COVER_APPLIED:
@@ -457,9 +532,9 @@ public class TrackDetailPresenter implements
         if(mView != null) {
             mView.setMessageStatus("");
             mView.hideStatus();
-            mView.hideProgress();
+            mView.loading(false);
         }
-        sFixer = null;
+        mFixer = null;
     }
 
     @Override
@@ -470,12 +545,36 @@ public class TrackDetailPresenter implements
         if(mView != null) {
             mView.setMessageStatus("");
             mView.hideStatus();
-            mView.hideProgress();
+            mView.loading(false);
             mView.onCorrectionError(errorMessage, action);
+            mView.onEnableFabs();
         }
     }
 
     /***********************************************************/
+
+
+    /**
+     * Method to validate if current track has cover
+     * when user tries to remove cover
+     */
+    public void removeCover(){
+        closeFabMenu();
+        if(mView != null) {
+            if (mCurrentTrackDataItem.cover == null) {
+                mView.onTrackHasNoCover();
+            } else {
+                mView.onConfirmRemovingCover();
+            }
+        }
+    }
+
+    public void confirmRemoveCover(){
+        mFixer = new Fixer(this);
+        mFixer.setTrack(mCurrentTrack);
+        mFixer.setTask(Tagger.MODE_REMOVE_COVER);
+        mFixer.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, null);
+    }
 
 
     private boolean validateInputs(){
@@ -568,29 +667,6 @@ public class TrackDetailPresenter implements
         return true;
     }
 
-    /*@Override
-    public void onStart() {
-        if(mView != null){
-            mView.showProgress();
-            mView.setMessageStatus(resourceManager.getString(R.string.updating_list));
-        }
-    }
-
-    @Override
-    public void onFinish(boolean emptyList) {
-        if(mView != null) {
-            mView.hideProgress();
-            mView.setMessageStatus("");
-            mView.hideStatus();
-            mView.onSuccessfullyCorrection(resourceManager.getString(R.string.successfully_applied_tags));
-        }
-    }
-
-    @Override
-    public void onCancel() {
-
-    }*/
-
     private void updateTempCurrentTrackDataCover(Tagger.ResultCorrection resultCorrection ){
         if(resultCorrection.code != Tagger.CURRENT_COVER_REMOVED) {
             if (mDataFrom == Constants.CACHED) {
@@ -598,26 +674,36 @@ public class TrackDetailPresenter implements
                 mView.setCover(results.cover);
                 mView.setImageSize(TrackUtils.getStringImageSize(results.cover, resourceManager));
                 mCurrentTrackDataItem.cover = results.cover;
+                mCurrentCover = results.cover;
 
-            } else {
-                mView.setImageSize(TrackUtils.getStringImageSize(mView.getCover(), resourceManager));
-                mView.setCover(mView.getCover());
-                mCurrentTrackDataItem.cover = mView.getCover();
-                mView.disableEditMode();
+            }
+            else {
+                mView.setImageSize(TrackUtils.getStringImageSize(mCurrentCover, resourceManager));
+                mView.setCover(mCurrentCover);
+                mCurrentTrackDataItem.cover = mCurrentCover;
+                disableEditMode();
             }
             mView.onSuccessfullyCorrection(resourceManager.getString(R.string.cover_updated));
         }
         else {
             mView.setCover(null);
             mCurrentTrackDataItem.cover = null;
+            mCurrentCover = null;
             mView.setImageSize(TrackUtils.getStringImageSize(null, resourceManager));
             mView.setFilesize(TrackUtils.getFileSize(mCurrentTrack.getPath()));
             mView.onSuccessfullyCorrection(resourceManager.getString(R.string.cover_removed));
         }
 
+        if(mView != null)
+            mView.onEnableFabs();
+
         trackRepository.update(resultCorrection.track);
     }
 
+    /**
+     * Updates the internal data to update the values of views.
+     * @param resultCorrection The result of correction.
+     */
     private void updateAppliedAllTagsView(Tagger.ResultCorrection resultCorrection){
         //File was renamed
         if(resultCorrection.pathTofileUpdated != null) {
@@ -626,6 +712,7 @@ public class TrackDetailPresenter implements
             mCurrentTrack.setPath(resultCorrection.pathTofileUpdated);
         }
 
+        //Take the values from cache or from input values entered by user.
         if (mDataFrom == Constants.CACHED) {
             GnResponseListener.IdentificationResults results = mCache.getCache().load(mCurrentId);
 
@@ -643,6 +730,7 @@ public class TrackDetailPresenter implements
                 mCurrentTrackDataItem.trackYear = results.trackYear;
             if(results.cover != null) {
                 mCurrentTrackDataItem.cover = results.cover;
+                mCurrentCover = results.cover;
                 mView.setCover(results.cover);
                 mView.setImageSize(TrackUtils.getStringImageSize(results.cover, resourceManager));
             }
@@ -650,16 +738,16 @@ public class TrackDetailPresenter implements
             setAdditionalInfo(mCurrentTrackDataItem);
         }
         else {
-            mView.setCover(mView.getCover());
-            mView.setImageSize(TrackUtils.getStringImageSize(mView.getCover(), resourceManager));
+            mView.setCover(mCurrentCover);
+            mView.setImageSize(TrackUtils.getStringImageSize(mCurrentCover, resourceManager));
             mCurrentTrackDataItem.title = mView.getTrackTitle();
             mCurrentTrackDataItem.artist = mView.getArtist();
             mCurrentTrackDataItem.album = mView.getAlbum();
             mCurrentTrackDataItem.genre = mView.getGenre();
             mCurrentTrackDataItem.trackNumber = mView.getTrackNumber();
             mCurrentTrackDataItem.trackYear = mView.getTrackYear();
-            mCurrentTrackDataItem.cover = mView.getCover();
-            mView.disableEditMode();
+            mCurrentTrackDataItem.cover = mCurrentCover;
+            disableEditMode();
         }
 
         if(!resultCorrection.track.getTitle().isEmpty())
@@ -670,6 +758,10 @@ public class TrackDetailPresenter implements
             mCurrentTrack.setAlbum(mCurrentTrackDataItem.album);
 
         mView.onSuccessfullyCorrection(resourceManager.getString(R.string.successfully_applied_tags));
+
+        if(mView != null)
+            mView.onEnableFabs();
+
         trackRepository.update(resultCorrection.track);
     }
 
@@ -683,8 +775,12 @@ public class TrackDetailPresenter implements
 
         setEditableInfo(mCurrentTrackDataItem);
         setAdditionalInfo(mCurrentTrackDataItem);
-        mView.disableEditMode();
+        disableEditMode();
         mView.onSuccessfullyCorrection(resourceManager.getString(R.string.successfully_applied_tags));
+
+        if(mView != null)
+            mView.onEnableFabs();
+
         trackRepository.update(resultCorrection.track);
     }
 
@@ -713,8 +809,9 @@ public class TrackDetailPresenter implements
                 mCurrentTrackDataItem.trackNumber = results.trackNumber;
             if(results.trackYear != null && mView.getTrackYear().isEmpty())
                 mCurrentTrackDataItem.trackYear = results.trackYear;
-            if(results.cover != null && mView.getCover() == null) {
+            if(results.cover != null && mCurrentCover == null) {
                 mCurrentTrackDataItem.cover = results.cover;
+                mCurrentCover = results.cover;
                 mView.setCover(results.cover);
                 mView.setImageSize(TrackUtils.getStringImageSize(results.cover, resourceManager));
             }
@@ -723,22 +820,26 @@ public class TrackDetailPresenter implements
 
         }
         else {
-            mView.setCover(mView.getCover());
-            mView.setImageSize(TrackUtils.getStringImageSize(mView.getCover(), resourceManager));
+            mView.setCover(mCurrentCover);
+            mView.setImageSize(TrackUtils.getStringImageSize(mCurrentCover, resourceManager));
             mCurrentTrackDataItem.title = mView.getTrackTitle();
             mCurrentTrackDataItem.artist = mView.getArtist();
             mCurrentTrackDataItem.album = mView.getAlbum();
             mCurrentTrackDataItem.genre = mView.getGenre();
             mCurrentTrackDataItem.trackNumber = mView.getTrackNumber();
             mCurrentTrackDataItem.trackYear = mView.getTrackYear();
-            mCurrentTrackDataItem.cover = mView.getCover();
-            mView.disableEditMode();
+            mCurrentTrackDataItem.cover = mCurrentCover;
+            disableEditMode();
         }
         mCurrentTrack.setTitle(resultCorrection.track.getTitle());
         mCurrentTrack.setArtist(resultCorrection.track.getArtist());
         mCurrentTrack.setAlbum(resultCorrection.track.getAlbum());
 
         mView.onSuccessfullyCorrection(resourceManager.getString(R.string.successfully_applied_tags));
+
+        if(mView != null)
+            mView.onEnableFabs();
+
         trackRepository.update(resultCorrection.track);
 
     }
@@ -748,7 +849,7 @@ public class TrackDetailPresenter implements
         if(mView != null) {
             mView.showStatus();
             mView.setMessageStatus(resourceManager.getString(R.string.saving_cover));
-            mView.showProgress();
+            mView.loading(true);
         }
     }
 
@@ -757,8 +858,9 @@ public class TrackDetailPresenter implements
         if(mView != null) {
             mView.setMessageStatus("");
             mView.hideStatus();
-            mView.hideProgress();
+            mView.loading(false);
             mView.onSuccessfullyFileSaved(newPath);
+            mView.onEnableFabs();
         }
     }
 
@@ -766,6 +868,136 @@ public class TrackDetailPresenter implements
     public void onSavingError(String error) {
         if(mView != null){
             mView.onCorrectionError(resourceManager.getString(R.string.cover_not_saved), null);
+            mView.onEnableFabs();
+        }
+    }
+
+    public void validateImageSize(ImageSize imageSize) {
+        if(mView != null) {
+            if (imageSize.height <= 2000 || imageSize.width <= 2000) {
+                setNewCoverFromGallery(imageSize);
+            } else {
+                mView.onInvalidImage();
+            }
+        }
+    }
+
+    /**
+     * Updates the cover
+     * @param imageSize The wrapper containing the image
+     */
+    private void setNewCoverFromGallery(ImageSize imageSize){
+        mCurrentCover = AndroidUtils.generateCover(imageSize.bitmap);
+        if (imageSize.requestCode == INTENT_GET_AND_UPDATE_FROM_GALLERY) {
+            Fixer.CorrectionParams correctionParams = new Fixer.CorrectionParams();
+            correctionParams.dataFrom = Constants.MANUAL;
+            correctionParams.mode = Tagger.MODE_ADD_COVER;
+            cancelIdentification();
+            performCorrection(correctionParams);
+        }
+        else {
+            if(mView != null)
+                mView.setCover(mCurrentCover);
+        }
+    }
+
+    public void openInExternalApp(Context applicationContext) {
+        AndroidUtils.openInExternalApp(mCurrentTrack.getPath(), applicationContext);
+    }
+
+    public void enableEditMode() {
+        closeFabMenu();
+        if(mView != null) {
+            mView.onEnableEditMode();
+            mIsInEditMode = true;
+        }
+    }
+
+    public void toggleFabMenu() {
+        if(!mIsFloatingActionMenuOpen) {
+            openFabMenu();
+        }
+        else {
+            closeFabMenu();
+        }
+    }
+
+    public void hideFabMenu(){
+        closeFabMenu();
+    }
+    private void openFabMenu() {
+        if(mView != null) {
+            mView.onShowFabMenu();
+            mIsFloatingActionMenuOpen = true;
+        }
+    }
+    private void closeFabMenu() {
+        if(mView != null) {
+            mView.onHideFabMenu();
+            mIsFloatingActionMenuOpen = false;
+        }
+    }
+
+    private void confirmExit(){
+        if(mView != null) {
+            mView.onConfirmExit();
+        }
+    }
+
+    private void disableEditModeAndRestore(){
+        mIsInEditMode = false;
+        if(mView != null) {
+            setEditableInfo(mCurrentTrackDataItem);
+            setAdditionalInfo(mCurrentTrackDataItem);
+            mView.onDisableEditModeAndRestore();
+        }
+    }
+
+    private void disableEditMode(){
+        mIsInEditMode = false;
+        if(mView != null) {
+            setEditableInfo(mCurrentTrackDataItem);
+            setAdditionalInfo(mCurrentTrackDataItem);
+            mView.onDisableEditMode();
+        }
+    }
+
+    public void onBackPressed() {
+        if(mIsFloatingActionMenuOpen){
+            closeFabMenu();
+        }
+        else if(mIsInEditMode) {
+            disableEditModeAndRestore();
+        }
+        else {
+            confirmExit();
+        }
+
+    }
+
+    /**
+     * Handle the state of fragment when configuration
+     * (rotation, language change, etc) changes.
+     */
+    public void handleConfigurationChange() {
+        mPendingResultsDelivery = true;
+    }
+
+    public void onStart() {
+        mLifeCycleState = LifeCycleState.RESUMED;
+        if(mPendingResultsDelivery){
+            startIdentification(mRecognition);
+        }
+    }
+
+    public void onStop(){
+        mLifeCycleState = LifeCycleState.PAUSED;
+    }
+
+    public void onApiInitialized() {
+        if(mPendingIdentification){
+            startIdentification(mRecognition);
+            mPendingIdentification = false;
         }
     }
 }

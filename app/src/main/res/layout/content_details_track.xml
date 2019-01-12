@@ -10,9 +10,7 @@
     android:paddingBottom="80dp"
     tools:showIn="@layout/fragment_track_detail"
     app:layout_behavior="@string/appbar_scrolling_view_behavior">
-    <FrameLayout
-        android:id="@+id/container_fragment_detail"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
+
+    <include layout="@layout/layout_data_track" />
 
 </android.support.v4.widget.NestedScrollView>

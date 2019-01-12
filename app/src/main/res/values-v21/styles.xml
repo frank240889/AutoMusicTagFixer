@@ -72,13 +72,20 @@
 
     <style name="CustomToast" parent="TextAppearance.AppCompat.Small">
         <item name="android:textColor">@color/grey_800</item>
-        <item name="android:padding">10dp</item>
+        <item name="android:padding">16dp</item>
         <item name="android:textSize">14sp</item>
     </style>
 
     <style name="Button.Yellow" parent="Widget.AppCompat.Button.Colored">
         <item name="android:textColor">@color/grey_900</item>
         <item name="android:backgroundTint">@color/primaryColor</item>
+    </style>
+
+    <style name="Button.Flat.Primary" parent="Theme.AppCompat.Light">
+        <item name="android:buttonStyle">
+            @style/Widget.AppCompat.Button.Borderless.Colored
+        </item>
+        <item name="colorAccent">@color/primaryColor</item>
     </style>
 
 

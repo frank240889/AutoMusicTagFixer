@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="image_view_cover_results_size">160dp</dimen>
+    <dimen name="image_view_only_cover_results_size">300dp</dimen>
+</resources>
