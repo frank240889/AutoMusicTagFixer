@@ -3,14 +3,11 @@ package mx.dev.franco.automusictagfixer.utilities.shared_preferences;
 import android.content.Context;
 import android.content.SharedPreferences;
 
-import javax.inject.Inject;
-
 import mx.dev.franco.automusictagfixer.utilities.Constants;
 
 
 public class SharedPreferencesImpl extends AbstractSharedPreferences {
-    @Inject
-    SharedPreferences mSharedPreferences;
+    private SharedPreferences mSharedPreferences;
 
     public SharedPreferencesImpl(Context context){
         mSharedPreferences = context.getSharedPreferences(Constants.Application.FULL_QUALIFIED_NAME, Context.MODE_PRIVATE);
@@ -18,8 +15,7 @@ public class SharedPreferencesImpl extends AbstractSharedPreferences {
 
     @Override
     public void putInt(String key, int value) {
-        mSharedPreferences.edit().putInt(key,value);
-        mSharedPreferences.edit().apply();
+        mSharedPreferences.edit().putInt(key,value).apply();
     }
 
     @Override

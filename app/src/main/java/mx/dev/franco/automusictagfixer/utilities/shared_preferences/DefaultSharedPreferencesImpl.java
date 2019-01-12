@@ -4,12 +4,9 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 
-import javax.inject.Inject;
-
 
 public class DefaultSharedPreferencesImpl extends AbstractSharedPreferences {
-    @Inject
-    SharedPreferences mDefaultSharedPreferences;
+    private SharedPreferences mDefaultSharedPreferences;
 
     public DefaultSharedPreferencesImpl(Context context){
         mDefaultSharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
