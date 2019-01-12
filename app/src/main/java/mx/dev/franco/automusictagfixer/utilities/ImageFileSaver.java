@@ -14,7 +14,7 @@ import java.util.Date;
  * Created by franco on 3/10/17.
  */
 
-public final class FileSaver {
+public final class ImageFileSaver {
     private static final String SLASH = "/";
     private static final String AUTO_MUSIC_TAG_FIXER_FOLDER_NAME = "Covers";
     private static final String EXTENSION = "jpg";

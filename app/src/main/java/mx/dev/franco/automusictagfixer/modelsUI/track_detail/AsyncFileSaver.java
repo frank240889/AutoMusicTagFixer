@@ -12,6 +12,7 @@ import java.io.IOException;
 import javax.inject.Inject;
 
 import mx.dev.franco.automusictagfixer.AutoMusicTagFixer;
+import mx.dev.franco.automusictagfixer.utilities.ImageFileSaver;
 
 /**
  * Saves cover art as image file, using
@@ -56,12 +57,12 @@ public class AsyncFileSaver extends AsyncTask<Void, Void, String> {
     protected String doInBackground(Void... voids) {
         mGeneratedPath = null;
         try {
-            mGeneratedPath = mx.dev.franco.automusictagfixer.utilities.FileSaver.saveImageFile(mDataImage, mTitle, mArtist, mAlbum);
+            mGeneratedPath = ImageFileSaver.saveImageFile(mDataImage, mTitle, mArtist, mAlbum);
             //if was successful saved, then
             //inform to system that one file has been created
-            if(mGeneratedPath != null && !mGeneratedPath.equals(mx.dev.franco.automusictagfixer.utilities.FileSaver.NULL_DATA)
-                    && !mGeneratedPath.equals(mx.dev.franco.automusictagfixer.utilities.FileSaver.NO_EXTERNAL_STORAGE_WRITABLE)
-                    && !mGeneratedPath.equals(mx.dev.franco.automusictagfixer.utilities.FileSaver.INPUT_OUTPUT_ERROR)) {
+            if(mGeneratedPath != null && !mGeneratedPath.equals(ImageFileSaver.NULL_DATA)
+                    && !mGeneratedPath.equals(ImageFileSaver.NO_EXTERNAL_STORAGE_WRITABLE)
+                    && !mGeneratedPath.equals(ImageFileSaver.INPUT_OUTPUT_ERROR)) {
                 MediaScannerConnection.scanFile(
                         context,
                         new String[]{mGeneratedPath},
@@ -81,9 +82,9 @@ public class AsyncFileSaver extends AsyncTask<Void, Void, String> {
     @Override
     protected void onPostExecute(String path){
         if(mOnSaveListener != null){
-            if(mGeneratedPath != null && !mGeneratedPath.equals(mx.dev.franco.automusictagfixer.utilities.FileSaver.NULL_DATA)
-                    && !mGeneratedPath.equals(mx.dev.franco.automusictagfixer.utilities.FileSaver.NO_EXTERNAL_STORAGE_WRITABLE)
-                    && !mGeneratedPath.equals(mx.dev.franco.automusictagfixer.utilities.FileSaver.INPUT_OUTPUT_ERROR)) {
+            if(mGeneratedPath != null && !mGeneratedPath.equals(ImageFileSaver.NULL_DATA)
+                    && !mGeneratedPath.equals(ImageFileSaver.NO_EXTERNAL_STORAGE_WRITABLE)
+                    && !mGeneratedPath.equals(ImageFileSaver.INPUT_OUTPUT_ERROR)) {
                 mOnSaveListener.onSavingFinished(path);
             }
             else {
