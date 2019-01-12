@@ -870,6 +870,7 @@ public class TrackDetailPresenter implements
     @Override
     public void onSavingError(String error) {
         if(mView != null){
+            mView.loading(false);
             mView.onCorrectionError(resourceManager.getString(R.string.cover_not_saved), null);
             mView.onEnableFabs();
         }
