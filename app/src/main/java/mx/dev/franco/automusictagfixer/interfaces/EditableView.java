@@ -32,9 +32,7 @@ public interface EditableView {
     void setImageSize(String value);
 
 
-    void showStatus();
-    void hideStatus();
-    void setMessageStatus(String status);
+    void setStateMessage(String message, boolean visible);
 
     void loading(boolean showProgress);
 
@@ -70,4 +68,6 @@ public interface EditableView {
 
     void onEnableFabs();
     void onDisableFabs();
+
+    void setCancelTaskEnabled(boolean enableCancelView);
 }

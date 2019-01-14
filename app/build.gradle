@@ -149,8 +149,8 @@ dependencies {
 
     annotationProcessor 'com.github.bumptech.glide:compiler:4.8.0'
 
-    debugImplementation 'com.squareup.leakcanary:leakcanary-android:1.6.2'
-    releaseImplementation 'com.squareup.leakcanary:leakcanary-android-no-op:1.6.2'
+    //debugImplementation 'com.squareup.leakcanary:leakcanary-android:1.6.2'
+    //releaseImplementation 'com.squareup.leakcanary:leakcanary-android-no-op:1.6.2'
 
     //the core iconcis library (without any widgets)
     implementation "com.mikepenz:iconics-core:3.0.3@aar"

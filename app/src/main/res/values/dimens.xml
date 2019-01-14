@@ -21,5 +21,6 @@
     <dimen name="nav_header_height">176dp</dimen>
     <dimen name="image_view_cover_results_size">280dp</dimen>
     <dimen name="image_view_only_cover_results_size">300dp</dimen>
+    <dimen name="image_view_cover_found_item">180dp</dimen>
 
 </resources>

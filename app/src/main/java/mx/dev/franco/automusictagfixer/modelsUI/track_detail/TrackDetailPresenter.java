@@ -93,8 +93,11 @@ public class TrackDetailPresenter implements
      */
     @Override
     public void onAsyncOperationStarted(Void params) {
-        if(mView != null)
+        if(mView != null) {
+            mView.setCancelTaskEnabled(false);
+            mView.setStateMessage(resourceManager.getString(R.string.loading_data_track), true);
             mView.loading(true);
+        }
     }
 
     /**
@@ -183,6 +186,7 @@ public class TrackDetailPresenter implements
             mView.setFiletype(trackDataItem.fileType);
             mView.setFilesize(trackDataItem.fileSize);
             mView.setImageSize(trackDataItem.imageSize);
+            mView.setPath(trackDataItem.path);
         }
     }
 
@@ -281,7 +285,7 @@ public class TrackDetailPresenter implements
             mView.onDisableFabs();
             //If there are cached results
             if(results != null){
-                mView.setMessageStatus("");
+                mView.setStateMessage(resourceManager.getString(R.string.identifying),true);
                 mView.loading(false);
                 //Type of recognition: only cover, or search all tags.
                 if(mRecognition == TrackIdentifier.ALL_TAGS) {
@@ -357,22 +361,18 @@ public class TrackDetailPresenter implements
 
     @Override
     public void statusIdentification(String status, Track track) {
-        if(mView != null)
-            mView.setMessageStatus(status);
+        //Not used
     }
 
     @Override
     public void gatheringFingerprint(Track track) {
-        String msg = String.format(resourceManager.getString(R.string.gathering_fingerprint), TrackUtils.getPath(track.getPath()));
-        if(mView != null)
-            mView.setMessageStatus(msg);
+        //Not used
     }
 
     @Override
     public void identificationError(String error, Track track) {
         if(mView != null) {
-            mView.hideStatus();
-            mView.setMessageStatus("");
+            mView.setStateMessage("", false);
             mView.loading(false);
             mView.onIdentificationError(error);
             mView.onEnableFabs();
@@ -385,7 +385,7 @@ public class TrackDetailPresenter implements
     public void identificationNotFound(Track track) {
         if(mView != null) {
             mView.onCorrectionError(resourceManager.getString(R.string.no_found_tags), resourceManager.getString(R.string.add_manual));
-            mView.setMessageStatus("");
+            mView.setStateMessage("", false);
             mView.loading(false);
             mView.onIdentificationNotFound();
             mView.onEnableFabs();
@@ -411,7 +411,6 @@ public class TrackDetailPresenter implements
             else {
                 if(results.cover == null){
                     mView.onCorrectionError(resourceManager.getString(R.string.no_cover_art_found), null);
-                    mView.onEnableFabs();
                 }
                 else {
                     if(mLifeCycleState == LifeCycleState.RESUMED) {
@@ -440,19 +439,17 @@ public class TrackDetailPresenter implements
     @Override
     public void onStartIdentification(Track track) {
         if(mView != null) {
-            mView.setMessageStatus("");
-            mView.showStatus();
+            mView.setStateMessage(resourceManager.getString(R.string.identifying), true);
+            mView.setCancelTaskEnabled(true);
             mView.loading(true);
-            mView.setMessageStatus(resourceManager.getString(R.string.starting_correction));
         }
     }
 
     @Override
     public void onIdentificationCancelled(String cancelledReason, Track track) {
         if(mView != null) {
+            mView.setStateMessage("",false);
             mView.loading(false);
-            mView.setMessageStatus("");
-            mView.hideStatus();
             mView.onIdentificationCancelled();
             mView.onEnableFabs();
         }
@@ -461,8 +458,7 @@ public class TrackDetailPresenter implements
 
     @Override
     public void status(String message) {
-        if(mView != null)
-            mView.setMessageStatus(message);
+        //NOt used
     }
 
     public void cancelIdentification(){
@@ -497,8 +493,8 @@ public class TrackDetailPresenter implements
     @Override
     public void onCorrectionStarted(Track track) {
         if(mView != null) {
-            mView.setMessageStatus(resourceManager.getString(R.string.correction_in_progress));
-            mView.showStatus();
+            mView.setStateMessage(resourceManager.getString(R.string.correction_in_progress), true);
+            mView.setCancelTaskEnabled(false);
             mView.loading(true);
         }
     }
@@ -506,8 +502,7 @@ public class TrackDetailPresenter implements
     @Override
     public void onCorrectionCompleted(Tagger.ResultCorrection resultCorrection, Track track) {
         if(mView != null) {
-            mView.setMessageStatus("");
-            mView.hideStatus();
+            mView.setStateMessage("", false);
             mView.loading(false);
         }
         mFixer = null;
@@ -533,8 +528,7 @@ public class TrackDetailPresenter implements
     @Override
     public void onCorrectionCancelled(Track track) {
         if(mView != null) {
-            mView.setMessageStatus("");
-            mView.hideStatus();
+            mView.setStateMessage("", false);
             mView.loading(false);
         }
         mFixer = null;
@@ -546,8 +540,7 @@ public class TrackDetailPresenter implements
         String action = resultCorrection.code == Tagger.COULD_NOT_GET_URI_SD_ROOT_TREE ?
                 resourceManager.getString(R.string.get_permission):null;
         if(mView != null) {
-            mView.setMessageStatus("");
-            mView.hideStatus();
+            mView.setStateMessage("", false);
             mView.loading(false);
             mView.onCorrectionError(errorMessage, action);
             mView.onEnableFabs();
@@ -713,6 +706,7 @@ public class TrackDetailPresenter implements
             mView.setFilename(resultCorrection.pathTofileUpdated);
             mView.setFilesize(TrackUtils.getFileSize(resultCorrection.pathTofileUpdated));
             mCurrentTrack.setPath(resultCorrection.pathTofileUpdated);
+            mCurrentTrackDataItem.path = resultCorrection.pathTofileUpdated;
         }
 
         //Take the values from cache or from input values entered by user.
@@ -774,6 +768,7 @@ public class TrackDetailPresenter implements
             mView.setFilename(resultCorrection.pathTofileUpdated);
             mView.setFilesize(TrackUtils.getFileSize(resultCorrection.pathTofileUpdated));
             mCurrentTrack.setPath(resultCorrection.pathTofileUpdated);
+            mCurrentTrackDataItem.path = resultCorrection.pathTofileUpdated;
         }
 
         setEditableInfo(mCurrentTrackDataItem);
@@ -795,6 +790,7 @@ public class TrackDetailPresenter implements
             mView.setFilename(resultCorrection.pathTofileUpdated);
             mView.setFilesize(TrackUtils.getFileSize(resultCorrection.pathTofileUpdated));
             mCurrentTrack.setPath(resultCorrection.pathTofileUpdated);
+            mCurrentTrackDataItem.path = resultCorrection.pathTofileUpdated;
         }
 
         if (mDataFrom == Constants.CACHED) {
@@ -850,8 +846,8 @@ public class TrackDetailPresenter implements
     @Override
     public void onSavingStart() {
         if(mView != null) {
-            mView.showStatus();
-            mView.setMessageStatus(resourceManager.getString(R.string.saving_cover));
+            mView.setStateMessage(resourceManager.getString(R.string.saving_cover), true);
+            mView.setCancelTaskEnabled(false);
             mView.loading(true);
         }
     }
@@ -859,8 +855,7 @@ public class TrackDetailPresenter implements
     @Override
     public void onSavingFinished(String newPath) {
         if(mView != null) {
-            mView.setMessageStatus("");
-            mView.hideStatus();
+            mView.setStateMessage("", false);
             mView.loading(false);
             mView.onSuccessfullyFileSaved(newPath);
             mView.onEnableFabs();

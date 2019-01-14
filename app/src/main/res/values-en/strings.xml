@@ -248,7 +248,7 @@
 
     <string name="contact_dev">Questions or comments? Contact the developer by clicking {gmd-email}.</string>
 
-    <string name="correction_in_progress">Correction in progress…</string>
+    <string name="correction_in_progress">Correcting…</string>
 
     <string name="yes">Yes</string>
     <string name="gathering_fingerprint">Generating fingerprint for %1$s</string>
@@ -306,7 +306,8 @@
     <string name="identification_results_language">Identification</string>
     <string name="pixels">Pixels</string>
     <string name="missing_cover">Missing cover</string>
-    <string name="results_found">Match found</string>
+    <string name="results_found">Tags found</string>
     <string name="cover_found">Cover found</string>
+    <string name="loading_data_track">Loading track data…</string>
 
 </resources>

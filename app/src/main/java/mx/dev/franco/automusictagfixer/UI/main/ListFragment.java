@@ -123,7 +123,6 @@ public class ListFragment extends Fragment implements
         mMessage = mLayout.findViewById(R.id.message);
         mActionBar = ((MainActivity)getActivity()).getSupportActionBar();
 
-
         //attach adapter to our recyclerview
         mGridLayoutManager = new GridLayoutManager(getActivity(), 1);
         mRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(), 1));

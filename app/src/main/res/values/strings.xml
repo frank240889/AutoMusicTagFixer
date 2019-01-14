@@ -251,7 +251,7 @@
 
     <string name="contact_dev">¿Dudas o comentarios? Contacta al desarrollador tocando {gmd-email}.</string>
 
-    <string name="correction_in_progress">Corrección en progreso…</string>
+    <string name="correction_in_progress">Corrigiendo…</string>
 
     <string name="yes">Si</string>
     <string name="gathering_fingerprint">Generando huella para %1$s</string>
@@ -310,7 +310,8 @@
     <string name="pixels">Pixeles</string>
     <string name="missing_cover">Sin carátula</string>
     <string name="app_version" translatable="false">1.0</string>
-    <string name="results_found">Información encontrada</string>
+    <string name="results_found">Etiquetas encontradas</string>
     <string name="cover_found">Carátula encontrada</string>
+    <string name="loading_data_track">Cargando información de canción…</string>
 
 </resources>
