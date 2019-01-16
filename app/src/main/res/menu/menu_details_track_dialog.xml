@@ -2,13 +2,21 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
+        android:id="@+id/action_update_cover"
+        android:icon="@drawable/ic_photo_white_24px"
+        android:title="@string/title_update_cover"
+        app:showAsAction="always"
+        android:orderInCategory="0"/>
+    <item
         android:id="@+id/action_play"
         android:icon="@drawable/ic_play_arrow_white_24px"
         app:showAsAction="always"
+        android:orderInCategory="1"
         android:title="@string/play_track"/>
+
     <item
         android:id="@+id/action_extract_cover"
-        android:icon="@drawable/ic_photo_library_white_24px"
+        android:icon="@drawable/ic_photo_library_black_24dp"
         android:title="@string/title_extract_cover"
         app:showAsAction="never"/>
     <item

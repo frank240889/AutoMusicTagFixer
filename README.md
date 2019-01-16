@@ -1,11 +1,8 @@
 # AutoMusicTagFixer
 ********************************************************************************************************************************
 -VERY IMPORTANT:
-1. This app is Beta version yet. 
-2. This app uses an ACR technology powered by Gracenote, visit https://developer.gracenote.com/gnsdk for more information.
-3. This app uses the awesome jAudioTagger library, visit http://www.jthink.net/jaudiotagger/ for more information.
-4. This app uses the amazing Glide library, visit https://github.com/bumptech/glide for more information.
-5- This app and source code is made for Android >= 5, so maybe doesn't work on Android <= 4 BUT you can fork it and adapt tou your needs!!
+1. This app is released in PlayStore, you can download it from next link: https://play.google.com/store/apps/details?id=mx.dev.franco.automusictagfixer
+2. This app uses the awesome jAudioTagger library, visit http://www.jthink.net/jaudiotagger/ for more information.
 ********************************************************************************************************************************
 - NOTICE!: Now the app is published under beta state, so you can directly download by join it to beta program, click in below link:
 
@@ -48,21 +45,3 @@ Features:
 - For MP3 files, in any mode of correction, ID3 tags version 1 will be automatically converted to ID3 version 2, this conversion will allow to write covers over the file itself(and other tags) to mp3 files, because ID3 version 1 has not support for some tags.
 - Background correction (with notification in status bar indicating the progress of task an ability to stop it from here) no matter if you close the app.
 - Crashlytics to report back to developer issues and crashes.
-
-How to build it?
-
-1. Download zip and import project from Android Studio, or import directly from Android Studio using the repo URL.
-2. Enter here and register an account: https://developer.gracenote.com/gnsdk.
-3. Once you have registered, go to MyAccount -> My Apps in top menu.
-4. Create a new app, follow the instructions to create it.
-5. Once you have created the app, use the info provided from it and put the corresponding values into these fields in GnService class:
-          
-          public static final String sGnsdkLicenseString;
-          public static final String sGnsdkClientId;
-          public static final String sGnsdkClientTag;
-          
-6. Then, in Android Studio go to Build -> Build APK.
-7. When apk is generated, copy it to your device and install it.
-8. That's all!!!, Hope you enjoy correcting your songs in an easier way, and mainly: FREE.
-
-NOTE: It is very important that you create a new application as indicated in steps 4 and 5, because each free registered application has a consultation quota that you can do at a given time.

@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
-    tools:context="mx.dev.franco.automusictagfixer.ScrollingAboutActivity"
+    tools:context="mx.dev.franco.automusictagfixer.UI.about.ScrollingAboutActivity"
     tools:showIn="@layout/activity_scrolling_about">
 
     <LinearLayout
@@ -70,30 +70,6 @@
             android:textSize="18sp" />
 
         <TextView
-            android:id="@+id/glide"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="10dp"
-            android:layout_marginStart="10dp"
-            android:layout_marginTop="10dp"
-            android:drawablePadding="8dp"
-            android:drawableStart="@drawable/ic_public_white_24px"
-            android:text="Glide."
-            android:textSize="18sp" />
-
-        <TextView
-            android:id="@+id/gnsdk"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="10dp"
-            android:layout_marginStart="10dp"
-            android:layout_marginTop="10dp"
-            android:drawablePadding="8dp"
-            android:drawableStart="@drawable/ic_public_white_24px"
-            android:text="GNSDK."
-            android:textSize="18sp" />
-
-        <TextView
             android:id="@+id/drawer_image"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -102,31 +78,7 @@
             android:layout_marginTop="10dp"
             android:drawablePadding="8dp"
             android:drawableStart="@drawable/ic_public_white_24px"
-            android:text="Créditos imagen en drawer."
-            android:textSize="18sp"/>
-
-        <TextView
-            android:id="@+id/crashlytics_lib"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="10dp"
-            android:layout_marginStart="10dp"
-            android:layout_marginTop="10dp"
-            android:drawablePadding="8dp"
-            android:drawableStart="@drawable/ic_public_white_24px"
-            android:text="Crashlytics."
-            android:textSize="18sp"/>
-
-        <TextView
-            android:id="@+id/iconics_lib"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="10dp"
-            android:layout_marginStart="10dp"
-            android:layout_marginTop="10dp"
-            android:drawablePadding="8dp"
-            android:drawableStart="@drawable/ic_public_white_24px"
-            android:text="Android-Iconics."
+            android:text="@string/image_drawer_credits"
             android:textSize="18sp"/>
 
     </LinearLayout>

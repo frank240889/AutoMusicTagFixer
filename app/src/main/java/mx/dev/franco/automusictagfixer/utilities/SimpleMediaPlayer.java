@@ -3,24 +3,26 @@ package mx.dev.franco.automusictagfixer.utilities;
 import android.content.Context;
 import android.media.MediaPlayer;
 import android.os.PowerManager;
-import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 
+import java.io.File;
 import java.io.IOException;
-
-import mx.dev.franco.automusictagfixer.list.AudioItem;
-import mx.dev.franco.automusictagfixer.list.TrackAdapter;
 
 /**
  * Created by franco on 29/03/17.
  */
 
 public final class SimpleMediaPlayer extends MediaPlayer implements MediaPlayer.OnCompletionListener, MediaPlayer.OnErrorListener {
+    public interface OnEventDispatchedListener{
+        void onStartPlaying();
+        void onStopPlaying();
+        void onCompletionPlaying();
+        void onErrorPlaying(int what, int extra);
+    }
+
 
     private static SimpleMediaPlayer sMediaPlayer;
-    private AudioItem mCurrentAudioItem;
-    private long mCurrentPosition = -1;
-    private TrackAdapter mAdapter;
+    private OnEventDispatchedListener mListener;
 
     /**
      * Don't let instantiate this class, we need only one instance,
@@ -34,9 +36,17 @@ public final class SimpleMediaPlayer extends MediaPlayer implements MediaPlayer.
         setOnErrorListener(this);
     }
 
+    public void addListener(OnEventDispatchedListener listener){
+        mListener = listener;
+    }
+
+    public void removeListener(){
+        mListener = null;
+    }
+
     /**
      *
-     * @param context
+     * @param context The context, needed for access Android resources
      * @return An unique instance of SimpleMediaPlayer.
      */
     public static SimpleMediaPlayer getInstance(Context context){
@@ -46,49 +56,36 @@ public final class SimpleMediaPlayer extends MediaPlayer implements MediaPlayer.
         return sMediaPlayer;
     }
 
-    public void setAdapter(TrackAdapter mAdapter){
-        this.mAdapter = mAdapter;
-    }
-
-    public RecyclerView.Adapter<TrackAdapter.AudioItemHolder> getAdapter(){
-        return this.mAdapter;
-    }
-
     /**
      * Play a preview of audiofile.
-     * @param position
+     * @param path The path of the file to play
      * @throws IOException
      * @throws InterruptedException
      */
 
-    public void playPreview(int position) throws IOException, InterruptedException {
-        //Stops current audio
-        if(mCurrentPosition == position && sMediaPlayer.isPlaying()) {
-            sMediaPlayer.stop();
-            sMediaPlayer.reset();
+    public void playPreview(String path) throws IOException {
+        File file = new File(path);
+        if(path == null || path.equals("") || !file.exists() || !file.canRead() || file.length() == 0)
             return;
-        }
 
-        //If user plays different audio file
-        //search in adapter, if not, take the current mCurrentAudioItem
-        if(mCurrentPosition != position){
-            mCurrentAudioItem = mAdapter.getAudioItemByPosition(position);
-            mCurrentPosition = position;
-        }
-        sMediaPlayer.setDataSource(mCurrentAudioItem.getAbsolutePath());
-        sMediaPlayer.prepare();
-
-        sMediaPlayer.start();
+        //Stops current audio
+        setDataSource(path);
+        prepare();
+        start();
+        if(mListener != null)
+            mListener.onStartPlaying();
     }
 
 
-    /**
-     * Get the position from current item_list playing.
-     * @return
-     */
-    public long getCurrentPosition2() {
-        return mCurrentPosition;
+    public void stopPreview(){
+        if(isPlaying()) {
+            stop();
+            reset();
+            if(mListener != null)
+                mListener.onStopPlaying();
+        }
     }
+
     /**
      * Implementation of completion interface for
      * handling correctly the ends of song if is playing.
@@ -97,29 +94,17 @@ public final class SimpleMediaPlayer extends MediaPlayer implements MediaPlayer.
     @Override
     public void onCompletion(MediaPlayer mp) {
         Log.d("OnCompletion","OnCompletion");
-        onCompletePlayback();
+        stop();
+        reset();
+        if(mListener != null)
+            mListener.onCompletionPlaying();
     }
 
-    /**
-     * If song reaches its end, then we stop and reset player
-     * for having it ready for next playback, and doesn't throw
-     * any error.
-     */
-
-    public void onCompletePlayback(){
-        mAdapter.notifyItemChanged((int)getCurrentPosition2());
-        sMediaPlayer.stop();
-        sMediaPlayer.reset();
-    }
 
     @Override
     public boolean onError(MediaPlayer mp, int what, int extra) {
-        try{
-            onCompletePlayback();
-        }
-        catch (Exception e){
-            e.printStackTrace();
-        }
+        if(mListener != null)
+            mListener.onErrorPlaying(what,extra);
         return false;
     }
 }

@@ -31,6 +31,7 @@
     <!--Style details track dialog activity-->
     <style name="AboutTheme" parent="AppTheme">
         <item name="colorAccent">@color/primaryColor</item>
+        <item name="colorPrimaryDark">@color/grey_900</item>
     </style>
 
     <!--Style details questions activity-->
@@ -74,5 +75,11 @@
         <item name="android:padding">10dp</item>
         <item name="android:textSize">14sp</item>
     </style>
+
+    <style name="Button.Yellow" parent="Widget.AppCompat.Button.Colored">
+        <item name="android:textColor">@color/grey_900</item>
+        <item name="android:backgroundTint">@color/primaryColor</item>
+    </style>
+
 
 </resources>

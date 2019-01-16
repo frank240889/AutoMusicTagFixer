@@ -1,19 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.v7.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:foreground="?selectableItemBackgroundBorderless"
-    android:stateListAnimator="@animator/default_z_transformation_card_view"
-    app:cardElevation="@dimen/cardview_default_elevation"
-    app:contentPadding="8dp"
-    app:cardUseCompatPadding="true">
-    <LinearLayout
-        android:id="@+id/container_questiom"
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/container_question"
+        android:background="?android:attr/selectableItemBackground"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:animateLayoutChanges="true">
+        android:animateLayoutChanges="false">
         <TextView
             android:id="@+id/question"
             android:layout_width="match_parent"
@@ -37,4 +29,3 @@
             android:text="answer"
             android:textSize="16sp"/>
     </LinearLayout>
-</android.support.v7.widget.CardView>

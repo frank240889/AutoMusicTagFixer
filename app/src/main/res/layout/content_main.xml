@@ -6,39 +6,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
-    tools:context="mx.dev.franco.automusictagfixer.MainActivity"
+    tools:context="mx.dev.franco.automusictagfixer.UI.main.MainActivity"
     tools:showIn="@layout/app_bar_select_folder">
-
-    <TextView
-        android:id="@+id/genericMessage"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:layout_centerVertical="true"
-        android:layout_marginEnd="10dp"
-        android:layout_marginStart="10dp"
-        android:gravity="center_horizontal"
-        android:text="@string/swipe_up_search"
-        android:textSize="18sp"
-        android:visibility="gone" />
-
-    <android.support.v4.widget.SwipeRefreshLayout xmlns:android="http://schemas.android.com/apk/res/android"
-        android:id="@+id/refreshLayout"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
-
-        <android.support.v7.widget.RecyclerView
-            android:id="@+id/recyclerView"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:divider="@drawable/divider_item_listview"
-            android:overScrollMode="always"
-            android:scrollbarStyle="outsideOverlay"
-            android:scrollbarThumbVertical="@drawable/custom_scrollbar_thumb"
-            android:scrollbars="vertical"
-            android:paddingBottom="80dp"
-            android:clipToPadding="false"/>
-    </android.support.v4.widget.SwipeRefreshLayout>
 
 
 </RelativeLayout>
