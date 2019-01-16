@@ -4,10 +4,6 @@
 1. This app is released in PlayStore, you can download it from next link: https://play.google.com/store/apps/details?id=mx.dev.franco.automusictagfixer
 2. This app uses the awesome jAudioTagger library, visit http://www.jthink.net/jaudiotagger/ for more information.
 ********************************************************************************************************************************
-- NOTICE!: Now the app is published under beta state, so you can directly download by join it to beta program, click in below link:
-
-https://play.google.com/apps/testing/mx.dev.franco.automusictagfixer
-
 What does it do?
 - For every audio file you have in your smartphone (all supported audio types by Android and jAudioTagger library), it will generate an audio fingerprint, then will connect to an ACR server and will download the correct data for every song, later will allow you to correct the song with this downloaded information; in other words, it will make a Shazam-like recognition but not from audio recorded, but over audio files you have and will correct their meta tags, including filename.
 
