@@ -131,7 +131,8 @@ public class IdentificationResultsFragment extends BottomSheetDialogFragment {
     public void onDestroy() {
         super.onDestroy();
         mArguments = null;
-        mOnClickTextView.release();
+        if(mOnClickTextView != null)
+            mOnClickTextView.release();
         mOnClickTextView = null;
     }
 
