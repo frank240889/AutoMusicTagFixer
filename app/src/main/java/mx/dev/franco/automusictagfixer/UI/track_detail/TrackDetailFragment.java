@@ -49,6 +49,7 @@ import javax.inject.Inject;
 
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.UI.BaseFragment;
+import mx.dev.franco.automusictagfixer.UI.main.MainActivity;
 import mx.dev.franco.automusictagfixer.UI.sd_card_instructions.SdCardInstructionsActivity;
 import mx.dev.franco.automusictagfixer.fixer.Fixer;
 import mx.dev.franco.automusictagfixer.identifier.GnResponseListener;
@@ -180,11 +181,11 @@ public class TrackDetailFragment extends BaseFragment implements EditableView,
         mEditableFieldsContainer = mLayout.findViewById(R.id.editable_data_container);
         //collapsible toolbar
         mToolbar = mLayout.findViewById(R.id.toolbar);
-        ((TrackDetailsActivity)getActivity()).setSupportActionBar(mToolbar);
+        ((MainActivity)getActivity()).setSupportActionBar(mToolbar);
         mCollapsingToolbarLayout = mLayout.findViewById(R.id.collapsing_toolbar_layout);
         mAppBarLayout = mLayout.findViewById(R.id.app_bar_layout);
         mCollapsingToolbarLayout.setTitleEnabled(false);
-        mActionBar = ((TrackDetailsActivity)getActivity()).getSupportActionBar();
+        mActionBar = ((MainActivity)getActivity()).getSupportActionBar();
         mActionBar.setDisplayShowTitleEnabled(false);
 
         setHasOptionsMenu(true);
@@ -976,6 +977,7 @@ public class TrackDetailFragment extends BaseFragment implements EditableView,
 
     @Override
     public void onBackPressed(){
+        if(mTrackDetailPresenter != null)
         mTrackDetailPresenter.onBackPressed();
     }
 
@@ -1176,11 +1178,21 @@ public class TrackDetailFragment extends BaseFragment implements EditableView,
     }
 
     @Override
-    protected void onApiInitialized() {
+    public void onApiInitialized() {
         Snackbar snackbar;
         snackbar = AndroidUtils.getSnackbar(mLayout, getActivity().getApplicationContext());
         snackbar.setText(R.string.api_initialized2);
         snackbar.show();
         mTrackDetailPresenter.onApiInitialized();
+    }
+
+    @Override
+    public void onNetworkConnected(Void param) {
+        //Do nothing
+    }
+
+    @Override
+    public void onNetworkDisconnected(Void param) {
+        mTrackDetailPresenter.cancelIdentification();
     }
 }

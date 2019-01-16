@@ -63,6 +63,7 @@
             android:parentActivityName=".UI.main.MainActivity"
             android:screenOrientation="portrait"
             android:theme="@style/DetailsTrackDialogTheme"
+            android:launchMode="singleTop"
             android:windowSoftInputMode="adjustResize"
             tools:ignore="InnerclassSeparator">
             <meta-data

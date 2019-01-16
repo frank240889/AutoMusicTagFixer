@@ -11,14 +11,18 @@ import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
+
+import java.lang.ref.WeakReference;
 
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.fixer.Fixer;
@@ -37,6 +41,7 @@ public class IdentificationResultsFragment extends BottomSheetDialogFragment {
     }
     private OnBottomSheetFragmentInteraction mCallback;
     private Bundle mArguments;
+    private OnClickTextView mOnClickTextView;
     public IdentificationResultsFragment(){}
 
     public static IdentificationResultsFragment newInstance(GnResponseListener.IdentificationResults identificationResults, boolean onlyCover) {
@@ -126,6 +131,8 @@ public class IdentificationResultsFragment extends BottomSheetDialogFragment {
     public void onDestroy() {
         super.onDestroy();
         mArguments = null;
+        mOnClickTextView.release();
+        mOnClickTextView = null;
     }
 
     @Override
@@ -139,11 +146,10 @@ public class IdentificationResultsFragment extends BottomSheetDialogFragment {
         TextInputLayout textInputLayout = view.findViewById(R.id.label_rename_to);
         EditText editText = view.findViewById(R.id.rename_to);
         TextView textView = view.findViewById(R.id.message_rename_hint);
+        mOnClickTextView = new OnClickTextView(getActivity());
         editText.addTextChangedListener(new TextWatcher() {
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
-            }
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
@@ -151,9 +157,7 @@ public class IdentificationResultsFragment extends BottomSheetDialogFragment {
             }
 
             @Override
-            public void afterTextChanged(Editable s) {
-
-            }
+            public void afterTextChanged(Editable s) { }
         });
         checkBox.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if(!isChecked){
@@ -162,12 +166,25 @@ public class IdentificationResultsFragment extends BottomSheetDialogFragment {
                 editText.setText("");
                 correctionParams.newName = "";
                 correctionParams.shouldRename = false;
+                editText.clearFocus();
+                InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+                try {
+                    assert imm != null;
+                    imm.hideSoftInputFromWindow(getActivity().getCurrentFocus().getWindowToken(), InputMethodManager.HIDE_IMPLICIT_ONLY);
+                }
+                catch (Exception e){
+                    e.printStackTrace();
+                }
             }
             else{
                 textInputLayout.setVisibility(View.VISIBLE);
                 textView.setVisibility(View.VISIBLE);
                 correctionParams.newName = editText.getText().toString();
                 correctionParams.shouldRename = true;
+                editText.requestFocus();
+                InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+                assert imm != null;
+                imm.showSoftInput(editText, InputMethodManager.SHOW_IMPLICIT);
             }
         });
 
@@ -177,24 +194,28 @@ public class IdentificationResultsFragment extends BottomSheetDialogFragment {
             TextView title = view.findViewById(R.id.track_id_title);
             title.setVisibility(View.VISIBLE);
             title.setText(results.title);
+            title.setOnClickListener(mOnClickTextView);
         }
 
         if(!results.artist.isEmpty()) {
             TextView artist = view.findViewById(R.id.track_id_artist);
             artist.setVisibility(View.VISIBLE);
             artist.setText(results.artist);
+            artist.setOnClickListener(mOnClickTextView);
         }
 
         if(!results.album.isEmpty()) {
             TextView album = view.findViewById(R.id.trackid_album);
             album.setVisibility(View.VISIBLE);
             album.setText(results.album);
+            album.setOnClickListener(mOnClickTextView);
         }
 
         if(!results.genre.isEmpty()) {
             TextView genre = view.findViewById(R.id.trackid_genre);
             genre.setVisibility(View.VISIBLE);
             genre.setText(results.genre);
+            genre.setOnClickListener(mOnClickTextView);
         }
 
         if(!results.trackNumber.isEmpty()) {
@@ -222,6 +243,36 @@ public class IdentificationResultsFragment extends BottomSheetDialogFragment {
                 into(cover);
         TextView coverDimensions = view.findViewById(R.id.trackid_cover_dimensions);
         coverDimensions.setText(TrackUtils.getStringImageSize(results.cover, getActivity().getApplicationContext())) ;
+    }
+
+    /**
+     * Helper class to show the information of textview
+     * in toast when value is too long
+     */
+    private static class OnClickTextView implements View.OnClickListener {
+        private WeakReference<Context> mContext;
+
+        public OnClickTextView(Context context){
+            mContext = new WeakReference<>(context);
+        }
+
+        @Override
+        public void onClick(View v) {
+            if(mContext != null && mContext.get() != null) {
+                Toast t = AndroidUtils.getToast(mContext.get().getApplicationContext());
+                t.setDuration(Toast.LENGTH_SHORT);
+                TextView textView = (TextView) v;
+                t.setText(textView.getText());
+                t.show();
+            }
+        }
+
+        public void release(){
+            if(mContext != null && mContext.get() != null) {
+                mContext.clear();
+                mContext = null;
+            }
+        }
     }
 
 }

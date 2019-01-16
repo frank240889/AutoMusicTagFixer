@@ -1,10 +1,12 @@
 package mx.dev.franco.automusictagfixer.UI.main;
 
 import android.Manifest;
+import android.app.SearchManager;
 import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.os.Build;
@@ -15,15 +17,18 @@ import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
-import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.SearchView;
+import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
@@ -38,10 +43,13 @@ import javax.inject.Inject;
 
 import mx.dev.franco.automusictagfixer.AutoMusicTagFixer;
 import mx.dev.franco.automusictagfixer.R;
+import mx.dev.franco.automusictagfixer.UI.BaseFragment;
 import mx.dev.franco.automusictagfixer.UI.sd_card_instructions.SdCardInstructionsActivity;
-import mx.dev.franco.automusictagfixer.UI.track_detail.TrackDetailsActivity;
+import mx.dev.franco.automusictagfixer.UI.track_detail.TrackDetailFragment;
+import mx.dev.franco.automusictagfixer.interfaces.CorrectionListener;
 import mx.dev.franco.automusictagfixer.modelsUI.main.ListViewModel;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
+import mx.dev.franco.automusictagfixer.persistence.room.database.TrackContract;
 import mx.dev.franco.automusictagfixer.services.FixerTrackService;
 import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
@@ -49,9 +57,10 @@ import mx.dev.franco.automusictagfixer.utilities.RequiredPermissions;
 import mx.dev.franco.automusictagfixer.utilities.ServiceUtils;
 import mx.dev.franco.automusictagfixer.utilities.StorageHelper;
 
-public class ListFragment extends Fragment implements
+public class ListFragment extends BaseFragment implements
         AudioItemHolder.ClickListener,Observer<List<Track>>,
-        TrackAdapter.OnSortingListener{
+        TrackAdapter.OnSortingListener,
+        CorrectionListener {
     private static final String TAG = ListFragment.class.getName();
 
     private GridLayoutManager mGridLayoutManager;
@@ -64,11 +73,13 @@ public class ListFragment extends Fragment implements
     //better performance with huge data sources
     private RecyclerView mRecyclerView;
     private TrackAdapter mAdapter;
-    private FloatingActionButton mFabStartTask;
-    private FloatingActionButton mFabStopTask;
     private ListViewModel mListViewModel;
     private ActionBar mActionBar;
     private View mLayout;
+    private Menu mMenu;
+    private Toolbar mToolbar;
+    private FloatingActionButton mStartTaskFab;
+    private FloatingActionButton mStopTaskFab;
 
     @Inject
     ServiceUtils serviceUtils;
@@ -110,7 +121,17 @@ public class ListFragment extends Fragment implements
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        mLayout = inflater.inflate(R.layout.fragment_list, container, false);
+        mLayout = inflater.inflate(R.layout.layout_list, container, false);
+        mStartTaskFab = mLayout.findViewById(R.id.fab_start);
+        mStopTaskFab = mLayout.findViewById(R.id.fab_stop);
+        mStartTaskFab.setOnClickListener(v -> startCorrection(-1));
+        mStopTaskFab.setOnClickListener(v -> stopCorrection());
+        mStartTaskFab.hide();
+        mStopTaskFab.hide();
+        mToolbar = mLayout.findViewById(R.id.toolbar);
+        ((MainActivity)getActivity()).setSupportActionBar(mToolbar);
+        mActionBar = ((MainActivity)getActivity()).getSupportActionBar();
+        mActionBar.setDisplayHomeAsUpEnabled(true);
         return mLayout;
     }
 
@@ -152,6 +173,17 @@ public class ListFragment extends Fragment implements
         });
         mRecyclerView.setAdapter(mAdapter);
 
+        mSwipeRefreshLayout.setOnRefreshListener(()->{
+            if(ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                        RequiredPermissions.WRITE_EXTERNAL_STORAGE_PERMISSION);
+            }
+            else {
+                mListViewModel.updateTrackList();
+            }
+        });
+
         //Color of progress bar of refresh layout
         mSwipeRefreshLayout.setColorSchemeColors(
                 ContextCompat.getColor(getActivity(), R.color.grey_900),
@@ -174,17 +206,34 @@ public class ListFragment extends Fragment implements
         if(AndroidUtils.getUriSD(getActivity().getApplicationContext()) == null && isPresentSD)
             getActivity().startActivity(new Intent(getActivity(), SdCardInstructionsActivity.class));
 
+        boolean hasPermission = ContextCompat.
+                checkSelfPermission(getActivity(), Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                == PackageManager.PERMISSION_GRANTED;
+
+        if(!hasPermission) {
+            requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                            Manifest.permission.READ_EXTERNAL_STORAGE},
+                    RequiredPermissions.WRITE_EXTERNAL_STORAGE_PERMISSION);
+        }
+        else {
+            mMessage.setText(R.string.loading_tracks);
+        }
+
+        //App is opened again
+        int id = getActivity().getIntent().getIntExtra(Constants.MEDIA_STORE_ID, -1);
+        scrollTo(id);
+
     }
 
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        mFabStartTask = ((MainActivity)getActivity()).mStartTaskFab;
+        /*mFabStartTask = ((MainActivity)getActivity()).mStartTaskFab;
         mFabStopTask = ((MainActivity)getActivity()).mStopTaskFab;
         mFabStartTask.setOnClickListener(v -> startCorrection(-1));
-        mFabStopTask.setOnClickListener(v -> stopCorrection());
+        mFabStopTask.setOnClickListener(v -> stopCorrection());*/
 
-        boolean hasPermission = ContextCompat.
+        /*boolean hasPermission = ContextCompat.
                 checkSelfPermission(getActivity(), Manifest.permission.WRITE_EXTERNAL_STORAGE)
                 == PackageManager.PERMISSION_GRANTED;
 
@@ -211,12 +260,205 @@ public class ListFragment extends Fragment implements
 
         //App is opened again
         int id = getActivity().getIntent().getIntExtra(Constants.MEDIA_STORE_ID, -1);
-        scrollTo(id);
+        scrollTo(id);*/
     }
 
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+        menu.clear();
+        inflater.inflate(R.menu.menu_main_activity, menu);
+        SearchManager searchManager = (SearchManager) getActivity().getSystemService(Context.SEARCH_SERVICE);
+        SearchView searchView = (SearchView) menu.findItem(R.id.action_search).getActionView();
+        searchView.setSearchableInfo(searchManager.getSearchableInfo(getActivity().getComponentName()));
+        searchView.setIconifiedByDefault(true);
+
+        mMenu = menu;
+        checkItem(-1);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem menuItem) {
+        int id = menuItem.getItemId();
+        boolean sorted = false;
+        stopScroll();
+        switch (id){
+            case R.id.action_select_all:
+                if(getDatasource() == null || getDatasource().size() == 0){
+                    Snackbar snackbar = AndroidUtils.getSnackbar(mLayout, getActivity().getApplicationContext());
+                    snackbar.setText(R.string.no_available);
+                    snackbar.show();
+                    return false;
+                }
+                checkAll();
+                break;
+            case R.id.action_refresh:
+                rescan();
+                break;
+
+            case R.id.path_asc:
+                sorted = sort(TrackContract.TrackData.DATA, TrackAdapter.ASC);
+                if(!sorted){
+                    Snackbar snackbar = AndroidUtils.getSnackbar(mLayout, getActivity().getApplicationContext());
+                    snackbar.setText(R.string.no_available);
+                    snackbar.show();
+                    return false;
+                }
+                checkItem(id);
+                break;
+            case R.id.path_desc:
+                sorted = sort(TrackContract.TrackData.DATA, TrackAdapter.DESC);
+                if(!sorted){
+                    Snackbar snackbar = AndroidUtils.getSnackbar(mLayout, getActivity().getApplicationContext());
+                    snackbar.setText(R.string.no_available);
+                    snackbar.show();
+                    return false;
+                }
+                checkItem(id);
+                break;
+            case R.id.title_asc:
+                sorted = sort(TrackContract.TrackData.TITLE, TrackAdapter.ASC);
+                if(!sorted){
+                    Snackbar snackbar = AndroidUtils.getSnackbar(mLayout, getActivity().getApplicationContext());
+                    snackbar.setText(R.string.no_available);
+                    snackbar.show();
+                    return false;
+                }
+                checkItem(id);
+                break;
+            case R.id.title_desc:
+                sorted = sort(TrackContract.TrackData.TITLE, TrackAdapter.DESC);
+                if(!sorted){
+                    Snackbar snackbar = AndroidUtils.getSnackbar(mLayout, getActivity().getApplicationContext());
+                    snackbar.setText(R.string.no_available);
+                    snackbar.show();
+                    return false;
+                }
+                checkItem(id);
+                break;
+            case R.id.artist_asc:
+                sorted = sort(TrackContract.TrackData.ARTIST, TrackAdapter.ASC);
+                if(!sorted){
+                    Snackbar snackbar = AndroidUtils.getSnackbar(mLayout, getActivity().getApplicationContext());
+                    snackbar.setText(R.string.no_available);
+                    snackbar.show();
+                    return false;
+                }
+                checkItem(id);
+                break;
+            case R.id.artist_desc:
+                sorted = sort(TrackContract.TrackData.ARTIST, TrackAdapter.DESC);
+                if(!sorted){
+                    Snackbar snackbar = AndroidUtils.getSnackbar(mLayout, getActivity().getApplicationContext());
+                    snackbar.setText(R.string.no_available);
+                    snackbar.show();
+                    return false;
+                }
+                checkItem(id);
+                break;
+            case R.id.album_asc:
+                sorted = sort(TrackContract.TrackData.ALBUM, TrackAdapter.ASC);
+                if(!sorted){
+                    Snackbar snackbar = AndroidUtils.getSnackbar(mLayout, getActivity().getApplicationContext());
+                    snackbar.setText(R.string.no_available);
+                    snackbar.show();
+                    return false;
+                }
+                checkItem(id);
+                break;
+            case R.id.album_desc:
+                sorted = sort(TrackContract.TrackData.ALBUM, TrackAdapter.DESC);
+                if(!sorted){
+                    Snackbar snackbar = AndroidUtils.getSnackbar(mLayout, getActivity().getApplicationContext());
+                    snackbar.setText(R.string.no_available);
+                    snackbar.show();
+                    return false;
+                }
+                checkItem(id);
+                break;
+        }
+        return super.onOptionsItemSelected(menuItem);
+    }
+
+    private void rescan(){
+        boolean hasPermission = ContextCompat.
+                checkSelfPermission(getActivity(), Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                == PackageManager.PERMISSION_GRANTED;
+        if(!hasPermission) {
+            requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                    RequiredPermissions.WRITE_EXTERNAL_STORAGE_PERMISSION);
+        }
+        else if(ServiceUtils.getInstance(getActivity().getApplicationContext()).
+                checkIfServiceIsRunning(FixerTrackService.class.getName())){
+            Snackbar snackbar = AndroidUtils.getSnackbar(mLayout, getActivity().getApplicationContext());
+            snackbar.setText(R.string.no_available);
+            snackbar.show();
+        }
+        else {
+            updateList();
+        }
+    }
+
+    /**
+     * Sets the item with an icon and saves to
+     * shared preferences to persist its value, to indicate what sort type is selected.
+     * @param selectedItem The id of item selected.
+     */
+    private void checkItem(int selectedItem) {
+        SharedPreferences sharedPreferences = getActivity().getSharedPreferences(
+                Constants.Application.FULL_QUALIFIED_NAME, Context.MODE_PRIVATE);
+        //No previous value was found.
+        if(selectedItem == -1){
+            int currentSelectedItem = sharedPreferences.getInt(Constants.SELECTED_ITEM, -1);
+            if(currentSelectedItem == -1){
+                MenuItem defaultMenuItemSelected = mMenu.findItem(R.id.title_asc);
+                defaultMenuItemSelected.setIcon(ContextCompat.getDrawable(
+                        getActivity().getApplicationContext(), R.drawable.ic_done_white));
+                sharedPreferences.edit().putInt(Constants.SELECTED_ITEM,
+                        defaultMenuItemSelected.getItemId()).apply();
+                sharedPreferences.edit().putInt(Constants.LAST_SELECTED_ITEM,
+                        defaultMenuItemSelected.getItemId()).apply();
+            }
+            else {
+                MenuItem menuItemSelected = mMenu.findItem(currentSelectedItem);
+                if(menuItemSelected != null) {
+                    menuItemSelected.setIcon(ContextCompat.
+                            getDrawable(getActivity().getApplicationContext(), R.drawable.ic_done_white));
+                    sharedPreferences.edit().putInt(Constants.SELECTED_ITEM,
+                            menuItemSelected.getItemId()).apply();
+                    sharedPreferences.edit().putInt(Constants.LAST_SELECTED_ITEM,
+                            menuItemSelected.getItemId()).apply();
+                }
+            }
+        }
+        else {
+            int lastItemSelected = sharedPreferences.getInt(Constants.LAST_SELECTED_ITEM, -1);
+            //User selected the same item.
+            if(selectedItem == lastItemSelected)
+                return;
+
+            MenuItem menuItemSelected = mMenu.findItem(selectedItem);
+            MenuItem lastMenuItemSelected = mMenu.findItem(lastItemSelected);
+            //Clear last selected
+            if(lastMenuItemSelected != null)
+                lastMenuItemSelected.setIcon(null);
+
+            int selectedMenuItem = -1;
+            if(menuItemSelected != null) {
+                menuItemSelected.setIcon(ContextCompat.getDrawable(getActivity().getApplicationContext(),
+                        R.drawable.ic_done_white));
+                selectedMenuItem = menuItemSelected.getItemId();
+            }
+            sharedPreferences.edit().putInt(Constants.SELECTED_ITEM, selectedMenuItem).apply();
+            sharedPreferences.edit().putInt(Constants.LAST_SELECTED_ITEM, selectedMenuItem).apply();
+        }
+    }
+
+
+
     private void noFilesFoundMessage(Boolean aBoolean) {
-        mFabStopTask.hide();
-        mFabStartTask.hide();
+        mStopTaskFab.hide();
+        mStartTaskFab.hide();
         mMessage.setVisibility(View.VISIBLE);
         mMessage.setText(R.string.no_items_found);
     }
@@ -251,8 +493,8 @@ public class ListFragment extends Fragment implements
 
         }
         else {
-            mFabStopTask.hide();
-            mFabStartTask.hide();
+            mStopTaskFab.hide();
+            mStartTaskFab.hide();
             mMessage.setVisibility(View.VISIBLE);
             mMessage.setText(R.string.permission_denied);
             mListViewModel.setProgress(false);
@@ -366,10 +608,18 @@ public class ListFragment extends Fragment implements
      */
     public void openDetails(ViewWrapper viewWrapper){
         mRecyclerView.stopScroll();
-        Intent intent = new Intent(getActivity(), TrackDetailsActivity.class);
-        intent.putExtra(Constants.MEDIA_STORE_ID, viewWrapper.track.getMediaStoreId());
-        intent.putExtra(Constants.CorrectionModes.MODE, viewWrapper.mode);
-        getActivity().startActivity(intent);
+
+        TrackDetailFragment trackDetailFragment = TrackDetailFragment.newInstance(
+                viewWrapper.track.getMediaStoreId(),
+                viewWrapper.mode);
+
+        getActivity().getSupportFragmentManager().beginTransaction().
+                add(R.id.container_fragments, trackDetailFragment).
+                setCustomAnimations(R.anim.slide_in_right,
+                        R.anim.slide_out_left, R.anim.slide_in_left,
+                        R.anim.slide_out_right).
+                addToBackStack(TrackDetailFragment.class.getName()).
+                commitAllowingStateLoss();
     }
 
     /**
@@ -381,20 +631,20 @@ public class ListFragment extends Fragment implements
     public void onChanged(@Nullable List<Track> tracks) {
         if(tracks != null) {
             if(tracks.isEmpty()) {
-                mFabStopTask.hide();
-                mFabStartTask.hide();
+                mStopTaskFab.hide();
+                mStartTaskFab.hide();
                 mMessage.setVisibility(View.VISIBLE);
                 mMessage.setText(R.string.no_items_found);
             }
             else {
                 boolean isServiceRunning = serviceUtils.checkIfServiceIsRunning(FixerTrackService.CLASS_NAME);
                 if(!isServiceRunning){
-                    mFabStartTask.show();
-                    mFabStopTask.hide();
+                    mStartTaskFab.show();
+                    mStopTaskFab.hide();
                 }
                 else {
-                    mFabStartTask.hide();
-                    mFabStopTask.show();
+                    mStartTaskFab.hide();
+                    mStopTaskFab.show();
                 }
                 mActionBar.setTitle(tracks.size() + " " +getString(R.string.tracks));
                 mMessage.setVisibility(View.GONE);
@@ -415,7 +665,7 @@ public class ListFragment extends Fragment implements
                     t.setDuration(Toast.LENGTH_SHORT);
                     t.setText(R.string.cancelling);
                     t.show();
-                    mFabStopTask.setEnabled(false);
+                    mStopTaskFab.setEnabled(false);
                 });
         final AlertDialog dialog = builder.create();
         dialog.show();
@@ -447,17 +697,6 @@ public class ListFragment extends Fragment implements
         //}
     }
 
-    public void correctionStarted() {
-        mFabStartTask.hide();
-        mFabStopTask.show();
-    }
-
-    public void correctionCompleted(){
-        mFabStartTask.show();
-        mFabStopTask.setEnabled(true);
-        mFabStopTask.hide();
-    }
-
     @Override
     public void onStartSorting() {
         mSwipeRefreshLayout.setEnabled(false);
@@ -469,13 +708,76 @@ public class ListFragment extends Fragment implements
         mRecyclerView.scrollToPosition(0);
     }
 
+    @Override
+    public void onApiInitialized() {
+        Snackbar snackbar = AndroidUtils.getSnackbar(mLayout, getActivity().getApplicationContext());
+        if(getDatasource().size() > 0) {
+            snackbar.setText(R.string.api_initialized);
+        }
+        else {
+            if(ContextCompat.checkSelfPermission(getActivity(),
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    != PackageManager.PERMISSION_GRANTED){
+                snackbar.setText(R.string.title_dialog_permision);
+            }
+            else {
+                snackbar.setText(R.string.add_some_tracks);
+            }
+        }
+        snackbar.show();
+    }
+
+    @Override
+    public void onBackPressed() {
+        callSuperOnBackPressed();
+    }
+
+    @Override
+    public void onNetworkConnected(Void param) {
+        //Do nothing
+    }
+
+    @Override
+    public void onNetworkDisconnected(Void param) {
+        Toast toast = AndroidUtils.getToast(getActivity().getApplicationContext());
+        toast.setText(R.string.connection_lost);
+        toast.setDuration(Toast.LENGTH_SHORT);
+        toast.show();
+    }
+
+    @Override
+    public void onTaskStarted() {
+        mStartTaskFab.hide();
+        mStopTaskFab.show();
+    }
+
+    @Override
+    public void onStartProcessingFor(int id) {
+        scrollTo(id);
+    }
+
+    @Override
+    public void onFinishProcessing(String error) {
+        Toast toast = AndroidUtils.getToast(getActivity().getApplicationContext());
+        toast.setText(error);
+        toast.setDuration(Toast.LENGTH_SHORT);
+        toast.show();
+    }
+
+    @Override
+    public void onFinishTask() {
+        mStartTaskFab.show();
+        mStopTaskFab.setEnabled(true);
+        mStopTaskFab.hide();
+    }
+
     public static class ViewWrapper{
         public View view;
         public Track track;
         public int mode;
     }
 
-    public void scrollTo(int id) {
+    private void scrollTo(int id) {
         if(id == -1)
             return;
 

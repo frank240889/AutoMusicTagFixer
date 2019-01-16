@@ -251,4 +251,12 @@ public class ListViewModel extends ViewModel {
 
        return trackRepository.sortTracks(by, orderType);
     }
+
+    public void onBackPressed() {
+
+    }
+
+    public void onApiInitialized() {
+
+    }
 }

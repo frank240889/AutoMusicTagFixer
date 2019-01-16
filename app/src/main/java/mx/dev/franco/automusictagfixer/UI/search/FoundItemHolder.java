@@ -2,10 +2,7 @@ package mx.dev.franco.automusictagfixer.UI.search;
 
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
-import android.widget.CheckBox;
-import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import mx.dev.franco.automusictagfixer.R;
