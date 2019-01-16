@@ -8,11 +8,10 @@
     android:orientation="vertical"
     android:padding="4dp"
     android:background="@color/grey_900"
-    tools:showIn="@layout/content_details_track">
+    tools:showIn="@layout/content_details_track"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-    <android.support.v7.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:app="http://schemas.android.com/apk/res-auto"
-        xmlns:tools="http://schemas.android.com/tools"
+    <android.support.v7.widget.CardView
         android:id="@+id/cardview_content"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -309,6 +308,7 @@
         app:cardElevation="@dimen/cardview_default_radius"
         app:cardUseCompatPadding="true"
         app:contentPadding="4dp"
+        android:layout_marginBottom="80dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

@@ -85,8 +85,7 @@
         </android.support.design.widget.CollapsingToolbarLayout>
     </android.support.design.widget.AppBarLayout>
 
-    <include layout="@layout/content_details_track"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior"/>
+    <include layout="@layout/content_details_track"/>
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/fab_edit_track_info"
