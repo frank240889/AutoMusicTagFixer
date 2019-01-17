@@ -12,20 +12,16 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
-import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.app.ShareCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
-import android.view.Menu;
 import android.view.MenuItem;
 import android.view.Window;
 import android.view.WindowManager;
@@ -37,6 +33,7 @@ import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.UI.BaseFragment;
 import mx.dev.franco.automusictagfixer.UI.about.ScrollingAboutActivity;
 import mx.dev.franco.automusictagfixer.UI.faq.QuestionsActivity;
+import mx.dev.franco.automusictagfixer.UI.search.ResultSearchListFragment;
 import mx.dev.franco.automusictagfixer.UI.settings.SettingsActivity;
 import mx.dev.franco.automusictagfixer.identifier.GnService;
 import mx.dev.franco.automusictagfixer.interfaces.OnTestingNetwork;
@@ -54,15 +51,7 @@ public class MainActivity extends AppCompatActivity
 
     //the receiver that handles the broadcasts from FixerTrackService
     private ResponseReceiver mReceiver;
-
-    private ListFragment mListFragment;
-
-    private Toolbar mToolbar;
-    private ActionBar mActionBar;
-    public FloatingActionButton mStartTaskFab;
-    public FloatingActionButton mStopTaskFab;
-    private Menu mMenu;
-    private DrawerLayout mDrawer;
+    public DrawerLayout mDrawer;
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
@@ -82,10 +71,7 @@ public class MainActivity extends AppCompatActivity
         setupReceivers();
 
         mDrawer = findViewById(R.id.drawer_layout);
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this,
-                mDrawer, mToolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        mDrawer.addDrawerListener(toggle);
-        toggle.syncState();
+
 
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
@@ -105,21 +91,49 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        Fragment fragment = getSupportFragmentManager().findFragmentByTag(ResultSearchListFragment.TAG);
+        if(fragment instanceof ResultSearchListFragment) {
+            ((ResultSearchListFragment) fragment).onNewIntent(intent);
+        }
+        else {
+            ResultSearchListFragment resultSearchListFragment = ResultSearchListFragment.newInstance(intent);
+            getSupportFragmentManager().beginTransaction().
+                    setCustomAnimations(R.anim.slide_in_right,
+                            R.anim.slide_out_left, R.anim.slide_in_left,
+                            R.anim.slide_out_right).
+                    addToBackStack(ResultSearchListFragment.TAG).
+                    add(R.id.container_fragments, resultSearchListFragment, ResultSearchListFragment.TAG).
+                    commit();
+
+        }
+
+    }
+
+    @Override
     public void onBackPressed() {
-        List<Fragment> fragments = getSupportFragmentManager().getFragments();
-        for(Fragment fragment : fragments){
+        if (getSupportFragmentManager().getBackStackEntryCount() > 0 ){
+            int topFragmentIndex = getSupportFragmentManager().getBackStackEntryCount() - 1;
+            FragmentManager.BackStackEntry backStackEntry = getSupportFragmentManager().
+                    getBackStackEntryAt(topFragmentIndex);
+            String backStackEntryName = backStackEntry.getName();
+            Fragment fragment = getSupportFragmentManager().findFragmentByTag(backStackEntryName);
             if(fragment instanceof BaseFragment){
                 ((BaseFragment) fragment).onBackPressed();
-                break;
             }
             else {
                 super.onBackPressed();
             }
         }
+        else {
+            super.onBackPressed();
+        }
     }
 
     @Override
     public void callSuperOnBackPressed() {
+        mDrawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
         if (mDrawer.isDrawerOpen(GravityCompat.START)) {
             mDrawer.closeDrawer(GravityCompat.START);
         }
@@ -140,7 +154,7 @@ public class MainActivity extends AppCompatActivity
         }
         else if(ServiceUtils.getInstance(getApplicationContext()).
                 checkIfServiceIsRunning(FixerTrackService.class.getName())){
-            Snackbar snackbar = AndroidUtils.getSnackbar(mToolbar, getApplicationContext());
+            Snackbar snackbar = AndroidUtils.getSnackbar(mDrawer, getApplicationContext());
             snackbar.setText(R.string.no_available);
             snackbar.show();
         }

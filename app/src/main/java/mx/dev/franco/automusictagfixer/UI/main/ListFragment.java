@@ -18,8 +18,10 @@ import android.support.annotation.RequiresApi;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.widget.DrawerLayout;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBar;
+import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -129,9 +131,6 @@ public class ListFragment extends BaseFragment implements
         mStartTaskFab.hide();
         mStopTaskFab.hide();
         mToolbar = mLayout.findViewById(R.id.toolbar);
-        ((MainActivity)getActivity()).setSupportActionBar(mToolbar);
-        mActionBar = ((MainActivity)getActivity()).getSupportActionBar();
-        mActionBar.setDisplayHomeAsUpEnabled(true);
         return mLayout;
     }
 
@@ -142,7 +141,6 @@ public class ListFragment extends BaseFragment implements
         mRecyclerView = mLayout.findViewById(R.id.tracks_recycler_view);
         mSwipeRefreshLayout = mLayout.findViewById(R.id.refresh_layout);
         mMessage = mLayout.findViewById(R.id.message);
-        mActionBar = ((MainActivity)getActivity()).getSupportActionBar();
 
         //attach adapter to our recyclerview
         mGridLayoutManager = new GridLayoutManager(getActivity(), 1);
@@ -228,39 +226,15 @@ public class ListFragment extends BaseFragment implements
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        /*mFabStartTask = ((MainActivity)getActivity()).mStartTaskFab;
-        mFabStopTask = ((MainActivity)getActivity()).mStopTaskFab;
-        mFabStartTask.setOnClickListener(v -> startCorrection(-1));
-        mFabStopTask.setOnClickListener(v -> stopCorrection());*/
-
-        /*boolean hasPermission = ContextCompat.
-                checkSelfPermission(getActivity(), Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                == PackageManager.PERMISSION_GRANTED;
-
-
-        mSwipeRefreshLayout.setOnRefreshListener(()->{
-            if(ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                    != PackageManager.PERMISSION_GRANTED) {
-                requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                        RequiredPermissions.WRITE_EXTERNAL_STORAGE_PERMISSION);
-            }
-            else {
-                mListViewModel.updateTrackList();
-            }
-        });
-
-        if(!hasPermission) {
-            requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                            Manifest.permission.READ_EXTERNAL_STORAGE},
-                    RequiredPermissions.WRITE_EXTERNAL_STORAGE_PERMISSION);
-        }
-        else {
-            mMessage.setText(R.string.loading_tracks);
-        }
-
-        //App is opened again
-        int id = getActivity().getIntent().getIntExtra(Constants.MEDIA_STORE_ID, -1);
-        scrollTo(id);*/
+        ((MainActivity)getActivity()).setSupportActionBar(mToolbar);
+        mActionBar = ((MainActivity)getActivity()).getSupportActionBar();
+        mActionBar.setDisplayHomeAsUpEnabled(true);
+        mActionBar = ((MainActivity)getActivity()).getSupportActionBar();
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(getActivity(),
+                ((MainActivity)getActivity()).mDrawer,
+                mToolbar,R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        ((MainActivity)getActivity()).mDrawer.addDrawerListener(toggle);
+        toggle.syncState();
     }
 
     @Override
@@ -612,13 +586,13 @@ public class ListFragment extends BaseFragment implements
         TrackDetailFragment trackDetailFragment = TrackDetailFragment.newInstance(
                 viewWrapper.track.getMediaStoreId(),
                 viewWrapper.mode);
-
+        ((MainActivity)getActivity()).mDrawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
         getActivity().getSupportFragmentManager().beginTransaction().
                 setCustomAnimations(R.anim.slide_in_right,
                         R.anim.slide_out_left, R.anim.slide_in_left,
                         R.anim.slide_out_right).
-                add(R.id.container_fragments, trackDetailFragment).
-                addToBackStack(TrackDetailFragment.class.getName()).
+                addToBackStack(TrackDetailFragment.TAG).
+                add(R.id.container_fragments, trackDetailFragment, TrackDetailFragment.TAG).
                 commit();
     }
 
