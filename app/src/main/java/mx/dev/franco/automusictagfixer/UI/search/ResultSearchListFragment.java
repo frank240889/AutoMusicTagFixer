@@ -19,6 +19,9 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
@@ -136,8 +139,6 @@ public class ResultSearchListFragment extends BaseFragment implements
             }
         });
         mRecyclerView.setAdapter(mAdapter);
-        Intent intent = (Intent) getArguments().get("intent");
-        performSearch(intent);
 
     }
 
@@ -181,6 +182,16 @@ public class ResultSearchListFragment extends BaseFragment implements
         ((MainActivity)getActivity()).mDrawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
         TrackDetailFragment trackDetailFragment = TrackDetailFragment.
                 newInstance(viewWrapper.track.getMediaStoreId(), viewWrapper.mode);
+
+        //to hide it, call the method again
+        InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+        try {
+            assert imm != null;
+            imm.hideSoftInputFromWindow(getActivity().getCurrentFocus().getWindowToken(), 0);
+        }
+        catch (Exception e){
+            e.printStackTrace();
+        }
         getActivity().getSupportFragmentManager().beginTransaction().
                 setCustomAnimations(R.anim.slide_in_right,
                         R.anim.slide_out_left, R.anim.slide_in_left,
@@ -264,5 +275,40 @@ public class ResultSearchListFragment extends BaseFragment implements
     @Override
     public void onNetworkDisconnected(Void param) {
         //Do  nothing
+    }
+
+    @Override
+    public Animation onCreateAnimation(int transit, boolean enter, int nextAnim) {
+        Animation animation = super.onCreateAnimation(transit, enter, nextAnim);
+
+        if (animation == null && nextAnim != 0) {
+            animation = AnimationUtils.loadAnimation(getActivity(), nextAnim);
+        }
+
+        if (animation != null && getView() != null)
+            getView().setLayerType(View.LAYER_TYPE_HARDWARE, null);
+
+        if(animation != null)
+            animation.setAnimationListener(new Animation.AnimationListener() {
+                @Override
+                public void onAnimationStart(Animation animation) {
+
+                }
+
+                @Override
+                public void onAnimationEnd(Animation animation) {
+                    animation.setAnimationListener(null);
+                    Intent intent = (Intent) (getArguments() != null ? getArguments().get("intent") : null);
+                    if(intent != null)
+                        performSearch(intent);
+                }
+
+                @Override
+                public void onAnimationRepeat(Animation animation) {
+
+                }
+            });
+
+        return animation;
     }
 }

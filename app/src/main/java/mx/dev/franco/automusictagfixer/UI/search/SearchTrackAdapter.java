@@ -1,7 +1,6 @@
 package mx.dev.franco.automusictagfixer.UI.search;
 
 import android.arch.lifecycle.Observer;
-import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -43,8 +42,6 @@ public class SearchTrackAdapter extends RecyclerView.Adapter<FoundItemHolder> im
         Destructible, Observer<List<Track>>,
         AsyncOperation<Void, DiffResults<Track>, Void, Void>{
     private static final String TAG = SearchTrackAdapter.class.getName();
-    @Inject
-    Context context;
     @Inject
     ServiceUtils serviceUtils;
     private List<Track> mTrackList = new ArrayList<>();
@@ -181,7 +178,7 @@ public class SearchTrackAdapter extends RecyclerView.Adapter<FoundItemHolder> im
                             public void onAsyncOperationFinished(byte[] result) {
                                 if (holder.itemView.getContext() != null) {
                                     try {
-                                        GlideApp.with(context).
+                                        GlideApp.with(holder.itemView.getContext()).
                                                 load(result)
                                                 .thumbnail(0.5f)
                                                 .error(R.drawable.ic_album_white_48px)
@@ -278,7 +275,6 @@ public class SearchTrackAdapter extends RecyclerView.Adapter<FoundItemHolder> im
         reset();
         mAsyncTaskQueue = null;
         serviceUtils = null;
-        context = null;
         mTrackList.clear();
         mTrackList = null;
         mListener = null;

@@ -111,6 +111,8 @@ public class MainActivity extends AppCompatActivity
 
     }
 
+
+
     @Override
     public void onBackPressed() {
         if (getSupportFragmentManager().getBackStackEntryCount() > 0 ){
@@ -127,7 +129,7 @@ public class MainActivity extends AppCompatActivity
             }
         }
         else {
-            super.onBackPressed();
+            callSuperOnBackPressed();
         }
     }
 

@@ -978,7 +978,7 @@ public class TrackDetailFragment extends BaseFragment implements EditableView,
     @Override
     public void onBackPressed(){
         if(mTrackDetailPresenter != null)
-        mTrackDetailPresenter.onBackPressed();
+            mTrackDetailPresenter.onBackPressed();
     }
 
     private void onCoverChanged(byte[] bytes) {
