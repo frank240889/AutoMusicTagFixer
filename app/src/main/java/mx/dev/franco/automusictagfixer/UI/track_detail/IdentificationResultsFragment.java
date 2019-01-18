@@ -22,8 +22,6 @@ import android.widget.Toast;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
 
-import java.lang.ref.WeakReference;
-
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.fixer.Fixer;
 import mx.dev.franco.automusictagfixer.identifier.GnResponseListener;
@@ -131,8 +129,6 @@ public class IdentificationResultsFragment extends BottomSheetDialogFragment {
     public void onDestroy() {
         super.onDestroy();
         mArguments = null;
-        if(mOnClickTextView != null)
-            mOnClickTextView.release();
         mOnClickTextView = null;
     }
 
@@ -147,7 +143,7 @@ public class IdentificationResultsFragment extends BottomSheetDialogFragment {
         TextInputLayout textInputLayout = view.findViewById(R.id.label_rename_to);
         EditText editText = view.findViewById(R.id.rename_to);
         TextView textView = view.findViewById(R.id.message_rename_hint);
-        mOnClickTextView = new OnClickTextView(getActivity());
+        mOnClickTextView = new OnClickTextView();
         editText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
@@ -251,28 +247,13 @@ public class IdentificationResultsFragment extends BottomSheetDialogFragment {
      * in toast when value is too long
      */
     private static class OnClickTextView implements View.OnClickListener {
-        private WeakReference<Context> mContext;
-
-        public OnClickTextView(Context context){
-            mContext = new WeakReference<>(context);
-        }
-
         @Override
         public void onClick(View v) {
-            if(mContext != null && mContext.get() != null) {
-                Toast t = AndroidUtils.getToast(mContext.get().getApplicationContext());
-                t.setDuration(Toast.LENGTH_SHORT);
-                TextView textView = (TextView) v;
-                t.setText(textView.getText());
-                t.show();
-            }
-        }
-
-        public void release(){
-            if(mContext != null && mContext.get() != null) {
-                mContext.clear();
-                mContext = null;
-            }
+            Toast t = AndroidUtils.getToast(v.getContext());
+            t.setDuration(Toast.LENGTH_SHORT);
+            TextView textView = (TextView) v;
+            t.setText(textView.getText());
+            t.show();
         }
     }
 

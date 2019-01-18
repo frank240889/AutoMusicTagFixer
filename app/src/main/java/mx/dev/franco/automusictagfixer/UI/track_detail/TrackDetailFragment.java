@@ -1195,4 +1195,37 @@ public class TrackDetailFragment extends BaseFragment implements EditableView,
     public void onNetworkDisconnected(Void param) {
         mTrackDetailPresenter.cancelIdentification();
     }
+
+    @Override
+    public Animation onCreateAnimation(int transit, boolean enter, int nextAnim) {
+        Animation animation = super.onCreateAnimation(transit, enter, nextAnim);
+
+        if (animation == null && nextAnim != 0) {
+            animation = AnimationUtils.loadAnimation(getActivity(), nextAnim);
+        }
+
+        if (animation != null && getView() != null)
+            getView().setLayerType(View.LAYER_TYPE_HARDWARE, null);
+
+        if(animation != null)
+        animation.setAnimationListener(new Animation.AnimationListener() {
+            @Override
+            public void onAnimationStart(Animation animation) {
+
+            }
+
+            @Override
+            public void onAnimationEnd(Animation animation) {
+                if(getView() != null)
+                getView().setLayerType(View.LAYER_TYPE_NONE, null);
+            }
+
+            @Override
+            public void onAnimationRepeat(Animation animation) {
+
+            }
+        });
+
+        return animation;
+    }
 }
