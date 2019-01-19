@@ -276,7 +276,7 @@
     <string name="watch">Ver</string>
     <string name="accept">Aceptar</string>
     <string name="add_some_tracks">Añade canciones a tu smartphone para comenzar.</string>
-    <string name="no_found_items">Sin resultados para \"%1$s\"</string>
+    <string name="no_found_items">\"%1$s\" buscado</string>
     <string name="search_results">%1$s canciones para \"%2$s\"</string>
     <string name="no_results">Sin resultados.</string>
     <string name="hint_rename">Nombre sin extensión</string>

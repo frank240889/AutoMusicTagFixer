@@ -49,12 +49,11 @@
             android:theme="@style/MainActivityTheme"
             android:launchMode="singleTop"
             tools:ignore="InnerclassSeparator">
-            <meta-data android:name="android.app.default_searchable"
-                android:value=".UI.main.MainActivity" />
-
             <intent-filter>
                 <action android:name="android.intent.action.SEARCH"/>
             </intent-filter>
+            <meta-data android:name="android.app.default_searchable"
+                android:value=".UI.main.MainActivity" />
             <meta-data
                 android:name="android.app.searchable"
                 android:resource="@xml/searchable" />
@@ -63,20 +62,8 @@
             android:name=".UI.sd_card_instructions.SdCardInstructionsActivity"
             android:parentActivityName=".UI.main.MainActivity"
             android:theme="@style/MyTransparentTheme"
-            tools:ignore="InnerclassSeparator"/>
-        <activity
-            android:name=".UI.track_detail.TrackDetailsActivity"
-            android:configChanges="orientation|screenSize"
-            android:parentActivityName=".UI.main.MainActivity"
             android:screenOrientation="portrait"
-            android:theme="@style/DetailsTrackDialogTheme"
-            android:launchMode="singleTop"
-            android:windowSoftInputMode="adjustResize"
-            tools:ignore="InnerclassSeparator">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="mx.dev.franco.automusictagfixer.UI.main.MainActivity" />
-        </activity>
+            tools:ignore="InnerclassSeparator"/>
         <activity
             android:name=".UI.faq.QuestionsActivity"
             android:configChanges="orientation|screenSize"
@@ -109,19 +96,6 @@
             android:screenOrientation="portrait"
             android:theme="@style/SettingsStyle"
             tools:ignore="InnerclassSeparator"/>
-        <activity android:name=".UI.search.SearchActivity"
-            android:configChanges="orientation|screenSize"
-            android:screenOrientation="portrait"
-            android:theme="@style/MainActivityTheme"
-            android:launchMode="singleTop"
-            tools:ignore="InnerclassSeparator">
-            <intent-filter>
-                <action android:name="android.intent.action.SEARCH"/>
-            </intent-filter>
-            <meta-data
-                android:name="android.app.searchable"
-                android:resource="@xml/searchable" />
-        </activity>
         <!-- "mx.dev.franco.automusictagfixer.fileProvider" -->
         <!-- This provider is necessary because in android >= 7 doesn't allow to access directly to files -->
         <provider

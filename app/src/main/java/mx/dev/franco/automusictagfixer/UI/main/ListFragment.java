@@ -146,7 +146,6 @@ public class ListFragment extends BaseFragment implements
         mGridLayoutManager = new GridLayoutManager(getActivity(), 1);
         mRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(), 1));
         mRecyclerView.setHasFixedSize(true);
-        mRecyclerView.setItemViewCacheSize(10);
         mRecyclerView.setDrawingCacheEnabled(true);
         mRecyclerView.setDrawingCacheQuality(View.DRAWING_CACHE_QUALITY_LOW);
         mRecyclerView.setHapticFeedbackEnabled(true);
@@ -155,11 +154,11 @@ public class ListFragment extends BaseFragment implements
             @Override
             public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
                 if (newState == RecyclerView.SCROLL_STATE_IDLE) {
-                    Glide.with(getActivity()).resumeRequests();
+                    Glide.with(recyclerView.getContext()).resumeRequests();
                 }
                 if (newState == RecyclerView.SCROLL_STATE_DRAGGING
                         || newState == RecyclerView.SCROLL_STATE_SETTLING) {
-                    Glide.with(getActivity()).pauseRequests();
+                    Glide.with(recyclerView.getContext()).pauseRequests();
                 }
                 super.onScrollStateChanged(recyclerView, newState);
             }

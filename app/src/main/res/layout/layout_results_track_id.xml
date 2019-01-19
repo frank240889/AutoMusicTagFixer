@@ -8,7 +8,7 @@
     android:layout_alignParentStart="false"
     android:layout_margin="8dp"
     android:theme="@style/DetailsTrackDialogTheme"
-    android:background="@color/grey_900"
+    android:background="@color/grey_850"
     android:splitMotionEvents="false">
 
     <TextView
@@ -246,6 +246,8 @@
             android:id="@+id/rename_to"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:inputType="text"
+            android:imeOptions="actionDone"
             android:hint="@string/hint_rename" />
     </android.support.design.widget.TextInputLayout>
 

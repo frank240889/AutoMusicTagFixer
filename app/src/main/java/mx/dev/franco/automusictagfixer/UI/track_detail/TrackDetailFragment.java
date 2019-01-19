@@ -212,9 +212,7 @@ public class TrackDetailFragment extends BaseFragment implements EditableView,
         removeItem = menu.findItem(R.id.action_remove_cover);
         searchInWebItem = menu.findItem(R.id.action_web_search);
 
-        Bundle bundle = getArguments();
-        if(bundle != null)
-            mTrackDetailPresenter.loadInfoTrack(bundle.getInt(Constants.MEDIA_STORE_ID,-1));
+
     }
 
     /**
@@ -1216,8 +1214,9 @@ public class TrackDetailFragment extends BaseFragment implements EditableView,
 
             @Override
             public void onAnimationEnd(Animation animation) {
-                if(getView() != null)
-                getView().setLayerType(View.LAYER_TYPE_NONE, null);
+                Bundle bundle = getArguments();
+                if(bundle != null)
+                    mTrackDetailPresenter.loadInfoTrack(bundle.getInt(Constants.MEDIA_STORE_ID,-1));
             }
 
             @Override

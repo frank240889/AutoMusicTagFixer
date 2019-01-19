@@ -6,7 +6,6 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    tools:context=".UI.track_detail.TrackDetailsActivity"
     tools:showIn="@layout/activity_track_details">
     <android.support.design.widget.AppBarLayout
         android:id="@+id/app_bar_layout"
@@ -14,7 +13,6 @@
         android:layout_height="416dp"
         android:background="@color/grey_900"
         android:elevation="4dp"
-        android:fitsSystemWindows="true"
         app:elevation="4dp">
 
         <android.support.design.widget.CollapsingToolbarLayout

@@ -6,7 +6,8 @@
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
     android:id="@+id/root_container"
-    tools:Context="mx.dev.franco.automusictagfixer.UI.searchActivity.SearchActivity">
+    android:theme="@style/AppTheme"
+    android:background="@color/grey_850">
 
     <android.support.design.widget.AppBarLayout
         android:id="@+id/found_main_AppBarLayout"

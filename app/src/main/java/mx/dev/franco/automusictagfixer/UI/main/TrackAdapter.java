@@ -1,7 +1,6 @@
 package mx.dev.franco.automusictagfixer.UI.main;
 
 import android.arch.lifecycle.Observer;
-import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -58,8 +57,6 @@ public class TrackAdapter extends RecyclerView.Adapter<AudioItemHolder> implemen
     public static final int ASC = 0;
     public static final int DESC = 1;
     private static final String TAG = TrackAdapter.class.getName();
-    @Inject
-    public Context context;
     @Inject
     public ServiceUtils serviceUtils;
     @Inject
@@ -143,7 +140,7 @@ public class TrackAdapter extends RecyclerView.Adapter<AudioItemHolder> implemen
                             public void onAsyncOperationFinished(byte[] result) {
                                 if (holder.itemView.getContext() != null) {
                                     try {
-                                        GlideApp.with(context).
+                                        GlideApp.with(holder.itemView.getContext()).
                                                 load(result)
                                                 .thumbnail(0.5f)
                                                 .error(R.drawable.ic_album_white_48px)
@@ -256,8 +253,8 @@ public class TrackAdapter extends RecyclerView.Adapter<AudioItemHolder> implemen
                                     load(result)
                                     .thumbnail(0.5f)
                                     .error(R.drawable.ic_album_white_48px)
-                                    .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.AUTOMATIC))
-                                    .apply(RequestOptions.skipMemoryCacheOf(false))
+                                    .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.NONE))
+                                    .apply(RequestOptions.skipMemoryCacheOf(true))
                                     .transition(DrawableTransitionOptions.withCrossFade(150))
                                     .fitCenter()
                                     .listener(new RequestListener<Drawable>() {
