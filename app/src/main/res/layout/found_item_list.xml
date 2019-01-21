@@ -1,59 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
 <android.support.v7.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/item_card"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    app:cardUseCompatPadding="true"
+    android:layout_margin="4dp"
     app:cardCornerRadius="8dp"
     app:cardElevation="@dimen/cardview_default_elevation"
     android:clickable="true"
     android:focusable="true">
-    <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:app="http://schemas.android.com/apk/res-auto"
-        xmlns:tools="http://schemas.android.com/tools"
+    <android.support.constraint.ConstraintLayout
         android:id="@+id/found_container_elements"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
-        android:layout_marginBottom="4dp"
-        android:clickable="true"
-        android:focusable="true"
-        android:padding="4dp"
-        android:transitionName="openDetails">
+        android:layout_height="wrap_content">
 
-        <android.support.v7.widget.CardView
-            android:id="@+id/found_card_thumb_cover"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_margin="8dp"
+        <ImageView
+            android:id="@+id/found_cover_art"
+            android:layout_width="@dimen/image_view_cover_found_item"
+            android:layout_height="@dimen/image_view_cover_found_item"
+            android:layout_centerVertical="true"
             android:clickable="true"
             android:focusable="true"
-            android:stateListAnimator="@animator/default_z_transformation_card_view"
-            app:cardCornerRadius="8dp"
-            app:cardElevation="@dimen/cardview_default_elevation"
+            android:scaleType="centerCrop"
+            android:transitionName="transitionFragment"
+            android:visibility="visible"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
-
-            <ImageView
-                android:id="@+id/found_cover_art"
-                android:layout_width="@dimen/image_view_cover_found_item"
-                android:layout_height="@dimen/image_view_cover_found_item"
-                android:layout_centerVertical="true"
-                android:clickable="true"
-                android:focusable="true"
-                android:scaleType="centerCrop"
-                android:transitionName="transitionFragment"
-                android:visibility="visible"
-                app:srcCompat="@drawable/ic_album_white_48px" />
-        </android.support.v7.widget.CardView>
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/ic_album_white_48px" />
 
         <TextView
             android:id="@+id/found_track_name"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_below="@id/found_card_thumb_cover"
+            android:layout_below="@id/found_cover_art"
             android:layout_marginStart="4dp"
             android:layout_marginTop="4dp"
             android:layout_marginEnd="4dp"
@@ -67,7 +48,7 @@
             android:singleLine="true"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/found_card_thumb_cover"
+            app:layout_constraintTop_toBottomOf="@+id/found_cover_art"
             tools:text="Mi Historia Entre Tus Dedos" />
 
         <TextView
@@ -75,7 +56,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_below="@+id/found_track_name"
-            android:layout_alignStart="@+id/found_card_thumb_cover"
+            android:layout_alignStart="@+id/found_cover_art"
             android:layout_marginStart="4dp"
             android:layout_marginEnd="4dp"
             android:drawableStart="@drawable/ic_account_circle_white_24px"
@@ -97,7 +78,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_below="@+id/found_artist_name"
-            android:layout_alignStart="@+id/found_card_thumb_cover"
+            android:layout_alignStart="@+id/found_cover_art"
             android:layout_marginStart="4dp"
             android:layout_marginEnd="4dp"
             android:drawableStart="@drawable/ic_album_white_24px"

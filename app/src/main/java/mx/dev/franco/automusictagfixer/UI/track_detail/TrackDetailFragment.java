@@ -68,6 +68,8 @@ import mx.dev.franco.automusictagfixer.utilities.TrackUtils;
 import mx.dev.franco.automusictagfixer.utilities.shared_preferences.AbstractSharedPreferences;
 import mx.dev.franco.automusictagfixer.utilities.shared_preferences.DefaultSharedPreferencesImpl;
 
+import static mx.dev.franco.automusictagfixer.utilities.Constants.GOOGLE_SEARCH;
+
 /**
  * Use the {@link TrackDetailFragment#newInstance} factory method to
  * create an instance of this fragment.
@@ -1021,14 +1023,9 @@ public class TrackDetailFragment extends BaseFragment implements EditableView,
         mCancelIdentification = mLayout.findViewById(R.id.cancel_identification);
     }
 
-    public void cancelIdentification(){
-        mTrackDetailPresenter.cancelIdentification();
-    }
-
-
     public void searchInfoForTrack(){
         String queryString = getTrackTitle() + (!getArtist().isEmpty() ? (" " + getArtist()) : "");
-        String query = "https://www.google.com/#q=" + queryString;
+        String query = GOOGLE_SEARCH + queryString;
         Uri uri = Uri.parse(query);
         Intent intent = new Intent(Intent.ACTION_VIEW, uri);
         startActivity(intent);
