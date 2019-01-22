@@ -4,17 +4,22 @@ import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MediatorLiveData;
 import android.arch.persistence.db.SimpleSQLiteQuery;
 import android.arch.persistence.db.SupportSQLiteQuery;
-import android.content.Context;
 import android.os.AsyncTask;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import mx.dev.franco.automusictagfixer.interfaces.AsyncOperation;
+import mx.dev.franco.automusictagfixer.modelsUI.AsyncOperation.TrackChecker;
+import mx.dev.franco.automusictagfixer.modelsUI.AsyncOperation.TrackRemover;
+import mx.dev.franco.automusictagfixer.modelsUI.AsyncOperation.TrackUnchecker;
+import mx.dev.franco.automusictagfixer.modelsUI.AsyncOperation.TrackUpdater;
 import mx.dev.franco.automusictagfixer.persistence.mediastore.AsyncFileReader;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.persistence.room.TrackDAO;
 import mx.dev.franco.automusictagfixer.persistence.room.TrackRoomDatabase;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
+import mx.dev.franco.automusictagfixer.utilities.Resource;
 import mx.dev.franco.automusictagfixer.utilities.shared_preferences.AbstractSharedPreferences;
 
 import static mx.dev.franco.automusictagfixer.UI.main.TrackAdapter.ASC;
@@ -24,11 +29,11 @@ public class TrackRepository {
     private TrackDAO mTrackDao;
     private LiveData<List<Track>> mAllTrack;
     private MediatorLiveData<List<Track>> mResultSearch = new MediatorLiveData<>();
-    private MediatorLiveData<List<Track>> mMediatorTrackData = new MediatorLiveData<>();
+    private MediatorLiveData<Resource<List<Track>>> mMediatorTrackData = new MediatorLiveData<>();
     private LiveData<List<Track>> liveDataTracks;
     private AbstractSharedPreferences mAbstractSharedPreferences;
     private String mCurrentOrder;
-    public TrackRepository(TrackRoomDatabase db, AbstractSharedPreferences abstractSharedPreferences, Context context){
+    public TrackRepository(TrackRoomDatabase db, AbstractSharedPreferences abstractSharedPreferences){
         mTrackDao = db.trackDao();
         mAbstractSharedPreferences = abstractSharedPreferences;
         mCurrentOrder = mAbstractSharedPreferences.getString(Constants.SORT_KEY);
@@ -39,10 +44,18 @@ public class TrackRepository {
 
         SupportSQLiteQuery sqLiteQuery = new SimpleSQLiteQuery(query);
         mAllTrack = mTrackDao.getAllTracks(sqLiteQuery);
-        mMediatorTrackData.addSource(mAllTrack, tracks -> mMediatorTrackData.setValue(tracks));
+        mMediatorTrackData.setValue(Resource.loading(null));
+        mMediatorTrackData.addSource(mAllTrack, tracks -> {
+            if(tracks == null || tracks.size() == 0) {
+                mMediatorTrackData.setValue(Resource.success(new ArrayList<>()));
+            }
+            else {
+                mMediatorTrackData.setValue(Resource.success(tracks));
+            }
+        });
     }
 
-    public LiveData<List<Track>> getAllTracks(){
+    public LiveData<Resource<List<Track>>> getAllTracks(){
         return mMediatorTrackData;
     }
 
@@ -67,23 +80,30 @@ public class TrackRepository {
     }
 
     public void update(Track track){
+        if(track.checked() == 1){
+            track.setChecked(0);
+        }
+        else {
+            track.setChecked(1);
+        }
+
         mAbstractSharedPreferences.putBoolean("sorting", false);
-        new updateTrack(mTrackDao).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,track);
+        new TrackUpdater(mTrackDao).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,track);
     }
 
     public void checkAll(){
         mAbstractSharedPreferences.putBoolean("sorting", false);
-        new checkAll(mTrackDao).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+        new TrackChecker(mTrackDao).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
 
     public void uncheckAll(){
         mAbstractSharedPreferences.putBoolean("sorting", false);
-        new uncheckAll(mTrackDao).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+        new TrackUnchecker(mTrackDao).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
 
     public void delete(Track track){
         mAbstractSharedPreferences.putBoolean("sorting", false);
-        new removeTrack(mTrackDao).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, track);
+        new TrackRemover(mTrackDao).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, track);
     }
 
     public boolean sortTracks(String order, int orderType) {
@@ -99,6 +119,7 @@ public class TrackRepository {
         if(orderBy.equals(mCurrentOrder))
             return true;
 
+        //Save this flag to indicate to adapter that the tracks are sorting
         mAbstractSharedPreferences.putBoolean("sorting", true);
         mCurrentOrder = orderBy;
         String query = "SELECT * FROM track_table ORDER BY" + mCurrentOrder;
@@ -107,7 +128,14 @@ public class TrackRepository {
         mMediatorTrackData.removeSource(mAllTrack);
         mAllTrack = mTrackDao.getAllTracks(sqLiteQuery);
 
-        mMediatorTrackData.addSource(mAllTrack, tracks -> mMediatorTrackData.setValue(tracks));
+        mMediatorTrackData.addSource(mAllTrack, tracks -> {
+            if(tracks == null || tracks.size() == 0) {
+                mMediatorTrackData.setValue(Resource.success(new ArrayList<>()));
+            }
+            else {
+                mMediatorTrackData.setValue(Resource.success(tracks));
+            }
+        });
         return true;
     }
 
@@ -115,6 +143,10 @@ public class TrackRepository {
         return mResultSearch;
     }
 
+    /**
+     * Search a track in the DB.
+     * @param query The query as param to search in DB.
+     */
     public void search(String query) {
         if(liveDataTracks != null)
             mResultSearch.removeSource(liveDataTracks);
@@ -125,65 +157,15 @@ public class TrackRepository {
         });
     }
 
-    private static class checkAll extends AsyncTask<Void, Void, Void> {
-
-        private TrackDAO mAsyncTaskDao;
-
-        checkAll(TrackDAO dao) {
-            mAsyncTaskDao = dao;
+    public void checkAllItems() {
+        boolean allChecked = mAbstractSharedPreferences.getBoolean(Constants.ALL_ITEMS_CHECKED);
+        if(allChecked){
+            mAbstractSharedPreferences.putBoolean(Constants.ALL_ITEMS_CHECKED, false);
+            uncheckAll();
         }
-
-        @Override
-        protected Void doInBackground(final Void... params) {
-            mAsyncTaskDao.checkAll();
-            return null;
+        else {
+            mAbstractSharedPreferences.putBoolean(Constants.ALL_ITEMS_CHECKED, true);
+            checkAll();
         }
     }
-
-    private static class uncheckAll extends AsyncTask<Void, Void, Void> {
-
-        private TrackDAO mAsyncTaskDao;
-
-        uncheckAll(TrackDAO dao) {
-            mAsyncTaskDao = dao;
-        }
-
-        @Override
-        protected Void doInBackground(final Void... params) {
-            mAsyncTaskDao.uncheckAll();
-            return null;
-        }
-    }
-
-    private static class updateTrack extends AsyncTask<Track, Void, Void> {
-
-        private TrackDAO mAsyncTaskDao;
-
-        updateTrack(TrackDAO dao) {
-            mAsyncTaskDao = dao;
-        }
-
-        @Override
-        protected Void doInBackground(final Track... track) {
-            mAsyncTaskDao.update(track[0]);
-            return null;
-        }
-    }
-
-
-    private static class removeTrack extends AsyncTask<Track, Void, Void> {
-
-        private TrackDAO mAsyncTaskDao;
-
-        removeTrack(TrackDAO dao) {
-            mAsyncTaskDao = dao;
-        }
-
-        @Override
-        protected Void doInBackground(final Track... track) {
-            mAsyncTaskDao.delete(track[0]);
-            return null;
-        }
-    }
-
 }

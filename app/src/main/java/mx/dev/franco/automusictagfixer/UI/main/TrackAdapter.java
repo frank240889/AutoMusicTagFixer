@@ -1,6 +1,5 @@
 package mx.dev.franco.automusictagfixer.UI.main;
 
-import android.arch.lifecycle.Observer;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -46,7 +45,6 @@ import static android.view.View.VISIBLE;
 
 public class TrackAdapter extends RecyclerView.Adapter<AudioItemHolder> implements
         Destructible,
-        Observer<List<Track>>,
         AsyncOperation<Void, DiffResults<Track>, Void, Void> {
 
     public interface OnSortingListener{
@@ -75,7 +73,9 @@ public class TrackAdapter extends RecyclerView.Adapter<AudioItemHolder> implemen
             mOnSortingListener = (OnSortingListener) listener;
     }
 
-
+    /**
+     * @inheritDoc
+     */
     @Override
     public AudioItemHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View itemView = LayoutInflater.from(parent.getContext()).
@@ -83,6 +83,9 @@ public class TrackAdapter extends RecyclerView.Adapter<AudioItemHolder> implemen
         return new AudioItemHolder(itemView, mListener);
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void onBindViewHolder(@NonNull final AudioItemHolder holder, int position,
                                  List<Object> payloads) {
@@ -217,6 +220,9 @@ public class TrackAdapter extends RecyclerView.Adapter<AudioItemHolder> implemen
         }
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void onBindViewHolder(final AudioItemHolder holder, final int position) {
         Track track = mTrackList.get(position);
@@ -325,12 +331,18 @@ public class TrackAdapter extends RecyclerView.Adapter<AudioItemHolder> implemen
 
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void onViewRecycled(AudioItemHolder holder) {
         if(holder.itemView.getContext() != null)
             Glide.with(holder.itemView.getContext()).clear(holder.cover);
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public boolean onFailedToRecycleView(@NonNull AudioItemHolder holder) {
         if(holder.itemView.getContext() != null)
@@ -339,8 +351,7 @@ public class TrackAdapter extends RecyclerView.Adapter<AudioItemHolder> implemen
     }
 
     /**
-     * Get size of data source
-     * @return zero if data source is null, otherwise size of data source
+     * @inheritDoc
      */
     @Override
     public int getItemCount() {
@@ -350,9 +361,7 @@ public class TrackAdapter extends RecyclerView.Adapter<AudioItemHolder> implemen
     }
 
     /**
-     * Indicates whether each item in the data set
-     * can be represented with a unique identifier of type Long.
-     * @param hasStableIds
+     * @inheritDoc
      */
     @Override
     public void setHasStableIds(boolean hasStableIds) {
@@ -377,7 +386,6 @@ public class TrackAdapter extends RecyclerView.Adapter<AudioItemHolder> implemen
         mOnSortingListener = null;
     }
 
-    @Override
     public void onChanged(@Nullable List<Track> tracks) {
         if(tracks != null) {
             //Update only if exist items

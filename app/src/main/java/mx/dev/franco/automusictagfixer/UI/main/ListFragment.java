@@ -115,13 +115,17 @@ public class ListFragment extends BaseFragment implements
         mListViewModel.actionCanStartAutomaticMode().observe(this, this::startCorrection);
         mListViewModel.actionIsTrackInaccessible().observe(this, this::showInaccessibleTrack);
         mListViewModel.noFilesFound().observe(this, this::noFilesFoundMessage);
-        mListViewModel.showProgress().observe(this, this::showProgress);
+        mListViewModel.getLoader().observe(this, this::loading);
         mListViewModel.getAllTracks().observe(this, this);
-        mListViewModel.getAllTracks().observe(this, mAdapter);
+
+        //For Android Marshmallow and Lollipop, there is no need to request permissions
+        //at runtime.
+        if(Build.VERSION.SDK_INT < Build.VERSION_CODES.M)
+            mListViewModel.getInfoForTracks();
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         mLayout = inflater.inflate(R.layout.layout_list, container, false);
         mStartTaskFab = mLayout.findViewById(R.id.fab_start);
@@ -146,8 +150,6 @@ public class ListFragment extends BaseFragment implements
         mGridLayoutManager = new GridLayoutManager(getActivity(), 1);
         mRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(), 1));
         mRecyclerView.setHasFixedSize(true);
-        mRecyclerView.setDrawingCacheEnabled(true);
-        mRecyclerView.setDrawingCacheQuality(View.DRAWING_CACHE_QUALITY_LOW);
         mRecyclerView.setHapticFeedbackEnabled(true);
         mRecyclerView.setSoundEffectsEnabled(true);
         mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
@@ -194,9 +196,6 @@ public class ListFragment extends BaseFragment implements
         setHasOptionsMenu(true);
         setRetainInstance(true);
 
-
-        if(Build.VERSION.SDK_INT < Build.VERSION_CODES.M)
-            mListViewModel.getInfoForTracks();
 
         boolean isPresentSD = StorageHelper.getInstance(getActivity().getApplicationContext()).
                 isPresentRemovableStorage();
@@ -443,8 +442,9 @@ public class ListFragment extends BaseFragment implements
         snackbar.show();
     }
 
-    private void showProgress(Boolean showProgress) {
-        mSwipeRefreshLayout.setRefreshing(showProgress);
+    @Override
+    protected void loading(boolean isLoading) {
+        mSwipeRefreshLayout.setRefreshing(isLoading);
     }
 
     @Override
@@ -470,7 +470,7 @@ public class ListFragment extends BaseFragment implements
             mStartTaskFab.hide();
             mMessage.setVisibility(View.VISIBLE);
             mMessage.setText(R.string.permission_denied);
-            mListViewModel.setProgress(false);
+            mListViewModel.setLoading(false);
             showViewPermissionMessage();
         }
 
@@ -602,26 +602,28 @@ public class ListFragment extends BaseFragment implements
      */
     @Override
     public void onChanged(@Nullable List<Track> tracks) {
-        if(tracks != null) {
-            if(tracks.isEmpty()) {
+        if(tracks == null)
+            return;
+
+        mAdapter.onChanged(tracks);
+        if(tracks.isEmpty()) {
+            mStopTaskFab.hide();
+            mStartTaskFab.hide();
+            mMessage.setVisibility(View.VISIBLE);
+            mMessage.setText(R.string.no_items_found);
+        }
+        else {
+            boolean isServiceRunning = serviceUtils.checkIfServiceIsRunning(FixerTrackService.CLASS_NAME);
+            if(!isServiceRunning){
+                mStartTaskFab.show();
                 mStopTaskFab.hide();
-                mStartTaskFab.hide();
-                mMessage.setVisibility(View.VISIBLE);
-                mMessage.setText(R.string.no_items_found);
             }
             else {
-                boolean isServiceRunning = serviceUtils.checkIfServiceIsRunning(FixerTrackService.CLASS_NAME);
-                if(!isServiceRunning){
-                    mStartTaskFab.show();
-                    mStopTaskFab.hide();
-                }
-                else {
-                    mStartTaskFab.hide();
-                    mStopTaskFab.show();
-                }
-                mActionBar.setTitle(tracks.size() + " " +getString(R.string.tracks));
-                mMessage.setVisibility(View.GONE);
+                mStartTaskFab.hide();
+                mStopTaskFab.show();
             }
+            mActionBar.setTitle(tracks.size() + " " +getString(R.string.tracks));
+            mMessage.setVisibility(View.GONE);
         }
     }
 

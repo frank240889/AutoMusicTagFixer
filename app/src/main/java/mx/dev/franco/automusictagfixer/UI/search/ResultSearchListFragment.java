@@ -116,9 +116,6 @@ public class ResultSearchListFragment extends BaseFragment implements
         layoutManager.setAlignItems(AlignItems.CENTER);
         mRecyclerView.setLayoutManager(layoutManager);
         mRecyclerView.setHasFixedSize(true);
-        mRecyclerView.setItemViewCacheSize(10);
-        mRecyclerView.setDrawingCacheEnabled(true);
-        mRecyclerView.setDrawingCacheQuality(View.DRAWING_CACHE_QUALITY_LOW);
         mRecyclerView.setHapticFeedbackEnabled(true);
         mRecyclerView.setSoundEffectsEnabled(true);
         mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
@@ -126,10 +123,10 @@ public class ResultSearchListFragment extends BaseFragment implements
             public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
                 super.onScrollStateChanged(recyclerView, newState);
                 if (newState == RecyclerView.SCROLL_STATE_IDLE) {
-                    Glide.with(ResultSearchListFragment.this).resumeRequests();
+                    Glide.with(recyclerView.getContext()).resumeRequests();
                 }
                 if (newState == RecyclerView.SCROLL_STATE_DRAGGING || newState == RecyclerView.SCROLL_STATE_SETTLING) {
-                    Glide.with(ResultSearchListFragment.this).pauseRequests();
+                    Glide.with(recyclerView.getContext()).pauseRequests();
                 }
             }
 

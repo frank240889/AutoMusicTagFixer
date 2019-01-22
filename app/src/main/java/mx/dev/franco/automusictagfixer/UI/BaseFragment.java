@@ -53,4 +53,6 @@ public abstract class BaseFragment extends Fragment implements
         void callSuperOnBackPressed();
     }
 
+    protected void loading(boolean isLoading){ }
+
 }

@@ -48,7 +48,7 @@ public class ContextModule {
         mResourceManager =  new AndroidResourceManager(mApp);
         mAbstractSharedPreferences = new SharedPreferencesImpl(mApp);
         mDefaultAbstractSharedPreferences = new DefaultSharedPreferencesImpl(mApp);
-        mTrackRepository = new TrackRepository(provideTrackRoomDatabase(), mAbstractSharedPreferences, mApp);
+        mTrackRepository = new TrackRepository(provideTrackRoomDatabase(), mAbstractSharedPreferences);
         mServiceUtils = ServiceUtils.getInstance(mApp);
         mSimpleMediaPlayer = SimpleMediaPlayer.getInstance(mApp);
         mStorageHelper = StorageHelper.getInstance(mApp);
