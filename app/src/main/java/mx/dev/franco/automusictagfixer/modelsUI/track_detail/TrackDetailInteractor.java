@@ -30,13 +30,17 @@ public class TrackDetailInteractor implements
     /**
      * Reads asynchronously the data from track.
      * @param id The id of the track to read.
+     * @return true if this task could be started, false otherwise
      */
-    public void loadInfoTrack(int id){
+    public boolean loadInfoTrack(int id){
         if(mTrackDataLoader == null){
             mTrackDataLoader = new TrackDataLoader();
             mTrackDataLoader.setListener(this);
             mTrackDataLoader.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, id);
+            return true;
         }
+
+        return false;
     }
 
     /**

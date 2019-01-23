@@ -582,17 +582,28 @@ public class ListFragment extends BaseFragment implements
     public void openDetails(ViewWrapper viewWrapper){
         mRecyclerView.stopScroll();
 
-        TrackDetailFragment trackDetailFragment = TrackDetailFragment.newInstance(
-                viewWrapper.track.getMediaStoreId(),
-                viewWrapper.mode);
+        TrackDetailFragment trackDetailFragment;
+
         ((MainActivity)getActivity()).mDrawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
-        getActivity().getSupportFragmentManager().beginTransaction().
-                setCustomAnimations(R.anim.slide_in_right,
-                        R.anim.slide_out_left, R.anim.slide_in_left,
-                        R.anim.slide_out_right).
-                addToBackStack(TrackDetailFragment.TAG).
-                add(R.id.container_fragments, trackDetailFragment, TrackDetailFragment.TAG).
-                commit();
+        trackDetailFragment = (TrackDetailFragment) getActivity().
+                getSupportFragmentManager().findFragmentByTag(TrackDetailFragment.TAG);
+        if(trackDetailFragment != null){
+            trackDetailFragment.load(AndroidUtils.getBundle(viewWrapper.track.getMediaStoreId(),
+                    viewWrapper.mode));
+        }
+        else {
+            trackDetailFragment = TrackDetailFragment.newInstance(
+                    viewWrapper.track.getMediaStoreId(),
+                    viewWrapper.mode);
+            getActivity().getSupportFragmentManager().beginTransaction().
+                    setCustomAnimations(R.anim.slide_in_right,
+                            R.anim.slide_out_left, R.anim.slide_in_left,
+                            R.anim.slide_out_right).
+                    addToBackStack(TrackDetailFragment.TAG).
+                    add(R.id.container_fragments, trackDetailFragment, TrackDetailFragment.TAG).
+                    commit();
+        }
+
     }
 
     /**

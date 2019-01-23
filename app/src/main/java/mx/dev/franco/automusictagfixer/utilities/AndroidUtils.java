@@ -342,4 +342,11 @@ public class AndroidUtils {
         return byteArrayOutputStream.toByteArray();
     }
 
+    public static Bundle getBundle(int idTrack, int correctionMode){
+        Bundle bundle = new Bundle();
+        bundle.putInt(Constants.MEDIA_STORE_ID, idTrack);
+        bundle.putInt(Constants.CorrectionModes.MODE, correctionMode);
+        return bundle;
+    }
+
 }

@@ -147,9 +147,7 @@ public class TrackDetailFragment extends BaseFragment implements EditableView,
 
     public static TrackDetailFragment newInstance(int idTrack, int correctionMode) {
         TrackDetailFragment fragment = new TrackDetailFragment();
-        Bundle bundle = new Bundle();
-        bundle.putInt(Constants.MEDIA_STORE_ID, idTrack);
-        bundle.putInt(Constants.CorrectionModes.MODE, correctionMode);
+        Bundle bundle = AndroidUtils.getBundle(idTrack, correctionMode);
         fragment.setArguments(bundle);
         return fragment;
     }
@@ -1191,6 +1189,13 @@ public class TrackDetailFragment extends BaseFragment implements EditableView,
         mTrackDetailPresenter.cancelIdentification();
     }
 
+    public void load(Bundle inputBundle){
+        Bundle bundle = inputBundle == null ? getArguments() : inputBundle;
+        if(bundle != null)
+            mTrackDetailPresenter.loadInfoTrack(bundle.getInt(Constants.MEDIA_STORE_ID,-1));
+
+    }
+
     @Override
     public Animation onCreateAnimation(int transit, boolean enter, int nextAnim) {
         Animation animation = super.onCreateAnimation(transit, enter, nextAnim);
@@ -1211,9 +1216,7 @@ public class TrackDetailFragment extends BaseFragment implements EditableView,
 
             @Override
             public void onAnimationEnd(Animation animation) {
-                Bundle bundle = getArguments();
-                if(bundle != null)
-                    mTrackDetailPresenter.loadInfoTrack(bundle.getInt(Constants.MEDIA_STORE_ID,-1));
+                load(null);
             }
 
             @Override

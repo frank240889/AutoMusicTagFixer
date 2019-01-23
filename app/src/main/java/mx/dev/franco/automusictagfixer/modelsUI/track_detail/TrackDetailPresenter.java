@@ -81,8 +81,9 @@ public class TrackDetailPresenter implements
     }
 
     public void loadInfoTrack(int id){
-        mCurrentId = id;
-        mInteractor.loadInfoTrack(id);
+       if(mInteractor.loadInfoTrack(id)) {
+           mCurrentId = id;
+       }
     }
 
     /*Loading track data callbacks*/
