@@ -6,6 +6,5 @@ package mx.dev.franco.automusictagfixer.utilities;
 
 public final class RequiredPermissions {
     public static final int WRITE_EXTERNAL_STORAGE_PERMISSION = 1;
-    public static boolean ACCESS_GRANTED_FILES = false;
     public static final int REQUEST_PERMISSION_SAF = 1000;
 }

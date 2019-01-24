@@ -4,6 +4,9 @@ import android.app.job.JobParameters;
 import android.app.job.JobService;
 import android.util.Log;
 
+import mx.dev.franco.automusictagfixer.identifier.GnService;
+import mx.dev.franco.automusictagfixer.network.ConnectivityDetector;
+
 /**
  * Created by franco on 6/07/17.
  */
@@ -30,7 +33,7 @@ public class ScheduleJobService extends JobService {
             //that service was not initialized from Splash.
             //is useful to inform to user in MainActivity
             //that API of GNSDK has been initialized
-            GnService.withContext(getApplicationContext()).initializeAPI(GnService.API_INITIALIZED_AFTER_CONNECTED);
+            GnService.getInstance(getApplicationContext()).initializeAPI();
         }
         //if already should not initialize it, we finalize this job
         jobFinished(params, !shouldInitialize);

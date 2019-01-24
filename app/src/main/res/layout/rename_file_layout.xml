@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/manual_correction_container"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_alignParentStart="true"
+    android:layout_gravity="start"
+    android:layout_margin="8dp"
+    android:splitMotionEvents="false">
+
+    <CheckBox
+        android:id="@+id/manual_checkbox_rename"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
+        android:text="@string/message_checkbox_rename" />
+
+    <android.support.design.widget.TextInputLayout
+        android:id="@+id/manual_label_rename_to"
+        android:labelFor="@id/rename_to"
+        android:layout_below="@id/manual_checkbox_rename"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:visibility="gone"
+        android:theme="@style/CustomEditTextHint">
+        <EditText
+            android:id="@+id/manual_rename_to"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/hint_rename"/>
+    </android.support.design.widget.TextInputLayout>
+
+
+    <TextView
+        android:id="@+id/manual_message_rename_hint"
+        android:layout_below="@id/manual_label_rename_to"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:textSize="12sp"
+        android:visibility="gone"
+        android:text="@string/message_rename"/>
+</RelativeLayout>
