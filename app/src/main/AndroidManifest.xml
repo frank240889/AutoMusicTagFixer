@@ -48,6 +48,7 @@
             android:screenOrientation="portrait"
             android:theme="@style/MainActivityTheme"
             android:launchMode="singleTop"
+            android:windowSoftInputMode="adjustPan"
             tools:ignore="InnerclassSeparator">
             <intent-filter>
                 <action android:name="android.intent.action.SEARCH"/>
