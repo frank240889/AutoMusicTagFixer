@@ -150,6 +150,7 @@ public class ListFragment extends BaseFragment implements
         mGridLayoutManager = new GridLayoutManager(getActivity(), 1);
         mRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(), 1));
         mRecyclerView.setHasFixedSize(true);
+        mRecyclerView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
         mRecyclerView.setHapticFeedbackEnabled(true);
         mRecyclerView.setSoundEffectsEnabled(true);
         mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
@@ -160,7 +161,7 @@ public class ListFragment extends BaseFragment implements
                 }
                 if (newState == RecyclerView.SCROLL_STATE_DRAGGING
                         || newState == RecyclerView.SCROLL_STATE_SETTLING) {
-                    Glide.with(recyclerView.getContext()).pauseRequests();
+                    Glide.with(recyclerView.getContext()).pauseAllRequests();
                 }
                 super.onScrollStateChanged(recyclerView, newState);
             }
@@ -372,8 +373,8 @@ public class ListFragment extends BaseFragment implements
     }
 
     /**
-     * Sets the item with an icon and saves to
-     * shared preferences to persist its value, to indicate what sort type is selected.
+     * Set the menu item with an icon to mark which type of sort is select
+     * and saves to shared preferences to persist its value.
      * @param selectedItem The id of item selected.
      */
     private void checkItem(int selectedItem) {
@@ -427,7 +428,11 @@ public class ListFragment extends BaseFragment implements
     }
 
 
-
+    /**
+     * Run when the scan of media store has finished and no music files have
+     * been found.
+     * @param aBoolean True if files have not been found.
+     */
     private void noFilesFoundMessage(Boolean aBoolean) {
         mStopTaskFab.hide();
         mStartTaskFab.hide();

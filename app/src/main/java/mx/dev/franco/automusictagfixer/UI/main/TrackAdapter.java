@@ -5,6 +5,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v7.util.DiffUtil;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -31,6 +32,7 @@ import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.interfaces.AsyncOperation;
 import mx.dev.franco.automusictagfixer.interfaces.Destructible;
 import mx.dev.franco.automusictagfixer.modelsUI.main.AsyncLoaderCover;
+import mx.dev.franco.automusictagfixer.modelsUI.main.DiffCallback;
 import mx.dev.franco.automusictagfixer.modelsUI.main.DiffExecutor;
 import mx.dev.franco.automusictagfixer.modelsUI.main.DiffResults;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
@@ -47,11 +49,15 @@ public class TrackAdapter extends RecyclerView.Adapter<AudioItemHolder> implemen
         Destructible,
         AsyncOperation<Void, DiffResults<Track>, Void, Void> {
 
+    /**
+     * Interface to communicate when the list is in process
+     * of sorting.
+     */
     public interface OnSortingListener{
         void onStartSorting();
         void onFinishSorting();
     }
-    //constants for indicate the sort order
+    //Constants for indicate the sort order
     public static final int ASC = 0;
     public static final int DESC = 1;
     private static final String TAG = TrackAdapter.class.getName();
@@ -65,13 +71,18 @@ public class TrackAdapter extends RecyclerView.Adapter<AudioItemHolder> implemen
     private List<AsyncLoaderCover> mAsyncTaskQueue =  new ArrayList<>();
     private Deque<List<Track>> mPendingUpdates = new ArrayDeque<>();
     private static DiffExecutor sDiffExecutor;
+    private static final int CPU_COUNT = Runtime.getRuntime().availableProcessors() - 1;
+    private static final int MAX_PARALLEL_THREADS = CPU_COUNT * 2;
 
     public TrackAdapter(AudioItemHolder.ClickListener listener){
+        this();
         mListener = listener;
         AutoMusicTagFixer.getContextComponent().inject(this);
         if(listener instanceof OnSortingListener)
             mOnSortingListener = (OnSortingListener) listener;
     }
+
+    public TrackAdapter(){}
 
     /**
      * @inheritDoc
@@ -88,12 +99,12 @@ public class TrackAdapter extends RecyclerView.Adapter<AudioItemHolder> implemen
      */
     @Override
     public void onBindViewHolder(@NonNull final AudioItemHolder holder, int position,
-                                 List<Object> payloads) {
-        Track track = mTrackList.get(position);
+                                 @NonNull List<Object> payloads) {
         if(payloads.isEmpty()) {
             super.onBindViewHolder(holder,position,payloads);
         }
         else {
+            Track track = mTrackList.get(position);
             Bundle o = (Bundle) payloads.get(0);
             for (String key : o.keySet()) {
                 if (key.equals("title")) {
@@ -129,7 +140,7 @@ public class TrackAdapter extends RecyclerView.Adapter<AudioItemHolder> implemen
                     //We need to extracts cover arts in other thread,
                     //because this operation is going to reduce performance
                     //in main thread, making the scroll very laggy
-                    if (mAsyncTaskQueue.size() < 9) {
+                    if (mAsyncTaskQueue.size() < MAX_PARALLEL_THREADS ) {
                         final AsyncLoaderCover asyncLoaderCover = new AsyncLoaderCover();
                         mAsyncTaskQueue.add(asyncLoaderCover);
                         asyncLoaderCover.setListener(
@@ -224,7 +235,7 @@ public class TrackAdapter extends RecyclerView.Adapter<AudioItemHolder> implemen
      * @inheritDoc
      */
     @Override
-    public void onBindViewHolder(final AudioItemHolder holder, final int position) {
+    public void onBindViewHolder(@NonNull final AudioItemHolder holder, final int position) {
         Track track = mTrackList.get(position);
         if(!serviceUtils.checkIfServiceIsRunning(FixerTrackService.CLASS_NAME)) {
             holder.checkBox.setVisibility(VISIBLE);
@@ -238,7 +249,7 @@ public class TrackAdapter extends RecyclerView.Adapter<AudioItemHolder> implemen
                 holder.progressBar.setVisibility(View.GONE);
             }
         }
-        if(mAsyncTaskQueue.size() < 9){
+        if(mAsyncTaskQueue.size() < MAX_PARALLEL_THREADS){
             final AsyncLoaderCover asyncLoaderCover = new AsyncLoaderCover();
             mAsyncTaskQueue.add(asyncLoaderCover);
             asyncLoaderCover.setListener(new AsyncOperation<Void, byte[], byte[], Void>() {
@@ -398,10 +409,16 @@ public class TrackAdapter extends RecyclerView.Adapter<AudioItemHolder> implemen
                     mOnSortingListener.onFinishSorting();
                 }
                 else {
-                    if(mPendingUpdates != null) {
-                        mPendingUpdates.push(tracks);
+                    if(tracks.size() > 500) {
+                        if (mPendingUpdates != null) {
+                            mPendingUpdates.push(tracks);
+                        }
+                        updateInBackground(tracks);
+
                     }
-                    updateInBackground(tracks);
+                    else {
+                        updateInUIThread(tracks);
+                    }
                 }
             } else {
                 mTrackList = tracks;
@@ -420,6 +437,14 @@ public class TrackAdapter extends RecyclerView.Adapter<AudioItemHolder> implemen
 
         return null;
 
+    }
+
+    private void updateInUIThread(List<Track> newItems) {
+        DiffUtil.DiffResult diffResult = DiffUtil.
+                calculateDiff(new DiffCallback(newItems, mTrackList),false);
+        diffResult.dispatchUpdatesTo(this);
+        mTrackList.clear();
+        mTrackList.addAll(newItems);
     }
 
     private void updateInBackground(List<Track> newItems){
