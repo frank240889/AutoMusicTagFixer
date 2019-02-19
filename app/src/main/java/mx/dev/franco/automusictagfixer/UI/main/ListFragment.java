@@ -82,6 +82,7 @@ public class ListFragment extends BaseFragment implements
     private Toolbar mToolbar;
     private FloatingActionButton mStartTaskFab;
     private FloatingActionButton mStopTaskFab;
+    private SearchView mSearchView;
 
     @Inject
     ServiceUtils serviceUtils;
@@ -150,7 +151,9 @@ public class ListFragment extends BaseFragment implements
         mGridLayoutManager = new GridLayoutManager(getActivity(), 1);
         mRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(), 1));
         mRecyclerView.setHasFixedSize(true);
-        mRecyclerView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
+        mRecyclerView.setItemViewCacheSize(15);
+        mRecyclerView.setDrawingCacheEnabled(true);
+        mRecyclerView.setDrawingCacheQuality(View.DRAWING_CACHE_QUALITY_LOW);
         mRecyclerView.setHapticFeedbackEnabled(true);
         mRecyclerView.setSoundEffectsEnabled(true);
         mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
@@ -242,9 +245,9 @@ public class ListFragment extends BaseFragment implements
         menu.clear();
         inflater.inflate(R.menu.menu_main_activity, menu);
         SearchManager searchManager = (SearchManager) getActivity().getSystemService(Context.SEARCH_SERVICE);
-        SearchView searchView = (SearchView) menu.findItem(R.id.action_search).getActionView();
-        searchView.setSearchableInfo(searchManager.getSearchableInfo(getActivity().getComponentName()));
-        searchView.setIconifiedByDefault(true);
+        mSearchView = (SearchView) menu.findItem(R.id.action_search).getActionView();
+        mSearchView.setSearchableInfo(searchManager.getSearchableInfo(getActivity().getComponentName()));
+        mSearchView.setIconifiedByDefault(true);
 
         mMenu = menu;
         checkItem(-1);
@@ -720,7 +723,11 @@ public class ListFragment extends BaseFragment implements
 
     @Override
     public void onBackPressed() {
-        callSuperOnBackPressed();
+        if (mSearchView.isShown()) {
+            mSearchView.onActionViewCollapsed();
+        } else {
+            callSuperOnBackPressed();
+        }
     }
 
     @Override

@@ -63,6 +63,7 @@ public class ResultSearchListFragment extends BaseFragment implements
     @Inject
     ServiceUtils serviceUtils;
     private View mLayout;
+    private SearchView mSearchView;
 
     public static ResultSearchListFragment newInstance(Intent intent) {
         ResultSearchListFragment fragment = new ResultSearchListFragment();
@@ -80,6 +81,7 @@ public class ResultSearchListFragment extends BaseFragment implements
     public void onAttach(Context context) {
         super.onAttach(context);
         mAdapter = new SearchTrackAdapter(this);
+        ((MainActivity)getActivity()).mDrawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
     }
 
     @Override
@@ -91,6 +93,7 @@ public class ResultSearchListFragment extends BaseFragment implements
         mSearchListViewModel.isTrackProcessing().observe(this, this::showMessageError);
         mSearchListViewModel.actionTrackEvaluatedSuccessfully().observe(this, this::showDialog);
         mSearchListViewModel.actionIsTrackInaccessible().observe(this, this::showInaccessibleTrack);
+        setHasOptionsMenu(true);
     }
 
     @Override
@@ -159,10 +162,13 @@ public class ResultSearchListFragment extends BaseFragment implements
         menu.clear();
         inflater.inflate(R.menu.menu_search_activity, menu);
         SearchManager searchManager = (SearchManager) getActivity().getSystemService(Context.SEARCH_SERVICE);
-        SearchView searchView = (SearchView) menu.findItem(R.id.action_search).getActionView();
-        searchView.setSearchableInfo(searchManager.getSearchableInfo(getActivity().getComponentName()));
-        searchView.setIconifiedByDefault(true);
+        mSearchView = (SearchView) menu.findItem(R.id.action_search).getActionView();
+        mSearchView.setSearchableInfo(searchManager.getSearchableInfo(getActivity().getComponentName()));
+        mSearchView.setIconifiedByDefault(true);
     }
+
+
+
 
     private void showInaccessibleTrack(ListFragment.ViewWrapper viewWrapper) {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
@@ -261,7 +267,11 @@ public class ResultSearchListFragment extends BaseFragment implements
 
     @Override
     public void onBackPressed() {
-        callSuperOnBackPressed();
+        if (mSearchView.isShown()) {
+            mSearchView.onActionViewCollapsed();
+        } else {
+            callSuperOnBackPressed();
+        }
     }
 
     @Override
@@ -307,5 +317,11 @@ public class ResultSearchListFragment extends BaseFragment implements
             });
 
         return animation;
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        ((MainActivity)getActivity()).mDrawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
     }
 }

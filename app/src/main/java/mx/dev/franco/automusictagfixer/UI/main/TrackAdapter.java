@@ -72,7 +72,7 @@ public class TrackAdapter extends RecyclerView.Adapter<AudioItemHolder> implemen
     private Deque<List<Track>> mPendingUpdates = new ArrayDeque<>();
     private static DiffExecutor sDiffExecutor;
     private static final int CPU_COUNT = Runtime.getRuntime().availableProcessors() - 1;
-    private static final int MAX_PARALLEL_THREADS = CPU_COUNT * 2;
+    private static final int MAX_PARALLEL_THREADS = (CPU_COUNT * 2) +4;
 
     public TrackAdapter(AudioItemHolder.ClickListener listener){
         this();
@@ -207,7 +207,7 @@ public class TrackAdapter extends RecyclerView.Adapter<AudioItemHolder> implemen
                                     mAsyncTaskQueue.remove(asyncLoaderCover);
                             }
                         });
-                        asyncLoaderCover.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, track.getPath());
+                        asyncLoaderCover.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, track.getPath());
                     }
                 }
 
@@ -318,7 +318,7 @@ public class TrackAdapter extends RecyclerView.Adapter<AudioItemHolder> implemen
                         mAsyncTaskQueue.remove(asyncLoaderCover);
                 }
             });
-            asyncLoaderCover.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, track.getPath());
+            asyncLoaderCover.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, track.getPath());
         }
 
         switch (track.getState()) {
@@ -335,7 +335,7 @@ public class TrackAdapter extends RecyclerView.Adapter<AudioItemHolder> implemen
                 holder.stateMark.setVisibility(GONE);
                 break;
         }
-
+        holder.checkBox.setChecked(track.checked() == 1);
         holder.trackName.setText(track.getTitle());
         holder.artistName.setText(track.getArtist());
         holder.albumName.setText(track.getAlbum());
@@ -409,16 +409,16 @@ public class TrackAdapter extends RecyclerView.Adapter<AudioItemHolder> implemen
                     mOnSortingListener.onFinishSorting();
                 }
                 else {
-                    if(tracks.size() > 500) {
+                    //if(tracks.size() > 500) {
                         if (mPendingUpdates != null) {
                             mPendingUpdates.push(tracks);
                         }
                         updateInBackground(tracks);
 
-                    }
+                    /*}
                     else {
                         updateInUIThread(tracks);
-                    }
+                    }*/
                 }
             } else {
                 mTrackList = tracks;
@@ -453,7 +453,7 @@ public class TrackAdapter extends RecyclerView.Adapter<AudioItemHolder> implemen
         }
 
         sDiffExecutor = new DiffExecutor(this);
-        sDiffExecutor.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, mTrackList, newItems);
+        sDiffExecutor.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, mTrackList, newItems);
 
     }
 

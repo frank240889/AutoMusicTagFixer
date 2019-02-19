@@ -49,6 +49,8 @@ public class SearchTrackAdapter extends RecyclerView.Adapter<FoundItemHolder> im
     private List<AsyncLoaderCover> mAsyncTaskQueue =  new ArrayList<>();
     private Deque<List<Track>> mPendingUpdates = new ArrayDeque<>();
     private static DiffExecutor sDiffExecutor;
+    private static final int CPU_COUNT = Runtime.getRuntime().availableProcessors() - 1;
+    private static final int MAX_PARALLEL_THREADS = CPU_COUNT * 2;
 
 
     public SearchTrackAdapter(FoundItemHolder.ClickListener listener){
@@ -69,7 +71,7 @@ public class SearchTrackAdapter extends RecyclerView.Adapter<FoundItemHolder> im
         Track track = mTrackList.get(position);
 
         final AsyncLoaderCover asyncLoaderCover = new AsyncLoaderCover();
-        if(mAsyncTaskQueue.size() < 8) {
+        if(mAsyncTaskQueue.size() < MAX_PARALLEL_THREADS) {
             mAsyncTaskQueue.add(asyncLoaderCover);
             asyncLoaderCover.setListener(new AsyncOperation<Void, byte[], byte[], Void>() {
                 @Override
@@ -137,7 +139,7 @@ public class SearchTrackAdapter extends RecyclerView.Adapter<FoundItemHolder> im
                         mAsyncTaskQueue.remove(asyncLoaderCover);
                 }
             });
-            asyncLoaderCover.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, track.getPath());
+            asyncLoaderCover.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, track.getPath());
         }
         holder.trackName.setText(track.getTitle());
         holder.artistName.setText(track.getArtist());
@@ -231,7 +233,7 @@ public class SearchTrackAdapter extends RecyclerView.Adapter<FoundItemHolder> im
                                     mAsyncTaskQueue.remove(asyncLoaderCover);
                             }
                         });
-                        asyncLoaderCover.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,
+                        asyncLoaderCover.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR,
                                 track.getPath());
                     }
                 }

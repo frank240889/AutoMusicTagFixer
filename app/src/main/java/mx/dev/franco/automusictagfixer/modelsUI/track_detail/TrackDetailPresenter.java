@@ -507,7 +507,6 @@ public class TrackDetailPresenter implements
             mView.loading(false);
         }
         mFixer = null;
-        //loadInfoTrack(mCurrentId);
         switch (resultCorrection.code){
             case Tagger.APPLIED_SAME_COVER:
             case Tagger.NEW_COVER_APPLIED:
@@ -760,6 +759,7 @@ public class TrackDetailPresenter implements
         if(mView != null)
             mView.onEnableFabs();
 
+        resultCorrection.track.setChecked(0);
         trackRepository.update(resultCorrection.track);
     }
 
