@@ -165,6 +165,7 @@ public class ResultSearchListFragment extends BaseFragment implements
         mSearchView = (SearchView) menu.findItem(R.id.action_search).getActionView();
         mSearchView.setSearchableInfo(searchManager.getSearchableInfo(getActivity().getComponentName()));
         mSearchView.setIconifiedByDefault(true);
+        mSearchView.clearFocus();
     }
 
 
@@ -270,7 +271,8 @@ public class ResultSearchListFragment extends BaseFragment implements
         if (mSearchView.isShown()) {
             mSearchView.onActionViewCollapsed();
         } else {
-            callSuperOnBackPressed();
+            getActivity().getSupportFragmentManager().popBackStack();
+            //callSuperOnBackPressed();
         }
     }
 

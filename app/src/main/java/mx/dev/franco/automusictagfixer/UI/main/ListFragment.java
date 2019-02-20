@@ -519,6 +519,12 @@ public class ListFragment extends BaseFragment implements
         }
     }
 
+    @Override
+    public void onStop() {
+        super.onStop();
+        mSearchView.clearFocus();
+    }
+
     public void showViewPermissionMessage() {
         final AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         builder.setTitle(R.string.title_dialog_permision).
