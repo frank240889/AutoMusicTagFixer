@@ -45,7 +45,7 @@ import static mx.dev.franco.automusictagfixer.utilities.TrackUtils.getExtension;
 
 /**
  * Helper class that wraps the functionality to
- * update metadata for audio files
+ * setChecked metadata for audio files
  */
 public class Tagger {
     private static final String TAG = Tagger.class.getName();
@@ -294,15 +294,15 @@ public class Tagger {
     }
 
     /**
-     * Check which tags needs to update, comparing current
+     * Check which tags needs to setChecked, comparing current
      * tags of file and new tags.
      * @param overrideAllTags Indicates the mode of comparision, if
-     *                         mOverrideAllTags is true, will set all tags as needed to update,
+     *                         mOverrideAllTags is true, will set all tags as needed to setChecked,
      *                         only if are not equal current than new; if mOverrideAllTags is false
      *                         will set only those missing in file.
      * @param file The file to apply tags.
      * @param newTags The new tags to apply.
-     * @return A hashmap containing the tags that will be update; it will be empty
+     * @return A hashmap containing the tags that will be setChecked; it will be empty
      *          if all current tags and news are equals.
      * @throws TagException
      * @throws ReadOnlyFileException
@@ -321,7 +321,7 @@ public class Tagger {
 
         HashMap<FieldKey, Object> tagsToUpdate = new HashMap<>();
         //Iterates over new values tag passed, to compare
-        //against the values of current tag and update only those
+        //against the values of current tag and setChecked only those
         //that are different than current
         for(Map.Entry entry : newTags.entrySet()){
             //For case of field cover, we need to compare the length of byte array
@@ -333,7 +333,7 @@ public class Tagger {
                     }
                 }
                 //Overwrite tags, but last comparision is to check if new cover is same
-                //than current, if is the same we don't update the field
+                //than current, if is the same we don't setChecked the field
                 else if ((currentCover == null) || currentCover.length == 0 || currentCover.length != ((byte[])entry.getValue()).length ) {
                     tagsToUpdate.put((FieldKey) entry.getKey(), entry.getValue());
                 }

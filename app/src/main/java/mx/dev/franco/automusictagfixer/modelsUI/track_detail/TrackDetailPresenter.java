@@ -697,7 +697,7 @@ public class TrackDetailPresenter implements
     }
 
     /**
-     * Updates the internal data to update the values of views.
+     * Updates the internal data to setChecked the values of views.
      * @param resultCorrection The result of correction.
      */
     private void updateAppliedAllTagsView(Tagger.ResultCorrection resultCorrection){
@@ -729,7 +729,9 @@ public class TrackDetailPresenter implements
                 mCurrentTrackDataItem.cover = results.cover;
                 mCurrentCover = results.cover;
                 mView.setCover(results.cover);
-                mView.setImageSize(TrackUtils.getStringImageSize(results.cover, resourceManager));
+                String imageSize = TrackUtils.getStringImageSize(results.cover, resourceManager);
+                mView.setImageSize(imageSize);
+                mCurrentTrackDataItem.imageSize = imageSize;
             }
             setEditableInfo(mCurrentTrackDataItem);
             setAdditionalInfo(mCurrentTrackDataItem);
@@ -759,7 +761,6 @@ public class TrackDetailPresenter implements
         if(mView != null)
             mView.onEnableFabs();
 
-        resultCorrection.track.setChecked(0);
         trackRepository.update(resultCorrection.track);
     }
 

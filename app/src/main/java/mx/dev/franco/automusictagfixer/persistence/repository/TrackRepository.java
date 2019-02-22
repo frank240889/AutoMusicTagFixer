@@ -79,7 +79,7 @@ public class TrackRepository {
             asyncFileReader.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
 
-    public void update(Track track){
+    public void setChecked(Track track){
         if(track.checked() == 1){
             track.setChecked(0);
         }
@@ -88,6 +88,10 @@ public class TrackRepository {
         }
 
         mAbstractSharedPreferences.putBoolean("sorting", false);
+        new TrackUpdater(mTrackDao).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,track);
+    }
+
+    public void update(Track track){
         new TrackUpdater(mTrackDao).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,track);
     }
 

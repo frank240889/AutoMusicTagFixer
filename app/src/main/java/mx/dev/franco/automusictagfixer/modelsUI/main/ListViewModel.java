@@ -106,11 +106,11 @@ public class ListViewModel extends ViewModel {
     }
 
     /**
-     * Request to repository to update the track
-     * @param track The track to update.
+     * Request to repository to setChecked the track
+     * @param track The track to setChecked.
      */
     public void updateTrack(Track track){
-        trackRepository.update(track);
+        trackRepository.setChecked(track);
     }
 
     /**

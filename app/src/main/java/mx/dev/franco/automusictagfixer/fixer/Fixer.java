@@ -194,7 +194,7 @@ public class Fixer extends AsyncTask<GnResponseListener.IdentificationResults,Vo
         if(hasError(mResultsCorrection.code))
             return false;
 
-        //Get tags that were updated to update item in internal app DB and MediaStore.
+        //Get tags that were updated to setChecked item in internal app DB and MediaStore.
         if(mResultsCorrection.tagsUpdated != null) {
             ContentValues updatedValues = new ContentValues();
              boolean shouldUpdateMediaStore = false;
@@ -277,7 +277,7 @@ public class Fixer extends AsyncTask<GnResponseListener.IdentificationResults,Vo
 
     private boolean updateCoverArt(GnResponseListener.IdentificationResults results) throws ReadOnlyFileException, CannotReadException, TagException, InvalidAudioFrameException, IOException {
         if(mTask == Tagger.MODE_ADD_COVER){
-            //Here we update cover
+            //Here we setChecked cover
             mResultsCorrection = taggerHelper.applyCover(results.cover, mTrack.getPath());
             mResultsCorrection.track = mTrack;
             mTrack.setState(TrackState.ALL_TAGS_FOUND);

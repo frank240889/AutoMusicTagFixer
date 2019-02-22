@@ -381,7 +381,7 @@ public class TrackDetailFragment extends BaseFragment implements EditableView,
     @Override
     public void setCover(byte[] value) {
         onCoverChanged(value);
-        mImageSize.setText(TrackUtils.getStringImageSize(value, getActivity().getApplicationContext()));
+        //mImageSize.setText(TrackUtils.getStringImageSize(value, getActivity().getApplicationContext()));
     }
 
     @Override

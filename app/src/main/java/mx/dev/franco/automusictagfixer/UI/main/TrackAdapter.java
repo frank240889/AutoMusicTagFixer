@@ -474,7 +474,7 @@ public class TrackAdapter extends RecyclerView.Adapter<AudioItemHolder> implemen
             mTrackList.addAll(result.list);
 
             sDiffExecutor = null;
-            //Try to perform next latest update.
+            //Try to perform next latest setChecked.
             if (mPendingUpdates != null && mPendingUpdates.size() > 0) {
                 updateInBackground(mPendingUpdates.peek());
             }
