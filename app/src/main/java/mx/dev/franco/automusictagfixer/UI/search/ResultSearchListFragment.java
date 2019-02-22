@@ -57,7 +57,7 @@ public class ResultSearchListFragment extends BaseFragment implements
     private SearchTrackAdapter mAdapter;
     private Toolbar mToolbar;
     private ActionBar mActionBar;
-    private String mQuery;
+    private String mQuery = null;
     private SearchListViewModel mSearchListViewModel;
 
     @Inject
@@ -87,7 +87,7 @@ public class ResultSearchListFragment extends BaseFragment implements
         mSearchListViewModel.getSearchResults().observe(this, this::onSearchResults);
         mSearchListViewModel.getSearchResults().observe(this, mAdapter);
         mSearchListViewModel.isTrackProcessing().observe(this, this::showMessageError);
-        mSearchListViewModel.actionTrackEvaluatedSuccessfully().observe(this, this::showDialog);
+        mSearchListViewModel.actionTrackEvaluatedSuccessfully().observe(this, this::openDetailTrack);
         mSearchListViewModel.actionIsTrackInaccessible().observe(this, this::showInaccessibleTrack);
         setHasOptionsMenu(true);
     }
@@ -191,10 +191,8 @@ public class ResultSearchListFragment extends BaseFragment implements
         alertDialog.show();
     }
 
-    private void showDialog(ListFragment.ViewWrapper viewWrapper) {
+    private void openDetailTrack(ListFragment.ViewWrapper viewWrapper) {
         ((MainActivity)getActivity()).mDrawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
-        TrackDetailFragment trackDetailFragment = TrackDetailFragment.
-                newInstance(viewWrapper.track.getMediaStoreId(), viewWrapper.mode);
 
         //to hide it, call the method again
         InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
@@ -205,6 +203,9 @@ public class ResultSearchListFragment extends BaseFragment implements
         catch (Exception e){
             e.printStackTrace();
         }
+
+        TrackDetailFragment trackDetailFragment = TrackDetailFragment.
+                newInstance(viewWrapper.track.getMediaStoreId(), viewWrapper.mode);
         getActivity().getSupportFragmentManager().beginTransaction().
                 setCustomAnimations(R.anim.slide_in_right,
                         R.anim.slide_out_left, R.anim.slide_in_left,
@@ -226,9 +227,11 @@ public class ResultSearchListFragment extends BaseFragment implements
                 mMessage.setVisibility(View.GONE);
             }
             else {
-                Toast toast = AndroidUtils.getToast(getActivity());
-                toast.setText(String.format(getString(R.string.no_found_items),mQuery));
-                toast.show();
+                if(mQuery != null) {
+                    Toast toast = AndroidUtils.getToast(getActivity());
+                    toast.setText(String.format(getString(R.string.no_found_items), mQuery));
+                    toast.show();
+                }
                 mMessage.setVisibility(View.VISIBLE);
             }
         }

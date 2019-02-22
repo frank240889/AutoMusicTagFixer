@@ -171,6 +171,7 @@ public class TrackDetailFragment extends BaseFragment implements EditableView,
             mTrackDetailPresenter.setCorrectionMode(Constants.CorrectionModes.VIEW_INFO);
 
         setRetainInstance(true);
+        setHasOptionsMenu(true);
     }
 
     @Override
@@ -188,7 +189,6 @@ public class TrackDetailFragment extends BaseFragment implements EditableView,
         mActionBar = ((MainActivity)getActivity()).getSupportActionBar();
         mActionBar.setDisplayShowTitleEnabled(false);
 
-        setHasOptionsMenu(true);
         setupFields();
         setupDataInfoFields();
         return mLayout;
@@ -211,8 +211,19 @@ public class TrackDetailFragment extends BaseFragment implements EditableView,
         mUpdateCoverButton = menu.findItem(R.id.action_update_cover);
         removeItem = menu.findItem(R.id.action_remove_cover);
         searchInWebItem = menu.findItem(R.id.action_web_search);
+    }
 
-
+    @Override
+    public void onPrepareOptionsMenu(Menu menu) {
+        super.onPrepareOptionsMenu(menu);
+        menu.clear();
+        //Both fragments have the same menu
+        getActivity().getMenuInflater().inflate(R.menu.menu_details_track_dialog, menu);
+        mPlayPreviewButton = menu.findItem(R.id.action_play);
+        mExtractCoverButton = menu.findItem(R.id.action_extract_cover);
+        mUpdateCoverButton = menu.findItem(R.id.action_update_cover);
+        removeItem = menu.findItem(R.id.action_remove_cover);
+        searchInWebItem = menu.findItem(R.id.action_web_search);
     }
 
     /**
