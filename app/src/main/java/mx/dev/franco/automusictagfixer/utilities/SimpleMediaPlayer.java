@@ -23,6 +23,7 @@ public final class SimpleMediaPlayer extends MediaPlayer implements MediaPlayer.
 
     private static SimpleMediaPlayer sMediaPlayer;
     private OnEventDispatchedListener mListener;
+    private String mCurrentPath;
 
     /**
      * Don't let instantiate this class, we need only one instance,
@@ -42,6 +43,7 @@ public final class SimpleMediaPlayer extends MediaPlayer implements MediaPlayer.
 
     public void removeListener(){
         mListener = null;
+        mCurrentPath = null;
     }
 
     /**
@@ -64,8 +66,11 @@ public final class SimpleMediaPlayer extends MediaPlayer implements MediaPlayer.
      */
 
     public void playPreview(String path) throws IOException {
+        if(path == null || path.equals(""))
+            return;
+
         File file = new File(path);
-        if(path == null || path.equals("") || !file.exists() || !file.canRead() || file.length() == 0)
+        if(!file.exists() || !file.canRead() || file.length() == 0)
             return;
 
         //Stops current audio
@@ -74,6 +79,27 @@ public final class SimpleMediaPlayer extends MediaPlayer implements MediaPlayer.
         start();
         if(mListener != null)
             mListener.onStartPlaying();
+    }
+
+    public void playPreview() throws IOException {
+
+        if(mCurrentPath == null || mCurrentPath.equals(""))
+            return;
+
+        File file = new File(mCurrentPath);
+        if(!file.exists() || !file.canRead() || file.length() == 0)
+            return;
+
+        //Stops current audio
+        setDataSource(mCurrentPath);
+        prepare();
+        start();
+        if(mListener != null)
+            mListener.onStartPlaying();
+    }
+
+    public void setPath(String path) {
+        mCurrentPath = path;
     }
 
 

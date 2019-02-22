@@ -13,6 +13,10 @@ import mx.dev.franco.automusictagfixer.utilities.Constants;
 
 /**
  * Created by franco on 26/12/17.
+ *
+ * This class is a helper that makes the request
+ * to test the connectivity and the internet connection
+ * then broadcast the result.
  */
 
 public class ConnectivityDetector implements OnTestingNetwork, OnTestingNetwork.OnTestingResult<String> {
@@ -23,7 +27,7 @@ public class ConnectivityDetector implements OnTestingNetwork, OnTestingNetwork.
     private Context mContext;
 
     private ConnectivityDetector(Context context){
-        this.mContext = context;
+        this.mContext = context.getApplicationContext();
     }
 
     public static ConnectivityDetector getInstance(Context context){
@@ -45,6 +49,8 @@ public class ConnectivityDetector implements OnTestingNetwork, OnTestingNetwork.
 
     @Override
     public void onNetworkConnected(String param) {
+
+        //If gracenote api is not initialized, try to initialize
         if(!GnService.sApiInitialized) {
             Job.scheduleJob(mContext);
         }

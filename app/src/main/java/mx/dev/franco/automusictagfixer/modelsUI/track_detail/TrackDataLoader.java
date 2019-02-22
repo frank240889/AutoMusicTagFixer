@@ -20,6 +20,10 @@ import mx.dev.franco.automusictagfixer.interfaces.AsyncOperation;
 import mx.dev.franco.automusictagfixer.persistence.room.TrackRoomDatabase;
 import mx.dev.franco.automusictagfixer.utilities.Tagger;
 
+/**
+ * This class  extracts asynchronously the data from track making use
+ * of {@link Tagger} class.
+ */
 public class TrackDataLoader extends AsyncTask<Integer, Void, TrackDataLoader.TrackDataItem> {
 
     private AsyncOperation<Void, TrackDataItem, Void, String> mListener;
@@ -78,7 +82,7 @@ public class TrackDataLoader extends AsyncTask<Integer, Void, TrackDataLoader.Tr
     }
 
 
-    public static class TrackDataItem{
+    public static class TrackDataItem implements Cloneable{
         public String title = "";
         public String artist = "";
         public String album = "";
@@ -101,5 +105,14 @@ public class TrackDataLoader extends AsyncTask<Integer, Void, TrackDataLoader.Tr
         public String imageSize = "Sin carátula.";
         public String fileSize = "";
 
+        @Override
+        protected Object clone() throws CloneNotSupportedException {
+            Object obj = null;
+            try {
+                obj = super.clone();
+            }
+            catch (CloneNotSupportedException ignored) {}
+            return obj;
+        }
     }
 }

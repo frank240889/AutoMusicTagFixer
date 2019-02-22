@@ -11,6 +11,7 @@
     <color name="true_white">#ffffff</color>
     <color name="md_statusbar_translucent">#4000</color>
     <color name="grey_900">#212121</color>
+    <color name="grey_850">#303030</color>
     <color name="grey_800">#424242</color>
     <color name="grey_700">#515151</color>
 

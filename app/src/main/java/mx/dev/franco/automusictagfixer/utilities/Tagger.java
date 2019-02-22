@@ -45,7 +45,7 @@ import static mx.dev.franco.automusictagfixer.utilities.TrackUtils.getExtension;
 
 /**
  * Helper class that wraps the functionality to
- * update metadata for audio files
+ * setChecked metadata for audio files
  */
 public class Tagger {
     private static final String TAG = Tagger.class.getName();
@@ -78,7 +78,7 @@ public class Tagger {
     public static final int APPLIED_SAME_TAGS = 24;
     public static final int APPLIED_SAME_COVER = 25;
 
-    //No identificationError is set
+    //No onIdentificationError is set
     public static final int NOT_SET = -1;
 
     private static Tagger sTaggerHelper;
@@ -294,15 +294,15 @@ public class Tagger {
     }
 
     /**
-     * Check which tags needs to update, comparing current
+     * Check which tags needs to setChecked, comparing current
      * tags of file and new tags.
      * @param overrideAllTags Indicates the mode of comparision, if
-     *                         mOverrideAllTags is true, will set all tags as needed to update,
+     *                         mOverrideAllTags is true, will set all tags as needed to setChecked,
      *                         only if are not equal current than new; if mOverrideAllTags is false
      *                         will set only those missing in file.
      * @param file The file to apply tags.
      * @param newTags The new tags to apply.
-     * @return A hashmap containing the tags that will be update; it will be empty
+     * @return A hashmap containing the tags that will be setChecked; it will be empty
      *          if all current tags and news are equals.
      * @throws TagException
      * @throws ReadOnlyFileException
@@ -321,7 +321,7 @@ public class Tagger {
 
         HashMap<FieldKey, Object> tagsToUpdate = new HashMap<>();
         //Iterates over new values tag passed, to compare
-        //against the values of current tag and update only those
+        //against the values of current tag and setChecked only those
         //that are different than current
         for(Map.Entry entry : newTags.entrySet()){
             //For case of field cover, we need to compare the length of byte array
@@ -333,7 +333,7 @@ public class Tagger {
                     }
                 }
                 //Overwrite tags, but last comparision is to check if new cover is same
-                //than current, if is the same we don't update the field
+                //than current, if is the same we don't setChecked the field
                 else if ((currentCover == null) || currentCover.length == 0 || currentCover.length != ((byte[])entry.getValue()).length ) {
                     tagsToUpdate.put((FieldKey) entry.getKey(), entry.getValue());
                 }
@@ -527,7 +527,6 @@ public class Tagger {
                 && extension.toLowerCase().equals("mp3"));
         //remove old version of ID3 tags
         if (isMp3 && ((MP3File) audioFile).hasID3v1Tag()) {
-            //Log.d("removed ID3v1","remove ID3v1");
             try {
                 ((MP3File) audioFile).delete(((MP3File) audioFile).getID3v1Tag());
             } catch (IOException e) {
@@ -680,7 +679,6 @@ public class Tagger {
                 sourceDocumentFile = nextDocument;
             }
         }
-        Log.d("document uri",sourceDocumentFile.getUri().toString());
         //this file is not a file so we can not apply tags
         if(!sourceDocumentFile.isFile())
             return null;
@@ -710,7 +708,6 @@ public class Tagger {
      */
     private String getRelativePath(File file){
         String baseFolder = getExtSdCardFolder(file);
-        Log.d("base folder",baseFolder);
 
         if (baseFolder == null) {
             return null;
@@ -719,9 +716,7 @@ public class Tagger {
         String relativePath;
         try {
             String fullPath = file.getCanonicalPath();
-            Log.d("fullpath",fullPath);
             relativePath = fullPath.substring(baseFolder.length() + 1);
-            Log.d("relativepath",relativePath);
         } catch (IOException e) {
             Crashlytics.logException(e);
             return null;
@@ -742,7 +737,6 @@ public class Tagger {
         String[] extSdPaths = getExtSdCardPaths();
         try {
             for (String extSdPath : extSdPaths) {
-                Log.d("starts with",file.getCanonicalPath() + "-" + extSdPath);
                 //Check where is located this file, in removable or non removable
                 if (file.getCanonicalPath().startsWith(extSdPath)) {
 

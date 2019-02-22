@@ -1,7 +1,6 @@
 package mx.dev.franco.automusictagfixer.UI.search;
 
 import android.arch.lifecycle.Observer;
-import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -44,14 +43,14 @@ public class SearchTrackAdapter extends RecyclerView.Adapter<FoundItemHolder> im
         AsyncOperation<Void, DiffResults<Track>, Void, Void>{
     private static final String TAG = SearchTrackAdapter.class.getName();
     @Inject
-    Context context;
-    @Inject
     ServiceUtils serviceUtils;
     private List<Track> mTrackList = new ArrayList<>();
     private FoundItemHolder.ClickListener mListener;
     private List<AsyncLoaderCover> mAsyncTaskQueue =  new ArrayList<>();
     private Deque<List<Track>> mPendingUpdates = new ArrayDeque<>();
     private static DiffExecutor sDiffExecutor;
+    private static final int CPU_COUNT = Runtime.getRuntime().availableProcessors() - 1;
+    private static final int MAX_PARALLEL_THREADS = CPU_COUNT * 2;
 
 
     public SearchTrackAdapter(FoundItemHolder.ClickListener listener){
@@ -72,7 +71,7 @@ public class SearchTrackAdapter extends RecyclerView.Adapter<FoundItemHolder> im
         Track track = mTrackList.get(position);
 
         final AsyncLoaderCover asyncLoaderCover = new AsyncLoaderCover();
-        if(mAsyncTaskQueue.size() < 8) {
+        if(mAsyncTaskQueue.size() < MAX_PARALLEL_THREADS) {
             mAsyncTaskQueue.add(asyncLoaderCover);
             asyncLoaderCover.setListener(new AsyncOperation<Void, byte[], byte[], Void>() {
                 @Override
@@ -140,7 +139,7 @@ public class SearchTrackAdapter extends RecyclerView.Adapter<FoundItemHolder> im
                         mAsyncTaskQueue.remove(asyncLoaderCover);
                 }
             });
-            asyncLoaderCover.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, track.getPath());
+            asyncLoaderCover.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, track.getPath());
         }
         holder.trackName.setText(track.getTitle());
         holder.artistName.setText(track.getArtist());
@@ -181,7 +180,7 @@ public class SearchTrackAdapter extends RecyclerView.Adapter<FoundItemHolder> im
                             public void onAsyncOperationFinished(byte[] result) {
                                 if (holder.itemView.getContext() != null) {
                                     try {
-                                        GlideApp.with(context).
+                                        GlideApp.with(holder.itemView.getContext()).
                                                 load(result)
                                                 .thumbnail(0.5f)
                                                 .error(R.drawable.ic_album_white_48px)
@@ -234,7 +233,7 @@ public class SearchTrackAdapter extends RecyclerView.Adapter<FoundItemHolder> im
                                     mAsyncTaskQueue.remove(asyncLoaderCover);
                             }
                         });
-                        asyncLoaderCover.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,
+                        asyncLoaderCover.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR,
                                 track.getPath());
                     }
                 }
@@ -278,7 +277,6 @@ public class SearchTrackAdapter extends RecyclerView.Adapter<FoundItemHolder> im
         reset();
         mAsyncTaskQueue = null;
         serviceUtils = null;
-        context = null;
         mTrackList.clear();
         mTrackList = null;
         mListener = null;
@@ -334,7 +332,7 @@ public class SearchTrackAdapter extends RecyclerView.Adapter<FoundItemHolder> im
             mTrackList.addAll(result.list);
 
             sDiffExecutor = null;
-            //Try to perform next latest update.
+            //Try to perform next latest setChecked.
             if (mPendingUpdates != null && mPendingUpdates.size() > 0) {
                 updateInBackground(mPendingUpdates.peek());
             }

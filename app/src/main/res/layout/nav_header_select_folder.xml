@@ -14,19 +14,26 @@
         android:cropToPadding="true"
         android:drawingCacheQuality="auto"
         android:scaleType="fitXY"
-        android:src="@drawable/material_mini" />
+        android:src="@drawable/material_mini"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <ImageView
         android:id="@+id/logo_drawer"
         android:layout_width="48dp"
         android:layout_height="48dp"
         android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
         android:layout_marginBottom="8dp"
         android:cropToPadding="false"
         android:scaleType="fitCenter"
         android:src="@drawable/splash"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="1.0"
         app:srcCompat="@drawable/splash" />
 
     <TextView
