@@ -17,7 +17,19 @@
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?android:attr/actionBarSize"
-            android:elevation="4dp" />
+            android:elevation="4dp">
+            <EditText
+                android:layout_marginStart="4dp"
+                android:layout_marginEnd="8dp"
+                android:drawableEnd="@drawable/ic_search_white_24px"
+                android:hint="@string/search_song"
+                android:id="@+id/search_box"
+                android:imeOptions="actionSearch"
+                android:maxLines="1"
+                android:singleLine="true"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+        </android.support.v7.widget.Toolbar>
 
     </android.support.design.widget.AppBarLayout>
 
@@ -30,7 +42,7 @@
         android:layout_marginEnd="10dp"
         android:layout_marginStart="10dp"
         android:gravity="center_horizontal"
-        android:text="@string/no_results"
+        android:text="@string/type_your_song_and_press_search"
         android:textSize="18sp" />
     <android.support.v7.widget.RecyclerView
         app:layout_behavior="@string/appbar_scrolling_view_behavior"

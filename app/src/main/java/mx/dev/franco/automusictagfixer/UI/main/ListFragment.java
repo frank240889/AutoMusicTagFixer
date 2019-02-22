@@ -1,7 +1,6 @@
 package mx.dev.franco.automusictagfixer.UI.main;
 
 import android.Manifest;
-import android.app.SearchManager;
 import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
@@ -47,6 +46,7 @@ import mx.dev.franco.automusictagfixer.AutoMusicTagFixer;
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.UI.BaseFragment;
 import mx.dev.franco.automusictagfixer.UI.sd_card_instructions.SdCardInstructionsActivity;
+import mx.dev.franco.automusictagfixer.UI.search.ResultSearchListFragment;
 import mx.dev.franco.automusictagfixer.UI.track_detail.TrackDetailFragment;
 import mx.dev.franco.automusictagfixer.interfaces.CorrectionListener;
 import mx.dev.franco.automusictagfixer.modelsUI.main.ListViewModel;
@@ -244,10 +244,10 @@ public class ListFragment extends BaseFragment implements
         super.onCreateOptionsMenu(menu, inflater);
         menu.clear();
         inflater.inflate(R.menu.menu_main_activity, menu);
-        SearchManager searchManager = (SearchManager) getActivity().getSystemService(Context.SEARCH_SERVICE);
-        mSearchView = (SearchView) menu.findItem(R.id.action_search).getActionView();
-        mSearchView.setSearchableInfo(searchManager.getSearchableInfo(getActivity().getComponentName()));
-        mSearchView.setIconifiedByDefault(true);
+        //SearchManager searchManager = (SearchManager) getActivity().getSystemService(Context.SEARCH_SERVICE);
+        //mSearchView = (SearchView) menu.findItem(R.id.action_search).getActionView();
+        //mSearchView.setSearchableInfo(searchManager.getSearchableInfo(getActivity().getComponentName()));
+        //mSearchView.setIconifiedByDefault(true);
 
         mMenu = menu;
         checkItem(-1);
@@ -267,6 +267,17 @@ public class ListFragment extends BaseFragment implements
                     return false;
                 }
                 checkAll();
+                break;
+            case R.id.action_search:
+                    ResultSearchListFragment resultSearchListFragment = ResultSearchListFragment.newInstance();
+                    getActivity().getSupportFragmentManager().beginTransaction().
+                            setCustomAnimations(R.anim.slide_in_right,
+                                    R.anim.slide_out_left, R.anim.slide_in_left,
+                                    R.anim.slide_out_right).
+                            addToBackStack(ResultSearchListFragment.TAG).
+                            add(R.id.container_fragments, resultSearchListFragment, ResultSearchListFragment.TAG).
+                            commit();
+
                 break;
             case R.id.action_refresh:
                 rescan();
@@ -522,7 +533,7 @@ public class ListFragment extends BaseFragment implements
     @Override
     public void onStop() {
         super.onStop();
-        mSearchView.clearFocus();
+        //mSearchView.clearFocus();
     }
 
     public void showViewPermissionMessage() {
@@ -729,11 +740,7 @@ public class ListFragment extends BaseFragment implements
 
     @Override
     public void onBackPressed() {
-        if (mSearchView.isShown()) {
-            mSearchView.onActionViewCollapsed();
-        } else {
-            callSuperOnBackPressed();
-        }
+        callSuperOnBackPressed();
     }
 
     @Override

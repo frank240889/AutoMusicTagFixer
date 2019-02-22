@@ -276,7 +276,7 @@
     <string name="watch">Ver</string>
     <string name="accept">Aceptar</string>
     <string name="add_some_tracks">Añade canciones a tu smartphone para comenzar.</string>
-    <string name="no_found_items">\"%1$s\" buscado</string>
+    <string name="no_found_items">Sin resultados para \"%1$s\"</string>
     <string name="search_results">%1$s canciones para \"%2$s\"</string>
     <string name="no_results">Sin resultados.</string>
     <string name="hint_rename">Nombre sin extensión</string>
@@ -313,5 +313,6 @@
     <string name="results_found">Etiquetas encontradas</string>
     <string name="cover_found">Carátula encontrada</string>
     <string name="loading_data_track">Cargando información de canción…</string>
+    <string name="type_your_song_and_press_search">Escribe la canción a buscar.</string>
 
 </resources>

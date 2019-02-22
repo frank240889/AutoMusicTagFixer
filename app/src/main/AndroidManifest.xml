@@ -50,14 +50,6 @@
             android:launchMode="singleTop"
             android:windowSoftInputMode="adjustPan"
             tools:ignore="InnerclassSeparator">
-            <intent-filter>
-                <action android:name="android.intent.action.SEARCH"/>
-            </intent-filter>
-            <meta-data android:name="android.app.default_searchable"
-                android:value=".UI.main.MainActivity" />
-            <meta-data
-                android:name="android.app.searchable"
-                android:resource="@xml/searchable" />
         </activity>
         <activity
             android:name=".UI.sd_card_instructions.SdCardInstructionsActivity"

@@ -43,7 +43,11 @@ public class SearchListViewModel extends ViewModel {
     }
 
     public void search(String query) {
-        trackRepository.search(query);
+        if(query == null || query.equals(""))
+            return;
+
+        String q = "%"+query+"%";
+        trackRepository.search(q);
     }
 
     public void onItemClick(ListFragment.ViewWrapper viewWrapper){

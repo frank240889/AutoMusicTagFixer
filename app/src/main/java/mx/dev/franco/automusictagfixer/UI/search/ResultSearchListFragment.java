@@ -1,9 +1,7 @@
 package mx.dev.franco.automusictagfixer.UI.search;
 
-import android.app.SearchManager;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -12,17 +10,19 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.google.android.flexbox.AlignItems;
@@ -63,14 +63,10 @@ public class ResultSearchListFragment extends BaseFragment implements
     @Inject
     ServiceUtils serviceUtils;
     private View mLayout;
-    private SearchView mSearchView;
+    private EditText mSearchBox;
 
-    public static ResultSearchListFragment newInstance(Intent intent) {
-        ResultSearchListFragment fragment = new ResultSearchListFragment();
-        Bundle bundle = new Bundle();
-        bundle.putParcelable("intent", intent);
-        fragment.setArguments(bundle);
-        return fragment;
+    public static ResultSearchListFragment newInstance() {
+        return new ResultSearchListFragment();
     }
 
     public ResultSearchListFragment() {
@@ -101,7 +97,35 @@ public class ResultSearchListFragment extends BaseFragment implements
                              Bundle savedInstanceState) {
         mLayout = inflater.inflate(R.layout.fragment_result_search_list, container, false);
         mToolbar = mLayout.findViewById(R.id.toolbar);
+        mSearchBox = mLayout.findViewById(R.id.search_box);
+        mSearchBox.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                if(actionId == EditorInfo.IME_ACTION_SEARCH || actionId == EditorInfo.IME_ACTION_UNSPECIFIED){
+                    mQuery = mSearchBox.getText().toString();
+                    mSearchListViewModel.search(mQuery);
+                    hideKeyboard();
+                }
+
+                return false;
+            }
+        });
+        mSearchBox.requestFocus();
+        InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+        assert imm != null;
+        imm.showSoftInput(mSearchBox, InputMethodManager.SHOW_IMPLICIT);
         return mLayout;
+    }
+
+    private void hideKeyboard() {
+        InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+        try {
+            assert imm != null;
+            imm.hideSoftInputFromWindow(getActivity().getCurrentFocus().getWindowToken(), 0);
+        }
+        catch (Exception e){
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -111,7 +135,6 @@ public class ResultSearchListFragment extends BaseFragment implements
         //attach adapter to our recyclerview
         mRecyclerView = view.findViewById(R.id.found_tracks_recycler_view);
         mMessage = view.findViewById(R.id.found_message);
-
 
         FlexboxLayoutManager layoutManager = new FlexboxLayoutManager(getContext());
         layoutManager.setFlexDirection(FlexDirection.ROW);
@@ -139,7 +162,12 @@ public class ResultSearchListFragment extends BaseFragment implements
             }
         });
         mRecyclerView.setAdapter(mAdapter);
+    }
 
+    @Override
+    public void onPrepareOptionsMenu(Menu menu) {
+        super.onPrepareOptionsMenu(menu);
+        menu.clear();
     }
 
     @Override
@@ -151,25 +179,6 @@ public class ResultSearchListFragment extends BaseFragment implements
         //pressing back from toolbar, close activity
         mToolbar.setNavigationOnClickListener(v -> callSuperOnBackPressed());
     }
-
-    public void onNewIntent(Intent intent){
-        performSearch(intent);
-    }
-
-    @Override
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        super.onCreateOptionsMenu(menu, inflater);
-        menu.clear();
-        inflater.inflate(R.menu.menu_search_activity, menu);
-        SearchManager searchManager = (SearchManager) getActivity().getSystemService(Context.SEARCH_SERVICE);
-        mSearchView = (SearchView) menu.findItem(R.id.action_search).getActionView();
-        mSearchView.setSearchableInfo(searchManager.getSearchableInfo(getActivity().getComponentName()));
-        mSearchView.setIconifiedByDefault(true);
-        mSearchView.clearFocus();
-    }
-
-
-
 
     private void showInaccessibleTrack(ListFragment.ViewWrapper viewWrapper) {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
@@ -215,10 +224,11 @@ public class ResultSearchListFragment extends BaseFragment implements
         if(tracks != null) {
             if(tracks.size() > 0) {
                 mMessage.setVisibility(View.GONE);
-                mActionBar.setTitle( String.format(getString(R.string.search_results),tracks.size()+"",mQuery) );
             }
             else {
-                mActionBar.setTitle( String.format(getString(R.string.no_found_items),mQuery) );
+                Toast toast = AndroidUtils.getToast(getActivity());
+                toast.setText(String.format(getString(R.string.no_found_items),mQuery));
+                toast.show();
                 mMessage.setVisibility(View.VISIBLE);
             }
         }
@@ -229,15 +239,6 @@ public class ResultSearchListFragment extends BaseFragment implements
     public void onPause(){
         super.onPause();
         mRecyclerView.stopScroll();
-    }
-
-    private void performSearch(Intent intent){
-        // Get the intent, verify the action and get the query
-        if (Intent.ACTION_SEARCH.equals(intent.getAction())) {
-            mQuery = intent.getStringExtra(SearchManager.QUERY);
-            String q = "%"+intent.getStringExtra(SearchManager.QUERY)+"%";
-            mSearchListViewModel.search(q);
-        }
     }
 
     @Override
@@ -268,12 +269,7 @@ public class ResultSearchListFragment extends BaseFragment implements
 
     @Override
     public void onBackPressed() {
-        if (mSearchView.isShown()) {
-            mSearchView.onActionViewCollapsed();
-        } else {
-            getActivity().getSupportFragmentManager().popBackStack();
-            //callSuperOnBackPressed();
-        }
+        callSuperOnBackPressed();
     }
 
     @Override
@@ -296,27 +292,6 @@ public class ResultSearchListFragment extends BaseFragment implements
 
         if (animation != null && getView() != null)
             getView().setLayerType(View.LAYER_TYPE_HARDWARE, null);
-
-        if(animation != null)
-            animation.setAnimationListener(new Animation.AnimationListener() {
-                @Override
-                public void onAnimationStart(Animation animation) {
-
-                }
-
-                @Override
-                public void onAnimationEnd(Animation animation) {
-                    animation.setAnimationListener(null);
-                    Intent intent = (Intent) (getArguments() != null ? getArguments().get("intent") : null);
-                    if(intent != null)
-                        performSearch(intent);
-                }
-
-                @Override
-                public void onAnimationRepeat(Animation animation) {
-
-                }
-            });
 
         return animation;
     }

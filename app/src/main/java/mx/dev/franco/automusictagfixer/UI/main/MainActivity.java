@@ -25,7 +25,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
 import android.view.Window;
 import android.view.WindowManager;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.Toast;
 
 import java.util.List;
@@ -34,7 +33,6 @@ import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.UI.BaseFragment;
 import mx.dev.franco.automusictagfixer.UI.about.ScrollingAboutActivity;
 import mx.dev.franco.automusictagfixer.UI.faq.QuestionsActivity;
-import mx.dev.franco.automusictagfixer.UI.search.ResultSearchListFragment;
 import mx.dev.franco.automusictagfixer.UI.settings.SettingsActivity;
 import mx.dev.franco.automusictagfixer.identifier.GnService;
 import mx.dev.franco.automusictagfixer.interfaces.OnTestingNetwork;
@@ -91,7 +89,7 @@ public class MainActivity extends AppCompatActivity
         mReceiver = null;
     }
 
-    @Override
+    /*@Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         Fragment fragment = getSupportFragmentManager().findFragmentByTag(ResultSearchListFragment.TAG);
@@ -119,7 +117,7 @@ public class MainActivity extends AppCompatActivity
 
         }
 
-    }
+    }*/
 
 
 

@@ -6,8 +6,7 @@
         android:id="@+id/action_search"
         android:title="@string/search_song"
         android:icon="@drawable/ic_search_white_24px"
-        app:showAsAction="ifRoom|collapseActionView"
-        app:actionViewClass="android.support.v7.widget.SearchView" />
+        app:showAsAction="always"/>
     <item
         android:id="@+id/action_refresh"
         app:showAsAction="never"

@@ -309,5 +309,6 @@
     <string name="results_found">Tags found</string>
     <string name="cover_found">Cover found</string>
     <string name="loading_data_track">Loading track data…</string>
+    <string name="type_your_song_and_press_search">Type the song to search.</string>
 
 </resources>
