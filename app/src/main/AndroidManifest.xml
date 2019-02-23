@@ -26,7 +26,8 @@
             android:name=".UI.SplashActivity"
             android:configChanges="orientation|screenSize"
             android:screenOrientation="portrait"
-            android:theme="@style/SplashTheme">
+            android:theme="@style/SplashTheme"
+            tools:ignore="InnerclassSeparator">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <action android:name="android.intent.action.VIEW"/>
@@ -37,39 +38,33 @@
         <activity
             android:name=".UI.intro.IntroActivity"
             android:configChanges="orientation|screenSize"
-            android:theme="@style/Theme.Intro" />
+            android:theme="@style/Theme.Intro"
+            tools:ignore="InnerclassSeparator"
+            />
         <activity
             android:name=".UI.main.MainActivity"
             android:configChanges="orientation|screenSize"
             android:label="@string/title_activity_main"
             android:screenOrientation="portrait"
             android:theme="@style/MainActivityTheme"
-            android:launchMode="singleTop">
-            <meta-data android:name="android.app.default_searchable"
-                android:value=".UI.search.SearchActivity" />
+            android:launchMode="singleTop"
+            android:windowSoftInputMode="adjustPan"
+            tools:ignore="InnerclassSeparator">
         </activity>
         <activity
             android:name=".UI.sd_card_instructions.SdCardInstructionsActivity"
             android:parentActivityName=".UI.main.MainActivity"
-            android:theme="@style/MyTransparentTheme"/>
-        <activity
-            android:name=".UI.track_detail.TrackDetailsActivity"
-            android:configChanges="orientation|screenSize"
-            android:parentActivityName=".UI.main.MainActivity"
+            android:theme="@style/MyTransparentTheme"
             android:screenOrientation="portrait"
-            android:theme="@style/DetailsTrackDialogTheme"
-            android:windowSoftInputMode="adjustResize">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="mx.dev.franco.automusictagfixer.UI.main.MainActivity" />
-        </activity>
+            tools:ignore="InnerclassSeparator"/>
         <activity
             android:name=".UI.faq.QuestionsActivity"
             android:configChanges="orientation|screenSize"
             android:label="@string/faq"
             android:parentActivityName=".UI.main.MainActivity"
             android:screenOrientation="portrait"
-            android:theme="@style/QuestionsTheme">
+            android:theme="@style/QuestionsTheme"
+            tools:ignore="InnerclassSeparator">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="mx.dev.franco.automusictagfixer.UI.main.MainActivity" />
@@ -80,7 +75,8 @@
             android:label="@string/title_activity_scrolling_about"
             android:parentActivityName=".UI.main.MainActivity"
             android:screenOrientation="portrait"
-            android:theme="@style/AboutTheme">
+            android:theme="@style/AboutTheme"
+            tools:ignore="InnerclassSeparator">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="mx.dev.franco.automusictagfixer.UI.main.MainActivity" />
@@ -91,19 +87,8 @@
             android:label="@string/title_activity_settings"
             android:parentActivityName=".UI.main.MainActivity"
             android:screenOrientation="portrait"
-            android:theme="@style/SettingsStyle" />
-        <activity android:name=".UI.search.SearchActivity"
-            android:configChanges="orientation|screenSize"
-            android:screenOrientation="portrait"
-            android:theme="@style/MainActivityTheme"
-            android:launchMode="singleTop">
-            <intent-filter>
-                <action android:name="android.intent.action.SEARCH"/>
-            </intent-filter>
-            <meta-data
-                android:name="android.app.searchable"
-                android:resource="@xml/searchable" />
-        </activity>
+            android:theme="@style/SettingsStyle"
+            tools:ignore="InnerclassSeparator"/>
         <!-- "mx.dev.franco.automusictagfixer.fileProvider" -->
         <!-- This provider is necessary because in android >= 7 doesn't allow to access directly to files -->
         <provider

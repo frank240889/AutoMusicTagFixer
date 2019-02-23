@@ -8,8 +8,10 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
@@ -28,6 +30,7 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
 import com.crashlytics.android.Crashlytics;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.util.Objects;
 
@@ -183,7 +186,7 @@ public class AndroidUtils {
         return builder;
     }
 
-    private static void setValues(GnResponseListener.IdentificationResults results, View view, Context context){
+    private static void setValues(GnResponseListener.IdentificationResults results, View view, Context context) {
         ImageView cover = view.findViewById(R.id.trackid_cover);
         GlideApp.with(view.getContext()).
                 load(results.cover).
@@ -318,6 +321,32 @@ public class AndroidUtils {
         AnimatorSet set = new AnimatorSet();
         set.playSequentially(delayAnimator, revealAnimator);
         return set;
+    }
+
+    public static GnResponseListener.IdentificationResults getResults(Bundle bundle) {
+        GnResponseListener.IdentificationResults identificationResults = new GnResponseListener.IdentificationResults();
+        identificationResults.title = bundle.getString("title");
+        identificationResults.artist = bundle.getString("artist");
+        identificationResults.album = bundle.getString("album");
+        identificationResults.trackNumber = bundle.getString("track_number");
+        identificationResults.trackYear = bundle.getString("track_year");
+        identificationResults.genre = bundle.getString("genre");
+        identificationResults.cover = bundle.getByteArray("cover");
+
+        return identificationResults;
+    }
+
+    public static byte[] generateCover(Bitmap bitmap) {
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStream);
+        return byteArrayOutputStream.toByteArray();
+    }
+
+    public static Bundle getBundle(int idTrack, int correctionMode){
+        Bundle bundle = new Bundle();
+        bundle.putInt(Constants.MEDIA_STORE_ID, idTrack);
+        bundle.putInt(Constants.CorrectionModes.MODE, correctionMode);
+        return bundle;
     }
 
 }

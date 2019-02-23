@@ -2,6 +2,7 @@ package mx.dev.franco.automusictagfixer.modelsUI.main;
 
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MutableLiveData;
+import android.arch.lifecycle.Transformations;
 import android.arch.lifecycle.ViewModel;
 
 import java.util.List;
@@ -18,7 +19,7 @@ import mx.dev.franco.automusictagfixer.persistence.repository.TrackRepository;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.persistence.room.TrackState;
 import mx.dev.franco.automusictagfixer.services.FixerTrackService;
-import mx.dev.franco.automusictagfixer.utilities.Constants;
+import mx.dev.franco.automusictagfixer.utilities.Resource;
 import mx.dev.franco.automusictagfixer.utilities.ServiceUtils;
 import mx.dev.franco.automusictagfixer.utilities.Tagger;
 import mx.dev.franco.automusictagfixer.utilities.resource_manager.ResourceManager;
@@ -33,6 +34,9 @@ public class ListViewModel extends ViewModel {
     private MutableLiveData<Integer> mCanRunService = new MutableLiveData<>();
     private MutableLiveData<String> mTrackIsProcessing = new MutableLiveData<>();
     private MutableLiveData<ListFragment.ViewWrapper> mTrackInaccessible = new MutableLiveData<>();
+    //LiveData to inform that there are no tracks in device, this is necessary because
+    //when no tracks are found, it will not insert any data in DB, meaning that this did not change
+    //and it will not dispatched the event to any observer because of that.
     private MutableLiveData<Boolean> mEmptyList = new MutableLiveData<>();
     private MutableLiveData<ListFragment.ViewWrapper> mCanOpenDetails = new MutableLiveData<>();
     private MutableLiveData<Integer> mStartAutomaticMode = new MutableLiveData<>();
@@ -53,20 +57,29 @@ public class ListViewModel extends ViewModel {
 
     public ListViewModel() {
         AutoMusicTagFixer.getContextComponent().inject(this);
-        mEmptyList.setValue(false);
-        mTracks = trackRepository.getAllTracks();
+        mShowProgress.setValue(true);
     }
 
+    /**
+     * Return the live data container that holds the reference to tracks from local DB.
+     * @return The live data container.
+     */
     public LiveData<List<Track>> getAllTracks(){
-        mShowProgress.setValue(false);
+        LiveData<Resource<List<Track>>> tracks = trackRepository.getAllTracks();
+        mTracks = Transformations.map(tracks, input -> {
+            mShowProgress.setValue(input.status == Resource.Status.LOADING);
+            return input.data;
+        });
         return mTracks;
     }
 
+    /**
+     * Retrieves the info of tracks from MediaStore.
+     */
     public void getInfoForTracks(){
         if(sharedPreferences.getBoolean("first_time_read"))
             return;
 
-        mShowProgress.setValue(true);
         trackRepository.getDataFromTracksFirst(new AsyncOperation<Void, Boolean, Void, Void>() {
             @Override
             public void onAsyncOperationStarted(Void params) {
@@ -80,7 +93,6 @@ public class ListViewModel extends ViewModel {
                 if(result){
                     mEmptyList.setValue(true);
                 }
-
             }
 
             @Override
@@ -93,16 +105,18 @@ public class ListViewModel extends ViewModel {
         });
     }
 
+    /**
+     * Request to repository to setChecked the track
+     * @param track The track to setChecked.
+     */
     public void updateTrack(Track track){
-        if(track.checked() == 1){
-            track.setChecked(0);
-        }
-        else {
-            track.setChecked(1);
-        }
-        trackRepository.update(track);
+        trackRepository.setChecked(track);
     }
 
+    /**
+     * Removes data of track from DB of app.
+     * @param track The track to remove its info.
+     */
     public void removeTrack(Track track){
         trackRepository.delete(track);
     }
@@ -111,15 +125,7 @@ public class ListViewModel extends ViewModel {
         if(serviceUtils.checkIfServiceIsRunning(FixerTrackService.CLASS_NAME))
             return;
 
-        boolean allChecked = sharedPreferences.getBoolean(Constants.ALL_ITEMS_CHECKED);
-        if(allChecked){
-            sharedPreferences.putBoolean(Constants.ALL_ITEMS_CHECKED, false);
-            trackRepository.uncheckAll();
-        }
-        else {
-            sharedPreferences.putBoolean(Constants.ALL_ITEMS_CHECKED, true);
-            trackRepository.checkAll();
-        }
+        trackRepository.checkAllItems();
     }
 
     public String getState(int stateCode){
@@ -159,7 +165,6 @@ public class ListViewModel extends ViewModel {
     }
 
     public void updateTrackList(){
-        mShowProgress.setValue(true);
         trackRepository.getNewTracks(new AsyncOperation<Void, Boolean, Void, Void>() {
             @Override
             public void onAsyncOperationStarted(Void params) {
@@ -194,7 +199,7 @@ public class ListViewModel extends ViewModel {
         }
     }
 
-    public void setProgress(boolean showProgress){
+    public void setLoading(boolean showProgress){
         mShowProgress.setValue(showProgress);
     }
 
@@ -218,7 +223,7 @@ public class ListViewModel extends ViewModel {
         return mEmptyList;
     }
 
-    public LiveData<Boolean> showProgress(){
+    public LiveData<Boolean> getLoader(){
         return mShowProgress;
     }
 

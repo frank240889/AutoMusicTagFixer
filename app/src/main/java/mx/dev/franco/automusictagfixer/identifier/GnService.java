@@ -31,6 +31,10 @@ import mx.dev.franco.automusictagfixer.utilities.Settings;
  */
 
 public class GnService{
+    public interface OnApiListener {
+        void onApiInitialized();
+    }
+
     private static int sCountAttempts = 0;
     private static final java.lang.String TAG = GnService.class.getName();
     public static final int AUTOMATIC = 0;

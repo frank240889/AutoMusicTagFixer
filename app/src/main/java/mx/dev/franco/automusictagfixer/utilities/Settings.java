@@ -8,7 +8,7 @@ import com.gracenote.gnsdk.GnImageSize;
 import com.gracenote.gnsdk.GnLanguage;
 
 /**
- * This class help us to store the values og ImageSize from settings.
+ * Helper class to store the values og¡f ImageSize from settings.
  */
 public class Settings {
     //Determine the size of downloaded cover art, default value is not download cover art.
@@ -47,7 +47,7 @@ public class Settings {
     }
 
     public static GnLanguage setValueLanguage(String preferenceSaved){
-        GnLanguage language= null;
+        GnLanguage language = null;
         switch (preferenceSaved){
             case "0":
                 language = GnLanguage.kLanguageSpanish;

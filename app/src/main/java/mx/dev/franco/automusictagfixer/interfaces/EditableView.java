@@ -17,7 +17,6 @@ public interface EditableView {
     String getGenre();
     String getTrackNumber();
     String getTrackYear();
-    byte[] getCover();
 
     void setFilename(String value);
     void setPath(String value);
@@ -33,30 +32,42 @@ public interface EditableView {
     void setImageSize(String value);
 
 
-    void showStatus();
-    void hideStatus();
-    void setMessageStatus(String status);
+    void setStateMessage(String message, boolean visible);
 
-    void showProgress();
-    void hideProgress();
+    void loading(boolean showProgress);
 
     void onLoadError(String error);
     void onSuccessLoad(String path);
 
-    void loadIdentificationResults(GnResponseListener.IdentificationResults results);
-    void loadCoverIdentificationResults(GnResponseListener.IdentificationResults results);
-    void identificationComplete(GnResponseListener.IdentificationResults identificationResults);
-    void identificationCancelled();
-    void identificationNotFound();
-    void identificationError(String error);
+    void onLoadIdentificationResults(GnResponseListener.IdentificationResults results);
+    void onLoadCoverIdentificationResults(GnResponseListener.IdentificationResults results);
+    void onIdentificationComplete(GnResponseListener.IdentificationResults identificationResults);
+    void onIdentificationCancelled();
+    void onIdentificationNotFound();
+    void onIdentificationError(String error);
 
     void onSuccessfullyCorrection(String message);
     void onSuccessfullyFileSaved(String message);
     void onCorrectionError(String message, String action);
 
-    void enableEditMode();
-    void disableEditMode();
-    void disableEditModeAndRestore();
+    void onEnableEditMode();
+    void onDisableEditMode();
+    void onDisableEditModeAndRestore();
     void alertInvalidData(String message, int field);
     void onDataValid();
+
+    void onTrackHasNoCover();
+
+    void onConfirmRemovingCover();
+    void onInvalidImage();
+
+    void onShowFabMenu();
+    void onHideFabMenu();
+
+    void onConfirmExit();
+
+    void onEnableFabs();
+    void onDisableFabs();
+
+    void setCancelTaskEnabled(boolean enableCancelView);
 }

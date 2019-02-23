@@ -47,8 +47,8 @@ import mx.dev.franco.automusictagfixer.fixer.TrackLoader;
 import mx.dev.franco.automusictagfixer.identifier.GnResponseListener;
 import mx.dev.franco.automusictagfixer.identifier.GnService;
 import mx.dev.franco.automusictagfixer.identifier.TrackIdentifier;
-import mx.dev.franco.automusictagfixer.interfaces.TrackListLoader;
 import mx.dev.franco.automusictagfixer.interfaces.InfoTrackLoader;
+import mx.dev.franco.automusictagfixer.interfaces.TrackListLoader;
 import mx.dev.franco.automusictagfixer.network.ConnectivityDetector;
 import mx.dev.franco.automusictagfixer.persistence.repository.TrackRepository;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
@@ -388,7 +388,7 @@ public class FixerTrackService extends Service implements GnResponseListener.GnL
         if(mTrackRepository != null) {
             track.setChecked(1);
             track.setProcessing(1);
-            mTrackRepository.update(track);
+            mTrackRepository.setChecked(track);
         }
         startNotification(TrackUtils.getPath(track.getPath()),
                 getString(R.string.correction_in_progress),
@@ -421,7 +421,7 @@ public class FixerTrackService extends Service implements GnResponseListener.GnL
         if(mTrackRepository != null) {
             track.setChecked(0);
             track.setProcessing(0);
-            mTrackRepository.update(track);
+            mTrackRepository.setChecked(track);
         }
 
         isRunning = false;
@@ -446,7 +446,7 @@ public class FixerTrackService extends Service implements GnResponseListener.GnL
         if(mTrackRepository != null) {
             track.setChecked(0);
             track.setProcessing(0);
-            mTrackRepository.update(track);
+            mTrackRepository.setChecked(track);
         }
         isRunning = false;
         if(mIds != null && mIds.size()>0)
@@ -488,7 +488,7 @@ public class FixerTrackService extends Service implements GnResponseListener.GnL
         if(mTrackRepository != null && track != null) {
             track.setChecked(0);
             track.setProcessing(0);
-            mTrackRepository.update(track);
+            mTrackRepository.setChecked(track);
         }
         notifyFinished();
         stopSelf();
@@ -514,7 +514,7 @@ public class FixerTrackService extends Service implements GnResponseListener.GnL
         if(mTrackRepository != null) {
             track.setChecked(0);
             track.setProcessing(0);
-            mTrackRepository.update(track);
+            mTrackRepository.setChecked(track);
         }
 
         if(mIds != null && mIds.size()>0)
@@ -531,7 +531,7 @@ public class FixerTrackService extends Service implements GnResponseListener.GnL
         if(mTrackRepository != null) {
             track.setChecked(0);
             track.setProcessing(0);
-            mTrackRepository.update(track);
+            mTrackRepository.setChecked(track);
         }
 
         isRunning = false;
@@ -552,7 +552,7 @@ public class FixerTrackService extends Service implements GnResponseListener.GnL
         if(mTrackRepository != null) {
             track.setChecked(0);
             track.setProcessing(0);
-            mTrackRepository.update(track);
+            mTrackRepository.setChecked(track);
         }
 
         if(mIds != null && mIds.size()>0)

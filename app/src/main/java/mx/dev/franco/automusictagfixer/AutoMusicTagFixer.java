@@ -24,7 +24,7 @@ import mx.dev.franco.automusictagfixer.utilities.StorageHelper;
  */
 
 public final class AutoMusicTagFixer extends Application {
-    private static ContextComponent mContextComponent;
+    private static ContextComponent sContextComponent;
     private ConnectivityChangesDetector mConnectivityChangesDetector;
     private DetectorRemovableMediaStorages mDetectorRemovableMediaStorages;
     // Called when the application is starting, before any other application objects have been created.
@@ -32,17 +32,17 @@ public final class AutoMusicTagFixer extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-        mContextComponent = DaggerContextComponent.builder().
+        sContextComponent = DaggerContextComponent.builder().
                 contextModule(new ContextModule(this)).
                 build();
 
 
         //Fabric.with(this, new Crashlytics());
-// Set up Crashlytics, disabled for debug builds
+        // Set up Crashlytics, disabled for debug builds
         Crashlytics crashlyticsKit = new Crashlytics.Builder()
                 .core(new CrashlyticsCore.Builder().disabled(BuildConfig.DEBUG).build())
                 .build();
-// Initialize Fabric with the debug-disabled crashlytics.
+        // Initialize Fabric with the debug-disabled crashlytics.
         Fabric.with(this, crashlyticsKit);
         //Detect connectivity changes
         mConnectivityChangesDetector = new ConnectivityChangesDetector();
@@ -83,6 +83,6 @@ public final class AutoMusicTagFixer extends Application {
     }
 
     public static ContextComponent getContextComponent(){
-        return mContextComponent;
+        return sContextComponent;
     }
 }
