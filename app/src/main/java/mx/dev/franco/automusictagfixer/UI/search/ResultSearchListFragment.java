@@ -110,12 +110,10 @@ public class ResultSearchListFragment extends BaseFragment implements
                 return false;
             }
         });
-        mSearchBox.requestFocus();
-        InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
-        assert imm != null;
-        imm.showSoftInput(mSearchBox, InputMethodManager.SHOW_IMPLICIT);
         return mLayout;
     }
+
+
 
     private void hideKeyboard() {
         InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
@@ -162,6 +160,10 @@ public class ResultSearchListFragment extends BaseFragment implements
             }
         });
         mRecyclerView.setAdapter(mAdapter);
+        mSearchBox.requestFocus();
+        InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+        assert imm != null;
+        imm.showSoftInput(mSearchBox, InputMethodManager.SHOW_IMPLICIT);
     }
 
     @Override
