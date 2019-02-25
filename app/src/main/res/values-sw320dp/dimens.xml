@@ -2,6 +2,6 @@
 <resources>
     <dimen name="image_view_cover_results_size">160dp</dimen>
     <dimen name="image_view_only_cover_results_size">300dp</dimen>
-    <dimen name="image_view_cover_found_item">140dp</dimen>
+    <dimen name="image_view_cover_found_item">180dp</dimen>
     <dimen name="image_view_cover_item">80dp</dimen>
 </resources>

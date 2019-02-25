@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    android:background="@color/grey_900"
+    android:background="@color/grey_850"
     android:id="@+id/root_container">
 
     <android.support.design.widget.AppBarLayout
@@ -39,8 +39,9 @@
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
         android:layout_gravity="center"
-        android:layout_marginEnd="10dp"
         android:layout_marginStart="10dp"
+        android:layout_marginEnd="10dp"
+        android:fontFamily="@font/montserrat"
         android:gravity="center_horizontal"
         android:text="@string/type_your_song_and_press_search"
         android:textSize="18sp" />
