@@ -41,7 +41,6 @@
         android:layout_gravity="center"
         android:layout_marginStart="10dp"
         android:layout_marginEnd="10dp"
-        android:fontFamily="@font/montserrat"
         android:gravity="center_horizontal"
         android:text="@string/type_your_song_and_press_search"
         android:textSize="18sp" />

@@ -124,7 +124,7 @@ public class TrackAdapter extends RecyclerView.Adapter<AudioItemHolder> implemen
                     }
                 }
                 else {
-                    holder.checkBox.setVisibility(GONE);
+                    holder.checkBox.setVisibility(View.INVISIBLE);
                     if (key.equals("processing")) {
                         if (track.processing() == 1) {
                             holder.progressBar.setVisibility(VISIBLE);
@@ -242,7 +242,7 @@ public class TrackAdapter extends RecyclerView.Adapter<AudioItemHolder> implemen
             holder.progressBar.setVisibility(GONE);
         }
         else {
-            holder.checkBox.setVisibility(GONE);
+            holder.checkBox.setVisibility(View.INVISIBLE);
             if (track.processing() == 1) {
                 holder.progressBar.setVisibility(View.VISIBLE);
             } else {

@@ -227,6 +227,7 @@ public class ResultSearchListFragment extends BaseFragment implements
             else {
                 if(mQuery != null) {
                     Toast toast = AndroidUtils.getToast(getActivity());
+                    toast.setDuration(Toast.LENGTH_SHORT);
                     toast.setText(String.format(getString(R.string.no_found_items), mQuery));
                     toast.show();
                 }

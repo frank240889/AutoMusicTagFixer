@@ -703,7 +703,7 @@ public class TrackDetailPresenter implements
     private void updateAppliedAllTagsView(Tagger.ResultCorrection resultCorrection){
         //File was renamed
         if(resultCorrection.pathTofileUpdated != null) {
-            mView.setFilename(resultCorrection.pathTofileUpdated);
+            mView.setFilename(TrackUtils.getPath(resultCorrection.pathTofileUpdated));
             mView.setFilesize(TrackUtils.getFileSize(resultCorrection.pathTofileUpdated));
             mCurrentTrack.setPath(resultCorrection.pathTofileUpdated);
             mCurrentTrackDataItem.path = resultCorrection.pathTofileUpdated;
@@ -767,7 +767,7 @@ public class TrackDetailPresenter implements
     private void updateAppliedSameTagsView(Tagger.ResultCorrection resultCorrection){
         //File was renamed
         if(resultCorrection.pathTofileUpdated != null) {
-            mView.setFilename(resultCorrection.pathTofileUpdated);
+            mView.setFilename(TrackUtils.getPath(resultCorrection.pathTofileUpdated));
             mView.setFilesize(TrackUtils.getFileSize(resultCorrection.pathTofileUpdated));
             mCurrentTrack.setPath(resultCorrection.pathTofileUpdated);
             mCurrentTrackDataItem.path = resultCorrection.pathTofileUpdated;
@@ -789,7 +789,7 @@ public class TrackDetailPresenter implements
 
         //File was renamed
         if(resultCorrection.pathTofileUpdated != null) {
-            mView.setFilename(resultCorrection.pathTofileUpdated);
+            mView.setFilename(TrackUtils.getPath(resultCorrection.pathTofileUpdated));
             mView.setFilesize(TrackUtils.getFileSize(resultCorrection.pathTofileUpdated));
             mCurrentTrack.setPath(resultCorrection.pathTofileUpdated);
             mCurrentTrackDataItem.path = resultCorrection.pathTofileUpdated;

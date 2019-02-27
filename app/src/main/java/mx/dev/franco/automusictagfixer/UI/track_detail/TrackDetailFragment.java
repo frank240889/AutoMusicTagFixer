@@ -218,7 +218,6 @@ public class TrackDetailFragment extends BaseFragment implements EditableView,
         mUpdateCoverButton = menu.findItem(R.id.action_update_cover);
         removeItem = menu.findItem(R.id.action_remove_cover);
         searchInWebItem = menu.findItem(R.id.action_web_search);
-        Log.d(TAG, "onCreateOptionsMenu");
     }
 
     /**

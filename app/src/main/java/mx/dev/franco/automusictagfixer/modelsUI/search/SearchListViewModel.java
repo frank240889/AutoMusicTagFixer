@@ -43,7 +43,7 @@ public class SearchListViewModel extends ViewModel {
     }
 
     public void search(String query) {
-        if(query == null || query.equals(""))
+        if(query == null)
             return;
 
         String q = "%"+query+"%";

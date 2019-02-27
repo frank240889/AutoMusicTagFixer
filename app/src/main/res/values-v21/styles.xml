@@ -9,7 +9,6 @@
         <item name="android:windowContentTransitions">true</item>
         <item name="android:windowTranslucentStatus">true</item>
         <item name="android:windowTranslucentNavigation">false</item>
-        <item name="android:fontFamily">@font/montserrat</item>
     </style>
 
     <style name="MainActivityTheme" parent="AppTheme">
@@ -29,6 +28,7 @@
         <item name="android:windowTranslucentNavigation">true</item>
         <item name="android:buttonStyle">@color/primaryColor</item>
         <item name="colorAccent">@color/primaryColor</item>
+        <item name="android:fontFamily">@font/montserrat</item>
     </style>
 
     <!--Style details track dialog activity-->
@@ -45,7 +45,6 @@
     <style name="MyTransparentTheme" parent="Theme.AppCompat.NoActionBar">
         <item name="android:windowIsTranslucent">true</item>
         <item name="android:windowBackground">@android:color/transparent</item>
-        <item name="android:fontFamily">@font/montserrat</item>
     </style>
 
 
@@ -57,12 +56,10 @@
         <item name="android:colorControlHighlight">@color/primaryLightColor</item>
         <item name="actionBarTheme">@style/MyApp.ActionBarTheme</item>
         <item name="colorAccent">@color/primaryColor</item>
-        <item name="android:fontFamily">@font/montserrat</item>
     </style>
 
     <style name="MyApp.ActionBarTheme" parent="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
         <item name="android:colorControlHighlight">@color/primaryLightColor</item>
-        <item name="android:fontFamily">@font/montserrat</item>
     </style>
 
 
@@ -90,11 +87,9 @@
         <item name="colorAccent">@color/primaryColor</item>
     </style>
 
-    <style name="NavigationText" parent="@android:style/TextAppearance.Medium">
-        <item name="android:textColor">@android:color/white</item>
-        <item name="android:textSize">14sp</item>
+    <style name="TextAppearance1" parent="android:TextAppearance">
         <item name="android:fontFamily">@font/montserrat</item>
+        <item name="android:textSize">14sp</item>
     </style>
-
 
 </resources>
