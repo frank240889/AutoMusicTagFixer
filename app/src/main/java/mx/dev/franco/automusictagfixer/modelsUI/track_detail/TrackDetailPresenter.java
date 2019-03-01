@@ -231,7 +231,7 @@ public class TrackDetailPresenter implements
         }
         mFileSaver = new AsyncFileSaver(cover, title, artist, album);
         mFileSaver.setOnSavingListener(this);
-        mFileSaver.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+        mFileSaver.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR);
     }
 
     public void validateInputData(){
@@ -569,7 +569,7 @@ public class TrackDetailPresenter implements
         mFixer = new Fixer(this);
         mFixer.setTrack(mCurrentTrack);
         mFixer.setTask(Tagger.MODE_REMOVE_COVER);
-        mFixer.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, null);
+        mFixer.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, null);
     }
 
 

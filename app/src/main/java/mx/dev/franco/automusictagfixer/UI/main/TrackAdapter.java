@@ -72,7 +72,7 @@ public class TrackAdapter extends RecyclerView.Adapter<AudioItemHolder> implemen
     private Deque<List<Track>> mPendingUpdates = new ArrayDeque<>();
     private static DiffExecutor sDiffExecutor;
     private static final int CPU_COUNT = Runtime.getRuntime().availableProcessors() - 1;
-    private static final int MAX_PARALLEL_THREADS = (CPU_COUNT * 2) +4;
+    private static final int MAX_PARALLEL_THREADS = (CPU_COUNT * 2) + 1;
 
     public TrackAdapter(AudioItemHolder.ClickListener listener){
         this();
