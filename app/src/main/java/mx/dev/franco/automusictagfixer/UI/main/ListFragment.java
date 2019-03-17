@@ -244,11 +244,6 @@ public class ListFragment extends BaseFragment implements
         super.onCreateOptionsMenu(menu, inflater);
         menu.clear();
         inflater.inflate(R.menu.menu_main_activity, menu);
-        //SearchManager searchManager = (SearchManager) getActivity().getSystemService(Context.SEARCH_SERVICE);
-        //mSearchView = (SearchView) menu.findItem(R.id.action_search).getActionView();
-        //mSearchView.setSearchableInfo(searchManager.getSearchableInfo(getActivity().getComponentName()));
-        //mSearchView.setIconifiedByDefault(true);
-
         mMenu = menu;
         checkItem(-1);
     }

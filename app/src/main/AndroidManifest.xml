@@ -48,7 +48,7 @@
             android:screenOrientation="portrait"
             android:theme="@style/MainActivityTheme"
             android:launchMode="singleTop"
-            android:windowSoftInputMode="adjustPan"
+            android:windowSoftInputMode="adjustResize"
             tools:ignore="InnerclassSeparator">
         </activity>
         <activity
@@ -115,6 +115,9 @@
         <meta-data
             android:name="io.fabric.ApiKey"
             android:value="3d4995f2cd3e5757faec4a2dadce6e00f2d0814e" />
+        <meta-data
+            android:name="preloaded_fonts"
+            android:resource="@array/preloaded_fonts" />
     </application>
 
 </manifest>

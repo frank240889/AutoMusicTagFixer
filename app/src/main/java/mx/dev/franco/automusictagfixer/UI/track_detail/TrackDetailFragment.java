@@ -11,6 +11,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.provider.MediaStore;
+import android.support.annotation.Nullable;
 import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.CollapsingToolbarLayout;
@@ -22,6 +23,7 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -158,6 +160,7 @@ public class TrackDetailFragment extends BaseFragment implements EditableView,
         mTrackDetailPresenter =  new TrackDetailPresenter(this, new TrackDetailInteractor());
         mPlayer = SimpleMediaPlayer.getInstance(context);
         mPlayer.addListener(this);
+        Log.d(TAG, "onAttach");
     }
 
     @Override
@@ -188,10 +191,15 @@ public class TrackDetailFragment extends BaseFragment implements EditableView,
         mCollapsingToolbarLayout.setTitleEnabled(false);
         mActionBar = ((MainActivity)getActivity()).getSupportActionBar();
         mActionBar.setDisplayShowTitleEnabled(false);
-
         setupFields();
         setupDataInfoFields();
         return mLayout;
+    }
+
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        getActivity().invalidateOptionsMenu();
     }
 
     @Override
@@ -204,21 +212,7 @@ public class TrackDetailFragment extends BaseFragment implements EditableView,
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         super.onCreateOptionsMenu(menu, inflater);
         menu.clear();
-        //Both fragments have the same menu
         inflater.inflate(R.menu.menu_details_track_dialog, menu);
-        mPlayPreviewButton = menu.findItem(R.id.action_play);
-        mExtractCoverButton = menu.findItem(R.id.action_extract_cover);
-        mUpdateCoverButton = menu.findItem(R.id.action_update_cover);
-        removeItem = menu.findItem(R.id.action_remove_cover);
-        searchInWebItem = menu.findItem(R.id.action_web_search);
-    }
-
-    @Override
-    public void onPrepareOptionsMenu(Menu menu) {
-        super.onPrepareOptionsMenu(menu);
-        menu.clear();
-        //Both fragments have the same menu
-        getActivity().getMenuInflater().inflate(R.menu.menu_details_track_dialog, menu);
         mPlayPreviewButton = menu.findItem(R.id.action_play);
         mExtractCoverButton = menu.findItem(R.id.action_extract_cover);
         mUpdateCoverButton = menu.findItem(R.id.action_update_cover);

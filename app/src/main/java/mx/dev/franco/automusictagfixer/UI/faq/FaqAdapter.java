@@ -19,6 +19,7 @@ import mx.dev.franco.automusictagfixer.R;
 public class FaqAdapter extends RecyclerView.Adapter<FaqAdapter.QuestionItemHolder> {
     private List<QuestionItem> mList;
     private OnItemClick mListener;
+    private int mCurrentExpandedPosition = -1;
 
     public interface OnItemClick{
         void onItemClick(int position, View view);
@@ -40,8 +41,41 @@ public class FaqAdapter extends RecyclerView.Adapter<FaqAdapter.QuestionItemHold
     @Override
     public void onBindViewHolder(@NonNull QuestionItemHolder holder, int position) {
         QuestionItem questionItem = mList.get(position);
-        holder.mQuestion.setText(questionItem.getQuestion());
-        holder.mAnswer.setText(questionItem.getAnswer());
+        holder.question.setText(questionItem.getQuestion());
+        holder.answer.setText(questionItem.getAnswer());
+        if(questionItem.isExpanded()) {
+            holder.answer.setVisibility(View.VISIBLE);
+        }
+        else {
+            holder.answer.setVisibility(View.GONE);
+        }
+    }
+
+    public void setActivePosition(int position) {
+        QuestionItem collapsedQuestionItem;
+        QuestionItem expandedQuestionItem;
+        if(mCurrentExpandedPosition != position) {
+            if(mCurrentExpandedPosition == -1) {
+                expandedQuestionItem = mList.get(position);
+                expandedQuestionItem.setExpanded(true);
+                notifyItemChanged(position);
+            }
+            else {
+                collapsedQuestionItem = mList.get(mCurrentExpandedPosition);
+                collapsedQuestionItem.setExpanded(false);
+                notifyItemChanged(mCurrentExpandedPosition);
+                expandedQuestionItem = mList.get(position);
+                expandedQuestionItem.setExpanded(true);
+                notifyItemChanged(position);
+            }
+            mCurrentExpandedPosition = position;
+        }
+        else {
+            collapsedQuestionItem = mList.get(mCurrentExpandedPosition);
+            collapsedQuestionItem.setExpanded(false);
+            notifyItemChanged(mCurrentExpandedPosition);
+            mCurrentExpandedPosition = -1;
+        }
     }
 
     @Override
@@ -52,27 +86,27 @@ public class FaqAdapter extends RecyclerView.Adapter<FaqAdapter.QuestionItemHold
     }
 
     public static class QuestionItemHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
-        public TextView mQuestion;
-        public TextView mAnswer;
-        public LinearLayout mContainer;
-        public OnItemClick mListener;
+        public TextView question;
+        public TextView answer;
+        public LinearLayout container;
+        public OnItemClick listener;
 
         QuestionItemHolder(View root, OnItemClick listener){
             super(root);
-            mQuestion = root.findViewById(R.id.question);
-            mAnswer = root.findViewById(R.id.answer);
-            mContainer = root.findViewById(R.id.container_question);
-            mListener = listener;
+            question = root.findViewById(R.id.question);
+            answer = root.findViewById(R.id.answer);
+            container = root.findViewById(R.id.container_question);
+            this.listener = listener;
             root.setOnClickListener(this);
             //Enable animations on this layout
-            /*mContainer.getLayoutTransition()
+            /*container.getLayoutTransition()
                     .enableTransitionType(LayoutTransition.CHANGING);*/
         }
 
         @Override
         public void onClick(View v) {
-            if(mListener != null){
-                mListener.onItemClick(getAdapterPosition(), v);
+            if(listener != null){
+                listener.onItemClick(getAdapterPosition(), v);
             }
         }
     }

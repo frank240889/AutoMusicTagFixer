@@ -156,9 +156,7 @@ public class TrackRepository {
             mResultSearch.removeSource(liveDataTracks);
 
         liveDataTracks = mTrackDao.search(query);
-        mResultSearch.addSource(liveDataTracks, tracks -> {
-            mResultSearch.setValue(tracks);
-        });
+        mResultSearch.addSource(liveDataTracks, tracks -> mResultSearch.setValue(tracks));
     }
 
     public void checkAllItems() {

@@ -56,13 +56,14 @@ public class QuestionsActivity extends AppCompatActivity implements FaqAdapter.O
 
     @Override
     public void onItemClick(int position, View view) {
-        View answer = view.findViewById(R.id.answer);
+        mFaqAdapter.setActivePosition(position);
+        /*View answer = view.findViewById(R.id.answer);
         if(answer.getVisibility() == View.GONE){
             answer.setVisibility(View.VISIBLE);
         }
         else {
             answer.setVisibility(View.GONE);
-        }
+        }*/
     }
 
     @Override

@@ -231,7 +231,7 @@ public class TrackDetailPresenter implements
         }
         mFileSaver = new AsyncFileSaver(cover, title, artist, album);
         mFileSaver.setOnSavingListener(this);
-        mFileSaver.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+        mFileSaver.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR);
     }
 
     public void validateInputData(){
@@ -569,7 +569,7 @@ public class TrackDetailPresenter implements
         mFixer = new Fixer(this);
         mFixer.setTrack(mCurrentTrack);
         mFixer.setTask(Tagger.MODE_REMOVE_COVER);
-        mFixer.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, null);
+        mFixer.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, null);
     }
 
 
@@ -703,7 +703,7 @@ public class TrackDetailPresenter implements
     private void updateAppliedAllTagsView(Tagger.ResultCorrection resultCorrection){
         //File was renamed
         if(resultCorrection.pathTofileUpdated != null) {
-            mView.setFilename(resultCorrection.pathTofileUpdated);
+            mView.setFilename(TrackUtils.getPath(resultCorrection.pathTofileUpdated));
             mView.setFilesize(TrackUtils.getFileSize(resultCorrection.pathTofileUpdated));
             mCurrentTrack.setPath(resultCorrection.pathTofileUpdated);
             mCurrentTrackDataItem.path = resultCorrection.pathTofileUpdated;
@@ -767,7 +767,7 @@ public class TrackDetailPresenter implements
     private void updateAppliedSameTagsView(Tagger.ResultCorrection resultCorrection){
         //File was renamed
         if(resultCorrection.pathTofileUpdated != null) {
-            mView.setFilename(resultCorrection.pathTofileUpdated);
+            mView.setFilename(TrackUtils.getPath(resultCorrection.pathTofileUpdated));
             mView.setFilesize(TrackUtils.getFileSize(resultCorrection.pathTofileUpdated));
             mCurrentTrack.setPath(resultCorrection.pathTofileUpdated);
             mCurrentTrackDataItem.path = resultCorrection.pathTofileUpdated;
@@ -789,7 +789,7 @@ public class TrackDetailPresenter implements
 
         //File was renamed
         if(resultCorrection.pathTofileUpdated != null) {
-            mView.setFilename(resultCorrection.pathTofileUpdated);
+            mView.setFilename(TrackUtils.getPath(resultCorrection.pathTofileUpdated));
             mView.setFilesize(TrackUtils.getFileSize(resultCorrection.pathTofileUpdated));
             mCurrentTrack.setPath(resultCorrection.pathTofileUpdated);
             mCurrentTrackDataItem.path = resultCorrection.pathTofileUpdated;

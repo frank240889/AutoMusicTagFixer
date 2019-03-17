@@ -7,7 +7,7 @@
     android:layout_alignParentStart="false"
     android:layout_margin="8dp"
     android:theme="@style/DetailsTrackDialogTheme"
-    android:background="@color/grey_900"
+    android:background="@color/grey_850"
     android:splitMotionEvents="false">
 
     <TextView

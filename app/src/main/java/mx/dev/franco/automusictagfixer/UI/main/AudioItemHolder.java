@@ -52,7 +52,7 @@ public class AudioItemHolder extends RecyclerView.ViewHolder implements View.OnC
     }
 
     /**
-     * This method of mListener is implemented in
+     * This method of listener is implemented in
      * activity that creates the adapter and data source
      * @param v
      */

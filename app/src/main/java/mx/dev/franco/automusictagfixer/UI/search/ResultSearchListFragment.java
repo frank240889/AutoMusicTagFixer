@@ -11,9 +11,9 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
@@ -93,28 +93,27 @@ public class ResultSearchListFragment extends BaseFragment implements
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         mLayout = inflater.inflate(R.layout.fragment_result_search_list, container, false);
         mToolbar = mLayout.findViewById(R.id.toolbar);
         mSearchBox = mLayout.findViewById(R.id.search_box);
-        mSearchBox.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-            @Override
-            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-                if(actionId == EditorInfo.IME_ACTION_SEARCH || actionId == EditorInfo.IME_ACTION_UNSPECIFIED){
-                    mQuery = mSearchBox.getText().toString();
-                    mSearchListViewModel.search(mQuery);
-                    hideKeyboard();
-                }
-
-                return false;
+        mSearchBox.setOnEditorActionListener((v, actionId, event) -> {
+            if(actionId == EditorInfo.IME_ACTION_SEARCH || actionId == EditorInfo.IME_ACTION_UNSPECIFIED){
+                mQuery = mSearchBox.getText().toString();
+                mSearchListViewModel.search(mQuery);
+                hideKeyboard();
             }
+
+            return false;
         });
-        mSearchBox.requestFocus();
-        InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
-        assert imm != null;
-        imm.showSoftInput(mSearchBox, InputMethodManager.SHOW_IMPLICIT);
         return mLayout;
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+        menu.clear();
     }
 
     private void hideKeyboard() {
@@ -162,12 +161,10 @@ public class ResultSearchListFragment extends BaseFragment implements
             }
         });
         mRecyclerView.setAdapter(mAdapter);
-    }
-
-    @Override
-    public void onPrepareOptionsMenu(Menu menu) {
-        super.onPrepareOptionsMenu(menu);
-        menu.clear();
+        mSearchBox.requestFocus();
+        InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+        assert imm != null;
+        imm.showSoftInput(mSearchBox, InputMethodManager.SHOW_IMPLICIT);
     }
 
     @Override
@@ -178,6 +175,7 @@ public class ResultSearchListFragment extends BaseFragment implements
         mActionBar.setDisplayHomeAsUpEnabled(true);
         //pressing back from toolbar, close activity
         mToolbar.setNavigationOnClickListener(v -> callSuperOnBackPressed());
+        getActivity().invalidateOptionsMenu();
     }
 
     private void showInaccessibleTrack(ListFragment.ViewWrapper viewWrapper) {
@@ -229,6 +227,7 @@ public class ResultSearchListFragment extends BaseFragment implements
             else {
                 if(mQuery != null) {
                     Toast toast = AndroidUtils.getToast(getActivity());
+                    toast.setDuration(Toast.LENGTH_SHORT);
                     toast.setText(String.format(getString(R.string.no_found_items), mQuery));
                     toast.show();
                 }

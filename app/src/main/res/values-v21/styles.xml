@@ -28,6 +28,7 @@
         <item name="android:windowTranslucentNavigation">true</item>
         <item name="android:buttonStyle">@color/primaryColor</item>
         <item name="colorAccent">@color/primaryColor</item>
+        <item name="android:fontFamily">@font/montserrat</item>
     </style>
 
     <!--Style details track dialog activity-->
@@ -61,10 +62,6 @@
         <item name="android:colorControlHighlight">@color/primaryLightColor</item>
     </style>
 
-    <style name="RobotoTextViewStyle" parent="android:Widget.TextView">
-        <!--item name="android:fontFamily">sans-serif-light</item-->
-    </style>
-
 
     <!-- TextInputLayout style-->
     <style name="CustomEditTextHint" parent="AppTheme">
@@ -90,5 +87,9 @@
         <item name="colorAccent">@color/primaryColor</item>
     </style>
 
+    <style name="TextAppearance1" parent="android:TextAppearance">
+        <item name="android:fontFamily">@font/montserrat</item>
+        <item name="android:textSize">14sp</item>
+    </style>
 
 </resources>
