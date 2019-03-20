@@ -161,12 +161,15 @@ public class ListFragment extends BaseFragment implements
             public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
                 if (newState == RecyclerView.SCROLL_STATE_IDLE) {
                     Glide.with(recyclerView.getContext()).resumeRequests();
+                    mAdapter.loadCovers();
                 }
-                if (newState == RecyclerView.SCROLL_STATE_DRAGGING
+                else if (newState == RecyclerView.SCROLL_STATE_DRAGGING
                         || newState == RecyclerView.SCROLL_STATE_SETTLING) {
                     Glide.with(recyclerView.getContext()).pauseAllRequests();
                 }
-                super.onScrollStateChanged(recyclerView, newState);
+                else {
+                    super.onScrollStateChanged(recyclerView, newState);
+                }
             }
 
             @Override
