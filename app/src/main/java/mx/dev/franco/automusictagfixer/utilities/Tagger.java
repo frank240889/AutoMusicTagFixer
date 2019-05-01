@@ -3,6 +3,7 @@ package mx.dev.franco.automusictagfixer.utilities;
 import android.content.Context;
 import android.net.Uri;
 import android.provider.DocumentsContract;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.provider.DocumentFile;
@@ -45,7 +46,7 @@ import static mx.dev.franco.automusictagfixer.utilities.TrackUtils.getExtension;
 
 /**
  * Helper class that wraps the functionality to
- * setChecked metadata for audio files
+ * read metadata for audio files
  */
 public class Tagger {
     private static final String TAG = Tagger.class.getName();
@@ -103,15 +104,30 @@ public class Tagger {
 
     /**
      * Creates a singleton of this class
-     * @param context The app context needed to create this singleton
      * @return Tagger singleton
      */
-    public static synchronized Tagger getInstance(Context context, StorageHelper storageHelper) {
+    public static synchronized Tagger getInstance() {
+        if(sContext == null)
+            throw new NullPointerException("init(Context) method has not been called yet.");
+
         if (sTaggerHelper == null) {
-            sTaggerHelper = new Tagger(context, storageHelper);
+            sTaggerHelper = new Tagger(sContext, sStorageHelper);
         }
 
         return sTaggerHelper;
+    }
+
+    /**
+     * The init method for this Tagger.
+     * @param context The app context needed to create this singleton
+     */
+    public static void init(Context context) {
+        if(sStorageHelper == null)
+            sStorageHelper = StorageHelper.getInstance(context);
+
+        if (sTaggerHelper == null) {
+            sTaggerHelper = new Tagger(context, sStorageHelper);
+        }
     }
 
     /**
@@ -219,9 +235,7 @@ public class Tagger {
         trackDataItem.trackYear = tag.getFirst(FieldKey.YEAR);
         trackDataItem.genre = tag.getFirst(FieldKey.GENRE);
 
-        trackDataItem.cover = (tag.getFirstArtwork() != null && tag.getFirstArtwork().getBinaryData() != null) ?
-                tag.getFirstArtwork().getBinaryData() :
-                null;
+        trackDataItem.cover = getCover(audioFile);
         trackDataItem.imageSize = TrackUtils.getStringImageSize(trackDataItem.cover, sContext);
 
         return trackDataItem;
@@ -457,6 +471,43 @@ public class Tagger {
         deleteTempFile(tempFile);
 
         return resultCorrection;
+    }
+
+    @Nullable
+    public static byte[] getCover(@NonNull String pathToFile) {
+        return getCover(new File(pathToFile));
+    }
+
+    @Nullable
+    public static byte[] getCover(File file) {
+        if(!file.exists())
+            return null;
+
+        try {
+            AudioFile audioTaggerFile = AudioFileIO.read(file);
+            return getCover(audioTaggerFile);
+        }
+        catch(IOException | CannotReadException | ReadOnlyFileException | InvalidAudioFrameException | TagException e){
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    @Nullable
+    private static byte[] getCover(AudioFile audioTaggerFile) {
+        Tag tag = null;
+        if (audioTaggerFile.getTag() == null)
+            return null;
+
+        tag = audioTaggerFile.getTag();
+
+        if (tag.getFirstArtwork() == null)
+            return null;
+
+        if(tag.getFirstArtwork().getBinaryData() == null)
+            return null;
+
+        return tag.getFirstArtwork().getBinaryData();
     }
 
     /**

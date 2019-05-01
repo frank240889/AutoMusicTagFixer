@@ -1,14 +1,13 @@
 package mx.dev.franco.automusictagfixer.UI.main;
 
-import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.CheckBox;
 import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import mx.dev.franco.automusictagfixer.R;
+import mx.dev.franco.automusictagfixer.UI.AudioHolder;
 
 /**
  * This class helps to maintain the reference to
@@ -16,7 +15,7 @@ import mx.dev.franco.automusictagfixer.R;
  * in every element for data source, making a considerable
  * improvement in performance of list
  */
-public class AudioItemHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+public class AudioItemHolder extends AudioHolder implements View.OnClickListener {
     public interface ClickListener{
         void onCoverClick(int position, View view);
         void onCheckboxClick(int position);
@@ -29,7 +28,6 @@ public class AudioItemHolder extends RecyclerView.ViewHolder implements View.OnC
     public TextView trackName;
     public TextView artistName;
     public TextView albumName;
-    public ImageView cover;
     public ImageButton stateMark;
     public ProgressBar progressBar;
     public ClickListener mListener;

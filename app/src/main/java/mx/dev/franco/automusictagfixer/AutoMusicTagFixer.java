@@ -17,6 +17,7 @@ import mx.dev.franco.automusictagfixer.dagger.DaggerContextComponent;
 import mx.dev.franco.automusictagfixer.network.ConnectivityChangesDetector;
 import mx.dev.franco.automusictagfixer.receivers.DetectorRemovableMediaStorages;
 import mx.dev.franco.automusictagfixer.utilities.StorageHelper;
+import mx.dev.franco.automusictagfixer.utilities.Tagger;
 
 
 /**
@@ -32,6 +33,7 @@ public final class AutoMusicTagFixer extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+        Tagger.init(this);
         sContextComponent = DaggerContextComponent.builder().
                 contextModule(new ContextModule(this)).
                 build();

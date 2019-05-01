@@ -52,7 +52,7 @@ public class ContextModule {
         mServiceUtils = ServiceUtils.getInstance(mApp);
         mSimpleMediaPlayer = SimpleMediaPlayer.getInstance(mApp);
         mStorageHelper = StorageHelper.getInstance(mApp);
-        mTagger = Tagger.getInstance(mApp, mStorageHelper);
+        mTagger = Tagger.getInstance();
         mGnService = GnService.getInstance(mApp);
         mConnectivityDetector = ConnectivityDetector.getInstance(mApp);
     }

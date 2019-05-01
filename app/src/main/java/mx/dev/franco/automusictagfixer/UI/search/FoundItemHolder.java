@@ -1,11 +1,10 @@
 package mx.dev.franco.automusictagfixer.UI.search;
 
-import android.support.v7.widget.RecyclerView;
 import android.view.View;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 import mx.dev.franco.automusictagfixer.R;
+import mx.dev.franco.automusictagfixer.UI.AudioHolder;
 
 /**
  * This class helps to maintain the reference to
@@ -13,7 +12,7 @@ import mx.dev.franco.automusictagfixer.R;
  * in every element for data source, making a considerable
  * improvement in performance of list
  */
-public class FoundItemHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+public class FoundItemHolder extends AudioHolder implements View.OnClickListener{
     public interface ClickListener{
         void onItemClick(int position, View view);
     }
@@ -21,7 +20,6 @@ public class FoundItemHolder extends RecyclerView.ViewHolder implements View.OnC
     public TextView trackName;
     public TextView artistName;
     public TextView albumName;
-    public ImageView cover;
     public ClickListener mListener;
 
     public FoundItemHolder(View itemView, ClickListener clickListener) {

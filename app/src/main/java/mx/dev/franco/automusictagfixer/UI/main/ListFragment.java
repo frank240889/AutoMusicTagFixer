@@ -35,8 +35,6 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.bumptech.glide.Glide;
-
 import java.util.List;
 import java.util.Objects;
 
@@ -151,32 +149,11 @@ public class ListFragment extends BaseFragment implements
         mGridLayoutManager = new GridLayoutManager(getActivity(), 1);
         mRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(), 1));
         mRecyclerView.setHasFixedSize(true);
-        mRecyclerView.setItemViewCacheSize(15);
+        mRecyclerView.setItemViewCacheSize(10);
         mRecyclerView.setDrawingCacheEnabled(true);
         mRecyclerView.setDrawingCacheQuality(View.DRAWING_CACHE_QUALITY_LOW);
         mRecyclerView.setHapticFeedbackEnabled(true);
         mRecyclerView.setSoundEffectsEnabled(true);
-        mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
-            @Override
-            public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
-                if (newState == RecyclerView.SCROLL_STATE_IDLE) {
-                    Glide.with(recyclerView.getContext()).resumeRequests();
-                    mAdapter.loadCovers();
-                }
-                else if (newState == RecyclerView.SCROLL_STATE_DRAGGING
-                        || newState == RecyclerView.SCROLL_STATE_SETTLING) {
-                    Glide.with(recyclerView.getContext()).pauseAllRequests();
-                }
-                else {
-                    super.onScrollStateChanged(recyclerView, newState);
-                }
-            }
-
-            @Override
-            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
-                super.onScrolled(recyclerView, dx, dy);
-            }
-        });
         mRecyclerView.setAdapter(mAdapter);
 
         mSwipeRefreshLayout.setOnRefreshListener(()->{
