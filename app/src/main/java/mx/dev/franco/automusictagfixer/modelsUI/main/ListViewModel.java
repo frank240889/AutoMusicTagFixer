@@ -4,6 +4,7 @@ import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MutableLiveData;
 import android.arch.lifecycle.Transformations;
 import android.arch.lifecycle.ViewModel;
+import android.content.Context;
 
 import java.util.List;
 
@@ -19,8 +20,10 @@ import mx.dev.franco.automusictagfixer.persistence.repository.TrackRepository;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.persistence.room.TrackState;
 import mx.dev.franco.automusictagfixer.services.FixerTrackService;
+import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 import mx.dev.franco.automusictagfixer.utilities.Resource;
 import mx.dev.franco.automusictagfixer.utilities.ServiceUtils;
+import mx.dev.franco.automusictagfixer.utilities.StorageHelper;
 import mx.dev.franco.automusictagfixer.utilities.Tagger;
 import mx.dev.franco.automusictagfixer.utilities.resource_manager.ResourceManager;
 import mx.dev.franco.automusictagfixer.utilities.shared_preferences.AbstractSharedPreferences;
@@ -42,6 +45,11 @@ public class ListViewModel extends ViewModel {
     private MutableLiveData<Integer> mStartAutomaticMode = new MutableLiveData<>();
     private MutableLiveData<Boolean> mShowProgress = new MutableLiveData<>();
     private MutableLiveData<String> mShowMessage = new MutableLiveData<>();
+    private MutableLiveData<Boolean> mOnCheckAll = new MutableLiveData<>();
+    private MutableLiveData<Integer> mOnMessage = new MutableLiveData<>();
+    private MutableLiveData<Integer> mOnSorted = new MutableLiveData<>();
+    private MutableLiveData<Boolean> mOnSdPresent = new MutableLiveData<>();
+    private List<Track> mCurrentList;
     @Inject
     public TrackRepository trackRepository;
     @Inject
@@ -54,6 +62,7 @@ public class ListViewModel extends ViewModel {
     public ConnectivityDetector connectivityDetector;
     @Inject
     public GnService gnService;
+
 
     public ListViewModel() {
         AutoMusicTagFixer.getContextComponent().inject(this);
@@ -68,7 +77,8 @@ public class ListViewModel extends ViewModel {
         LiveData<Resource<List<Track>>> tracks = trackRepository.getAllTracks();
         mTracks = Transformations.map(tracks, input -> {
             mShowProgress.setValue(input.status == Resource.Status.LOADING);
-            return input.data;
+            mCurrentList = input.data;
+            return mCurrentList;
         });
         return mTracks;
     }
@@ -107,9 +117,10 @@ public class ListViewModel extends ViewModel {
 
     /**
      * Request to repository to setChecked the track
-     * @param track The track to setChecked.
+     * @param position The position of track.
      */
-    public void updateTrack(Track track){
+    public void onCheckboxClick(int position){
+        Track track = mCurrentList.get(position);
         trackRepository.setChecked(track);
     }
 
@@ -128,37 +139,39 @@ public class ListViewModel extends ViewModel {
         trackRepository.checkAllItems();
     }
 
-    public String getState(int stateCode){
-        return getStatusText(stateCode);
-    }
-
-    private String getStatusText(int status){
-        String msg = "";
+    private int getStatusText(int status){
         switch (status){
             case TrackState.ALL_TAGS_FOUND:
-                msg = resourceManager.getString(R.string.file_status_ok);
-                break;
+                return R.string.file_status_ok;
             case TrackState.ALL_TAGS_NOT_FOUND:
-                msg = resourceManager.getString(R.string.file_status_incomplete);
-                break;
+                return R.string.file_status_incomplete;
             default:
-                msg = resourceManager.getString(R.string.file_status_no_processed);
-                break;
+                return R.string.file_status_no_processed;
         }
-
-        return msg;
     }
 
 
-    public void onItemClick(ListFragment.ViewWrapper viewWrapper){
-        boolean isAccessible = Tagger.checkFileIntegrity(viewWrapper.track.getPath());
+    public void onItemClick(ListFragment.Wrapper wrapper){
+        Track track = mCurrentList.get(wrapper.position);
+        boolean isAccessible = Tagger.checkFileIntegrity(track.getPath());
+        ListFragment.ViewWrapper viewWrapper = null;
         if(!isAccessible){
+            viewWrapper = new ListFragment.ViewWrapper();
+            viewWrapper.mode = wrapper.mode;
+            viewWrapper.position = wrapper.position;
+            viewWrapper.view = wrapper.view;
+            viewWrapper.track = track;
             mTrackInaccessible.setValue(viewWrapper);
         }
-        else if(viewWrapper.track.processing() == 1){
-            mTrackIsProcessing.setValue(resourceManager.getString(R.string.current_file_processing));
+        else if(track.processing() == 1){
+            mOnMessage.setValue(R.string.current_file_processing);
         }
         else {
+            viewWrapper = new ListFragment.ViewWrapper();
+            viewWrapper.mode = wrapper.mode;
+            viewWrapper.position = wrapper.position;
+            viewWrapper.view = wrapper.view;
+            viewWrapper.track = track;
             mTrack.setValue(viewWrapper);
         }
 
@@ -239,21 +252,88 @@ public class ListViewModel extends ViewModel {
         return mStartAutomaticMode;
     }
 
+    public MutableLiveData<Boolean> getOnCheckAll() {
+        return mOnCheckAll;
+    }
+
+    public MutableLiveData<Integer> getMessage() {
+        return mOnMessage;
+    }
+
+    public MutableLiveData<Integer> onSorted() {
+        return mOnSorted;
+    }
+
+
     /**
      * Sort list in desired order
      * @param by the field/column to sort by
      * @param orderType the sort type, may be ascendant or descendant
-     * @param tracks Current tracks in adapter.
+     * @param idResource Current tracks in adapter.
      */
-    public boolean sortTracks(String by, int orderType, List<Track> tracks) {
+    public void sortTracks(String by, int orderType, int idResource) {
         //wait for sorting while correction task is running
         if(serviceUtils.checkIfServiceIsRunning(FixerTrackService.class.getName())){
-            return false;
+            mOnSorted.setValue(-1);
+            mOnMessage.setValue(R.string.no_available);
         }
 
-        if(tracks == null || tracks.isEmpty())
-            return false;
+        if(mCurrentList == null || mCurrentList.isEmpty()) {
+            mOnSorted.setValue(-1);
+            mOnMessage.setValue(R.string.no_available);
+        }
 
-       return trackRepository.sortTracks(by, orderType);
+        boolean sorted = trackRepository.sortTracks(by, orderType);
+
+        mOnSorted.setValue(sorted ? idResource : -1);
+    }
+
+    public void actionSelectAll() {
+        if(mCurrentList != null && mCurrentList.size() > 0) {
+            mOnCheckAll.setValue(true);
+            checkAllItems();
+        }
+        else {
+            mOnCheckAll.setValue(false);
+            mOnMessage.setValue(R.string.no_available);
+        }
+
+    }
+
+    public void rescan() {
+        if(serviceUtils.checkIfServiceIsRunning(FixerTrackService.class.getName())){
+            mOnMessage.setValue(R.string.no_available);
+        }
+        else {
+            updateTrackList();
+        }
+    }
+
+    public void onCheckMarkClick(int position) {
+        mOnMessage.setValue(getStatusText(mCurrentList.get(position).getState()));
+    }
+
+    public LiveData<Boolean> onSdPresent() {
+        return mOnSdPresent;
+    }
+
+    public void checkSdIsPresent(Context context) {
+        boolean isPresentSD = StorageHelper.getInstance(context.getApplicationContext()).
+                isPresentRemovableStorage();
+        if(AndroidUtils.getUriSD(context.getApplicationContext()) == null && isPresentSD) {
+            mOnSdPresent.setValue(true);
+        }
+        else {
+            mOnSdPresent.setValue(false);
+        }
+    }
+
+    public void onApiInitialized() {
+        if(mCurrentList != null && mCurrentList.size() > 0) {
+            mOnMessage.setValue(R.string.api_initialized);
+        }
+        else {
+            mOnMessage.setValue(R.string.add_some_tracks);
+        }
     }
 }

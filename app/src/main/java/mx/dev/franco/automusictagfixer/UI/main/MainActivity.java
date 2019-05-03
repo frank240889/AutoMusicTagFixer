@@ -13,7 +13,6 @@ import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
 import android.support.design.widget.NavigationView;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.ShareCompat;
@@ -41,7 +40,6 @@ import mx.dev.franco.automusictagfixer.services.FixerTrackService;
 import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
 import mx.dev.franco.automusictagfixer.utilities.RequiredPermissions;
-import mx.dev.franco.automusictagfixer.utilities.ServiceUtils;
 
 public class MainActivity extends AppCompatActivity
         implements ResponseReceiver.OnResponse, NavigationView.OnNavigationItemSelectedListener,
@@ -163,12 +161,6 @@ public class MainActivity extends AppCompatActivity
                 listFragment.requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
                     RequiredPermissions.WRITE_EXTERNAL_STORAGE_PERMISSION);
         }
-        else if(ServiceUtils.getInstance(getApplicationContext()).
-                checkIfServiceIsRunning(FixerTrackService.class.getName())){
-            Snackbar snackbar = AndroidUtils.getSnackbar(mDrawer, getApplicationContext());
-            snackbar.setText(R.string.no_available);
-            snackbar.show();
-        }
         else {
             if(listFragment != null)
                 listFragment.updateList();
@@ -189,7 +181,7 @@ public class MainActivity extends AppCompatActivity
      * only certain actions sent by FixerTrackService
      */
     private void setupReceivers(){
-        IntentFilter apiInitializedFilter = new IntentFilter(Constants.GnServiceActions.ACTION_API_INITIALIZED);
+        IntentFilter apiInitializedFilter = new IntentFilter(Constants.GnServiceActions.ACTION_API_INITIALIZATION_RESULT);
         IntentFilter connectionLostFilter = new IntentFilter(Constants.Actions.ACTION_CONNECTION_LOST);
         IntentFilter startTaskFilter = new IntentFilter(Constants.Actions.ACTION_START_TASK);
         IntentFilter showProgressFilter = new IntentFilter(Constants.Actions.START_PROCESSING_FOR);
@@ -284,11 +276,15 @@ public class MainActivity extends AppCompatActivity
         int id = intent.getIntExtra(Constants.MEDIA_STORE_ID, -1);
         List<Fragment> fragmentList;
         switch (action) {
-            case Constants.GnServiceActions.ACTION_API_INITIALIZED:
+            case Constants.GnServiceActions.ACTION_API_INITIALIZATION_RESULT:
+                boolean res = intent.getBooleanExtra(Constants.GnServiceActions.ACTION_API_INITIALIZATION_RESULT, false);
                 fragmentList = getSupportFragmentManager().getFragments();
                 for(Fragment fragment:fragmentList){
                     if(fragment instanceof GnService.OnApiListener){
-                        ((GnService.OnApiListener) fragment).onApiInitialized();
+                        if(res)
+                            ((GnService.OnApiListener) fragment).onApiInitialized();
+                        else
+                            ((GnService.OnApiListener) fragment).onApiNotInitialized();
                     }
                 }
 

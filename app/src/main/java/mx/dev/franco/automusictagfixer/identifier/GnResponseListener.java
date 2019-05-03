@@ -230,7 +230,7 @@ public class GnResponseListener implements IGnMusicIdFileEvents, IGnCancellable 
                         for (int sizes = values.length - 1; sizes >= 0; --sizes) {
                             String url = gnContent.asset(values[sizes]).url();
                             if (!gnContent.asset(values[sizes]).url().equals("")) {
-                                identificationResults.cover = new GnAssetFetch(GnService.sGnUser, url).data();
+                                identificationResults.cover = new GnAssetFetch(GnService.getInstance().getGnUser(), url).data();
                                 break;
                             }
                         }
@@ -243,7 +243,7 @@ public class GnResponseListener implements IGnMusicIdFileEvents, IGnCancellable 
                             for (int sizes = values.length - 1; sizes >= 0; --sizes) {
                                 String url = gnContent.asset(values[sizes]).url();
                                 if (!gnContent.asset(values[sizes]).url().equals("")) {
-                                    identificationResults.cover = new GnAssetFetch(GnService.sGnUser, url).data();
+                                    identificationResults.cover = new GnAssetFetch(GnService.getInstance().getGnUser(), url).data();
                                     break;
                                 }
                             }
@@ -277,7 +277,7 @@ public class GnResponseListener implements IGnMusicIdFileEvents, IGnCancellable 
                 for (int sizes = 0; sizes < values.length ; sizes++) {
                     String url = gnContent.asset(values[sizes]).url();
                     if (!gnContent.asset(values[sizes]).url().equals("")) {
-                        identificationResults.cover = new GnAssetFetch(GnService.sGnUser, url).data();
+                        identificationResults.cover = new GnAssetFetch(GnService.getInstance().getGnUser(), url).data();
                         break;
                     }
                 }
@@ -294,7 +294,7 @@ public class GnResponseListener implements IGnMusicIdFileEvents, IGnCancellable 
                 }
                 GnContent gnContent = gnResponseAlbums.albums().at(0).next().coverArt();
                 cover = gnContent.asset(Settings.SETTING_SIZE_ALBUM_ART).url();
-                identificationResults.cover = new GnAssetFetch(GnService.sGnUser, cover).data();
+                identificationResults.cover = new GnAssetFetch(GnService.getInstance().getGnUser(), cover).data();
             }
 
         } catch (GnException e) {

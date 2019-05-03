@@ -62,7 +62,6 @@ public final class SimpleMediaPlayer extends MediaPlayer implements MediaPlayer.
      * Play a preview of audiofile.
      * @param path The path of the file to play
      * @throws IOException
-     * @throws InterruptedException
      */
 
     public void playPreview(String path) throws IOException {

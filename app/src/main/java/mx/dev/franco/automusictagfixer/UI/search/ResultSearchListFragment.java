@@ -253,6 +253,11 @@ public class ResultSearchListFragment extends BaseFragment implements
     }
 
     @Override
+    public void onApiNotInitialized() {
+
+    }
+
+    @Override
     public void onBackPressed() {
         callSuperOnBackPressed();
     }

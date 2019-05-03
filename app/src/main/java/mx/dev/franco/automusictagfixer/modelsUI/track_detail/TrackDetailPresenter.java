@@ -341,7 +341,7 @@ public class TrackDetailPresenter implements
                 }
 
                 //Check if API is available
-                if(!GnService.sApiInitialized || GnService.sIsInitializing) {
+                if(!GnService.getInstance().isApiInitialized() || GnService.getInstance().isApiInitializing()) {
                     if(mView != null) {
                         mView.onCorrectionError(resourceManager.getString(R.string.initializing_recognition_api), null);
                         mView.onEnableFabs();

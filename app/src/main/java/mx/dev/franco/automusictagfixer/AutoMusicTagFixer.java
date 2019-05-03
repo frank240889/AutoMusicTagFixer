@@ -14,6 +14,7 @@ import io.fabric.sdk.android.Fabric;
 import mx.dev.franco.automusictagfixer.dagger.ContextComponent;
 import mx.dev.franco.automusictagfixer.dagger.ContextModule;
 import mx.dev.franco.automusictagfixer.dagger.DaggerContextComponent;
+import mx.dev.franco.automusictagfixer.identifier.GnService;
 import mx.dev.franco.automusictagfixer.network.ConnectivityChangesDetector;
 import mx.dev.franco.automusictagfixer.receivers.DetectorRemovableMediaStorages;
 import mx.dev.franco.automusictagfixer.utilities.StorageHelper;
@@ -34,6 +35,8 @@ public final class AutoMusicTagFixer extends Application {
     public void onCreate() {
         super.onCreate();
         Tagger.init(this);
+        GnService.init(this);
+        GnService.getInstance().initializeAPI();
         sContextComponent = DaggerContextComponent.builder().
                 contextModule(new ContextModule(this)).
                 build();

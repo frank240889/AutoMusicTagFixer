@@ -1185,6 +1185,14 @@ public class TrackDetailFragment extends BaseFragment implements EditableView,
     }
 
     @Override
+    public void onApiNotInitialized() {
+        Snackbar snackbar;
+        snackbar = AndroidUtils.getSnackbar(mLayout, getActivity().getApplicationContext());
+        snackbar.setText(R.string.could_not_init_api);
+        snackbar.show();
+    }
+
+    @Override
     public void onNetworkConnected(Void param) {
         //Do nothing
     }

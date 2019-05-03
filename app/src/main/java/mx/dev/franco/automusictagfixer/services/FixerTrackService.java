@@ -191,8 +191,8 @@ public class FixerTrackService extends Service implements GnResponseListener.GnL
             return false;
         }
 
-        if(GnService.sIsInitializing || !GnService.sApiInitialized){
-            GnService.getInstance(getApplicationContext()).initializeAPI();
+        if(GnService.getInstance().isApiInitializing()|| !GnService.getInstance().isApiInitialized()){
+            GnService.getInstance().initializeAPI();
             return false;
         }
 

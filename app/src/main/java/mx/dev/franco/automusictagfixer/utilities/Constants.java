@@ -48,7 +48,9 @@ public class Constants {
     }
 
     public static class GnServiceActions{
-        public static final String ACTION_API_INITIALIZED = BuildConfig.APPLICATION_ID + "." +"action_api_initialized";
+        public static final String ACTION_API_INITIALIZATION_RESULT = BuildConfig.APPLICATION_ID + "." +"action_api_initialization_result";
+        public static final String INITIALIZATION_RESULT = BuildConfig.APPLICATION_ID + "." +"initialization_result";
+
     }
 
     public static class State{

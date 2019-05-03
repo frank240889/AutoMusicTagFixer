@@ -24,7 +24,6 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -55,7 +54,6 @@ import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
 import mx.dev.franco.automusictagfixer.utilities.RequiredPermissions;
 import mx.dev.franco.automusictagfixer.utilities.ServiceUtils;
-import mx.dev.franco.automusictagfixer.utilities.StorageHelper;
 
 public class ListFragment extends BaseFragment implements
         AudioItemHolder.ClickListener,Observer<List<Track>>,
@@ -80,7 +78,6 @@ public class ListFragment extends BaseFragment implements
     private Toolbar mToolbar;
     private FloatingActionButton mStartTaskFab;
     private FloatingActionButton mStopTaskFab;
-    private SearchView mSearchView;
 
     @Inject
     ServiceUtils serviceUtils;
@@ -106,16 +103,20 @@ public class ListFragment extends BaseFragment implements
         mAdapter = new TrackAdapter(this);
         mListViewModel = ViewModelProviders.of(this).get(ListViewModel.class);
 
-        mListViewModel.actionShowMessage().observe(this, this::showMessageError);
+        //mListViewModel.actionShowMessage().observe(this, this::showMessageError);
         mListViewModel.isTrackProcessing().observe(this, this::showMessageError);
         mListViewModel.actionTrackEvaluatedSuccessfully().observe(this, this::showDialog);
-        mListViewModel.actionCanRunService().observe(this, this::showMessage);
+        //mListViewModel.actionCanRunService().observe(this, this::showMessage);
         mListViewModel.actionCanOpenDetails().observe(this, this::openDetails);
         mListViewModel.actionCanStartAutomaticMode().observe(this, this::startCorrection);
         mListViewModel.actionIsTrackInaccessible().observe(this, this::showInaccessibleTrack);
         mListViewModel.noFilesFound().observe(this, this::noFilesFoundMessage);
         mListViewModel.getLoader().observe(this, this::loading);
+        mListViewModel.getOnCheckAll().observe(this, this::onCheckAll);
         mListViewModel.getAllTracks().observe(this, this);
+        mListViewModel.getMessage().observe(this, this::onMessage);
+        mListViewModel.onSorted().observe(this, this::onSorted);
+        mListViewModel.onSdPresent().observe(this, this::onSdPresent);
 
         //For Android Marshmallow and Lollipop, there is no need to request permissions
         //at runtime.
@@ -180,11 +181,7 @@ public class ListFragment extends BaseFragment implements
         setHasOptionsMenu(true);
         setRetainInstance(true);
 
-
-        boolean isPresentSD = StorageHelper.getInstance(getActivity().getApplicationContext()).
-                isPresentRemovableStorage();
-        if(AndroidUtils.getUriSD(getActivity().getApplicationContext()) == null && isPresentSD)
-            getActivity().startActivity(new Intent(getActivity(), SdCardInstructionsActivity.class));
+        mListViewModel.checkSdIsPresent(getContext());
 
         boolean hasPermission = ContextCompat.
                 checkSelfPermission(getActivity(), Manifest.permission.WRITE_EXTERNAL_STORAGE)
@@ -201,8 +198,7 @@ public class ListFragment extends BaseFragment implements
 
         //App is opened again
         int id = getActivity().getIntent().getIntExtra(Constants.MEDIA_STORE_ID, -1);
-        scrollTo(id);
-
+        mAdapter.scrollToPosition(id);
     }
 
     @Override
@@ -231,17 +227,10 @@ public class ListFragment extends BaseFragment implements
     @Override
     public boolean onOptionsItemSelected(MenuItem menuItem) {
         int id = menuItem.getItemId();
-        boolean sorted = false;
         stopScroll();
         switch (id){
             case R.id.action_select_all:
-                if(getDatasource() == null || getDatasource().size() == 0){
-                    Snackbar snackbar = AndroidUtils.getSnackbar(mLayout, getActivity().getApplicationContext());
-                    snackbar.setText(R.string.no_available);
-                    snackbar.show();
-                    return false;
-                }
-                checkAll();
+                    mListViewModel.actionSelectAll();
                 break;
             case R.id.action_search:
                     ResultSearchListFragment resultSearchListFragment = ResultSearchListFragment.newInstance();
@@ -255,88 +244,31 @@ public class ListFragment extends BaseFragment implements
 
                 break;
             case R.id.action_refresh:
-                rescan();
+                    rescan();
                 break;
-
             case R.id.path_asc:
-                sorted = sort(TrackContract.TrackData.DATA, TrackAdapter.ASC);
-                if(!sorted){
-                    Snackbar snackbar = AndroidUtils.getSnackbar(mLayout, getActivity().getApplicationContext());
-                    snackbar.setText(R.string.no_available);
-                    snackbar.show();
-                    return false;
-                }
-                checkItem(id);
+                    mListViewModel.sortTracks(TrackContract.TrackData.DATA, TrackAdapter.ASC, id);
                 break;
             case R.id.path_desc:
-                sorted = sort(TrackContract.TrackData.DATA, TrackAdapter.DESC);
-                if(!sorted){
-                    Snackbar snackbar = AndroidUtils.getSnackbar(mLayout, getActivity().getApplicationContext());
-                    snackbar.setText(R.string.no_available);
-                    snackbar.show();
-                    return false;
-                }
-                checkItem(id);
+                    mListViewModel.sortTracks(TrackContract.TrackData.DATA, TrackAdapter.DESC, id);
                 break;
             case R.id.title_asc:
-                sorted = sort(TrackContract.TrackData.TITLE, TrackAdapter.ASC);
-                if(!sorted){
-                    Snackbar snackbar = AndroidUtils.getSnackbar(mLayout, getActivity().getApplicationContext());
-                    snackbar.setText(R.string.no_available);
-                    snackbar.show();
-                    return false;
-                }
-                checkItem(id);
+                    mListViewModel.sortTracks(TrackContract.TrackData.TITLE, TrackAdapter.ASC, id);
                 break;
             case R.id.title_desc:
-                sorted = sort(TrackContract.TrackData.TITLE, TrackAdapter.DESC);
-                if(!sorted){
-                    Snackbar snackbar = AndroidUtils.getSnackbar(mLayout, getActivity().getApplicationContext());
-                    snackbar.setText(R.string.no_available);
-                    snackbar.show();
-                    return false;
-                }
-                checkItem(id);
+                    mListViewModel.sortTracks(TrackContract.TrackData.TITLE, TrackAdapter.DESC, id);
                 break;
             case R.id.artist_asc:
-                sorted = sort(TrackContract.TrackData.ARTIST, TrackAdapter.ASC);
-                if(!sorted){
-                    Snackbar snackbar = AndroidUtils.getSnackbar(mLayout, getActivity().getApplicationContext());
-                    snackbar.setText(R.string.no_available);
-                    snackbar.show();
-                    return false;
-                }
-                checkItem(id);
+                    mListViewModel.sortTracks(TrackContract.TrackData.ARTIST, TrackAdapter.ASC, id);
                 break;
             case R.id.artist_desc:
-                sorted = sort(TrackContract.TrackData.ARTIST, TrackAdapter.DESC);
-                if(!sorted){
-                    Snackbar snackbar = AndroidUtils.getSnackbar(mLayout, getActivity().getApplicationContext());
-                    snackbar.setText(R.string.no_available);
-                    snackbar.show();
-                    return false;
-                }
-                checkItem(id);
+                    mListViewModel.sortTracks(TrackContract.TrackData.ARTIST, TrackAdapter.DESC, id);
                 break;
             case R.id.album_asc:
-                sorted = sort(TrackContract.TrackData.ALBUM, TrackAdapter.ASC);
-                if(!sorted){
-                    Snackbar snackbar = AndroidUtils.getSnackbar(mLayout, getActivity().getApplicationContext());
-                    snackbar.setText(R.string.no_available);
-                    snackbar.show();
-                    return false;
-                }
-                checkItem(id);
+                    mListViewModel.sortTracks(TrackContract.TrackData.ALBUM, TrackAdapter.ASC, id);
                 break;
             case R.id.album_desc:
-                sorted = sort(TrackContract.TrackData.ALBUM, TrackAdapter.DESC);
-                if(!sorted){
-                    Snackbar snackbar = AndroidUtils.getSnackbar(mLayout, getActivity().getApplicationContext());
-                    snackbar.setText(R.string.no_available);
-                    snackbar.show();
-                    return false;
-                }
-                checkItem(id);
+                    mListViewModel.sortTracks(TrackContract.TrackData.ALBUM, TrackAdapter.DESC, id);
                 break;
         }
         return super.onOptionsItemSelected(menuItem);
@@ -350,14 +282,8 @@ public class ListFragment extends BaseFragment implements
             requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
                     RequiredPermissions.WRITE_EXTERNAL_STORAGE_PERMISSION);
         }
-        else if(ServiceUtils.getInstance(getActivity().getApplicationContext()).
-                checkIfServiceIsRunning(FixerTrackService.class.getName())){
-            Snackbar snackbar = AndroidUtils.getSnackbar(mLayout, getActivity().getApplicationContext());
-            snackbar.setText(R.string.no_available);
-            snackbar.show();
-        }
         else {
-            updateList();
+            mListViewModel.rescan();
         }
     }
 
@@ -470,16 +396,12 @@ public class ListFragment extends BaseFragment implements
 
     }
 
-    public boolean sort(String by, int order){
-        return mListViewModel.sortTracks(by, order, mAdapter.getDatasource());
-    }
-
     public void checkAll(){
         mListViewModel.checkAllItems();
     }
 
     public void updateList(){
-        mListViewModel.updateTrackList();
+        mListViewModel.rescan();
     }
 
     @Override
@@ -508,7 +430,6 @@ public class ListFragment extends BaseFragment implements
     @Override
     public void onStop() {
         super.onStop();
-        //mSearchView.clearFocus();
     }
 
     public void showViewPermissionMessage() {
@@ -534,22 +455,18 @@ public class ListFragment extends BaseFragment implements
 
     @Override
     public void onCheckboxClick(int position) {
-        Track track = mAdapter.getDatasource().get(position);
-        mListViewModel.updateTrack(track);
+        mListViewModel.onCheckboxClick(position);
     }
 
     @Override
     public void onCheckMarkClick(int position) {
-        String status =  mListViewModel.getState(mAdapter.getDatasource().get(position).getState());
-        Toast t = AndroidUtils.getToast(getActivity());
-        t.setText(status);
-        t.show();
+        mListViewModel.onCheckMarkClick(position);
     }
 
     @Override
     public void onItemClick(int position, View view) {
-        ViewWrapper viewWrapper = new ViewWrapper();
-        viewWrapper.track = mAdapter.getDatasource().get(position);
+        Wrapper viewWrapper = new Wrapper();
+        viewWrapper.position = position;
         viewWrapper.view = view;
         viewWrapper.mode = Constants.CorrectionModes.SEMI_AUTOMATIC;
         mListViewModel.onItemClick(viewWrapper);
@@ -696,21 +613,19 @@ public class ListFragment extends BaseFragment implements
 
     @Override
     public void onApiInitialized() {
-        Snackbar snackbar = AndroidUtils.getSnackbar(mLayout, getActivity().getApplicationContext());
-        if(getDatasource().size() > 0) {
-            snackbar.setText(R.string.api_initialized);
+        if(ContextCompat.checkSelfPermission(getActivity(),
+                Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED){
+            onMessage(R.string.title_dialog_permision);
         }
         else {
-            if(ContextCompat.checkSelfPermission(getActivity(),
-                    Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                    != PackageManager.PERMISSION_GRANTED){
-                snackbar.setText(R.string.title_dialog_permision);
-            }
-            else {
-                snackbar.setText(R.string.add_some_tracks);
-            }
+            mListViewModel.onApiInitialized();
         }
-        snackbar.show();
+    }
+
+    @Override
+    public void onApiNotInitialized() {
+        onMessage(R.string.could_not_init_api);
     }
 
     @Override
@@ -720,15 +635,17 @@ public class ListFragment extends BaseFragment implements
 
     @Override
     public void onNetworkConnected(Void param) {
-        //Do nothing
+        onMessage(R.string.internet_connection_restored);
+    }
+
+    private void onCheckAll(Boolean checkAll) {
+        if(!checkAll)
+            checkAll();
     }
 
     @Override
     public void onNetworkDisconnected(Void param) {
-        Toast toast = AndroidUtils.getToast(getActivity().getApplicationContext());
-        toast.setText(R.string.connection_lost);
-        toast.setDuration(Toast.LENGTH_SHORT);
-        toast.show();
+        onMessage(R.string.connection_lost);
     }
 
     @Override
@@ -739,7 +656,7 @@ public class ListFragment extends BaseFragment implements
 
     @Override
     public void onStartProcessingFor(int id) {
-        scrollTo(id);
+        mAdapter.scrollToPosition(id);
     }
 
     @Override
@@ -757,23 +674,38 @@ public class ListFragment extends BaseFragment implements
         mStopTaskFab.hide();
     }
 
-    public static class ViewWrapper{
+    public List<Track> getDatasource() {
+        return mAdapter.getDatasource();
+    }
+
+    private void onMessage(Integer integer) {
+        Snackbar snackbar = AndroidUtils.getSnackbar(mLayout, getActivity().getApplicationContext());
+        snackbar.setText(integer);
+        snackbar.show();
+    }
+
+    private void onSdPresent(Boolean sdPresent) {
+        if(sdPresent)
+            getActivity().startActivity(new Intent(getActivity(), SdCardInstructionsActivity.class));
+    }
+
+    private void onSorted(Integer idResource) {
+        if(idResource != -1) {
+            checkItem(idResource);
+        }
+    }
+
+    public static class Wrapper {
         public View view;
-        public Track track;
+        public int position;
         public int mode;
     }
 
-    private void scrollTo(int id) {
-        if(id == -1)
-            return;
-
-        Track track = mAdapter.getTrackById(id);
-        int position = mAdapter.getDatasource().indexOf(track);
-        mRecyclerView.scrollToPosition(position);
-    }
-
-    public List<Track> getDatasource() {
-        return mAdapter.getDatasource();
+    public static class ViewWrapper {
+        public View view;
+        public Track track;
+        public int position;
+        public int mode;
     }
 
 }

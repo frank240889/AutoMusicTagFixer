@@ -2,8 +2,6 @@ package mx.dev.franco.automusictagfixer.UI.main;
 
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.util.DiffUtil;
@@ -40,13 +38,7 @@ import static android.view.View.VISIBLE;
 
 public class TrackAdapter extends RecyclerView.Adapter<AudioItemHolder> implements
         Destructible,
-        AsyncOperation<Void, DiffResults<Track>, Void, Void>,
-        Handler.Callback {
-
-    @Override
-    public boolean handleMessage(Message msg) {
-        return false;
-    }
+        AsyncOperation<Void, DiffResults<Track>, Void, Void> {
 
     /**
      * Interface to communicate when the list is in process
@@ -69,6 +61,7 @@ public class TrackAdapter extends RecyclerView.Adapter<AudioItemHolder> implemen
     private OnSortingListener mOnSortingListener;
     private Deque<List<Track>> mPendingUpdates = new ArrayDeque<>();
     private static DiffExecutor sDiffExecutor;
+    private RecyclerView mRecyclerView;
 
     public TrackAdapter(){}
     public TrackAdapter(AudioItemHolder.ClickListener listener){
@@ -77,6 +70,16 @@ public class TrackAdapter extends RecyclerView.Adapter<AudioItemHolder> implemen
         AutoMusicTagFixer.getContextComponent().inject(this);
         if(listener instanceof OnSortingListener)
             mOnSortingListener = (OnSortingListener) listener;
+    }
+
+    @Override
+    public void onAttachedToRecyclerView(@NonNull RecyclerView recyclerView) {
+        mRecyclerView = recyclerView;
+    }
+
+    @Override
+    public void onDetachedFromRecyclerView(@NonNull RecyclerView recyclerView) {
+        mRecyclerView = null;
     }
 
     /**
@@ -344,6 +347,15 @@ public class TrackAdapter extends RecyclerView.Adapter<AudioItemHolder> implemen
 
     @Override
     public void onAsyncOperationError(Void error) {/*Do nothing*/}
+
+    public void scrollToPosition(int id) {
+        if(id == -1)
+            return;
+
+        Track track = getTrackById(id);
+        int position = mTrackList.indexOf(track);
+        mRecyclerView.scrollToPosition(position);
+    }
 }
 
 

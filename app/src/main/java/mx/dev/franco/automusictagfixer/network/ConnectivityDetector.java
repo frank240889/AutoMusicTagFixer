@@ -51,7 +51,7 @@ public class ConnectivityDetector implements OnTestingNetwork, OnTestingNetwork.
     public void onNetworkConnected(String param) {
 
         //If gracenote api is not initialized, try to initialize
-        if(!GnService.sApiInitialized) {
+        if(!GnService.getInstance().isApiInitialized()) {
             Job.scheduleJob(mContext);
         }
 
