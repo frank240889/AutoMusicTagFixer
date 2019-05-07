@@ -152,7 +152,7 @@ public class TrackRepository {
      * Search a track in the DB.
      * @param query The query as param to search in DB.
      */
-    public void search(String query) {
+    public void trackSearch(String query) {
         if(liveDataTracks != null)
             mResultSearch.removeSource(liveDataTracks);
 

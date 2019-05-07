@@ -1143,7 +1143,7 @@ public class TrackDetailFragment extends BaseFragment implements EditableView,
             return false;
         });
 
-        //performs a web search in navigator
+        //performs a web trackSearch in navigator
         //using the title and artist name
         searchInWebItem.setOnMenuItemClickListener(item -> {
             searchInfoForTrack();

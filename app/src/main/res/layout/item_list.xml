@@ -10,6 +10,7 @@
     app:cardElevation="@dimen/cardview_default_elevation"
     android:clickable="true"
     android:focusable="true">
+
     <android.support.constraint.ConstraintLayout
         android:id="@+id/container_elements"
         android:layout_width="match_parent"

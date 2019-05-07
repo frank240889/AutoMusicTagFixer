@@ -86,7 +86,7 @@ public class CoverManager {
                 byte[] cover = coverTask.getCover();
 
                 if(audioItemHolder != null) {
-                    loadCover(audioItemHolder, cover, coverTask);
+                    loadCover(audioItemHolder, cover);
                 }
 
                 recycleTask(coverTask);
@@ -99,35 +99,37 @@ public class CoverManager {
         mCoverTaskQueue.offer(coverTask);
     }
 
-    private void loadCover(AudioHolder holder, byte[] result, final CoverTask coverTask) {
-        GlideApp.with(holder.itemView.getContext()).
-                load(result)
-                .thumbnail(0.5f)
-                .error(R.drawable.ic_album_white_48px)
-                .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.AUTOMATIC))
-                .apply(RequestOptions.skipMemoryCacheOf(false))
-                .transition(DrawableTransitionOptions.withCrossFade(150))
-                .fitCenter()
-                .listener(new RequestListener<Drawable>() {
-                    @Override
-                    public boolean onLoadFailed(@Nullable GlideException e,
-                                                Object model,
-                                                Target<Drawable> target,
-                                                boolean isFirstResource) {
-                        return false;
-                    }
+    private void loadCover(AudioHolder holder, byte[] result) {
+        if(holder.itemView.getContext() != null) {
+            GlideApp.with(holder.itemView.getContext()).
+                    load(result)
+                    .thumbnail(0.5f)
+                    .error(R.drawable.ic_album_white_48px)
+                    .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.AUTOMATIC))
+                    .apply(RequestOptions.skipMemoryCacheOf(false))
+                    .transition(DrawableTransitionOptions.withCrossFade(150))
+                    .fitCenter()
+                    .listener(new RequestListener<Drawable>() {
+                        @Override
+                        public boolean onLoadFailed(@Nullable GlideException e,
+                                                    Object model,
+                                                    Target<Drawable> target,
+                                                    boolean isFirstResource) {
+                            return false;
+                        }
 
-                    @Override
-                    public boolean onResourceReady(Drawable resource,
-                                                   Object model,
-                                                   Target<Drawable> target,
-                                                   DataSource dataSource,
-                                                   boolean isFirstResource) {
-                        return false;
-                    }
-                })
-                .placeholder(R.drawable.ic_album_white_48px)
-                .into(holder.cover);
+                        @Override
+                        public boolean onResourceReady(Drawable resource,
+                                                       Object model,
+                                                       Target<Drawable> target,
+                                                       DataSource dataSource,
+                                                       boolean isFirstResource) {
+                            return false;
+                        }
+                    })
+                    .placeholder(R.drawable.ic_album_white_48px)
+                    .into(holder.cover);
+        }
     }
 
     /**

@@ -288,7 +288,7 @@ public class TrackDetailPresenter implements
             if(results != null){
                 mView.setStateMessage(resourceManager.getString(R.string.identifying),true);
                 mView.loading(false);
-                //Type of recognition: only cover, or search all tags.
+                //Type of recognition: only cover, or trackSearch all tags.
                 if(mRecognition == TrackIdentifier.ALL_TAGS) {
                     if(mLifeCycleState == LifeCycleState.RESUMED) {
                         mPendingResultsDelivery = false;

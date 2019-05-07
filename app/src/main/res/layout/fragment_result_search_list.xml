@@ -52,13 +52,9 @@
         android:choiceMode="singleChoice"
         android:clipToPadding="false"
         android:overScrollMode="always"
-        android:paddingBottom="80dp"
-        android:padding="4dp"
         android:scrollbarStyle="outsideOverlay"
         android:scrollbarThumbVertical="@drawable/custom_scrollbar_thumb"
         android:scrollbars="vertical"
-        app:layoutManager="com.google.android.flexbox.FlexboxLayoutManager"
-        tools:layoutManager="com.google.android.flexbox.FlexboxLayoutManager"
         tools:listitem="@layout/found_item_list"/>
 
 </android.support.design.widget.CoordinatorLayout>

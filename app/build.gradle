@@ -161,7 +161,7 @@ dependencies {
 
     implementation 'com.google.dagger:dagger:2.15'
     annotationProcessor 'com.google.dagger:dagger-compiler:2.15'
-    implementation 'io.reactivex.rxjava2:rxandroid:2.0.2'
+    //implementation 'io.reactivex.rxjava2:rxandroid:2.0.2'
 
     // Room components
     implementation "android.arch.persistence.room:runtime:$rootProject.roomVersion"
@@ -176,5 +176,5 @@ dependencies {
 
     implementation 'agency.tango.android:material-intro-screen:0.0.5'
 
-    implementation 'com.google.android:flexbox:1.0.0'
+    //implementation 'com.google.android:flexbox:1.0.0'
 }
