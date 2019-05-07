@@ -103,17 +103,14 @@ public class ListFragment extends BaseFragment implements
         mAdapter = new TrackAdapter(this);
         mListViewModel = ViewModelProviders.of(this).get(ListViewModel.class);
 
-        //mListViewModel.actionShowMessage().observe(this, this::showMessageError);
-        mListViewModel.isTrackProcessing().observe(this, this::showMessageError);
         mListViewModel.actionTrackEvaluatedSuccessfully().observe(this, this::showDialog);
-        //mListViewModel.actionCanRunService().observe(this, this::showMessage);
         mListViewModel.actionCanOpenDetails().observe(this, this::openDetails);
         mListViewModel.actionCanStartAutomaticMode().observe(this, this::startCorrection);
         mListViewModel.actionIsTrackInaccessible().observe(this, this::showInaccessibleTrack);
         mListViewModel.noFilesFound().observe(this, this::noFilesFoundMessage);
         mListViewModel.getLoader().observe(this, this::loading);
-        mListViewModel.getOnCheckAll().observe(this, this::onCheckAll);
-        mListViewModel.getAllTracks().observe(this, this);
+        mListViewModel.checkAll().observe(this, this::onCheckAll);
+        mListViewModel.showAllTracks().observe(this, this);
         mListViewModel.getMessage().observe(this, this::onMessage);
         mListViewModel.onSorted().observe(this, this::onSorted);
         mListViewModel.onSdPresent().observe(this, this::onSdPresent);
@@ -121,7 +118,7 @@ public class ListFragment extends BaseFragment implements
         //For Android Marshmallow and Lollipop, there is no need to request permissions
         //at runtime.
         if(Build.VERSION.SDK_INT < Build.VERSION_CODES.M)
-            mListViewModel.getInfoForTracks();
+            mListViewModel.fetchTracks();
     }
 
     @Override
@@ -164,7 +161,7 @@ public class ListFragment extends BaseFragment implements
                         RequiredPermissions.WRITE_EXTERNAL_STORAGE_PERMISSION);
             }
             else {
-                mListViewModel.updateTrackList();
+                mListViewModel.fetchNewTracks();
             }
         });
 
@@ -230,7 +227,7 @@ public class ListFragment extends BaseFragment implements
         stopScroll();
         switch (id){
             case R.id.action_select_all:
-                    mListViewModel.actionSelectAll();
+                    mListViewModel.checkAllTracks();
                 break;
             case R.id.action_search:
                     ResultSearchListFragment resultSearchListFragment = ResultSearchListFragment.newInstance();
@@ -352,7 +349,6 @@ public class ListFragment extends BaseFragment implements
         mStopTaskFab.hide();
         mStartTaskFab.hide();
         mMessage.setVisibility(View.VISIBLE);
-        mMessage.setText(R.string.no_items_found);
     }
 
 
@@ -382,7 +378,7 @@ public class ListFragment extends BaseFragment implements
         //Check permission to access files and execute scan if were granted
         if(grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
             mMessage.setText(R.string.loading_tracks);
-            mListViewModel.getInfoForTracks();
+            mListViewModel.fetchTracks();
 
         }
         else {
@@ -447,7 +443,6 @@ public class ListFragment extends BaseFragment implements
     @Override
     public void onCoverClick(int position, View view) {
         ViewWrapper viewWrapper = new ViewWrapper();
-        viewWrapper.view = view;
         viewWrapper.track = mAdapter.getDatasource().get(position);
         viewWrapper.mode = Constants.CorrectionModes.VIEW_INFO;
         mListViewModel.onClickCover(viewWrapper);
@@ -465,30 +460,14 @@ public class ListFragment extends BaseFragment implements
 
     @Override
     public void onItemClick(int position, View view) {
-        Wrapper viewWrapper = new Wrapper();
+        ViewWrapper viewWrapper = new ViewWrapper();
         viewWrapper.position = position;
-        viewWrapper.view = view;
         viewWrapper.mode = Constants.CorrectionModes.SEMI_AUTOMATIC;
         mListViewModel.onItemClick(viewWrapper);
     }
 
     public void showDialog(ViewWrapper viewWrapper){
         openDetails(viewWrapper);
-    }
-
-    private void showMessage(int code){
-        String message = "";
-        if (code == 1) {
-            message = getActivity().getString(R.string.no_internet_connection_automatic_mode);
-        } else if (code == 2) {
-            message = getActivity().getString(R.string.could_not_init_api);
-        } else if (code == 3) {
-            message = getActivity().getString(R.string.correction_in_progress);
-        }
-        Snackbar snackbar = AndroidUtils.getSnackbar(mRecyclerView, getActivity());
-        snackbar.setText(message);
-        snackbar.setDuration(Snackbar.LENGTH_LONG);
-        snackbar.show();
     }
 
 
@@ -697,13 +676,6 @@ public class ListFragment extends BaseFragment implements
 
     public static class Wrapper {
         public View view;
-        public int position;
-        public int mode;
-    }
-
-    public static class ViewWrapper {
-        public View view;
-        public Track track;
         public int position;
         public int mode;
     }

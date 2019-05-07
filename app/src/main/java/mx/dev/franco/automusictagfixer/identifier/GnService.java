@@ -79,29 +79,26 @@ public class GnService {
      * This method initializes the API
      */
     public void initializeAPI(){
-        if(!isApiInitialized() && isApiInitializing()) {
-            Thread thread = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    initApi();
-                    if(isApiInitialized()) {
+        if(!isApiInitialized() && !isApiInitializing()) {
+            Thread thread = new Thread(() -> {
+                initApi();
+                if(isApiInitialized()) {
+                    Handler handler = new Handler(Looper.getMainLooper());
+                    handler.post(() -> handleResult(true));
+                    sCounter = 0;
+                }
+                else {
+                    sCounter++;
+                    if(sCounter == 5) {
                         Handler handler = new Handler(Looper.getMainLooper());
-                        handler.post(() -> handleResult(true));
-                        sCounter = 0;
+                        handler.post(() -> handleResult(false));
                     }
                     else {
-                        sCounter++;
-                        if(sCounter == 5) {
-                            Handler handler = new Handler(Looper.getMainLooper());
-                            handler.post(() -> handleResult(false));
-                        }
-                        else {
-                            Handler handler = new Handler(Looper.getMainLooper());
-                            handler.post(() -> initializeAPI());
-                        }
+                        Handler handler = new Handler(Looper.getMainLooper());
+                        handler.post(this::initializeAPI);
                     }
-
                 }
+
             });
             thread.start();
         }

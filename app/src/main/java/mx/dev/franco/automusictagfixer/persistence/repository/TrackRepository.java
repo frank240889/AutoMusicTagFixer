@@ -33,6 +33,7 @@ public class TrackRepository {
     private LiveData<List<Track>> liveDataTracks;
     private AbstractSharedPreferences mAbstractSharedPreferences;
     private String mCurrentOrder;
+
     public TrackRepository(TrackRoomDatabase db, AbstractSharedPreferences abstractSharedPreferences){
         mTrackDao = db.trackDao();
         mAbstractSharedPreferences = abstractSharedPreferences;
@@ -59,7 +60,11 @@ public class TrackRepository {
         return mMediatorTrackData;
     }
 
-    public void getDataFromTracksFirst(final AsyncOperation<Void, Boolean, Void, Void> iRetriever){
+    public LiveData<List<Track>> getSearchResults() {
+        return mResultSearch;
+    }
+
+    public void fetchTracks(final AsyncOperation<Void, Boolean, Void, Void> iRetriever){
         boolean databaseCreationCompleted = mAbstractSharedPreferences.getBoolean(Constants.COMPLETE_READ);
         if(!databaseCreationCompleted) {
             AsyncFileReader asyncFileReader = new AsyncFileReader();
@@ -72,7 +77,7 @@ public class TrackRepository {
         }
     }
 
-    public void getNewTracks(final AsyncOperation<Void, Boolean, Void, Void> iRetriever){
+    public void fetchNewTracks(final AsyncOperation<Void, Boolean, Void, Void> iRetriever){
             AsyncFileReader asyncFileReader = new AsyncFileReader();
             asyncFileReader.setTask(AsyncFileReader.UPDATE_LIST);
             asyncFileReader.setListener(iRetriever);
@@ -141,10 +146,6 @@ public class TrackRepository {
             }
         });
         return true;
-    }
-
-    public LiveData<List<Track>> getSearchResults() {
-        return mResultSearch;
     }
 
     /**

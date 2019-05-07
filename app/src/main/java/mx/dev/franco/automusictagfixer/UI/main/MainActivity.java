@@ -277,7 +277,7 @@ public class MainActivity extends AppCompatActivity
         List<Fragment> fragmentList;
         switch (action) {
             case Constants.GnServiceActions.ACTION_API_INITIALIZATION_RESULT:
-                boolean res = intent.getBooleanExtra(Constants.GnServiceActions.ACTION_API_INITIALIZATION_RESULT, false);
+                boolean res = intent.getBooleanExtra(Constants.GnServiceActions.INITIALIZATION_RESULT, false);
                 fragmentList = getSupportFragmentManager().getFragments();
                 for(Fragment fragment:fragmentList){
                     if(fragment instanceof GnService.OnApiListener){

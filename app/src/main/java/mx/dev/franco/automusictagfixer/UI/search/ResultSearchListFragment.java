@@ -35,8 +35,8 @@ import javax.inject.Inject;
 
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.UI.BaseFragment;
-import mx.dev.franco.automusictagfixer.UI.main.ListFragment;
 import mx.dev.franco.automusictagfixer.UI.main.MainActivity;
+import mx.dev.franco.automusictagfixer.UI.main.ViewWrapper;
 import mx.dev.franco.automusictagfixer.UI.track_detail.TrackDetailFragment;
 import mx.dev.franco.automusictagfixer.modelsUI.search.SearchListViewModel;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
@@ -161,7 +161,7 @@ public class ResultSearchListFragment extends BaseFragment implements
         getActivity().invalidateOptionsMenu();
     }
 
-    private void showInaccessibleTrack(ListFragment.ViewWrapper viewWrapper) {
+    private void showInaccessibleTrack(ViewWrapper viewWrapper) {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         builder.setMessage(String.format(getString(R.string.file_error), viewWrapper.track.getPath())).
                 setPositiveButton(R.string.remove_from_list, (dialog, which) -> {
@@ -172,7 +172,7 @@ public class ResultSearchListFragment extends BaseFragment implements
         alertDialog.show();
     }
 
-    private void openDetailTrack(ListFragment.ViewWrapper viewWrapper) {
+    private void openDetailTrack(ViewWrapper viewWrapper) {
         ((MainActivity)getActivity()).mDrawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
 
         //to hide it, call the method again
@@ -230,9 +230,8 @@ public class ResultSearchListFragment extends BaseFragment implements
     public void onItemClick(int position, View view) {
         mRecyclerView.stopScroll();
         Track track = mAdapter.getDatasource().get(position);
-        ListFragment.ViewWrapper viewWrapper = new ListFragment.ViewWrapper();
+        ViewWrapper viewWrapper = new ViewWrapper();
         viewWrapper.track = track;
-        viewWrapper.view = view;
         viewWrapper.mode = Constants.CorrectionModes.SEMI_AUTOMATIC;
         mSearchListViewModel.onItemClick(viewWrapper);
     }

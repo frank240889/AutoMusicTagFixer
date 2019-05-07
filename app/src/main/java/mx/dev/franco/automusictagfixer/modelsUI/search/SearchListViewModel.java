@@ -10,7 +10,7 @@ import javax.inject.Inject;
 
 import mx.dev.franco.automusictagfixer.AutoMusicTagFixer;
 import mx.dev.franco.automusictagfixer.R;
-import mx.dev.franco.automusictagfixer.UI.main.ListFragment;
+import mx.dev.franco.automusictagfixer.UI.main.ViewWrapper;
 import mx.dev.franco.automusictagfixer.persistence.repository.TrackRepository;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.utilities.Tagger;
@@ -20,11 +20,11 @@ import mx.dev.franco.automusictagfixer.utilities.shared_preferences.AbstractShar
 public class SearchListViewModel extends ViewModel {
     private static final String TAG = SearchListViewModel.class.getName();
     //MutableLiveData objects to respond to user interactions.
-    private MutableLiveData<ListFragment.ViewWrapper> mTrack = new MutableLiveData<>();
+    private MutableLiveData<ViewWrapper> mTrack = new MutableLiveData<>();
     //The list of tracks.
     private LiveData<List<Track>> mTracks;
     private MutableLiveData<String> mTrackIsProcessing = new MutableLiveData<>();
-    private MutableLiveData<ListFragment.ViewWrapper> mTrackInaccessible = new MutableLiveData<>();
+    private MutableLiveData<ViewWrapper> mTrackInaccessible = new MutableLiveData<>();
     private MutableLiveData<Boolean> mShowProgress = new MutableLiveData<>();
     @Inject
     public TrackRepository trackRepository;
@@ -50,7 +50,7 @@ public class SearchListViewModel extends ViewModel {
         trackRepository.search(q);
     }
 
-    public void onItemClick(ListFragment.ViewWrapper viewWrapper){
+    public void onItemClick(ViewWrapper viewWrapper){
         boolean isAccessible = Tagger.checkFileIntegrity(viewWrapper.track.getPath());
         if(!isAccessible){
             mTrackInaccessible.setValue(viewWrapper);
@@ -76,11 +76,11 @@ public class SearchListViewModel extends ViewModel {
         return mTrackIsProcessing;
     }
 
-    public LiveData<ListFragment.ViewWrapper> actionTrackEvaluatedSuccessfully(){
+    public LiveData<ViewWrapper> actionTrackEvaluatedSuccessfully(){
         return mTrack;
     }
 
-    public LiveData<ListFragment.ViewWrapper> actionIsTrackInaccessible(){
+    public LiveData<ViewWrapper> actionIsTrackInaccessible(){
         return mTrackInaccessible;
     }
 

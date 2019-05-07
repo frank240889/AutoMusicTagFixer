@@ -168,7 +168,7 @@ public class CoverManager {
         }
 
         // Initializes the task
-        coverTask.initializeExtractionCoverTask(CoverManager.sInstance, audioItemHolder, path);
+        coverTask.startFetching(CoverManager.sInstance, audioItemHolder, path);
 
 
             /*

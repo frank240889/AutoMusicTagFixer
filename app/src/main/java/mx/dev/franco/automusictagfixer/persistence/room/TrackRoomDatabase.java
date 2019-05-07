@@ -50,7 +50,6 @@ public abstract class TrackRoomDatabase extends RoomDatabase {
                                                         Manifest.permission.WRITE_EXTERNAL_STORAGE)
                                                 == PackageManager.PERMISSION_GRANTED;
                                         if (!cursor.moveToFirst() && hasPermission) {
-                                            Log.d("move to first","false");
                                             Intent intent = new Intent(Constants.Actions.ACTION_RESCAN);
                                             LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
                                         }

@@ -16,7 +16,7 @@ public class CoverTask implements ICoverRunnable {
         mExtractionRunnable = new CoverExtractionRunnable(this);
     }
 
-    void initializeExtractionCoverTask(
+    void startFetching(
             CoverManager coverManager, AudioHolder audioItemHolder, String path) {
 
         mAudioItemHolderWeakReference = new WeakReference<>(audioItemHolder);
