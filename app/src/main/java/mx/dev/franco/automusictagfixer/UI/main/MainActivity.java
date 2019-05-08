@@ -1,11 +1,9 @@
 package mx.dev.franco.automusictagfixer.UI.main;
 
-import android.Manifest;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -16,7 +14,6 @@ import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.ShareCompat;
-import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -39,10 +36,9 @@ import mx.dev.franco.automusictagfixer.receivers.ResponseReceiver;
 import mx.dev.franco.automusictagfixer.services.FixerTrackService;
 import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
-import mx.dev.franco.automusictagfixer.utilities.RequiredPermissions;
 
-public class MainActivity extends AppCompatActivity
-        implements ResponseReceiver.OnResponse, NavigationView.OnNavigationItemSelectedListener,
+public class MainActivity extends AppCompatActivity implements ResponseReceiver.OnResponse,
+        NavigationView.OnNavigationItemSelectedListener,
         BaseFragment.OnConfirmBackPressedListener {
     public static String TAG = MainActivity.class.getName();
 
@@ -87,38 +83,6 @@ public class MainActivity extends AppCompatActivity
         mReceiver = null;
     }
 
-    /*@Override
-    protected void onNewIntent(Intent intent) {
-        super.onNewIntent(intent);
-        Fragment fragment = getSupportFragmentManager().findFragmentByTag(ResultSearchListFragment.TAG);
-        if(fragment instanceof ResultSearchListFragment) {
-            ((ResultSearchListFragment) fragment).onNewIntent(intent);
-        }
-        else {
-            //to hide it, call the method again
-            InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-            try {
-                assert imm != null;
-                imm.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0);
-            }
-            catch (Exception e){
-                e.printStackTrace();
-            }
-            ResultSearchListFragment resultSearchListFragment = ResultSearchListFragment.newInstance(intent);
-            getSupportFragmentManager().beginTransaction().
-                    setCustomAnimations(R.anim.slide_in_right,
-                            R.anim.slide_out_left, R.anim.slide_in_left,
-                            R.anim.slide_out_right).
-                    addToBackStack(ResultSearchListFragment.TAG).
-                    add(R.id.container_fragments, resultSearchListFragment, ResultSearchListFragment.TAG).
-                    commit();
-
-        }
-
-    }*/
-
-
-
     @Override
     public void onBackPressed() {
         if (getSupportFragmentManager().getBackStackEntryCount() > 0 ){
@@ -152,19 +116,9 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void rescan(){
-        boolean hasPermission = ContextCompat.
-                checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                == PackageManager.PERMISSION_GRANTED;
         ListFragment listFragment = (ListFragment) getSupportFragmentManager().findFragmentByTag(ListFragment.class.getName());
-        if(!hasPermission) {
-            if(listFragment != null)
-                listFragment.requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                    RequiredPermissions.WRITE_EXTERNAL_STORAGE_PERMISSION);
-        }
-        else {
-            if(listFragment != null)
-                listFragment.updateList();
-        }
+        if(listFragment != null)
+            listFragment.rescan();
     }
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)

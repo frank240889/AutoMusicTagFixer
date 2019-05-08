@@ -271,7 +271,7 @@ public class ListFragment extends BaseFragment implements
         return super.onOptionsItemSelected(menuItem);
     }
 
-    private void rescan(){
+    public void rescan(){
         boolean hasPermission = ContextCompat.
                 checkSelfPermission(getActivity(), Manifest.permission.WRITE_EXTERNAL_STORAGE)
                 == PackageManager.PERMISSION_GRANTED;
@@ -345,17 +345,10 @@ public class ListFragment extends BaseFragment implements
      * been found.
      * @param aBoolean True if files have not been found.
      */
-    private void noFilesFoundMessage(Boolean aBoolean) {
+    private void noFilesFoundMessage(Void voids) {
         mStopTaskFab.hide();
         mStartTaskFab.hide();
         mMessage.setVisibility(View.VISIBLE);
-    }
-
-
-    private void showMessageError(String s) {
-        Snackbar snackbar = AndroidUtils.getSnackbar(mLayout, getActivity().getApplicationContext());
-        snackbar.setText(s);
-        snackbar.show();
     }
 
     @Override
@@ -401,11 +394,6 @@ public class ListFragment extends BaseFragment implements
     }
 
     @Override
-    public void onPrepareOptionsMenu(Menu menu){
-        super.onPrepareOptionsMenu(menu);
-    }
-
-    @Override
     public void onPause(){
         super.onPause();
         mRecyclerView.stopScroll();
@@ -443,7 +431,7 @@ public class ListFragment extends BaseFragment implements
     @Override
     public void onCoverClick(int position, View view) {
         ViewWrapper viewWrapper = new ViewWrapper();
-        viewWrapper.track = mAdapter.getDatasource().get(position);
+        viewWrapper.position = position;
         viewWrapper.mode = Constants.CorrectionModes.VIEW_INFO;
         mListViewModel.onClickCover(viewWrapper);
     }
@@ -653,10 +641,6 @@ public class ListFragment extends BaseFragment implements
         mStopTaskFab.hide();
     }
 
-    public List<Track> getDatasource() {
-        return mAdapter.getDatasource();
-    }
-
     private void onMessage(Integer integer) {
         Snackbar snackbar = AndroidUtils.getSnackbar(mLayout, getActivity().getApplicationContext());
         snackbar.setText(integer);
@@ -673,11 +657,4 @@ public class ListFragment extends BaseFragment implements
             checkItem(idResource);
         }
     }
-
-    public static class Wrapper {
-        public View view;
-        public int position;
-        public int mode;
-    }
-
 }

@@ -33,7 +33,7 @@ public class ListViewModel extends ViewModel {
     private MutableLiveData<ViewWrapper> mTrack = new MutableLiveData<>();
     private MutableLiveData<ViewWrapper> mTrackInaccessible = new MutableLiveData<>();
     //LiveData to exposes data changes to observers.
-    private MutableLiveData<Boolean> mEmptyList = new MutableLiveData<>();
+    private MutableLiveData<Void> mEmptyList = new MutableLiveData<>();
     private MutableLiveData<ViewWrapper> mCanOpenDetails = new MutableLiveData<>();
     private MutableLiveData<Integer> mStartAutomaticMode = new MutableLiveData<>();
     private MutableLiveData<Boolean> mShowProgress = new MutableLiveData<>();
@@ -64,7 +64,7 @@ public class ListViewModel extends ViewModel {
         return mTrackInaccessible;
     }
 
-    public LiveData<Boolean> noFilesFound(){
+    public LiveData<Void> noFilesFound(){
         return mEmptyList;
     }
 
@@ -183,7 +183,7 @@ public class ListViewModel extends ViewModel {
                 mShowProgress.setValue(false);
                 sharedPreferences.putBoolean("first_time_read", true);
                 if(result){
-                    mEmptyList.setValue(true);
+                    mEmptyList.setValue(null);
                     mOnMessage.setValue(R.string.no_items_found);
                 }
             }
@@ -228,11 +228,13 @@ public class ListViewModel extends ViewModel {
      * @param viewWrapper A {@link ViewWrapper} object containing th info if the item.
      */
     public void onClickCover(ViewWrapper viewWrapper){
-        boolean isAccessible = Tagger.checkFileIntegrity(viewWrapper.track.getPath());
+        Track track = mCurrentList.get(viewWrapper.position);
+        boolean isAccessible = Tagger.checkFileIntegrity(track.getPath());
+        viewWrapper.track = track;
         if(!isAccessible){
             mTrackInaccessible.setValue(viewWrapper);
         }
-        else if(viewWrapper.track.processing() == 1){
+        else if(track.processing() == 1){
             mOnMessage.setValue(R.string.current_file_processing);
         }
         else {

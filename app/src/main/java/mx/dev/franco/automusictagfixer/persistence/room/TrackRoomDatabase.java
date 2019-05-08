@@ -15,7 +15,6 @@ import android.database.Cursor;
 import android.support.annotation.NonNull;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
-import android.util.Log;
 
 import mx.dev.franco.automusictagfixer.utilities.Constants;
 
@@ -40,7 +39,6 @@ public abstract class TrackRoomDatabase extends RoomDatabase {
                                 @Override
                                 public void onOpen(@NonNull SupportSQLiteDatabase db) {
                                     super.onOpen(db);
-                                    Log.d("VERSION DB", db.getVersion()+"");
                                     if(db.getVersion() == 2) {
                                         String query = "SELECT * FROM track_table";
                                         SupportSQLiteQuery sqLiteQuery = new SimpleSQLiteQuery(query);

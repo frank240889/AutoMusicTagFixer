@@ -241,11 +241,6 @@ public class TrackAdapter extends RecyclerView.Adapter<AudioItemHolder> implemen
         super.setHasStableIds(true);
     }
 
-    public List<Track> getDatasource(){
-        return mTrackList;
-    }
-
-
     @Override
     public void destroy() {
         if(sDiffExecutor != null && (sDiffExecutor.getStatus() == AsyncTask.Status.PENDING ||
