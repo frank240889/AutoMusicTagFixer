@@ -16,6 +16,7 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
+import java.util.concurrent.Executors;
 
 import javax.inject.Inject;
 
@@ -309,7 +310,7 @@ public class TrackAdapter extends RecyclerView.Adapter<AudioItemHolder> implemen
         }
 
         sDiffExecutor = new DiffExecutor(this);
-        sDiffExecutor.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, mTrackList, newItems);
+        sDiffExecutor.executeOnExecutor(Executors.newSingleThreadExecutor(), mTrackList, newItems);
 
     }
 

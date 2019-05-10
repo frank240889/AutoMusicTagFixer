@@ -1,7 +1,8 @@
 package mx.dev.franco.automusictagfixer.modelsUI.track_detail;
 
 import android.content.Context;
-import android.os.AsyncTask;
+
+import java.util.concurrent.Executors;
 
 import javax.inject.Inject;
 
@@ -231,7 +232,7 @@ public class TrackDetailPresenter implements
         }
         mFileSaver = new AsyncFileSaver(cover, title, artist, album);
         mFileSaver.setOnSavingListener(this);
-        mFileSaver.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR);
+        mFileSaver.executeOnExecutor(Executors.newSingleThreadExecutor());
     }
 
     public void validateInputData(){
@@ -488,7 +489,7 @@ public class TrackDetailPresenter implements
         else {
             results = createResultsFromInputData();
         }
-        mFixer.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, results);
+        mFixer.executeOnExecutor(Executors.newSingleThreadExecutor(), results);
     }
 
     @Override
@@ -569,7 +570,7 @@ public class TrackDetailPresenter implements
         mFixer = new Fixer(this);
         mFixer.setTrack(mCurrentTrack);
         mFixer.setTask(Tagger.MODE_REMOVE_COVER);
-        mFixer.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, null);
+        mFixer.executeOnExecutor(Executors.newSingleThreadExecutor(), null);
     }
 
 

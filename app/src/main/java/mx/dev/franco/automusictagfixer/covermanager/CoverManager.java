@@ -101,7 +101,7 @@ public class CoverManager {
 
     private void loadCover(AudioHolder holder, byte[] result) {
         if(holder.itemView.getContext() != null) {
-            GlideApp.with(holder.itemView.getContext()).
+            GlideApp.with(holder.itemView.getContext().getApplicationContext()).
                     load(result)
                     .thumbnail(0.5f)
                     .error(R.drawable.ic_album_white_48px)

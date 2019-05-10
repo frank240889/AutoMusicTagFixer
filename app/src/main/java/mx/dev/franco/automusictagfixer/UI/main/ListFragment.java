@@ -268,7 +268,7 @@ public class ListFragment extends BaseFragment implements
                     mListViewModel.sortTracks(TrackContract.TrackData.ALBUM, TrackAdapter.DESC, id);
                 break;
         }
-        return super.onOptionsItemSelected(menuItem);
+        return true;
     }
 
     public void rescan(){
@@ -343,7 +343,7 @@ public class ListFragment extends BaseFragment implements
     /**
      * Run when the scan of media store has finished and no music files have
      * been found.
-     * @param aBoolean True if files have not been found.
+     * @param voids void param, not usable.
      */
     private void noFilesFoundMessage(Void voids) {
         mStopTaskFab.hide();
@@ -387,10 +387,6 @@ public class ListFragment extends BaseFragment implements
 
     public void checkAll(){
         mListViewModel.checkAllItems();
-    }
-
-    public void updateList(){
-        mListViewModel.rescan();
     }
 
     @Override

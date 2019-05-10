@@ -34,6 +34,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Executors;
 
 import javax.inject.Inject;
 
@@ -131,7 +132,7 @@ public class FixerTrackService extends Service implements GnResponseListener.GnL
                     getSharedPreferences(Constants.Application.FULL_QUALIFIED_NAME, Context.MODE_PRIVATE);
             String order = sharedPreferences.getString(Constants.SORT_KEY, null);
             sIdLoader = new IdLoader(this, trackRoomDatabase);
-            sIdLoader.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, order);
+            sIdLoader.executeOnExecutor(Executors.newSingleThreadExecutor(), order);
         }
         return START_NOT_STICKY;
     }
@@ -180,7 +181,7 @@ public class FixerTrackService extends Service implements GnResponseListener.GnL
         }
         else if (!isRunning){
             sTrackDataLoader = new TrackLoader(this, trackRoomDatabase);
-            sTrackDataLoader.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, mIds.get(0));
+            sTrackDataLoader.executeOnExecutor(Executors.newSingleThreadExecutor(), mIds.get(0));
         }
     }
 
@@ -473,7 +474,7 @@ public class FixerTrackService extends Service implements GnResponseListener.GnL
         sFixer.setShouldRename(shouldRename);
         sFixer.setTask(task);
         sFixer.setTrack(track);
-        sFixer.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, results);
+        sFixer.executeOnExecutor(Executors.newSingleThreadExecutor(), results);
     }
 
     @Override
