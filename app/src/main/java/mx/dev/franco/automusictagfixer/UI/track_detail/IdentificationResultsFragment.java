@@ -4,7 +4,6 @@ import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.design.widget.BottomSheetDialogFragment;
 import android.support.design.widget.TextInputLayout;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -23,6 +22,7 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
 
 import mx.dev.franco.automusictagfixer.R;
+import mx.dev.franco.automusictagfixer.UI.RoundedBottomSheetDialogFragment;
 import mx.dev.franco.automusictagfixer.fixer.Fixer;
 import mx.dev.franco.automusictagfixer.identifier.GnResponseListener;
 import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
@@ -31,7 +31,7 @@ import mx.dev.franco.automusictagfixer.utilities.GlideApp;
 import mx.dev.franco.automusictagfixer.utilities.Tagger;
 import mx.dev.franco.automusictagfixer.utilities.TrackUtils;
 
-public class IdentificationResultsFragment extends BottomSheetDialogFragment {
+public class IdentificationResultsFragment extends RoundedBottomSheetDialogFragment {
     public interface OnBottomSheetFragmentInteraction {
         void onMissingTagsButton(Fixer.CorrectionParams correctionParams);
         void onOverwriteTagsButton(Fixer.CorrectionParams correctionParams);
