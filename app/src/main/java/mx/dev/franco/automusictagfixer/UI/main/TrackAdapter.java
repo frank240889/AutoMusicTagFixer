@@ -311,6 +311,7 @@ public class TrackAdapter extends RecyclerView.Adapter<AudioItemHolder> implemen
 
         sDiffExecutor = new DiffExecutor(this);
         sDiffExecutor.executeOnExecutor(Executors.newSingleThreadExecutor(), mTrackList, newItems);
+        
 
     }
 
