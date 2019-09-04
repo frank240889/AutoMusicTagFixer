@@ -11,9 +11,7 @@ import com.crashlytics.android.Crashlytics;
 import com.crashlytics.android.core.CrashlyticsCore;
 
 import io.fabric.sdk.android.Fabric;
-import mx.dev.franco.automusictagfixer.dagger.ContextComponent;
-import mx.dev.franco.automusictagfixer.dagger.ContextModule;
-import mx.dev.franco.automusictagfixer.dagger.DaggerContextComponent;
+import mx.dev.franco.automusictagfixer.di.DaggerContextComponent;
 import mx.dev.franco.automusictagfixer.identifier.GnService;
 import mx.dev.franco.automusictagfixer.network.ConnectivityChangesDetector;
 import mx.dev.franco.automusictagfixer.receivers.DetectorRemovableMediaStorages;

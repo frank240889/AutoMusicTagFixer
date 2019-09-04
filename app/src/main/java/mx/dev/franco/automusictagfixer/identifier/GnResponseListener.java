@@ -54,11 +54,6 @@ public class GnResponseListener implements IGnMusicIdFileEvents, IGnCancellable 
 
     @Override
     public synchronized void musicIdFileStatusEvent(GnMusicIdFileInfo gnMusicIdFileInfo, GnMusicIdFileCallbackStatus gnMusicIdFileCallbackStatus, long currentFile, long totalFiles, IGnCancellable iGnCancellable) {
-        //Retrieve current status of current tracked id song
-        //check the current state
-        //Log.d(TAG,"isCancelled musicidfilesstatusevent() " + mCancelled);
-        //Log.d(TAG,"GNThreadName " + Thread.currentThread().getName());
-        //Log.d(TAG,"GNThreadID " + Thread.currentThread().getId());
         if(mCancelled){
             //if(!Thread.currentThread().isInterrupted())
             //    Thread.currentThread().interrupt();
@@ -79,10 +74,7 @@ public class GnResponseListener implements IGnMusicIdFileEvents, IGnCancellable 
 
     @Override
     public synchronized void gatherFingerprint(GnMusicIdFileInfo fileInfo, long l, long l1, IGnCancellable iGnCancellable) {
-        //Log.d(TAG,"isCancelled gatherFingerprint" + mCancelled);
         if(mCancelled){
-            //if(!Thread.currentThread().isInterrupted())
-            //    Thread.currentThread().interrupt();
             clear();
             return;
         }

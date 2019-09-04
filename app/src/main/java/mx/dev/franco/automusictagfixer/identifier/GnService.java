@@ -2,10 +2,6 @@ package mx.dev.franco.automusictagfixer.identifier;
 
 import android.app.Application;
 import android.content.Context;
-import android.content.Intent;
-import android.os.Handler;
-import android.os.Looper;
-import android.support.v4.content.LocalBroadcastManager;
 
 import com.crashlytics.android.Crashlytics;
 import com.gracenote.gnsdk.GnDescriptor;
@@ -18,6 +14,9 @@ import com.gracenote.gnsdk.GnRegion;
 import com.gracenote.gnsdk.GnUser;
 import com.gracenote.gnsdk.GnUserStore;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
 import mx.dev.franco.automusictagfixer.utilities.Settings;
@@ -27,20 +26,14 @@ import mx.dev.franco.automusictagfixer.utilities.Settings;
  */
 
 public class GnService {
-
-    public interface OnApiListener {
-        void onApiInitialized();
-        void onApiNotInitialized();
-    }
-
     private static final java.lang.String TAG = GnService.class.getName();
     //We can set a Context in static field while we call getApplicationContext() to avoid memory leaks, because
     //if we use the activity Context, this activity can remain in memory due is still in use its Context
-    private static Context sContext;
+    private Context sContext;
+    private GnManager sGnManager;
+    private GnUser sGnUser;
+    private GnLocale sGnLocale;
     private static GnService sGnService;
-    private static GnManager sGnManager;
-    private static GnUser sGnUser;
-    private static GnLocale sGnLocale;
 
     /*Production account*/
     private static final String sGnsdkLicenseString =
@@ -49,9 +42,10 @@ public class GnService {
     private static final String sGnsdkClientTag = "6CB01DB21FA7F47FDBF1FD6DCDFA8E88";
     private static final String sAppString = "AutomaticMusicTagFixer";
     /***************************/
-    private static volatile boolean sApiInitialized = false;
-    private static volatile boolean sIsInitializing = false;
-    private static volatile int sCounter = 0;
+    private volatile boolean sApiInitialized = false;
+    private volatile boolean sIsInitializing = false;
+    private volatile int sCounter = 0;
+    private HashMap<String,String> mGnStatusToDisplay;
 
     /**
      * We don't need instances of this class
@@ -60,6 +54,15 @@ public class GnService {
         if(sContext == null) {
             sContext = context.getApplicationContext();
         }
+    }
+
+    private void initStates() {
+        mGnStatusToDisplay = new HashMap<>();
+        mGnStatusToDisplay.put(Constants.State.BEGIN_PROCESSING,Constants.State.BEGIN_PROCESSING_MSG);
+        mGnStatusToDisplay.put(Constants.State.QUERYING_INFO,Constants.State.QUERYING_INFO_MSG);
+        mGnStatusToDisplay.put(Constants.State.COMPLETE_IDENTIFICATION,Constants.State.COMPLETE_IDENTIFICATION_MSG);
+        mGnStatusToDisplay.put(Constants.State.STATUS_ERROR,Constants.State.STATUS_ERROR_MSG);
+        mGnStatusToDisplay.put(Constants.State.STATUS_PROCESSING_ERROR,Constants.State.STATUS_PROCESSING_ERROR_MSG);
     }
 
     public static GnService getInstance() {
@@ -83,32 +86,18 @@ public class GnService {
             Thread thread = new Thread(() -> {
                 initApi();
                 if(isApiInitialized()) {
-                    Handler handler = new Handler(Looper.getMainLooper());
-                    handler.post(() -> handleResult(true));
                     sCounter = 0;
                 }
                 else {
                     sCounter++;
-                    if(sCounter == 5) {
-                        Handler handler = new Handler(Looper.getMainLooper());
-                        handler.post(() -> handleResult(false));
-                    }
-                    else {
-                        Handler handler = new Handler(Looper.getMainLooper());
-                        handler.post(this::initializeAPI);
+                    if(sCounter <= 5) {
+                        initializeAPI();
                     }
                 }
 
             });
             thread.start();
         }
-    }
-
-    private void handleResult(boolean b) {
-        Intent intent = new Intent();
-        intent.setAction(Constants.GnServiceActions.ACTION_API_INITIALIZATION_RESULT);
-        intent.putExtra(Constants.GnServiceActions.INITIALIZATION_RESULT, b);
-        LocalBroadcastManager.getInstance(sContext).sendBroadcast(intent);
     }
 
     private void initApi() {
@@ -152,15 +141,15 @@ public class GnService {
         return sIsInitializing;
     }
 
-    public synchronized void setApiInitializing(boolean initializing) {
+    private synchronized void setApiInitializing(boolean initializing) {
         sIsInitializing = initializing;
     }
 
-    public synchronized void setApiInitialized(boolean initialized) {
+    private synchronized void setApiInitialized(boolean initialized) {
         sApiInitialized = initialized;
     }
 
-    public synchronized void setGnManager(GnManager manager) {
+    private synchronized void setGnManager(GnManager manager) {
         sGnManager = manager;
     }
 
@@ -168,7 +157,7 @@ public class GnService {
         return sGnManager;
     }
 
-    public synchronized void setGnUser(GnUser gnUser) {
+    private synchronized void setGnUser(GnUser gnUser) {
         sGnUser = gnUser;
     }
 
@@ -176,11 +165,15 @@ public class GnService {
         return sGnUser;
     }
 
-    public synchronized void setGnLocale(GnLocale gnLocale) {
+    private synchronized void setGnLocale(GnLocale gnLocale) {
         sGnLocale = gnLocale;
     }
 
     public synchronized GnLocale getGnLocale() {
         return sGnLocale;
+    }
+
+    public Map<String, String> getStates() {
+        return mGnStatusToDisplay;
     }
 }

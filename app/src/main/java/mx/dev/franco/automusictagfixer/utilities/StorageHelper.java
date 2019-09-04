@@ -19,7 +19,7 @@ import java.nio.channels.FileChannel;
  * Created by franco on 12/01/18.
  */
 
-public class StorageHelper{
+public class StorageHelper {
     private static Context sContext;
     private static StorageHelper sStorage;
     private SparseArray<String> mBasePaths = new SparseArray<>();
