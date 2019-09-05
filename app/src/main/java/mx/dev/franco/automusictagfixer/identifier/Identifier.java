@@ -12,4 +12,6 @@ public interface Identifier<I, R> {
         void onIdentificationCancelled(I file);
         void onIdentificationNotFound(I file);
     }
+
+    interface IdentificationResults {}
 }
