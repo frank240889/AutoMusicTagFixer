@@ -4,7 +4,6 @@ import android.os.AsyncTask;
 
 import javax.inject.Inject;
 
-import mx.dev.franco.automusictagfixer.AutoMusicTagFixer;
 import mx.dev.franco.automusictagfixer.interfaces.AsyncOperation;
 import mx.dev.franco.automusictagfixer.interfaces.Destructible;
 import mx.dev.franco.automusictagfixer.persistence.room.TrackRoomDatabase;
@@ -20,7 +19,7 @@ public class TrackDetailInteractor implements
     public TrackRoomDatabase trackRoomDatabase;
 
     public TrackDetailInteractor(){
-        AutoMusicTagFixer.getContextComponent().inject(this);
+
     }
 
     public void setLoaderListener(AsyncOperation<Void, TrackDataLoader.TrackDataItem, Void, String> loader){

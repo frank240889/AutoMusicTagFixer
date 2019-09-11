@@ -38,19 +38,17 @@ import java.util.concurrent.Executors;
 
 import javax.inject.Inject;
 
-import mx.dev.franco.automusictagfixer.AutoMusicTagFixer;
 import mx.dev.franco.automusictagfixer.BuildConfig;
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.UI.main.MainActivity;
 import mx.dev.franco.automusictagfixer.fixer.Fixer;
 import mx.dev.franco.automusictagfixer.fixer.IdLoader;
 import mx.dev.franco.automusictagfixer.fixer.TrackLoader;
+import mx.dev.franco.automusictagfixer.identifier.GnApiService;
 import mx.dev.franco.automusictagfixer.identifier.GnResponseListener;
-import mx.dev.franco.automusictagfixer.identifier.GnService;
 import mx.dev.franco.automusictagfixer.identifier.TrackIdentifier;
 import mx.dev.franco.automusictagfixer.interfaces.InfoTrackLoader;
 import mx.dev.franco.automusictagfixer.interfaces.TrackListLoader;
-import mx.dev.franco.automusictagfixer.network.ConnectivityDetector;
 import mx.dev.franco.automusictagfixer.persistence.repository.TrackRepository;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.persistence.room.TrackRoomDatabase;
@@ -97,7 +95,6 @@ public class FixerTrackService extends Service implements GnResponseListener.GnL
     @Override
     public void onCreate(){
         super.onCreate();
-        AutoMusicTagFixer.getContextComponent().inject(this);
         setupReceiver();
         notifyStartingCorrection();
     }
@@ -187,13 +184,8 @@ public class FixerTrackService extends Service implements GnResponseListener.GnL
 
 
     private boolean canContinue(){
-        if(!ConnectivityDetector.sIsConnected){
-            ConnectivityDetector.getInstance(getApplicationContext()).onStartTestingNetwork();
-            return false;
-        }
-
-        if(GnService.getInstance().isApiInitializing()|| !GnService.getInstance().isApiInitialized()){
-            GnService.getInstance().initializeAPI();
+        if(GnApiService.getInstance().isApiInitializing()|| !GnApiService.getInstance().isApiInitialized()){
+            GnApiService.getInstance().initializeAPI();
             return false;
         }
 

@@ -12,7 +12,6 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-import mx.dev.franco.automusictagfixer.AutoMusicTagFixer;
 import mx.dev.franco.automusictagfixer.interfaces.AsyncOperation;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.persistence.room.TrackDAO;
@@ -41,7 +40,7 @@ public class AsyncFileReader extends AsyncTask<Void, Void, Void> {
     private boolean mEmptyList = true;
 
     public AsyncFileReader(){
-        AutoMusicTagFixer.getContextComponent().inject(this);
+
     }
 
     public void setListener(AsyncOperation<Void, Boolean, Void, Void> mediaStoreRetrieverListener){

@@ -1,26 +1,57 @@
 package mx.dev.franco.automusictagfixer;
 
-import android.content.Context;
-import android.support.test.InstrumentationRegistry;
-import android.support.test.runner.AndroidJUnit4;
-
 import org.junit.Test;
-import org.junit.runner.RunWith;
-
-import static org.junit.Assert.assertEquals;
 
 /**
  * Instrumentation test, which will execute on an Android device.
  *
  * @see <a href="http://d.android.com/tools/testing">Testing documentation</a>
  */
-@RunWith(AndroidJUnit4.class)
+
 public class ExampleInstrumentedTest {
     @Test
     public void useAppContext() throws Exception {
         // Context of the app under test.
-        Context appContext = InstrumentationRegistry.getTargetContext();
+        /*Context appContext = InstrumentationRegistry.getTargetContext();
 
-        assertEquals("mx.dev.franco.automusictagfixer", appContext.getPackageName());
+        assertEquals("mx.dev.franco.automusictagfixer", appContext.getPackageName());*/
+    }
+
+
+    @Test
+    public void testIdentification() {
+        /*File file = new File("");
+        String abs = file.getAbsolutePath() + "/6_AM.MP3";
+        GnApiService.init(InstrumentationRegistry.getTargetContext().getApplicationContext());
+        IdentifierFactory factory = new IdentifierFactory(GnApiService.getInstance(), null);
+        Identifier<Track, List<GnIdentifier.IdentificationResults>> identifier = factory.create(IdentifierFactory.FINGERPRINT_IDENTIFIER);
+        Track track = new Track("Me faltas tu", "Los temerarios", "", abs);
+        identifier.registerCallback(new Identifier.IdentificationListener<List<GnIdentifier.IdentificationResults>, Track>() {
+            @Override
+            public void onIdentificationStart(Track file) {
+
+            }
+
+            @Override
+            public void onIdentificationFinished(List<GnIdentifier.IdentificationResults> result) {
+
+            }
+
+            @Override
+            public void onIdentificationError(Track file, String error) {
+
+            }
+
+            @Override
+            public void onIdentificationCancelled(Track file) {
+
+            }
+
+            @Override
+            public void onIdentificationNotFound(Track file) {
+
+            }
+        });
+        identifier.identify(track);*/
     }
 }

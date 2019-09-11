@@ -8,7 +8,6 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-import mx.dev.franco.automusictagfixer.AutoMusicTagFixer;
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.UI.main.ViewWrapper;
 import mx.dev.franco.automusictagfixer.persistence.repository.TrackRepository;
@@ -34,7 +33,6 @@ public class SearchListViewModel extends ViewModel {
     public AbstractSharedPreferences sharedPreferences;
 
     public SearchListViewModel() {
-        AutoMusicTagFixer.getContextComponent().inject(this);
         mTracks = trackRepository.getSearchResults();
     }
 

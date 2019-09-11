@@ -1,6 +1,5 @@
 package mx.dev.franco.automusictagfixer.identifier;
 
-import android.app.Application;
 import android.content.Context;
 
 import com.crashlytics.android.Crashlytics;
@@ -18,22 +17,33 @@ import java.util.HashMap;
 import java.util.Map;
 
 import mx.dev.franco.automusictagfixer.R;
-import mx.dev.franco.automusictagfixer.utilities.Constants;
 import mx.dev.franco.automusictagfixer.utilities.Settings;
 
 /**
  * Created by franco on 5/07/17.
  */
 
-public class GnService {
-    private static final java.lang.String TAG = GnService.class.getName();
+public class GnApiService {
+
+    public static final String BEGIN_PROCESSING = "kMusicIdFileCallbackStatusProcessingBegin";
+    public static final String QUERYING_INFO = "kMusicIdFileCallbackStatusFileInfoQuery";
+    public static final String COMPLETE_IDENTIFICATION = "kMusicIdFileCallbackStatusProcessingComplete";
+    public static final String STATUS_ERROR = "kMusicIdFileCallbackStatusError";
+    public static final String STATUS_PROCESSING_ERROR = "kMusicIdFileCallbackStatusProcessingError";
+
+    public static final String BEGIN_PROCESSING_MSG = "Iniciando identificación...";
+    public static final String QUERYING_INFO_MSG = "Identificando, espere por favor...";
+    public static final String COMPLETE_IDENTIFICATION_MSG = "Identificación completa";
+    public static final String STATUS_ERROR_MSG = "Error";
+    public static final String STATUS_PROCESSING_ERROR_MSG = "Error al procesar ";
+    private static final java.lang.String TAG = GnApiService.class.getName();
     //We can set a Context in static field while we call getApplicationContext() to avoid memory leaks, because
     //if we use the activity Context, this activity can remain in memory due is still in use its Context
     private Context sContext;
     private GnManager sGnManager;
     private GnUser sGnUser;
     private GnLocale sGnLocale;
-    private static GnService sGnService;
+    private static GnApiService sGnApiService;
 
     /*Production account*/
     private static final String sGnsdkLicenseString =
@@ -50,31 +60,29 @@ public class GnService {
     /**
      * We don't need instances of this class
      */
-    private GnService(Context context){
+    private GnApiService(Context context){
         if(sContext == null) {
             sContext = context.getApplicationContext();
+            initStates();
         }
     }
 
     private void initStates() {
         mGnStatusToDisplay = new HashMap<>();
-        mGnStatusToDisplay.put(Constants.State.BEGIN_PROCESSING,Constants.State.BEGIN_PROCESSING_MSG);
-        mGnStatusToDisplay.put(Constants.State.QUERYING_INFO,Constants.State.QUERYING_INFO_MSG);
-        mGnStatusToDisplay.put(Constants.State.COMPLETE_IDENTIFICATION,Constants.State.COMPLETE_IDENTIFICATION_MSG);
-        mGnStatusToDisplay.put(Constants.State.STATUS_ERROR,Constants.State.STATUS_ERROR_MSG);
-        mGnStatusToDisplay.put(Constants.State.STATUS_PROCESSING_ERROR,Constants.State.STATUS_PROCESSING_ERROR_MSG);
+        mGnStatusToDisplay.put(BEGIN_PROCESSING,BEGIN_PROCESSING_MSG);
+        mGnStatusToDisplay.put(QUERYING_INFO,QUERYING_INFO_MSG);
+        mGnStatusToDisplay.put(COMPLETE_IDENTIFICATION,COMPLETE_IDENTIFICATION_MSG);
+        mGnStatusToDisplay.put(STATUS_ERROR,STATUS_ERROR_MSG);
+        mGnStatusToDisplay.put(STATUS_PROCESSING_ERROR,STATUS_PROCESSING_ERROR_MSG);
     }
 
-    public static GnService getInstance() {
-        return sGnService;
+    public static GnApiService getInstance() {
+        return sGnApiService;
     }
 
     public static void init(Context application) {
-        if(!(application instanceof Application))
-            throw new IllegalArgumentException("Required app context.");
-
-        if(sGnService == null){
-            sGnService = new GnService(application);
+        if(sGnApiService == null){
+            sGnApiService = new GnApiService(application.getApplicationContext());
         }
     }
 
@@ -83,20 +91,16 @@ public class GnService {
      */
     public void initializeAPI(){
         if(!isApiInitialized() && !isApiInitializing()) {
-            Thread thread = new Thread(() -> {
-                initApi();
-                if(isApiInitialized()) {
-                    sCounter = 0;
+            initApi();
+            if(isApiInitialized()) {
+                sCounter = 0;
+            }
+            else {
+                sCounter++;
+                if(sCounter <= 5) {
+                    initializeAPI();
                 }
-                else {
-                    sCounter++;
-                    if(sCounter <= 5) {
-                        initializeAPI();
-                    }
-                }
-
-            });
-            thread.start();
+            }
         }
     }
 
@@ -106,13 +110,13 @@ public class GnService {
             GnManager gnManager = new GnManager(sContext.getApplicationContext(),
                     sGnsdkLicenseString,
                     GnLicenseInputMode.kLicenseInputModeString);
-            GnService.getInstance().setGnManager(gnManager);
+            setGnManager(gnManager);
             GnUser gnUser = new GnUser(new GnUserStore(
                     sContext.getApplicationContext()),
                     sGnsdkClientId,
                     sGnsdkClientTag,
-                    GnService.sAppString);
-            GnService.getInstance().setGnUser(gnUser);
+                    GnApiService.sAppString);
+            setGnUser(gnUser);
             GnLocale gnLocale = new GnLocale(GnLocaleGroup.kLocaleGroupMusic,
                     Settings.SETTING_LANGUAGE,
                     GnRegion.kRegionGlobal,
@@ -120,16 +124,16 @@ public class GnService {
                     gnUser);
 
             gnLocale.setGroupDefault();
-            GnService.getInstance().setGnLocale(gnLocale);
-            GnService.getInstance().setApiInitializing(false);
-            GnService.getInstance().setApiInitialized(true);
+            setGnLocale(gnLocale);
+            setApiInitializing(false);
+            setApiInitialized(true);
         }
         catch (GnException e) {
             e.printStackTrace();
             Crashlytics.logException(e);
             Crashlytics.log(sContext.getApplicationContext().getString(R.string.could_not_init_api));
-            GnService.getInstance().setApiInitializing(false);
-            GnService.getInstance().setApiInitialized(false);
+            setApiInitializing(false);
+            setApiInitialized(false);
         }
     }
 

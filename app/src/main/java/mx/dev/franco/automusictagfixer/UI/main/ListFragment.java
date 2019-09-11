@@ -39,7 +39,6 @@ import java.util.Objects;
 
 import javax.inject.Inject;
 
-import mx.dev.franco.automusictagfixer.AutoMusicTagFixer;
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.UI.BaseFragment;
 import mx.dev.franco.automusictagfixer.UI.sd_card_instructions.SdCardInstructionsActivity;
@@ -99,7 +98,6 @@ public class ListFragment extends BaseFragment implements
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        AutoMusicTagFixer.getContextComponent().inject(this);
         mAdapter = new TrackAdapter(this);
         mListViewModel = ViewModelProviders.of(this).get(ListViewModel.class);
 
@@ -578,40 +576,13 @@ public class ListFragment extends BaseFragment implements
     }
 
     @Override
-    public void onApiInitialized() {
-        if(ContextCompat.checkSelfPermission(getActivity(),
-                Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                != PackageManager.PERMISSION_GRANTED){
-            onMessage(R.string.title_dialog_permision);
-        }
-        else {
-            mListViewModel.onApiInitialized();
-        }
-    }
-
-    @Override
-    public void onApiNotInitialized() {
-        onMessage(R.string.could_not_init_api);
-    }
-
-    @Override
     public void onBackPressed() {
         callSuperOnBackPressed();
-    }
-
-    @Override
-    public void onNetworkConnected(Void param) {
-        onMessage(R.string.internet_connection_restored);
     }
 
     private void onCheckAll(Boolean checkAll) {
         if(!checkAll)
             checkAll();
-    }
-
-    @Override
-    public void onNetworkDisconnected(Void param) {
-        onMessage(R.string.connection_lost);
     }
 
     @Override

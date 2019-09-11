@@ -1,6 +1,7 @@
 package mx.dev.franco.automusictagfixer.identifier;
 
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Result implements Identifier.IdentificationResults {
     private String title;
@@ -9,12 +10,12 @@ public class Result implements Identifier.IdentificationResults {
     private String trackNumber;
     private String trackYear;
     private String genre;
-    private byte[] cover;
+    private List<byte[]> covers = new ArrayList<>();
 
     public Result() {
     }
 
-    public Result(String title, String artist, String album, String trackNumber, String trackYear, String genre, byte[] cover) {
+    public Result(String title, String artist, String album, String trackNumber, String trackYear, String genre, List<byte[]> covers) {
         this();
         this.title = title;
         this.artist = artist;
@@ -22,7 +23,7 @@ public class Result implements Identifier.IdentificationResults {
         this.trackNumber = trackNumber;
         this.trackYear = trackYear;
         this.genre = genre;
-        this.cover = cover;
+        this.covers.addAll(covers);
     }
 
     public String getTitle() {
@@ -73,24 +74,11 @@ public class Result implements Identifier.IdentificationResults {
         this.genre = genre;
     }
 
-    public byte[] getCover() {
-        return cover;
+    public List<byte[]> getCovers() {
+        return covers;
     }
 
-    public void setCover(byte[] cover) {
-        this.cover = cover;
-    }
-
-    @Override
-    public String toString() {
-        return "Result{" +
-                "title='" + title + '\'' +
-                ", artist='" + artist + '\'' +
-                ", album='" + album + '\'' +
-                ", trackNumber='" + trackNumber + '\'' +
-                ", trackYear='" + trackYear + '\'' +
-                ", genre='" + genre + '\'' +
-                ", cover=" + Arrays.toString(cover) +
-                '}';
+    public void addCover(byte[] cover) {
+        this.covers.add(cover);
     }
 }

@@ -4,9 +4,7 @@ import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 
-import mx.dev.franco.automusictagfixer.identifier.GnService;
 import mx.dev.franco.automusictagfixer.interfaces.OnBackPressedListener;
-import mx.dev.franco.automusictagfixer.interfaces.OnTestingNetwork;
 
 /**
  * Base fragment that abstract the common functionality for fragments
@@ -15,7 +13,7 @@ import mx.dev.franco.automusictagfixer.interfaces.OnTestingNetwork;
  * @author Franco Castillo
  */
 public abstract class BaseFragment extends Fragment implements
-        OnBackPressedListener, GnService.OnApiListener, OnTestingNetwork.OnTestingResult<Void> {
+        OnBackPressedListener {
     public static final String BASE_FRAGMENT_TAG = BaseFragment.class.getName();
     public static String TAG;
     protected OnConfirmBackPressedListener mOnConfirmBackPressedListener;

@@ -3,17 +3,13 @@ package mx.dev.franco.automusictagfixer;
 import android.app.Application;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.res.Configuration;
-import android.net.ConnectivityManager;
 import android.support.v7.app.AppCompatDelegate;
 
 import com.crashlytics.android.Crashlytics;
 import com.crashlytics.android.core.CrashlyticsCore;
 
 import io.fabric.sdk.android.Fabric;
-import mx.dev.franco.automusictagfixer.di.DaggerContextComponent;
-import mx.dev.franco.automusictagfixer.identifier.GnService;
-import mx.dev.franco.automusictagfixer.network.ConnectivityChangesDetector;
+import mx.dev.franco.automusictagfixer.identifier.GnApiService;
 import mx.dev.franco.automusictagfixer.receivers.DetectorRemovableMediaStorages;
 import mx.dev.franco.automusictagfixer.utilities.StorageHelper;
 import mx.dev.franco.automusictagfixer.utilities.Tagger;
@@ -24,8 +20,6 @@ import mx.dev.franco.automusictagfixer.utilities.Tagger;
  */
 
 public final class AutoMusicTagFixer extends Application {
-    private static ContextComponent sContextComponent;
-    private ConnectivityChangesDetector mConnectivityChangesDetector;
     private DetectorRemovableMediaStorages mDetectorRemovableMediaStorages;
     // Called when the application is starting, before any other application objects have been created.
     // Overriding this method is totally optional!
@@ -33,11 +27,8 @@ public final class AutoMusicTagFixer extends Application {
     public void onCreate() {
         super.onCreate();
         Tagger.init(this);
-        GnService.init(this);
-        GnService.getInstance().initializeAPI();
-        sContextComponent = DaggerContextComponent.builder().
-                contextModule(new ContextModule(this)).
-                build();
+        GnApiService.init(this);
+        //GnApiService.getInstance().initializeAPI();
 
 
         //Fabric.with(this, new Crashlytics());
@@ -47,11 +38,6 @@ public final class AutoMusicTagFixer extends Application {
                 .build();
         // Initialize Fabric with the debug-disabled crashlytics.
         Fabric.with(this, crashlyticsKit);
-        //Detect connectivity changes
-        mConnectivityChangesDetector = new ConnectivityChangesDetector();
-        IntentFilter filterConnectivity = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
-
-        registerReceiver(mConnectivityChangesDetector,filterConnectivity);
 
         //Detect if a media is removed or added while app is running
         mDetectorRemovableMediaStorages = new DetectorRemovableMediaStorages();
@@ -68,24 +54,5 @@ public final class AutoMusicTagFixer extends Application {
         //LeakCanary.install(this);
         //Stetho.initializeWithDefaults(this);
         AppCompatDelegate.setCompatVectorFromResourcesEnabled(true);
-    }
-
-    // Called by the system when the device configuration changes while your component is running.
-    // Overriding this method is totally optional!
-    @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-    }
-
-    // This is called when the overall system is running low on memory,
-    // and would like actively running processes to tighten their belts.
-    // Overriding this method is totally optional!
-    @Override
-    public void onLowMemory() {
-        super.onLowMemory();
-    }
-
-    public static ContextComponent getContextComponent(){
-        return sContextComponent;
     }
 }

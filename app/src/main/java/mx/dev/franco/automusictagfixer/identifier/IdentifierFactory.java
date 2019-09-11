@@ -12,19 +12,19 @@ public class IdentifierFactory {
     public static final int FINGERPRINT_IDENTIFIER = 1;
     public static final int METADATA_IDENTIFIER = 2;
 
-    private GnService gnService;
+    private GnApiService gnApiService;
     private AbstractSharedPreferences sharedPreferences;
 
     @Inject
-    public IdentifierFactory(GnService gnService, AbstractSharedPreferences sharedPreferences){
-        this.gnService = gnService;
+    public IdentifierFactory(GnApiService gnApiService, AbstractSharedPreferences sharedPreferences){
+        this.gnApiService = gnApiService;
         this.sharedPreferences = sharedPreferences;
     }
 
     @Nullable
     public Identifier<Track, List<GnIdentifier.IdentificationResults>> create(int identifierType) {
         if(identifierType == FINGERPRINT_IDENTIFIER)
-            return new GnIdentifier(gnService, sharedPreferences);
+            return new GnIdentifier(gnApiService, sharedPreferences);
         else
             return null;
     }

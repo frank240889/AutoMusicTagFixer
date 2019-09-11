@@ -30,7 +30,6 @@ import mx.dev.franco.automusictagfixer.UI.BaseFragment;
 import mx.dev.franco.automusictagfixer.UI.about.ScrollingAboutActivity;
 import mx.dev.franco.automusictagfixer.UI.faq.QuestionsActivity;
 import mx.dev.franco.automusictagfixer.UI.settings.SettingsActivity;
-import mx.dev.franco.automusictagfixer.identifier.GnService;
 import mx.dev.franco.automusictagfixer.interfaces.OnTestingNetwork;
 import mx.dev.franco.automusictagfixer.receivers.ResponseReceiver;
 import mx.dev.franco.automusictagfixer.services.FixerTrackService;
@@ -233,14 +232,6 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
             case Constants.GnServiceActions.ACTION_API_INITIALIZATION_RESULT:
                 boolean res = intent.getBooleanExtra(Constants.GnServiceActions.INITIALIZATION_RESULT, false);
                 fragmentList = getSupportFragmentManager().getFragments();
-                for(Fragment fragment:fragmentList){
-                    if(fragment instanceof GnService.OnApiListener){
-                        if(res)
-                            ((GnService.OnApiListener) fragment).onApiInitialized();
-                        else
-                            ((GnService.OnApiListener) fragment).onApiNotInitialized();
-                    }
-                }
 
                 break;
             case Constants.Actions.ACTION_CONNECTION_LOST:

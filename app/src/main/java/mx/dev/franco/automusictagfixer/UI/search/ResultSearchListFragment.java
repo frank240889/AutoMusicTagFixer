@@ -240,28 +240,8 @@ public class ResultSearchListFragment extends BaseFragment implements
     }
 
     @Override
-    public void onApiInitialized() {
-        //Do nothing
-    }
-
-    @Override
-    public void onApiNotInitialized() {
-
-    }
-
-    @Override
     public void onBackPressed() {
         callSuperOnBackPressed();
-    }
-
-    @Override
-    public void onNetworkConnected(Void param) {
-        //Do nothing
-    }
-
-    @Override
-    public void onNetworkDisconnected(Void param) {
-        //Do  nothing
     }
 
     @Override

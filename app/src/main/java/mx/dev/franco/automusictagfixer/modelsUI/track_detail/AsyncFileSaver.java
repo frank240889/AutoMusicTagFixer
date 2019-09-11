@@ -11,7 +11,6 @@ import java.io.IOException;
 
 import javax.inject.Inject;
 
-import mx.dev.franco.automusictagfixer.AutoMusicTagFixer;
 import mx.dev.franco.automusictagfixer.utilities.ImageFileSaver;
 
 /**
@@ -40,7 +39,6 @@ public class AsyncFileSaver extends AsyncTask<Void, Void, String> {
         mTitle = data[0];
         mArtist = data[1];
         mAlbum = data[2];
-        AutoMusicTagFixer.getContextComponent().inject(this);
     }
 
     public void setOnSavingListener(OnSaveListener listener){

@@ -19,7 +19,6 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-import mx.dev.franco.automusictagfixer.AutoMusicTagFixer;
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.UI.AudioHolder;
 import mx.dev.franco.automusictagfixer.covermanager.CoverManager;
@@ -46,7 +45,6 @@ public class SearchTrackAdapter extends RecyclerView.Adapter<FoundItemHolder> im
 
     public SearchTrackAdapter(FoundItemHolder.ClickListener listener){
         mListener = listener;
-        AutoMusicTagFixer.getContextComponent().inject(this);
     }
 
 

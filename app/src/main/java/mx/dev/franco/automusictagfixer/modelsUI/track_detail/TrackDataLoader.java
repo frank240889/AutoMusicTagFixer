@@ -15,7 +15,6 @@ import java.io.IOException;
 
 import javax.inject.Inject;
 
-import mx.dev.franco.automusictagfixer.AutoMusicTagFixer;
 import mx.dev.franco.automusictagfixer.interfaces.AsyncOperation;
 import mx.dev.franco.automusictagfixer.persistence.room.TrackRoomDatabase;
 import mx.dev.franco.automusictagfixer.utilities.Tagger;
@@ -33,7 +32,7 @@ public class TrackDataLoader extends AsyncTask<Integer, Void, TrackDataLoader.Tr
     public TrackRoomDatabase trackRoomDatabase;
 
     public TrackDataLoader(){
-        AutoMusicTagFixer.getContextComponent().inject(this);
+
     }
 
     public void setListener(AsyncOperation<Void, TrackDataItem ,Void, String> listener){

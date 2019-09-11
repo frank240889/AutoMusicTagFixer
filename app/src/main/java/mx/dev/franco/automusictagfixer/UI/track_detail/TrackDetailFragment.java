@@ -1175,33 +1175,6 @@ public class TrackDetailFragment extends BaseFragment implements EditableView,
         });
     }
 
-    @Override
-    public void onApiInitialized() {
-        Snackbar snackbar;
-        snackbar = AndroidUtils.getSnackbar(mLayout, getActivity().getApplicationContext());
-        snackbar.setText(R.string.api_initialized2);
-        snackbar.show();
-        mTrackDetailPresenter.onApiInitialized();
-    }
-
-    @Override
-    public void onApiNotInitialized() {
-        Snackbar snackbar;
-        snackbar = AndroidUtils.getSnackbar(mLayout, getActivity().getApplicationContext());
-        snackbar.setText(R.string.could_not_init_api);
-        snackbar.show();
-    }
-
-    @Override
-    public void onNetworkConnected(Void param) {
-        //Do nothing
-    }
-
-    @Override
-    public void onNetworkDisconnected(Void param) {
-        mTrackDetailPresenter.cancelIdentification();
-    }
-
     public void load(Bundle inputBundle){
         Bundle bundle = inputBundle == null ? getArguments() : inputBundle;
         if(bundle != null)

@@ -59,7 +59,7 @@ public class TrackIdentifier implements  GnResponseListener.GnListener{
         mGnListener.onStartIdentification(mTrack);
         //set options of track id process
         try {
-            mGnMusicIdFile = new GnMusicIdFile(GnService.getInstance().getGnUser(), mGnResponseListener);
+            mGnMusicIdFile = new GnMusicIdFile(GnApiService.getInstance().getGnUser(), mGnResponseListener);
             mGnMusicIdFile.options().lookupData(GnLookupData.kLookupDataContent, true);
             Log.d("Identifying Language",Settings.SETTING_LANGUAGE.name());
             mGnMusicIdFile.options().preferResultLanguage(Settings.SETTING_LANGUAGE);

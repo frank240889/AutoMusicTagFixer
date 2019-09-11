@@ -6,17 +6,15 @@ import java.util.concurrent.Executors;
 
 import javax.inject.Inject;
 
-import mx.dev.franco.automusictagfixer.AutoMusicTagFixer;
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.fixer.Fixer;
+import mx.dev.franco.automusictagfixer.identifier.GnApiService;
 import mx.dev.franco.automusictagfixer.identifier.GnResponseListener;
-import mx.dev.franco.automusictagfixer.identifier.GnService;
 import mx.dev.franco.automusictagfixer.identifier.TrackIdentifier;
 import mx.dev.franco.automusictagfixer.interfaces.AsyncOperation;
 import mx.dev.franco.automusictagfixer.interfaces.Cache;
 import mx.dev.franco.automusictagfixer.interfaces.Destructible;
 import mx.dev.franco.automusictagfixer.interfaces.EditableView;
-import mx.dev.franco.automusictagfixer.network.ConnectivityDetector;
 import mx.dev.franco.automusictagfixer.persistence.cache.DownloadedTrackDataCacheImpl;
 import mx.dev.franco.automusictagfixer.persistence.repository.TrackRepository;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
@@ -64,14 +62,11 @@ public class TrackDetailPresenter implements
     @Inject
     public ResourceManager resourceManager;
     @Inject
-    public ConnectivityDetector connectivityDetector;
-    @Inject
-    public GnService gnService;
+    public GnApiService gnApiService;
     @Inject
     public TrackRepository trackRepository;
 
     public TrackDetailPresenter(EditableView view, TrackDetailInteractor interactor){
-        AutoMusicTagFixer.getContextComponent().inject(this);
         mView = view;
         mInteractor = interactor;
         mInteractor.setLoaderListener(this);
@@ -271,8 +266,7 @@ public class TrackDetailPresenter implements
         mIdentifier = null;
         mView = null;
         resourceManager = null;
-        connectivityDetector = null;
-        gnService = null;
+        gnApiService = null;
         mInteractor.destroy();
     }
 
@@ -321,34 +315,14 @@ public class TrackDetailPresenter implements
             }
             //There are no cached results, make the request
             else {
-                //Check connectivity
-                if(!ConnectivityDetector.sIsConnected){
-                    String message;
-
-                    if(mRecognition == TrackIdentifier.ALL_TAGS) {
-                        message = resourceManager.getString(R.string.no_internet_connection_semi_automatic_mode);
-                    }
-                    else {
-                        message = resourceManager.getString(R.string.no_internet_connection_download_cover);
-                    }
-
-                    if(mView != null) {
-                        mView.onCorrectionError(message, resourceManager.getString(R.string.add_manual));
-                        mView.onEnableFabs();
-                    }
-                    connectivityDetector.onStartTestingNetwork();
-                    mPendingIdentification = true;
-                    return;
-                }
-
                 //Check if API is available
-                if(!GnService.getInstance().isApiInitialized() || GnService.getInstance().isApiInitializing()) {
+                if(!GnApiService.getInstance().isApiInitialized() || GnApiService.getInstance().isApiInitializing()) {
                     if(mView != null) {
                         mView.onCorrectionError(resourceManager.getString(R.string.initializing_recognition_api), null);
                         mView.onEnableFabs();
                     }
 
-                    gnService.initializeAPI();
+                    gnApiService.initializeAPI();
                     mPendingIdentification = true;
                     return;
                 }

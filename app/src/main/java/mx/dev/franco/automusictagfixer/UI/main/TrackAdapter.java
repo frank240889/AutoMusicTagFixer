@@ -20,7 +20,6 @@ import java.util.concurrent.Executors;
 
 import javax.inject.Inject;
 
-import mx.dev.franco.automusictagfixer.AutoMusicTagFixer;
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.covermanager.CoverManager;
 import mx.dev.franco.automusictagfixer.interfaces.AsyncOperation;
@@ -68,7 +67,6 @@ public class TrackAdapter extends RecyclerView.Adapter<AudioItemHolder> implemen
     public TrackAdapter(AudioItemHolder.ClickListener listener){
         this();
         mListener = listener;
-        AutoMusicTagFixer.getContextComponent().inject(this);
         if(listener instanceof OnSortingListener)
             mOnSortingListener = (OnSortingListener) listener;
     }

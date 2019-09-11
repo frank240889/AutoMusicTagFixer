@@ -22,6 +22,8 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:targetApi="n">
+        <uses-library android:name="android.test.runner"
+            android:required="false" />
         <activity
             android:name=".UI.SplashActivity"
             android:configChanges="orientation|screenSize"
@@ -30,33 +32,31 @@
             tools:ignore="InnerclassSeparator">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-                <action android:name="android.intent.action.VIEW"/>
+                <action android:name="android.intent.action.VIEW" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
         <activity
             android:name=".UI.intro.IntroActivity"
             android:configChanges="orientation|screenSize"
             android:theme="@style/Theme.Intro"
-            tools:ignore="InnerclassSeparator"
-            />
+            tools:ignore="InnerclassSeparator" />
         <activity
             android:name=".UI.main.MainActivity"
             android:configChanges="orientation|screenSize"
             android:label="@string/title_activity_main"
+            android:launchMode="singleTop"
             android:screenOrientation="portrait"
             android:theme="@style/MainActivityTheme"
-            android:launchMode="singleTop"
             android:windowSoftInputMode="adjustResize"
-            tools:ignore="InnerclassSeparator">
-        </activity>
+            tools:ignore="InnerclassSeparator"></activity>
         <activity
             android:name=".UI.sd_card_instructions.SdCardInstructionsActivity"
             android:parentActivityName=".UI.main.MainActivity"
-            android:theme="@style/MyTransparentTheme"
             android:screenOrientation="portrait"
-            tools:ignore="InnerclassSeparator"/>
+            android:theme="@style/MyTransparentTheme"
+            tools:ignore="InnerclassSeparator" />
         <activity
             android:name=".UI.faq.QuestionsActivity"
             android:configChanges="orientation|screenSize"
@@ -88,8 +88,7 @@
             android:parentActivityName=".UI.main.MainActivity"
             android:screenOrientation="portrait"
             android:theme="@style/SettingsStyle"
-            tools:ignore="InnerclassSeparator"/>
-        <!-- "mx.dev.franco.automusictagfixer.fileProvider" -->
+            tools:ignore="InnerclassSeparator" /> <!-- "mx.dev.franco.automusictagfixer.fileProvider" -->
         <!-- This provider is necessary because in android >= 7 doesn't allow to access directly to files -->
         <provider
             android:name="android.support.v4.content.FileProvider"
@@ -99,19 +98,19 @@
             <meta-data
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
-        </provider>
-
-        <!-- We need this service for start or schedule GNSDK API initialization -->
+        </provider> <!-- We need this service for start or schedule GNSDK API initialization -->
         <service
             android:name=".services.ScheduleJobService"
             android:label="DetectionService"
-            android:permission="android.permission.BIND_JOB_SERVICE" />
-
-        <!-- Service that runs in background thread and have the ability to run if app is closed -->
+            android:permission="android.permission.BIND_JOB_SERVICE" /> <!-- Service that runs in background thread and have the ability to run if app is closed -->
         <service
             android:name=".services.FixerTrackService"
             android:exported="false"
             android:label="FixerTrackService" />
+        <service
+            android:name=".identifier.ApiInitializerService"
+            android:enabled="true"
+            android:exported="false" />
         <meta-data
             android:name="io.fabric.ApiKey"
             android:value="3d4995f2cd3e5757faec4a2dadce6e00f2d0814e" />

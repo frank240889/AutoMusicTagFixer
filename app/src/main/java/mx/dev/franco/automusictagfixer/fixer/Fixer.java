@@ -17,7 +17,6 @@ import java.util.HashMap;
 
 import javax.inject.Inject;
 
-import mx.dev.franco.automusictagfixer.AutoMusicTagFixer;
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.identifier.GnResponseListener;
 import mx.dev.franco.automusictagfixer.persistence.repository.TrackRepository;
@@ -53,7 +52,7 @@ public class Fixer extends AsyncTask<GnResponseListener.IdentificationResults,Vo
 
     public Fixer(OnCorrectionListener listener){
         mListener = listener;
-        AutoMusicTagFixer.getContextComponent().inject(this);
+
     }
 
     public void setTrack(Track track){

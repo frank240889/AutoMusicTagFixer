@@ -10,7 +10,6 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-import mx.dev.franco.automusictagfixer.AutoMusicTagFixer;
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.UI.main.ViewWrapper;
 import mx.dev.franco.automusictagfixer.interfaces.AsyncOperation;
@@ -52,7 +51,6 @@ public class ListViewModel extends ViewModel {
 
 
     public ListViewModel() {
-        AutoMusicTagFixer.getContextComponent().inject(this);
         mShowProgress.setValue(true);
     }
 
