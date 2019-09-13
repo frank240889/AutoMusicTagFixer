@@ -3,8 +3,6 @@ package mx.dev.franco.automusictagfixer.services;
 import android.app.job.JobParameters;
 import android.app.job.JobService;
 
-import mx.dev.franco.automusictagfixer.identifier.GnApiService;
-
 /**
  * Created by franco on 6/07/17.
  */
@@ -23,16 +21,6 @@ public class ScheduleJobService extends JobService {
     @Override
     public boolean onStartJob(final JobParameters params) {
         //We set context and initialize the GNSDK API if it was not before.
-        boolean shouldInitialize = (!GnApiService.getInstance().isApiInitialized());
-        if(shouldInitialize) {
-            //GnApiService.API_INITIALIZED_AFTER_CONNECTED flag indicates
-            //that service was not initialized from Splash.
-            //is useful to inform to user in MainActivity
-            //that API of GNSDK has been initialized
-            GnApiService.getInstance().initializeAPI();
-        }
-        //if already should not initialize it, we finalize this job
-        jobFinished(params, !shouldInitialize);
         return true;
     }
 

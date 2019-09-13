@@ -18,7 +18,6 @@ import java.util.HashMap;
 import javax.inject.Inject;
 
 import mx.dev.franco.automusictagfixer.R;
-import mx.dev.franco.automusictagfixer.identifier.GnResponseListener;
 import mx.dev.franco.automusictagfixer.persistence.repository.TrackRepository;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.persistence.room.TrackState;

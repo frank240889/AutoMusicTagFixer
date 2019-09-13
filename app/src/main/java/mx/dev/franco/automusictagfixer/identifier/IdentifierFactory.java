@@ -5,7 +5,6 @@ import java.util.List;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 
-import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.utilities.shared_preferences.AbstractSharedPreferences;
 
 public class IdentifierFactory {
@@ -22,7 +21,7 @@ public class IdentifierFactory {
     }
 
     @Nullable
-    public Identifier<Track, List<GnIdentifier.IdentificationResults>> create(int identifierType) {
+    public Identifier<GnIdentifier.Audio, List<GnIdentifier.IdentificationResults>> create(int identifierType) {
         if(identifierType == FINGERPRINT_IDENTIFIER)
             return new GnIdentifier(gnApiService, sharedPreferences);
         else

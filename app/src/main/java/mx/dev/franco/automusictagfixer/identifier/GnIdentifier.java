@@ -25,22 +25,20 @@ import java.util.ArrayList;
 import java.util.List;
 
 import mx.dev.franco.automusictagfixer.identifier.Identifier.IdentificationResults;
-import mx.dev.franco.automusictagfixer.persistence.room.Track;
-import mx.dev.franco.automusictagfixer.utilities.Settings;
 import mx.dev.franco.automusictagfixer.utilities.shared_preferences.AbstractSharedPreferences;
 
 /**
  * A concrete identifier that implements {@link Identifier} interface.
  */
-public class GnIdentifier implements Identifier<Track, List<IdentificationResults>> {
+public class GnIdentifier implements Identifier<GnIdentifier.Audio, List<IdentificationResults>> {
 
     private GnApiService gnApiService;
     private AbstractSharedPreferences sharedPreferences;
-    private IdentificationListener<List<IdentificationResults>, Track> identificationListener;
+    private IdentificationListener<List<IdentificationResults>, Audio> identificationListener;
     private GnMusicIdFile mGnMusicIdFile;
     private GnMusicIdFileInfo gnMusicIdFileInfo;
     private GnMusicIdFileInfoManager gnMusicIdFileInfoManager;
-    private Track track;
+    private Audio track;
 
     public GnIdentifier(GnApiService gnApiService, AbstractSharedPreferences sharedPreferences){
         this.gnApiService = gnApiService;
@@ -48,7 +46,7 @@ public class GnIdentifier implements Identifier<Track, List<IdentificationResult
     }
 
     @Override
-    public void identify(Track input) {
+    public void identify(Audio input) {
         track = input;
         if(identificationListener != null)
             identificationListener.onIdentificationStart(track);
@@ -86,7 +84,7 @@ public class GnIdentifier implements Identifier<Track, List<IdentificationResult
                 public void statusEvent(GnStatus gnStatus, long l, long l1, long l2, IGnCancellable iGnCancellable) {}
             });
             mGnMusicIdFile.options().lookupData(GnLookupData.kLookupDataContent, true);
-            mGnMusicIdFile.options().preferResultLanguage(Settings.SETTING_LANGUAGE);
+            mGnMusicIdFile.options().preferResultLanguage(gnApiService.getLanguage());
             //queue will be processed one by one
             //mGnMusicIdFile.options().batchSize(1);
             //get the fileInfoManager
@@ -121,7 +119,7 @@ public class GnIdentifier implements Identifier<Track, List<IdentificationResult
     }
 
     @Override
-    public void registerCallback(IdentificationListener<List<IdentificationResults>, Track> identificationListener) {
+    public void registerCallback(IdentificationListener<List<IdentificationResults>, Audio> identificationListener) {
         this.identificationListener = identificationListener;
     }
 
@@ -244,6 +242,61 @@ public class GnIdentifier implements Identifier<Track, List<IdentificationResult
         }
 
         return identificationResults;
+    }
+
+
+    /**
+     * Model class for this identifier.
+     */
+    public static final class Audio {
+        private String title;
+        private String artist;
+        private String album;
+        private String path;
+
+        public Audio() {
+
+        }
+
+        public Audio(String title, String artist, String album, String path) {
+            this();
+            this.title = title;
+            this.artist = artist;
+            this.album = album;
+            this.path = path;
+        }
+
+        public String getTitle() {
+            return title;
+        }
+
+        public void setTitle(String title) {
+            this.title = title;
+        }
+
+        public String getArtist() {
+            return artist;
+        }
+
+        public void setArtist(String artist) {
+            this.artist = artist;
+        }
+
+        public String getAlbum() {
+            return album;
+        }
+
+        public void setAlbum(String album) {
+            this.album = album;
+        }
+
+        public String getPath() {
+            return path;
+        }
+
+        public void setPath(String path) {
+            this.path = path;
+        }
     }
 
 }

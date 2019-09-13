@@ -100,7 +100,7 @@ public class GnApiService {
     /**
      * Initializes the API making a max of {@link #MAX_RETRIES}.
      */
-    public void initializeAPI(){
+    public synchronized void initializeAPI(){
         if(!isApiInitialized() && !isApiInitializing()) {
             initApi();
             if(isApiInitialized()) {
@@ -119,7 +119,7 @@ public class GnApiService {
      * Initialization of API with the desired delivery language results.
      * @param language
      */
-    public void initializeAPI(@Nullable GnLanguage language){
+    public synchronized void initializeAPI(@Nullable GnLanguage language){
         if(language == null)
             mLanguage = GnLanguage.kLanguageSpanish;
         else
@@ -201,6 +201,10 @@ public class GnApiService {
 
     public synchronized GnLocale getGnLocale() {
         return mGnLocale;
+    }
+
+    public GnLanguage getLanguage() {
+        return mLanguage;
     }
 
     public Map<String, String> getStates() {

@@ -15,13 +15,11 @@ import javax.annotation.Nullable;
 import javax.inject.Inject;
 
 import mx.dev.franco.automusictagfixer.interfaces.FileManager;
-import mx.dev.franco.automusictagfixer.modelsUI.track_detail.TrackDataLoader;
-import mx.dev.franco.automusictagfixer.utilities.AudioTagger;
 
 /**
  * Created by Franco on 03/09/2019
  */
-public class FileTagger implements FileManager<FileTagger.InputParams, TrackDataLoader.TrackDataItem, AudioTagger.ResultCorrection> {
+public class FileTagger implements FileManager<FileTagger.InputParams, AudioTagger.TrackDataItem, AudioTagger.ResultCorrection> {
     private AudioTagger tagger;
 
     @Inject
@@ -31,7 +29,7 @@ public class FileTagger implements FileManager<FileTagger.InputParams, TrackData
 
     @Nullable
     @Override
-    public TrackDataLoader.TrackDataItem readFile(String path) {
+    public AudioTagger.TrackDataItem readFile(String path) {
         try {
             return tagger.readFile(path);
         } catch (ReadOnlyFileException | CannotReadException |

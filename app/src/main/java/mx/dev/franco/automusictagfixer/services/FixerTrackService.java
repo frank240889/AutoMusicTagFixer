@@ -45,8 +45,6 @@ import mx.dev.franco.automusictagfixer.fixer.Fixer;
 import mx.dev.franco.automusictagfixer.fixer.IdLoader;
 import mx.dev.franco.automusictagfixer.fixer.TrackLoader;
 import mx.dev.franco.automusictagfixer.identifier.GnApiService;
-import mx.dev.franco.automusictagfixer.identifier.GnResponseListener;
-import mx.dev.franco.automusictagfixer.identifier.TrackIdentifier;
 import mx.dev.franco.automusictagfixer.interfaces.InfoTrackLoader;
 import mx.dev.franco.automusictagfixer.interfaces.TrackListLoader;
 import mx.dev.franco.automusictagfixer.persistence.repository.TrackRepository;

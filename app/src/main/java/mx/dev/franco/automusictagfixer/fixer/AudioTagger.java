@@ -1,13 +1,18 @@
-package mx.dev.franco.automusictagfixer.utilities;
+package mx.dev.franco.automusictagfixer.fixer;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.os.Environment;
 import android.provider.DocumentsContract;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.provider.DocumentFile;
 import android.util.Log;
+import android.util.SparseArray;
+import android.webkit.MimeTypeMap;
 
 import com.crashlytics.android.Crashlytics;
 
@@ -31,16 +36,20 @@ import org.jaudiotagger.tag.images.Artwork;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-import mx.dev.franco.automusictagfixer.modelsUI.track_detail.TrackDataLoader;
-import mx.dev.franco.automusictagfixer.persistence.room.Track;
+import mx.dev.franco.automusictagfixer.BuildConfig;
+import mx.dev.franco.automusictagfixer.R;
 
 /**
  * Helper class that wraps the functionality to
@@ -82,6 +91,8 @@ public class AudioTagger {
 
     private Context mContext;
     private static final int BUFFER_SIZE = 131072;//->128Kb
+    private static final float KILOBYTE = 1048576;
+
 
     //Used as a support for storage operations
     private StorageHelper mStorageHelper;
@@ -158,7 +169,7 @@ public class AudioTagger {
      * @throws CannotReadException
      * @throws InvalidAudioFrameException
      */
-    public TrackDataLoader.TrackDataItem readFile(File file)
+    public TrackDataItem readFile(File file)
             throws IOException, TagException, ReadOnlyFileException, CannotReadException, InvalidAudioFrameException {
         if(file == null)
             throw new NullPointerException("Source file has not been set yet.");
@@ -182,12 +193,12 @@ public class AudioTagger {
      * @throws InvalidAudioFrameException
      * @throws IOException
      */
-    private TrackDataLoader.TrackDataItem getData(AudioFile audioFile){
-        TrackDataLoader.TrackDataItem trackDataItem = new TrackDataLoader.TrackDataItem();
+    private TrackDataItem getData(AudioFile audioFile){
+        TrackDataItem trackDataItem = new TrackDataItem();
 
         File file = audioFile.getFile();
-        String extension = TrackUtils.getExtension(file);
-        String mimeType = TrackUtils.getMimeType(file);
+        String extension = getExtension(file);
+        String mimeType = getMimeType(file);
 
         trackDataItem.extension = extension;
         trackDataItem.fileName = file.getName();
@@ -196,13 +207,13 @@ public class AudioTagger {
         Tag tag = getTag(audioFile);
         AudioHeader audioHeader = audioFile.getAudioHeader();
         //Get header info and current tags
-        trackDataItem.duration = TrackUtils.getHumanReadableDuration(audioHeader.getTrackLength() + "");
-        trackDataItem.bitrate = TrackUtils.getBitrate(audioHeader.getBitRate());
-        trackDataItem.frequency = TrackUtils.getFrequency(audioHeader.getSampleRate());
-        trackDataItem.resolution = TrackUtils.getResolution(audioHeader.getBitsPerSample());
+        trackDataItem.duration = getHumanReadableDuration(audioHeader.getTrackLength() + "");
+        trackDataItem.bitrate = getBitrate(audioHeader.getBitRate());
+        trackDataItem.frequency = getFrequency(audioHeader.getSampleRate());
+        trackDataItem.resolution = getResolution(audioHeader.getBitsPerSample());
         trackDataItem.channels = audioHeader.getChannels();
         trackDataItem.fileType = audioHeader.getFormat();
-        trackDataItem.fileSize = TrackUtils.getFileSize(file.length());
+        trackDataItem.fileSize = getFileSize(file.length());
 
         trackDataItem.title = tag.getFirst(FieldKey.TITLE);
         trackDataItem.artist = tag.getFirst(FieldKey.ARTIST);
@@ -212,7 +223,7 @@ public class AudioTagger {
         trackDataItem.genre = tag.getFirst(FieldKey.GENRE);
 
         trackDataItem.cover = getCover(audioFile);
-        trackDataItem.imageSize = TrackUtils.getStringImageSize(trackDataItem.cover, mContext);
+        trackDataItem.imageSize = getStringImageSize(trackDataItem.cover, mContext);
 
         return trackDataItem;
     }
@@ -227,7 +238,7 @@ public class AudioTagger {
      * @throws CannotReadException
      * @throws InvalidAudioFrameException
      */
-    public TrackDataLoader.TrackDataItem readFile(String path)
+    public TrackDataItem readFile(String path)
             throws ReadOnlyFileException, CannotReadException, TagException, InvalidAudioFrameException, IOException {
         if(path == null)
             throw new NullPointerException("Path to file has not been set yet.");
@@ -254,7 +265,7 @@ public class AudioTagger {
         ResultCorrection resultCorrection = new ResultCorrection();
 
         if(isStoredInSd){
-            if(AndroidUtils.getUriSD(mContext) == null) {
+            if(getUriSD() == null) {
                 resultCorrection.code = COULD_NOT_GET_URI_SD_ROOT_TREE;
             }
             else {
@@ -357,8 +368,8 @@ public class AudioTagger {
     private Tag getTag(AudioFile audioFile){
 
         Tag tag = null;
-        String mimeType = TrackUtils.getMimeType(audioFile.getFile());
-        String extension = TrackUtils.getExtension(audioFile.getFile());
+        String mimeType = getMimeType(audioFile.getFile());
+        String extension = getExtension(audioFile.getFile());
 
         if((mimeType.equals("audio/mpeg_mp3") || mimeType.equals("audio/mpeg") ) && extension.toLowerCase().equals("mp3")){
             if(((MP3File)audioFile).hasID3v1Tag() && !((MP3File) audioFile).hasID3v2Tag()){
@@ -548,8 +559,8 @@ public class AudioTagger {
      */
     private void setNewTags(AudioFile audioFile,HashMap<FieldKey, Object> tagsToApply, int overwriteAllTags){
         Tag currentTag = getTag(audioFile);
-        String mimeType = TrackUtils.getMimeType(audioFile.getFile());
-        String extension = TrackUtils.getExtension(audioFile.getFile());
+        String mimeType = getMimeType(audioFile.getFile());
+        String extension = getExtension(audioFile.getFile());
         boolean isMp3 = ((mimeType.equals("audio/mpeg_mp3") || mimeType.equals("audio/mpeg") )
                 && extension.toLowerCase().equals("mp3"));
         //remove old version of ID3 tags
@@ -657,7 +668,7 @@ public class AudioTagger {
         try {
             //First create a DocumentFile object referencing to its original path that it was stored
             DocumentFile newFile =  sourceDocumentFile.getParentFile().
-                    createFile(TrackUtils.getMimeType(correctedFile), correctedFile.getName() );
+                    createFile(getMimeType(correctedFile), correctedFile.getName() );
             //Destination data
             out = mContext.getContentResolver().openOutputStream(newFile.getUri());
             //Input data
@@ -720,7 +731,7 @@ public class AudioTagger {
      *         or null otherwise.
      */
     private DocumentFile getUriTree(){
-        Uri uri = AndroidUtils.getUriSD(mContext);
+        Uri uri = getUriSD();
         if(uri == null) {
             return null;
         }
@@ -853,11 +864,11 @@ public class AudioTagger {
             throws ReadOnlyFileException, CannotReadException, TagException, InvalidAudioFrameException, IOException {
         boolean isStoredInSd = mStorageHelper.isStoredInSD(file);
         ResultCorrection resultCorrection = new ResultCorrection();
-        TrackDataLoader.TrackDataItem trackDataItem = readFile(file);
+        TrackDataItem trackDataItem = readFile(file);
 
 
         if(isStoredInSd) {
-            if(AndroidUtils.getUriSD(mContext) == null) {
+            if(getUriSD() == null) {
                 resultCorrection.code = COULD_NOT_GET_URI_SD_ROOT_TREE;
             }
             else{
@@ -1011,7 +1022,7 @@ public class AudioTagger {
         boolean isStoredInSd = mStorageHelper.isStoredInSD(currentFile);
 
         if(isStoredInSd ){
-            if (AndroidUtils.getUriSD(mContext) == null){
+            if (getUriSD() == null){
                 return null;
             }
             return internalRenameDocumentFile(currentFile ,metadata);
@@ -1057,7 +1068,7 @@ public class AudioTagger {
 
         //Check if new file document already exist
         id = id + getRelativePath(new File(newRelativeFilePath));
-        Uri childUri = DocumentsContract.buildDocumentUriUsingTree(AndroidUtils.getUriSD(mContext), id);
+        Uri childUri = DocumentsContract.buildDocumentUriUsingTree(getUriSD(), id);
         DocumentFile renamedDocument = DocumentFile.fromSingleUri(mContext, childUri);
         boolean wasRenamed = false;
         if(renamedDocument == null){
@@ -1175,6 +1186,123 @@ public class AudioTagger {
         return file.getName().substring(file.getName().lastIndexOf(".") + 1).toLowerCase();
     }
 
+    public static String getMimeType(String absolutePath){
+        String ext = getExtension(absolutePath);
+        if(ext == null)
+            return null;
+        //get type depending on extension
+        return MimeTypeMap.getSingleton().getMimeTypeFromExtension(ext);
+    }
+
+    public static String getMimeType(File file){
+        String ext = getExtension(file);
+        if(ext == null)
+            return null;
+        //get type depending on extension
+        return MimeTypeMap.getSingleton().getMimeTypeFromExtension(ext);
+    }
+
+    public static String getFrequency(String freq){
+        if(freq == null || freq.isEmpty())
+            return "0 Khz";
+
+        float f = Float.parseFloat(freq);
+        float f2 = f / 1000f;
+        return f2+ " Khz";
+    }
+
+    public static String getResolution(int res){
+        return res + " bits";
+    }
+
+    public static String getBitrate(String bitrate) {
+
+        if (bitrate != null && !bitrate.equals("") && !bitrate.equals("0") ){
+            // int bitrateInt = Integer.parseInt(bitrate);
+            return bitrate + " Kbps";
+        }
+        return "0 Kbps";
+    }
+
+    /**
+     * Gets file size in megabytes
+     * @param size File size
+     * @return formatted file size string
+     */
+    public static String getFileSize(long size){
+        if(size <= 0)
+            return "0 Mb";
+
+        float s = size / KILOBYTE;
+        String str = String.valueOf(s);
+        int l = str.length();
+        String readableSize = "";
+        if(l > 4)
+            readableSize = str.substring(0,4);
+        else
+            readableSize =str.substring(0,3);
+        readableSize += " mb";
+
+        return readableSize;
+    }
+
+    public static String getFileSize(String path){
+        File file = new File(path);
+        if(!checkFileIntegrity(file))
+            return "0 Mb";
+
+        return getFileSize(file.length());
+    }
+
+    /**
+     * Gets image dimensions information
+     * @param cover Cover art data
+     * @return formatted string image size
+     */
+    public static String getStringImageSize(byte[] cover, Context context){
+        String msg = context.getString(R.string.missing_cover);
+        if(cover != null && cover.length > 0) {
+            try {
+                Bitmap bitmapDrawable = BitmapFactory.decodeByteArray(cover, 0, cover.length);
+                msg = bitmapDrawable.getHeight() + " * " + bitmapDrawable.getWidth() +" " +
+                        context.getString(R.string.pixels);
+            }
+            catch (Exception e){
+                msg = context.getString(R.string.missing_cover);
+            }
+        }
+        return msg;
+    }
+
+    /**
+     * Formats duration to human readable
+     * string
+     * @param duration duration in seconds
+     * @return formatted string duration
+     */
+    public static String getHumanReadableDuration(String duration){
+        if(duration == null || duration.isEmpty())
+            return "0";
+        int d = Integer.parseInt(duration);
+        int minutes = 0;
+        int seconds = 0;
+        String readableDuration;
+        minutes = (int) Math.floor(d / 60f);
+        seconds = d % 60;
+        readableDuration = minutes + "\'" + (seconds<10?("0"+seconds):seconds) + "\"";
+        return readableDuration;
+    }
+
+    private Uri getUriSD(){
+        String uriString = mContext.
+                getSharedPreferences(BuildConfig.APPLICATION_ID, Context.MODE_PRIVATE).
+                getString("uri_tree", null);
+
+        if(uriString == null)
+            return null;
+        return Uri.parse(uriString);
+    }
+
     /**
      * Deletes file passed as parameter.
      * @param file The file to delete.
@@ -1193,7 +1321,281 @@ public class AudioTagger {
         public String pathTofileUpdated = null;
         public int code = NOT_SET;
         public int allTagsApplied;
-        public Track track;
         public HashMap<FieldKey, Object> tagsUpdated;
+    }
+
+    public static class TrackDataItem implements Cloneable{
+        public String title = "";
+        public String artist = "";
+        public String album = "";
+        public String trackNumber = "";
+        public String trackYear = "";
+        public String genre = "";
+        public byte[] cover = null;
+
+        public String fileName = "";
+        public String path = "";
+
+        public String duration = "";
+        public String bitrate = "";
+        public String frequency = "";
+        public String resolution = "";
+        public String channels = "";
+        public String fileType = "";
+        public String extension = "";
+        public String mimeType = "";
+        public String imageSize = "Sin carátula.";
+        public String fileSize = "";
+
+        @Override
+        protected Object clone() throws CloneNotSupportedException {
+            Object obj = null;
+            try {
+                obj = super.clone();
+            }
+            catch (CloneNotSupportedException ignored) {}
+            return obj;
+        }
+    }
+
+    /**
+     * Created by franco on 12/01/18.
+     */
+
+    public static class StorageHelper {
+        private static Context sContext;
+        private static StorageHelper sStorage;
+        private SparseArray<String> mBasePaths = new SparseArray<>();
+        private static final String PRIVATE_TEMP_FOLDER = "temp_tagged_files";
+        private StorageHelper(Context context){
+            sContext = context.getApplicationContext();
+        }
+
+        public static synchronized StorageHelper getInstance(Context context){
+            if(sStorage == null) {
+                sStorage = new StorageHelper(context);
+            }
+
+            return sStorage;
+        }
+
+        public int getNumberAvailableMediaStorage (){
+            return ContextCompat.getExternalFilesDirs(sContext, null).length;
+        }
+
+        public boolean isPresentRemovableStorage(){
+            return (mBasePaths.size() > 1);
+        }
+
+        /**
+         * Detect number of storage available.
+         */
+        public StorageHelper detectStorages(){
+            File[] storage = ContextCompat.getExternalFilesDirs(sContext, PRIVATE_TEMP_FOLDER);
+
+            int numberMountedStorage = 0;
+
+            for(File s : storage){
+                //When SD card is removed sometimes storage hold a reference to this
+                //folder, so if the reference is null, means the storage has unmounted or removed
+                //and is not available anymore
+                if(s != null) {
+                    int i = s.getPath().lastIndexOf("/Android/data");
+                    String basePath = s.getPath().substring(0,i);
+                    mBasePaths.put(numberMountedStorage,basePath);
+                    numberMountedStorage++;
+                    Log.d("storage", basePath);
+                }
+            }
+            return this;
+        }
+
+        /**
+         * Returns the base path of available storage.
+         * @return An {@link SparseArray} containing the base paths.
+         */
+        public SparseArray<String> getBasePaths(){
+            return mBasePaths;
+        }
+
+        /**
+         * Gets current available size
+         * @return available size of current storage
+         */
+        private static long getInternalAvailableSize(){
+            return Environment.getExternalStorageDirectory().getTotalSpace();
+        }
+
+        /**
+         * Creates a temp file in external non-removable storage,
+         * more known as shared Storage or internal storage
+         * @param sourceFile The source file to copy.
+         * @return The copy of file or null if could not be created.
+         */
+        public File createTempFileFrom(File sourceFile) {
+
+            //Before create temp file, check if exist enough space,
+            //to ensure we can perform correctly the operations, lets take the triple size of source file
+            //because operations of AudioTagger library.
+            long availableSize = getInternalAvailableSize();
+            long fileSize = sourceFile.getTotalSpace();
+            if(availableSize < (fileSize * 3) ) {
+
+                return null;
+            }
+
+
+            // Create a path where we will place our private file on non removable external
+            // storage.
+            File externalNonRemovableDevicePath = ContextCompat.getExternalFilesDirs(sContext, PRIVATE_TEMP_FOLDER)[0];
+
+            File fileDest = new File(externalNonRemovableDevicePath, sourceFile.getName());
+
+            FileChannel inChannel = null;
+            FileChannel outChannel = null;
+
+            try {
+                inChannel = new FileInputStream(sourceFile).getChannel();
+                outChannel = new FileOutputStream(fileDest).getChannel();
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+                Crashlytics.logException(e);
+                return null;
+            }
+
+            //Copy data
+            try {
+                inChannel.transferTo(0, inChannel.size(), outChannel);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            finally {
+                if (inChannel != null)
+                    try {
+                        inChannel.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        Crashlytics.logException(e);
+                    }
+                if (outChannel != null)
+                    try {
+                        outChannel.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        Crashlytics.logException(e);
+                    }
+            }
+            return fileDest;
+        }
+
+        public boolean isStoredInSD(File file){
+            return internalIsStoredInSD(file);
+        }
+
+        /**
+         * Check if file is stored on SD card or Non removable storage.
+         * @return True if file is stored in SD, false otherwise.
+         */
+        private boolean internalIsStoredInSD(File file){
+            SparseArray<String> basePaths =  StorageHelper.getInstance(sContext).getBasePaths();
+            int availableStorage = basePaths.size();
+            //If there are only one storage, no need to check
+            // where is stored file.
+            if(availableStorage < 2)
+                return false;
+
+            //The position 0 belongs to non removable external storage.
+            for(int d = 0  ; d < availableStorage ; d++){
+                if(d == 0 && file.getParent().contains(basePaths.get(d)) ){
+                    return false;
+                }
+            }
+            return true;
+        }
+    }
+
+    /**
+     * Created by franco on 21/06/17.
+     * Helper class containing some useful
+     * static methods for validating strings
+     */
+
+    public static final class StringUtilities {
+        /**
+         *
+         * @param str is the input entered by user
+         * @return true if string is empty, false otherwise
+         */
+        public static boolean isFieldEmpty(String str) {
+            return str.isEmpty();
+        }
+
+        /**
+         *
+         * @param dirtyString
+         * We replace all invalid characters because
+         * compatibility problems when showing the information
+         * about song
+         * @return sanitized string
+         */
+        public static String sanitizeString(String dirtyString) {
+            return dirtyString.replaceAll("[^\\w\\s()&_\\-\\]\\[\'#.:$]", "");
+        }
+
+        /**
+         *
+         * @param str is the input entered by user
+         * @return true string contains another chararacter, false otherwise
+         */
+        public static boolean hasNotAllowedCharacters(String str){
+            Pattern pattern = Pattern.compile("[^\\w\\s()&_\\-\\]\\[\'#.:$]");
+            Matcher matcher = pattern.matcher(str);
+            return matcher.find();
+        }
+
+        public static String sanitizeFilename(String dirtyFileName){
+            if(dirtyFileName != null && !dirtyFileName.equals(""))
+                return dirtyFileName.replaceAll("[^\\w\\s()&_\\-\\]\\[\'#.:$/]", "");
+
+            return "";
+        }
+
+        /**
+         *
+         * @param str is the input entered by user
+         * @return trimmed string
+         */
+        public static String trimString(String str){
+            return str.trim();
+        }
+
+        /**
+         *
+         * @param id is the id of element
+         * @param str is the input entered by user
+         * @return true if string is too long, false otherwise
+         */
+        public static boolean isTooLong(int id, String str){
+            boolean isTooLong = false;
+            switch (id){
+                case R.id.track_name_details:
+                    isTooLong = str.length() >= 101;
+                    break;
+                case R.id.artist_name_details:
+                    isTooLong = str.length() >= 101;
+                    break;
+                case R.id.album_name_details:
+                    isTooLong = str.length() >= 151;
+                    break;
+                case R.id.track_number:
+                case R.id.track_year:
+                    isTooLong = str.length() >= 5;
+                    break;
+                case R.id.track_genre:
+                    isTooLong = str.length() >= 81;
+                    break;
+            }
+            return isTooLong;
+        }
     }
 }

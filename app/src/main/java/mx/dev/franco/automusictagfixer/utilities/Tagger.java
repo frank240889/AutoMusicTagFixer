@@ -39,6 +39,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import mx.dev.franco.automusictagfixer.fixer.AudioTagger;
 import mx.dev.franco.automusictagfixer.modelsUI.track_detail.TrackDataLoader;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
 
@@ -87,13 +88,13 @@ public class Tagger {
     private static final int BUFFER_SIZE = 131072;//->128Kb
 
     //Used as a support for storage operations
-    private static StorageHelper sStorageHelper;
+    private static AudioTagger.StorageHelper sStorageHelper;
 
     /**
      * A single instance of this helper
      * @param context
      */
-    private Tagger(Context context, StorageHelper storageHelper) {
+    private Tagger(Context context, AudioTagger.StorageHelper storageHelper) {
         sContext = context.getApplicationContext();
         TagOptionSingleton.getInstance().setAndroid(true);
         //Save genres as text, not as numeric codes
@@ -123,7 +124,7 @@ public class Tagger {
      */
     public static void init(Context context) {
         if(sStorageHelper == null)
-            sStorageHelper = StorageHelper.getInstance(context);
+            sStorageHelper = AudioTagger.StorageHelper.getInstance(context);
 
         if (sTaggerHelper == null) {
             sTaggerHelper = new Tagger(context, sStorageHelper);
@@ -1095,7 +1096,7 @@ public class Tagger {
         else {
             //if artist tag was identified
             if(!artistName.isEmpty()) {
-                newFilename = title + " ( " + StringUtilities.sanitizeFilename(artistName) + " ) " + "." + getExtension(sourceFile);
+                newFilename = title + " ( " + AudioTagger.StringUtilities.sanitizeFilename(artistName) + " ) " + "." + getExtension(sourceFile);
             }
             else{
                 newFilename = title +" ( "+ (int)Math.floor((Math.random()*100)+ 1) + " ) " + "." + getExtension(sourceFile);
@@ -1119,7 +1120,7 @@ public class Tagger {
         if(metadata[0].isEmpty())
             return null;
 
-        String title = StringUtilities.sanitizeFilename(metadata[0]);
+        String title = AudioTagger.StringUtilities.sanitizeFilename(metadata[0]);
         String artistName = metadata[1];
 
         if(sameFilename(sourceFile, metadata)){
@@ -1134,7 +1135,7 @@ public class Tagger {
         File renamedFile;
         String newParentPath = sourceFile.getParent();
 
-        String newFilename = StringUtilities.sanitizeFilename(title) + "." + getExtension(sourceFile);
+        String newFilename = AudioTagger.StringUtilities.sanitizeFilename(title) + "." + getExtension(sourceFile);
         String newAbsolutePath= newParentPath + "/" + newFilename;
         renamedFile = new File(newAbsolutePath);
         if(!renamedFile.exists()) {
@@ -1143,7 +1144,7 @@ public class Tagger {
         else {
             //if artist tag was identificationFound
             if(!artistName.isEmpty()) {
-                newFilename = title + "(" + StringUtilities.sanitizeFilename(artistName) + ")" + "." + getExtension(sourceFile);
+                newFilename = title + "(" + AudioTagger.StringUtilities.sanitizeFilename(artistName) + ")" + "." + getExtension(sourceFile);
             }
             else{
                 newFilename = title +"("+ (int)Math.floor((Math.random()*10)+ 1) +")"+ "." + getExtension(sourceFile);

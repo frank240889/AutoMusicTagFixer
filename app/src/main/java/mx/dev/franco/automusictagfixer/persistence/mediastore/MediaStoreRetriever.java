@@ -4,8 +4,18 @@ import android.content.Context;
 import android.database.Cursor;
 import android.provider.MediaStore;
 
+/**
+ * @author Franco Castillo
+ * Helper class to get audio files information from MediaStore.
+ */
 public class MediaStoreRetriever {
+    private MediaStoreRetriever(){}
 
+    /**
+     * Get all music from MediaStore.
+     * @param context Context to access system resources.
+     * @return A cursor containing data of audio files.
+     */
     public static Cursor getAllFromDevice(Context context) {
         //Select all music
         String selection = MediaStore.Audio.Media.IS_MUSIC + " != 0";
@@ -19,12 +29,12 @@ public class MediaStoreRetriever {
                 MediaStore.Audio.Media.DATA // absolute path to audio file
         };
 
-        //get mCursorData from content provider
-        //the last parameter sorts the mCursorData alphanumerically by the "DATA" column in ascendant mode
+        // Get cursor from content provider
+        // the last parameter sorts the data alphanumerically by the "DATA" column in ascendant mode
         return context.getContentResolver().query(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
                 projection,
                 selection,
                 null,
-                null);//Sort.setDefaultOrder());
+                null);
     }
 }

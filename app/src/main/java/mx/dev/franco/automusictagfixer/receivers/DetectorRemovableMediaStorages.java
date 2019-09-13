@@ -7,8 +7,8 @@ import android.util.Log;
 import android.widget.Toast;
 
 import mx.dev.franco.automusictagfixer.R;
+import mx.dev.franco.automusictagfixer.fixer.AudioTagger;
 import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
-import mx.dev.franco.automusictagfixer.utilities.StorageHelper;
 
 /**
  * Created by franco on 12/01/18.
@@ -33,7 +33,7 @@ public final class DetectorRemovableMediaStorages extends BroadcastReceiver{
         toast.show();
 
         //Reload number of storage available
-        StorageHelper.getInstance(context).getBasePaths().clear();
-        StorageHelper.getInstance(context).detectStorages();
+        AudioTagger.StorageHelper.getInstance(context).getBasePaths().clear();
+        AudioTagger.StorageHelper.getInstance(context).detectStorages();
     }
 }

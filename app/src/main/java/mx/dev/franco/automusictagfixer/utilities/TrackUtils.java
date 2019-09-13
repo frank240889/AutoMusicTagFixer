@@ -28,8 +28,8 @@ public final class TrackUtils {
         int d = Integer.parseInt(duration);
         int minutes = 0;
         int seconds = 0;
-        String readableDuration = "\'" + "00" +  "\"" + "00";
-        minutes = (int) Math.floor(d / 60);
+        String readableDuration;
+        minutes = (int) Math.floor(d / 60f);
         seconds = d % 60;
         readableDuration = minutes + "\'" + (seconds<10?("0"+seconds):seconds) + "\"";
         return readableDuration;

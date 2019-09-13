@@ -25,11 +25,11 @@ import android.widget.Toast;
 import java.util.List;
 
 import mx.dev.franco.automusictagfixer.R;
+import mx.dev.franco.automusictagfixer.fixer.AudioTagger;
 import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
 import mx.dev.franco.automusictagfixer.utilities.RequiredPermissions;
 import mx.dev.franco.automusictagfixer.utilities.Settings;
-import mx.dev.franco.automusictagfixer.utilities.StorageHelper;
 
 /**
  * A {@link PreferenceActivity} that presents a set of application settings. On
@@ -249,7 +249,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity{
             addPreferencesFromResource(R.xml.pref_general);
             ((SettingsActivity)getActivity()).mSDCardAccess = (SwitchPreference) findPreference("key_enable_sd_card_access");
             //Disable URI SD request if no removable media is detected
-            if(StorageHelper.getInstance(getActivity().getApplicationContext()).getBasePaths().size()<2){
+            if(AudioTagger.StorageHelper.getInstance(getActivity().getApplicationContext()).getBasePaths().size()<2){
 
                 ((SettingsActivity)getActivity()).mSDCardAccess.setEnabled(false);
                 ((SettingsActivity)getActivity()).mSDCardAccess.setSummary(getString(R.string.removable_media_no_detected));

@@ -11,5 +11,4 @@ public interface Cache<K,V> {
     void delete(K key);
     V load(K key);
     void deleteAll();
-    Cache<K,V> getCache();
 }

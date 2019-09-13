@@ -24,7 +24,6 @@ import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.UI.RoundedBottomSheetDialogFragment;
 import mx.dev.franco.automusictagfixer.fixer.Fixer;
-import mx.dev.franco.automusictagfixer.identifier.GnResponseListener;
 import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
 import mx.dev.franco.automusictagfixer.utilities.GlideApp;

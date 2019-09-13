@@ -36,7 +36,6 @@ import java.util.Objects;
 
 import mx.dev.franco.automusictagfixer.BuildConfig;
 import mx.dev.franco.automusictagfixer.R;
-import mx.dev.franco.automusictagfixer.identifier.GnResponseListener;
 
 import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
 

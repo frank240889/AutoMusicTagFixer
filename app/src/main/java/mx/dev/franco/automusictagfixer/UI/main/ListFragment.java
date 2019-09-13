@@ -177,7 +177,6 @@ public class ListFragment extends BaseFragment implements
                 getResources().getColor(R.color.primaryColor));
 
         setHasOptionsMenu(true);
-        setRetainInstance(true);
 
         mListViewModel.checkSdIsPresent(getContext());
 

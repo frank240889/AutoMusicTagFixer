@@ -30,7 +30,6 @@ import mx.dev.franco.automusictagfixer.UI.BaseFragment;
 import mx.dev.franco.automusictagfixer.UI.about.ScrollingAboutActivity;
 import mx.dev.franco.automusictagfixer.UI.faq.QuestionsActivity;
 import mx.dev.franco.automusictagfixer.UI.settings.SettingsActivity;
-import mx.dev.franco.automusictagfixer.interfaces.OnTestingNetwork;
 import mx.dev.franco.automusictagfixer.receivers.ResponseReceiver;
 import mx.dev.franco.automusictagfixer.services.FixerTrackService;
 import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
@@ -41,7 +40,7 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
         BaseFragment.OnConfirmBackPressedListener {
     public static String TAG = MainActivity.class.getName();
 
-    //the receiver that handles the broadcasts from FixerTrackService
+    // The receiver that handles the broadcasts from FixerTrackService
     private ResponseReceiver mReceiver;
     public DrawerLayout mDrawer;
 
@@ -82,6 +81,9 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
         mReceiver = null;
     }
 
+    /**
+     * Handle the onBackPressed callback for fragments.
+     */
     @Override
     public void onBackPressed() {
         if (getSupportFragmentManager().getBackStackEntryCount() > 0 ){
@@ -103,6 +105,9 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
         }
     }
 
+    /**
+     * Handle the onBackPressed for this activity.
+     */
     @Override
     public void callSuperOnBackPressed() {
         mDrawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
@@ -133,9 +138,7 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
      * Allows to register filters to handle
      * only certain actions sent by FixerTrackService
      */
-    private void setupReceivers(){
-        IntentFilter apiInitializedFilter = new IntentFilter(Constants.GnServiceActions.ACTION_API_INITIALIZATION_RESULT);
-        IntentFilter connectionLostFilter = new IntentFilter(Constants.Actions.ACTION_CONNECTION_LOST);
+    private void setupReceivers() {
         IntentFilter startTaskFilter = new IntentFilter(Constants.Actions.ACTION_START_TASK);
         IntentFilter showProgressFilter = new IntentFilter(Constants.Actions.START_PROCESSING_FOR);
         IntentFilter finishProcessingFilter = new IntentFilter(Constants.Actions.FINISH_TRACK_PROCESSING);
@@ -149,9 +152,7 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
 
         localBroadcastManager.registerReceiver(mReceiver, completedTaskFilter);
         localBroadcastManager.registerReceiver(mReceiver, showProgressFilter);
-        localBroadcastManager.registerReceiver(mReceiver, connectionLostFilter);
         localBroadcastManager.registerReceiver(mReceiver, finishProcessingFilter);
-        localBroadcastManager.registerReceiver(mReceiver, apiInitializedFilter);
         localBroadcastManager.registerReceiver(mReceiver, startTaskFilter);
         localBroadcastManager.registerReceiver(mReceiver, errorTask);
         localBroadcastManager.registerReceiver(mReceiver, rescanFilter);
@@ -234,15 +235,6 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
                 fragmentList = getSupportFragmentManager().getFragments();
 
                 break;
-            case Constants.Actions.ACTION_CONNECTION_LOST:
-                    fragmentList = getSupportFragmentManager().getFragments();
-                    for(Fragment fragment:fragmentList){
-                        if(fragment instanceof OnTestingNetwork.OnTestingResult){
-                            ((OnTestingNetwork.OnTestingResult<Void>) fragment).
-                                    onNetworkDisconnected(null);
-                        }
-                    }
-                break;
 
             case Constants.Actions.ACTION_START_TASK:
                     ListFragment f1 = (ListFragment) getSupportFragmentManager().findFragmentByTag(ListFragment.class.getName());
@@ -273,10 +265,6 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
                 if(f4 != null)
                     f4.onFinishTask();
                     String message = intent.getStringExtra("message");
-                    toast = AndroidUtils.getToast(getApplicationContext());
-                    toast.setText(message);
-                    toast.setDuration(Toast.LENGTH_SHORT);
-                    toast.show();
                     getSharedPreferences(Constants.Application.FULL_QUALIFIED_NAME,
                         Context.MODE_PRIVATE).edit().putBoolean(Constants.ALL_ITEMS_CHECKED, false).
                             apply();

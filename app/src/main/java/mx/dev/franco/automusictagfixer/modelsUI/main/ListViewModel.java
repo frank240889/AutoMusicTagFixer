@@ -12,6 +12,7 @@ import javax.inject.Inject;
 
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.UI.main.ViewWrapper;
+import mx.dev.franco.automusictagfixer.fixer.AudioTagger;
 import mx.dev.franco.automusictagfixer.interfaces.AsyncOperation;
 import mx.dev.franco.automusictagfixer.persistence.repository.TrackRepository;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
@@ -20,7 +21,6 @@ import mx.dev.franco.automusictagfixer.services.FixerTrackService;
 import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 import mx.dev.franco.automusictagfixer.utilities.Resource;
 import mx.dev.franco.automusictagfixer.utilities.ServiceUtils;
-import mx.dev.franco.automusictagfixer.utilities.StorageHelper;
 import mx.dev.franco.automusictagfixer.utilities.Tagger;
 import mx.dev.franco.automusictagfixer.utilities.shared_preferences.AbstractSharedPreferences;
 
@@ -304,25 +304,13 @@ public class ListViewModel extends ViewModel {
      * @param context The context.
      */
     public void checkSdIsPresent(Context context) {
-        boolean isPresentSD = StorageHelper.getInstance(context.getApplicationContext()).
+        boolean isPresentSD = AudioTagger.StorageHelper.getInstance(context.getApplicationContext()).
                 isPresentRemovableStorage();
         if(AndroidUtils.getUriSD(context.getApplicationContext()) == null && isPresentSD) {
             mOnSdPresent.setValue(true);
         }
         else {
             mOnSdPresent.setValue(false);
-        }
-    }
-
-    /**
-     * Handles the message when Api of identification service is started.
-     */
-    public void onApiInitialized() {
-        if(mCurrentList != null && mCurrentList.size() > 0) {
-            mOnMessage.setValue(R.string.api_initialized);
-        }
-        else {
-            mOnMessage.setValue(R.string.add_some_tracks);
         }
     }
 

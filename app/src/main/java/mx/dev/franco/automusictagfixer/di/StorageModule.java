@@ -6,14 +6,14 @@ import javax.inject.Singleton;
 
 import dagger.Module;
 import dagger.Provides;
-import mx.dev.franco.automusictagfixer.utilities.StorageHelper;
+import mx.dev.franco.automusictagfixer.fixer.AudioTagger;
 
 @Module
 public class StorageModule {
 
 @Singleton
     @Provides
-    StorageHelper providesStorageHelper(Application application) {
-    return StorageHelper.getInstance(application);
+AudioTagger.StorageHelper providesStorageHelper(Application application) {
+    return AudioTagger.StorageHelper.getInstance(application);
 }
 }

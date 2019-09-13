@@ -7,10 +7,9 @@ import java.util.concurrent.Executors;
 import javax.inject.Inject;
 
 import mx.dev.franco.automusictagfixer.R;
+import mx.dev.franco.automusictagfixer.fixer.AudioTagger;
 import mx.dev.franco.automusictagfixer.fixer.Fixer;
 import mx.dev.franco.automusictagfixer.identifier.GnApiService;
-import mx.dev.franco.automusictagfixer.identifier.GnResponseListener;
-import mx.dev.franco.automusictagfixer.identifier.TrackIdentifier;
 import mx.dev.franco.automusictagfixer.interfaces.AsyncOperation;
 import mx.dev.franco.automusictagfixer.interfaces.Cache;
 import mx.dev.franco.automusictagfixer.interfaces.Destructible;
@@ -20,7 +19,6 @@ import mx.dev.franco.automusictagfixer.persistence.repository.TrackRepository;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
-import mx.dev.franco.automusictagfixer.utilities.StringUtilities;
 import mx.dev.franco.automusictagfixer.utilities.Tagger;
 import mx.dev.franco.automusictagfixer.utilities.TrackUtils;
 import mx.dev.franco.automusictagfixer.utilities.resource_manager.ResourceManager;
@@ -240,12 +238,12 @@ public class TrackDetailPresenter implements
     private GnResponseListener.IdentificationResults createResultsFromInputData(){
         GnResponseListener.IdentificationResults results = new GnResponseListener.IdentificationResults();
 
-        results.title = StringUtilities.trimString(mView.getTrackTitle());
-        results.artist = StringUtilities.trimString(mView.getArtist());
-        results.album = StringUtilities.trimString(mView.getAlbum());
-        results.trackNumber = StringUtilities.trimString(mView.getTrackNumber());
-        results.trackYear = StringUtilities.trimString(mView.getTrackYear());
-        results.genre = StringUtilities.trimString(mView.getGenre());
+        results.title = AudioTagger.StringUtilities.trimString(mView.getTrackTitle());
+        results.artist = AudioTagger.StringUtilities.trimString(mView.getArtist());
+        results.album = AudioTagger.StringUtilities.trimString(mView.getAlbum());
+        results.trackNumber = AudioTagger.StringUtilities.trimString(mView.getTrackNumber());
+        results.trackYear = AudioTagger.StringUtilities.trimString(mView.getTrackYear());
+        results.genre = AudioTagger.StringUtilities.trimString(mView.getGenre());
         results.cover = mCurrentCover;
         return results;
     }
@@ -559,80 +557,80 @@ public class TrackDetailPresenter implements
         int field = -1;
         if(title != null){
             field = R.id.track_name_details;
-           if(StringUtilities.isFieldEmpty(title)) {
+           if(AudioTagger.StringUtilities.isFieldEmpty(title)) {
                 mView.alertInvalidData(resourceManager.getString(R.string.empty_tag), field);
                 return false;
             }
-            if(StringUtilities.isTooLong(field, title)) {
+            if(AudioTagger.StringUtilities.isTooLong(field, title)) {
                 mView.alertInvalidData(resourceManager.getString(R.string.tag_too_long), field);
                 return false;
             }
-            title = StringUtilities.trimString(title);
+            title = AudioTagger.StringUtilities.trimString(title);
         }
 
         if(artist != null){
             field = R.id.artist_name_details;
-            if(StringUtilities.isFieldEmpty(artist)) {
+            if(AudioTagger.StringUtilities.isFieldEmpty(artist)) {
                 mView.alertInvalidData(resourceManager.getString(R.string.empty_tag), field);
                 return false;
             }
-            if(StringUtilities.isTooLong(field, artist)) {
+            if(AudioTagger.StringUtilities.isTooLong(field, artist)) {
                 mView.alertInvalidData(resourceManager.getString(R.string.tag_too_long), field);
                 return false;
             }
-            artist = StringUtilities.trimString(artist);
+            artist = AudioTagger.StringUtilities.trimString(artist);
         }
 
         if(album != null){
             field = R.id.album_name_details;
-            if(StringUtilities.isFieldEmpty(album)) {
+            if(AudioTagger.StringUtilities.isFieldEmpty(album)) {
                 mView.alertInvalidData(resourceManager.getString(R.string.empty_tag), field);
                 return false;
             }
-            if(StringUtilities.isTooLong(field, album)) {
+            if(AudioTagger.StringUtilities.isTooLong(field, album)) {
                 mView.alertInvalidData(resourceManager.getString(R.string.tag_too_long), field);
                 return false;
             }
-            album = StringUtilities.trimString(album);
+            album = AudioTagger.StringUtilities.trimString(album);
         }
 
         if(trackYear != null){
             field = R.id.track_year;
-            if(StringUtilities.isFieldEmpty(trackYear)) {
+            if(AudioTagger.StringUtilities.isFieldEmpty(trackYear)) {
                 mView.alertInvalidData(resourceManager.getString(R.string.empty_tag), field);
                 return false;
             }
-            if(StringUtilities.isTooLong(field, trackYear)) {
+            if(AudioTagger.StringUtilities.isTooLong(field, trackYear)) {
                 mView.alertInvalidData(resourceManager.getString(R.string.tag_too_long), field);
                 return false;
             }
-            trackYear = StringUtilities.trimString(trackYear);
+            trackYear = AudioTagger.StringUtilities.trimString(trackYear);
         }
 
         if(trackNumber != null){
             field = R.id.track_number;
-            if(StringUtilities.isFieldEmpty(trackNumber)) {
+            if(AudioTagger.StringUtilities.isFieldEmpty(trackNumber)) {
                 mView.alertInvalidData(resourceManager.getString(R.string.empty_tag), field);
                 return false;
             }
-            if(StringUtilities.isTooLong(field, trackNumber)) {
+            if(AudioTagger.StringUtilities.isTooLong(field, trackNumber)) {
                 mView.alertInvalidData(resourceManager.getString(R.string.tag_too_long), field);
                 return false;
             }
-            trackNumber = StringUtilities.trimString(trackNumber);
+            trackNumber = AudioTagger.StringUtilities.trimString(trackNumber);
         }
 
         if(genre != null){
             field = R.id.track_genre;
-            if(StringUtilities.isFieldEmpty(genre)) {
+            if(AudioTagger.StringUtilities.isFieldEmpty(genre)) {
                 mView.alertInvalidData(resourceManager.getString(R.string.empty_tag), field);
                 return false;
             }
-            if(StringUtilities.isTooLong(field, genre)) {
+            if(AudioTagger.StringUtilities.isTooLong(field, genre)) {
                 mView.alertInvalidData(resourceManager.getString(R.string.tag_too_long), field);
                 return false;
             }
-            genre = StringUtilities.trimString(genre);
+            genre = AudioTagger.StringUtilities.trimString(genre);
         }
 
         return true;

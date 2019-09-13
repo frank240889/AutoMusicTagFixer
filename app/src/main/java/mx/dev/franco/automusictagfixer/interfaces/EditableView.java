@@ -1,7 +1,5 @@
 package mx.dev.franco.automusictagfixer.interfaces;
 
-import mx.dev.franco.automusictagfixer.identifier.GnResponseListener;
-
 public interface EditableView {
     void setTrackTitle(String value);
     void setArtist(String value);
