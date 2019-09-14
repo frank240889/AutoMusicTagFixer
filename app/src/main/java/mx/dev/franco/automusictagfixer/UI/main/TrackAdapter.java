@@ -31,54 +31,26 @@ import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.persistence.room.TrackState;
 import mx.dev.franco.automusictagfixer.services.FixerTrackService;
 import mx.dev.franco.automusictagfixer.utilities.ServiceUtils;
-import mx.dev.franco.automusictagfixer.utilities.shared_preferences.AbstractSharedPreferences;
 
 import static android.view.View.GONE;
 import static android.view.View.VISIBLE;
 
 public class TrackAdapter extends RecyclerView.Adapter<AudioItemHolder> implements
-        Destructible,
-        AsyncOperation<Void, DiffResults<Track>, Void, Void> {
+        Destructible {
 
-    /**
-     * Interface to communicate when the list is in process
-     * of sorting.
-     */
-    public interface OnSortingListener{
-        void onStartSorting();
-        void onFinishSorting();
-    }
-    //Constants for indicate the sort order
-    public static final int ASC = 0;
-    public static final int DESC = 1;
     private static final String TAG = TrackAdapter.class.getName();
+
     @Inject
     public ServiceUtils serviceUtils;
-    @Inject
-    public AbstractSharedPreferences sharedPreferences;
     private List<Track> mTrackList = new ArrayList<>();
     private AudioItemHolder.ClickListener mListener;
-    private OnSortingListener mOnSortingListener;
     private Deque<List<Track>> mPendingUpdates = new ArrayDeque<>();
     private static DiffExecutor sDiffExecutor;
-    private RecyclerView mRecyclerView;
 
     public TrackAdapter(){}
     public TrackAdapter(AudioItemHolder.ClickListener listener){
         this();
         mListener = listener;
-        if(listener instanceof OnSortingListener)
-            mOnSortingListener = (OnSortingListener) listener;
-    }
-
-    @Override
-    public void onAttachedToRecyclerView(@NonNull RecyclerView recyclerView) {
-        mRecyclerView = recyclerView;
-    }
-
-    @Override
-    public void onDetachedFromRecyclerView(@NonNull RecyclerView recyclerView) {
-        mRecyclerView = null;
     }
 
     /**
@@ -130,8 +102,6 @@ public class TrackAdapter extends RecyclerView.Adapter<AudioItemHolder> implemen
                         }
                     }
                 }
-
-
 
                 if (key.equals("should_reload_cover")){
                     enqueue(holder, track);
@@ -248,50 +218,28 @@ public class TrackAdapter extends RecyclerView.Adapter<AudioItemHolder> implemen
         }
         sDiffExecutor = null;
         mListener = null;
-        mOnSortingListener = null;
         CoverManager.cancelAll();
     }
 
-    public void onChanged(@Nullable List<Track> tracks) {
+    void onChanged(@Nullable List<Track> tracks) {
         if(tracks != null) {
             //Update only if exist items
             if (getItemCount() > 0) {
-                boolean dispatchListener = sharedPreferences.getBoolean("sorting")
-                        && mOnSortingListener != null;
-                if(dispatchListener){
-                    mTrackList = tracks;
-                    notifyDataSetChanged();
-                    mOnSortingListener.onFinishSorting();
+                if(tracks.size() > 1000) {
+                    if (mPendingUpdates != null) {
+                        mPendingUpdates.push(tracks);
+                    }
+                    updateInBackground(tracks);
+
                 }
                 else {
-                    if(tracks.size() > 255) {
-                        if (mPendingUpdates != null) {
-                            mPendingUpdates.push(tracks);
-                        }
-                        updateInBackground(tracks);
-
-                    }
-                    else {
-                        updateInUIThread(tracks);
-                    }
+                    updateInUIThread(tracks);
                 }
             } else {
                 mTrackList = tracks;
                 notifyDataSetChanged();
             }
         }
-    }
-
-    public Track getTrackById(int id){
-        if(getItemCount() > 0){
-            for(Track track: mTrackList){
-                if(track.getMediaStoreId() == id)
-                    return track;
-            }
-        }
-
-        return null;
-
     }
 
     private void updateInUIThread(List<Track> newItems) {
@@ -302,54 +250,32 @@ public class TrackAdapter extends RecyclerView.Adapter<AudioItemHolder> implemen
         mTrackList.addAll(newItems);
     }
 
+    @SuppressWarnings("unchecked")
     private void updateInBackground(List<Track> newItems){
         if (mPendingUpdates != null && mPendingUpdates.size() > 1) {
             return;
         }
 
-        sDiffExecutor = new DiffExecutor(this);
-        sDiffExecutor.executeOnExecutor(Executors.newSingleThreadExecutor(), mTrackList, newItems);
-        
+        sDiffExecutor = new DiffExecutor(new AsyncOperation<Void, DiffResults<Track>, Void, Void>() {
+            @Override
+            public void onAsyncOperationFinished(DiffResults<Track> result) {
+                if (mPendingUpdates != null)
+                    mPendingUpdates.remove();
 
-    }
+                if (result.diffResult != null) {
+                    result.diffResult.dispatchUpdatesTo(TrackAdapter.this);
+                    mTrackList.clear();
+                    mTrackList.addAll(result.list);
 
-    @Override
-    public void onAsyncOperationStarted(Void params) {
-        if(sharedPreferences.getBoolean("sorting") && mOnSortingListener != null)
-            mOnSortingListener.onStartSorting();
-    }
-
-    @Override
-    public void onAsyncOperationFinished(DiffResults<Track> result) {
-        if (mPendingUpdates != null)
-            mPendingUpdates.remove();
-
-        if (result.diffResult != null) {
-            result.diffResult.dispatchUpdatesTo(this);
-            mTrackList.clear();
-            mTrackList.addAll(result.list);
-
-            sDiffExecutor = null;
-            //Try to perform next latest setChecked.
-            if (mPendingUpdates != null && mPendingUpdates.size() > 0) {
-                updateInBackground(mPendingUpdates.peek());
+                    sDiffExecutor = null;
+                    //Try to perform next latest setChecked.
+                    if (mPendingUpdates != null && mPendingUpdates.size() > 0) {
+                        updateInBackground(mPendingUpdates.peek());
+                    }
+                }
             }
-        }
-    }
-
-    @Override
-    public void onAsyncOperationCancelled(Void cancellation) {/*Do nothing*/}
-
-    @Override
-    public void onAsyncOperationError(Void error) {/*Do nothing*/}
-
-    public void scrollToPosition(int id) {
-        if(id == -1)
-            return;
-
-        Track track = getTrackById(id);
-        int position = mTrackList.indexOf(track);
-        mRecyclerView.scrollToPosition(position);
+        });
+        sDiffExecutor.executeOnExecutor(Executors.newSingleThreadExecutor(), mTrackList, newItems);
     }
 }
 

@@ -44,8 +44,10 @@ import mx.dev.franco.automusictagfixer.UI.BaseFragment;
 import mx.dev.franco.automusictagfixer.UI.sd_card_instructions.SdCardInstructionsActivity;
 import mx.dev.franco.automusictagfixer.UI.search.ResultSearchListFragment;
 import mx.dev.franco.automusictagfixer.UI.track_detail.TrackDetailFragment;
-import mx.dev.franco.automusictagfixer.interfaces.CorrectionListener;
+import mx.dev.franco.automusictagfixer.interfaces.LongRunningTaskListener;
+import mx.dev.franco.automusictagfixer.interfaces.ProcessingListener;
 import mx.dev.franco.automusictagfixer.modelsUI.main.ListViewModel;
+import mx.dev.franco.automusictagfixer.persistence.repository.TrackRepository;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.persistence.room.database.TrackContract;
 import mx.dev.franco.automusictagfixer.services.FixerTrackService;
@@ -56,8 +58,7 @@ import mx.dev.franco.automusictagfixer.utilities.ServiceUtils;
 
 public class ListFragment extends BaseFragment implements
         AudioItemHolder.ClickListener,Observer<List<Track>>,
-        TrackAdapter.OnSortingListener,
-        CorrectionListener {
+        LongRunningTaskListener, ProcessingListener {
     private static final String TAG = ListFragment.class.getName();
 
     private GridLayoutManager mGridLayoutManager;
@@ -91,27 +92,22 @@ public class ListFragment extends BaseFragment implements
     }
 
     @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-    }
-
-    @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mAdapter = new TrackAdapter(this);
         mListViewModel = ViewModelProviders.of(this).get(ListViewModel.class);
 
-        mListViewModel.actionTrackEvaluatedSuccessfully().observe(this, this::showDialog);
-        mListViewModel.actionCanOpenDetails().observe(this, this::openDetails);
-        mListViewModel.actionCanStartAutomaticMode().observe(this, this::startCorrection);
-        mListViewModel.actionIsTrackInaccessible().observe(this, this::showInaccessibleTrack);
-        mListViewModel.noFilesFound().observe(this, this::noFilesFoundMessage);
-        mListViewModel.getLoader().observe(this, this::loading);
-        mListViewModel.checkAll().observe(this, this::onCheckAll);
-        mListViewModel.showAllTracks().observe(this, this);
-        mListViewModel.getMessage().observe(this, this::onMessage);
-        mListViewModel.onSorted().observe(this, this::onSorted);
-        mListViewModel.onSdPresent().observe(this, this::onSdPresent);
+        mListViewModel.observeTrackEvaluatedSuccessfully().observe(this, this::openDetails);
+        mListViewModel.observeActionCanOpenDetails().observe(this, this::openDetails);
+        mListViewModel.observeActionCanStartAutomaticMode().observe(this, this::startCorrection);
+        mListViewModel.observeIsTrackInaccessible().observe(this, this::showInaccessibleTrack);
+        mListViewModel.observeResultFilesFound().observe(this, this::noFilesFoundMessage);
+        mListViewModel.observeLoadingState().observe(this, this::loading);
+        mListViewModel.observeActionCheckAll().observe(this, this::onCheckAll);
+        mListViewModel.getTracks().observe(this, this);
+        mListViewModel.observeInformativeMessage().observe(this, this::onMessage);
+        mListViewModel.observeOnSortTracks().observe(this, this::onSorted);
+        mListViewModel.observeOnSdPresent().observe(this, this::onSdPresent);
 
         //For Android Marshmallow and Lollipop, there is no need to request permissions
         //at runtime.
@@ -135,8 +131,7 @@ public class ListFragment extends BaseFragment implements
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-        // Inflate the mLayout for this fragment
+        // Inflate the layout for this fragment
         mRecyclerView = mLayout.findViewById(R.id.tracks_recycler_view);
         mSwipeRefreshLayout = mLayout.findViewById(R.id.refresh_layout);
         mMessage = mLayout.findViewById(R.id.message);
@@ -193,9 +188,10 @@ public class ListFragment extends BaseFragment implements
             mMessage.setText(R.string.loading_tracks);
         }
 
-        //App is opened again
+        //App is opened again, then scroll to the track being processed.
         int id = getActivity().getIntent().getIntExtra(Constants.MEDIA_STORE_ID, -1);
-        mAdapter.scrollToPosition(id);
+        int pos = mListViewModel.getTrackPosition(id);
+        mRecyclerView.scrollToPosition(pos);
     }
 
     @Override
@@ -235,37 +231,38 @@ public class ListFragment extends BaseFragment implements
                             setCustomAnimations(R.anim.slide_in_right,
                                     R.anim.slide_out_left, R.anim.slide_in_left,
                                     R.anim.slide_out_right).
-                            addToBackStack(ResultSearchListFragment.TAG).
-                            add(R.id.container_fragments, resultSearchListFragment, ResultSearchListFragment.TAG).
-                            commit();
+                            addToBackStack(resultSearchListFragment.getClass().getName()).
+                            add(R.id.container_fragments, resultSearchListFragment,
+                                    resultSearchListFragment.getClass().getName()).
+                            commitNow();
 
                 break;
             case R.id.action_refresh:
                     rescan();
                 break;
             case R.id.path_asc:
-                    mListViewModel.sortTracks(TrackContract.TrackData.DATA, TrackAdapter.ASC, id);
+                    mListViewModel.sortTracks(TrackContract.TrackData.DATA, TrackRepository.ASC, id);
                 break;
             case R.id.path_desc:
-                    mListViewModel.sortTracks(TrackContract.TrackData.DATA, TrackAdapter.DESC, id);
+                    mListViewModel.sortTracks(TrackContract.TrackData.DATA, TrackRepository.DESC, id);
                 break;
             case R.id.title_asc:
-                    mListViewModel.sortTracks(TrackContract.TrackData.TITLE, TrackAdapter.ASC, id);
+                    mListViewModel.sortTracks(TrackContract.TrackData.TITLE, TrackRepository.ASC, id);
                 break;
             case R.id.title_desc:
-                    mListViewModel.sortTracks(TrackContract.TrackData.TITLE, TrackAdapter.DESC, id);
+                    mListViewModel.sortTracks(TrackContract.TrackData.TITLE, TrackRepository.DESC, id);
                 break;
             case R.id.artist_asc:
-                    mListViewModel.sortTracks(TrackContract.TrackData.ARTIST, TrackAdapter.ASC, id);
+                    mListViewModel.sortTracks(TrackContract.TrackData.ARTIST, TrackRepository.ASC, id);
                 break;
             case R.id.artist_desc:
-                    mListViewModel.sortTracks(TrackContract.TrackData.ARTIST, TrackAdapter.DESC, id);
+                    mListViewModel.sortTracks(TrackContract.TrackData.ARTIST, TrackRepository.DESC, id);
                 break;
             case R.id.album_asc:
-                    mListViewModel.sortTracks(TrackContract.TrackData.ALBUM, TrackAdapter.ASC, id);
+                    mListViewModel.sortTracks(TrackContract.TrackData.ALBUM, TrackRepository.ASC, id);
                 break;
             case R.id.album_desc:
-                    mListViewModel.sortTracks(TrackContract.TrackData.ALBUM, TrackAdapter.DESC, id);
+                    mListViewModel.sortTracks(TrackContract.TrackData.ALBUM, TrackRepository.DESC, id);
                 break;
         }
         return true;
@@ -450,16 +447,11 @@ public class ListFragment extends BaseFragment implements
         mListViewModel.onItemClick(viewWrapper);
     }
 
-    public void showDialog(ViewWrapper viewWrapper){
-        openDetails(viewWrapper);
-    }
-
-
     /**
      * Opens new activity showing up the details from current audio item list pressed
      * @param viewWrapper a wrapper object containing the track, view , and mode of correction.
      */
-    public void openDetails(ViewWrapper viewWrapper){
+    private void openDetails(ViewWrapper viewWrapper){
         mRecyclerView.stopScroll();
 
         TrackDetailFragment trackDetailFragment;
@@ -468,10 +460,12 @@ public class ListFragment extends BaseFragment implements
         trackDetailFragment = (TrackDetailFragment) getActivity().
                 getSupportFragmentManager().findFragmentByTag(TrackDetailFragment.TAG);
         if(trackDetailFragment != null){
+
             trackDetailFragment.load(AndroidUtils.getBundle(viewWrapper.track.getMediaStoreId(),
                     viewWrapper.mode));
         }
         else {
+
             trackDetailFragment = TrackDetailFragment.newInstance(
                     viewWrapper.track.getMediaStoreId(),
                     viewWrapper.mode);
@@ -540,9 +534,8 @@ public class ListFragment extends BaseFragment implements
     private void showInaccessibleTrack(ViewWrapper viewWrapper) {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         builder.setMessage(String.format(getString(R.string.file_error), viewWrapper.track.getPath())).
-                setPositiveButton(R.string.remove_from_list, (dialog, which) -> {
-                    mListViewModel.removeTrack(viewWrapper.track);
-                });
+                setPositiveButton(R.string.remove_from_list, (dialog, which) ->
+                        mListViewModel.removeTrack(viewWrapper.track));
 
         AlertDialog alertDialog = builder.create();
         alertDialog.show();
@@ -564,17 +557,6 @@ public class ListFragment extends BaseFragment implements
     }
 
     @Override
-    public void onStartSorting() {
-        mSwipeRefreshLayout.setEnabled(false);
-    }
-
-    @Override
-    public void onFinishSorting() {
-        mSwipeRefreshLayout.setEnabled(true);
-        mRecyclerView.scrollToPosition(0);
-    }
-
-    @Override
     public void onBackPressed() {
         callSuperOnBackPressed();
     }
@@ -585,18 +567,19 @@ public class ListFragment extends BaseFragment implements
     }
 
     @Override
-    public void onTaskStarted() {
+    public void onLongRunningTaskStarted() {
         mStartTaskFab.hide();
         mStopTaskFab.show();
     }
 
     @Override
     public void onStartProcessingFor(int id) {
-        mAdapter.scrollToPosition(id);
+        int index = mListViewModel.getTrackPosition(id);
+        mRecyclerView.scrollToPosition(index);
     }
 
     @Override
-    public void onFinishProcessing(String error) {
+    public void onLongRunningTaskError(String error) {
         Toast toast = AndroidUtils.getToast(getActivity().getApplicationContext());
         toast.setText(error);
         toast.setDuration(Toast.LENGTH_SHORT);
@@ -604,7 +587,7 @@ public class ListFragment extends BaseFragment implements
     }
 
     @Override
-    public void onFinishTask() {
+    public void onLongRunningTaskFinish() {
         mStartTaskFab.show();
         mStopTaskFab.setEnabled(true);
         mStopTaskFab.hide();

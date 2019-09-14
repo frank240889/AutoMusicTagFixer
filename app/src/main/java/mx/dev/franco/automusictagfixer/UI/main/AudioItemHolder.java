@@ -10,10 +10,7 @@ import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.UI.AudioHolder;
 
 /**
- * This class helps to maintain the reference to
- * every element of item, avoiding call findViewById()
- * in every element for data source, making a considerable
- * improvement in performance of list
+ * @author Franco Castillo
  */
 public class AudioItemHolder extends AudioHolder implements View.OnClickListener {
     public interface ClickListener{
@@ -51,8 +48,8 @@ public class AudioItemHolder extends AudioHolder implements View.OnClickListener
 
     /**
      * This method of listener is implemented in
-     * activity that creates the adapter and data source
-     * @param v
+     * the host that creates the adapter and data source
+     * @param v The view clicked.
      */
     @Override
     public void onClick(View v) {
@@ -73,5 +70,4 @@ public class AudioItemHolder extends AudioHolder implements View.OnClickListener
             }
         }
     }
-
 }

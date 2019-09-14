@@ -4,17 +4,21 @@ import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MediatorLiveData;
 import android.arch.persistence.db.SimpleSQLiteQuery;
 import android.arch.persistence.db.SupportSQLiteQuery;
+import android.content.Context;
 import android.os.AsyncTask;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Executors;
 
 import mx.dev.franco.automusictagfixer.interfaces.AsyncOperation;
 import mx.dev.franco.automusictagfixer.modelsUI.AsyncOperation.TrackChecker;
+import mx.dev.franco.automusictagfixer.modelsUI.AsyncOperation.TrackInserter;
 import mx.dev.franco.automusictagfixer.modelsUI.AsyncOperation.TrackRemover;
 import mx.dev.franco.automusictagfixer.modelsUI.AsyncOperation.TrackUnchecker;
 import mx.dev.franco.automusictagfixer.modelsUI.AsyncOperation.TrackUpdater;
 import mx.dev.franco.automusictagfixer.persistence.mediastore.AsyncFileReader;
+import mx.dev.franco.automusictagfixer.persistence.mediastore.MediaStoreReader;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.persistence.room.TrackDAO;
 import mx.dev.franco.automusictagfixer.persistence.room.TrackRoomDatabase;
@@ -22,10 +26,9 @@ import mx.dev.franco.automusictagfixer.utilities.Constants;
 import mx.dev.franco.automusictagfixer.utilities.Resource;
 import mx.dev.franco.automusictagfixer.utilities.shared_preferences.AbstractSharedPreferences;
 
-import static mx.dev.franco.automusictagfixer.UI.main.TrackAdapter.ASC;
-
 public class TrackRepository {
-
+    public static final int ASC = 0;
+    public static final int DESC = 1;
     private TrackDAO mTrackDao;
     private LiveData<List<Track>> mAllTrack;
     private MediatorLiveData<List<Track>> mResultSearch = new MediatorLiveData<>();
@@ -33,11 +36,17 @@ public class TrackRepository {
     private LiveData<List<Track>> liveDataTracks;
     private AbstractSharedPreferences mAbstractSharedPreferences;
     private String mCurrentOrder;
+    private Context mContext;
 
-    public TrackRepository(TrackRoomDatabase db, AbstractSharedPreferences abstractSharedPreferences){
+    public TrackRepository(TrackRoomDatabase db,
+                           AbstractSharedPreferences abstractSharedPreferences,
+                           Context context){
         mTrackDao = db.trackDao();
         mAbstractSharedPreferences = abstractSharedPreferences;
+        mContext = context;
+
         mCurrentOrder = mAbstractSharedPreferences.getString(Constants.SORT_KEY);
+
         if(mCurrentOrder == null)
             mCurrentOrder = " title COLLATE NOCASE ASC ";
 
@@ -45,6 +54,7 @@ public class TrackRepository {
 
         SupportSQLiteQuery sqLiteQuery = new SimpleSQLiteQuery(query);
         mAllTrack = mTrackDao.getAllTracks(sqLiteQuery);
+
         mMediatorTrackData.setValue(Resource.loading(null));
         mMediatorTrackData.addSource(mAllTrack, tracks -> {
             if(tracks == null || tracks.size() == 0) {
@@ -84,6 +94,30 @@ public class TrackRepository {
             asyncFileReader.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
 
+    private void fetchFromMediaStore() {
+        MediaStoreReader mediaStoreReader = new MediaStoreReader(new AsyncOperation<Void, List<Track>, Void, Void>() {
+            @Override
+            public void onAsyncOperationStarted(Void params) {
+                mMediatorTrackData.setValue(Resource.loading(new ArrayList<>()));
+            }
+
+            @Override
+            public void onAsyncOperationFinished(List<Track> result) {
+                processFetchedTracks(result);
+            }
+        });
+        mediaStoreReader.executeOnExecutor(Executors.newCachedThreadPool(), mContext);
+    }
+
+    private void processFetchedTracks(List<Track> result) {
+        if(result.size() > 0) {
+            insert(result);
+        }
+        else {
+            mMediatorTrackData.setValue(Resource.success(new ArrayList<>()));
+        }
+    }
+
     public void setChecked(Track track){
         if(track.checked() == 1){
             track.setChecked(0);
@@ -101,17 +135,14 @@ public class TrackRepository {
     }
 
     public void checkAll(){
-        mAbstractSharedPreferences.putBoolean("sorting", false);
         new TrackChecker(mTrackDao).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
 
     public void uncheckAll(){
-        mAbstractSharedPreferences.putBoolean("sorting", false);
         new TrackUnchecker(mTrackDao).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
 
     public void delete(Track track){
-        mAbstractSharedPreferences.putBoolean("sorting", false);
         new TrackRemover(mTrackDao).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, track);
     }
 
@@ -170,5 +201,11 @@ public class TrackRepository {
             mAbstractSharedPreferences.putBoolean(Constants.ALL_ITEMS_CHECKED, true);
             checkAll();
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    private void insert(List<Track> tracks) {
+        new TrackInserter(mTrackDao).
+                executeOnExecutor(Executors.newCachedThreadPool(), tracks);
     }
 }

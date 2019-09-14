@@ -6,7 +6,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 
 import java.io.File;
-import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,12 +20,6 @@ import mx.dev.franco.automusictagfixer.utilities.Constants;
 import mx.dev.franco.automusictagfixer.utilities.shared_preferences.AbstractSharedPreferences;
 
 public class AsyncFileReader extends AsyncTask<Void, Void, Void> {
-    public interface IRetriever {
-        void onStart();
-        void onFinish(boolean emptyList);
-        void onCancel();
-    }
-
     public static final int INSERT_ALL = 0;
     public static final int UPDATE_LIST = 1;
 
@@ -36,12 +30,16 @@ public class AsyncFileReader extends AsyncTask<Void, Void, Void> {
     @Inject
     Context context;
     private AsyncOperation<Void, Boolean, Void, Void> mListener;
+    private AsyncOperation<Void, List<Track>, Void, Void> mCallback;
     private int mTask;
     private boolean mEmptyList = true;
 
-    public AsyncFileReader(){
-
+    public AsyncFileReader(AsyncOperation<Void, List<Track>, Void, Void> listener){
+        this();
+        mCallback = listener;
     }
+
+    public AsyncFileReader(){}
 
     public void setListener(AsyncOperation<Void, Boolean, Void, Void> mediaStoreRetrieverListener){
         mListener = mediaStoreRetrieverListener;
@@ -60,17 +58,21 @@ public class AsyncFileReader extends AsyncTask<Void, Void, Void> {
 
     @Override
     protected Void doInBackground(Void... voids) {
+        Cursor cursor = null;
         if(mTask == INSERT_ALL){
-            Cursor cursor = MediaStoreRetriever.getAllFromDevice(context);
+            cursor = MediaStoreRetriever.getAllFromDevice(context);
             insertAll(cursor);
             //Save process of reading identificationCompleted
             sharedPreferences.putBoolean(Constants.COMPLETE_READ, true);
         }
         else if(mTask == UPDATE_LIST){
-            Cursor cursor = MediaStoreRetriever.getAllFromDevice(context);
+            cursor = MediaStoreRetriever.getAllFromDevice(context);
             addNewTracks(cursor);
             removeInexistentTracks();
         }
+
+        if(cursor != null && !cursor.isClosed())
+            cursor.close();
 
         return null;
     }
@@ -102,7 +104,7 @@ public class AsyncFileReader extends AsyncTask<Void, Void, Void> {
         }
 
         if(tracks.size() > 0) {
-            trackDAO.insertAll(tracks);
+            trackDAO.insert(tracks);
             mEmptyList = false;
         }
         else {
@@ -124,7 +126,7 @@ public class AsyncFileReader extends AsyncTask<Void, Void, Void> {
 
         }
         if(tracks.size() > 0) {
-            trackDAO.insertAll(tracks);
+            trackDAO.insert(tracks);
             mEmptyList = false;
         }
         else {
@@ -156,29 +158,16 @@ public class AsyncFileReader extends AsyncTask<Void, Void, Void> {
      * @return A Track object
      */
     private Track buildTrack(Cursor cursor){
-        int mediaStoreId = cursor.getInt(0);//mediastore id
+        //mediastore id
+        int mediaStoreId = cursor.getInt(0);
         String title = null;
-        try {
-            title = new String(cursor.getString(1).getBytes(), "UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            title = cursor.getString(1);
-            e.printStackTrace();
-        }
+        title = new String(cursor.getString(1).getBytes(), StandardCharsets.UTF_8);
         String artist = null;
-        try {
-            artist = new String(cursor.getString(2).getBytes(), "UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-            artist = cursor.getString(2);
-        }
+        artist = new String(cursor.getString(2).getBytes(), StandardCharsets.UTF_8);
         String album = null;
-        try {
-            album = new String(cursor.getString(3).getBytes(), "UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-            album = cursor.getString(3);
-        }
-        String fullPath = Uri.parse(cursor.getString(4)).toString(); //MediaStore.Audio.Media.DATA column is the path of file
+        album = new String(cursor.getString(3).getBytes(), StandardCharsets.UTF_8);
+        //MediaStore.Audio.Media.DATA column is the path of file
+        String fullPath = Uri.parse(cursor.getString(4)).toString();
         Track track = new Track(title,artist,album,fullPath);
         track.setMediaStoreId(mediaStoreId);
         return track;

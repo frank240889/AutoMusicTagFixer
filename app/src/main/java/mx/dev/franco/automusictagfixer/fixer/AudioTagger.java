@@ -53,7 +53,7 @@ import mx.dev.franco.automusictagfixer.R;
 
 /**
  * Helper class that wraps the functionality to
- * read metadata for audio files
+ * read and write metadata for audio files.
  */
 public class AudioTagger {
     private static final String TAG = AudioTagger.class.getName();

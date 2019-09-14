@@ -8,7 +8,7 @@ package mx.dev.franco.automusictagfixer.identifier;
  */
 public interface Identifier<I, R> {
     /**
-     * Identify the input passed.
+     * Identify the input passed as parameter.
      * @param input The input to identify.
      */
     void identify(I input);

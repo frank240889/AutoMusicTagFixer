@@ -5,6 +5,7 @@ import android.arch.persistence.db.SupportSQLiteQuery;
 import android.arch.persistence.room.Dao;
 import android.arch.persistence.room.Delete;
 import android.arch.persistence.room.Insert;
+import android.arch.persistence.room.OnConflictStrategy;
 import android.arch.persistence.room.Query;
 import android.arch.persistence.room.RawQuery;
 import android.arch.persistence.room.Update;
@@ -26,11 +27,14 @@ public interface TrackDAO {
     @Query("SELECT * FROM track_table WHERE mediastore_id = :id ORDER BY title ASC")
     List<Track> getSelectedTrack(int id);
 
-    @Insert
+    @Query("SELECT COUNT(*) FROM track_table")
+    int count();
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insert(Track track);
 
-    @Insert
-    void insertAll(List<Track> tracks);
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    void insert(List<Track> tracks);
 
     @Update
     void update(Track track);

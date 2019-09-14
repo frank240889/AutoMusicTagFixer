@@ -5,6 +5,7 @@ import android.arch.lifecycle.MutableLiveData;
 import android.arch.lifecycle.Transformations;
 import android.arch.lifecycle.ViewModel;
 import android.content.Context;
+import android.support.annotation.IntegerRes;
 
 import java.util.List;
 
@@ -12,6 +13,7 @@ import javax.inject.Inject;
 
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.UI.main.ViewWrapper;
+import mx.dev.franco.automusictagfixer.UI.track_detail.SingleLiveEvent;
 import mx.dev.franco.automusictagfixer.fixer.AudioTagger;
 import mx.dev.franco.automusictagfixer.interfaces.AsyncOperation;
 import mx.dev.franco.automusictagfixer.persistence.repository.TrackRepository;
@@ -21,7 +23,6 @@ import mx.dev.franco.automusictagfixer.services.FixerTrackService;
 import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 import mx.dev.franco.automusictagfixer.utilities.Resource;
 import mx.dev.franco.automusictagfixer.utilities.ServiceUtils;
-import mx.dev.franco.automusictagfixer.utilities.Tagger;
 import mx.dev.franco.automusictagfixer.utilities.shared_preferences.AbstractSharedPreferences;
 
 public class ListViewModel extends ViewModel {
@@ -29,17 +30,17 @@ public class ListViewModel extends ViewModel {
     //The list of tracks.
     private LiveData<List<Track>> mTracks;
     //MutableLiveData objects to respond to user interactions.
-    private MutableLiveData<ViewWrapper> mTrack = new MutableLiveData<>();
-    private MutableLiveData<ViewWrapper> mTrackInaccessible = new MutableLiveData<>();
+    private MutableLiveData<ViewWrapper> mTrack = new SingleLiveEvent<>();
+    private MutableLiveData<ViewWrapper> mTrackInaccessible = new SingleLiveEvent<>();
     //LiveData to exposes data changes to observers.
-    private MutableLiveData<Void> mEmptyList = new MutableLiveData<>();
-    private MutableLiveData<ViewWrapper> mCanOpenDetails = new MutableLiveData<>();
-    private MutableLiveData<Integer> mStartAutomaticMode = new MutableLiveData<>();
+    private MutableLiveData<Void> mEmptyList = new SingleLiveEvent<>();
+    private MutableLiveData<ViewWrapper> mCanOpenDetails = new SingleLiveEvent<>();
+    private MutableLiveData<Integer> mStartAutomaticMode = new SingleLiveEvent<>();
     private MutableLiveData<Boolean> mShowProgress = new MutableLiveData<>();
-    private MutableLiveData<Boolean> mOnCheckAll = new MutableLiveData<>();
-    private MutableLiveData<Integer> mOnMessage = new MutableLiveData<>();
-    private MutableLiveData<Integer> mOnSorted = new MutableLiveData<>();
-    private MutableLiveData<Boolean> mOnSdPresent = new MutableLiveData<>();
+    private MutableLiveData<Boolean> mOnCheckAll = new SingleLiveEvent<>();
+    private MutableLiveData<Integer> mOnMessage = new SingleLiveEvent<>();
+    private MutableLiveData<Integer> mOnSorted = new SingleLiveEvent<>();
+    private MutableLiveData<Boolean> mOnSdPresent = new SingleLiveEvent<>();
     //The current list of tracks.
     private List<Track> mCurrentList;
     @Inject
@@ -54,43 +55,43 @@ public class ListViewModel extends ViewModel {
         mShowProgress.setValue(true);
     }
 
-    public LiveData<ViewWrapper> actionTrackEvaluatedSuccessfully(){
+    public LiveData<ViewWrapper> observeTrackEvaluatedSuccessfully(){
         return mTrack;
     }
 
-    public LiveData<ViewWrapper> actionIsTrackInaccessible(){
+    public LiveData<ViewWrapper> observeIsTrackInaccessible(){
         return mTrackInaccessible;
     }
 
-    public LiveData<Void> noFilesFound(){
+    public LiveData<Void> observeResultFilesFound(){
         return mEmptyList;
     }
 
-    public LiveData<Boolean> getLoader(){
+    public LiveData<Boolean> observeLoadingState(){
         return mShowProgress;
     }
 
-    public LiveData<ViewWrapper> actionCanOpenDetails(){
+    public LiveData<ViewWrapper> observeActionCanOpenDetails(){
         return mCanOpenDetails;
     }
 
-    public LiveData<Integer> actionCanStartAutomaticMode(){
+    public LiveData<Integer> observeActionCanStartAutomaticMode(){
         return mStartAutomaticMode;
     }
 
-    public MutableLiveData<Boolean> checkAll() {
+    public MutableLiveData<Boolean> observeActionCheckAll() {
         return mOnCheckAll;
     }
 
-    public MutableLiveData<Integer> getMessage() {
+    public MutableLiveData<Integer> observeInformativeMessage() {
         return mOnMessage;
     }
 
-    public MutableLiveData<Integer> onSorted() {
+    public MutableLiveData<Integer> observeOnSortTracks() {
         return mOnSorted;
     }
 
-    public LiveData<Boolean> onSdPresent() {
+    public LiveData<Boolean> observeOnSdPresent() {
         return mOnSdPresent;
     }
 
@@ -98,7 +99,7 @@ public class ListViewModel extends ViewModel {
      * Return the live data container that holds the reference to tracks from local DB.
      * @return The live data container.
      */
-    public LiveData<List<Track>> showAllTracks(){
+    public LiveData<List<Track>> getTracks(){
         LiveData<Resource<List<Track>>> tracks = trackRepository.getAllTracks();
         mTracks = Transformations.map(tracks, input -> {
             mShowProgress.setValue(input.status == Resource.Status.LOADING);
@@ -141,26 +142,18 @@ public class ListViewModel extends ViewModel {
      */
     public void onItemClick(ViewWrapper wrapper){
         Track track = mCurrentList.get(wrapper.position);
-        boolean isAccessible = Tagger.checkFileIntegrity(track.getPath());
-        ViewWrapper viewWrapper = null;
+        boolean isAccessible = AudioTagger.checkFileIntegrity(track.getPath());
         if(!isAccessible){
-            viewWrapper = new ViewWrapper();
-            viewWrapper.mode = wrapper.mode;
-            viewWrapper.position = wrapper.position;
-            viewWrapper.track = track;
-            mTrackInaccessible.setValue(viewWrapper);
+            wrapper.track = track;
+            mTrackInaccessible.setValue(wrapper);
         }
         else if(track.processing() == 1){
             mOnMessage.setValue(R.string.current_file_processing);
         }
         else {
-            viewWrapper = new ViewWrapper();
-            viewWrapper.mode = wrapper.mode;
-            viewWrapper.position = wrapper.position;
-            viewWrapper.track = track;
-            mTrack.setValue(viewWrapper);
+            wrapper.track = track;
+            mTrack.setValue(wrapper);
         }
-
     }
 
     /**
@@ -227,7 +220,7 @@ public class ListViewModel extends ViewModel {
      */
     public void onClickCover(ViewWrapper viewWrapper){
         Track track = mCurrentList.get(viewWrapper.position);
-        boolean isAccessible = Tagger.checkFileIntegrity(track.getPath());
+        boolean isAccessible = AudioTagger.checkFileIntegrity(track.getPath());
         viewWrapper.track = track;
         if(!isAccessible){
             mTrackInaccessible.setValue(viewWrapper);
@@ -250,7 +243,7 @@ public class ListViewModel extends ViewModel {
      * @param orderType the sort type, may be ascendant or descendant
      * @param idResource Current tracks in adapter.
      */
-    public void sortTracks(String by, int orderType, int idResource) {
+    public void sortTracks(String by, int orderType, @IntegerRes int idResource) {
         //wait for sorting while correction task is running
         if(serviceUtils.checkIfServiceIsRunning(FixerTrackService.class.getName())){
             mOnSorted.setValue(-1);
@@ -314,6 +307,11 @@ public class ListViewModel extends ViewModel {
         }
     }
 
+    /**
+     * Get the status text.
+     * @param status The id of track status.
+     * @return The resource string of descriptive status of track.
+     */
     private int getStatusText(int status){
         switch (status){
             case TrackState.ALL_TAGS_FOUND:
@@ -323,5 +321,38 @@ public class ListViewModel extends ViewModel {
             default:
                 return R.string.file_status_no_processed;
         }
+    }
+
+    /**
+     * Returns the track for the id passed as parameter.
+     * @param id The id of track.
+     * @return A track object or null if could not be found.
+     */
+    private Track getTrackById(int id){
+        if(mCurrentList.size() > 0){
+            for(Track track: mCurrentList){
+                if(track.getMediaStoreId() == id)
+                    return track;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Get the index of track id.
+     * @param id The id of track.
+     * @return The position of the track id in current list or 0 if
+     * the id is invalid.
+     */
+    public int getTrackPosition(int id) {
+        if(id == -1)
+            return 0;
+
+        Track track = getTrackById(id);
+        if(track != null)
+            return mCurrentList.indexOf(track);
+
+        return 0;
     }
 }

@@ -45,6 +45,9 @@ public class GnIdentifier implements Identifier<GnIdentifier.Audio, List<Identif
         this.sharedPreferences = sharedPreferences;
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void identify(Audio input) {
         track = input;
@@ -107,6 +110,9 @@ public class GnIdentifier implements Identifier<GnIdentifier.Audio, List<Identif
 
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void cancel() {
         if(mGnMusicIdFile != null)
@@ -118,11 +124,19 @@ public class GnIdentifier implements Identifier<GnIdentifier.Audio, List<Identif
         identificationListener = null;
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void registerCallback(IdentificationListener<List<IdentificationResults>, Audio> identificationListener) {
         this.identificationListener = identificationListener;
     }
 
+    /**
+     * Process the response from the API.
+     * @param gnResponseAlbums The response from the API.
+     * @return A list of results.
+     */
     private List<IdentificationResults> processResponse(GnResponseAlbums gnResponseAlbums) {
         List<IdentificationResults> results = new ArrayList<>();
 
@@ -142,6 +156,11 @@ public class GnIdentifier implements Identifier<GnIdentifier.Audio, List<Identif
 
     }
 
+    /**
+     * Process every album found in response.
+     * @param gnAlbum The album to response.
+     * @return A result object containing the info for the Input identified.
+     */
     private Result processAlbum(GnAlbum gnAlbum) {
         final Result identificationResults = new Result();
         String title = "";

@@ -21,7 +21,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
 import android.view.Window;
 import android.view.WindowManager;
-import android.widget.Toast;
 
 import java.util.List;
 
@@ -32,7 +31,6 @@ import mx.dev.franco.automusictagfixer.UI.faq.QuestionsActivity;
 import mx.dev.franco.automusictagfixer.UI.settings.SettingsActivity;
 import mx.dev.franco.automusictagfixer.receivers.ResponseReceiver;
 import mx.dev.franco.automusictagfixer.services.FixerTrackService;
-import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
 
 public class MainActivity extends AppCompatActivity implements ResponseReceiver.OnResponse,
@@ -230,22 +228,10 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
         int id = intent.getIntExtra(Constants.MEDIA_STORE_ID, -1);
         List<Fragment> fragmentList;
         switch (action) {
-            case Constants.GnServiceActions.ACTION_API_INITIALIZATION_RESULT:
-                boolean res = intent.getBooleanExtra(Constants.GnServiceActions.INITIALIZATION_RESULT, false);
-                fragmentList = getSupportFragmentManager().getFragments();
-
-                break;
-
             case Constants.Actions.ACTION_START_TASK:
                     ListFragment f1 = (ListFragment) getSupportFragmentManager().findFragmentByTag(ListFragment.class.getName());
                     if(f1 != null)
-                        f1.onTaskStarted();
-                break;
-            case Constants.Actions.ACTION_SD_CARD_ERROR:
-                    Toast toast = AndroidUtils.getToast(getApplicationContext());
-                    toast.setText(intent.getStringExtra("error"));
-                    toast.setDuration(Toast.LENGTH_SHORT);
-                    toast.show();
+                        f1.onLongRunningTaskStarted();
                 break;
             case Constants.Actions.START_PROCESSING_FOR:
                 ListFragment f2 = (ListFragment) getSupportFragmentManager().findFragmentByTag(ListFragment.class.getName());
@@ -263,8 +249,7 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
             case Constants.Actions.ACTION_COMPLETE_TASK:
                 ListFragment f4 = (ListFragment) getSupportFragmentManager().findFragmentByTag(ListFragment.class.getName());
                 if(f4 != null)
-                    f4.onFinishTask();
-                    String message = intent.getStringExtra("message");
+                    f4.onLongRunningTaskFinish();
                     getSharedPreferences(Constants.Application.FULL_QUALIFIED_NAME,
                         Context.MODE_PRIVATE).edit().putBoolean(Constants.ALL_ITEMS_CHECKED, false).
                             apply();

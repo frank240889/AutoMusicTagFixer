@@ -19,6 +19,7 @@ public class DiffExecutor extends AsyncTask<List<Track>, Void, DiffResults<Track
             mListener.onAsyncOperationStarted(null);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     protected DiffResults doInBackground(List<Track>... lists) {
         DiffUtil.DiffResult diffResult = DiffUtil.

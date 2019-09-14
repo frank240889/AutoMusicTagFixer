@@ -2,6 +2,8 @@ package mx.dev.franco.automusictagfixer.modelsUI;
 
 import android.os.AsyncTask;
 
+import java.util.List;
+
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.persistence.room.TrackDAO;
 
@@ -18,6 +20,7 @@ public class AsyncOperation {
         @Override
         protected Void doInBackground(final Void... params) {
             mAsyncTaskDao.checkAll();
+            mAsyncTaskDao = null;
             return null;
         }
     }
@@ -33,6 +36,7 @@ public class AsyncOperation {
         @Override
         protected Void doInBackground(final Void... params) {
             mAsyncTaskDao.uncheckAll();
+            mAsyncTaskDao = null;
             return null;
         }
     }
@@ -48,6 +52,7 @@ public class AsyncOperation {
         @Override
         protected Void doInBackground(final Track... track) {
             mAsyncTaskDao.update(track[0]);
+            mAsyncTaskDao = null;
             return null;
         }
     }
@@ -64,6 +69,23 @@ public class AsyncOperation {
         @Override
         protected Void doInBackground(final Track... track) {
             mAsyncTaskDao.delete(track[0]);
+            mAsyncTaskDao = null;
+            return null;
+        }
+    }
+
+    public static class TrackInserter extends AsyncTask<List<Track>, Void, Void> {
+        private TrackDAO mAsyncTaskDao;
+
+        public TrackInserter(TrackDAO trackDAO) {
+            mAsyncTaskDao = trackDAO;
+        }
+
+        @SafeVarargs
+        @Override
+        protected final Void doInBackground(List<Track>... lists) {
+            mAsyncTaskDao.insert(lists[0]);
+            mAsyncTaskDao = null;
             return null;
         }
     }
