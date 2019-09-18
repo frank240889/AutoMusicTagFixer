@@ -3,11 +3,15 @@ package mx.dev.franco.automusictagfixer.utilities;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.support.annotation.NonNull;
 import android.webkit.MimeTypeMap;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 import mx.dev.franco.automusictagfixer.R;
+import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.utilities.resource_manager.ResourceManager;
 
 /**
@@ -184,5 +188,19 @@ public final class TrackUtils {
         if(file == null)
             return null;
         return getPath(file.getAbsolutePath());
+    }
+
+    @NonNull
+    public static List<Track> getInexistentTracks(@NonNull List<Track> currentTracks){
+        List<Track> tracksToRemove = new ArrayList<>();
+
+        for(Track track:currentTracks){
+            File file = new File(track.getPath());
+            if(!file.exists()){
+                tracksToRemove.add(track);
+            }
+        }
+
+        return tracksToRemove;
     }
 }

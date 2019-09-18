@@ -87,9 +87,7 @@ public class ListFragment extends BaseFragment implements
         return fragment;
     }
 
-    public ListFragment() {
-        // Required empty public constructor
-    }
+    public ListFragment() {}
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -97,14 +95,42 @@ public class ListFragment extends BaseFragment implements
         mAdapter = new TrackAdapter(this);
         mListViewModel = ViewModelProviders.of(this).get(ListViewModel.class);
 
-        mListViewModel.observeTrackEvaluatedSuccessfully().observe(this, this::openDetails);
+        mListViewModel.observeAccessibleTrack().observe(this, this::openDetails);
         mListViewModel.observeActionCanOpenDetails().observe(this, this::openDetails);
         mListViewModel.observeActionCanStartAutomaticMode().observe(this, this::startCorrection);
         mListViewModel.observeIsTrackInaccessible().observe(this, this::showInaccessibleTrack);
-        mListViewModel.observeResultFilesFound().observe(this, this::noFilesFoundMessage);
+        mListViewModel.observeResultFilesFound().observe(this, this::noResultFilesFound);
         mListViewModel.observeLoadingState().observe(this, this::loading);
         mListViewModel.observeActionCheckAll().observe(this, this::onCheckAll);
-        mListViewModel.getTracks().observe(this, this);
+        mListViewModel.getTracks().observe(this, new Observer<List<Track>>() {
+            @Override
+            public void onChanged(@Nullable List<Track> tracks) {
+                if(tracks == null)
+                    return;
+
+                mAdapter.onChanged(tracks);
+                if(tracks.isEmpty()) {
+                    mStopTaskFab.hide();
+                    mStartTaskFab.hide();
+                    mMessage.setVisibility(View.VISIBLE);
+                    mMessage.setText(R.string.no_items_found);
+                }
+                else {
+                    boolean isServiceRunning = serviceUtils.checkIfServiceIsRunning(FixerTrackService.CLASS_NAME);
+                    if(!isServiceRunning){
+                        mStartTaskFab.show();
+                        mStopTaskFab.hide();
+                    }
+                    else {
+                        mStartTaskFab.hide();
+                        mStopTaskFab.show();
+                    }
+                    mActionBar.setTitle(tracks.size() + " " +getString(R.string.tracks));
+                    mMessage.setVisibility(View.GONE);
+                }
+            }
+        });
+
         mListViewModel.observeInformativeMessage().observe(this, this::onMessage);
         mListViewModel.observeOnSortTracks().observe(this, this::onSorted);
         mListViewModel.observeOnSdPresent().observe(this, this::onSdPresent);
@@ -154,7 +180,7 @@ public class ListFragment extends BaseFragment implements
                         RequiredPermissions.WRITE_EXTERNAL_STORAGE_PERMISSION);
             }
             else {
-                mListViewModel.fetchNewTracks();
+                rescan();
             }
         });
 
@@ -342,7 +368,7 @@ public class ListFragment extends BaseFragment implements
      * been found.
      * @param voids void param, not usable.
      */
-    private void noFilesFoundMessage(Void voids) {
+    private void noResultFilesFound(Void voids) {
         mStopTaskFab.hide();
         mStartTaskFab.hide();
         mMessage.setVisibility(View.VISIBLE);
@@ -367,7 +393,6 @@ public class ListFragment extends BaseFragment implements
                                            @NonNull int[] grantResults) {
         //Check permission to access files and execute scan if were granted
         if(grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
-            mMessage.setText(R.string.loading_tracks);
             mListViewModel.fetchTracks();
 
         }
@@ -478,38 +503,6 @@ public class ListFragment extends BaseFragment implements
                     commit();
         }
 
-    }
-
-    /**
-     * Runs when a modification in database
-     * occurred
-     * @param tracks The list with the new data.
-     */
-    @Override
-    public void onChanged(@Nullable List<Track> tracks) {
-        if(tracks == null)
-            return;
-
-        mAdapter.onChanged(tracks);
-        if(tracks.isEmpty()) {
-            mStopTaskFab.hide();
-            mStartTaskFab.hide();
-            mMessage.setVisibility(View.VISIBLE);
-            mMessage.setText(R.string.no_items_found);
-        }
-        else {
-            boolean isServiceRunning = serviceUtils.checkIfServiceIsRunning(FixerTrackService.CLASS_NAME);
-            if(!isServiceRunning){
-                mStartTaskFab.show();
-                mStopTaskFab.hide();
-            }
-            else {
-                mStartTaskFab.hide();
-                mStopTaskFab.show();
-            }
-            mActionBar.setTitle(tracks.size() + " " +getString(R.string.tracks));
-            mMessage.setVisibility(View.GONE);
-        }
     }
 
     private void stopCorrection() {

@@ -2,6 +2,7 @@ package mx.dev.franco.automusictagfixer.persistence.repository;
 
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MediatorLiveData;
+import android.arch.lifecycle.MutableLiveData;
 import android.arch.persistence.db.SimpleSQLiteQuery;
 import android.arch.persistence.db.SupportSQLiteQuery;
 import android.content.Context;
@@ -34,6 +35,8 @@ public class TrackRepository {
     private MediatorLiveData<List<Track>> mResultSearch = new MediatorLiveData<>();
     private MediatorLiveData<Resource<List<Track>>> mMediatorTrackData = new MediatorLiveData<>();
     private LiveData<List<Track>> liveDataTracks;
+    private MutableLiveData<String> mObservableMessage;
+    private MutableLiveData<Boolean> mProgressObservable;
     private AbstractSharedPreferences mAbstractSharedPreferences;
     private String mCurrentOrder;
     private Context mContext;
@@ -44,6 +47,9 @@ public class TrackRepository {
         mTrackDao = db.trackDao();
         mAbstractSharedPreferences = abstractSharedPreferences;
         mContext = context;
+
+        mProgressObservable = new MutableLiveData<>();
+        mObservableMessage = new MutableLiveData<>();
 
         mCurrentOrder = mAbstractSharedPreferences.getString(Constants.SORT_KEY);
 
@@ -74,16 +80,42 @@ public class TrackRepository {
         return mResultSearch;
     }
 
-    public void fetchTracks(final AsyncOperation<Void, Boolean, Void, Void> iRetriever){
+    public MutableLiveData<String> observeMessage() {
+        return mObservableMessage;
+    }
+
+    public MutableLiveData<Boolean> observeProgress() {
+        return mProgressObservable;
+    }
+
+    /**
+     * Recover tracks from MediaStore the first time the app is opened.
+     * @param iRetriever
+     */
+    public void fetchTracks(){
         boolean databaseCreationCompleted = mAbstractSharedPreferences.getBoolean(Constants.COMPLETE_READ);
         if(!databaseCreationCompleted) {
-            AsyncFileReader asyncFileReader = new AsyncFileReader();
-            asyncFileReader.setTask(AsyncFileReader.INSERT_ALL);
-            asyncFileReader.setListener(iRetriever);
-            asyncFileReader.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+            MediaStoreReader mediaStoreReader = new MediaStoreReader(new AsyncOperation<Void, List<Track>, Void, Void>() {
+                @Override
+                public void onAsyncOperationStarted(Void params) {
+                    mProgressObservable.setValue(true);
+                }
+
+                @Override
+                public void onAsyncOperationFinished(List<Track> result) {
+                    mProgressObservable.setValue(false);
+                    //Save process of reading identificationCompleted and first time reading complete.
+                    mAbstractSharedPreferences.putBoolean("first_time_read", true);
+                    mAbstractSharedPreferences.putBoolean(Constants.COMPLETE_READ, true);
+                    if(result.size() > 0) {
+                        insert(result);
+                    }
+                }
+            });
+            mediaStoreReader.executeOnExecutor(Executors.newCachedThreadPool());
         }
         else {
-            iRetriever.onAsyncOperationFinished(false);
+            mProgressObservable.setValue(false);
         }
     }
 
@@ -94,28 +126,25 @@ public class TrackRepository {
             asyncFileReader.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
 
-    private void fetchFromMediaStore() {
+    public void rescan() {
         MediaStoreReader mediaStoreReader = new MediaStoreReader(new AsyncOperation<Void, List<Track>, Void, Void>() {
             @Override
             public void onAsyncOperationStarted(Void params) {
-                mMediatorTrackData.setValue(Resource.loading(new ArrayList<>()));
+                mProgressObservable.setValue(true);
             }
 
             @Override
             public void onAsyncOperationFinished(List<Track> result) {
-                processFetchedTracks(result);
+                mProgressObservable.setValue(false);
+                //Save process of reading identificationCompleted and first time reading complete.
+                mAbstractSharedPreferences.putBoolean("first_time_read", true);
+                mAbstractSharedPreferences.putBoolean(Constants.COMPLETE_READ, true);
+                if(result.size() > 0) {
+                    insert(result);
+                }
             }
         });
-        mediaStoreReader.executeOnExecutor(Executors.newCachedThreadPool(), mContext);
-    }
-
-    private void processFetchedTracks(List<Track> result) {
-        if(result.size() > 0) {
-            insert(result);
-        }
-        else {
-            mMediatorTrackData.setValue(Resource.success(new ArrayList<>()));
-        }
+        mediaStoreReader.executeOnExecutor(Executors.newCachedThreadPool());
     }
 
     public void setChecked(Track track){

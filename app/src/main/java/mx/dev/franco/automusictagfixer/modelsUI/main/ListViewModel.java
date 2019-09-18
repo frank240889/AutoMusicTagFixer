@@ -30,17 +30,18 @@ public class ListViewModel extends ViewModel {
     //The list of tracks.
     private LiveData<List<Track>> mTracks;
     //MutableLiveData objects to respond to user interactions.
-    private MutableLiveData<ViewWrapper> mTrack = new SingleLiveEvent<>();
-    private MutableLiveData<ViewWrapper> mTrackInaccessible = new SingleLiveEvent<>();
+    private MutableLiveData<ViewWrapper> mObservableAccessibleTrack = new SingleLiveEvent<>();
+    private MutableLiveData<ViewWrapper> mObservableInaccessibleTrack = new SingleLiveEvent<>();
     //LiveData to exposes data changes to observers.
-    private MutableLiveData<Void> mEmptyList = new SingleLiveEvent<>();
-    private MutableLiveData<ViewWrapper> mCanOpenDetails = new SingleLiveEvent<>();
+    private MutableLiveData<Void> mObservableEmptyList = new SingleLiveEvent<>();
+    private MutableLiveData<ViewWrapper> mObservableOpenTrackDetails = new SingleLiveEvent<>();
     private MutableLiveData<Integer> mStartAutomaticMode = new SingleLiveEvent<>();
-    private MutableLiveData<Boolean> mShowProgress = new MutableLiveData<>();
-    private MutableLiveData<Boolean> mOnCheckAll = new SingleLiveEvent<>();
-    private MutableLiveData<Integer> mOnMessage = new SingleLiveEvent<>();
+    private MutableLiveData<Boolean> mObservableProgress;
+    private MutableLiveData<Boolean> mObservableCheckAllTracks = new SingleLiveEvent<>();
+    private MutableLiveData<Integer> mObservableMessage = new SingleLiveEvent<>();
     private MutableLiveData<Integer> mOnSorted = new SingleLiveEvent<>();
-    private MutableLiveData<Boolean> mOnSdPresent = new SingleLiveEvent<>();
+    private MutableLiveData<Boolean> mObservableOnSdPresent = new SingleLiveEvent<>();
+    private MutableLiveData<String> mObservableMessage2;
     //The current list of tracks.
     private List<Track> mCurrentList;
     @Inject
@@ -52,27 +53,28 @@ public class ListViewModel extends ViewModel {
 
 
     public ListViewModel() {
-        mShowProgress.setValue(true);
+        mObservableProgress = trackRepository.observeProgress();
+        mObservableMessage2 = trackRepository.observeMessage();
     }
 
-    public LiveData<ViewWrapper> observeTrackEvaluatedSuccessfully(){
-        return mTrack;
+    public LiveData<ViewWrapper> observeAccessibleTrack(){
+        return mObservableAccessibleTrack;
     }
 
     public LiveData<ViewWrapper> observeIsTrackInaccessible(){
-        return mTrackInaccessible;
+        return mObservableInaccessibleTrack;
     }
 
     public LiveData<Void> observeResultFilesFound(){
-        return mEmptyList;
+        return mObservableEmptyList;
     }
 
     public LiveData<Boolean> observeLoadingState(){
-        return mShowProgress;
+        return mObservableProgress;
     }
 
     public LiveData<ViewWrapper> observeActionCanOpenDetails(){
-        return mCanOpenDetails;
+        return mObservableOpenTrackDetails;
     }
 
     public LiveData<Integer> observeActionCanStartAutomaticMode(){
@@ -80,11 +82,11 @@ public class ListViewModel extends ViewModel {
     }
 
     public MutableLiveData<Boolean> observeActionCheckAll() {
-        return mOnCheckAll;
+        return mObservableCheckAllTracks;
     }
 
     public MutableLiveData<Integer> observeInformativeMessage() {
-        return mOnMessage;
+        return mObservableMessage;
     }
 
     public MutableLiveData<Integer> observeOnSortTracks() {
@@ -92,7 +94,7 @@ public class ListViewModel extends ViewModel {
     }
 
     public LiveData<Boolean> observeOnSdPresent() {
-        return mOnSdPresent;
+        return mObservableOnSdPresent;
     }
 
     /**
@@ -102,7 +104,7 @@ public class ListViewModel extends ViewModel {
     public LiveData<List<Track>> getTracks(){
         LiveData<Resource<List<Track>>> tracks = trackRepository.getAllTracks();
         mTracks = Transformations.map(tracks, input -> {
-            mShowProgress.setValue(input.status == Resource.Status.LOADING);
+            mObservableProgress.setValue(input.status == Resource.Status.LOADING);
             mCurrentList = input.data;
             return mCurrentList;
         });
@@ -120,7 +122,7 @@ public class ListViewModel extends ViewModel {
 
     /**
      * Removes data of track from DB of app.
-     * @param track The track to remove its info.
+     * @param track The track to remove from local DB.
      */
     public void removeTrack(Track track){
         trackRepository.delete(track);
@@ -145,14 +147,14 @@ public class ListViewModel extends ViewModel {
         boolean isAccessible = AudioTagger.checkFileIntegrity(track.getPath());
         if(!isAccessible){
             wrapper.track = track;
-            mTrackInaccessible.setValue(wrapper);
+            mObservableInaccessibleTrack.setValue(wrapper);
         }
         else if(track.processing() == 1){
-            mOnMessage.setValue(R.string.current_file_processing);
+            mObservableMessage.setValue(R.string.current_file_processing);
         }
         else {
             wrapper.track = track;
-            mTrack.setValue(wrapper);
+            mObservableAccessibleTrack.setValue(wrapper);
         }
     }
 
@@ -160,53 +162,32 @@ public class ListViewModel extends ViewModel {
      * Fetches the tracks from MediaStore.
      */
     public void fetchTracks(){
-        if(sharedPreferences.getBoolean("first_time_read"))
+        if(sharedPreferences.getBoolean("first_time_read")) {
             return;
+        }
 
-        trackRepository.fetchTracks(new AsyncOperation<Void, Boolean, Void, Void>() {
-            @Override
-            public void onAsyncOperationStarted(Void params) {
-                mShowProgress.setValue(true);
-            }
-
-            @Override
-            public void onAsyncOperationFinished(Boolean result) {
-                mShowProgress.setValue(false);
-                sharedPreferences.putBoolean("first_time_read", true);
-                if(result){
-                    mEmptyList.setValue(null);
-                    mOnMessage.setValue(R.string.no_items_found);
-                }
-            }
-
-            @Override
-            public void onAsyncOperationCancelled(Void cancellation) {
-                mShowProgress.setValue(false);
-            }
-
-            @Override
-            public void onAsyncOperationError(Void error) {}
-        });
+        trackRepository.fetchTracks();
     }
 
     /**
      * Re scan the media store.
      */
     public void fetchNewTracks(){
+        trackRepository.rescan();
         trackRepository.fetchNewTracks(new AsyncOperation<Void, Boolean, Void, Void>() {
             @Override
             public void onAsyncOperationStarted(Void params) {
-                mShowProgress.setValue(true);
+                mObservableProgress.setValue(true);
             }
 
             @Override
             public void onAsyncOperationFinished(Boolean result) {
-                mShowProgress.setValue(false);
+                mObservableProgress.setValue(false);
             }
 
             @Override
             public void onAsyncOperationCancelled(Void cancellation) {
-                mShowProgress.setValue(false);
+                mObservableProgress.setValue(false);
             }
 
             @Override
@@ -223,18 +204,18 @@ public class ListViewModel extends ViewModel {
         boolean isAccessible = AudioTagger.checkFileIntegrity(track.getPath());
         viewWrapper.track = track;
         if(!isAccessible){
-            mTrackInaccessible.setValue(viewWrapper);
+            mObservableInaccessibleTrack.setValue(viewWrapper);
         }
         else if(track.processing() == 1){
-            mOnMessage.setValue(R.string.current_file_processing);
+            mObservableMessage.setValue(R.string.current_file_processing);
         }
         else {
-            mCanOpenDetails.setValue(viewWrapper);
+            mObservableOpenTrackDetails.setValue(viewWrapper);
         }
     }
 
     public void setLoading(boolean showProgress){
-        mShowProgress.setValue(showProgress);
+        mObservableProgress.setValue(showProgress);
     }
 
     /**
@@ -247,12 +228,12 @@ public class ListViewModel extends ViewModel {
         //wait for sorting while correction task is running
         if(serviceUtils.checkIfServiceIsRunning(FixerTrackService.class.getName())){
             mOnSorted.setValue(-1);
-            mOnMessage.setValue(R.string.no_available);
+            mObservableMessage.setValue(R.string.no_available);
         }
 
         if(mCurrentList == null || mCurrentList.isEmpty()) {
             mOnSorted.setValue(-1);
-            mOnMessage.setValue(R.string.no_available);
+            mObservableMessage.setValue(R.string.no_available);
         }
 
         boolean sorted = trackRepository.sortTracks(by, orderType);
@@ -262,12 +243,12 @@ public class ListViewModel extends ViewModel {
 
     public void checkAllTracks() {
         if(mCurrentList != null && mCurrentList.size() > 0) {
-            mOnCheckAll.setValue(true);
+            mObservableCheckAllTracks.setValue(true);
             checkAllItems();
         }
         else {
-            mOnCheckAll.setValue(false);
-            mOnMessage.setValue(R.string.no_available);
+            mObservableCheckAllTracks.setValue(false);
+            mObservableMessage.setValue(R.string.no_available);
         }
 
     }
@@ -277,7 +258,7 @@ public class ListViewModel extends ViewModel {
      */
     public void rescan() {
         if(serviceUtils.checkIfServiceIsRunning(FixerTrackService.class.getName())){
-            mOnMessage.setValue(R.string.no_available);
+            mObservableMessage.setValue(R.string.no_available);
         }
         else {
             fetchNewTracks();
@@ -289,7 +270,7 @@ public class ListViewModel extends ViewModel {
      * @param position The position of the clicked item.
      */
     public void onCheckMarkClick(int position) {
-        mOnMessage.setValue(getStatusText(mCurrentList.get(position).getState()));
+        mObservableMessage.setValue(getStatusText(mCurrentList.get(position).getState()));
     }
 
     /**
@@ -300,10 +281,10 @@ public class ListViewModel extends ViewModel {
         boolean isPresentSD = AudioTagger.StorageHelper.getInstance(context.getApplicationContext()).
                 isPresentRemovableStorage();
         if(AndroidUtils.getUriSD(context.getApplicationContext()) == null && isPresentSD) {
-            mOnSdPresent.setValue(true);
+            mObservableOnSdPresent.setValue(true);
         }
         else {
-            mOnSdPresent.setValue(false);
+            mObservableOnSdPresent.setValue(false);
         }
     }
 
