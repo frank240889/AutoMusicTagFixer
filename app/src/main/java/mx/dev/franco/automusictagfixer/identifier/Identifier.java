@@ -31,7 +31,7 @@ public interface Identifier<I, R> {
      */
     interface IdentificationListener<R, I> {
         void onIdentificationStart(I file);
-        void onIdentificationFinished(R result);
+        void onIdentificationFinished(R result, I file);
         void onIdentificationError(I file, String error);
         void onIdentificationCancelled(I file);
         void onIdentificationNotFound(I file);

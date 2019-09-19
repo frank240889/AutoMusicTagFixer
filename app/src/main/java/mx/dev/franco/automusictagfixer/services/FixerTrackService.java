@@ -7,16 +7,13 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Build;
-import android.os.Handler;
 import android.os.IBinder;
-import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 import android.support.v4.app.NotificationCompat;
@@ -24,14 +21,6 @@ import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
-import org.jaudiotagger.audio.AudioFileIO;
-import org.jaudiotagger.audio.exceptions.CannotReadException;
-import org.jaudiotagger.audio.exceptions.InvalidAudioFrameException;
-import org.jaudiotagger.audio.exceptions.ReadOnlyFileException;
-import org.jaudiotagger.tag.TagException;
-
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -41,12 +30,17 @@ import javax.inject.Inject;
 import mx.dev.franco.automusictagfixer.BuildConfig;
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.UI.main.MainActivity;
-import mx.dev.franco.automusictagfixer.fixer.Fixer;
+import mx.dev.franco.automusictagfixer.fixer.AudioTagger;
+import mx.dev.franco.automusictagfixer.fixer.FileTagger;
+import mx.dev.franco.automusictagfixer.fixer.FixerService;
 import mx.dev.franco.automusictagfixer.fixer.IdLoader;
+import mx.dev.franco.automusictagfixer.fixer.MetadataFixer;
 import mx.dev.franco.automusictagfixer.fixer.TrackLoader;
 import mx.dev.franco.automusictagfixer.identifier.GnApiService;
+import mx.dev.franco.automusictagfixer.identifier.GnIdentifier;
+import mx.dev.franco.automusictagfixer.identifier.Identifier;
+import mx.dev.franco.automusictagfixer.interfaces.AsyncOperation;
 import mx.dev.franco.automusictagfixer.interfaces.InfoTrackLoader;
-import mx.dev.franco.automusictagfixer.interfaces.TrackListLoader;
 import mx.dev.franco.automusictagfixer.persistence.repository.TrackRepository;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.persistence.room.TrackRoomDatabase;
@@ -55,19 +49,20 @@ import mx.dev.franco.automusictagfixer.utilities.Constants;
 import mx.dev.franco.automusictagfixer.utilities.Tagger;
 import mx.dev.franco.automusictagfixer.utilities.TrackUtils;
 import mx.dev.franco.automusictagfixer.utilities.resource_manager.ResourceManager;
+import mx.dev.franco.automusictagfixer.utilities.shared_preferences.AbstractSharedPreferences;
 
 /**
  * Created by franco on 17/08/17.
  */
 
-public class FixerTrackService extends Service implements GnResponseListener.GnListener,
-        Fixer.OnCorrectionListener, TrackListLoader<List<Integer>>, InfoTrackLoader<List<Track>>
+public class FixerTrackService extends Service implements
+        FixerService.OnCorrectionListener, InfoTrackLoader<List<Track>>
         ,ResponseReceiver.OnResponse{
     public static String CLASS_NAME = FixerTrackService.class.getName();
     //Notification on status bar
     private Notification mNotification;
-    private static volatile TrackIdentifier sIdentifier;
-    private static Fixer sFixer;
+    private static Identifier<Track, List<Identifier.IdentificationResults>> sIdentifier;
+    private static MetadataFixer sFixer;
     private static TrackLoader sTrackDataLoader;
     @Inject
     TrackRepository mTrackRepository;
@@ -75,12 +70,20 @@ public class FixerTrackService extends Service implements GnResponseListener.GnL
     TrackRoomDatabase trackRoomDatabase;
     @Inject
     ResourceManager resourceManager;
+    @Inject
+    GnApiService mGnApiService;
+    @Inject
+    AudioTagger tagger;
+    @Inject
+    AbstractSharedPreferences sharedPreferences;
+
     private static IdLoader sIdLoader;
     private boolean isRunning = false;
     private List<Integer> mIds = new ArrayList<>();
     private ResponseReceiver mReceiver;
     private String messageFinishTask = "";
     private boolean mIsCancelled = false;
+    private FixerState mFixerState;
 
 
     /**
@@ -93,7 +96,6 @@ public class FixerTrackService extends Service implements GnResponseListener.GnL
     @Override
     public void onCreate(){
         super.onCreate();
-        setupReceiver();
         notifyStartingCorrection();
     }
 
@@ -106,13 +108,12 @@ public class FixerTrackService extends Service implements GnResponseListener.GnL
      */
     @Override
     public int onStartCommand(final Intent intent, int flags, int startId){
-        super.onStartCommand(intent,flags,startId);
         //When setting "Corrección en segundo plano" is on,
         //then the service will be able to run in background,
         //and a correction won't stop when app closes, but when you explicitly
         //stop the task by pressing stop button in main screen or notification or task finishes.
         String action = intent.getAction();
-        if(action != null && action.equals(Constants.Actions.ACTION_COMPLETE_TASK)){
+        if(action != null && action.equals(Constants.Actions.ACTION_STOP_TASK)){
             messageFinishTask = getString(R.string.task_cancelled);
             mIsCancelled = true;
             if(isRunning)
@@ -126,41 +127,26 @@ public class FixerTrackService extends Service implements GnResponseListener.GnL
             SharedPreferences sharedPreferences =
                     getSharedPreferences(Constants.Application.FULL_QUALIFIED_NAME, Context.MODE_PRIVATE);
             String order = sharedPreferences.getString(Constants.SORT_KEY, null);
-            sIdLoader = new IdLoader(this, trackRoomDatabase);
+
+            sIdLoader = new IdLoader(new AsyncOperation<Void, List<Integer>, Void, Void>() {
+                @Override
+                public void onAsyncOperationFinished(List<Integer> result) {
+                    sIdLoader = null;
+                    if(result.isEmpty()) {
+                        messageFinishTask = getString(R.string.no_songs_to_correct);
+                        notifyFinished();
+                        stopSelf();
+                    }
+                    else {
+                        mIds.addAll(result);
+                        shouldContinue();
+                    }
+                }
+
+            }, trackRoomDatabase);
             sIdLoader.executeOnExecutor(Executors.newSingleThreadExecutor(), order);
         }
-        return START_NOT_STICKY;
-    }
-
-
-    @Override
-    public void onDataLoaded(List<Integer> tracks) {
-        sIdLoader = null;
-        if(tracks.isEmpty()) {
-            messageFinishTask = getString(R.string.no_songs_to_correct);
-            notifyFinished();
-            stopSelf();
-        }
-        else {
-            mIds.addAll(tracks);
-            shouldContinue();
-        }
-    }
-
-    /**
-     * Allows to register filters to handle
-     * only certain actions sent by FixerTrackService
-     */
-    private void setupReceiver(){
-        //create filters to listen for response from FixerTrackService
-        IntentFilter mConnectionLost = new IntentFilter(Constants.Actions.ACTION_CONNECTION_LOST);
-        IntentFilter mediaMounted = new IntentFilter(Intent.ACTION_MEDIA_MOUNTED);
-        IntentFilter mediaUnmounted = new IntentFilter(Intent.ACTION_MEDIA_UNMOUNTED);
-        mReceiver = new ResponseReceiver(this, new Handler());
-        LocalBroadcastManager.getInstance(getApplicationContext()).registerReceiver(mReceiver, mConnectionLost);
-        LocalBroadcastManager.getInstance(getApplicationContext()).registerReceiver(mReceiver, mediaMounted);
-        LocalBroadcastManager.getInstance(getApplicationContext()).registerReceiver(mReceiver, mediaUnmounted);
-
+        return super.onStartCommand(intent,flags,startId);
     }
 
     private void startCorrection(){
@@ -175,48 +161,169 @@ public class FixerTrackService extends Service implements GnResponseListener.GnL
             stopSelf();
         }
         else if (!isRunning){
-            sTrackDataLoader = new TrackLoader(this, trackRoomDatabase);
+            sTrackDataLoader = new TrackLoader(new AsyncOperation<Void, List<Track>, Void, Void>() {
+                @Override
+                public void onAsyncOperationFinished(List<Track> result) {
+                    processTrack(result);
+                }
+            }, trackRoomDatabase);
             sTrackDataLoader.executeOnExecutor(Executors.newSingleThreadExecutor(), mIds.get(0));
         }
     }
 
 
     private boolean canContinue(){
-        if(GnApiService.getInstance().isApiInitializing()|| !GnApiService.getInstance().isApiInitialized()){
-            GnApiService.getInstance().initializeAPI();
+        if(mGnApiService.isApiInitializing()|| !mGnApiService.isApiInitialized()){
+            mGnApiService.initializeAPI();
             return false;
         }
 
         return true;
     }
 
-    @Override
-    public void onTrackDataLoaded(List<Track> data) {
+    public void processTrack(List<Track> data) {
         if(mIsCancelled){
             messageFinishTask = getString(R.string.task_cancelled);
             notifyFinished();
             stopSelf();
         }
         else {
-            sIdentifier = new TrackIdentifier();
-            sIdentifier.setResourceManager(resourceManager);
-            sIdentifier.setTrack(data.get(0));
-            sIdentifier.setGnListener(this);
-            isRunning = true;
-            try {
-                AudioFileIO.read(new File(data.get(0).getPath()));
-                startNotification(getString(R.string.correction_in_progress),
-                        getString(R.string.correcting) +" " +
-                                TrackUtils.getFilename(data.get(0).getPath()),
-                        getString(R.string.starting_correction), data.get(0).getMediaStoreId());
-                sIdentifier.execute();
-            } catch (CannotReadException | IOException
-                    | ReadOnlyFileException | TagException | InvalidAudioFrameException e) {
-                e.printStackTrace();
+            if(AudioTagger.checkFileIntegrity(data.get(0).getPath())) {
                 identificationError(getString(R.string.could_not_read_file), data.get(0));
             }
+            else {
+                sIdentifier = new GnIdentifier(mGnApiService, sharedPreferences);
+                sIdentifier.registerCallback(new Identifier.IdentificationListener<List<Identifier.IdentificationResults>, Track>() {
+                    @Override
+                    public void onIdentificationStart(Track file) {
+                        mFixerState = FixerState.IDENTIFYING;
+                        onStartIdentification(file);
+                    }
+
+                    @Override
+                    public void onIdentificationFinished(List<Identifier.IdentificationResults> result, Track file) {
+                        sTrackDataLoader = null;
+                        identificationFound(result, file);
+                    }
+
+                    @Override
+                    public void onIdentificationError(Track file, String error) {
+                        sTrackDataLoader = null;
+                    }
+
+                    @Override
+                    public void onIdentificationCancelled(Track file) {
+                        sTrackDataLoader = null;
+                    }
+
+                    @Override
+                    public void onIdentificationNotFound(Track file) {
+                        sTrackDataLoader = null;
+                    }
+                });
+
+                sIdentifier.identify(data.get(0));
+            }
         }
-        sTrackDataLoader = null;
+    }
+
+
+    private void onStartIdentification(Track track) {
+        isRunning = true;
+        Intent intent = new Intent(Constants.Actions.START_PROCESSING_FOR);
+        intent.putExtra(Constants.MEDIA_STORE_ID, track.getMediaStoreId());
+        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcastSync(intent);
+        if(mTrackRepository != null) {
+            track.setChecked(1);
+            track.setProcessing(1);
+            mTrackRepository.update(track);
+        }
+        startNotification(TrackUtils.getPath(track.getPath()),
+                getString(R.string.correction_in_progress),
+                getString(R.string.identifying), track.getMediaStoreId());
+    }
+
+    private void identificationError(String error, Track track) {
+        startNotification(getString(R.string.correction_in_progress), "", error, track.getMediaStoreId() );
+
+        Intent intent = new Intent(Constants.Actions.FINISH_TRACK_PROCESSING);
+        intent.putExtra("error", error);
+        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcastSync(intent);
+
+        if(mTrackRepository != null) {
+            track.setChecked(0);
+            track.setProcessing(0);
+            mTrackRepository.update(track);
+        }
+
+        isRunning = false;
+        if(mIds!= null && mIds.size()>0)
+            mIds.remove(0);
+        shouldContinue();
+    }
+
+    private void identificationNotFound(Track track) {
+        if(sIdentifier != null){
+            sIdentifier = null;
+        }
+        startNotification(TrackUtils.getPath(track.getPath()),getString(R.string.correction_in_progress),
+                getString(R.string.no_match_found), track.getMediaStoreId() );
+
+        Intent intent = new Intent(Constants.Actions.FINISH_TRACK_PROCESSING);
+        intent.putExtra(Constants.MEDIA_STORE_ID, track.getMediaStoreId());
+        intent.putExtra("processing", false);
+        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcastSync(intent);
+
+        if(mTrackRepository != null) {
+            track.setChecked(0);
+            track.setProcessing(0);
+            mTrackRepository.update(track);
+        }
+        isRunning = false;
+        if(mIds != null && mIds.size()>0)
+            mIds.remove(0);
+        shouldContinue();
+    }
+
+    public void identificationFound(List<Identifier.IdentificationResults> result, Track track) {
+        startNotification(TrackUtils.getPath(track.getPath()), getString(R.string.match_found),
+                getString(R.string.starting_correction), track.getMediaStoreId() );
+        sFixer = new MetadataFixer(new AsyncOperation<Track, MetadataFixer.Result, Track, MetadataFixer.Error>() {
+            @Override
+            public void onAsyncOperationStarted(Track params) {
+
+            }
+
+            @Override
+            public void onAsyncOperationFinished(MetadataFixer.Result result) {
+
+            }
+
+            @Override
+            public void onAsyncOperationCancelled(Track cancellation) {
+
+            }
+
+            @Override
+            public void onAsyncOperationError(MetadataFixer.Error error) {
+
+            }
+        }, new FileTagger(tagger), new FileTagger.InputParams(), track);
+
+        sFixer.executeOnExecutor(Executors.newSingleThreadExecutor());
+    }
+
+    public void onIdentificationCancelled(String cancelledReason, Track track) {
+        messageFinishTask = getString(R.string.task_cancelled);
+
+        if(mTrackRepository != null && track != null) {
+            track.setChecked(0);
+            track.setProcessing(0);
+            mTrackRepository.update(track);
+        }
+        notifyFinished();
+        stopSelf();
+        isRunning = false;
     }
 
     /**
@@ -262,7 +369,7 @@ public class FixerTrackService extends Service implements GnResponseListener.GnL
 
     private void stopIdentification(){
         if(sIdentifier != null){
-            sIdentifier.cancelIdentification();
+            sIdentifier.cancel();
         }
         sIdentifier = null;
     }
@@ -365,132 +472,8 @@ public class FixerTrackService extends Service implements GnResponseListener.GnL
 
     private void notifyStartingCorrection(){
         Intent results = new Intent(Constants.Actions.ACTION_START_TASK);
-        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcastSync(results);
+        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(results);
     }
-
-    /**************************IDENTIFICATION CALLBACKS
-     * @param track************************/
-    @Override
-    public void onStartIdentification(Track track) {
-        isRunning = true;
-        Intent intent = new Intent(Constants.Actions.START_PROCESSING_FOR);
-        intent.putExtra(Constants.MEDIA_STORE_ID, track.getMediaStoreId());
-        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcastSync(intent);
-        if(mTrackRepository != null) {
-            track.setChecked(1);
-            track.setProcessing(1);
-            mTrackRepository.update(track);
-        }
-        startNotification(TrackUtils.getPath(track.getPath()),
-                getString(R.string.correction_in_progress),
-                getString(R.string.identifying), track.getMediaStoreId());
-    }
-
-    @Override
-    public void statusIdentification(String status, Track track) {
-
-    }
-
-    @Override
-    public void gatheringFingerprint(Track track) {
-        startNotification(TrackUtils.getPath(track.getPath()),
-                getString(R.string.correction_in_progress),
-                getString(R.string.generating_fingerprint), track.getMediaStoreId());
-    }
-
-    @Override
-    public void identificationError(String error, Track track) {
-        if(sIdentifier != null){
-            sIdentifier = null;
-        }
-        startNotification(getString(R.string.correction_in_progress), "", error, track.getMediaStoreId() );
-
-        Intent intent = new Intent(Constants.Actions.FINISH_TRACK_PROCESSING);
-        intent.putExtra("error", error);
-        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcastSync(intent);
-
-        if(mTrackRepository != null) {
-            track.setChecked(0);
-            track.setProcessing(0);
-            mTrackRepository.update(track);
-        }
-
-        isRunning = false;
-        if(mIds!= null && mIds.size()>0)
-            mIds.remove(0);
-        shouldContinue();
-    }
-
-    @Override
-    public void identificationNotFound(Track track) {
-        if(sIdentifier != null){
-            sIdentifier = null;
-        }
-        startNotification(TrackUtils.getPath(track.getPath()),getString(R.string.correction_in_progress),
-                getString(R.string.no_match_found), track.getMediaStoreId() );
-
-        Intent intent = new Intent(Constants.Actions.FINISH_TRACK_PROCESSING);
-        intent.putExtra(Constants.MEDIA_STORE_ID, track.getMediaStoreId());
-        intent.putExtra("processing", false);
-        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcastSync(intent);
-
-        if(mTrackRepository != null) {
-            track.setChecked(0);
-            track.setProcessing(0);
-            mTrackRepository.update(track);
-        }
-        isRunning = false;
-        if(mIds != null && mIds.size()>0)
-            mIds.remove(0);
-        shouldContinue();
-    }
-
-    @Override
-    public void identificationFound(GnResponseListener.IdentificationResults results, Track track) {
-        if(sIdentifier != null){
-            sIdentifier = null;
-        }
-        startNotification(TrackUtils.getPath(track.getPath()), getString(R.string.match_found),
-                getString(R.string.starting_correction), track.getMediaStoreId() );
-        sFixer = new Fixer(this);
-        boolean shouldRename = PreferenceManager.
-                getDefaultSharedPreferences(getApplicationContext()).
-                getBoolean("key_rename_file_automatic_mode", true);
-        int task = PreferenceManager.
-                getDefaultSharedPreferences(getApplicationContext()).
-                getBoolean("key_overwrite_all_tags_automatic_mode", true) ?
-                Tagger.MODE_OVERWRITE_ALL_TAGS : Tagger.MODE_WRITE_ONLY_MISSING;
-
-        sFixer.setShouldRename(shouldRename);
-        sFixer.setTask(task);
-        sFixer.setTrack(track);
-        sFixer.executeOnExecutor(Executors.newSingleThreadExecutor(), results);
-    }
-
-    @Override
-    public void identificationCompleted(Track track) {
-        //Not used
-    }
-
-    @Override
-    public void onIdentificationCancelled(String cancelledReason, Track track) {
-        messageFinishTask = getString(R.string.task_cancelled);
-
-        if(mTrackRepository != null && track != null) {
-            track.setChecked(0);
-            track.setProcessing(0);
-            mTrackRepository.update(track);
-        }
-        notifyFinished();
-        stopSelf();
-        isRunning = false;
-    }
-
-    @Override
-    public void status(String message) {
-
-    }
-
 
     @Override
     public void onCorrectionStarted(Track track) {
@@ -536,7 +519,7 @@ public class FixerTrackService extends Service implements GnResponseListener.GnL
                 getString(R.string.could_not_correct_file), track.getMediaStoreId()  );
 
         Intent intent = new Intent(Constants.Actions.ACTION_SD_CARD_ERROR);
-        intent.putExtra("error", Fixer.ERROR_CODES.
+        intent.putExtra("error", FixerService.ERROR_CODES.
                 getErrorMessage(this, resultCorrection.code));
         LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcastSync(intent);
 
@@ -577,6 +560,12 @@ public class FixerTrackService extends Service implements GnResponseListener.GnL
         action.equals(Intent.ACTION_MEDIA_MOUNTED) || action.equals(Intent.ACTION_MEDIA_UNMOUNTED))){
             stopAsyncTasks();
         }
+    }
+
+
+    enum FixerState {
+        IDENTIFYING,
+        FIXING
     }
 }
 

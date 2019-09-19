@@ -23,7 +23,7 @@ import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
 
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.UI.RoundedBottomSheetDialogFragment;
-import mx.dev.franco.automusictagfixer.fixer.Fixer;
+import mx.dev.franco.automusictagfixer.fixer.FixerService;
 import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
 import mx.dev.franco.automusictagfixer.utilities.GlideApp;
@@ -32,8 +32,8 @@ import mx.dev.franco.automusictagfixer.utilities.TrackUtils;
 
 public class IdentificationResultsFragment extends RoundedBottomSheetDialogFragment {
     public interface OnBottomSheetFragmentInteraction {
-        void onMissingTagsButton(Fixer.CorrectionParams correctionParams);
-        void onOverwriteTagsButton(Fixer.CorrectionParams correctionParams);
+        void onMissingTagsButton(FixerService.CorrectionParams correctionParams);
+        void onOverwriteTagsButton(FixerService.CorrectionParams correctionParams);
         void onSaveAsImageFile();
     }
     private OnBottomSheetFragmentInteraction mCallback;
@@ -81,7 +81,7 @@ public class IdentificationResultsFragment extends RoundedBottomSheetDialogFragm
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        Fixer.CorrectionParams correctionParams = new Fixer.CorrectionParams();
+        FixerService.CorrectionParams correctionParams = new FixerService.CorrectionParams();
 
         Button missingTagsButton = view.findViewById(R.id.missing_tags_button);
         Button allTagsButton = view.findViewById(R.id.all_tags_button);
@@ -137,7 +137,7 @@ public class IdentificationResultsFragment extends RoundedBottomSheetDialogFragm
         mCallback = null;
     }
 
-    private void setValues(GnResponseListener.IdentificationResults results, View view, Fixer.CorrectionParams correctionParams) {
+    private void setValues(GnResponseListener.IdentificationResults results, View view, FixerService.CorrectionParams correctionParams) {
         final CheckBox checkBox = view.findViewById(R.id.checkbox_rename);
         TextInputLayout textInputLayout = view.findViewById(R.id.label_rename_to);
         EditText editText = view.findViewById(R.id.rename_to);

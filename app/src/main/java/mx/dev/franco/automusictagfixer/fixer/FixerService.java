@@ -24,7 +24,7 @@ import mx.dev.franco.automusictagfixer.persistence.room.TrackState;
 import mx.dev.franco.automusictagfixer.utilities.Tagger;
 import mx.dev.franco.automusictagfixer.utilities.resource_manager.ResourceManager;
 
-public class Fixer extends AsyncTask<GnResponseListener.IdentificationResults,Void,Boolean> {
+public class FixerService extends AsyncTask<GnResponseListener.IdentificationResults,Void,Boolean> {
     public interface OnCorrectionListener {
         void onCorrectionStarted(Track track);
         void onCorrectionCompleted(Tagger.ResultCorrection resultCorrection, Track track);
@@ -32,7 +32,7 @@ public class Fixer extends AsyncTask<GnResponseListener.IdentificationResults,Vo
         void onCorrectionError(Tagger.ResultCorrection resultCorrection, Track track);
     }
 
-    private static final String TAG = Fixer.class.getName();
+    private static final String TAG = FixerService.class.getName();
     private Track mTrack;
     private OnCorrectionListener mListener;
     private boolean mShouldRename = true;
@@ -49,7 +49,7 @@ public class Fixer extends AsyncTask<GnResponseListener.IdentificationResults,Vo
     private Tagger.ResultCorrection mResultsCorrection;
     private int mTask;
 
-    public Fixer(OnCorrectionListener listener){
+    public FixerService(OnCorrectionListener listener){
         mListener = listener;
 
     }

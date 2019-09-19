@@ -8,7 +8,7 @@ import javax.inject.Inject;
 
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.fixer.AudioTagger;
-import mx.dev.franco.automusictagfixer.fixer.Fixer;
+import mx.dev.franco.automusictagfixer.fixer.FixerService;
 import mx.dev.franco.automusictagfixer.identifier.GnApiService;
 import mx.dev.franco.automusictagfixer.interfaces.AsyncOperation;
 import mx.dev.franco.automusictagfixer.interfaces.Cache;
@@ -28,7 +28,7 @@ import static mx.dev.franco.automusictagfixer.UI.track_detail.TrackDetailFragmen
 public class TrackDetailPresenter implements
         Destructible, GnResponseListener.GnListener,
         AsyncOperation<Void, TrackDataLoader.TrackDataItem, Void, String>,
-        Fixer.OnCorrectionListener,
+        FixerService.OnCorrectionListener,
         AsyncFileSaver.OnSaveListener {
     public enum LifeCycleState {
         RESUMED,
@@ -48,7 +48,7 @@ public class TrackDetailPresenter implements
     private TrackIdentifier mIdentifier;
     private int mCurrentId;
     private Cache<Integer, GnResponseListener.IdentificationResults> mCache = new DownloadedTrackDataCacheImpl.Builder().build();
-    private Fixer mFixer;
+    private FixerService mFixer;
     private AsyncFileSaver mFileSaver;
     private int mCorrectionMode = Constants.CorrectionModes.VIEW_INFO;
     private int mRecognition = TrackIdentifier.ALL_TAGS;
@@ -445,9 +445,9 @@ public class TrackDetailPresenter implements
     /**************************************************************************************/
 
     /************************Correction*************************/
-    public void performCorrection(Fixer.CorrectionParams correctionParams){
+    public void performCorrection(FixerService.CorrectionParams correctionParams){
         GnResponseListener.IdentificationResults results;
-        mFixer = new Fixer(this);
+        mFixer = new FixerService(this);
 
         mFixer.setTrack(mCurrentTrack);
         mFixer.setTask(correctionParams.mode);
@@ -509,7 +509,7 @@ public class TrackDetailPresenter implements
 
     @Override
     public void onCorrectionError(Tagger.ResultCorrection resultCorrection, Track track) {
-        String errorMessage = Fixer.ERROR_CODES.getErrorMessage(resourceManager,resultCorrection.code);
+        String errorMessage = FixerService.ERROR_CODES.getErrorMessage(resourceManager,resultCorrection.code);
         String action = resultCorrection.code == Tagger.COULD_NOT_GET_URI_SD_ROOT_TREE ?
                 resourceManager.getString(R.string.get_permission):null;
         if(mView != null) {
@@ -539,7 +539,7 @@ public class TrackDetailPresenter implements
     }
 
     public void confirmRemoveCover(){
-        mFixer = new Fixer(this);
+        mFixer = new FixerService(this);
         mFixer.setTrack(mCurrentTrack);
         mFixer.setTask(Tagger.MODE_REMOVE_COVER);
         mFixer.executeOnExecutor(Executors.newSingleThreadExecutor(), null);
@@ -863,7 +863,7 @@ public class TrackDetailPresenter implements
     private void setNewCoverFromGallery(ImageSize imageSize){
         mCurrentCover = AndroidUtils.generateCover(imageSize.bitmap);
         if (imageSize.requestCode == INTENT_GET_AND_UPDATE_FROM_GALLERY) {
-            Fixer.CorrectionParams correctionParams = new Fixer.CorrectionParams();
+            FixerService.CorrectionParams correctionParams = new FixerService.CorrectionParams();
             correctionParams.dataFrom = Constants.MANUAL;
             correctionParams.mode = Tagger.MODE_ADD_COVER;
             cancelIdentification();

@@ -1,7 +1,6 @@
 package mx.dev.franco.automusictagfixer.UI.main;
 
 import android.Manifest;
-import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
 import android.content.Intent;
@@ -34,7 +33,6 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.util.List;
 import java.util.Objects;
 
 import javax.inject.Inject;
@@ -48,7 +46,6 @@ import mx.dev.franco.automusictagfixer.interfaces.LongRunningTaskListener;
 import mx.dev.franco.automusictagfixer.interfaces.ProcessingListener;
 import mx.dev.franco.automusictagfixer.modelsUI.main.ListViewModel;
 import mx.dev.franco.automusictagfixer.persistence.repository.TrackRepository;
-import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.persistence.room.database.TrackContract;
 import mx.dev.franco.automusictagfixer.services.FixerTrackService;
 import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
@@ -57,7 +54,7 @@ import mx.dev.franco.automusictagfixer.utilities.RequiredPermissions;
 import mx.dev.franco.automusictagfixer.utilities.ServiceUtils;
 
 public class ListFragment extends BaseFragment implements
-        AudioItemHolder.ClickListener,Observer<List<Track>>,
+        AudioItemHolder.ClickListener,
         LongRunningTaskListener, ProcessingListener {
     private static final String TAG = ListFragment.class.getName();
 
@@ -73,7 +70,6 @@ public class ListFragment extends BaseFragment implements
     private TrackAdapter mAdapter;
     private ListViewModel mListViewModel;
     private ActionBar mActionBar;
-    private View mLayout;
     private Menu mMenu;
     private Toolbar mToolbar;
     private FloatingActionButton mStartTaskFab;
@@ -83,8 +79,7 @@ public class ListFragment extends BaseFragment implements
     ServiceUtils serviceUtils;
 
     public static ListFragment newInstance() {
-        ListFragment fragment = new ListFragment();
-        return fragment;
+        return new ListFragment();
     }
 
     public ListFragment() {}
@@ -102,32 +97,29 @@ public class ListFragment extends BaseFragment implements
         mListViewModel.observeResultFilesFound().observe(this, this::noResultFilesFound);
         mListViewModel.observeLoadingState().observe(this, this::loading);
         mListViewModel.observeActionCheckAll().observe(this, this::onCheckAll);
-        mListViewModel.getTracks().observe(this, new Observer<List<Track>>() {
-            @Override
-            public void onChanged(@Nullable List<Track> tracks) {
-                if(tracks == null)
-                    return;
+        mListViewModel.getTracks().observe(this, tracks -> {
+            if(tracks == null)
+                return;
 
-                mAdapter.onChanged(tracks);
-                if(tracks.isEmpty()) {
+            mAdapter.onChanged(tracks);
+            if(tracks.isEmpty()) {
+                mStopTaskFab.hide();
+                mStartTaskFab.hide();
+                mMessage.setVisibility(View.VISIBLE);
+                mMessage.setText(R.string.no_items_found);
+            }
+            else {
+                boolean isServiceRunning = serviceUtils.checkIfServiceIsRunning(FixerTrackService.CLASS_NAME);
+                if(!isServiceRunning){
+                    mStartTaskFab.show();
                     mStopTaskFab.hide();
-                    mStartTaskFab.hide();
-                    mMessage.setVisibility(View.VISIBLE);
-                    mMessage.setText(R.string.no_items_found);
                 }
                 else {
-                    boolean isServiceRunning = serviceUtils.checkIfServiceIsRunning(FixerTrackService.CLASS_NAME);
-                    if(!isServiceRunning){
-                        mStartTaskFab.show();
-                        mStopTaskFab.hide();
-                    }
-                    else {
-                        mStartTaskFab.hide();
-                        mStopTaskFab.show();
-                    }
-                    mActionBar.setTitle(tracks.size() + " " +getString(R.string.tracks));
-                    mMessage.setVisibility(View.GONE);
+                    mStartTaskFab.hide();
+                    mStopTaskFab.show();
                 }
+                mActionBar.setTitle(tracks.size() + " " +getString(R.string.tracks));
+                mMessage.setVisibility(View.GONE);
             }
         });
 
@@ -144,25 +136,26 @@ public class ListFragment extends BaseFragment implements
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        mLayout = inflater.inflate(R.layout.layout_list, container, false);
-        mStartTaskFab = mLayout.findViewById(R.id.fab_start);
-        mStopTaskFab = mLayout.findViewById(R.id.fab_stop);
-        mStartTaskFab.setOnClickListener(v -> startCorrection(-1));
-        mStopTaskFab.setOnClickListener(v -> stopCorrection());
-        mStartTaskFab.hide();
-        mStopTaskFab.hide();
-        mToolbar = mLayout.findViewById(R.id.toolbar);
-        return mLayout;
+
+        return inflater.inflate(R.layout.layout_list, container, false);
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
-        mRecyclerView = mLayout.findViewById(R.id.tracks_recycler_view);
-        mSwipeRefreshLayout = mLayout.findViewById(R.id.refresh_layout);
-        mMessage = mLayout.findViewById(R.id.message);
 
-        //attach adapter to our recyclerview
+        mRecyclerView = view.findViewById(R.id.tracks_recycler_view);
+        mSwipeRefreshLayout = view.findViewById(R.id.refresh_layout);
+        mMessage = view.findViewById(R.id.message);
+
+        mStartTaskFab = view.findViewById(R.id.fab_start);
+        mStopTaskFab = view.findViewById(R.id.fab_stop);
+        mStartTaskFab.setOnClickListener(v -> startCorrection(-1));
+        mStopTaskFab.setOnClickListener(v -> stopCorrection());
+        mStartTaskFab.hide();
+        mStopTaskFab.hide();
+        mToolbar = view.findViewById(R.id.toolbar);
+
+        //attach adapter recyclerview
         mGridLayoutManager = new GridLayoutManager(getActivity(), 1);
         mRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(), 1));
         mRecyclerView.setHasFixedSize(true);
@@ -199,8 +192,6 @@ public class ListFragment extends BaseFragment implements
 
         setHasOptionsMenu(true);
 
-        mListViewModel.checkSdIsPresent(getContext());
-
         boolean hasPermission = ContextCompat.
                 checkSelfPermission(getActivity(), Manifest.permission.WRITE_EXTERNAL_STORAGE)
                 == PackageManager.PERMISSION_GRANTED;
@@ -218,6 +209,8 @@ public class ListFragment extends BaseFragment implements
         int id = getActivity().getIntent().getIntExtra(Constants.MEDIA_STORE_ID, -1);
         int pos = mListViewModel.getTrackPosition(id);
         mRecyclerView.scrollToPosition(pos);
+
+        mListViewModel.checkSdIsPresent();
     }
 
     @Override
@@ -397,6 +390,7 @@ public class ListFragment extends BaseFragment implements
 
         }
         else {
+            mSwipeRefreshLayout.setEnabled(true);
             mStopTaskFab.hide();
             mStartTaskFab.hide();
             mMessage.setVisibility(View.VISIBLE);
@@ -512,7 +506,7 @@ public class ListFragment extends BaseFragment implements
                     //stops service, and sets starting state to FAB
 
                     Intent stopIntent = new Intent(getActivity(), FixerTrackService.class);
-                    stopIntent.setAction(Constants.Actions.ACTION_COMPLETE_TASK);
+                    stopIntent.setAction(Constants.Actions.ACTION_STOP_TASK);
                     getActivity().getApplicationContext().startService(stopIntent);
                     Toast t = AndroidUtils.getToast(getContext());
                     t.setDuration(Toast.LENGTH_SHORT);
@@ -587,7 +581,7 @@ public class ListFragment extends BaseFragment implements
     }
 
     private void onMessage(Integer integer) {
-        Snackbar snackbar = AndroidUtils.getSnackbar(mLayout, getActivity().getApplicationContext());
+        Snackbar snackbar = AndroidUtils.getSnackbar(mRecyclerView, getActivity().getApplicationContext());
         snackbar.setText(integer);
         snackbar.show();
     }

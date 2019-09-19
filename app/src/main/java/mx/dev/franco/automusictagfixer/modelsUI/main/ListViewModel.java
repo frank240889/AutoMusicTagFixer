@@ -1,11 +1,12 @@
 package mx.dev.franco.automusictagfixer.modelsUI.main;
 
+import android.app.Application;
+import android.arch.lifecycle.AndroidViewModel;
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MutableLiveData;
 import android.arch.lifecycle.Transformations;
-import android.arch.lifecycle.ViewModel;
-import android.content.Context;
 import android.support.annotation.IntegerRes;
+import android.support.annotation.NonNull;
 
 import java.util.List;
 
@@ -15,7 +16,6 @@ import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.UI.main.ViewWrapper;
 import mx.dev.franco.automusictagfixer.UI.track_detail.SingleLiveEvent;
 import mx.dev.franco.automusictagfixer.fixer.AudioTagger;
-import mx.dev.franco.automusictagfixer.interfaces.AsyncOperation;
 import mx.dev.franco.automusictagfixer.persistence.repository.TrackRepository;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.persistence.room.TrackState;
@@ -25,7 +25,7 @@ import mx.dev.franco.automusictagfixer.utilities.Resource;
 import mx.dev.franco.automusictagfixer.utilities.ServiceUtils;
 import mx.dev.franco.automusictagfixer.utilities.shared_preferences.AbstractSharedPreferences;
 
-public class ListViewModel extends ViewModel {
+public class ListViewModel extends AndroidViewModel {
     private static final String TAG = ListViewModel.class.getName();
     //The list of tracks.
     private LiveData<List<Track>> mTracks;
@@ -52,7 +52,8 @@ public class ListViewModel extends ViewModel {
     public ServiceUtils serviceUtils;
 
 
-    public ListViewModel() {
+    public ListViewModel(@NonNull Application application) {
+        super(application);
         mObservableProgress = trackRepository.observeProgress();
         mObservableMessage2 = trackRepository.observeMessage();
     }
@@ -170,32 +171,6 @@ public class ListViewModel extends ViewModel {
     }
 
     /**
-     * Re scan the media store.
-     */
-    public void fetchNewTracks(){
-        trackRepository.rescan();
-        trackRepository.fetchNewTracks(new AsyncOperation<Void, Boolean, Void, Void>() {
-            @Override
-            public void onAsyncOperationStarted(Void params) {
-                mObservableProgress.setValue(true);
-            }
-
-            @Override
-            public void onAsyncOperationFinished(Boolean result) {
-                mObservableProgress.setValue(false);
-            }
-
-            @Override
-            public void onAsyncOperationCancelled(Void cancellation) {
-                mObservableProgress.setValue(false);
-            }
-
-            @Override
-            public void onAsyncOperationError(Void error) {}
-        });
-    }
-
-    /**
      * Handles the click when the cover is clicked.
      * @param viewWrapper A {@link ViewWrapper} object containing th info if the item.
      */
@@ -261,7 +236,7 @@ public class ListViewModel extends ViewModel {
             mObservableMessage.setValue(R.string.no_available);
         }
         else {
-            fetchNewTracks();
+            trackRepository.rescan();
         }
     }
 
@@ -277,10 +252,10 @@ public class ListViewModel extends ViewModel {
      * Verifies if an slot of SD card is present and if an SD card is inserted.
      * @param context The context.
      */
-    public void checkSdIsPresent(Context context) {
-        boolean isPresentSD = AudioTagger.StorageHelper.getInstance(context.getApplicationContext()).
+    public void checkSdIsPresent() {
+        boolean isPresentSD = AudioTagger.StorageHelper.getInstance(getApplication().getApplicationContext()).
                 isPresentRemovableStorage();
-        if(AndroidUtils.getUriSD(context.getApplicationContext()) == null && isPresentSD) {
+        if(AndroidUtils.getUriSD(getApplication().getApplicationContext()) == null && isPresentSD) {
             mObservableOnSdPresent.setValue(true);
         }
         else {

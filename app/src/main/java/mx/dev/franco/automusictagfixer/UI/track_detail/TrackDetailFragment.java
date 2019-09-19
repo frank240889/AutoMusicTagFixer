@@ -53,7 +53,7 @@ import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.UI.BaseFragment;
 import mx.dev.franco.automusictagfixer.UI.main.MainActivity;
 import mx.dev.franco.automusictagfixer.UI.sd_card_instructions.SdCardInstructionsActivity;
-import mx.dev.franco.automusictagfixer.fixer.Fixer;
+import mx.dev.franco.automusictagfixer.fixer.FixerService;
 import mx.dev.franco.automusictagfixer.interfaces.EditableView;
 import mx.dev.franco.automusictagfixer.modelsUI.track_detail.ImageSize;
 import mx.dev.franco.automusictagfixer.modelsUI.track_detail.TrackDetailInteractor;
@@ -549,7 +549,7 @@ public class TrackDetailFragment extends BaseFragment implements EditableView,
      * user pressed apply only missing tags button
      */
     @Override
-    public void onMissingTagsButton(Fixer.CorrectionParams correctionParams) {
+    public void onMissingTagsButton(FixerService.CorrectionParams correctionParams) {
         mTrackDetailPresenter.performCorrection(correctionParams);
     }
 
@@ -558,7 +558,7 @@ public class TrackDetailFragment extends BaseFragment implements EditableView,
      * user pressed apply all tags button
      */
     @Override
-    public void onOverwriteTagsButton(Fixer.CorrectionParams correctionParams) {
+    public void onOverwriteTagsButton(FixerService.CorrectionParams correctionParams) {
         mTrackDetailPresenter.performCorrection(correctionParams);
     }
 
@@ -709,7 +709,7 @@ public class TrackDetailFragment extends BaseFragment implements EditableView,
      */
     @Override
     public void onDataValid() {
-        Fixer.CorrectionParams correctionParams = new Fixer.CorrectionParams();
+        FixerService.CorrectionParams correctionParams = new FixerService.CorrectionParams();
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         View view = LayoutInflater.from(getActivity()).inflate(R.layout.rename_file_layout, null);
         builder.setView(view);

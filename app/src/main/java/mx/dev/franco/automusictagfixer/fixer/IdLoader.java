@@ -6,16 +6,22 @@ import android.os.AsyncTask;
 
 import java.util.List;
 
-import mx.dev.franco.automusictagfixer.interfaces.TrackListLoader;
+import mx.dev.franco.automusictagfixer.interfaces.AsyncOperation;
 import mx.dev.franco.automusictagfixer.persistence.room.TrackRoomDatabase;
 
 public class IdLoader extends AsyncTask<String, Void, List<Integer>> {
-    private TrackListLoader<List<Integer>> mTrackListLoader;
+    private AsyncOperation<Void, List<Integer>, Void, Void> mTrackListLoader;
     private TrackRoomDatabase mTrackRoomDatabase;
 
-    public IdLoader(TrackListLoader<List<Integer>> trackListLoader, TrackRoomDatabase trackRoomDatabase){
+    public IdLoader(AsyncOperation<Void, List<Integer>, Void, Void> trackListLoader, TrackRoomDatabase trackRoomDatabase){
         mTrackListLoader = trackListLoader;
         mTrackRoomDatabase = trackRoomDatabase;
+    }
+
+    @Override
+    protected void onPreExecute() {
+        if(mTrackListLoader != null)
+            mTrackListLoader.onAsyncOperationStarted(null);
     }
 
     @Override
@@ -31,7 +37,7 @@ public class IdLoader extends AsyncTask<String, Void, List<Integer>> {
     @Override
     protected void onPostExecute(List<Integer> list){
         if(mTrackListLoader != null)
-            mTrackListLoader.onDataLoaded(list);
+            mTrackListLoader.onAsyncOperationFinished(list);
 
         mTrackListLoader = null;
         mTrackRoomDatabase = null;
@@ -39,7 +45,8 @@ public class IdLoader extends AsyncTask<String, Void, List<Integer>> {
 
     @Override
     public void onCancelled(List<Integer> list){
-        super.onCancelled();
+        mTrackListLoader.onAsyncOperationCancelled(null);
+        onCancelled();
         mTrackListLoader = null;
         mTrackRoomDatabase = null;
     }

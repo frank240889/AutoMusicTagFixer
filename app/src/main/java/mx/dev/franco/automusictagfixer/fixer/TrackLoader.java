@@ -4,15 +4,15 @@ import android.os.AsyncTask;
 
 import java.util.List;
 
-import mx.dev.franco.automusictagfixer.interfaces.InfoTrackLoader;
+import mx.dev.franco.automusictagfixer.interfaces.AsyncOperation;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.persistence.room.TrackRoomDatabase;
 
 public class TrackLoader extends AsyncTask<Integer, Void, List<Track>> {
-    private InfoTrackLoader<List<Track>> mDataLoader;
+    private AsyncOperation<Void, List<Track>, Void, Void> mDataLoader;
     private TrackRoomDatabase mTrackRoomDatabase;
 
-    public TrackLoader(InfoTrackLoader<List<Track>> dataLoader, TrackRoomDatabase trackRoomDatabase){
+    public TrackLoader(AsyncOperation<Void, List<Track>, Void, Void> dataLoader, TrackRoomDatabase trackRoomDatabase){
         mDataLoader = dataLoader;
         mTrackRoomDatabase = trackRoomDatabase;
     }
@@ -25,7 +25,7 @@ public class TrackLoader extends AsyncTask<Integer, Void, List<Track>> {
     @Override
     protected void onPostExecute(List<Track> list){
         if(mDataLoader != null)
-            mDataLoader.onTrackDataLoaded(list);
+            mDataLoader.onAsyncOperationFinished(list);
 
         mDataLoader = null;
         mTrackRoomDatabase = null;
@@ -33,7 +33,9 @@ public class TrackLoader extends AsyncTask<Integer, Void, List<Track>> {
 
     @Override
     public void onCancelled(List<Track> list){
-        super.onCancelled();
+        if(mDataLoader != null)
+            mDataLoader.onAsyncOperationCancelled(null);
+        onCancelled();
         mDataLoader = null;
         mTrackRoomDatabase = null;
     }

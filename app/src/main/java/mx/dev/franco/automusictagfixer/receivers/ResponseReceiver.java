@@ -29,7 +29,7 @@ public class ResponseReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, final Intent intent) {
-        if(mCallback != null && mHandler != null){
+        if(mCallback != null && mHandler != null) {
             mHandler.post(() -> {
                 if(mCallback != null)
                     mCallback.onResponse(intent);

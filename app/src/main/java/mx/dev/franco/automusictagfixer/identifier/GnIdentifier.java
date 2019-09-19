@@ -25,20 +25,21 @@ import java.util.ArrayList;
 import java.util.List;
 
 import mx.dev.franco.automusictagfixer.identifier.Identifier.IdentificationResults;
+import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.utilities.shared_preferences.AbstractSharedPreferences;
 
 /**
  * A concrete identifier that implements {@link Identifier} interface.
  */
-public class GnIdentifier implements Identifier<GnIdentifier.Audio, List<IdentificationResults>> {
+public class GnIdentifier implements Identifier<Track, List<IdentificationResults>> {
 
     private GnApiService gnApiService;
     private AbstractSharedPreferences sharedPreferences;
-    private IdentificationListener<List<IdentificationResults>, Audio> identificationListener;
+    private IdentificationListener<List<IdentificationResults>, Track> identificationListener;
     private GnMusicIdFile mGnMusicIdFile;
     private GnMusicIdFileInfo gnMusicIdFileInfo;
     private GnMusicIdFileInfoManager gnMusicIdFileInfoManager;
-    private Audio track;
+    private Track track;
 
     public GnIdentifier(GnApiService gnApiService, AbstractSharedPreferences sharedPreferences){
         this.gnApiService = gnApiService;
@@ -49,7 +50,7 @@ public class GnIdentifier implements Identifier<GnIdentifier.Audio, List<Identif
      * @inheritDoc
      */
     @Override
-    public void identify(Audio input) {
+    public void identify(Track input) {
         track = input;
         if(identificationListener != null)
             identificationListener.onIdentificationStart(track);
@@ -65,7 +66,7 @@ public class GnIdentifier implements Identifier<GnIdentifier.Audio, List<Identif
                 public void musicIdFileAlbumResult(GnResponseAlbums gnResponseAlbums, long l, long l1, IGnCancellable iGnCancellable) {
                     List<IdentificationResults> results = processResponse(gnResponseAlbums);
                     if(identificationListener != null)
-                        identificationListener.onIdentificationFinished(results);
+                        identificationListener.onIdentificationFinished(results, track);
                 }
 
                 @Override
@@ -128,7 +129,7 @@ public class GnIdentifier implements Identifier<GnIdentifier.Audio, List<Identif
      * @inheritDoc
      */
     @Override
-    public void registerCallback(IdentificationListener<List<IdentificationResults>, Audio> identificationListener) {
+    public void registerCallback(IdentificationListener<List<IdentificationResults>, Track> identificationListener) {
         this.identificationListener = identificationListener;
     }
 

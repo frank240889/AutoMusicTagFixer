@@ -18,7 +18,6 @@ import mx.dev.franco.automusictagfixer.modelsUI.AsyncOperation.TrackInserter;
 import mx.dev.franco.automusictagfixer.modelsUI.AsyncOperation.TrackRemover;
 import mx.dev.franco.automusictagfixer.modelsUI.AsyncOperation.TrackUnchecker;
 import mx.dev.franco.automusictagfixer.modelsUI.AsyncOperation.TrackUpdater;
-import mx.dev.franco.automusictagfixer.persistence.mediastore.AsyncFileReader;
 import mx.dev.franco.automusictagfixer.persistence.mediastore.MediaStoreReader;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.persistence.room.TrackDAO;
@@ -119,13 +118,9 @@ public class TrackRepository {
         }
     }
 
-    public void fetchNewTracks(final AsyncOperation<Void, Boolean, Void, Void> iRetriever){
-            AsyncFileReader asyncFileReader = new AsyncFileReader();
-            asyncFileReader.setTask(AsyncFileReader.UPDATE_LIST);
-            asyncFileReader.setListener(iRetriever);
-            asyncFileReader.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-    }
-
+    /**
+     * Reescan the media store to retrieve new audio files.
+     */
     public void rescan() {
         MediaStoreReader mediaStoreReader = new MediaStoreReader(new AsyncOperation<Void, List<Track>, Void, Void>() {
             @Override
@@ -136,9 +131,6 @@ public class TrackRepository {
             @Override
             public void onAsyncOperationFinished(List<Track> result) {
                 mProgressObservable.setValue(false);
-                //Save process of reading identificationCompleted and first time reading complete.
-                mAbstractSharedPreferences.putBoolean("first_time_read", true);
-                mAbstractSharedPreferences.putBoolean(Constants.COMPLETE_READ, true);
                 if(result.size() > 0) {
                     insert(result);
                 }

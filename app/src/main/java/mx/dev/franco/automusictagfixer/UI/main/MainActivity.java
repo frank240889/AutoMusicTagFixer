@@ -1,7 +1,6 @@
 package mx.dev.franco.automusictagfixer.UI.main;
 
 import android.content.ActivityNotFoundException;
-import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.Uri;
@@ -22,13 +21,13 @@ import android.view.MenuItem;
 import android.view.Window;
 import android.view.WindowManager;
 
-import java.util.List;
-
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.UI.BaseFragment;
 import mx.dev.franco.automusictagfixer.UI.about.ScrollingAboutActivity;
 import mx.dev.franco.automusictagfixer.UI.faq.QuestionsActivity;
 import mx.dev.franco.automusictagfixer.UI.settings.SettingsActivity;
+import mx.dev.franco.automusictagfixer.interfaces.LongRunningTaskListener;
+import mx.dev.franco.automusictagfixer.interfaces.ProcessingListener;
 import mx.dev.franco.automusictagfixer.receivers.ResponseReceiver;
 import mx.dev.franco.automusictagfixer.services.FixerTrackService;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
@@ -117,12 +116,6 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
         }
     }
 
-    private void rescan(){
-        ListFragment listFragment = (ListFragment) getSupportFragmentManager().findFragmentByTag(ListFragment.class.getName());
-        if(listFragment != null)
-            listFragment.rescan();
-    }
-
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
     public void onRequestPermissionsResult(int requestCode,
@@ -145,6 +138,7 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
         IntentFilter rescanFilter = new IntentFilter(Constants.Actions.ACTION_RESCAN);
 
         mReceiver = new ResponseReceiver(this, new Handler());
+
 
         LocalBroadcastManager localBroadcastManager = LocalBroadcastManager.getInstance(getApplicationContext());
 
@@ -226,36 +220,38 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
         //get action and handle it
         String action = intent.getAction();
         int id = intent.getIntExtra(Constants.MEDIA_STORE_ID, -1);
-        List<Fragment> fragmentList;
+        BaseFragment baseFragment = null;
         switch (action) {
             case Constants.Actions.ACTION_START_TASK:
-                    ListFragment f1 = (ListFragment) getSupportFragmentManager().findFragmentByTag(ListFragment.class.getName());
-                    if(f1 != null)
-                        f1.onLongRunningTaskStarted();
+                    baseFragment = (BaseFragment) getSupportFragmentManager().findFragmentByTag(ListFragment.class.getName());
+                    if(baseFragment instanceof LongRunningTaskListener)
+                        ((LongRunningTaskListener) baseFragment).onLongRunningTaskStarted();
                 break;
             case Constants.Actions.START_PROCESSING_FOR:
-                ListFragment f2 = (ListFragment) getSupportFragmentManager().findFragmentByTag(ListFragment.class.getName());
-                if(f2 != null)
-                    f2.onStartProcessingFor(id);
+                baseFragment = (BaseFragment) getSupportFragmentManager().findFragmentByTag(ListFragment.class.getName());
+                if(baseFragment instanceof ProcessingListener)
+                    ((ProcessingListener) baseFragment).onStartProcessingFor(id);
                 break;
             case Constants.Actions.FINISH_TRACK_PROCESSING:
                     String error = intent.getStringExtra("error");
-                    if(error != null){
-                        ListFragment f3 = (ListFragment) getSupportFragmentManager().findFragmentByTag(ListFragment.class.getName());
-                        if(f3 != null)
-                            f3.onFinishProcessing(error);
+                    baseFragment = (BaseFragment) getSupportFragmentManager().findFragmentByTag(ListFragment.class.getName());
+                    if(baseFragment instanceof LongRunningTaskListener) {
+                        if(error != null){
+                            ((LongRunningTaskListener) baseFragment).onLongRunningTaskError(error);
+                        }
+                        else {
+                            ((LongRunningTaskListener) baseFragment).onLongRunningTaskFinish();
+                        }
                     }
+
                 break;
             case Constants.Actions.ACTION_COMPLETE_TASK:
-                ListFragment f4 = (ListFragment) getSupportFragmentManager().findFragmentByTag(ListFragment.class.getName());
-                if(f4 != null)
-                    f4.onLongRunningTaskFinish();
-                    getSharedPreferences(Constants.Application.FULL_QUALIFIED_NAME,
+                baseFragment = (BaseFragment) getSupportFragmentManager().findFragmentByTag(ListFragment.class.getName());
+                if(baseFragment instanceof LongRunningTaskListener)
+                    ((LongRunningTaskListener)baseFragment).onLongRunningTaskFinish();
+                    /*getSharedPreferences(Constants.Application.FULL_QUALIFIED_NAME,
                         Context.MODE_PRIVATE).edit().putBoolean(Constants.ALL_ITEMS_CHECKED, false).
-                            apply();
-                break;
-            case Constants.Actions.ACTION_RESCAN:
-                    rescan();
+                            apply();*/
                 break;
         }
 
