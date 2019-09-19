@@ -4,15 +4,15 @@ import javax.inject.Singleton;
 
 import dagger.Module;
 import dagger.Provides;
+import mx.dev.franco.automusictagfixer.fixer.AudioMetadataTagger;
 import mx.dev.franco.automusictagfixer.fixer.AudioTagger;
-import mx.dev.franco.automusictagfixer.fixer.FileTagger;
-import mx.dev.franco.automusictagfixer.interfaces.FileManager;
+import mx.dev.franco.automusictagfixer.interfaces.AudioMetadataManager;
 
 @Module
 public class FileManagerModule {
     @Singleton
     @Provides
-    FileManager<FileTagger.InputParams, AudioTagger.TrackDataItem, AudioTagger.ResultCorrection> provideFileManager(AudioTagger tagger){
-        return new FileTagger(tagger);
+    AudioMetadataManager<AudioMetadataTagger.InputParams, AudioTagger.AudioFields, AudioTagger.ResultCorrection> provideFileManager(AudioTagger tagger){
+        return new AudioMetadataTagger(tagger);
     }
 }

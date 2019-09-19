@@ -509,7 +509,7 @@ public class TrackDetailPresenter implements
 
     @Override
     public void onCorrectionError(Tagger.ResultCorrection resultCorrection, Track track) {
-        String errorMessage = FixerService.ERROR_CODES.getErrorMessage(resourceManager,resultCorrection.code);
+        String errorMessage = FixerService.ERROR_CODES.getErrorMessage(resourceManager, resultCorrection.code);
         String action = resultCorrection.code == Tagger.COULD_NOT_GET_URI_SD_ROOT_TREE ?
                 resourceManager.getString(R.string.get_permission):null;
         if(mView != null) {

@@ -41,9 +41,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.channels.FileChannel;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -78,8 +82,7 @@ public class AudioTagger {
     //Constants to indicate a successful operation
     public static final int CURRENT_COVER_REMOVED = 20;
     public static final int NEW_COVER_APPLIED = 21;
-    public static final int APPLIED_ONLY_MISSING_TAGS = 22;
-    public static final int APPLIED_ALL_TAGS = 23;
+    public static final int SUCCESS = 23;
 
     //Constants to indicate that operation was successful
     //but previous and new tags were the same.
@@ -88,6 +91,7 @@ public class AudioTagger {
 
     //No onIdentificationError is set
     public static final int NOT_SET = -1;
+    private static final int SUCCESS_APPLY_COVER = 22;
 
     private Context mContext;
     private static final int BUFFER_SIZE = 131072;//->128Kb
@@ -129,17 +133,17 @@ public class AudioTagger {
      * @throws InvalidAudioFrameException
      * @throws IOException
      */
-    public ResultCorrection saveTags(String pathToFile, HashMap<FieldKey, Object> tags, int overWriteTags)
+    public ResultCorrection saveTags(String pathToTargetFile, HashMap<FieldKey, Object> tags, int overWriteTags)
             throws ReadOnlyFileException, CannotReadException, TagException, InvalidAudioFrameException, IOException {
 
-        if(pathToFile == null)
-            throw new NullPointerException("Path to file has not been set yet.");
+        if(pathToTargetFile == null || pathToTargetFile.isEmpty())
+            throw new NullPointerException("Path to target file has not been set yet.");
 
-        return saveTags(new File(pathToFile), tags, overWriteTags);
+        return saveTags(new File(pathToTargetFile), tags, overWriteTags);
     }
 
     /**
-     * @param file The file to apply new tags.
+     * @param targetFile The file to apply new tags.
      * @param tags Tags to apply.
      * @param overWriteTags Option to indicate if current tags must overwrite
      *                      or only apply those missing.
@@ -150,13 +154,13 @@ public class AudioTagger {
      * @throws InvalidAudioFrameException
      * @throws IOException
      */
-    public ResultCorrection saveTags(File file, HashMap<FieldKey, Object> tags, int overWriteTags)
+    public ResultCorrection saveTags(File targetFile, HashMap<FieldKey, Object> tags, int overWriteTags)
             throws ReadOnlyFileException, CannotReadException, TagException, InvalidAudioFrameException, IOException {
 
-        if(file == null)
-            throw new NullPointerException("File has not been set yet.");
+        if(targetFile == null)
+            throw new NullPointerException("Target file has not been set yet.");
 
-        return applyTags(file, tags, overWriteTags);
+        return applyTags(targetFile, tags, overWriteTags);
     }
 
     /**
@@ -169,7 +173,7 @@ public class AudioTagger {
      * @throws CannotReadException
      * @throws InvalidAudioFrameException
      */
-    public TrackDataItem readFile(File file)
+    public AudioFields readFile(File file)
             throws IOException, TagException, ReadOnlyFileException, CannotReadException, InvalidAudioFrameException {
         if(file == null)
             throw new NullPointerException("Source file has not been set yet.");
@@ -193,39 +197,39 @@ public class AudioTagger {
      * @throws InvalidAudioFrameException
      * @throws IOException
      */
-    private TrackDataItem getData(AudioFile audioFile){
-        TrackDataItem trackDataItem = new TrackDataItem();
+    private AudioFields getData(AudioFile audioFile){
+        AudioFields audioFields = new AudioFields();
 
         File file = audioFile.getFile();
         String extension = getExtension(file);
         String mimeType = getMimeType(file);
 
-        trackDataItem.extension = extension;
-        trackDataItem.fileName = file.getName();
-        trackDataItem.path = file.getParent();
+        audioFields.extension = extension;
+        audioFields.fileName = file.getName();
+        audioFields.path = file.getParent();
 
         Tag tag = getTag(audioFile);
         AudioHeader audioHeader = audioFile.getAudioHeader();
         //Get header info and current tags
-        trackDataItem.duration = getHumanReadableDuration(audioHeader.getTrackLength() + "");
-        trackDataItem.bitrate = getBitrate(audioHeader.getBitRate());
-        trackDataItem.frequency = getFrequency(audioHeader.getSampleRate());
-        trackDataItem.resolution = getResolution(audioHeader.getBitsPerSample());
-        trackDataItem.channels = audioHeader.getChannels();
-        trackDataItem.fileType = audioHeader.getFormat();
-        trackDataItem.fileSize = getFileSize(file.length());
+        audioFields.duration = getHumanReadableDuration(audioHeader.getTrackLength() + "");
+        audioFields.bitrate = getBitrate(audioHeader.getBitRate());
+        audioFields.frequency = getFrequency(audioHeader.getSampleRate());
+        audioFields.resolution = getResolution(audioHeader.getBitsPerSample());
+        audioFields.channels = audioHeader.getChannels();
+        audioFields.fileType = audioHeader.getFormat();
+        audioFields.fileSize = getFileSize(file.length());
 
-        trackDataItem.title = tag.getFirst(FieldKey.TITLE);
-        trackDataItem.artist = tag.getFirst(FieldKey.ARTIST);
-        trackDataItem.album = tag.getFirst(FieldKey.ALBUM);
-        trackDataItem.trackNumber = tag.getFirst(FieldKey.TRACK);
-        trackDataItem.trackYear = tag.getFirst(FieldKey.YEAR);
-        trackDataItem.genre = tag.getFirst(FieldKey.GENRE);
+        audioFields.title = tag.getFirst(FieldKey.TITLE);
+        audioFields.artist = tag.getFirst(FieldKey.ARTIST);
+        audioFields.album = tag.getFirst(FieldKey.ALBUM);
+        audioFields.trackNumber = tag.getFirst(FieldKey.TRACK);
+        audioFields.trackYear = tag.getFirst(FieldKey.YEAR);
+        audioFields.genre = tag.getFirst(FieldKey.GENRE);
 
-        trackDataItem.cover = getCover(audioFile);
-        trackDataItem.imageSize = getStringImageSize(trackDataItem.cover, mContext);
+        audioFields.cover = getCover(audioFile);
+        audioFields.imageSize = getStringImageSize(audioFields.cover, mContext);
 
-        return trackDataItem;
+        return audioFields;
     }
 
     /**
@@ -238,7 +242,7 @@ public class AudioTagger {
      * @throws CannotReadException
      * @throws InvalidAudioFrameException
      */
-    public TrackDataItem readFile(String path)
+    public AudioFields readFile(String path)
             throws ReadOnlyFileException, CannotReadException, TagException, InvalidAudioFrameException, IOException {
         if(path == null)
             throw new NullPointerException("Path to file has not been set yet.");
@@ -261,34 +265,39 @@ public class AudioTagger {
      */
     private ResultCorrection applyTags(File file, HashMap<FieldKey, Object> tags, int overWriteTags)
             throws ReadOnlyFileException, IOException, TagException, InvalidAudioFrameException, CannotReadException {
+
         boolean isStoredInSd = mStorageHelper.isStoredInSD(file);
-        ResultCorrection resultCorrection = new ResultCorrection();
+
+        ResultCorrection resultCorrection;
 
         if(isStoredInSd){
             if(getUriSD() == null) {
-                resultCorrection.code = COULD_NOT_GET_URI_SD_ROOT_TREE;
+                resultCorrection = new ResultCorrection();
+                resultCorrection.setCode(COULD_NOT_GET_URI_SD_ROOT_TREE);
             }
             else {
                 //Hold which tags were applied to return in results.
                 HashMap<FieldKey, Object> tagsToUpdate = isNeededUpdateTags(overWriteTags,file, tags);
                 if(tagsToUpdate.isEmpty()){
-                    resultCorrection.code = APPLIED_SAME_TAGS;
+                    resultCorrection = new ResultCorrection();
+                    resultCorrection.setCode(APPLIED_SAME_TAGS);
                 }
                 else {
                     resultCorrection = applyTagsForDocumentFileObject(file, tagsToUpdate, overWriteTags);
-                    resultCorrection.tagsUpdated = tagsToUpdate;
                 }
+                resultCorrection.setTagsUpdated(tagsToUpdate);
             }
         }
         else {
             HashMap<FieldKey, Object> tagsToUpdate = isNeededUpdateTags(overWriteTags,file, tags);
             if(tagsToUpdate.isEmpty()){
-                resultCorrection.code = APPLIED_SAME_TAGS;
+                resultCorrection = new ResultCorrection();
+                resultCorrection.setCode(APPLIED_SAME_TAGS);
             }
             else {
                 resultCorrection = applyTagsForFileObject(file, tagsToUpdate, overWriteTags);
-                resultCorrection.tagsUpdated = tagsToUpdate;
             }
+            resultCorrection.setTagsUpdated(tagsToUpdate);
         }
 
         return resultCorrection;
@@ -416,47 +425,42 @@ public class AudioTagger {
         File tempFile = mStorageHelper.createTempFileFrom(file);
 
         if (tempFile == null) {
-            resultCorrection.code = COULD_NOT_CREATE_TEMP_FILE;
-            return resultCorrection;
+            resultCorrection.setCode(COULD_NOT_CREATE_TEMP_FILE);
         }
+        else {
+            //Try to create AudioFile
+            AudioFile audioFile = getAudioTaggerFile(tempFile);
 
-        //Try to create AudioFile
-        AudioFile audioFile = getAudioTaggerFile(tempFile);
+            if (audioFile == null) {
+                resultCorrection.setCode(COULD_NOT_CREATE_AUDIOFILE);
+            }
+            else {
+                //Set new tags and get ready to apply
+                setNewTags(audioFile, tagsToApply, overwriteTags);
 
-        if (audioFile == null) {
-            resultCorrection.code = COULD_NOT_CREATE_AUDIOFILE;
-            return resultCorrection;
+                //Apply tags to current temp file
+                try {
+                    audioFile.commit();
+
+                    //Try to copy temp file with its news tags to its original location
+                    int resultOfCopy = copyBack(tempFile, file);
+
+                    if (resultOfCopy != SUCCESS_COPY_BACK) {
+                        resultCorrection.setCode(resultOfCopy);
+                    }
+                    else {
+                        resultCorrection.setCode(SUCCESS);
+                    }
+                } catch (CannotWriteException e) {
+                    e.printStackTrace();
+                    resultCorrection.setCode(COULD_NOT_APPLY_TAGS);
+                }
+                finally {
+                    //Delete temp file from internal storage
+                    deleteTempFile(tempFile);
+                }
+            }
         }
-
-        //Set new tags and get ready to apply
-        setNewTags(audioFile, tagsToApply , overwriteTags);
-
-        //Apply tags to current temp file
-        try {
-            audioFile.commit();
-        } catch (CannotWriteException e) {
-            Crashlytics.logException(e);
-            e.printStackTrace();
-            resultCorrection.code = COULD_NOT_APPLY_TAGS;
-            return resultCorrection;
-        }
-
-        //Try to copy temp file with its news tags to its original location
-        int resultOfCopy = copyBack(tempFile, file);
-
-        if (resultOfCopy != SUCCESS_COPY_BACK) {
-            resultCorrection.code = resultOfCopy;
-            return resultCorrection;
-        }
-
-        if(overwriteTags == MODE_OVERWRITE_ALL_TAGS)
-            resultCorrection.code = APPLIED_ALL_TAGS;
-        else
-            resultCorrection.code = APPLIED_ONLY_MISSING_TAGS;
-
-        //Delete temp file from internal storage
-        deleteTempFile(tempFile);
-
         return resultCorrection;
     }
 
@@ -508,27 +512,21 @@ public class AudioTagger {
         AudioFile audioFile = getAudioTaggerFile(file);
 
         if (audioFile == null) {
-            resultCorrection.code = COULD_NOT_CREATE_AUDIOFILE;
-            return resultCorrection;
+            resultCorrection.setCode(COULD_NOT_CREATE_AUDIOFILE);
         }
+        else {
+            //Put new values in its fields
+            setNewTags(audioFile, tagsToApply, overwriteTags);
 
-        //Put new values in its fields
-        setNewTags(audioFile, tagsToApply, overwriteTags);
-
-        try {
-            audioFile.commit();
+            try {
+                audioFile.commit();
+                resultCorrection.setCode(SUCCESS);
+            }
+            catch (CannotWriteException e) {
+                e.printStackTrace();
+                resultCorrection.setCode(COULD_NOT_APPLY_TAGS);
+            }
         }
-        catch (CannotWriteException e) {
-            e.printStackTrace();
-            Crashlytics.logException(e);
-            resultCorrection.code = COULD_NOT_APPLY_TAGS;
-            return resultCorrection;
-        }
-
-        if(overwriteTags == MODE_OVERWRITE_ALL_TAGS)
-            resultCorrection.code = APPLIED_ALL_TAGS;
-        else
-            resultCorrection.code = APPLIED_ONLY_MISSING_TAGS;
 
         return resultCorrection;
     }
@@ -831,15 +829,15 @@ public class AudioTagger {
      *              to remove current cover.
      * @return resultCorrection containing the result of operation.
      */
-    public ResultCorrection applyCover(@Nullable byte[] cover, String pathToFile)
+    public ResultCorrection applyCover(@Nullable byte[] cover, @NonNull String pathToTargetFile)
             throws ReadOnlyFileException, IOException, TagException, InvalidAudioFrameException, CannotReadException {
-        if(pathToFile == null)
-            throw new NullPointerException("Path to file not set.");
+        if(pathToTargetFile == null)
+            throw new NullPointerException("Path to target file not set.");
 
-        if(pathToFile.isEmpty())
+        if(pathToTargetFile.isEmpty())
             throw new IllegalArgumentException("Path must not be empty.");
 
-        return applyCover(cover, new File(pathToFile));
+        return applyCover(cover, new File(pathToTargetFile));
     }
 
     /**
@@ -862,19 +860,23 @@ public class AudioTagger {
      */
     private ResultCorrection internalApplyCover(File file, byte[] coverToApply)
             throws ReadOnlyFileException, CannotReadException, TagException, InvalidAudioFrameException, IOException {
+
         boolean isStoredInSd = mStorageHelper.isStoredInSD(file);
-        ResultCorrection resultCorrection = new ResultCorrection();
-        TrackDataItem trackDataItem = readFile(file);
+
+        ResultCorrection resultCorrection;
+        AudioFields audioFields = readFile(file);
 
 
         if(isStoredInSd) {
             if(getUriSD() == null) {
-                resultCorrection.code = COULD_NOT_GET_URI_SD_ROOT_TREE;
+                resultCorrection = new ResultCorrection();
+                resultCorrection.setCode(COULD_NOT_GET_URI_SD_ROOT_TREE);
             }
             else{
-                if(trackDataItem.cover != null && coverToApply != null &&
-                        (coverToApply.length == trackDataItem.cover.length)){
-                    resultCorrection.code = APPLIED_SAME_COVER;
+                if(audioFields.cover != null && coverToApply != null &&
+                        (coverToApply.length == audioFields.cover.length)){
+                    resultCorrection = new ResultCorrection();
+                    resultCorrection.setCode(SUCCESS);
                 }
                 else {
                     resultCorrection = applyCoverForDocumentFileObject(coverToApply, file);
@@ -882,9 +884,10 @@ public class AudioTagger {
             }
         }
         else {
-            if(trackDataItem.cover != null && coverToApply != null &&
-                    (coverToApply.length == trackDataItem.cover.length)){
-                resultCorrection.code = APPLIED_SAME_COVER;
+            if(audioFields.cover != null && coverToApply != null &&
+                    (coverToApply.length == audioFields.cover.length)){
+                resultCorrection = new ResultCorrection();
+                resultCorrection.setCode(SUCCESS);
             }
             else {
                 resultCorrection = applyCoverForFileObject(coverToApply, file);
@@ -905,65 +908,65 @@ public class AudioTagger {
         File tempFile = mStorageHelper.createTempFileFrom(file);
         ResultCorrection resultCorrection = new ResultCorrection();
         if(tempFile == null) {
-            resultCorrection.code = COULD_NOT_CREATE_TEMP_FILE;
-            return resultCorrection;
-        }
-
-        //Creates an audio file from temp file created in which
-        //we can apply new data
-        AudioFile audioFile = getAudioTaggerFile(tempFile);
-
-        if(audioFile == null) {
-            resultCorrection.code = COULD_NOT_CREATE_AUDIOFILE;
-            return resultCorrection;
-        }
-
-        Tag tag = getTag(audioFile);
-
-        if(tag == null){
-            resultCorrection.code = COULD_NOT_READ_TAGS;
-            return resultCorrection;
-        }
-
-        if(cover == null){
-            try {
-                //Delete current cover art
-                tag.deleteArtworkField();
-                audioFile.commit();
-                resultCorrection.code = CURRENT_COVER_REMOVED;
-            } catch (CannotWriteException e) {
-                Crashlytics.logException(e);
-                e.printStackTrace();
-                resultCorrection.code = COULD_NOT_APPLY_COVER;
-                return resultCorrection;
-            }
+            resultCorrection.setCode(COULD_NOT_CREATE_TEMP_FILE);
         }
         else {
-            try {
-                //Replace current cover art and apply the new one
-                Artwork artwork = new AndroidArtwork();
-                artwork.setBinaryData(cover);
-                tag.deleteArtworkField();
-                tag.setField(artwork);
-                audioFile.commit();
-                resultCorrection.code = NEW_COVER_APPLIED;
-            } catch (FieldDataInvalidException  | CannotWriteException e) {
-                Crashlytics.logException(e);
-                e.printStackTrace();
-                resultCorrection.code = COULD_NOT_REMOVE_COVER;
-                return resultCorrection;
+
+            //Creates an audio file from temp file created in which
+            //we can apply new data
+            AudioFile audioFile = getAudioTaggerFile(tempFile);
+
+            if (audioFile == null) {
+                resultCorrection.setCode(COULD_NOT_CREATE_AUDIOFILE);
             }
+            else {
+                Tag tag = getTag(audioFile);
+
+                if (tag == null) {
+                    resultCorrection.setCode(COULD_NOT_READ_TAGS);
+                }
+                else {
+                    if (cover == null) {
+                        try {
+                            //Delete current cover art
+                            tag.deleteArtworkField();
+                            audioFile.commit();
+                            //Try to copy file to its original SD location
+                            int resultOfCopyBack = copyBack(tempFile, file);
+
+                            if (resultOfCopyBack != SUCCESS_COPY_BACK) {
+                                resultCorrection.setCode(COULD_NOT_COPY_BACK_TO_ORIGINAL_LOCATION);
+                            }
+
+                            resultCorrection.setCode(SUCCESS);
+                        } catch (CannotWriteException e) {
+                            resultCorrection.setCode(COULD_NOT_APPLY_COVER);
+                        }
+                    } else {
+                        try {
+                            //Replace current cover art and apply the new one
+                            Artwork artwork = new AndroidArtwork();
+                            artwork.setBinaryData(cover);
+                            tag.deleteArtworkField();
+                            tag.setField(artwork);
+                            audioFile.commit();
+
+                            //Try to copy file to its original SD location
+                            int resultOfCopyBack = copyBack(tempFile, file);
+
+                            if (resultOfCopyBack != SUCCESS_COPY_BACK) {
+                                resultCorrection.setCode(COULD_NOT_COPY_BACK_TO_ORIGINAL_LOCATION);
+                            }
+
+                            resultCorrection.setCode(SUCCESS);
+                        } catch (FieldDataInvalidException | CannotWriteException e) {
+                            resultCorrection.setCode(COULD_NOT_REMOVE_COVER);
+                        }
+                    }
+                }
+            }
+            deleteTempFile(tempFile);
         }
-
-        //Try to copy file to its original SD location
-        int resultOfCopyBack = copyBack(tempFile, file);
-
-        if(resultOfCopyBack != SUCCESS_COPY_BACK){
-            resultCorrection.code = COULD_NOT_COPY_BACK_TO_ORIGINAL_LOCATION;
-            return resultCorrection;
-        }
-
-        deleteTempFile(tempFile);
 
         return resultCorrection;
     }
@@ -980,17 +983,14 @@ public class AudioTagger {
         AudioFile audioFile = getAudioTaggerFile(file);
         Tag currentTag = getTag(audioFile);
 
+        //When cover is null, then the current cover will be removed.
         if(cover == null){
             try {
                 currentTag.deleteArtworkField();
                 audioFile.commit();
-                resultCorrection.code = CURRENT_COVER_REMOVED;
-                return resultCorrection;
+                resultCorrection.setCode(SUCCESS);
             } catch (CannotWriteException e) {
-                Crashlytics.logException(e);
-                e.printStackTrace();
-                resultCorrection.code = COULD_NOT_APPLY_COVER;
-                return resultCorrection;
+                resultCorrection.setCode(COULD_NOT_APPLY_COVER);
             }
         }
         else {
@@ -1000,15 +1000,12 @@ public class AudioTagger {
                 currentTag.deleteArtworkField();
                 currentTag.setField(artwork);
                 audioFile.commit();
-                resultCorrection.code = NEW_COVER_APPLIED;
-                return resultCorrection;
+                resultCorrection.setCode(SUCCESS);
             } catch (CannotWriteException | FieldDataInvalidException e) {
-                e.printStackTrace();
-                Crashlytics.logException(e);
-                resultCorrection.code = COULD_NOT_REMOVE_COVER;
-                return resultCorrection;
+                resultCorrection.setCode(COULD_NOT_REMOVE_COVER);
             }
         }
+        return resultCorrection;
     }
 
     /**
@@ -1018,59 +1015,56 @@ public class AudioTagger {
      * @param metadata The string or strings to use as name.
      * @return new absolute path to file;
      */
-    public String renameFile(File currentFile, String... metadata){
+    public String renameFile(File currentFile, String newName){
         boolean isStoredInSd = mStorageHelper.isStoredInSD(currentFile);
 
-        if(isStoredInSd ){
-            if (getUriSD() == null){
-                return null;
-            }
-            return internalRenameDocumentFile(currentFile ,metadata);
+        String newFileName;
+
+        if(isStoredInSd && getUriSD() != null){
+            newFileName = internalRenameDocumentFile(currentFile ,newName);
         }
         else {
-            return internalRenameFile(currentFile, metadata);
+            newFileName =  internalRenameFile(currentFile, newName);
         }
 
+        return newFileName;
     }
 
     /**
      * Rename file object using the data passed in the array
      * @param sourceFile File to rename
-     * @param metadata Data to use as name, if is not empty
+     * @param newName Data to use as name, if is not empty
      * @return New complete file path as string
      */
-    private String internalRenameDocumentFile(File sourceFile, String[] metadata) {
-        if(metadata[0].isEmpty())
-            return null;
+    private String internalRenameDocumentFile(File sourceFile, String newName) {
+        if(newName.isEmpty())
+            throw new IllegalArgumentException("Cannot rename a file with an empty string.");
 
-        String title = metadata[0];
-        String artistName = metadata[1];
-
-        DocumentFile currentDocumentFile = getDocumentFile(sourceFile);
-        if(currentDocumentFile == null){
-            return null;
+        if(sameFilename(sourceFile, newName)){
+            return sourceFile.getAbsolutePath();
         }
 
-        if(sameFilename(sourceFile, metadata)){
-            return null;
-        }
-
-        if(!checkFileIntegrity(currentDocumentFile)){
+        if(!checkFileIntegrity(sourceFile)){
             return null;
         }
 
 
         String currentParentPath = sourceFile.getParent();
-        String newFilename = title + "." + getExtension(currentDocumentFile.getName());
+        String newFilename = newName + "." + getExtension(sourceFile.getName());
         String newRelativeFilePath = currentParentPath + "/" + newFilename;
 
-        String id = DocumentsContract.getDocumentId(getUriTree().getUri());
+        Uri uriTree = getUriTree().getUri();
+
+        if(uriTree == null)
+            return null;
+
+        String id = DocumentsContract.getDocumentId(uriTree);
 
         //Check if new file document already exist
         id = id + getRelativePath(new File(newRelativeFilePath));
         Uri childUri = DocumentsContract.buildDocumentUriUsingTree(getUriSD(), id);
         DocumentFile renamedDocument = DocumentFile.fromSingleUri(mContext, childUri);
-        boolean wasRenamed = false;
+        boolean wasRenamed;
         if(renamedDocument == null){
             return null;
         }
@@ -1099,42 +1093,36 @@ public class AudioTagger {
     /**
      * Rename file object using the data passed in the array
      * @param sourceFile FIle to rename
-     * @param metadata Data to use as name, if is not empty
+     * @param newName Data to use as name, if is not empty
      * @return New complete file path as string
      */
-    private String internalRenameFile(File sourceFile, String[] metadata) {
-        if(metadata[0].isEmpty())
-            return null;
+    private String internalRenameFile(File sourceFile, String newName) {
+        if(newName.isEmpty())
+            throw new IllegalArgumentException("Cannot rename a file with an empty string.");
 
-        String title = StringUtilities.sanitizeFilename(metadata[0]);
-        String artistName = metadata[1];
-
-        if(sameFilename(sourceFile, metadata)){
-            return null;
+        if(sameFilename(sourceFile, newName)){
+            return sourceFile.getAbsolutePath();
         }
 
         if(!checkFileIntegrity(sourceFile)){
             return null;
         }
 
-        boolean success =false;
+        boolean success;
         File renamedFile;
         String newParentPath = sourceFile.getParent();
 
-        String newFilename = StringUtilities.sanitizeFilename(title) + "." + getExtension(sourceFile);
-        String newAbsolutePath= newParentPath + "/" + newFilename;
+        String newFilename = StringUtilities.sanitizeFilename(newName) + "." + getExtension(sourceFile);
+        String newAbsolutePath = newParentPath + "/" + newFilename;
         renamedFile = new File(newAbsolutePath);
         if(!renamedFile.exists()) {
             success = sourceFile.renameTo(renamedFile);
         }
         else {
-            //if artist tag was identificationFound
-            if(!artistName.isEmpty()) {
-                newFilename = title + "(" + StringUtilities.sanitizeFilename(artistName) + ")" + "." + getExtension(sourceFile);
-            }
-            else{
-                newFilename = title +"("+ (int)Math.floor((Math.random()*10)+ 1) +")"+ "." + getExtension(sourceFile);
-            }
+            //Get and format date
+            Date date = new Date();
+            DateFormat now = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault());
+            newFilename = newName +"("+ now.format(date) +")"+ "." + getExtension(sourceFile);
             newAbsolutePath = newParentPath + "/" + newFilename;
             renamedFile = new File(newAbsolutePath);
             success = sourceFile.renameTo(renamedFile);
@@ -1150,12 +1138,12 @@ public class AudioTagger {
      * @param metadata Title field tag to compare with file name
      * @return true if is necessary rename it, false otherwise
      */
-    private static boolean sameFilename(File sourceFile, String... metadata){
+    private static boolean sameFilename(File sourceFile, String newName){
         //Compare current file name against new title
         String currentFileName = sourceFile.getName();
         //Remove extension and get only name
         String currentFileNameWithoutExt = currentFileName.substring(0, currentFileName.length() - 4);
-        return currentFileNameWithoutExt.equals(metadata[0]);
+        return currentFileNameWithoutExt.equals(newName);
     }
 
     public static boolean checkFileIntegrity(DocumentFile file){
@@ -1313,18 +1301,92 @@ public class AudioTagger {
         }
     }
 
+    public static abstract class AudioTaggerResult {
+        private int code;
+
+        AudioTaggerResult(){}
+
+        public AudioTaggerResult(int code) {
+            this();
+            this.code = code;
+        }
+
+        public int getCode() {
+            return code;
+        }
+
+        public void setCode(int code) {
+            this.code = code;
+        }
+    }
+
     /**
      * Container class that holds
      * the result of correction
      */
-    public static class ResultCorrection{
-        public String pathTofileUpdated = null;
-        public int code = NOT_SET;
-        public int allTagsApplied;
+    public static class ResultCorrection extends AudioTaggerResult {
         public HashMap<FieldKey, Object> tagsUpdated;
+
+        public ResultCorrection(){}
+
+        public ResultCorrection(int code, HashMap<FieldKey, Object> tagsUpdated) {
+            super(code);
+            this.tagsUpdated = tagsUpdated;
+        }
+
+        public HashMap<FieldKey, Object> getTagsUpdated() {
+            return tagsUpdated;
+        }
+
+        public void setTagsUpdated(HashMap<FieldKey, Object> tagsUpdated) {
+            this.tagsUpdated = tagsUpdated;
+        }
     }
 
-    public static class TrackDataItem implements Cloneable{
+    public static class AudioFields extends AudioTaggerResult {
+
+        public AudioFields(int code,
+                           String title,
+                           String artist,
+                           String album,
+                           String trackNumber,
+                           String trackYear,
+                           String genre,
+                           byte[] cover,
+                           String fileName,
+                           String path,
+                           String duration,
+                           String bitrate,
+                           String frequency,
+                           String resolution,
+                           String channels,
+                           String fileType,
+                           String extension,
+                           String mimeType,
+                           String imageSize,
+                           String fileSize) {
+            super(code);
+            this.title = title;
+            this.artist = artist;
+            this.album = album;
+            this.trackNumber = trackNumber;
+            this.trackYear = trackYear;
+            this.genre = genre;
+            this.cover = cover;
+            this.fileName = fileName;
+            this.path = path;
+            this.duration = duration;
+            this.bitrate = bitrate;
+            this.frequency = frequency;
+            this.resolution = resolution;
+            this.channels = channels;
+            this.fileType = fileType;
+            this.extension = extension;
+            this.mimeType = mimeType;
+            this.imageSize = imageSize;
+            this.fileSize = fileSize;
+        }
+
         public String title = "";
         public String artist = "";
         public String album = "";
@@ -1346,15 +1408,42 @@ public class AudioTagger {
         public String mimeType = "";
         public String imageSize = "Sin carátula.";
         public String fileSize = "";
+    }
 
-        @Override
-        protected Object clone() throws CloneNotSupportedException {
-            Object obj = null;
-            try {
-                obj = super.clone();
-            }
-            catch (CloneNotSupportedException ignored) {}
-            return obj;
+    public static class ResultFileRename extends AudioTaggerResult{
+        private String filename;
+        private String path;
+        private String fullpath;
+
+        public ResultFileRename(int code, String filename, String path, String fullpath) {
+            super(code);
+            this.filename = filename;
+            this.path = path;
+            this.fullpath = fullpath;
+        }
+
+        public String getFilename() {
+            return filename;
+        }
+
+        public void setFilename(String filename) {
+            this.filename = filename;
+        }
+
+        public String getPath() {
+            return path;
+        }
+
+        public void setPath(String path) {
+            this.path = path;
+        }
+
+        public String getFullpath() {
+            return fullpath;
+        }
+
+        public void setFullpath(String fullpath) {
+            this.fullpath = fullpath;
         }
     }
 
