@@ -10,6 +10,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.provider.DocumentFile;
+import android.support.v4.util.ArrayMap;
 import android.util.Log;
 import android.util.SparseArray;
 import android.webkit.MimeTypeMap;
@@ -45,7 +46,6 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -133,7 +133,7 @@ public class AudioTagger {
      * @throws InvalidAudioFrameException
      * @throws IOException
      */
-    public ResultCorrection saveTags(String pathToTargetFile, HashMap<FieldKey, Object> tags, int overWriteTags)
+    public ResultCorrection saveTags(String pathToTargetFile, Map<FieldKey, Object> tags, int overWriteTags)
             throws ReadOnlyFileException, CannotReadException, TagException, InvalidAudioFrameException, IOException {
 
         if(pathToTargetFile == null || pathToTargetFile.isEmpty())
@@ -154,7 +154,7 @@ public class AudioTagger {
      * @throws InvalidAudioFrameException
      * @throws IOException
      */
-    public ResultCorrection saveTags(File targetFile, HashMap<FieldKey, Object> tags, int overWriteTags)
+    public ResultCorrection saveTags(File targetFile, Map<FieldKey, Object> tags, int overWriteTags)
             throws ReadOnlyFileException, CannotReadException, TagException, InvalidAudioFrameException, IOException {
 
         if(targetFile == null)
@@ -263,7 +263,7 @@ public class AudioTagger {
      * @throws InvalidAudioFrameException
      * @throws CannotReadException
      */
-    private ResultCorrection applyTags(File file, HashMap<FieldKey, Object> tags, int overWriteTags)
+    private ResultCorrection applyTags(File file, Map<FieldKey, Object> tags, int overWriteTags)
             throws ReadOnlyFileException, IOException, TagException, InvalidAudioFrameException, CannotReadException {
 
         boolean isStoredInSd = mStorageHelper.isStoredInSD(file);
@@ -277,7 +277,7 @@ public class AudioTagger {
             }
             else {
                 //Hold which tags were applied to return in results.
-                HashMap<FieldKey, Object> tagsToUpdate = isNeededUpdateTags(overWriteTags,file, tags);
+                Map<FieldKey, Object> tagsToUpdate = isNeededUpdateTags(overWriteTags,file, tags);
                 if(tagsToUpdate.isEmpty()){
                     resultCorrection = new ResultCorrection();
                     resultCorrection.setCode(APPLIED_SAME_TAGS);
@@ -289,7 +289,7 @@ public class AudioTagger {
             }
         }
         else {
-            HashMap<FieldKey, Object> tagsToUpdate = isNeededUpdateTags(overWriteTags,file, tags);
+            Map<FieldKey, Object> tagsToUpdate = isNeededUpdateTags(overWriteTags,file, tags);
             if(tagsToUpdate.isEmpty()){
                 resultCorrection = new ResultCorrection();
                 resultCorrection.setCode(APPLIED_SAME_TAGS);
@@ -320,7 +320,7 @@ public class AudioTagger {
      * @throws InvalidAudioFrameException
      * @throws IOException
      */
-    private HashMap<FieldKey, Object> isNeededUpdateTags(int overrideAllTags, File file, HashMap<FieldKey, Object> newTags)
+    private Map<FieldKey, Object> isNeededUpdateTags(int overrideAllTags, File file, Map<FieldKey, Object> newTags)
             throws TagException, ReadOnlyFileException, CannotReadException, InvalidAudioFrameException, IOException {
         AudioFile audioFile = AudioFileIO.read(file);
         Tag currentTags = getTag(audioFile);
@@ -329,7 +329,7 @@ public class AudioTagger {
                 currentTags.getFirstArtwork().getBinaryData() :
                 null;
 
-        HashMap<FieldKey, Object> tagsToUpdate = new HashMap<>();
+        Map<FieldKey, Object> tagsToUpdate = new ArrayMap<>();
         //Iterates over new values tag passed, to compare
         //against the values of current tag and setChecked only those
         //that are different than current
@@ -418,7 +418,7 @@ public class AudioTagger {
      * only works with File objects.
      * @return resultCorrection with the state of correction
      */
-    private ResultCorrection applyTagsForDocumentFileObject(File file, HashMap<FieldKey,
+    private ResultCorrection applyTagsForDocumentFileObject(File file, Map<FieldKey,
             Object> tagsToApply, int overwriteTags) {
         ResultCorrection resultCorrection = new ResultCorrection();
         //Creates a temp file in non removable storage to work with it
@@ -506,7 +506,7 @@ public class AudioTagger {
      * (better known as internal storage).
      * @return true if successful, false otherwise
      */
-    private ResultCorrection applyTagsForFileObject(File file, HashMap<FieldKey, Object> tagsToApply, int overwriteTags){
+    private ResultCorrection applyTagsForFileObject(File file, Map<FieldKey, Object> tagsToApply, int overwriteTags){
         ResultCorrection resultCorrection = new ResultCorrection();
         //Try to create AudioFile
         AudioFile audioFile = getAudioTaggerFile(file);
@@ -555,7 +555,7 @@ public class AudioTagger {
      * @param overwriteAllTags Indicates if all current tags ust be overwrote or write
      *                         only those missing.
      */
-    private void setNewTags(AudioFile audioFile,HashMap<FieldKey, Object> tagsToApply, int overwriteAllTags){
+    private void setNewTags(AudioFile audioFile, Map<FieldKey, Object> tagsToApply, int overwriteAllTags){
         Tag currentTag = getTag(audioFile);
         String mimeType = getMimeType(audioFile.getFile());
         String extension = getExtension(audioFile.getFile());
@@ -592,7 +592,7 @@ public class AudioTagger {
                     }
                 }
                 //check if current field from tag is null or empty
-                //in that case set the field with the value passed in the mNewTags HashMap
+                //in that case set the field with the value passed in the mNewTags Map
                 else {
                     try {
                         if( currentTag.getFirst((FieldKey) entry.getKey()) == null ||
@@ -1337,20 +1337,20 @@ public class AudioTagger {
      * the result of correction
      */
     public static class ResultCorrection extends AudioTaggerResult {
-        public HashMap<FieldKey, Object> tagsUpdated;
+        public Map<FieldKey, Object> tagsUpdated;
 
         public ResultCorrection(){}
 
-        public ResultCorrection(int code, HashMap<FieldKey, Object> tagsUpdated) {
+        public ResultCorrection(int code, Map<FieldKey, Object> tagsUpdated) {
             super(code);
             this.tagsUpdated = tagsUpdated;
         }
 
-        public HashMap<FieldKey, Object> getTagsUpdated() {
+        public Map<FieldKey, Object> getTagsUpdated() {
             return tagsUpdated;
         }
 
-        public void setTagsUpdated(HashMap<FieldKey, Object> tagsUpdated) {
+        public void setTagsUpdated(Map<FieldKey, Object> tagsUpdated) {
             this.tagsUpdated = tagsUpdated;
         }
     }

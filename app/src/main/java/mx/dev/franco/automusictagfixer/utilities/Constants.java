@@ -46,6 +46,7 @@ public class Constants {
         public static final String FINISH_TRACK_PROCESSING = BuildConfig.APPLICATION_ID + ".action_finish_track_processing";
         public static final String ACTION_RESCAN = BuildConfig.APPLICATION_ID + ".action_rescan";
         public static final String ACTION_STOP_TASK = BuildConfig.APPLICATION_ID + ".action_stop_task";
+        public static final String ACTION_BROADCAST_MESSAGE = BuildConfig.APPLICATION_ID + ".action_broadcast_message";
     }
 
     public static class GnServiceActions{
