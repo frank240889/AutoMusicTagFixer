@@ -12,9 +12,9 @@ import mx.dev.franco.automusictagfixer.persistence.room.Track;
 
 public class MetadataReader extends AbstractMetadataFixer<Void, Void, AudioTagger.AudioFields> {
     private Throwable mError;
-    private AsyncOperation<Track, AudioTagger.AudioFields, Track, MetadataWriter.Error> mCallback;
+    private AsyncOperation<Track, MetadataReaderResult, Track, MetadataReaderResult> mCallback;
     private AudioMetadataTagger.InputParams mInputParams;
-    public MetadataReader(AsyncOperation<Track, AudioTagger.AudioFields, Track, MetadataWriter.Error> callback, AudioMetadataTagger fileTagger,
+    public MetadataReader(AsyncOperation<Track, MetadataReaderResult, Track, MetadataReaderResult> callback, AudioMetadataTagger fileTagger,
                           AudioMetadataTagger.InputParams inputParams, Track track) {
         super(fileTagger,track);
         mCallback = callback;
@@ -36,23 +36,20 @@ public class MetadataReader extends AbstractMetadataFixer<Void, Void, AudioTagge
                 CannotReadException|
                 TagException|
                 InvalidAudioFrameException e) {
-
-            mError = e;
             e.printStackTrace();
+            return new AudioTagger.AudioFields(AudioTagger.COULD_NOT_READ_TAGS);
         }
-
-        return null;
     }
 
     @Override
     protected void onPostExecute(AudioTagger.AudioFields audioFields) {
         if(mCallback != null) {
-            if(audioFields == null && mError != null) {
-                MetadataWriter.Error error = new MetadataWriter.Error(track, mError.toString(), -1);
-                mCallback.onAsyncOperationError(error);
+            MetadataReaderResult readerResult = new MetadataReaderResult(track, audioFields);
+            if(audioFields.getCode() != AudioTagger.SUCCESS) {
+                mCallback.onAsyncOperationError(readerResult);
             }
             else {
-                mCallback.onAsyncOperationFinished(audioFields);
+                mCallback.onAsyncOperationFinished(readerResult);
             }
         }
     }

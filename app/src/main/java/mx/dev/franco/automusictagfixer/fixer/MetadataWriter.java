@@ -11,9 +11,10 @@ import mx.dev.franco.automusictagfixer.interfaces.AsyncOperation;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
 
 public class MetadataWriter extends AbstractMetadataFixer<Void, Void, AudioTagger.ResultCorrection> {
-    private AsyncOperation<Track, MetadataFixerResult, Track, Error> mCallback;
+    private AsyncOperation<Track, MetadataWriterResult, Track, MetadataWriterResult> mCallback;
     private AudioMetadataTagger.InputParams mInputParams;
-    public MetadataWriter(AsyncOperation<Track, MetadataFixerResult, Track, Error> callback, AudioMetadataTagger fileTagger,
+    public MetadataWriter(AsyncOperation<Track, MetadataWriterResult, Track, MetadataWriterResult> callback,
+                          AudioMetadataTagger fileTagger,
                           AudioMetadataTagger.InputParams inputParams, Track track) {
         super(fileTagger, track);
         mCallback = callback;
@@ -28,7 +29,6 @@ public class MetadataWriter extends AbstractMetadataFixer<Void, Void, AudioTagge
 
     @Override
     protected AudioTagger.ResultCorrection doInBackground(Void... voids) {
-        Throwable error = null;
         try {
             return mFileTagger.writeMetadata(mInputParams);
         } catch (IOException|
@@ -36,14 +36,12 @@ public class MetadataWriter extends AbstractMetadataFixer<Void, Void, AudioTagge
                 CannotReadException|
                 TagException|
                 InvalidAudioFrameException e) {
-
-            error = e;
             e.printStackTrace();
         }
 
         AudioTagger.ResultCorrection resultCorrection = new AudioTagger.ResultCorrection();
 
-        resultCorrection.error = error;
+        resultCorrection.setCode(AudioTagger.COULD_NOT_WRITE_TAGS);
 
         return resultCorrection;
     }
@@ -51,12 +49,12 @@ public class MetadataWriter extends AbstractMetadataFixer<Void, Void, AudioTagge
     @Override
     protected void onPostExecute(AudioTagger.ResultCorrection resultCorrection) {
         if(mCallback != null) {
-            if(resultCorrection.error != null || resultCorrection.code != AudioTagger.SUCCESS) {
-                Error error = new Error(track, resultCorrection.error.toString(), resultCorrection.code);
-                mCallback.onAsyncOperationError(error);
+            MetadataWriterResult result = new MetadataWriterResult(track, resultCorrection);
+            if(resultCorrection.getCode() != AudioTagger.SUCCESS) {
+                mCallback.onAsyncOperationError(result);
             }
             else {
-                mCallback.onAsyncOperationFinished(new MetadataFixerResult(track, resultCorrection));
+                mCallback.onAsyncOperationFinished(result);
             }
         }
     }
@@ -66,77 +64,5 @@ public class MetadataWriter extends AbstractMetadataFixer<Void, Void, AudioTagge
         onCancelled();
         if(mCallback != null)
             mCallback.onAsyncOperationCancelled(track);
-    }
-
-
-
-    public static class MetadataFixerResult {
-        private Track track;
-        private AudioTagger.ResultCorrection resultCorrection;
-
-        public MetadataFixerResult() {
-        }
-
-        public MetadataFixerResult(Track track, AudioTagger.ResultCorrection resultCorrection) {
-            this();
-            this.track = track;
-            this.resultCorrection = resultCorrection;
-        }
-
-        public Track getTrack() {
-            return track;
-        }
-
-        public void setTrack(Track track) {
-            this.track = track;
-        }
-
-        public AudioTagger.ResultCorrection getResultCorrection() {
-            return resultCorrection;
-        }
-
-        public void setResultCorrection(AudioTagger.ResultCorrection resultCorrection) {
-            this.resultCorrection = resultCorrection;
-        }
-    }
-
-
-    public static class Error {
-        private Track track;
-        private String error;
-        private int e;
-
-        public Error() {}
-
-        public Error(Track track, String error, int e) {
-            this();
-            this.track = track;
-            this.error = error;
-            this.e = e;
-        }
-
-        public Track getTrack() {
-            return track;
-        }
-
-        public void setTrack(Track track) {
-            this.track = track;
-        }
-
-        public String getError() {
-            return error;
-        }
-
-        public void setError(String error) {
-            this.error = error;
-        }
-
-        public int getE() {
-            return e;
-        }
-
-        public void setE(int e) {
-            this.e = e;
-        }
     }
 }

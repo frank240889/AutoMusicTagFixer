@@ -9,11 +9,11 @@ import java.util.List;
 import mx.dev.franco.automusictagfixer.interfaces.AsyncOperation;
 import mx.dev.franco.automusictagfixer.persistence.room.TrackRoomDatabase;
 
-public class IdLoader extends AsyncTask<String, Void, List<Integer>> {
+public class TrackIdLoader extends AsyncTask<String, Void, List<Integer>> {
     private AsyncOperation<Void, List<Integer>, Void, Void> mTrackListLoader;
     private TrackRoomDatabase mTrackRoomDatabase;
 
-    public IdLoader(AsyncOperation<Void, List<Integer>, Void, Void> trackListLoader, TrackRoomDatabase trackRoomDatabase){
+    public TrackIdLoader(AsyncOperation<Void, List<Integer>, Void, Void> trackListLoader, TrackRoomDatabase trackRoomDatabase){
         mTrackListLoader = trackListLoader;
         mTrackRoomDatabase = trackRoomDatabase;
     }

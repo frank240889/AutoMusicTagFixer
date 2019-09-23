@@ -34,6 +34,6 @@ public final class DetectorRemovableMediaStorages extends BroadcastReceiver{
 
         //Reload number of storage available
         AudioTagger.StorageHelper.getInstance(context).getBasePaths().clear();
-        AudioTagger.StorageHelper.getInstance(context).detectStorages();
+        AudioTagger.StorageHelper.getInstance(context).detectStorage();
     }
 }

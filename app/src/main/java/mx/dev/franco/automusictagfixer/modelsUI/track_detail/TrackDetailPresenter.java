@@ -8,7 +8,6 @@ import javax.inject.Inject;
 
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.fixer.AudioTagger;
-import mx.dev.franco.automusictagfixer.fixer.FixerService;
 import mx.dev.franco.automusictagfixer.identifier.GnApiService;
 import mx.dev.franco.automusictagfixer.interfaces.AsyncOperation;
 import mx.dev.franco.automusictagfixer.interfaces.Cache;
@@ -447,7 +446,7 @@ public class TrackDetailPresenter implements
     /************************Correction*************************/
     public void performCorrection(FixerService.CorrectionParams correctionParams){
         GnResponseListener.IdentificationResults results;
-        mFixer = new FixerService(this);
+        //mFixer = new FixerService(this);
 
         mFixer.setTrack(mCurrentTrack);
         mFixer.setTask(correctionParams.mode);
@@ -509,7 +508,7 @@ public class TrackDetailPresenter implements
 
     @Override
     public void onCorrectionError(Tagger.ResultCorrection resultCorrection, Track track) {
-        String errorMessage = FixerService.ERROR_CODES.getErrorMessage(resourceManager, resultCorrection.code);
+        String errorMessage = AndroidUtils.AudioTaggerErrorDescription.getErrorMessage(resourceManager, resultCorrection.code);
         String action = resultCorrection.code == Tagger.COULD_NOT_GET_URI_SD_ROOT_TREE ?
                 resourceManager.getString(R.string.get_permission):null;
         if(mView != null) {
@@ -539,7 +538,7 @@ public class TrackDetailPresenter implements
     }
 
     public void confirmRemoveCover(){
-        mFixer = new FixerService(this);
+        //mFixer = new FixerService(this);
         mFixer.setTrack(mCurrentTrack);
         mFixer.setTask(Tagger.MODE_REMOVE_COVER);
         mFixer.executeOnExecutor(Executors.newSingleThreadExecutor(), null);
@@ -561,7 +560,7 @@ public class TrackDetailPresenter implements
                 mView.alertInvalidData(resourceManager.getString(R.string.empty_tag), field);
                 return false;
             }
-            if(AudioTagger.StringUtilities.isTooLong(field, title)) {
+            if(AndroidUtils.isTooLong(field, title)) {
                 mView.alertInvalidData(resourceManager.getString(R.string.tag_too_long), field);
                 return false;
             }
@@ -574,7 +573,7 @@ public class TrackDetailPresenter implements
                 mView.alertInvalidData(resourceManager.getString(R.string.empty_tag), field);
                 return false;
             }
-            if(AudioTagger.StringUtilities.isTooLong(field, artist)) {
+            if(AndroidUtils.isTooLong(field, artist)) {
                 mView.alertInvalidData(resourceManager.getString(R.string.tag_too_long), field);
                 return false;
             }
@@ -587,7 +586,7 @@ public class TrackDetailPresenter implements
                 mView.alertInvalidData(resourceManager.getString(R.string.empty_tag), field);
                 return false;
             }
-            if(AudioTagger.StringUtilities.isTooLong(field, album)) {
+            if(AndroidUtils.isTooLong(field, album)) {
                 mView.alertInvalidData(resourceManager.getString(R.string.tag_too_long), field);
                 return false;
             }
@@ -600,7 +599,7 @@ public class TrackDetailPresenter implements
                 mView.alertInvalidData(resourceManager.getString(R.string.empty_tag), field);
                 return false;
             }
-            if(AudioTagger.StringUtilities.isTooLong(field, trackYear)) {
+            if(AndroidUtils.isTooLong(field, trackYear)) {
                 mView.alertInvalidData(resourceManager.getString(R.string.tag_too_long), field);
                 return false;
             }
@@ -613,7 +612,7 @@ public class TrackDetailPresenter implements
                 mView.alertInvalidData(resourceManager.getString(R.string.empty_tag), field);
                 return false;
             }
-            if(AudioTagger.StringUtilities.isTooLong(field, trackNumber)) {
+            if(AndroidUtils.isTooLong(field, trackNumber)) {
                 mView.alertInvalidData(resourceManager.getString(R.string.tag_too_long), field);
                 return false;
             }
@@ -626,7 +625,7 @@ public class TrackDetailPresenter implements
                 mView.alertInvalidData(resourceManager.getString(R.string.empty_tag), field);
                 return false;
             }
-            if(AudioTagger.StringUtilities.isTooLong(field, genre)) {
+            if(AndroidUtils.isTooLong(field, genre)) {
                 mView.alertInvalidData(resourceManager.getString(R.string.tag_too_long), field);
                 return false;
             }

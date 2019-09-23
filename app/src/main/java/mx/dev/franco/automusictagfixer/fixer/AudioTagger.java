@@ -53,13 +53,13 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import mx.dev.franco.automusictagfixer.BuildConfig;
-import mx.dev.franco.automusictagfixer.R;
 
 /**
  * Helper class that wraps the functionality to
  * read and write metadata for audio files.
  */
 public class AudioTagger {
+    public static final int COULD_NOT_WRITE_TAGS = 200;
     private static final String TAG = AudioTagger.class.getName();
     //Constants to overwrite all tags or only apply those missing
     public static final int MODE_OVERWRITE_ALL_TAGS = 0;
@@ -111,7 +111,7 @@ public class AudioTagger {
     }
     /**
      * A single instance of this helper
-     * @param context
+     * @param context The context required to access system resources.
      */
     public AudioTagger(Context context) {
         mContext = context.getApplicationContext();
@@ -122,7 +122,7 @@ public class AudioTagger {
     }
 
     /**
-     * @param pathToFile The path of the file to apply new tags.
+     * @param pathToTargetFile The path of the file to apply new tags.
      * @param tags Tags to apply.
      * @param overWriteTags Option to indicate if current tags must overwrite
      *                      or only apply those missing.
@@ -227,7 +227,7 @@ public class AudioTagger {
         audioFields.genre = tag.getFirst(FieldKey.GENRE);
 
         audioFields.cover = getCover(audioFile);
-        audioFields.imageSize = getStringImageSize(audioFields.cover, mContext);
+        audioFields.imageSize = getStringImageSize(audioFields.cover);
 
         return audioFields;
     }
@@ -627,7 +627,6 @@ public class AudioTagger {
                 else {
                     try {
                         currentTag.setField((FieldKey) entry.getKey(), (String) entry.getValue());
-
                     } catch (FieldDataInvalidException e) {
                         e.printStackTrace();
                         Crashlytics.logException(e);
@@ -978,7 +977,7 @@ public class AudioTagger {
      *              delete current cover.
      * @return resultCorrection containing the result of operation.
      */
-    private ResultCorrection applyCoverForFileObject(byte[] cover, File file){
+    private ResultCorrection applyCoverForFileObject(@Nullable byte[] cover, File file){
         ResultCorrection resultCorrection = new ResultCorrection();
         AudioFile audioFile = getAudioTaggerFile(file);
         Tag currentTag = getTag(audioFile);
@@ -1012,8 +1011,8 @@ public class AudioTagger {
      * Public common method to exposes rename file functionality both for files
      * stored in SD card or files stores in internal memory
      * @param currentFile The file to rename
-     * @param metadata The string or strings to use as name.
-     * @return new absolute path to file;
+     * @param newName The new name for the file, without extension.
+     * @return string of new absolute path to file or null if could not be renamed;
      */
     public String renameFile(File currentFile, String newName){
         boolean isStoredInSd = mStorageHelper.isStoredInSD(currentFile);
@@ -1031,10 +1030,10 @@ public class AudioTagger {
     }
 
     /**
-     * Rename file object using the data passed in the array
+     * Renames document file object.
      * @param sourceFile File to rename
-     * @param newName Data to use as name, if is not empty
-     * @return New complete file path as string
+     * @param newName The new name for the file, without extension.
+     * @return string of new absolute path to file or null if could not be renamed;
      */
     private String internalRenameDocumentFile(File sourceFile, String newName) {
         if(newName.isEmpty())
@@ -1048,6 +1047,10 @@ public class AudioTagger {
             return null;
         }
 
+        DocumentFile currentDocumentFile = getDocumentFile(sourceFile);
+
+        if(currentDocumentFile == null)
+            return null;
 
         String currentParentPath = sourceFile.getParent();
         String newFilename = newName + "." + getExtension(sourceFile.getName());
@@ -1065,6 +1068,7 @@ public class AudioTagger {
         Uri childUri = DocumentsContract.buildDocumentUriUsingTree(getUriSD(), id);
         DocumentFile renamedDocument = DocumentFile.fromSingleUri(mContext, childUri);
         boolean wasRenamed;
+
         if(renamedDocument == null){
             return null;
         }
@@ -1074,14 +1078,9 @@ public class AudioTagger {
             wasRenamed = currentDocumentFile.renameTo(newFilename);
         }
         else {
-            //if artist tag was identified
-            if(!artistName.isEmpty()) {
-                newFilename = title + " ( " + StringUtilities.sanitizeFilename(artistName) + " ) " + "." + getExtension(sourceFile);
-            }
-            else{
-                newFilename = title +" ( "+ (int)Math.floor((Math.random()*100)+ 1) + " ) " + "." + getExtension(sourceFile);
-            }
-
+            Date date = new Date();
+            DateFormat now = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault());
+            newFilename = newName +"("+ now.format(date) +")"+ "." + getExtension(sourceFile);
             wasRenamed = currentDocumentFile.renameTo(newFilename);
             newRelativeFilePath = currentParentPath + "/" + newFilename;
 
@@ -1091,10 +1090,10 @@ public class AudioTagger {
     }
 
     /**
-     * Rename file object using the data passed in the array
-     * @param sourceFile FIle to rename
-     * @param newName Data to use as name, if is not empty
-     * @return New complete file path as string
+     * Renames file object.
+     * @param sourceFile The file to rename
+     * @param newName The new name for the file, without extension.
+     * @return string of new absolute path to file or null if could not be renamed;
      */
     private String internalRenameFile(File sourceFile, String newName) {
         if(newName.isEmpty())
@@ -1135,7 +1134,7 @@ public class AudioTagger {
     /**
      * If filename is the same than title, then is not necessary rename it
      * @param sourceFile The source file to rename
-     * @param metadata Title field tag to compare with file name
+     * @param newName The new name to compare with the current name of sourceFile
      * @return true if is necessary rename it, false otherwise
      */
     private static boolean sameFilename(File sourceFile, String newName){
@@ -1162,20 +1161,21 @@ public class AudioTagger {
         if(absolutePath == null || absolutePath.isEmpty())
             return null;
 
-        File file = new File(absolutePath);
-        //get file extension, extension must be in lowercase
-        return file.getName().substring(file.getName().lastIndexOf(".") + 1).toLowerCase();
+        return getExtension(new File(absolutePath));
     }
 
     public static String getExtension(File file){
         if(file == null)
             return null;
+
+        int lastIndexOfDot = file.getName().lastIndexOf(".") + 1;
+        String ext = file.getName().substring(lastIndexOfDot);
         //get file extension, extension must be in lowercase
-        return file.getName().substring(file.getName().lastIndexOf(".") + 1).toLowerCase();
+        return ext.toLowerCase();
     }
 
-    public static String getMimeType(String absolutePath){
-        String ext = getExtension(absolutePath);
+    public static String getMimeType(String absolutePathSourceFile){
+        String ext = getExtension(absolutePathSourceFile);
         if(ext == null)
             return null;
         //get type depending on extension
@@ -1215,21 +1215,22 @@ public class AudioTagger {
     /**
      * Gets file size in megabytes
      * @param size File size
-     * @return formatted file size string
+     * @return formatted file size string in kilobytes.
      */
+    @Nullable
     public static String getFileSize(long size){
         if(size <= 0)
-            return "0 Mb";
+            return null;
 
-        float s = size / KILOBYTE;
+        float s = size ;/// KILOBYTE;
         String str = String.valueOf(s);
-        int l = str.length();
+        //int l = str.length();
         String readableSize = "";
-        if(l > 4)
+        /*if(l > 4)
             readableSize = str.substring(0,4);
         else
-            readableSize =str.substring(0,3);
-        readableSize += " mb";
+            readableSize =str.substring(0,3);*/
+        readableSize += " kb";
 
         return readableSize;
     }
@@ -1237,50 +1238,58 @@ public class AudioTagger {
     public static String getFileSize(String path){
         File file = new File(path);
         if(!checkFileIntegrity(file))
-            return "0 Mb";
+            return "0";
 
         return getFileSize(file.length());
     }
 
     /**
-     * Gets image dimensions information
-     * @param cover Cover art data
-     * @return formatted string image size
+     * Gets image dimensions.
+     * @param cover Cover as byte array.
+     * @return Size of image as string or null if could not be read.
      */
-    public static String getStringImageSize(byte[] cover, Context context){
-        String msg = context.getString(R.string.missing_cover);
+    @Nullable
+    public static String getStringImageSize(byte[] cover){
+        String size = null;
         if(cover != null && cover.length > 0) {
             try {
                 Bitmap bitmapDrawable = BitmapFactory.decodeByteArray(cover, 0, cover.length);
-                msg = bitmapDrawable.getHeight() + " * " + bitmapDrawable.getWidth() +" " +
-                        context.getString(R.string.pixels);
+                size = bitmapDrawable.getHeight() + " * " + bitmapDrawable.getWidth();
             }
-            catch (Exception e){
-                msg = context.getString(R.string.missing_cover);
-            }
+            catch (Exception ignored){}
         }
-        return msg;
+        return size;
     }
 
     /**
-     * Formats duration to human readable
-     * string
+     * Formats duration to human readable string.
      * @param duration duration in seconds
-     * @return formatted string duration
+     * @return formatted string duration or null if
+     * duration could not be parsed.
      */
+    @Nullable
     public static String getHumanReadableDuration(String duration){
+        String readableDuration = null;
         if(duration == null || duration.isEmpty())
-            return "0";
-        int d = Integer.parseInt(duration);
-        int minutes = 0;
-        int seconds = 0;
-        String readableDuration;
-        minutes = (int) Math.floor(d / 60f);
-        seconds = d % 60;
-        readableDuration = minutes + "\'" + (seconds<10?("0"+seconds):seconds) + "\"";
+            return null;
+
+        try {
+            int d = Integer.parseInt(duration);
+            int minutes;
+            int seconds;
+            minutes = (int) Math.floor(d / 60f);
+            seconds = d % 60;
+            readableDuration = minutes + "\'" + (seconds < 10 ? ("0" + seconds) : seconds) + "\"";
+        }
+        catch (NumberFormatException ignored) { }
+
         return readableDuration;
     }
 
+    /**
+     * Get the uri tree from persistence storage.
+     * @return An URI object.
+     */
     private Uri getUriSD(){
         String uriString = mContext.
                 getSharedPreferences(BuildConfig.APPLICATION_ID, Context.MODE_PRIVATE).
@@ -1301,6 +1310,9 @@ public class AudioTagger {
         }
     }
 
+    /**
+     * Generic class for operations result of {@link AudioTagger}
+     */
     public static abstract class AudioTaggerResult {
         private int code;
 
@@ -1344,49 +1356,6 @@ public class AudioTagger {
     }
 
     public static class AudioFields extends AudioTaggerResult {
-
-        public AudioFields(int code,
-                           String title,
-                           String artist,
-                           String album,
-                           String trackNumber,
-                           String trackYear,
-                           String genre,
-                           byte[] cover,
-                           String fileName,
-                           String path,
-                           String duration,
-                           String bitrate,
-                           String frequency,
-                           String resolution,
-                           String channels,
-                           String fileType,
-                           String extension,
-                           String mimeType,
-                           String imageSize,
-                           String fileSize) {
-            super(code);
-            this.title = title;
-            this.artist = artist;
-            this.album = album;
-            this.trackNumber = trackNumber;
-            this.trackYear = trackYear;
-            this.genre = genre;
-            this.cover = cover;
-            this.fileName = fileName;
-            this.path = path;
-            this.duration = duration;
-            this.bitrate = bitrate;
-            this.frequency = frequency;
-            this.resolution = resolution;
-            this.channels = channels;
-            this.fileType = fileType;
-            this.extension = extension;
-            this.mimeType = mimeType;
-            this.imageSize = imageSize;
-            this.fileSize = fileSize;
-        }
-
         public String title = "";
         public String artist = "";
         public String album = "";
@@ -1408,6 +1377,206 @@ public class AudioTagger {
         public String mimeType = "";
         public String imageSize = "Sin carátula.";
         public String fileSize = "";
+
+        public AudioFields(){
+            super(SUCCESS);
+        }
+        public AudioFields(int code){
+            super(code);
+        }
+
+        public AudioFields(String title,
+                           String artist,
+                           String album,
+                           String trackNumber,
+                           String trackYear,
+                           String genre,
+                           byte[] cover,
+                           String fileName,
+                           String path,
+                           String duration,
+                           String bitrate,
+                           String frequency,
+                           String resolution,
+                           String channels,
+                           String fileType,
+                           String extension,
+                           String mimeType,
+                           String imageSize,
+                           String fileSize) {
+            this();
+            this.title = title;
+            this.artist = artist;
+            this.album = album;
+            this.trackNumber = trackNumber;
+            this.trackYear = trackYear;
+            this.genre = genre;
+            this.cover = cover;
+            this.fileName = fileName;
+            this.path = path;
+            this.duration = duration;
+            this.bitrate = bitrate;
+            this.frequency = frequency;
+            this.resolution = resolution;
+            this.channels = channels;
+            this.fileType = fileType;
+            this.extension = extension;
+            this.mimeType = mimeType;
+            this.imageSize = imageSize;
+            this.fileSize = fileSize;
+        }
+
+        public String getTitle() {
+            return title;
+        }
+
+        public void setTitle(String title) {
+            this.title = title;
+        }
+
+        public String getArtist() {
+            return artist;
+        }
+
+        public void setArtist(String artist) {
+            this.artist = artist;
+        }
+
+        public String getAlbum() {
+            return album;
+        }
+
+        public void setAlbum(String album) {
+            this.album = album;
+        }
+
+        public String getTrackNumber() {
+            return trackNumber;
+        }
+
+        public void setTrackNumber(String trackNumber) {
+            this.trackNumber = trackNumber;
+        }
+
+        public String getTrackYear() {
+            return trackYear;
+        }
+
+        public void setTrackYear(String trackYear) {
+            this.trackYear = trackYear;
+        }
+
+        public String getGenre() {
+            return genre;
+        }
+
+        public void setGenre(String genre) {
+            this.genre = genre;
+        }
+
+        public byte[] getCover() {
+            return cover;
+        }
+
+        public void setCover(byte[] cover) {
+            this.cover = cover;
+        }
+
+        public String getFileName() {
+            return fileName;
+        }
+
+        public void setFileName(String fileName) {
+            this.fileName = fileName;
+        }
+
+        public String getPath() {
+            return path;
+        }
+
+        public void setPath(String path) {
+            this.path = path;
+        }
+
+        public String getDuration() {
+            return duration;
+        }
+
+        public void setDuration(String duration) {
+            this.duration = duration;
+        }
+
+        public String getBitrate() {
+            return bitrate;
+        }
+
+        public void setBitrate(String bitrate) {
+            this.bitrate = bitrate;
+        }
+
+        public String getFrequency() {
+            return frequency;
+        }
+
+        public void setFrequency(String frequency) {
+            this.frequency = frequency;
+        }
+
+        public String getResolution() {
+            return resolution;
+        }
+
+        public void setResolution(String resolution) {
+            this.resolution = resolution;
+        }
+
+        public String getChannels() {
+            return channels;
+        }
+
+        public void setChannels(String channels) {
+            this.channels = channels;
+        }
+
+        public String getFileType() {
+            return fileType;
+        }
+
+        public void setFileType(String fileType) {
+            this.fileType = fileType;
+        }
+
+        public String getExtension() {
+            return extension;
+        }
+
+        public void setExtension(String extension) {
+            this.extension = extension;
+        }
+
+        public String getMimeType() {
+            return mimeType;
+        }
+
+        public void setMimeType(String mimeType) {
+            this.mimeType = mimeType;
+        }
+
+        public String getImageSize() {
+            return imageSize;
+        }
+
+        public void setImageSize(String imageSize) {
+            this.imageSize = imageSize;
+        }
+
+        public String getFileSize() {
+            return fileSize;
+        }
+
+        public void setFileSize(String fileSize) {
+            this.fileSize = fileSize;
+        }
     }
 
     public static class ResultFileRename extends AudioTaggerResult{
@@ -1452,12 +1621,12 @@ public class AudioTagger {
      */
 
     public static class StorageHelper {
-        private static Context sContext;
+        private Context mContext;
         private static StorageHelper sStorage;
         private SparseArray<String> mBasePaths = new SparseArray<>();
         private static final String PRIVATE_TEMP_FOLDER = "temp_tagged_files";
         private StorageHelper(Context context){
-            sContext = context.getApplicationContext();
+            mContext = context.getApplicationContext();
         }
 
         public static synchronized StorageHelper getInstance(Context context){
@@ -1469,7 +1638,7 @@ public class AudioTagger {
         }
 
         public int getNumberAvailableMediaStorage (){
-            return ContextCompat.getExternalFilesDirs(sContext, null).length;
+            return ContextCompat.getExternalFilesDirs(mContext, null).length;
         }
 
         public boolean isPresentRemovableStorage(){
@@ -1479,8 +1648,8 @@ public class AudioTagger {
         /**
          * Detect number of storage available.
          */
-        public StorageHelper detectStorages(){
-            File[] storage = ContextCompat.getExternalFilesDirs(sContext, PRIVATE_TEMP_FOLDER);
+        public StorageHelper detectStorage(){
+            File[] storage = ContextCompat.getExternalFilesDirs(mContext, PRIVATE_TEMP_FOLDER);
 
             int numberMountedStorage = 0;
 
@@ -1536,7 +1705,8 @@ public class AudioTagger {
 
             // Create a path where we will place our private file on non removable external
             // storage.
-            File externalNonRemovableDevicePath = ContextCompat.getExternalFilesDirs(sContext, PRIVATE_TEMP_FOLDER)[0];
+            File externalNonRemovableDevicePath = ContextCompat.
+                    getExternalFilesDirs(mContext, PRIVATE_TEMP_FOLDER)[0];
 
             File fileDest = new File(externalNonRemovableDevicePath, sourceFile.getName());
 
@@ -1586,7 +1756,7 @@ public class AudioTagger {
          * @return True if file is stored in SD, false otherwise.
          */
         private boolean internalIsStoredInSD(File file){
-            SparseArray<String> basePaths =  StorageHelper.getInstance(sContext).getBasePaths();
+            SparseArray<String> basePaths =  sStorage.getBasePaths();
             int availableStorage = basePaths.size();
             //If there are only one storage, no need to check
             // where is stored file.
@@ -1656,35 +1826,6 @@ public class AudioTagger {
          */
         public static String trimString(String str){
             return str.trim();
-        }
-
-        /**
-         *
-         * @param id is the id of element
-         * @param str is the input entered by user
-         * @return true if string is too long, false otherwise
-         */
-        public static boolean isTooLong(int id, String str){
-            boolean isTooLong = false;
-            switch (id){
-                case R.id.track_name_details:
-                    isTooLong = str.length() >= 101;
-                    break;
-                case R.id.artist_name_details:
-                    isTooLong = str.length() >= 101;
-                    break;
-                case R.id.album_name_details:
-                    isTooLong = str.length() >= 151;
-                    break;
-                case R.id.track_number:
-                case R.id.track_year:
-                    isTooLong = str.length() >= 5;
-                    break;
-                case R.id.track_genre:
-                    isTooLong = str.length() >= 81;
-                    break;
-            }
-            return isTooLong;
         }
     }
 }

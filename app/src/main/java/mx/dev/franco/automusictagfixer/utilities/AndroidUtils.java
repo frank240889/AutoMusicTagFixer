@@ -1,11 +1,8 @@
 package mx.dev.franco.automusictagfixer.utilities;
 
-import android.animation.Animator;
-import android.animation.AnimatorSet;
 import android.annotation.SuppressLint;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
@@ -17,17 +14,11 @@ import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.FileProvider;
-import android.support.v7.app.AlertDialog;
 import android.view.Gravity;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewAnimationUtils;
-import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.bumptech.glide.load.engine.DiskCacheStrategy;
-import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
 import com.crashlytics.android.Crashlytics;
 
 import java.io.ByteArrayOutputStream;
@@ -36,6 +27,7 @@ import java.util.Objects;
 
 import mx.dev.franco.automusictagfixer.BuildConfig;
 import mx.dev.franco.automusictagfixer.R;
+import mx.dev.franco.automusictagfixer.utilities.resource_manager.ResourceManager;
 
 import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
 
@@ -100,175 +92,6 @@ public class AndroidUtils {
         return snackbar;
     }
 
-    public static AlertDialog createResultsDialog(Context context, GnResponseListener.IdentificationResults results, DialogInterface.OnClickListener... listeners){
-        AlertDialog.Builder builder = getBuilder(context, results, false);
-        builder.setPositiveButton(R.string.all_tags, listeners[0]).
-                setNegativeButton(R.string.missing_tags, listeners[1]);
-
-        return builder.create();
-    }
-
-    public static AlertDialog createResultsDialog(Context context, GnResponseListener.IdentificationResults results,
-                                                  String message, DialogInterface.OnClickListener... listeners){
-        AlertDialog.Builder builder = getBuilder(context, results, false );
-        builder.setMessage(message);
-        builder.setPositiveButton(R.string.all_tags, listeners[0]).
-                setNegativeButton(R.string.missing_tags, listeners[1]);
-
-        return builder.create();
-    }
-
-    public static AlertDialog createResultsDialog(Context context, GnResponseListener.IdentificationResults results,
-                                                  String title, String message, DialogInterface.OnClickListener... listeners){
-        AlertDialog.Builder builder = getBuilder(context, results, false );
-        builder.setTitle(title);
-        builder.setMessage(message);
-        builder.setPositiveButton(R.string.all_tags, listeners[0]).
-                setNegativeButton(R.string.missing_tags, listeners[1]);
-
-        return builder.create();
-    }
-
-    public static AlertDialog createResultsDialog(Context context, GnResponseListener.IdentificationResults results,
-                                                  int message, boolean showAll, DialogInterface.OnClickListener... listeners){
-        AlertDialog.Builder builder = getBuilder(context, results, showAll);
-        builder.setMessage(message);
-        builder.setPositiveButton(R.string.all_tags, listeners[0]).
-                setNegativeButton(R.string.missing_tags, listeners[1]);
-
-        return builder.create();
-    }
-
-    public static AlertDialog createResultsDialog(Context context, GnResponseListener.IdentificationResults results,
-                                                  int message, boolean showAll, View customView, DialogInterface.OnClickListener... listeners){
-        AlertDialog.Builder builder = getBuilder(context, results, showAll, customView);
-        builder.setMessage(message);
-        builder.setPositiveButton(R.string.all_tags, listeners[0]).
-                setNegativeButton(R.string.missing_tags, listeners[1]);
-
-        return builder.create();
-    }
-
-    private static AlertDialog.Builder getBuilder(Context context, GnResponseListener.IdentificationResults results, boolean showAll, View customView){
-        AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        builder.setView(customView);
-        if(showAll)
-            setValues(results, customView, context);
-        else
-            setCover(results,customView, context);
-        return builder;
-    }
-
-    public static AlertDialog createResultsDialog(Context context, GnResponseListener.IdentificationResults results,
-                                                  int title, int message, DialogInterface.OnClickListener... listeners){
-        AlertDialog.Builder builder = getBuilder(context, results, false);
-        builder.setTitle(title);
-        builder.setMessage(message);
-        builder.setPositiveButton(R.string.all_tags, listeners[0]).
-                setNegativeButton(R.string.missing_tags, listeners[1]);
-
-        return builder.create();
-    }
-
-    private static AlertDialog.Builder getBuilder(Context context, GnResponseListener.IdentificationResults results, boolean showAll){
-        AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        View view = LayoutInflater.from(context).inflate(R.layout.layout_results_track_id, null);
-        builder.setView(view);
-        view.findViewById(R.id.checkbox_rename).setVisibility(View.GONE);
-        view.findViewById(R.id.label_rename_to).setVisibility(View.GONE);
-        view.findViewById(R.id.rename_to).setVisibility(View.GONE);
-        view.findViewById(R.id.message_rename_hint).setVisibility(View.GONE);
-        if(showAll)
-            setValues(results, view, context);
-        else
-            setCover(results,view, context);
-        return builder;
-    }
-
-    private static void setValues(GnResponseListener.IdentificationResults results, View view, Context context) {
-        ImageView cover = view.findViewById(R.id.trackid_cover);
-        GlideApp.with(view.getContext()).
-                load(results.cover).
-                diskCacheStrategy(DiskCacheStrategy.NONE).
-                skipMemoryCache(true).
-                placeholder(R.drawable.ic_album_white_48px).
-                transition(DrawableTransitionOptions.withCrossFade(200)).
-                fitCenter().
-                into(cover);
-        TextView coverDimensions = view.findViewById(R.id.trackid_cover_dimensions);
-        coverDimensions.setText(TrackUtils.getStringImageSize(results.cover, context)) ;
-        if(!results.title.isEmpty()) {
-            TextView title = view.findViewById(R.id.track_id_title);
-            title.setVisibility(View.VISIBLE);
-
-            title.setText(results.title);
-        }
-
-        if(!results.artist.isEmpty()) {
-            TextView artist = view.findViewById(R.id.track_id_artist);
-            artist.setVisibility(View.VISIBLE);
-            artist.setText(results.artist);
-        }
-
-        if(!results.album.isEmpty()) {
-            TextView album = view.findViewById(R.id.trackid_album);
-            album.setVisibility(View.VISIBLE);
-            album.setText(results.album);
-        }
-
-        if(!results.genre.isEmpty()) {
-            TextView genre = view.findViewById(R.id.trackid_genre);
-            genre.setVisibility(View.VISIBLE);
-            genre.setText(results.genre);
-        }
-
-        if(!results.trackNumber.isEmpty()) {
-            TextView trackNumber = view.findViewById(R.id.track_id_number);
-            trackNumber.setVisibility(View.VISIBLE);
-            trackNumber.setText(results.trackNumber);
-        }
-
-        if(!results.trackYear.isEmpty()) {
-            TextView year = view.findViewById(R.id.track_id_year);
-            year.setVisibility(View.VISIBLE);
-            year.setText(results.trackYear);
-        }
-    }
-
-    private static void setCover(GnResponseListener.IdentificationResults results, View view, Context context){
-        ImageView cover = view.findViewById(R.id.trackid_cover);
-        GlideApp.with(view.getContext()).
-                load(results.cover).
-                diskCacheStrategy(DiskCacheStrategy.NONE).
-                skipMemoryCache(true).
-                placeholder(R.drawable.ic_album_white_48px).
-                transition(DrawableTransitionOptions.withCrossFade(200)).
-                fitCenter().
-                into(cover);
-        TextView coverDimensions = view.findViewById(R.id.trackid_cover_dimensions);
-        coverDimensions.setText(TrackUtils.getStringImageSize(results.cover, context)) ;
-
-        TextView title = view.findViewById(R.id.track_id_title);
-        title.setVisibility(View.GONE);
-
-        TextView artist = view.findViewById(R.id.track_id_artist);
-        artist.setVisibility(View.GONE);
-
-        TextView album = view.findViewById(R.id.trackid_album);
-        album.setVisibility(View.GONE);
-
-        TextView genre = view.findViewById(R.id.trackid_genre);
-        genre.setVisibility(View.GONE);
-
-        TextView trackNumber = view.findViewById(R.id.track_id_number);
-        trackNumber.setVisibility(View.GONE);
-
-        TextView year = view.findViewById(R.id.track_id_year);
-        year.setVisibility(View.GONE);
-
-    }
-
-
     public static boolean grantPermissionSD(Context context, Intent resultData){
 
         if(resultData == null)
@@ -313,28 +136,6 @@ public class AndroidUtils {
         return Uri.parse(uriString);
     }
 
-    public static Animator createRevealWithDelay(View view, int centerX, int centerY, float startRadius, float endRadius) {
-        Animator delayAnimator = ViewAnimationUtils.createCircularReveal(view, centerX, centerY, startRadius, startRadius);
-        delayAnimator.setDuration(100);
-        Animator revealAnimator = ViewAnimationUtils.createCircularReveal(view, centerX, centerY, startRadius, endRadius);
-        AnimatorSet set = new AnimatorSet();
-        set.playSequentially(delayAnimator, revealAnimator);
-        return set;
-    }
-
-    public static GnResponseListener.IdentificationResults getResults(Bundle bundle) {
-        GnResponseListener.IdentificationResults identificationResults = new GnResponseListener.IdentificationResults();
-        identificationResults.title = bundle.getString("title");
-        identificationResults.artist = bundle.getString("artist");
-        identificationResults.album = bundle.getString("album");
-        identificationResults.trackNumber = bundle.getString("track_number");
-        identificationResults.trackYear = bundle.getString("track_year");
-        identificationResults.genre = bundle.getString("genre");
-        identificationResults.cover = bundle.getByteArray("cover");
-
-        return identificationResults;
-    }
-
     public static byte[] generateCover(Bitmap bitmap) {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         bitmap.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStream);
@@ -348,4 +149,104 @@ public class AndroidUtils {
         return bundle;
     }
 
+    /**
+     *
+     * @param id is the id of element
+     * @param str is the input entered by user
+     * @return true if string is too long, false otherwise
+     */
+    public static boolean isTooLong(int id, String str){
+        boolean isTooLong = false;
+        switch (id){
+            case R.id.track_name_details:
+                isTooLong = str.length() >= 101;
+                break;
+            case R.id.artist_name_details:
+                isTooLong = str.length() >= 101;
+                break;
+            case R.id.album_name_details:
+                isTooLong = str.length() >= 151;
+                break;
+            case R.id.track_number:
+            case R.id.track_year:
+                isTooLong = str.length() >= 5;
+                break;
+            case R.id.track_genre:
+                isTooLong = str.length() >= 81;
+                break;
+        }
+        return isTooLong;
+    }
+
+    public static class AudioTaggerErrorDescription {
+        public static String getErrorMessage(ResourceManager resourceManager, int errorCode){
+            String errorMessage;
+            switch (errorCode){
+                case Tagger.COULD_NOT_APPLY_COVER:
+                    errorMessage = resourceManager.getString(R.string.message_could_not_apply_cover);
+                    break;
+                case Tagger.COULD_NOT_APPLY_TAGS:
+                    errorMessage = resourceManager.getString(R.string.message_could_not_apply_tags);
+                    break;
+                case Tagger.COULD_NOT_COPY_BACK_TO_ORIGINAL_LOCATION:
+                    errorMessage = resourceManager.getString(R.string.message_could_copy_back);
+                    break;
+                case Tagger.COULD_NOT_CREATE_AUDIOFILE:
+                    errorMessage = resourceManager.getString(R.string.message_could_not_create_audio_file);
+                    break;
+                case Tagger.COULD_NOT_CREATE_TEMP_FILE:
+                    errorMessage = resourceManager.getString(R.string.message_could_not_create_temp_file);
+                    break;
+                case Tagger.COULD_NOT_GET_URI_SD_ROOT_TREE:
+                    errorMessage = resourceManager.getString(R.string.message_uri_tree_not_set);
+                    break;
+                case Tagger.COULD_NOT_READ_TAGS:
+                    errorMessage = resourceManager.getString(R.string.message_could_not_read_tags);
+                    break;
+                case Tagger.COULD_NOT_REMOVE_COVER:
+                    errorMessage = resourceManager.getString(R.string.message_could_not_remove_cover);
+                    break;
+                default:
+                    errorMessage = resourceManager.getString(R.string.error);
+                    break;
+            }
+
+            return errorMessage;
+        }
+
+        public static String getErrorMessage(Context context, int errorCode){
+            String errorMessage;
+            switch (errorCode){
+                case Tagger.COULD_NOT_APPLY_COVER:
+                    errorMessage = context.getString(R.string.message_could_not_apply_cover);
+                    break;
+                case Tagger.COULD_NOT_APPLY_TAGS:
+                    errorMessage = context.getString(R.string.message_could_not_apply_tags);
+                    break;
+                case Tagger.COULD_NOT_COPY_BACK_TO_ORIGINAL_LOCATION:
+                    errorMessage = context.getString(R.string.message_could_copy_back);
+                    break;
+                case Tagger.COULD_NOT_CREATE_AUDIOFILE:
+                    errorMessage = context.getString(R.string.message_could_not_create_audio_file);
+                    break;
+                case Tagger.COULD_NOT_CREATE_TEMP_FILE:
+                    errorMessage = context.getString(R.string.message_could_not_create_temp_file);
+                    break;
+                case Tagger.COULD_NOT_GET_URI_SD_ROOT_TREE:
+                    errorMessage = context.getString(R.string.message_uri_tree_not_set);
+                    break;
+                case Tagger.COULD_NOT_READ_TAGS:
+                    errorMessage = context.getString(R.string.message_could_not_read_tags);
+                    break;
+                case Tagger.COULD_NOT_REMOVE_COVER:
+                    errorMessage = context.getString(R.string.message_could_not_remove_cover);
+                    break;
+                default:
+                    errorMessage = context.getString(R.string.error);
+                    break;
+            }
+
+            return errorMessage;
+        }
+    }
 }
