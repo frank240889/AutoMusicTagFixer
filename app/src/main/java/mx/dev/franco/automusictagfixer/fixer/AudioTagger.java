@@ -60,6 +60,7 @@ import mx.dev.franco.automusictagfixer.BuildConfig;
  */
 public class AudioTagger {
     public static final int COULD_NOT_WRITE_TAGS = 200;
+    public static final int COULD_NOT_RENAME_FILE = 300;
     private static final String TAG = AudioTagger.class.getName();
     //Constants to overwrite all tags or only apply those missing
     public static final int MODE_OVERWRITE_ALL_TAGS = 0;
@@ -1315,8 +1316,15 @@ public class AudioTagger {
      */
     public static abstract class AudioTaggerResult {
         private int code;
+        private Throwable throwable;
 
         AudioTaggerResult(){}
+
+        public AudioTaggerResult(int code, Throwable throwable) {
+            this();
+            this.code = code;
+            this.throwable = throwable;
+        }
 
         public AudioTaggerResult(int code) {
             this();
@@ -1329,6 +1337,14 @@ public class AudioTagger {
 
         public void setCode(int code) {
             this.code = code;
+        }
+
+        public Throwable getError() {
+            return throwable;
+        }
+
+        public void setError(Throwable throwable) {
+            this.throwable = throwable;
         }
     }
 
@@ -1354,6 +1370,31 @@ public class AudioTagger {
             this.tagsUpdated = tagsUpdated;
         }
     }
+
+
+    /**
+     * Container class that holds
+     * the result of correction
+     */
+    public static class ResultRename extends AudioTaggerResult {
+        private String newAbsolutePath;
+        public ResultRename(){}
+
+        public ResultRename(int code, String newAbsolutePath) {
+            super(code);
+            this.newAbsolutePath = newAbsolutePath;
+        }
+
+        public String getNewAbsolutePath() {
+            return newAbsolutePath;
+        }
+
+        public void setNewAbsolutePath(String newAbsolutePath) {
+            this.newAbsolutePath = newAbsolutePath;
+        }
+    }
+
+
 
     public static class AudioFields extends AudioTaggerResult {
         public String title = "";
@@ -1576,43 +1617,6 @@ public class AudioTagger {
 
         public void setFileSize(String fileSize) {
             this.fileSize = fileSize;
-        }
-    }
-
-    public static class ResultFileRename extends AudioTaggerResult{
-        private String filename;
-        private String path;
-        private String fullpath;
-
-        public ResultFileRename(int code, String filename, String path, String fullpath) {
-            super(code);
-            this.filename = filename;
-            this.path = path;
-            this.fullpath = fullpath;
-        }
-
-        public String getFilename() {
-            return filename;
-        }
-
-        public void setFilename(String filename) {
-            this.filename = filename;
-        }
-
-        public String getPath() {
-            return path;
-        }
-
-        public void setPath(String path) {
-            this.path = path;
-        }
-
-        public String getFullpath() {
-            return fullpath;
-        }
-
-        public void setFullpath(String fullpath) {
-            this.fullpath = fullpath;
         }
     }
 

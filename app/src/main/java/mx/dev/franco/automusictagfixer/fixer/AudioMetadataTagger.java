@@ -55,8 +55,8 @@ public class AudioMetadataTagger implements AudioMetadataManager<AudioMetadataTa
 
     @Nullable
     @Override
-    public String renameFile(String originalFile, String newName) {
-        return tagger.renameFile(new File(originalFile), newName);
+    public String renameFile(String absolutePathTargetFile, String newName) {
+        return tagger.renameFile(new File(absolutePathTargetFile), newName);
     }
 
 
@@ -69,6 +69,19 @@ public class AudioMetadataTagger implements AudioMetadataManager<AudioMetadataTa
         private int codeRequest;
 
         public InputParams() {
+        }
+
+        public InputParams(String targetFile) {
+            this.targetFile = targetFile;
+        }
+
+        public InputParams(Map<FieldKey, Object> fields) {
+            this.fields = fields;
+        }
+
+        public InputParams(String targetFile, Map<FieldKey, Object> fields) {
+            this.targetFile = targetFile;
+            this.fields = fields;
         }
 
         public InputParams(String targetFile, Map<FieldKey, Object> fields, int codeRequest) {

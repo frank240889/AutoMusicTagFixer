@@ -39,6 +39,7 @@ import mx.dev.franco.automusictagfixer.fixer.AudioMetadataTagger;
 import mx.dev.franco.automusictagfixer.identifier.GnApiService;
 import mx.dev.franco.automusictagfixer.identifier.Identifier;
 import mx.dev.franco.automusictagfixer.identifier.Result;
+import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.utilities.resource_manager.ResourceManager;
 
 import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
@@ -190,6 +191,16 @@ public class AndroidUtils {
         return isTooLong;
     }
 
+    public static String createName(Track track) {
+        if(!track.getTitle().isEmpty())
+            return track.getTitle();
+        else if(!track.getPath().isEmpty()) {
+            File file = new File(track.getPath());
+            return file.getName();
+        }
+        else return null;
+    }
+
     public static class AudioTaggerErrorDescription {
         public static String getErrorMessage(ResourceManager resourceManager, int errorCode){
             String errorMessage;
@@ -263,7 +274,7 @@ public class AndroidUtils {
     }
 
 
-    public static AudioMetadataTagger.InputParams createInputParams(Identifier.IdentificationResults result, Context context) {
+    public static AudioMetadataTagger.InputParams createInputParams(Identifier.IdentificationResults result) {
         Result r = (Result) result;
         Map<FieldKey, Object> tags = new ArrayMap<>();
         if(!r.getTitle().isEmpty())
@@ -286,67 +297,50 @@ public class AndroidUtils {
 
         Map<GnImageSize, String> covers = r.getCovers();
 
-        byte[] c = null;
+        String coverUrl = null;
         if(covers.size() > 0) {
 
             //If is selected "De mejor calidad disponible"
             //iterate from higher to lower quality and select the first higher quality identificationFound.
             if (Settings.SETTING_SIZE_ALBUM_ART == GnImageSize.kImageSizeXLarge) {
-                c = getBetterQualityCover(covers, context);
-                if(c != null)
-                    tags.put(FieldKey.COVER_ART, c);
+                coverUrl = getBetterQualityCover(covers);
+                if(coverUrl != null)
+                    tags.put(FieldKey.COVER_ART, coverUrl);
             }
             //If is selected "De menor calidad disponible"
             //iterate from lower to higher quality and select the first lower quality identificationFound.
             else if (Settings.SETTING_SIZE_ALBUM_ART == GnImageSize.kImageSizeThumbnail) {
-                c = getLowestQualityCover(covers, context);
-                if(c != null)
-                    tags.put(FieldKey.COVER_ART, c);
+                coverUrl = getLowestQualityCover(covers);
+                if(coverUrl != null)
+                    tags.put(FieldKey.COVER_ART, coverUrl);
             }
             //get the first identificationFound in any of those predefined sizes:
             //"De baja calidad", "De media calidad", "De alta calidad", "De muy alta calidad"
             else {
-                try {
-                    c = getAsset(Settings.SETTING_SIZE_ALBUM_ART.name(), context);
-                    if(c != null)
-                        tags.put(FieldKey.COVER_ART, c);
-                } catch (GnException e) {
-                    e.printStackTrace();
-                }
+                coverUrl = covers.get(Settings.SETTING_SIZE_ALBUM_ART);
+                if(coverUrl != null)
+                    tags.put(FieldKey.COVER_ART, coverUrl);
             }
         }
 
-
-
-        AudioMetadataTagger.InputParams inputParams = new AudioMetadataTagger.InputParams();
+        return new AudioMetadataTagger.InputParams(tags);
     }
 
-    public static byte[] getBetterQualityCover(Map<GnImageSize, String> covers, Context context) {
+    public static String getBetterQualityCover(Map<GnImageSize, String> covers) {
         Set<Map.Entry<GnImageSize, String>> entries = covers.entrySet();
         for(Map.Entry<GnImageSize, String> entry : entries) {
             if(entry.getValue() != null) {
-                try {
-                    byte[] c = getAsset(entry.getValue(), context);
-                    return c;
-                } catch (GnException e) {
-                    e.printStackTrace();
-                }
+                return entry.getValue();
             }
         }
         return null;
     }
 
-    public static byte[] getLowestQualityCover(Map<GnImageSize, String> covers, Context context) {
+    public static String getLowestQualityCover(Map<GnImageSize, String> covers) {
         Set<Map.Entry<GnImageSize, String>> entries = covers.entrySet();
-        
         for(Map.Entry<GnImageSize, String> entry : entries) {
             if(entry.getValue() != null) {
-                try {
-                    byte[] c = getAsset(entry.getValue(), context);
-                    return c;
-                } catch (GnException e) {
-                    e.printStackTrace();
-                }
+                return entry.getValue();
             }
         }
         return null;

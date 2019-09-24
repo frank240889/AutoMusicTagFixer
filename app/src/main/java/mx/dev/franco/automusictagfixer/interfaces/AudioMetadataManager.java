@@ -19,5 +19,5 @@ public interface AudioMetadataManager<I,O,R> {
     R writeMetadata(I input)
             throws IOException, ReadOnlyFileException, CannotReadException, TagException, InvalidAudioFrameException;
     @Nullable
-    String renameFile(String originalFile, String newName);
+    String renameFile(String absolutePathTargetFile, String newName);
 }

@@ -1,16 +1,23 @@
 package mx.dev.franco.automusictagfixer.fixer;
 
+import android.content.Context;
+
+import com.gracenote.gnsdk.GnAssetFetch;
+import com.gracenote.gnsdk.GnException;
+
 import org.jaudiotagger.audio.exceptions.CannotReadException;
 import org.jaudiotagger.audio.exceptions.InvalidAudioFrameException;
 import org.jaudiotagger.audio.exceptions.ReadOnlyFileException;
+import org.jaudiotagger.tag.FieldKey;
 import org.jaudiotagger.tag.TagException;
 
 import java.io.IOException;
 
+import mx.dev.franco.automusictagfixer.identifier.GnApiService;
 import mx.dev.franco.automusictagfixer.interfaces.AsyncOperation;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
 
-public class MetadataWriter extends AbstractMetadataFixer<Void, Void, AudioTagger.ResultCorrection> {
+public class MetadataWriter extends AbstractMetadataFixer<Context, Void, AudioTagger.ResultCorrection> {
     private AsyncOperation<Track, MetadataWriterResult, Track, MetadataWriterResult> mCallback;
     private AudioMetadataTagger.InputParams mInputParams;
     public MetadataWriter(AsyncOperation<Track, MetadataWriterResult, Track, MetadataWriterResult> callback,
@@ -28,20 +35,26 @@ public class MetadataWriter extends AbstractMetadataFixer<Void, Void, AudioTagge
     }
 
     @Override
-    protected AudioTagger.ResultCorrection doInBackground(Void... voids) {
+    protected AudioTagger.ResultCorrection doInBackground(Context... contexts) {
+        AudioTagger.ResultCorrection resultCorrection = null;
         try {
-            return mFileTagger.writeMetadata(mInputParams);
+            //Check if exist cover and fetch from url, then replace it in the same key.
+            String url = (String) mInputParams.getFields().get(FieldKey.COVER_ART);
+            if(url != null && !url.isEmpty()) {
+                byte[] cover = new GnAssetFetch(GnApiService.getInstance(contexts[0]).getGnUser(), url).data();
+                mInputParams.getFields().put(FieldKey.COVER_ART, cover);
+            }
+            resultCorrection = mFileTagger.writeMetadata(mInputParams);
         } catch (IOException|
                 ReadOnlyFileException|
                 CannotReadException|
                 TagException|
-                InvalidAudioFrameException e) {
+                InvalidAudioFrameException|
+                GnException e) {
             e.printStackTrace();
+            resultCorrection = new AudioTagger.ResultCorrection(AudioTagger.COULD_NOT_APPLY_TAGS, null);
+            resultCorrection.setError(e);
         }
-
-        AudioTagger.ResultCorrection resultCorrection = new AudioTagger.ResultCorrection();
-
-        resultCorrection.setCode(AudioTagger.COULD_NOT_WRITE_TAGS);
 
         return resultCorrection;
     }
