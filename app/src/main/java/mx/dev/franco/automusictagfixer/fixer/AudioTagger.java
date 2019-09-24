@@ -331,7 +331,7 @@ public class AudioTagger {
 
         Map<FieldKey, Object> tagsToUpdate = new ArrayMap<>();
         //Iterates over new values tag passed, to compare
-        //against the values of current tag and setChecked only those
+        //against the values of current tag and return only those
         //that are different than current
         for(Map.Entry entry : newTags.entrySet()){
             //For case of field cover, we need to compare the length of byte array
@@ -349,7 +349,7 @@ public class AudioTagger {
                 }
             }
 
-            //Compare for other fields if current value tag exist, and if current value tags is different that new
+            //Compare for other fields if current value tag exist, and if current value tags is different than new
             else {
                 if(overrideAllTags == MODE_WRITE_ONLY_MISSING){
                     if ( ( currentTags.getFirst((FieldKey) entry.getKey()) == null ) ||

@@ -566,7 +566,7 @@ public class ListFragment extends BaseFragment implements
     }
 
     @Override
-    public void onLongRunningTaskError(String error) {
+    public void onLongRunningTaskMessage(String error) {
         Toast toast = AndroidUtils.getToast(getActivity().getApplicationContext());
         toast.setText(error);
         toast.setDuration(Toast.LENGTH_SHORT);

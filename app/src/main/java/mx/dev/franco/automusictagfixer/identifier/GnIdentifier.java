@@ -2,7 +2,6 @@ package mx.dev.franco.automusictagfixer.identifier;
 
 import com.gracenote.gnsdk.GnAlbum;
 import com.gracenote.gnsdk.GnAlbumIterator;
-import com.gracenote.gnsdk.GnAssetFetch;
 import com.gracenote.gnsdk.GnContent;
 import com.gracenote.gnsdk.GnDataLevel;
 import com.gracenote.gnsdk.GnError;
@@ -194,11 +193,7 @@ public class GnIdentifier implements Identifier<Track, List<IdentificationResult
         for (int sizes = values.length - 1; sizes >= 0; --sizes) {
             String url = gnContent.asset(values[sizes]).url();
             if (!gnContent.asset(values[sizes]).url().equals("")) {
-                try {
-                    identificationResults.addCover(new GnAssetFetch(gnApiService.getGnUser(), url).data());
-                } catch (GnException e) {
-                    e.printStackTrace();
-                }
+                identificationResults.addCover(GnImageSize.valueOf(values[sizes]+""),url);
                 break;
             }
         }

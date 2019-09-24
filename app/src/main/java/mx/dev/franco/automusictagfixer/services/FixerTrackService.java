@@ -49,7 +49,10 @@ import mx.dev.franco.automusictagfixer.utilities.resource_manager.ResourceManage
 import mx.dev.franco.automusictagfixer.utilities.shared_preferences.AbstractSharedPreferences;
 
 /**
- * Created by franco on 17/08/17.
+ * @author franco
+ * @version 2.0
+ * Service that fix the metadata in background threads and is capable to run in background no matter
+ * if app is closed.
  */
 
 public class FixerTrackService extends Service {
@@ -75,9 +78,8 @@ public class FixerTrackService extends Service {
     private TrackIdLoader mTrackIdLoader;
     private boolean isRunning = false;
     private List<Integer> mTrackIds = new ArrayList<>();
-    private String messageFinishTask = "";
     private boolean mIsCancelled = false;
-    private ServiceState mServiceState = ServiceState.IDLE;
+    private ServiceState mServiceState = ServiceState.NOT_RUNNING;
     private FixerState mFixerState;
     private Intent mRecycledIntent = new Intent();
 
@@ -110,85 +112,129 @@ public class FixerTrackService extends Service {
         //stop the task by pressing stop button in main screen or notification or task finishes.
         String action = intent.getAction();
         if(action != null) {
+            // Service will be stopped
             if(action.equals(Constants.Actions.ACTION_STOP_TASK)){
-                mIsCancelled = true;
-                if(mServiceState == ServiceState.RUNNING) {
-                    stopAsyncTasks();
-                    broadcastMessage(getString(R.string.task_cancelled));
-                }
-                else {
-                    notifyFinished();
-                    stopAndRemoveFromForeground();
-                }
+                actionStopTask();
             }
+            //Service is running and correction task is about to begin.
             else {
-                mServiceState = FixerState.STARTING;
-                SharedPreferences sharedPreferences =
-                        getSharedPreferences(Constants.Application.FULL_QUALIFIED_NAME, Context.MODE_PRIVATE);
-                String order = sharedPreferences.getString(Constants.SORT_KEY, null);
-
-                mTrackIdLoader = new TrackIdLoader(new AsyncOperation<Void, List<Integer>, Void, Void>() {
-                    @Override
-                    public void onAsyncOperationFinished(List<Integer> result) {
-                        mTrackIdLoader = null;
-                        if(result.isEmpty()) {
-                            messageFinishTask = getString(R.string.no_songs_to_correct);
-                            notifyFinished();
-                            stopAndRemoveFromForeground();
-                        }
-                        else {
-                            mTrackIds.addAll(result);
-                            shouldContinue();
-                        }
-                    }
-
-                }, mTrackRoomDatabase);
-                mTrackIdLoader.executeOnExecutor(Executors.newSingleThreadExecutor(), order);
+                actionStartTask();
             }
         }
         return super.onStartCommand(intent,flags,startId);
     }
 
-    private void startCorrection(){
-        if(!canContinue()){
-            messageFinishTask = getString(R.string.initializing_recognition_api);
-            notifyFinished();
-            stopAndRemoveFromForeground();
-        }
-        else if(mIsCancelled){
-            messageFinishTask = getString(R.string.task_cancelled);
-            notifyFinished();
-            stopAndRemoveFromForeground();
-        }
-        else if (!isRunning){
-            mTrackInformationLoader = new TrackInformationLoader(new AsyncOperation<Void, List<Track>, Void, Void>() {
-                @Override
-                public void onAsyncOperationFinished(List<Track> result) {
-                    processTrack(result);
+    private void actionStartTask() {
+        SharedPreferences sharedPreferences =
+                getSharedPreferences(Constants.Application.FULL_QUALIFIED_NAME, Context.MODE_PRIVATE);
+        String order = sharedPreferences.getString(Constants.SORT_KEY, null);
+
+        mTrackIdLoader = new TrackIdLoader(new AsyncOperation<Void, List<Integer>, Void, Void>() {
+            @Override
+            public void onAsyncOperationStarted(Void params) {
+                mServiceState = ServiceState.RUNNING;
+                mFixerState = FixerState.IDENTIFYING;
+            }
+
+            @Override
+            public void onAsyncOperationFinished(List<Integer> result) {
+                mServiceState = ServiceState.IDLE;
+                mTrackIdLoader = null;
+                if(result.isEmpty()) {
+                    broadcastMessage(getString(R.string.no_songs_to_correct));
+                    broadcastCompleteCorrection();
+                    stopAndRemoveFromForeground();
                 }
-            }, mTrackRoomDatabase);
-            mTrackInformationLoader.executeOnExecutor(Executors.newSingleThreadExecutor(), mTrackIds.get(0));
+                else {
+                    mTrackIds.addAll(result);
+                    shouldContinue();
+                }
+            }
+
+            @Override
+            public void onAsyncOperationCancelled(Void cancellation) {
+                mServiceState = ServiceState.NOT_RUNNING;
+                mTrackIdLoader = null;
+            }
+        }, mTrackRoomDatabase);
+        mTrackIdLoader.executeOnExecutor(Executors.newCachedThreadPool(), order);
+    }
+
+    private void actionStopTask() {
+        mIsCancelled = true;
+        if(mServiceState == ServiceState.RUNNING) {
+            stopAsyncTasks();
+            broadcastMessage(getString(R.string.task_cancelled));
+        }
+        else {
+            broadcastCompleteCorrection();
+            stopAndRemoveFromForeground();
         }
     }
 
+    private void shouldContinue(){
+        if(mIsCancelled){
+            broadcastCompleteCorrection();
+            broadcastMessage(getString(R.string.identification_cancelled));
+            stopAndRemoveFromForeground();
+        }
+        else {
+            if(mTrackIds != null && !mTrackIds.isEmpty()){
+                startCorrection();
+            }
+            else {
+                broadcastMessage(getString(R.string.complete_task));
+                broadcastCompleteCorrection();
+                stopAndRemoveFromForeground();
+            }
+        }
+    }
+
+    private void startCorrection(){
+        if(!canContinue()){
+            broadcastMessage(getString(R.string.initializing_recognition_api));
+            broadcastCompleteCorrection();
+            stopAndRemoveFromForeground();
+        }
+        else if(mIsCancelled){
+            broadcastMessage(getString(R.string.task_cancelled));
+            broadcastCompleteCorrection();
+            stopAndRemoveFromForeground();
+        }
+        else if (mServiceState != ServiceState.RUNNING) {//(!isRunning){
+            mTrackInformationLoader = new TrackInformationLoader(new AsyncOperation<Void, List<Track>, Void, Void>() {
+                @Override
+                public void onAsyncOperationStarted(Void params) {
+                    mServiceState = ServiceState.RUNNING;
+                }
+
+                @Override
+                public void onAsyncOperationFinished(List<Track> result) {
+                    mServiceState = ServiceState.IDLE;
+                    processTrack(result);
+                }
+            }, mTrackRoomDatabase);
+            mTrackInformationLoader.executeOnExecutor(Executors.newCachedThreadPool(), mTrackIds.get(0));
+        }
+    }
 
     private boolean canContinue(){
         if(mGnApiService.isApiInitializing()|| !mGnApiService.isApiInitialized()){
             mGnApiService.initializeAPI();
             return false;
         }
-
         return true;
     }
 
     public void processTrack(List<Track> data) {
         if(mIsCancelled){
-            messageFinishTask = getString(R.string.task_cancelled);
-            notifyFinished();
+            broadcastMessage(getString(R.string.task_cancelled));
+            broadcastCompleteCorrection();
             stopAndRemoveFromForeground();
         }
         else {
             if(AudioTagger.checkFileIntegrity(data.get(0).getPath())) {
+                mServiceState = ServiceState.IDLE;
                 identificationError(getString(R.string.could_not_read_file), data.get(0));
             }
             else {
@@ -196,33 +242,36 @@ public class FixerTrackService extends Service {
                 mIdentifier.registerCallback(new Identifier.IdentificationListener<List<Identifier.IdentificationResults>, Track>() {
                     @Override
                     public void onIdentificationStart(Track file) {
-                        mServiceState = FixerState.IDENTIFYING;
+                        mServiceState = ServiceState.RUNNING;
                         onStartIdentification(file);
                     }
 
                     @Override
                     public void onIdentificationFinished(List<Identifier.IdentificationResults> result, Track file) {
                         mTrackInformationLoader = null;
-                        mServiceState = FixerState.STOPPED;
+                        mServiceState = ServiceState.IDLE;
                         identificationFound(result, file);
                     }
 
                     @Override
                     public void onIdentificationError(Track file, String error) {
-                        mServiceState = FixerState.STOPPED;
+                        mServiceState = ServiceState.IDLE;
                         mTrackInformationLoader = null;
+                        identificationError(error, file);
                     }
 
                     @Override
                     public void onIdentificationCancelled(Track file) {
-                        mServiceState = FixerState.STOPPED;
+                        mServiceState = ServiceState.IDLE;
                         mTrackInformationLoader = null;
+                        identificationCancelled(file);
                     }
 
                     @Override
                     public void onIdentificationNotFound(Track file) {
-                        mServiceState = FixerState.STOPPED;
+                        mServiceState = ServiceState.IDLE;
                         mTrackInformationLoader = null;
+                        identificationNotFound(file);
                     }
                 });
 
@@ -233,65 +282,57 @@ public class FixerTrackService extends Service {
 
 
     private void onStartIdentification(Track track) {
-        isRunning = true;
-        Intent intent = new Intent(Constants.Actions.START_PROCESSING_FOR);
-        intent.putExtra(Constants.MEDIA_STORE_ID, track.getMediaStoreId());
-        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcastSync(intent);
-        if(mTrackRepository != null) {
-            track.setChecked(1);
-            track.setProcessing(1);
-            mTrackRepository.update(track);
-        }
+        //isRunning = true;
+        track.setChecked(1);
+        track.setProcessing(1);
+        updateTrack(track);
         startNotification(TrackUtils.getPath(track.getPath()),
                 getString(R.string.correction_in_progress),
                 getString(R.string.identifying), track.getMediaStoreId());
+        broadcastCorrectionForId(track);
     }
 
     private void identificationError(String error, Track track) {
         startNotification(getString(R.string.correction_in_progress), "", error, track.getMediaStoreId() );
 
-        Intent intent = new Intent(Constants.Actions.FINISH_TRACK_PROCESSING);
-        intent.putExtra("error", error);
-        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcastSync(intent);
+        broadcastMessage(error);
 
-        if(mTrackRepository != null) {
-            track.setChecked(0);
-            track.setProcessing(0);
-            mTrackRepository.update(track);
-        }
+        track.setChecked(0);
+        track.setProcessing(0);
+        updateTrack(track);
 
-        isRunning = false;
-        if(mTrackIds != null && mTrackIds.size()>0)
-            mTrackIds.remove(0);
+        //isRunning = false;
+
+        popFirstFromList();
         shouldContinue();
     }
 
     private void identificationNotFound(Track track) {
-        if(mIdentifier != null){
-            mIdentifier = null;
-        }
+
         startNotification(TrackUtils.getPath(track.getPath()),getString(R.string.correction_in_progress),
                 getString(R.string.no_match_found), track.getMediaStoreId() );
 
-        Intent intent = new Intent(Constants.Actions.FINISH_TRACK_PROCESSING);
-        intent.putExtra(Constants.MEDIA_STORE_ID, track.getMediaStoreId());
-        intent.putExtra("processing", false);
-        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcastSync(intent);
 
-        if(mTrackRepository != null) {
-            track.setChecked(0);
-            track.setProcessing(0);
-            mTrackRepository.update(track);
-        }
-        isRunning = false;
-        if(mTrackIds != null && mTrackIds.size()>0)
-            mTrackIds.remove(0);
+        track.setChecked(0);
+        track.setProcessing(0);
+        updateTrack(track);
+
+        //isRunning = false;
+
+        popFirstFromList();
         shouldContinue();
     }
 
-    public void identificationFound(List<Identifier.IdentificationResults> result, Track track) {
+    /**
+     * Called if current track is identified.
+     * @param result
+     * @param track
+     */
+    public void identificationFound(List<Identifier.IdentificationResults> results, Track track) {
         startNotification(TrackUtils.getPath(track.getPath()), getString(R.string.match_found),
-                getString(R.string.starting_correction), track.getMediaStoreId() );
+                getString(R.string.starting_correction), track.getMediaStoreId());
+
+
         mMetadataWriter = new MetadataWriter(new AsyncOperation<Track, MetadataWriterResult, Track, MetadataWriterResult>() {
             @Override
             public void onAsyncOperationStarted(Track params) {
@@ -300,18 +341,22 @@ public class FixerTrackService extends Service {
 
             @Override
             public void onAsyncOperationFinished(MetadataWriterResult result) {
-                onCorrectionCompleted(result);
+                mServiceState = ServiceState.IDLE;
                 mMetadataWriter = null;
+                onCorrectionCompleted(result);
             }
 
             @Override
             public void onAsyncOperationCancelled(Track cancellation) {
-                onCorrectionCancelled(cancellation);
+                mServiceState = ServiceState.IDLE;
                 mMetadataWriter = null;
+                onCorrectionCancelled(cancellation);
             }
 
             @Override
             public void onAsyncOperationError(MetadataWriterResult result1) {
+                mServiceState = ServiceState.IDLE;
+                mMetadataWriter = null;
                 onCorrectionError(result1);
             }
         }, new AudioMetadataTagger(mTagger), new AudioMetadataTagger.InputParams(), track);
@@ -325,30 +370,23 @@ public class FixerTrackService extends Service {
         Track track = result.getTrack();
         startNotification(TrackUtils.getFilename(track.getPath()), getString(R.string.success), "", track.getMediaStoreId() );
 
-        if(mTrackRepository != null) {
-            track.setChecked(0);
-            track.setProcessing(0);
-            mTrackRepository.update(track);
-        }
+        track.setChecked(0);
+        track.setProcessing(0);
+        updateTrack(track);
 
-        if(mTrackIds != null && mTrackIds.size()>0)
-            mTrackIds.remove(0);
-
-        isRunning = false;
-
+        popFirstFromList();
+        //isRunning = false;
         shouldContinue();
     }
 
     public void onCorrectionCancelled(Track track) {
-        messageFinishTask = getString(R.string.task_cancelled);
-        if(mTrackRepository != null) {
-            track.setChecked(0);
-            track.setProcessing(0);
-            mTrackRepository.update(track);
-        }
+        broadcastMessage(getString(R.string.task_cancelled));
+        track.setChecked(0);
+        track.setProcessing(0);
+        updateTrack(track);
 
         isRunning = false;
-        notifyFinished();
+        broadcastCompleteCorrection();
         stopAndRemoveFromForeground();
     }
 
@@ -362,13 +400,10 @@ public class FixerTrackService extends Service {
 
         track.setChecked(0);
         track.setProcessing(0);
-
         updateTrack(track);
 
         popFirstFromList();
-
         isRunning = false;
-
         shouldContinue();
     }
 
@@ -384,15 +419,12 @@ public class FixerTrackService extends Service {
     }
 
 
-    public void onIdentificationCancelled(String cancelledReason, Track track) {
-        messageFinishTask = getString(R.string.task_cancelled);
-
-        if(mTrackRepository != null && track != null) {
-            track.setChecked(0);
-            track.setProcessing(0);
-            mTrackRepository.update(track);
-        }
-        notifyFinished();
+    public void identificationCancelled(Track track) {
+        track.setChecked(0);
+        track.setProcessing(0);
+        updateTrack(track);
+        broadcastCompleteCorrection();
+        broadcastMessage(getString(R.string.task_cancelled));
         stopAndRemoveFromForeground();
         isRunning = false;
     }
@@ -439,12 +471,6 @@ public class FixerTrackService extends Service {
         }
     }
 
-    private void notifyFinished(){
-        broadcastCompleteCorrection();
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O)
-            stopForeground(true);
-    }
-
     private void broadcastCompleteCorrection(){
         mRecycledIntent.setAction(Constants.Actions.ACTION_COMPLETE_TASK);
         LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(mRecycledIntent);
@@ -459,6 +485,12 @@ public class FixerTrackService extends Service {
     private void broadcastStartingCorrection(){
         mRecycledIntent.setAction(Constants.Actions.ACTION_START_TASK);
         LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(mRecycledIntent);
+    }
+
+    private void broadcastCorrectionForId(Track track) {
+        mRecycledIntent.setAction(Constants.Actions.START_PROCESSING_FOR);
+        mRecycledIntent.putExtra(Constants.MEDIA_STORE_ID, track.getMediaStoreId());
+        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcastSync(mRecycledIntent);
     }
 
     private void stopIdentification(){
@@ -563,24 +595,7 @@ public class FixerTrackService extends Service {
                 getString(R.string.applying_tags), track.getMediaStoreId() );
     }
 
-    private void shouldContinue(){
-        if(mIsCancelled){
-            notifyFinished();
-            stopAndRemoveFromForeground();
-        }
-        else {
-            if(mTrackIds != null && !mTrackIds.isEmpty()){
-                startCorrection();
-            }
-            else {
-                messageFinishTask = getString(R.string.complete_task);
-                notifyFinished();
-                stopAndRemoveFromForeground();
-            }
-        }
-    }
-
-    enum FixerState {
+    private enum FixerState {
         FETCHING_TRACKS,
         FETCHING_TRACK_INFO,
         IDENTIFYING,
@@ -588,7 +603,7 @@ public class FixerTrackService extends Service {
         RENAMING
     }
 
-    enum ServiceState {
+    private enum ServiceState {
         IDLE,
         RUNNING,
         NOT_RUNNING

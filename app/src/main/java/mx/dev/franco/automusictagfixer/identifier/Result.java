@@ -1,21 +1,23 @@
 package mx.dev.franco.automusictagfixer.identifier;
 
-import java.util.ArrayList;
-import java.util.List;
+import com.gracenote.gnsdk.GnImageSize;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 public class Result implements Identifier.IdentificationResults {
-    private String title;
-    private String artist;
-    private String album;
-    private String trackNumber;
-    private String trackYear;
-    private String genre;
-    private List<byte[]> covers = new ArrayList<>();
+    private String title = "";
+    private String artist = "";
+    private String album = "";
+    private String trackNumber = "";
+    private String trackYear = "";
+    private String genre = "";
+    private Map<GnImageSize, String> covers = new LinkedHashMap<>();
 
     public Result() {
     }
 
-    public Result(String title, String artist, String album, String trackNumber, String trackYear, String genre, List<byte[]> covers) {
+    public Result(String title, String artist, String album, String trackNumber, String trackYear, String genre, Map<GnImageSize, String> covers) {
         this();
         this.title = title;
         this.artist = artist;
@@ -23,7 +25,7 @@ public class Result implements Identifier.IdentificationResults {
         this.trackNumber = trackNumber;
         this.trackYear = trackYear;
         this.genre = genre;
-        this.covers.addAll(covers);
+        this.covers.putAll(covers);
     }
 
     public String getTitle() {
@@ -74,11 +76,11 @@ public class Result implements Identifier.IdentificationResults {
         this.genre = genre;
     }
 
-    public List<byte[]> getCovers() {
+    public Map<GnImageSize, String> getCovers() {
         return covers;
     }
 
-    public void addCover(byte[] cover) {
-        this.covers.add(cover);
+    public void addCover(GnImageSize size, String url) {
+        this.covers.put(size, url);
     }
 }

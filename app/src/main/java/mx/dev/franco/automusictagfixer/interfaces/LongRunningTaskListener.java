@@ -23,5 +23,5 @@ public interface LongRunningTaskListener {
      * Called when and error occur and long running task is interrupted.
      */
 
-    default void onLongRunningTaskError(String error){}
+    default void onLongRunningTaskMessage(String error){}
 }

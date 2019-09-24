@@ -8,7 +8,6 @@ import org.jaudiotagger.tag.TagException;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Map;
 
 import javax.annotation.Nullable;
@@ -44,12 +43,12 @@ public class AudioMetadataTagger implements AudioMetadataManager<AudioMetadataTa
 
         switch (input.codeRequest) {
             case AudioTagger.MODE_ADD_COVER:
-                return tagger.applyCover((byte[]) input.fields.get(FieldKey.COVER_ART), input.path);
+                return tagger.applyCover((byte[]) input.fields.get(FieldKey.COVER_ART), input.targetFile);
             case AudioTagger.MODE_REMOVE_COVER:
-                return tagger.applyCover(null, input.path);
+                return tagger.applyCover(null, input.targetFile);
             case AudioTagger.MODE_WRITE_ONLY_MISSING:
             case AudioTagger.MODE_OVERWRITE_ALL_TAGS:
-                return tagger.saveTags(input.path, (HashMap<FieldKey, Object>) input.fields, input.codeRequest);
+                return tagger.saveTags(input.targetFile, input.fields, input.codeRequest);
         }
         return null;
     }
@@ -61,9 +60,45 @@ public class AudioMetadataTagger implements AudioMetadataManager<AudioMetadataTa
     }
 
 
+    /**
+     * Class to wrap required data for this tagger to correct the metadata.
+     */
     public static class InputParams {
-        private String path;
+        private String targetFile;
         private Map<FieldKey, Object> fields;
         private int codeRequest;
+
+        public InputParams() {
+        }
+
+        public InputParams(String targetFile, Map<FieldKey, Object> fields, int codeRequest) {
+            this.targetFile = targetFile;
+            this.fields = fields;
+            this.codeRequest = codeRequest;
+        }
+
+        public String getTargetFile() {
+            return targetFile;
+        }
+
+        public void setTargetFile(String targetFile) {
+            this.targetFile = targetFile;
+        }
+
+        public Map<FieldKey, Object> getFields() {
+            return fields;
+        }
+
+        public void setFields(Map<FieldKey, Object> fields) {
+            this.fields = fields;
+        }
+
+        public int getCodeRequest() {
+            return codeRequest;
+        }
+
+        public void setCodeRequest(int codeRequest) {
+            this.codeRequest = codeRequest;
+        }
     }
 }

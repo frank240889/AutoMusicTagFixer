@@ -220,35 +220,20 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
         //get action and handle it
         String action = intent.getAction();
         int id = intent.getIntExtra(Constants.MEDIA_STORE_ID, -1);
-        BaseFragment baseFragment = null;
+        BaseFragment baseFragment = (BaseFragment) getSupportFragmentManager().findFragmentByTag(ListFragment.class.getName());
+        String message = intent.getStringExtra("message");
+        if(message != null){
+            ((LongRunningTaskListener) baseFragment).onLongRunningTaskMessage(message);
+        }
         switch (action) {
             case Constants.Actions.ACTION_START_TASK:
-                    baseFragment = (BaseFragment) getSupportFragmentManager().findFragmentByTag(ListFragment.class.getName());
-                    if(baseFragment instanceof LongRunningTaskListener)
-                        ((LongRunningTaskListener) baseFragment).onLongRunningTaskStarted();
+                ((LongRunningTaskListener) baseFragment).onLongRunningTaskStarted();
                 break;
             case Constants.Actions.START_PROCESSING_FOR:
-                baseFragment = (BaseFragment) getSupportFragmentManager().findFragmentByTag(ListFragment.class.getName());
-                if(baseFragment instanceof ProcessingListener)
-                    ((ProcessingListener) baseFragment).onStartProcessingFor(id);
-                break;
-            case Constants.Actions.FINISH_TRACK_PROCESSING:
-                    String error = intent.getStringExtra("error");
-                    baseFragment = (BaseFragment) getSupportFragmentManager().findFragmentByTag(ListFragment.class.getName());
-                    if(baseFragment instanceof LongRunningTaskListener) {
-                        if(error != null){
-                            ((LongRunningTaskListener) baseFragment).onLongRunningTaskError(error);
-                        }
-                        else {
-                            ((LongRunningTaskListener) baseFragment).onLongRunningTaskFinish();
-                        }
-                    }
-
+                ((ProcessingListener) baseFragment).onStartProcessingFor(id);
                 break;
             case Constants.Actions.ACTION_COMPLETE_TASK:
-                baseFragment = (BaseFragment) getSupportFragmentManager().findFragmentByTag(ListFragment.class.getName());
-                if(baseFragment instanceof LongRunningTaskListener)
-                    ((LongRunningTaskListener)baseFragment).onLongRunningTaskFinish();
+                ((LongRunningTaskListener)baseFragment).onLongRunningTaskFinish();
                     /*getSharedPreferences(Constants.Application.FULL_QUALIFIED_NAME,
                         Context.MODE_PRIVATE).edit().putBoolean(Constants.ALL_ITEMS_CHECKED, false).
                             apply();*/
