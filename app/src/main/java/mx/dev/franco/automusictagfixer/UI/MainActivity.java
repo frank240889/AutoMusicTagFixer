@@ -1,4 +1,4 @@
-package mx.dev.franco.automusictagfixer.UI.main;
+package mx.dev.franco.automusictagfixer.UI;
 
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
@@ -22,15 +22,20 @@ import android.view.Window;
 import android.view.WindowManager;
 
 import mx.dev.franco.automusictagfixer.R;
-import mx.dev.franco.automusictagfixer.UI.BaseFragment;
 import mx.dev.franco.automusictagfixer.UI.about.ScrollingAboutActivity;
 import mx.dev.franco.automusictagfixer.UI.faq.QuestionsActivity;
+import mx.dev.franco.automusictagfixer.UI.main.ListFragment;
 import mx.dev.franco.automusictagfixer.UI.settings.SettingsActivity;
 import mx.dev.franco.automusictagfixer.interfaces.LongRunningTaskListener;
 import mx.dev.franco.automusictagfixer.interfaces.ProcessingListener;
 import mx.dev.franco.automusictagfixer.receivers.ResponseReceiver;
 import mx.dev.franco.automusictagfixer.services.FixerTrackService;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
+
+import static mx.dev.franco.automusictagfixer.utilities.Constants.Actions.ACTION_BROADCAST_MESSAGE;
+import static mx.dev.franco.automusictagfixer.utilities.Constants.Actions.ACTION_COMPLETE_TASK;
+import static mx.dev.franco.automusictagfixer.utilities.Constants.Actions.ACTION_START_TASK;
+import static mx.dev.franco.automusictagfixer.utilities.Constants.Actions.START_PROCESSING_FOR;
 
 public class MainActivity extends AppCompatActivity implements ResponseReceiver.OnResponse,
         NavigationView.OnNavigationItemSelectedListener,
@@ -130,24 +135,19 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
      * only certain actions sent by FixerTrackService
      */
     private void setupReceivers() {
-        IntentFilter startTaskFilter = new IntentFilter(Constants.Actions.ACTION_START_TASK);
-        IntentFilter showProgressFilter = new IntentFilter(Constants.Actions.START_PROCESSING_FOR);
-        IntentFilter finishProcessingFilter = new IntentFilter(Constants.Actions.FINISH_TRACK_PROCESSING);
-        IntentFilter completedTaskFilter = new IntentFilter(Constants.Actions.ACTION_COMPLETE_TASK);
-        IntentFilter errorTask = new IntentFilter(Constants.Actions.ACTION_SD_CARD_ERROR);
-        IntentFilter rescanFilter = new IntentFilter(Constants.Actions.ACTION_RESCAN);
+        IntentFilter startTaskFilter = new IntentFilter(ACTION_START_TASK);
+        IntentFilter completedTaskFilter = new IntentFilter(ACTION_COMPLETE_TASK);
+        IntentFilter startProcessingForFilter = new IntentFilter(START_PROCESSING_FOR);
+        IntentFilter broadcastMessageFilter = new IntentFilter(ACTION_BROADCAST_MESSAGE);
 
         mReceiver = new ResponseReceiver(this, new Handler());
-
 
         LocalBroadcastManager localBroadcastManager = LocalBroadcastManager.getInstance(getApplicationContext());
 
         localBroadcastManager.registerReceiver(mReceiver, completedTaskFilter);
-        localBroadcastManager.registerReceiver(mReceiver, showProgressFilter);
-        localBroadcastManager.registerReceiver(mReceiver, finishProcessingFilter);
+        localBroadcastManager.registerReceiver(mReceiver, startProcessingForFilter);
         localBroadcastManager.registerReceiver(mReceiver, startTaskFilter);
-        localBroadcastManager.registerReceiver(mReceiver, errorTask);
-        localBroadcastManager.registerReceiver(mReceiver, rescanFilter);
+        localBroadcastManager.registerReceiver(mReceiver, broadcastMessageFilter);
 
     }
 
@@ -221,22 +221,24 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
         String action = intent.getAction();
         int id = intent.getIntExtra(Constants.MEDIA_STORE_ID, -1);
         BaseFragment baseFragment = (BaseFragment) getSupportFragmentManager().findFragmentByTag(ListFragment.class.getName());
-        String message = intent.getStringExtra("message");
-        if(message != null){
-            ((LongRunningTaskListener) baseFragment).onLongRunningTaskMessage(message);
-        }
         switch (action) {
-            case Constants.Actions.ACTION_START_TASK:
+            case ACTION_START_TASK:
                 ((LongRunningTaskListener) baseFragment).onLongRunningTaskStarted();
                 break;
-            case Constants.Actions.START_PROCESSING_FOR:
+            case START_PROCESSING_FOR:
                 ((ProcessingListener) baseFragment).onStartProcessingFor(id);
                 break;
-            case Constants.Actions.ACTION_COMPLETE_TASK:
+            case ACTION_COMPLETE_TASK:
                 ((LongRunningTaskListener)baseFragment).onLongRunningTaskFinish();
                     /*getSharedPreferences(Constants.Application.FULL_QUALIFIED_NAME,
                         Context.MODE_PRIVATE).edit().putBoolean(Constants.ALL_ITEMS_CHECKED, false).
                             apply();*/
+                break;
+            case ACTION_BROADCAST_MESSAGE:
+                String message = intent.getStringExtra("message");
+                if(message != null){
+                    ((LongRunningTaskListener) baseFragment).onLongRunningTaskMessage(message);
+                }
                 break;
         }
 

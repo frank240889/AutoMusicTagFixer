@@ -8,7 +8,6 @@ import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 
 import mx.dev.franco.automusictagfixer.UI.intro.IntroActivity;
-import mx.dev.franco.automusictagfixer.UI.main.MainActivity;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
 import mx.dev.franco.automusictagfixer.utilities.Settings;
 

@@ -51,7 +51,7 @@ import javax.inject.Inject;
 
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.UI.BaseFragment;
-import mx.dev.franco.automusictagfixer.UI.main.MainActivity;
+import mx.dev.franco.automusictagfixer.UI.MainActivity;
 import mx.dev.franco.automusictagfixer.UI.sd_card_instructions.SdCardInstructionsActivity;
 import mx.dev.franco.automusictagfixer.interfaces.EditableView;
 import mx.dev.franco.automusictagfixer.modelsUI.track_detail.ImageSize;

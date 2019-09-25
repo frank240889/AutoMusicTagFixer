@@ -39,6 +39,7 @@ import javax.inject.Inject;
 
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.UI.BaseFragment;
+import mx.dev.franco.automusictagfixer.UI.MainActivity;
 import mx.dev.franco.automusictagfixer.UI.sd_card_instructions.SdCardInstructionsActivity;
 import mx.dev.franco.automusictagfixer.UI.search.ResultSearchListFragment;
 import mx.dev.franco.automusictagfixer.UI.track_detail.TrackDetailFragment;

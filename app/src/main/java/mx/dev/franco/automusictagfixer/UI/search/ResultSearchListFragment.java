@@ -31,7 +31,7 @@ import javax.inject.Inject;
 
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.UI.BaseFragment;
-import mx.dev.franco.automusictagfixer.UI.main.MainActivity;
+import mx.dev.franco.automusictagfixer.UI.MainActivity;
 import mx.dev.franco.automusictagfixer.UI.main.ViewWrapper;
 import mx.dev.franco.automusictagfixer.UI.track_detail.TrackDetailFragment;
 import mx.dev.franco.automusictagfixer.modelsUI.search.SearchListViewModel;

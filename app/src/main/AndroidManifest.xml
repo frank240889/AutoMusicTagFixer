@@ -43,7 +43,7 @@
             android:theme="@style/Theme.Intro"
             tools:ignore="InnerclassSeparator" />
         <activity
-            android:name=".UI.main.MainActivity"
+            android:name=".UI.MainActivity"
             android:configChanges="orientation|screenSize"
             android:label="@string/title_activity_main"
             android:launchMode="singleTop"
@@ -53,7 +53,7 @@
             tools:ignore="InnerclassSeparator"></activity>
         <activity
             android:name=".UI.sd_card_instructions.SdCardInstructionsActivity"
-            android:parentActivityName=".UI.main.MainActivity"
+            android:parentActivityName=".UI.MainActivity"
             android:screenOrientation="portrait"
             android:theme="@style/MyTransparentTheme"
             tools:ignore="InnerclassSeparator" />
@@ -61,31 +61,31 @@
             android:name=".UI.faq.QuestionsActivity"
             android:configChanges="orientation|screenSize"
             android:label="@string/faq"
-            android:parentActivityName=".UI.main.MainActivity"
+            android:parentActivityName=".UI.MainActivity"
             android:screenOrientation="portrait"
             android:theme="@style/QuestionsTheme"
             tools:ignore="InnerclassSeparator">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="mx.dev.franco.automusictagfixer.UI.main.MainActivity" />
+                android:value="mx.dev.franco.automusictagfixer.UI.MainActivity" />
         </activity>
         <activity
             android:name=".UI.about.ScrollingAboutActivity"
             android:configChanges="orientation|screenSize"
             android:label="@string/title_activity_scrolling_about"
-            android:parentActivityName=".UI.main.MainActivity"
+            android:parentActivityName=".UI.MainActivity"
             android:screenOrientation="portrait"
             android:theme="@style/AboutTheme"
             tools:ignore="InnerclassSeparator">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="mx.dev.franco.automusictagfixer.UI.main.MainActivity" />
+                android:value="mx.dev.franco.automusictagfixer.UI.MainActivity" />
         </activity>
         <activity
             android:name=".UI.settings.SettingsActivity"
             android:configChanges="orientation|screenSize"
             android:label="@string/title_activity_settings"
-            android:parentActivityName=".UI.main.MainActivity"
+            android:parentActivityName=".UI.MainActivity"
             android:screenOrientation="portrait"
             android:theme="@style/SettingsStyle"
             tools:ignore="InnerclassSeparator" /> <!-- "mx.dev.franco.automusictagfixer.fileProvider" -->

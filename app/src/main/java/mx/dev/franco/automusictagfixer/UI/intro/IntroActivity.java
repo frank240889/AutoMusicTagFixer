@@ -8,7 +8,7 @@ import android.os.Bundle;
 import agency.tango.materialintroscreen.MaterialIntroActivity;
 import agency.tango.materialintroscreen.SlideFragmentBuilder;
 import mx.dev.franco.automusictagfixer.R;
-import mx.dev.franco.automusictagfixer.UI.main.MainActivity;
+import mx.dev.franco.automusictagfixer.UI.MainActivity;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
 
 public class IntroActivity extends MaterialIntroActivity {

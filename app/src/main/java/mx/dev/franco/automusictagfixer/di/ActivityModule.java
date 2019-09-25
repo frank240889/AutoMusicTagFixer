@@ -1,7 +1,7 @@
 package mx.dev.franco.automusictagfixer.di;
 import dagger.Module;
 import dagger.android.ContributesAndroidInjector;
-import mx.dev.franco.automusictagfixer.UI.main.MainActivity;
+import mx.dev.franco.automusictagfixer.UI.MainActivity;
 
 /**
  * The module that injects the dependencies into fragments.
