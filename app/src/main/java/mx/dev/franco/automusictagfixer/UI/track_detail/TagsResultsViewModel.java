@@ -5,7 +5,7 @@ import android.support.annotation.NonNull;
 
 public class TagsResultsViewModel extends ResultsViewModel {
 
-    
+
 
     public TagsResultsViewModel(@NonNull Application application) {
         super(application);
