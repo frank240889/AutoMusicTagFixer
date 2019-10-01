@@ -1,4 +1,4 @@
-package mx.dev.franco.automusictagfixer.UI.track_detail;
+package mx.dev.franco.automusictagfixer.UI;
 
 import android.app.Application;
 import android.arch.lifecycle.AndroidViewModel;
@@ -11,9 +11,8 @@ import java.util.List;
 import mx.dev.franco.automusictagfixer.identifier.Identifier;
 
 public abstract class ResultsViewModel extends AndroidViewModel {
-    protected LiveData<Boolean> mProgressObservable;
-    protected LiveData<List<Identifier.IdentificationResults>> mObservableResults;
-    protected List<Identifier.IdentificationResults> mResults;
+    protected MutableLiveData<Boolean> mProgressObservable;
+    protected MutableLiveData<List<Identifier.IdentificationResults>> mObservableResults;
 
     public ResultsViewModel(@NonNull Application application) {
         super(application);
@@ -28,5 +27,5 @@ public abstract class ResultsViewModel extends AndroidViewModel {
         return mObservableResults;
     }
 
-    public abstract void fetchResults();
+    public abstract void fetchResults(String id);
 }

@@ -1,4 +1,4 @@
-package mx.dev.franco.automusictagfixer.UI.track_detail;
+package mx.dev.franco.automusictagfixer.UI;
 
 import android.os.Bundle;
 import android.support.annotation.LayoutRes;
@@ -7,8 +7,6 @@ import android.support.annotation.Nullable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-
-import mx.dev.franco.automusictagfixer.UI.RoundedBottomSheetDialogFragment;
 
 public abstract class ResultsFragment extends RoundedBottomSheetDialogFragment {
     public static final String LAYOUT_ID = "layout_id";

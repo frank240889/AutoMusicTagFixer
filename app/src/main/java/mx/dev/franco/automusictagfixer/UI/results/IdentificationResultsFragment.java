@@ -1,4 +1,4 @@
-package mx.dev.franco.automusictagfixer.UI.track_detail;
+package mx.dev.franco.automusictagfixer.UI.results;
 
 import android.content.Context;
 import android.os.Bundle;
@@ -8,8 +8,9 @@ import android.support.annotation.Nullable;
 import android.view.View;
 
 import mx.dev.franco.automusictagfixer.UI.RoundedBottomSheetDialogFragment;
+import mx.dev.franco.automusictagfixer.UI.track_detail.CorrectionParams;
 
-import static mx.dev.franco.automusictagfixer.UI.track_detail.ResultsFragment.LAYOUT_ID;
+import static mx.dev.franco.automusictagfixer.UI.ResultsFragment.LAYOUT_ID;
 
 public class IdentificationResultsFragment extends RoundedBottomSheetDialogFragment {
     public interface OnBottomSheetFragmentInteraction {
@@ -18,7 +19,6 @@ public class IdentificationResultsFragment extends RoundedBottomSheetDialogFragm
     }
     private OnBottomSheetFragmentInteraction mCallback;
     private Bundle mArguments;
-    private OnClickTextView mOnClickTextView;
     public IdentificationResultsFragment(){}
 
     public static IdentificationResultsFragment newInstance(@LayoutRes int layoutId) {
@@ -37,7 +37,7 @@ public class IdentificationResultsFragment extends RoundedBottomSheetDialogFragm
         else if(context instanceof OnBottomSheetFragmentInteraction)
             mCallback = (OnBottomSheetFragmentInteraction) context;
         else
-            throw new RuntimeException(context.toString() + "must implement " +
+            throw new RuntimeException(context.toString() + " must implement " +
                     OnBottomSheetFragmentInteraction.class.getCanonicalName());
     }
 
