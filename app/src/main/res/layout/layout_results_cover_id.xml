@@ -1,122 +1,87 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/root_container_track_id_item"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_height="match_parent"
     android:layout_alignParentStart="false"
     android:layout_margin="8dp"
     android:theme="@style/DetailsTrackDialogTheme"
-    android:background="@color/grey_850"
+    android:background="@color/darker"
+    android:orientation="vertical"
     android:splitMotionEvents="false">
 
     <TextView
         android:id="@+id/title_results"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_gravity="center"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
+        android:gravity="center"
         android:text="@string/cover_found"
         android:textSize="20sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <android.support.v7.widget.CardView
-        android:id="@+id/cover_card"
-        android:layout_width="wrap_content"
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/cover_results_list"
+        android:layout_marginTop="16dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentStart="false"
-        android:layout_centerHorizontal="true"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginEnd="8dp"
-        android:elevation="@dimen/cardview_default_elevation"
-        android:foreground="?android:attr/selectableItemBackgroundBorderless"
-        android:stateListAnimator="@animator/default_z_transformation_card_view"
-        app:cardCornerRadius="8dp"
-        app:cardElevation="@dimen/cardview_default_elevation"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/title_results">
+        android:orientation="horizontal"
+        tools:itemCount="5"
+        tools:layoutManager="android.support.v7.widget.LinearLayoutManager"
+        tools:listitem="@layout/cover_result_item_list" />
 
-        <ImageView
-            android:id="@+id/trackid_cover"
-            android:layout_width="@dimen/image_view_only_cover_results_size"
-            android:layout_height="@dimen/image_view_only_cover_results_size"
-            android:layout_alignParentTop="true"
-            android:layout_centerHorizontal="true"
-            android:adjustViewBounds="true"
-            android:clickable="true"
-            android:cropToPadding="false"
-            android:focusable="true"
-            android:scaleType="centerCrop"
-            android:src="@drawable/ic_album_white_48px"
-            android:transitionName="transitionFragment"
-            app:srcCompat="@drawable/ic_album_white_48px" />
-    </android.support.v7.widget.CardView>
+    <android.support.constraint.ConstraintLayout
+        android:id="@+id/container_cover_results"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
 
+        <TextView
+            android:id="@+id/text_view_title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="8dp"
+            android:text="@string/message_results_cover"
+            android:textColor="@color/primaryColor"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
-    <TextView
-        android:id="@+id/trackid_cover_dimensions"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/cover_card"
-        android:layout_centerHorizontal="true"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginEnd="8dp"
-        android:drawableStart="@drawable/ic_photo_size_select_large_white_24px"
-        android:ellipsize="marquee"
-        android:gravity="center_vertical"
-        android:marqueeRepeatLimit="marquee_forever"
-        android:scrollHorizontally="true"
-        android:singleLine="true"
-        android:text="@string/no_cover_art_found"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/cover_card" />
+        <Button
+            android:id="@+id/missing_tags_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginBottom="8dp"
+            android:text="@string/as_cover_art"
+            android:theme="@style/Button.Flat.Primary"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/text_view_title" />
 
-    <TextView
-        android:id="@+id/text_view_title"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginEnd="8dp"
-        android:text="@string/message_results_cover"
-        android:textColor="@color/primaryColor"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/trackid_cover_dimensions" />
+        <Button
+            android:id="@+id/all_tags_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:layout_marginBottom="8dp"
+            android:text="@string/as_file"
+            app:layout_constraintBottom_toBottomOf="@+id/missing_tags_button"
+            app:layout_constraintEnd_toStartOf="@+id/missing_tags_button"
+            app:layout_constraintTop_toTopOf="@+id/missing_tags_button"
+            app:layout_constraintVertical_bias="0.0"
+            android:theme="@style/Button.Flat.Primary"/>
 
-    <Button
-        android:id="@+id/missing_tags_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginBottom="8dp"
-        android:text="@string/as_cover_art"
-        android:theme="@style/Button.Flat.Primary"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/text_view_title" />
+    </android.support.constraint.ConstraintLayout>
 
-    <Button
-        android:id="@+id/all_tags_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="8dp"
-        android:layout_marginBottom="8dp"
-        android:text="@string/as_file"
-        app:layout_constraintBottom_toBottomOf="@+id/missing_tags_button"
-        app:layout_constraintEnd_toStartOf="@+id/missing_tags_button"
-        app:layout_constraintTop_toTopOf="@+id/missing_tags_button"
-        app:layout_constraintVertical_bias="0.0"
-        android:theme="@style/Button.Flat.Primary"/>
-
-</android.support.constraint.ConstraintLayout>
+</LinearLayout>
