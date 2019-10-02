@@ -10,9 +10,9 @@ import javax.inject.Inject;
 
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.UI.main.ViewWrapper;
+import mx.dev.franco.automusictagfixer.fixer.AudioTagger;
 import mx.dev.franco.automusictagfixer.persistence.repository.TrackRepository;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
-import mx.dev.franco.automusictagfixer.utilities.Tagger;
 import mx.dev.franco.automusictagfixer.utilities.resource_manager.ResourceManager;
 import mx.dev.franco.automusictagfixer.utilities.shared_preferences.AbstractSharedPreferences;
 
@@ -49,7 +49,7 @@ public class SearchListViewModel extends ViewModel {
     }
 
     public void onItemClick(ViewWrapper viewWrapper){
-        boolean isAccessible = Tagger.checkFileIntegrity(viewWrapper.track.getPath());
+        boolean isAccessible = AudioTagger.checkFileIntegrity(viewWrapper.track.getPath());
         if(!isAccessible){
             mTrackInaccessible.setValue(viewWrapper);
         }

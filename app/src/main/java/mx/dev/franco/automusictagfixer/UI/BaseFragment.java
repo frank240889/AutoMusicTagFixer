@@ -15,6 +15,10 @@ import mx.dev.franco.automusictagfixer.interfaces.OnBackPressedListener;
 public abstract class BaseFragment extends Fragment implements
         OnBackPressedListener {
     public static final String BASE_FRAGMENT_TAG = BaseFragment.class.getName();
+    private static final int CROSS_FADE_DURATION = 200;
+    //Intent type for pick an image
+    public static final int INTENT_OPEN_GALLERY = 1;
+    public static final int INTENT_GET_AND_UPDATE_FROM_GALLERY = 2;
     public static String TAG;
     protected OnConfirmBackPressedListener mOnConfirmBackPressedListener;
 

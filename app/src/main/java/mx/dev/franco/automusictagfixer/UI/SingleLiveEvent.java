@@ -1,4 +1,4 @@
-package mx.dev.franco.automusictagfixer.UI.track_detail;
+package mx.dev.franco.automusictagfixer.UI;
 import android.arch.lifecycle.LifecycleOwner;
 import android.arch.lifecycle.MutableLiveData;
 import android.arch.lifecycle.Observer;

@@ -1,146 +1,157 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/root_container_details"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:fitsSystemWindows="true"
-    tools:showIn="@layout/activity_track_details">
-    <android.support.design.widget.AppBarLayout
-        android:id="@+id/app_bar_layout"
-        android:layout_width="match_parent"
-        android:layout_height="416dp"
-        android:background="@color/grey_900"
-        android:elevation="4dp"
-        app:elevation="4dp">
+    xmlns:bind="http://schemas.android.com/apk/res-auto">
+    <data>
+        <variable
+            name="viewModel"
+            type="mx.dev.franco.automusictagfixer.UI.track_detail.TrackDetailViewModel" />
+    </data>
 
-        <android.support.design.widget.CollapsingToolbarLayout
-            android:id="@+id/collapsing_toolbar_layout"
+    <android.support.design.widget.CoordinatorLayout
+        android:id="@+id/root_container_details"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fitsSystemWindows="true"
+        tools:showIn="@layout/activity_track_details">
+        <android.support.design.widget.AppBarLayout
+            android:id="@+id/app_bar_layout"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:fitsSystemWindows="true"
-            app:layout_collapseMode="parallax"
-            app:layout_scrollFlags="scroll|exitUntilCollapsed">
-            <ImageView
-                android:id="@+id/toolbar_cover_art"
+            android:layout_height="416dp"
+            android:background="@color/grey_900"
+            android:elevation="4dp"
+            app:elevation="4dp">
+
+            <android.support.design.widget.CollapsingToolbarLayout
+                android:id="@+id/collapsing_toolbar_layout"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_gravity="top|start"
-                android:adjustViewBounds="true"
-                android:scaleType="fitCenter"
-                android:transitionName="transitionFragment"
+                android:fitsSystemWindows="true"
                 app:layout_collapseMode="parallax"
-                app:layout_collapseParallaxMultiplier="0.7">
-            </ImageView>
-            <FrameLayout
-                android:id="@+id/transparent_bottom_toolbar"
-                android:layout_width="match_parent"
-                android:layout_height="?android:attr/actionBarSize"
-                android:layout_gravity="top"
-                android:orientation="vertical"
-                app:layout_collapseMode="parallax">
+                app:layout_scrollFlags="scroll|exitUntilCollapsed">
                 <ImageView
+                    android:id="@+id/toolbar_cover_art"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:background="@drawable/linear_gradient_black_to_transparent" />
-            </FrameLayout>
-
-            <FrameLayout
-                android:id="@+id/bottom_transparent_layer"
-                android:layout_width="match_parent"
-                android:layout_height="?android:attr/actionBarSize"
-                android:layout_gravity="bottom"
-                android:orientation="vertical"
-                app:layout_collapseMode="parallax">
-
-                <ImageView
+                    android:layout_gravity="top|start"
+                    android:adjustViewBounds="true"
+                    android:scaleType="fitCenter"
+                    android:transitionName="transitionFragment"
+                    app:layout_collapseMode="parallax"
+                    app:layout_collapseParallaxMultiplier="0.7">
+                </ImageView>
+                <FrameLayout
+                    android:id="@+id/transparent_bottom_toolbar"
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:background="@drawable/linear_gradient_transparent_to_black" />
+                    android:layout_height="?android:attr/actionBarSize"
+                    android:layout_gravity="top"
+                    android:orientation="vertical"
+                    app:layout_collapseMode="parallax">
+                    <ImageView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@drawable/linear_gradient_black_to_transparent" />
+                </FrameLayout>
 
-                <TextView
-                    android:id="@+id/title_bottom_transparent_layer"
+                <FrameLayout
+                    android:id="@+id/bottom_transparent_layer"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_vertical"
-                    android:layout_marginStart="10dp"
-                    android:drawableStart="@drawable/ic_insert_drive_file_white_24px"
-                    android:gravity="center_vertical"
-                    tools:text="Mi historia entre tus dedos.mp3"
-                    android:textColor="@color/true_white"
-                    android:textSize="18sp" />
+                    android:layout_height="?android:attr/actionBarSize"
+                    android:layout_gravity="bottom"
+                    android:orientation="vertical"
+                    app:layout_collapseMode="parallax">
 
-            </FrameLayout>
-            <android.support.v7.widget.Toolbar
-                android:id="@+id/toolbar"
-                android:layout_width="match_parent"
-                android:layout_height="?android:attr/actionBarSize"
-                android:elevation="4dp"
-                app:layout_collapseMode="pin">
+                    <ImageView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@drawable/linear_gradient_transparent_to_black" />
 
-            </android.support.v7.widget.Toolbar>
-        </android.support.design.widget.CollapsingToolbarLayout>
-    </android.support.design.widget.AppBarLayout>
+                    <TextView
+                        android:id="@+id/title_bottom_transparent_layer"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:layout_marginStart="10dp"
+                        android:drawableStart="@drawable/ic_insert_drive_file_white_24px"
+                        android:gravity="center_vertical"
+                        tools:text="Mi historia entre tus dedos.mp3"
+                        android:textColor="@color/true_white"
+                        android:textSize="18sp" />
 
-    <include layout="@layout/content_details_track"/>
+                </FrameLayout>
+                <android.support.v7.widget.Toolbar
+                    android:id="@+id/toolbar"
+                    android:layout_width="match_parent"
+                    android:layout_height="?android:attr/actionBarSize"
+                    android:elevation="4dp"
+                    app:layout_collapseMode="pin">
 
-    <android.support.design.widget.FloatingActionButton
-        android:id="@+id/fab_edit_track_info"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_margin="@dimen/standard_24"
-        app:fabSize="mini"
-        android:tint="@color/grey_800"
-        android:visibility="gone"
-        app:useCompatPadding="true"
-        android:src="@drawable/ic_edit_white" />
+                </android.support.v7.widget.Toolbar>
+            </android.support.design.widget.CollapsingToolbarLayout>
+        </android.support.design.widget.AppBarLayout>
 
-    <android.support.design.widget.FloatingActionButton
-        android:id="@+id/fab_download_cover"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_margin="@dimen/standard_24"
-        app:fabSize="mini"
-        android:tint="@color/grey_800"
-        android:visibility="gone"
-        app:useCompatPadding="true"
-        android:src="@drawable/ic_photo_white" />
+        <include android:id="@+id/layout_content_details_track"
+            layout="@layout/content_details_track"
+            bind:nestedViewModel="@{viewModel}"/>
 
-    <android.support.design.widget.FloatingActionButton
-        android:id="@+id/fab_autofix"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_margin="@dimen/standard_24"
-        app:fabSize="mini"
-        android:tint="@color/grey_800"
-        android:visibility="gone"
-        app:useCompatPadding="true"
-        android:src="@drawable/ic_photo_filter_white_24px" />
+        <android.support.design.widget.FloatingActionButton
+            android:id="@+id/fab_edit_track_info"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end"
+            android:layout_margin="@dimen/standard_24"
+            app:fabSize="mini"
+            android:tint="@color/grey_800"
+            android:visibility="gone"
+            app:useCompatPadding="true"
+            android:src="@drawable/ic_edit_white" />
 
-    <android.support.design.widget.FloatingActionButton
-        android:id="@+id/fab_menu"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_margin="@dimen/fab_margin"
-        android:tint="@color/grey_800"
-        android:visibility="gone"
-        app:useCompatPadding="true"
-        android:src="@drawable/ic_add_white_24px" />
+        <android.support.design.widget.FloatingActionButton
+            android:id="@+id/fab_download_cover"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end"
+            android:layout_margin="@dimen/standard_24"
+            app:fabSize="mini"
+            android:tint="@color/grey_800"
+            android:visibility="gone"
+            app:useCompatPadding="true"
+            android:src="@drawable/ic_photo_white" />
 
-    <android.support.design.widget.FloatingActionButton
-        android:id="@+id/fab_save_info"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_margin="@dimen/fab_margin"
-        android:tint="@color/grey_800"
-        android:visibility="gone"
-        app:useCompatPadding="true"
-        android:src="@drawable/ic_save_white_24px" />
+        <android.support.design.widget.FloatingActionButton
+            android:id="@+id/fab_autofix"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end"
+            android:layout_margin="@dimen/standard_24"
+            app:fabSize="mini"
+            android:tint="@color/grey_800"
+            android:visibility="gone"
+            app:useCompatPadding="true"
+            android:src="@drawable/ic_photo_filter_white_24px" />
 
-</android.support.design.widget.CoordinatorLayout>
+        <android.support.design.widget.FloatingActionButton
+            android:id="@+id/fab_menu"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end"
+            android:layout_margin="@dimen/fab_margin"
+            android:tint="@color/grey_800"
+            android:visibility="gone"
+            app:useCompatPadding="true"
+            android:src="@drawable/ic_add_white_24px" />
+
+        <android.support.design.widget.FloatingActionButton
+            android:id="@+id/fab_save_info"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end"
+            android:layout_margin="@dimen/fab_margin"
+            android:tint="@color/grey_800"
+            android:visibility="gone"
+            app:useCompatPadding="true"
+            android:src="@drawable/ic_save_white_24px" />
+
+    </android.support.design.widget.CoordinatorLayout>
+</layout>

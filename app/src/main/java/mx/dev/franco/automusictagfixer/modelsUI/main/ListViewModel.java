@@ -13,8 +13,8 @@ import java.util.List;
 import javax.inject.Inject;
 
 import mx.dev.franco.automusictagfixer.R;
+import mx.dev.franco.automusictagfixer.UI.SingleLiveEvent;
 import mx.dev.franco.automusictagfixer.UI.main.ViewWrapper;
-import mx.dev.franco.automusictagfixer.UI.track_detail.SingleLiveEvent;
 import mx.dev.franco.automusictagfixer.fixer.AudioTagger;
 import mx.dev.franco.automusictagfixer.persistence.repository.TrackRepository;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;

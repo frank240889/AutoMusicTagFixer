@@ -24,21 +24,18 @@ import mx.dev.franco.automusictagfixer.UI.AudioHolder;
 import mx.dev.franco.automusictagfixer.covermanager.CoverManager;
 import mx.dev.franco.automusictagfixer.interfaces.AsyncOperation;
 import mx.dev.franco.automusictagfixer.interfaces.Destructible;
-import mx.dev.franco.automusictagfixer.modelsUI.main.AsyncLoaderCover;
 import mx.dev.franco.automusictagfixer.modelsUI.main.DiffExecutor;
 import mx.dev.franco.automusictagfixer.modelsUI.main.DiffResults;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.utilities.ServiceUtils;
 
 public class SearchTrackAdapter extends RecyclerView.Adapter<FoundItemHolder> implements
-        Destructible, Observer<List<Track>>,
-        AsyncOperation<Void, DiffResults<Track>, Void, Void>{
+        Destructible, Observer<List<Track>> {
     private static final String TAG = SearchTrackAdapter.class.getName();
     @Inject
     ServiceUtils serviceUtils;
     private List<Track> mTrackList = new ArrayList<>();
     private FoundItemHolder.ClickListener mListener;
-    private List<AsyncLoaderCover> mAsyncTaskQueue =  new ArrayList<>();
     private Deque<List<Track>> mPendingUpdates = new ArrayDeque<>();
     private static DiffExecutor sDiffExecutor;
 
@@ -128,24 +125,11 @@ public class SearchTrackAdapter extends RecyclerView.Adapter<FoundItemHolder> im
 
     @Override
     public void destroy() {
-        reset();
-        mAsyncTaskQueue = null;
         serviceUtils = null;
         mTrackList.clear();
         mTrackList = null;
         mListener = null;
         CoverManager.cancelAll();
-    }
-
-    public void reset() {
-        if(mAsyncTaskQueue != null && mAsyncTaskQueue.size() > 0 ){
-            for(AsyncLoaderCover asyncLoaderCover: mAsyncTaskQueue){
-                if(asyncLoaderCover.getStatus() == AsyncTask.Status.RUNNING ||
-                        asyncLoaderCover.getStatus() == AsyncTask.Status.PENDING)
-                asyncLoaderCover.cancel(true);
-            }
-            mAsyncTaskQueue.clear();
-        }
     }
 
     @Override
@@ -168,16 +152,17 @@ public class SearchTrackAdapter extends RecyclerView.Adapter<FoundItemHolder> im
         if (mPendingUpdates != null && mPendingUpdates.size() > 1) {
             return;
         }
-        sDiffExecutor = new DiffExecutor(this);
+        sDiffExecutor = new DiffExecutor(new AsyncOperation<Void, DiffResults<Track>, Void, Void>() {
+            @Override
+            public void onAsyncOperationFinished(DiffResults<Track> result) {
+                processResult(result);
+            }
+        });
         sDiffExecutor.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, mTrackList, newItems);
 
     }
 
-    @Override
-    public void onAsyncOperationStarted(Void params) {}
-
-    @Override
-    public void onAsyncOperationFinished(DiffResults<Track> result) {
+    private void processResult(DiffResults<Track> result) {
         if (mPendingUpdates != null)
             mPendingUpdates.remove();
 
@@ -193,12 +178,6 @@ public class SearchTrackAdapter extends RecyclerView.Adapter<FoundItemHolder> im
             }
         }
     }
-
-    @Override
-    public void onAsyncOperationCancelled(Void cancellation) {/*Do nothing*/}
-
-    @Override
-    public void onAsyncOperationError(Void error) {/*Do nothing*/}
 }
 
 

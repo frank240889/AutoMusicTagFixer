@@ -6,11 +6,13 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
+import android.databinding.DataBindingUtil;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.provider.MediaStore;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.AppBarLayout;
@@ -23,7 +25,6 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -54,9 +55,8 @@ import mx.dev.franco.automusictagfixer.UI.BaseFragment;
 import mx.dev.franco.automusictagfixer.UI.MainActivity;
 import mx.dev.franco.automusictagfixer.UI.results.IdentificationResultsFragment;
 import mx.dev.franco.automusictagfixer.UI.sd_card_instructions.SdCardInstructionsActivity;
-import mx.dev.franco.automusictagfixer.interfaces.EditableView;
+import mx.dev.franco.automusictagfixer.databinding.FragmentTrackDetailBinding;
 import mx.dev.franco.automusictagfixer.modelsUI.track_detail.ImageSize;
-import mx.dev.franco.automusictagfixer.modelsUI.track_detail.TrackDetailInteractor;
 import mx.dev.franco.automusictagfixer.modelsUI.track_detail.TrackDetailPresenter;
 import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
@@ -74,15 +74,9 @@ import static mx.dev.franco.automusictagfixer.utilities.Constants.GOOGLE_SEARCH;
  * Use the {@link TrackDetailFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class TrackDetailFragment extends BaseFragment implements EditableView,
-        IdentificationResultsFragment.OnBottomSheetFragmentInteraction,
-        SimpleMediaPlayer.OnEventDispatchedListener {
+public class TrackDetailFragment extends BaseFragment implements SimpleMediaPlayer.OnEventDispatchedListener {
 
     public static final String TAG = TrackDetailFragment.class.getName();
-    private static final int CROSS_FADE_DURATION = 200;
-    //Intent type for pick an image
-    public static final int INTENT_OPEN_GALLERY = 1;
-    public static final int INTENT_GET_AND_UPDATE_FROM_GALLERY = 2;
 
     //rootview
     private View mLayout;
@@ -94,7 +88,7 @@ public class TrackDetailFragment extends BaseFragment implements EditableView,
     private EditText mYearField;
     private EditText mGenreField;
 
-    //Additional data.
+    //Additional informative data.
     private TextView mBitrateField;
     private TextView mSubtitleLayer;
     private TextView mImageSize;
@@ -111,8 +105,8 @@ public class TrackDetailFragment extends BaseFragment implements EditableView,
     private MenuItem mPlayPreviewButton;
     private MenuItem mUpdateCoverButton;
     private MenuItem mExtractCoverButton;
-    private MenuItem removeItem;
-    private MenuItem searchInWebItem;
+    private MenuItem mRemoveItem;
+    private MenuItem mSearchInWebItem;
 
     //Title in bottom toolbar of appbar layout
     private TextView mTitleBottomTransparentLayer;
@@ -122,8 +116,8 @@ public class TrackDetailFragment extends BaseFragment implements EditableView,
     private AppBarLayout mAppBarLayout;
     private ActionBar mActionBar;
 
-    //Reference to custom media mPlayer.
-    private SimpleMediaPlayer mPlayer;
+    @Inject
+    SimpleMediaPlayer mPlayer;
 
     private ConstraintLayout mProgressContainer;
 
@@ -143,6 +137,9 @@ public class TrackDetailFragment extends BaseFragment implements EditableView,
     public DefaultSharedPreferencesImpl defaultSharedPreferences;
     private ConstraintLayout mEditableFieldsContainer;
 
+    @Inject
+    TrackDetailViewModel mTrackDetailViewModel;
+
     public TrackDetailFragment() {}
 
     public static TrackDetailFragment newInstance(int idTrack, int correctionMode) {
@@ -155,43 +152,50 @@ public class TrackDetailFragment extends BaseFragment implements EditableView,
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        mTrackDetailPresenter =  new TrackDetailPresenter(this, new TrackDetailInteractor());
-        mPlayer = SimpleMediaPlayer.getInstance(context);
         mPlayer.addListener(this);
-        Log.d(TAG, "onAttach");
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         Bundle bundle = getArguments();
         if(bundle != null)
             mTrackDetailPresenter.setCorrectionMode(bundle.getInt(Constants.CorrectionModes.MODE,Constants.CorrectionModes.VIEW_INFO));
         else
             mTrackDetailPresenter.setCorrectionMode(Constants.CorrectionModes.VIEW_INFO);
 
-        setRetainInstance(true);
         setHasOptionsMenu(true);
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
-        mLayout = inflater.inflate(R.layout.fragment_track_detail, container, false);
-        mEditableFieldsContainer = mLayout.findViewById(R.id.editable_data_container);
+        FragmentTrackDetailBinding binding = DataBindingUtil.inflate(inflater,
+                R.layout.fragment_track_detail,
+                container,
+                false);
+        binding.setLifecycleOwner(this);
+        binding.setViewModel(mTrackDetailViewModel);
+        return binding.getRoot();
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        mLayout = view;
+
+        mEditableFieldsContainer = view.findViewById(R.id.editable_data_container);
         //collapsible toolbar
-        mToolbar = mLayout.findViewById(R.id.toolbar);
+        mToolbar = view.findViewById(R.id.toolbar);
+        mCollapsingToolbarLayout = view.findViewById(R.id.collapsing_toolbar_layout);
+        mAppBarLayout = view.findViewById(R.id.app_bar_layout);
+
         ((MainActivity)getActivity()).setSupportActionBar(mToolbar);
-        mCollapsingToolbarLayout = mLayout.findViewById(R.id.collapsing_toolbar_layout);
-        mAppBarLayout = mLayout.findViewById(R.id.app_bar_layout);
+
         mCollapsingToolbarLayout.setTitleEnabled(false);
         mActionBar = ((MainActivity)getActivity()).getSupportActionBar();
         mActionBar.setDisplayShowTitleEnabled(false);
         setupFields();
         setupDataInfoFields();
-        return mLayout;
     }
 
     @Override
@@ -214,8 +218,8 @@ public class TrackDetailFragment extends BaseFragment implements EditableView,
         mPlayPreviewButton = menu.findItem(R.id.action_play);
         mExtractCoverButton = menu.findItem(R.id.action_extract_cover);
         mUpdateCoverButton = menu.findItem(R.id.action_update_cover);
-        removeItem = menu.findItem(R.id.action_remove_cover);
-        searchInWebItem = menu.findItem(R.id.action_web_search);
+        mRemoveItem = menu.findItem(R.id.action_remove_cover);
+        mSearchInWebItem = menu.findItem(R.id.action_web_search);
     }
 
     /**
@@ -282,7 +286,6 @@ public class TrackDetailFragment extends BaseFragment implements EditableView,
     /**
      * Callback when user tried to set new cover from gallery but was not valid.
      */
-    @Override
     public void onInvalidImage() {
         Snackbar snackbar = AndroidUtils.getSnackbar(mEditableFieldsContainer, getActivity().getApplicationContext());
         snackbar.setText(getString(R.string.image_too_big));
@@ -330,7 +333,6 @@ public class TrackDetailFragment extends BaseFragment implements EditableView,
      * Callback when user tried to remove the cover but current track
      * has no cover.
      */
-    @Override
     public void onTrackHasNoCover() {
         Snackbar snackbar = AndroidUtils.getSnackbar(mEditableFieldsContainer, getActivity().getApplicationContext());
         snackbar.setText(getString(R.string.does_not_exist_cover));
@@ -341,7 +343,6 @@ public class TrackDetailFragment extends BaseFragment implements EditableView,
     /**
      * Callback to confirm the deletion of current cover;
      */
-    @Override
     public void onConfirmRemovingCover() {
         final AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         builder.setMessage(R.string.message_remove_cover_art_dialog);
@@ -351,143 +352,114 @@ public class TrackDetailFragment extends BaseFragment implements EditableView,
         alertDialog.show();
     }
 
-    @Override
     public void setTrackTitle(String value) {
         mTitleField.setText(value);
     }
 
-    @Override
     public void setArtist(String value) {
         mArtistField.setText(value);
     }
 
-    @Override
     public void setAlbum(String value) {
         mAlbumField.setText(value);
     }
 
-    @Override
     public void setGenre(String value) {
         mGenreField.setText(value);
     }
 
-    @Override
     public void setTrackNumber(String value) {
         mNumberField.setText(value);
     }
 
-    @Override
     public void setTrackYear(String value) {
         mYearField.setText(value);
     }
 
-    @Override
     public void setCover(byte[] value) {
         onCoverChanged(value);
-        //mImageSize.setText(TrackUtils.getStringImageSize(value, getActivity().getApplicationContext()));
     }
 
-    @Override
     public String getTrackTitle() {
         return mTitleField.getText().toString();
     }
 
-    @Override
     public String getArtist() {
         return mArtistField.getText().toString();
     }
 
-    @Override
     public String getAlbum() {
         return mAlbumField.getText().toString();
     }
 
-    @Override
     public String getGenre() {
         return mGenreField.getText().toString();
     }
 
-    @Override
     public String getTrackNumber() {
         return mNumberField.getText().toString();
     }
 
-    @Override
     public String getTrackYear() {
         return mYearField.getText().toString();
     }
 
-    @Override
     public void setFilename(String value) {
         mTitleBottomTransparentLayer.setText(TrackUtils.getFilename(value));
     }
 
-    @Override
     public void setPath(String value) {
         mSubtitleLayer.setText(value);
         setupMediaPlayer(value);
     }
 
-    @Override
     public void setDuration(String value) {
         mTrackLength.setText(value);
     }
 
-    @Override
     public void setBitrate(String value) {
         mBitrateField.setText(value);
     }
 
-    @Override
     public void setFrequency(String value) {
         mFrequency.setText(value);
     }
 
-    @Override
     public void setResolution(String value) {
         mResolution.setText(value);
     }
 
-    @Override
     public void setFiletype(String value) {
         mTrackType.setText(value);
     }
 
-    @Override
     public void setChannels(String value) {
         mChannels.setText(value);
     }
 
-    @Override
     public void setExtension(String value) {
 
     }
 
-    @Override
     public void setMimeType(String value) {
 
     }
 
-    @Override
     public void setFilesize(String value) {
             mFileSize.setText(value);
     }
 
-    @Override
     public void setImageSize(String value) {
         mImageSize.setText(value);
     }
 
-    @Override
     public void setStateMessage(String message, boolean visible) {
         mStatus.setVisibility(View.VISIBLE);
         mStatus.setText(message);
     }
 
-    @Override
     public void loading(boolean showProgress) {
         if(showProgress) {
-            mPlayer.stopPreview();
             mProgressContainer.setVisibility(View.VISIBLE);
         }
         else {
@@ -499,7 +471,6 @@ public class TrackDetailFragment extends BaseFragment implements EditableView,
      * Callback when could not read the track.
      * @param error The reason why could not read track.
      */
-    @Override
     public void onLoadError(String error) {
         //pressing back from toolbar, close activity
         mToolbar.setNavigationOnClickListener(v -> onConfirmExit());
@@ -691,7 +662,6 @@ public class TrackDetailFragment extends BaseFragment implements EditableView,
     /**
      * Callback when user pressed mSaveButton and input data is invalid.
      */
-    @Override
     public void alertInvalidData(String message, int field) {
         EditText editText = mLayout.findViewById(field);
         Animation animation = AnimationUtils.loadAnimation(getActivity().getApplicationContext(), R.anim.blink);
@@ -1000,6 +970,7 @@ public class TrackDetailFragment extends BaseFragment implements EditableView,
      */
     private void setupDataInfoFields(){
         //editable edit texts from song
+
         mTitleField = mLayout.findViewById(R.id.track_name_details);
         mArtistField = mLayout.findViewById(R.id.artist_name_details);
         mAlbumField = mLayout.findViewById(R.id.album_name_details);
@@ -1136,14 +1107,14 @@ public class TrackDetailFragment extends BaseFragment implements EditableView,
 
         addPlayAction();
 
-        removeItem.setOnMenuItemClickListener(item -> {
+        mRemoveItem.setOnMenuItemClickListener(item -> {
             mTrackDetailPresenter.removeCover();
             return false;
         });
 
         //performs a web trackSearch in navigator
         //using the title and artist name
-        searchInWebItem.setOnMenuItemClickListener(item -> {
+        mSearchInWebItem.setOnMenuItemClickListener(item -> {
             searchInfoForTrack();
             return false;
         });
