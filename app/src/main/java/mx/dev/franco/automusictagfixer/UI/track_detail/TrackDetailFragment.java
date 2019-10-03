@@ -3,9 +3,9 @@ package mx.dev.franco.automusictagfixer.UI.track_detail;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.app.Activity;
+import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
 import android.content.Intent;
-import android.content.res.Configuration;
 import android.databinding.DataBindingUtil;
 import android.graphics.Bitmap;
 import android.net.Uri;
@@ -14,15 +14,10 @@ import android.preference.PreferenceManager;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.constraint.ConstraintLayout;
-import android.support.design.widget.AppBarLayout;
-import android.support.design.widget.CollapsingToolbarLayout;
-import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TextInputLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
-import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
@@ -34,10 +29,8 @@ import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -57,7 +50,6 @@ import mx.dev.franco.automusictagfixer.UI.results.IdentificationResultsFragment;
 import mx.dev.franco.automusictagfixer.UI.sd_card_instructions.SdCardInstructionsActivity;
 import mx.dev.franco.automusictagfixer.databinding.FragmentTrackDetailBinding;
 import mx.dev.franco.automusictagfixer.modelsUI.track_detail.ImageSize;
-import mx.dev.franco.automusictagfixer.modelsUI.track_detail.TrackDetailPresenter;
 import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
 import mx.dev.franco.automusictagfixer.utilities.GlideApp;
@@ -65,8 +57,6 @@ import mx.dev.franco.automusictagfixer.utilities.RequiredPermissions;
 import mx.dev.franco.automusictagfixer.utilities.SimpleMediaPlayer;
 import mx.dev.franco.automusictagfixer.utilities.Tagger;
 import mx.dev.franco.automusictagfixer.utilities.TrackUtils;
-import mx.dev.franco.automusictagfixer.utilities.shared_preferences.AbstractSharedPreferences;
-import mx.dev.franco.automusictagfixer.utilities.shared_preferences.DefaultSharedPreferencesImpl;
 
 import static mx.dev.franco.automusictagfixer.utilities.Constants.GOOGLE_SEARCH;
 
@@ -74,32 +64,9 @@ import static mx.dev.franco.automusictagfixer.utilities.Constants.GOOGLE_SEARCH;
  * Use the {@link TrackDetailFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class TrackDetailFragment extends BaseFragment implements SimpleMediaPlayer.OnEventDispatchedListener {
+public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> implements SimpleMediaPlayer.OnEventDispatchedListener {
 
     public static final String TAG = TrackDetailFragment.class.getName();
-
-    //rootview
-    private View mLayout;
-    //Editable data
-    private EditText mTitleField;
-    private EditText mArtistField;
-    private EditText mAlbumField;
-    private EditText mNumberField;
-    private EditText mYearField;
-    private EditText mGenreField;
-
-    //Additional informative data.
-    private TextView mBitrateField;
-    private TextView mSubtitleLayer;
-    private TextView mImageSize;
-    private TextView mChangeImage;
-    private TextView mFileSize;
-    private TextView mTrackLength;
-    private TextView mFrequency;
-    private TextView mResolution;
-    private TextView mChannels;
-    private TextView mTrackType;
-    private TextView mStatus;
 
     //Menu items
     private MenuItem mPlayPreviewButton;
@@ -107,38 +74,12 @@ public class TrackDetailFragment extends BaseFragment implements SimpleMediaPlay
     private MenuItem mExtractCoverButton;
     private MenuItem mRemoveItem;
     private MenuItem mSearchInWebItem;
-
-    //Title in bottom toolbar of appbar layout
-    private TextView mTitleBottomTransparentLayer;
-    private Toolbar mToolbar;
-    private ImageView mToolbarCover;
-    private CollapsingToolbarLayout mCollapsingToolbarLayout;
-    private AppBarLayout mAppBarLayout;
     private ActionBar mActionBar;
+
+    private FragmentTrackDetailBinding mFragmentTrackDetailBinding;
 
     @Inject
     SimpleMediaPlayer mPlayer;
-
-    private ConstraintLayout mProgressContainer;
-
-    private TrackDetailPresenter mTrackDetailPresenter;
-    private Button mCancelIdentification;
-
-    //Fabs to create a fab menu
-    FloatingActionButton mEditButton;
-    FloatingActionButton mDownloadCoverButton;
-    FloatingActionButton mAutoFixButton;
-    FloatingActionButton mSaveButton;
-    FloatingActionButton mFloatingActionMenu;
-
-    @Inject
-    public AbstractSharedPreferences abstractSharedPreferences;
-    @Inject
-    public DefaultSharedPreferencesImpl defaultSharedPreferences;
-    private ConstraintLayout mEditableFieldsContainer;
-
-    @Inject
-    TrackDetailViewModel mTrackDetailViewModel;
 
     public TrackDetailFragment() {}
 
@@ -160,54 +101,46 @@ public class TrackDetailFragment extends BaseFragment implements SimpleMediaPlay
         super.onCreate(savedInstanceState);
         Bundle bundle = getArguments();
         if(bundle != null)
-            mTrackDetailPresenter.setCorrectionMode(bundle.getInt(Constants.CorrectionModes.MODE,Constants.CorrectionModes.VIEW_INFO));
+           mViewModel.setCorrectionMode(bundle.getInt(Constants.CorrectionModes.MODE,Constants.CorrectionModes.VIEW_INFO));
         else
-            mTrackDetailPresenter.setCorrectionMode(Constants.CorrectionModes.VIEW_INFO);
+            mViewModel.setCorrectionMode(Constants.CorrectionModes.VIEW_INFO);
 
         setHasOptionsMenu(true);
     }
 
     @Override
+    public TrackDetailViewModel getViewModel() {
+        return ViewModelProviders.of(this, androidViewModelFactory).get(TrackDetailViewModel.class);
+    }
+
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        FragmentTrackDetailBinding binding = DataBindingUtil.inflate(inflater,
+        mFragmentTrackDetailBinding = DataBindingUtil.inflate(inflater,
                 R.layout.fragment_track_detail,
                 container,
                 false);
-        binding.setLifecycleOwner(this);
-        binding.setViewModel(mTrackDetailViewModel);
-        return binding.getRoot();
+        mFragmentTrackDetailBinding.setLifecycleOwner(this);
+        mFragmentTrackDetailBinding.setViewModel(mViewModel);
+        mFragmentTrackDetailBinding.layoutContentDetailsTrack.setViewModel(mViewModel);
+        return mFragmentTrackDetailBinding.getRoot();
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        mLayout = view;
 
-        mEditableFieldsContainer = view.findViewById(R.id.editable_data_container);
-        //collapsible toolbar
-        mToolbar = view.findViewById(R.id.toolbar);
-        mCollapsingToolbarLayout = view.findViewById(R.id.collapsing_toolbar_layout);
-        mAppBarLayout = view.findViewById(R.id.app_bar_layout);
+        ((MainActivity)getActivity()).setSupportActionBar(mFragmentTrackDetailBinding.toolbar);
 
-        ((MainActivity)getActivity()).setSupportActionBar(mToolbar);
-
-        mCollapsingToolbarLayout.setTitleEnabled(false);
+        mFragmentTrackDetailBinding.collapsingToolbarLayout.setTitleEnabled(false);
         mActionBar = ((MainActivity)getActivity()).getSupportActionBar();
         mActionBar.setDisplayShowTitleEnabled(false);
-        setupFields();
-        setupDataInfoFields();
+        hideAllFabs();
     }
 
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         getActivity().invalidateOptionsMenu();
-    }
-
-    @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-        mTrackDetailPresenter.handleConfigurationChange();
     }
 
     @Override
@@ -246,10 +179,11 @@ public class TrackDetailFragment extends BaseFragment implements SimpleMediaPlay
                         imageSize.height = bitmap.getHeight();
                         imageSize.bitmap = bitmap;
                         imageSize.requestCode = requestCode;
-                        mTrackDetailPresenter.validateImageSize(imageSize);
+                        mViewModel.validateImageSize(imageSize);
                     } catch(IOException e){
                         e.printStackTrace();
-                        Snackbar snackbar = AndroidUtils.getSnackbar(mEditableFieldsContainer, getActivity().getApplicationContext());
+                        Snackbar snackbar = AndroidUtils.getSnackbar(
+                                mFragmentTrackDetailBinding.rootContainerDetails, getActivity().getApplicationContext());
                         snackbar.setText(getString(R.string.error_load_image));
                         snackbar.setDuration(Snackbar.LENGTH_SHORT);
                         snackbar.show();
@@ -287,7 +221,8 @@ public class TrackDetailFragment extends BaseFragment implements SimpleMediaPlay
      * Callback when user tried to set new cover from gallery but was not valid.
      */
     public void onInvalidImage() {
-        Snackbar snackbar = AndroidUtils.getSnackbar(mEditableFieldsContainer, getActivity().getApplicationContext());
+        Snackbar snackbar = AndroidUtils.getSnackbar(
+                mFragmentTrackDetailBinding.rootContainerDetails, getActivity().getApplicationContext());
         snackbar.setText(getString(R.string.image_too_big));
         snackbar.setDuration(Snackbar.LENGTH_LONG);
         snackbar.show();
@@ -297,24 +232,8 @@ public class TrackDetailFragment extends BaseFragment implements SimpleMediaPlay
     public void onDetach() {
         super.onDetach();
         mPlayer.removeListener();
-        mTitleField = null;
-        mArtistField = null;
-        mAlbumField = null;
-        mNumberField = null;
-        mYearField = null;
-        mGenreField = null;
-        mBitrateField = null;
-        mSubtitleLayer = null;
-        mImageSize = null;
-        mFileSize = null;
-        mTrackLength = null;
-        mFrequency = null;
-        mResolution = null;
-        mChannels = null;
-        mTrackType = null;
-        mStatus = null;
+
         mPlayer = null;
-        mTrackDetailPresenter = null;
     }
 
     /**
@@ -326,7 +245,6 @@ public class TrackDetailFragment extends BaseFragment implements SimpleMediaPlay
     public void onDestroy(){
         super.onDestroy();
         mPlayer.stopPreview();
-        mTrackDetailPresenter.destroy();
     }
 
     /**
@@ -334,7 +252,8 @@ public class TrackDetailFragment extends BaseFragment implements SimpleMediaPlay
      * has no cover.
      */
     public void onTrackHasNoCover() {
-        Snackbar snackbar = AndroidUtils.getSnackbar(mEditableFieldsContainer, getActivity().getApplicationContext());
+        Snackbar snackbar = AndroidUtils.getSnackbar(
+                mFragmentTrackDetailBinding.rootContainerDetails, getActivity().getApplicationContext());
         snackbar.setText(getString(R.string.does_not_exist_cover));
         snackbar.setDuration(Snackbar.LENGTH_SHORT);
         snackbar.show();
@@ -347,123 +266,39 @@ public class TrackDetailFragment extends BaseFragment implements SimpleMediaPlay
         final AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         builder.setMessage(R.string.message_remove_cover_art_dialog);
         builder.setNegativeButton(R.string.cancel_button, (dialog, which) -> dialog.cancel());
-        builder.setPositiveButton(R.string.accept, (dialog, which) -> mTrackDetailPresenter.confirmRemoveCover());
+        builder.setPositiveButton(R.string.accept, (dialog, which) -> mViewModel.confirmRemoveCover());
         AlertDialog alertDialog = builder.create();
         alertDialog.show();
     }
 
-    public void setTrackTitle(String value) {
-        mTitleField.setText(value);
-    }
 
-    public void setArtist(String value) {
-        mArtistField.setText(value);
-    }
-
-    public void setAlbum(String value) {
-        mAlbumField.setText(value);
-    }
-
-    public void setGenre(String value) {
-        mGenreField.setText(value);
-    }
-
-    public void setTrackNumber(String value) {
-        mNumberField.setText(value);
-    }
-
-    public void setTrackYear(String value) {
-        mYearField.setText(value);
-    }
 
     public void setCover(byte[] value) {
         onCoverChanged(value);
     }
 
-    public String getTrackTitle() {
-        return mTitleField.getText().toString();
-    }
-
-    public String getArtist() {
-        return mArtistField.getText().toString();
-    }
-
-    public String getAlbum() {
-        return mAlbumField.getText().toString();
-    }
-
-    public String getGenre() {
-        return mGenreField.getText().toString();
-    }
-
-    public String getTrackNumber() {
-        return mNumberField.getText().toString();
-    }
-
-    public String getTrackYear() {
-        return mYearField.getText().toString();
-    }
-
     public void setFilename(String value) {
-        mTitleBottomTransparentLayer.setText(TrackUtils.getFilename(value));
+        mFragmentTrackDetailBinding.titleBottomTransparentLayer.setText(TrackUtils.getFilename(value));
     }
 
     public void setPath(String value) {
-        mSubtitleLayer.setText(value);
+        mFragmentTrackDetailBinding.layoutContentDetailsTrack.trackPath.setText(value);
         setupMediaPlayer(value);
     }
 
-    public void setDuration(String value) {
-        mTrackLength.setText(value);
-    }
-
-    public void setBitrate(String value) {
-        mBitrateField.setText(value);
-    }
-
-    public void setFrequency(String value) {
-        mFrequency.setText(value);
-    }
-
-    public void setResolution(String value) {
-        mResolution.setText(value);
-    }
-
-    public void setFiletype(String value) {
-        mTrackType.setText(value);
-    }
-
-    public void setChannels(String value) {
-        mChannels.setText(value);
-    }
-
-    public void setExtension(String value) {
-
-    }
-
-    public void setMimeType(String value) {
-
-    }
-
-    public void setFilesize(String value) {
-            mFileSize.setText(value);
-    }
-
-    public void setImageSize(String value) {
-        mImageSize.setText(value);
-    }
-
     public void setStateMessage(String message, boolean visible) {
-        mStatus.setVisibility(View.VISIBLE);
-        mStatus.setText(message);
+        mFragmentTrackDetailBinding.layoutContentDetailsTrack.statusMessage.setVisibility(View.VISIBLE);
+        mFragmentTrackDetailBinding.layoutContentDetailsTrack.statusMessage.setText(message);
     }
 
     public void loading(boolean showProgress) {
         if(showProgress) {
-            mProgressContainer.setVisibility(View.VISIBLE);
+            mFragmentTrackDetailBinding.
+                    layoutContentDetailsTrack.progressContainer.setVisibility(View.VISIBLE);
         }
         else {
-            mProgressContainer.setVisibility(View.GONE);
+            mFragmentTrackDetailBinding.
+                    layoutContentDetailsTrack.progressContainer.setVisibility(View.GONE);
         }
     }
 
@@ -473,8 +308,8 @@ public class TrackDetailFragment extends BaseFragment implements SimpleMediaPlay
      */
     public void onLoadError(String error) {
         //pressing back from toolbar, close activity
-        mToolbar.setNavigationOnClickListener(v -> onConfirmExit());
-        mChangeImage.setVisibility(View.GONE);
+        mFragmentTrackDetailBinding.toolbar.setNavigationOnClickListener(v -> onConfirmExit());
+        mFragmentTrackDetailBinding.layoutContentDetailsTrack.changeImageButton.setVisibility(View.GONE);
         Toast t = AndroidUtils.getToast(getActivity());
         t.setText(R.string.could_not_read_file);
         t.setDuration(Toast.LENGTH_SHORT);
@@ -487,11 +322,12 @@ public class TrackDetailFragment extends BaseFragment implements SimpleMediaPlay
      * loaded.
      * @param path The path of the file loaded
      */
-    @Override
     public void onSuccessLoad(String path) {
         //pressing back from toolbar, close activity
-        mToolbar.setNavigationOnClickListener(v -> onConfirmExit());
-        mChangeImage.setOnClickListener(v -> editCover(INTENT_OPEN_GALLERY));
+        mFragmentTrackDetailBinding.toolbar.setNavigationOnClickListener(v -> onConfirmExit());
+        mFragmentTrackDetailBinding.
+                layoutContentDetailsTrack.
+                changeImageButton.setOnClickListener(v -> editCover(INTENT_OPEN_GALLERY));
 
         addFloatingActionButtonListeners();
         addAppBarOffsetListener();
@@ -500,14 +336,16 @@ public class TrackDetailFragment extends BaseFragment implements SimpleMediaPlay
         setupMediaPlayer(path);
 
         //Set action for "X" button
-        mCancelIdentification.setOnClickListener(v -> mTrackDetailPresenter.cancelIdentification());
+        mFragmentTrackDetailBinding.
+                layoutContentDetailsTrack.
+                cancelIdentification.
+                setOnClickListener(v -> mViewModel.cancelIdentification());
     }
 
     /**
      * Loads the identification results and shows to the user.
      * @param results The object containing the data.
      */
-    @Override
     public void onLoadIdentificationResults(GnResponseListener.IdentificationResults results) {
         IdentificationResultsFragment identificationResultsFragment =
                 IdentificationResultsFragment.newInstance(results, false);
@@ -519,34 +357,30 @@ public class TrackDetailFragment extends BaseFragment implements SimpleMediaPlay
      * Callback from {@link IdentificationResultsFragment} when
      * user pressed apply only missing tags button
      */
-    @Override
     public void onMissingTagsButton(FixerService.CorrectionParams correctionParams) {
-        mTrackDetailPresenter.performCorrection(correctionParams);
+        mViewModel.performCorrection(correctionParams);
     }
 
     /**
      * Callback from {@link IdentificationResultsFragment} when
      * user pressed apply all tags button
      */
-    @Override
     public void onOverwriteTagsButton(FixerService.CorrectionParams correctionParams) {
-        mTrackDetailPresenter.performCorrection(correctionParams);
+        mViewModel.performCorrection(correctionParams);
     }
 
     /**
      * Callback from {@link IdentificationResultsFragment} when
      * user pressed save cover as image button
      */
-    @Override
     public void onSaveAsImageFile() {
-        mTrackDetailPresenter.saveAsImageFileFrom(Constants.CACHED);
+        mViewModel.saveAsImageFileFrom(Constants.CACHED);
     }
 
     /**
      * Loads the identification results and shows to the user.
      * @param results The object containing the data.
      */
-    @Override
     public void onLoadCoverIdentificationResults(GnResponseListener.IdentificationResults results) {
         IdentificationResultsFragment identificationResultsFragment =
                 IdentificationResultsFragment.newInstance(results, true);
@@ -555,58 +389,31 @@ public class TrackDetailFragment extends BaseFragment implements SimpleMediaPlay
     }
 
     /**
-     * Callback when idenfitication process finishes.
-     * @param identificationResults The object containing the results.
-     */
-    @Override
-    public void onIdentificationComplete(GnResponseListener.IdentificationResults identificationResults) {
-    }
-
-    /**
      * Callback when user cancelled the identification process.
      */
-    @Override
     public void onIdentificationCancelled() {
-        Snackbar snackbar = AndroidUtils.getSnackbar(mEditableFieldsContainer, getActivity().getApplicationContext());
+        Snackbar snackbar = AndroidUtils.getSnackbar(
+                mFragmentTrackDetailBinding.rootContainerDetails, getActivity().getApplicationContext());
         if (snackbar != null) {
             snackbar.setText(R.string.identification_interrupted);
             snackbar.show();
         }
     }
 
-
-    /**
-     * Callback when no results from identification process were found.
-     */
-    @Override
-    public void onIdentificationNotFound() {
-
-    }
-
-    /**
-     * Callback when identification process error ocurred.
-     */
-    @Override
-    public void onIdentificationError(String error) {
-    }
-
     /**
      * Callback when correction process has successfully finished.
      */
-    @Override
     public void onSuccessfullyCorrection(String message) {
-        Snackbar snackbar = AndroidUtils.getSnackbar(mEditableFieldsContainer, getActivity().getApplicationContext());
+        Snackbar snackbar = AndroidUtils.getSnackbar(
+                mFragmentTrackDetailBinding.rootContainerDetails, getActivity().getApplicationContext());
         snackbar.setText(message);
         snackbar.show();
     }
 
-
-    @Override
     public void onEnableFabs() {
         enableMiniFabs(true);
     }
 
-    @Override
     public void onDisableFabs() {
         enableMiniFabs(false);
     }
@@ -616,9 +423,9 @@ public class TrackDetailFragment extends BaseFragment implements SimpleMediaPlay
      * @param message The message of error.
      * @param action The action to perform on snackbar.
      */
-    @Override
     public void onCorrectionError(String message, String action) {
-        Snackbar snackbar = AndroidUtils.getSnackbar(mEditableFieldsContainer, getActivity().getApplicationContext());
+        Snackbar snackbar = AndroidUtils.getSnackbar(
+                mFragmentTrackDetailBinding.rootContainerDetails, getActivity().getApplicationContext());
         snackbar.setDuration(Snackbar.LENGTH_LONG);
         if (action != null && action.equals(getString(R.string.get_permission))){
             snackbar.setAction(action, v -> getActivity().startActivity(new Intent(getActivity(), SdCardInstructionsActivity.class)));
@@ -634,27 +441,24 @@ public class TrackDetailFragment extends BaseFragment implements SimpleMediaPlay
     /**
      * Callback when saving cover as jpg image process has successfully finished.
      */
-    @Override
     public void onSuccessfullyFileSaved(final String message) {
-        Snackbar snackbar = AndroidUtils.getSnackbar(mEditableFieldsContainer, getActivity().getApplicationContext());
+        Snackbar snackbar = AndroidUtils.getSnackbar(
+                mFragmentTrackDetailBinding.rootContainerDetails, getActivity().getApplicationContext());
         snackbar.setDuration(Snackbar.LENGTH_LONG);
         snackbar.setText(String.format(getString(R.string.cover_saved), message));
         snackbar.setAction(R.string.watch, v -> AndroidUtils.openInExternalApp(message, getActivity().getApplicationContext()));
         snackbar.show();
     }
 
-    @Override
     public void onEnableEditMode() {
         disableAppBarLayout();
         enableFieldsToEdit();
     }
 
-    @Override
     public void onDisableEditMode() {
         disableFields();
     }
 
-    @Override
     public void onDisableEditModeAndRestore() {
         onDisableEditMode();
     }
@@ -663,7 +467,7 @@ public class TrackDetailFragment extends BaseFragment implements SimpleMediaPlay
      * Callback when user pressed mSaveButton and input data is invalid.
      */
     public void alertInvalidData(String message, int field) {
-        EditText editText = mLayout.findViewById(field);
+        EditText editText = mFragmentTrackDetailBinding.getRoot().findViewById(field);
         Animation animation = AnimationUtils.loadAnimation(getActivity().getApplicationContext(), R.anim.blink);
         editText.requestFocus();
         editText.setError(message);
@@ -677,7 +481,6 @@ public class TrackDetailFragment extends BaseFragment implements SimpleMediaPlay
     /**
      * Callback when user pressed mSaveButton and input data is valid.
      */
-    @Override
     public void onDataValid() {
         FixerService.CorrectionParams correctionParams = new FixerService.CorrectionParams();
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
@@ -718,12 +521,12 @@ public class TrackDetailFragment extends BaseFragment implements SimpleMediaPlay
         builder.setNegativeButton(R.string.cancel_button, (dialog, which) -> {
             dialog.dismiss();
             disableFields();
-            mTrackDetailPresenter.restorePreviousValues();
+            mViewModel.restorePreviousValues();
         });
         builder.setPositiveButton(R.string.yes, (dialog, which) -> {
             correctionParams.dataFrom = Constants.MANUAL;
             correctionParams.mode = Tagger.MODE_OVERWRITE_ALL_TAGS;
-            mTrackDetailPresenter.performCorrection(correctionParams);
+            mViewModel.performCorrection(correctionParams);
         });
         AlertDialog alertDialog = builder.create();
         alertDialog.show();
@@ -751,41 +554,29 @@ public class TrackDetailFragment extends BaseFragment implements SimpleMediaPlay
         mPlayPreviewButton.setEnabled(false);
     }
 
-    @Override
     public void onShowFabMenu() {
         showFABMenu();
     }
 
-    @Override
     public void onHideFabMenu() {
         closeFABMenu();
     }
 
     @Override
     protected void callSuperOnBackPressed() {
-        mTrackDetailPresenter.onBackPressed();
+        mViewModel.onBackPressed();
     }
 
-    @Override
     public void onConfirmExit() {
         super.callSuperOnBackPressed();
     }
 
-    @Override
-    public void onStart() {
-        super.onStart();
-        mTrackDetailPresenter.onStart();
-    }
 
-    @Override
-    public void onStop() {
-        super.onStop();
-        mTrackDetailPresenter.onStop();
-    }
-
-    @Override
     public void setCancelTaskEnabled(boolean enableCancelView) {
-        mCancelIdentification.setVisibility(enableCancelView ? View.VISIBLE : View.GONE);
+        mFragmentTrackDetailBinding.
+                layoutContentDetailsTrack.
+                cancelIdentification.
+                setVisibility(enableCancelView ? View.VISIBLE : View.GONE);
     }
 
     /**
@@ -794,52 +585,42 @@ public class TrackDetailFragment extends BaseFragment implements SimpleMediaPlay
      */
     private void enableMiniFabs(boolean enable){
         mUpdateCoverButton.setEnabled(enable);
-        mToolbarCover.setEnabled(enable);
-        mDownloadCoverButton.setEnabled(enable);
-        mEditButton.setEnabled(enable);
-        mAutoFixButton.setEnabled(enable);
+        mFragmentTrackDetailBinding.toolbarCoverArt.setEnabled(enable);
+        mFragmentTrackDetailBinding.fabDownloadCover.setEnabled(enable);
+        mFragmentTrackDetailBinding.fabEditTrackInfo.setEnabled(enable);
+        mFragmentTrackDetailBinding.fabAutofix.setEnabled(enable);
     }
 
     /**
      * Shows mini fabs
      */
     private void showFABMenu(){
-        mFloatingActionMenu.animate().rotation(-400);
-        mAutoFixButton.animate().translationY(-getResources().getDimension(R.dimen.standard_55));
-        mEditButton.animate().translationY(-getResources().getDimension(R.dimen.standard_105));
-        mDownloadCoverButton.animate().translationY(-getResources().getDimension(R.dimen.standard_155));
+        mFragmentTrackDetailBinding.fabMenu.animate().rotation(-400);
+        mFragmentTrackDetailBinding.fabAutofix.animate().translationY(-getResources().getDimension(R.dimen.standard_55));
+        mFragmentTrackDetailBinding.fabEditTrackInfo.animate().translationY(-getResources().getDimension(R.dimen.standard_105));
+        mFragmentTrackDetailBinding.fabDownloadCover.animate().translationY(-getResources().getDimension(R.dimen.standard_155));
     }
 
     /**
      * Hides mini fabs
      */
     private void closeFABMenu() {
-        mFloatingActionMenu.animate().rotation(0);
-        mAutoFixButton.animate().translationY(0);
-        mEditButton.animate().translationY(0);
-        mDownloadCoverButton.animate().translationY(0);
+        mFragmentTrackDetailBinding.fabMenu.animate().rotation(0);
+        mFragmentTrackDetailBinding.fabAutofix.animate().translationY(0);
+        mFragmentTrackDetailBinding.fabEditTrackInfo.animate().translationY(0);
+        mFragmentTrackDetailBinding.fabDownloadCover.animate().translationY(0);
     }
 
     /**
      * This method creates the references to visual elements
      * in layout
      */
-    private void setupFields(){
-        mToolbarCover = mLayout.findViewById(R.id.toolbar_cover_art);
-
-        mTitleBottomTransparentLayer = mLayout.findViewById(R.id.title_bottom_transparent_layer);
-
-        //Floating action buttons
-        mDownloadCoverButton = mLayout.findViewById(R.id.fab_download_cover);
-        mEditButton = mLayout.findViewById(R.id.fab_edit_track_info);
-        mAutoFixButton = mLayout.findViewById(R.id.fab_autofix);
-        mFloatingActionMenu = mLayout.findViewById(R.id.fab_menu);
-        mSaveButton = mLayout.findViewById(R.id.fab_save_info);
-        mDownloadCoverButton.hide();
-        mEditButton.hide();
-        mAutoFixButton.hide();
-        mFloatingActionMenu.hide();
-        mSaveButton.hide();
+    private void hideAllFabs(){
+        mFragmentTrackDetailBinding.fabDownloadCover.hide();
+        mFragmentTrackDetailBinding.fabEditTrackInfo.hide();
+        mFragmentTrackDetailBinding.fabAutofix.hide();
+        mFragmentTrackDetailBinding.fabMenu.hide();
+        mFragmentTrackDetailBinding.fabSaveInfo.hide();
     }
 
     /**
@@ -849,47 +630,48 @@ public class TrackDetailFragment extends BaseFragment implements SimpleMediaPlay
 
     private void addFloatingActionButtonListeners(){
         //enable manual mode
-        mEditButton.setOnClickListener(v -> {
-            mTrackDetailPresenter.enableEditMode();
+        mFragmentTrackDetailBinding.fabEditTrackInfo.setOnClickListener(v -> {
+            mViewModel.enableEditMode();
         });
 
         //runs track id
-        mAutoFixButton.setOnClickListener(v -> {
-            mTrackDetailPresenter.startIdentification(TrackIdentifier.ALL_TAGS);
+        mFragmentTrackDetailBinding.fabAutofix.setOnClickListener(v -> {
+            mViewModel.startIdentification(TrackIdentifier.ALL_TAGS);
         });
 
-        mDownloadCoverButton.setOnClickListener(v -> {
-            mTrackDetailPresenter.startIdentification(TrackIdentifier.JUST_COVER);
+        mFragmentTrackDetailBinding.fabDownloadCover.setOnClickListener(v -> {
+            mViewModel.startIdentification(TrackIdentifier.JUST_COVER);
         });
 
         //shows or hides mini fabs
-        mFloatingActionMenu.setOnClickListener(view -> {
-            mTrackDetailPresenter.toggleFabMenu();
+        mFragmentTrackDetailBinding.fabMenu.setOnClickListener(view -> {
+            mViewModel.toggleFabMenu();
         });
 
         //updates only cover art
-        mToolbarCover.setOnClickListener(v -> {
-            mTrackDetailPresenter.hideFabMenu();
+        mFragmentTrackDetailBinding.toolbarCoverArt.setOnClickListener(v -> {
+            mViewModel.hideFabMenu();
             editCover(TrackDetailFragment.INTENT_GET_AND_UPDATE_FROM_GALLERY);
         });
 
     }
 
     private void addAppBarOffsetListener(){
-        mAppBarLayout.addOnOffsetChangedListener((appBarLayout, verticalOffset) -> {
+        mFragmentTrackDetailBinding.appBarLayout.addOnOffsetChangedListener((appBarLayout, verticalOffset) -> {
             //set alpha of cover depending on offset of expanded toolbar cover height,
-            mToolbarCover.setAlpha(1.0f - Math.abs(verticalOffset/(float)appBarLayout.getTotalScrollRange()));
+            mFragmentTrackDetailBinding.toolbarCoverArt.setAlpha(1.0f - Math.abs(verticalOffset/(float)appBarLayout.getTotalScrollRange()));
             //when toolbar is fully collapsed show name of audio file in toolbar and back button
             if(Math.abs(verticalOffset)-appBarLayout.getTotalScrollRange() == 0) {
-                mCollapsingToolbarLayout.setTitleEnabled(true);
-                mCollapsingToolbarLayout.setTitle(mTitleBottomTransparentLayer.getText().toString());
+                mFragmentTrackDetailBinding.collapsingToolbarLayout.setTitleEnabled(true);
+                mFragmentTrackDetailBinding.collapsingToolbarLayout.setTitle(
+                        mFragmentTrackDetailBinding.titleBottomTransparentLayer.getText().toString());
                 mActionBar.setDisplayShowTitleEnabled(true);
                 mActionBar.setDisplayHomeAsUpEnabled(true);
                 mActionBar.setDisplayShowHomeEnabled(true);
             }
             //hides title of toolbar and back button if toolbar is fully expanded
             else {
-                mCollapsingToolbarLayout.setTitleEnabled(false);
+                mFragmentTrackDetailBinding.collapsingToolbarLayout.setTitleEnabled(false);
                 mActionBar.setDisplayShowTitleEnabled(false);
                 mActionBar.setDisplayHomeAsUpEnabled(false);
                 mActionBar.setDisplayShowHomeEnabled(false);
@@ -899,19 +681,19 @@ public class TrackDetailFragment extends BaseFragment implements SimpleMediaPlay
 
 
     private void showFabs(){
-        mSaveButton.hide();
-        mDownloadCoverButton.show();
-        mEditButton.show();
-        mAutoFixButton.show();
-        mFloatingActionMenu.show();
+        mFragmentTrackDetailBinding.fabDownloadCover.show();
+        mFragmentTrackDetailBinding.fabEditTrackInfo.show();
+        mFragmentTrackDetailBinding.fabAutofix.show();
+        mFragmentTrackDetailBinding.fabMenu.show();
+        mFragmentTrackDetailBinding.fabSaveInfo.hide();
     }
 
     private void editMode(){
-        mDownloadCoverButton.hide();
-        mEditButton.hide();
-        mAutoFixButton.hide();
-        mFloatingActionMenu.hide();
-        mSaveButton.show();
+        mFragmentTrackDetailBinding.fabDownloadCover.hide();
+        mFragmentTrackDetailBinding.fabEditTrackInfo.hide();
+        mFragmentTrackDetailBinding.fabAutofix.hide();
+        mFragmentTrackDetailBinding.fabMenu.hide();
+        mFragmentTrackDetailBinding.fabSaveInfo.show();
     }
 
     /**
@@ -921,16 +703,16 @@ public class TrackDetailFragment extends BaseFragment implements SimpleMediaPlay
     private void disableAppBarLayout(){
         //shrink toolbar to make it easy to user
         //focus in editing tags
-        mAppBarLayout.setExpanded(false);
+        mFragmentTrackDetailBinding.appBarLayout.setExpanded(false);
 
-        mFloatingActionMenu.animate().rotation(0).setListener(new AnimatorListenerAdapter() {
+        mFragmentTrackDetailBinding.fabMenu.animate().rotation(0).setListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationEnd(Animator animation) {
-                mFloatingActionMenu.hide();
-                mSaveButton.show();
-                mSaveButton.setOnClickListener(null);
-                mSaveButton.setOnClickListener(v -> mTrackDetailPresenter.validateInputData());
-                mToolbarCover.setEnabled(false);
+                mFragmentTrackDetailBinding.fabMenu.hide();
+                mFragmentTrackDetailBinding.fabSaveInfo.show();
+                mFragmentTrackDetailBinding.fabSaveInfo.setOnClickListener(null);
+                mFragmentTrackDetailBinding.fabSaveInfo.setOnClickListener(v -> mViewModel.validateInputData());
+                mFragmentTrackDetailBinding.toolbarCoverArt.setEnabled(false);
                 mUpdateCoverButton.setEnabled(false);
                 editMode();
             }
@@ -948,12 +730,11 @@ public class TrackDetailFragment extends BaseFragment implements SimpleMediaPlay
 
     @Override
     public void onBackPressed(){
-        if(mTrackDetailPresenter != null)
-            mTrackDetailPresenter.onBackPressed();
+        mViewModel.onBackPressed();
     }
 
     private void onCoverChanged(byte[] bytes) {
-        mAppBarLayout.setExpanded(true);
+        mFragmentTrackDetailBinding.appBarLayout.setExpanded(true);
         GlideApp.with(this).
                 load(bytes)
                 .error(R.drawable.ic_album_white_48px)
@@ -961,42 +742,16 @@ public class TrackDetailFragment extends BaseFragment implements SimpleMediaPlay
                 .apply(RequestOptions.skipMemoryCacheOf(true))
                 .transition(DrawableTransitionOptions.withCrossFade(CROSS_FADE_DURATION))
                 .fitCenter()
-                .into(mToolbarCover);
-    }
-
-    /**
-     * This method creates the references to visual elements
-     * in layout
-     */
-    private void setupDataInfoFields(){
-        //editable edit texts from song
-
-        mTitleField = mLayout.findViewById(R.id.track_name_details);
-        mArtistField = mLayout.findViewById(R.id.artist_name_details);
-        mAlbumField = mLayout.findViewById(R.id.album_name_details);
-        mNumberField = mLayout.findViewById(R.id.track_number);
-        mYearField = mLayout.findViewById(R.id.track_year);
-        mGenreField = mLayout.findViewById(R.id.track_genre);
-
-        //Additional data fields
-        mSubtitleLayer = mLayout.findViewById(R.id.track_path);
-        mImageSize = mLayout.findViewById(R.id.imageSize);
-        mChangeImage = mLayout.findViewById(R.id.change_image_button);
-        mFileSize = mLayout.findViewById(R.id.file_size);
-        mTrackLength = mLayout.findViewById(R.id.trackLength);
-        mBitrateField = mLayout.findViewById(R.id.bitrate);
-        mTrackType = mLayout.findViewById(R.id.track_type);
-        mFrequency = mLayout.findViewById(R.id.frequency);
-        mResolution = mLayout.findViewById(R.id.resolution);
-        mChannels = mLayout.findViewById(R.id.channels);
-        mStatus = mLayout.findViewById(R.id.status_message);
-
-        mProgressContainer = mLayout.findViewById(R.id.progress_container);
-        mCancelIdentification = mLayout.findViewById(R.id.cancel_identification);
+                .into(mFragmentTrackDetailBinding.toolbarCoverArt);
     }
 
     public void searchInfoForTrack(){
-        String queryString = getTrackTitle() + (!getArtist().isEmpty() ? (" " + getArtist()) : "");
+        String title = mFragmentTrackDetailBinding.layoutContentDetailsTrack.trackNameDetails.
+                getText().toString();
+        String artist = mFragmentTrackDetailBinding.layoutContentDetailsTrack.artistNameDetails.
+                getText().toString();
+
+        String queryString = title + (!artist.isEmpty() ? (" " + artist) : "");
         String query = GOOGLE_SEARCH + queryString;
         Uri uri = Uri.parse(query);
         Intent intent = new Intent(Intent.ACTION_VIEW, uri);
@@ -1012,19 +767,20 @@ public class TrackDetailFragment extends BaseFragment implements SimpleMediaPlay
         //focus in editing tags
 
         //Enable edit text for edit them
-        mTitleField.setEnabled(true);
-        mArtistField.setEnabled(true);
-        mAlbumField.setEnabled(true);
-        mNumberField.setEnabled(true);
-        mYearField.setEnabled(true);
-        mGenreField.setEnabled(true);
+        mFragmentTrackDetailBinding.layoutContentDetailsTrack.trackNameDetails.setEnabled(true);
+        mFragmentTrackDetailBinding.layoutContentDetailsTrack.artistNameDetails.setEnabled(true);
+        mFragmentTrackDetailBinding.layoutContentDetailsTrack.albumNameDetails.setEnabled(true);
+        mFragmentTrackDetailBinding.layoutContentDetailsTrack.trackNumber.setEnabled(true);
+        mFragmentTrackDetailBinding.layoutContentDetailsTrack.trackYear.setEnabled(true);
+        mFragmentTrackDetailBinding.layoutContentDetailsTrack.trackGenre.setEnabled(true);
 
-        mImageSize.setVisibility(View.GONE);
-        mChangeImage.setVisibility(View.VISIBLE);
+        mFragmentTrackDetailBinding.layoutContentDetailsTrack.imageSize.setVisibility(View.GONE);
+        mFragmentTrackDetailBinding.layoutContentDetailsTrack.changeImageButton.setVisibility(View.VISIBLE);
 
-        mTitleField.requestFocus();
+        mFragmentTrackDetailBinding.layoutContentDetailsTrack.trackNameDetails.requestFocus();
         InputMethodManager imm =(InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
-        imm.showSoftInput(mTitleField,InputMethodManager.SHOW_IMPLICIT);
+        imm.showSoftInput(mFragmentTrackDetailBinding.layoutContentDetailsTrack.trackNameDetails,
+                InputMethodManager.SHOW_IMPLICIT);
     }
 
     /**
@@ -1032,7 +788,7 @@ public class TrackDetailFragment extends BaseFragment implements SimpleMediaPlay
      */
     private void removeErrorTags(){
         //get descendants instances of edit text
-        ArrayList<View> fields = mLayout.getFocusables(View.FOCUS_DOWN);
+        ArrayList<View> fields = mFragmentTrackDetailBinding.getRoot().getFocusables(View.FOCUS_DOWN);
         int numElements = fields.size();
 
         for (int i = 0 ; i < numElements ; i++) {
@@ -1050,22 +806,22 @@ public class TrackDetailFragment extends BaseFragment implements SimpleMediaPlay
 
         removeErrorTags();
 
-        mTitleField.clearFocus();
-        mTitleField.setEnabled(false);
-        mArtistField.clearFocus();
-        mArtistField.setEnabled(false);
-        mAlbumField.clearFocus();
-        mAlbumField.setEnabled(false);
-        mNumberField.clearFocus();
-        mNumberField.setEnabled(false);
-        mYearField.clearFocus();
-        mYearField.setEnabled(false);
-        mGenreField.clearFocus();
-        mGenreField.setEnabled(false);
+        mFragmentTrackDetailBinding.layoutContentDetailsTrack.trackNameDetails.clearFocus();
+        mFragmentTrackDetailBinding.layoutContentDetailsTrack.trackNameDetails.setEnabled(false);
+        mFragmentTrackDetailBinding.layoutContentDetailsTrack.artistNameDetails.clearFocus();
+        mFragmentTrackDetailBinding.layoutContentDetailsTrack.artistNameDetails.setEnabled(false);
+        mFragmentTrackDetailBinding.layoutContentDetailsTrack.albumNameDetails.clearFocus();
+        mFragmentTrackDetailBinding.layoutContentDetailsTrack.albumNameDetails.setEnabled(false);
+        mFragmentTrackDetailBinding.layoutContentDetailsTrack.trackNumber.clearFocus();
+        mFragmentTrackDetailBinding.layoutContentDetailsTrack.trackNumber.setEnabled(false);
+        mFragmentTrackDetailBinding.layoutContentDetailsTrack.trackYear.clearFocus();
+        mFragmentTrackDetailBinding.layoutContentDetailsTrack.trackYear.setEnabled(false);
+        mFragmentTrackDetailBinding.layoutContentDetailsTrack.trackGenre.clearFocus();
+        mFragmentTrackDetailBinding.layoutContentDetailsTrack.trackGenre.setEnabled(false);
 
-        mImageSize.setVisibility(View.VISIBLE);
-        mChangeImage.setVisibility(View.GONE);
-        mToolbarCover.setEnabled(true);
+        mFragmentTrackDetailBinding.layoutContentDetailsTrack.imageSize.setVisibility(View.VISIBLE);
+        mFragmentTrackDetailBinding.layoutContentDetailsTrack.changeImageButton.setVisibility(View.GONE);
+        mFragmentTrackDetailBinding.toolbarCoverArt.setEnabled(true);
         //to hide it, call the method again
         InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
         try {
@@ -1095,12 +851,12 @@ public class TrackDetailFragment extends BaseFragment implements SimpleMediaPlay
 
     private void addToolbarButtonsListeners(){
         mExtractCoverButton.setOnMenuItemClickListener(menuItem -> {
-            mTrackDetailPresenter.saveAsImageFileFrom(Constants.MANUAL);
+            mViewModel.saveAsImageFileFrom(Constants.MANUAL);
             return false;
         });
 
         mUpdateCoverButton.setOnMenuItemClickListener(menuItem -> {
-            mTrackDetailPresenter.hideFabMenu();
+            mViewModel.hideFabMenu();
             editCover(TrackDetailFragment.INTENT_GET_AND_UPDATE_FROM_GALLERY);
             return false;
         });
@@ -1108,7 +864,7 @@ public class TrackDetailFragment extends BaseFragment implements SimpleMediaPlay
         addPlayAction();
 
         mRemoveItem.setOnMenuItemClickListener(item -> {
-            mTrackDetailPresenter.removeCover();
+            mViewModel.removeCover();
             return false;
         });
 
@@ -1128,7 +884,7 @@ public class TrackDetailFragment extends BaseFragment implements SimpleMediaPlay
                         getApplicationContext()).getBoolean("key_use_embed_player",true))
                     mPlayer.playPreview();
                 else
-                    mTrackDetailPresenter.openInExternalApp(getActivity().getApplicationContext());
+                    mViewModel.openInExternalApp(getActivity().getApplicationContext());
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -1147,7 +903,7 @@ public class TrackDetailFragment extends BaseFragment implements SimpleMediaPlay
     public void load(Bundle inputBundle){
         Bundle bundle = inputBundle == null ? getArguments() : inputBundle;
         if(bundle != null)
-            mTrackDetailPresenter.loadInfoTrack(bundle.getInt(Constants.MEDIA_STORE_ID,-1));
+            mViewModel.loadInfoTrack(bundle.getInt(Constants.MEDIA_STORE_ID,-1));
 
     }
 

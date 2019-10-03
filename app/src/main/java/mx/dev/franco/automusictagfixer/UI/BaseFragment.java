@@ -2,8 +2,15 @@ package mx.dev.franco.automusictagfixer.UI;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 
+import javax.inject.Inject;
+
+import dagger.android.AndroidInjector;
+import dagger.android.DispatchingAndroidInjector;
+import dagger.android.support.AndroidSupportInjection;
+import dagger.android.support.HasSupportFragmentInjector;
 import mx.dev.franco.automusictagfixer.interfaces.OnBackPressedListener;
 
 /**
@@ -12,15 +19,21 @@ import mx.dev.franco.automusictagfixer.interfaces.OnBackPressedListener;
  *
  * @author Franco Castillo
  */
-public abstract class BaseFragment extends Fragment implements
-        OnBackPressedListener {
+public abstract class BaseFragment<ViewModel> extends Fragment implements
+        OnBackPressedListener, HasSupportFragmentInjector {
+    @Inject
+    DispatchingAndroidInjector<Fragment> fragmentDispatchingAndroidInjector;
+    @Inject
+    protected AndroidViewModelFactory androidViewModelFactory;
+
     public static final String BASE_FRAGMENT_TAG = BaseFragment.class.getName();
-    private static final int CROSS_FADE_DURATION = 200;
+    public static final int CROSS_FADE_DURATION = 200;
     //Intent type for pick an image
     public static final int INTENT_OPEN_GALLERY = 1;
     public static final int INTENT_GET_AND_UPDATE_FROM_GALLERY = 2;
     public static String TAG;
     protected OnConfirmBackPressedListener mOnConfirmBackPressedListener;
+    protected ViewModel mViewModel;
 
     /**
      * Called when a fragment is first attached to its context.
@@ -28,10 +41,19 @@ public abstract class BaseFragment extends Fragment implements
      */
     @Override
     public void onAttach(Context context) {
+        AndroidSupportInjection.inject(this);
         super.onAttach(context);
         if(context instanceof OnConfirmBackPressedListener)
             mOnConfirmBackPressedListener = (OnConfirmBackPressedListener) context;
     }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        mViewModel = getViewModel();
+    }
+
+    protected abstract ViewModel getViewModel();
 
     @Override
     public void onDetach() {
@@ -56,5 +78,10 @@ public abstract class BaseFragment extends Fragment implements
     }
 
     protected void loading(boolean isLoading){ }
+
+    @Override
+    public AndroidInjector<Fragment> supportFragmentInjector() {
+        return fragmentDispatchingAndroidInjector;
+    }
 
 }

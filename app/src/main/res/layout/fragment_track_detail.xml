@@ -93,7 +93,7 @@
 
         <include android:id="@+id/layout_content_details_track"
             layout="@layout/content_details_track"
-            bind:nestedViewModel="@{viewModel}"/>
+            bind:viewModel="@{viewModel}"/>
 
         <android.support.design.widget.FloatingActionButton
             android:id="@+id/fab_edit_track_info"
