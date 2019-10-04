@@ -3,7 +3,10 @@ package mx.dev.franco.automusictagfixer.UI.track_detail;
 import android.app.Application;
 import android.arch.lifecycle.AndroidViewModel;
 import android.arch.lifecycle.MutableLiveData;
+import android.content.Context;
 import android.support.annotation.NonNull;
+
+import mx.dev.franco.automusictagfixer.modelsUI.track_detail.ImageSize;
 
 public class TrackDetailViewModel extends AndroidViewModel {
     public MutableLiveData<String> title;
@@ -27,5 +30,66 @@ public class TrackDetailViewModel extends AndroidViewModel {
         super(application);
         title = new MutableLiveData<>();
     }
-    
+
+    public void setCorrectionMode(int correctionMode) {
+
+    }
+
+    public void validateImageSize(ImageSize imageSize) {
+
+    }
+
+    public void confirmRemoveCover() {
+
+    }
+
+    public void cancelIdentification() {
+
+    }
+
+    public void performCorrection(CorrectionParams correctionParams) {
+
+    }
+
+    public void saveAsImageFileFrom(int cached) {
+
+    }
+
+    public void enableEditMode() {
+
+    }
+
+    public void restorePreviousValues() {
+
+    }
+
+    public void onBackPressed() {
+
+    }
+
+    public void startIdentification() {
+
+    }
+
+    public void toggleFabMenu() {
+
+
+    }
+
+    public void hideFabMenu() {
+
+
+    }
+
+    public void validateInputData() {
+
+    }
+
+    public void openInExternalApp(Context applicationContext) {
+
+    }
+
+    public void loadInfoTrack(int anInt) {
+
+    }
 }

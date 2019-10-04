@@ -357,7 +357,7 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
      * Callback from {@link IdentificationResultsFragment} when
      * user pressed apply only missing tags button
      */
-    public void onMissingTagsButton(FixerService.CorrectionParams correctionParams) {
+    public void onMissingTagsButton(CorrectionParams correctionParams) {
         mViewModel.performCorrection(correctionParams);
     }
 
@@ -365,7 +365,7 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
      * Callback from {@link IdentificationResultsFragment} when
      * user pressed apply all tags button
      */
-    public void onOverwriteTagsButton(FixerService.CorrectionParams correctionParams) {
+    public void onOverwriteTagsButton(CorrectionParams correctionParams) {
         mViewModel.performCorrection(correctionParams);
     }
 
@@ -431,7 +431,7 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
             snackbar.setAction(action, v -> getActivity().startActivity(new Intent(getActivity(), SdCardInstructionsActivity.class)));
         }
         else if(action != null && action.equals(getString(R.string.add_manual))){
-            snackbar.setAction(action, v -> mTrackDetailPresenter.enableEditMode());
+            snackbar.setAction(action, v -> mViewModel.enableEditMode());
         }
 
         snackbar.setText(message);
@@ -482,7 +482,7 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
      * Callback when user pressed mSaveButton and input data is valid.
      */
     public void onDataValid() {
-        FixerService.CorrectionParams correctionParams = new FixerService.CorrectionParams();
+        CorrectionParams correctionParams = new CorrectionParams();
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         View view = LayoutInflater.from(getActivity()).inflate(R.layout.rename_file_layout, null);
         builder.setView(view);
@@ -636,11 +636,11 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
 
         //runs track id
         mFragmentTrackDetailBinding.fabAutofix.setOnClickListener(v -> {
-            mViewModel.startIdentification(TrackIdentifier.ALL_TAGS);
+            mViewModel.startIdentification();
         });
 
         mFragmentTrackDetailBinding.fabDownloadCover.setOnClickListener(v -> {
-            mViewModel.startIdentification(TrackIdentifier.JUST_COVER);
+            mViewModel.startIdentification();
         });
 
         //shows or hides mini fabs
