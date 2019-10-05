@@ -5,7 +5,8 @@ import android.arch.lifecycle.AndroidViewModel;
 import android.arch.lifecycle.MutableLiveData;
 import android.content.Context;
 import android.support.annotation.NonNull;
-import mx.dev.franco.automusictagfixer.modelsUI.track_detail.ImageWrapper;
+
+import mx.dev.franco.automusictagfixer.fixer.AudioMetadataTagger;
 
 public class TrackDetailViewModel extends AndroidViewModel {
     public MutableLiveData<String> title;
@@ -46,7 +47,7 @@ public class TrackDetailViewModel extends AndroidViewModel {
 
     }
 
-    public void performCorrection(CorrectionParams correctionParams) {
+    public void performCorrection(AudioMetadataTagger.InputParams correctionParams) {
 
     }
 

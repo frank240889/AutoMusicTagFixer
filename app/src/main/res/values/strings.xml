@@ -315,5 +315,6 @@
     <string name="loading_data_track">Cargando información de canción…</string>
     <string name="type_your_song_and_press_search">Escribe la canción a buscar.</string>
     <string name="internet_connection_restored">Conexión reestablecida.</string>
+    <string name="cannot_play_track">El reproductor interno no pudo reproducir la canción, usa uno externo.</string>
 
 </resources>

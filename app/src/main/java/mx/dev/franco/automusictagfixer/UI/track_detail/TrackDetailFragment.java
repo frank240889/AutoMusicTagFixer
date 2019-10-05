@@ -1,7 +1,5 @@
 package mx.dev.franco.automusictagfixer.UI.track_detail;
 
-import static mx.dev.franco.automusictagfixer.utilities.Constants.GOOGLE_SEARCH;
-
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.app.Activity;
@@ -17,11 +15,8 @@ import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
-import android.support.design.widget.TextInputLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -32,16 +27,18 @@ import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.CheckBox;
 import android.widget.EditText;
-import android.widget.TextView;
 import android.widget.Toast;
+
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
 import com.bumptech.glide.request.RequestOptions;
+
 import java.io.IOException;
 import java.util.ArrayList;
+
 import javax.inject.Inject;
+
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.UI.BaseFragment;
 import mx.dev.franco.automusictagfixer.UI.MainActivity;
@@ -49,7 +46,6 @@ import mx.dev.franco.automusictagfixer.UI.results.IdentificationResultsFragment;
 import mx.dev.franco.automusictagfixer.UI.sd_card_instructions.SdCardInstructionsActivity;
 import mx.dev.franco.automusictagfixer.common.Action;
 import mx.dev.franco.automusictagfixer.databinding.FragmentTrackDetailBinding;
-import mx.dev.franco.automusictagfixer.modelsUI.track_detail.ImageWrapper;
 import mx.dev.franco.automusictagfixer.utilities.ActionableMessage;
 import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
@@ -59,14 +55,16 @@ import mx.dev.franco.automusictagfixer.utilities.Message;
 import mx.dev.franco.automusictagfixer.utilities.RequiredPermissions;
 import mx.dev.franco.automusictagfixer.utilities.SimpleMediaPlayer;
 import mx.dev.franco.automusictagfixer.utilities.SimpleMediaPlayer.OnMediaPlayerEventListener;
-import mx.dev.franco.automusictagfixer.utilities.Tagger;
 import mx.dev.franco.automusictagfixer.utilities.TrackUtils;
+
+import static mx.dev.franco.automusictagfixer.utilities.Constants.GOOGLE_SEARCH;
 
 /**
  * Use the {@link TrackDetailFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel>{
+public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> implements
+    ManualCorrectionDialogFragment.OnManualCorrectionListener {
 
     public static final String TAG = TrackDetailFragment.class.getName();
 
@@ -362,7 +360,7 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel>{
      * Loads the identification results and shows to the user.
      * @param results The object containing the data.
      */
-    public void onLoadIdentificationResults(GnResponseListener.IdentificationResults results) {
+    public void onLoadIdentificationResults() {
         IdentificationResultsFragment identificationResultsFragment =
                 IdentificationResultsFragment.newInstance(results, false);
         identificationResultsFragment.show(getChildFragmentManager(),
@@ -498,54 +496,11 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel>{
      * Callback when user pressed mSaveButton and input data is valid.
      */
     public void onDataValid() {
-        CorrectionParams correctionParams = new CorrectionParams();
-        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-        View view = LayoutInflater.from(getActivity()).inflate(R.layout.rename_file_layout, null);
-        builder.setView(view);
+        ManualCorrectionDialogFragment manualCorrectionDialogFragment =
+                ManualCorrectionDialogFragment.newInstance();
 
-        final CheckBox checkBox = view.findViewById(R.id.manual_checkbox_rename);
-        TextInputLayout textInputLayout = view.findViewById(R.id.manual_label_rename_to);
-        EditText editText = view.findViewById(R.id.manual_rename_to);
-        editText.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                correctionParams.newName = editText.getText().toString();
-            }
-            @Override
-            public void afterTextChanged(Editable s) {}
-        });
-        TextView textView = view.findViewById(R.id.manual_message_rename_hint);
-        checkBox.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            if(!isChecked){
-                textInputLayout.setVisibility(View.GONE);
-                textView.setVisibility(View.GONE);
-                editText.setText("");
-                correctionParams.newName = "";
-                correctionParams.shouldRename = false;
-            }
-            else{
-                textInputLayout.setVisibility(View.VISIBLE);
-                textView.setVisibility(View.VISIBLE);
-                correctionParams.newName = editText.getText().toString();
-                correctionParams.shouldRename = true;
-            }
-        });
-        builder.setTitle(R.string.manual);
-        builder.setMessage(R.string.message_apply_new_tags);
-        builder.setNegativeButton(R.string.cancel_button, (dialog, which) -> {
-            dialog.dismiss();
-            disableFields();
-            mViewModel.restorePreviousValues();
-        });
-        builder.setPositiveButton(R.string.yes, (dialog, which) -> {
-            correctionParams.dataFrom = Constants.MANUAL;
-            correctionParams.mode = Tagger.MODE_OVERWRITE_ALL_TAGS;
-            mViewModel.performCorrection(correctionParams);
-        });
-        AlertDialog alertDialog = builder.create();
-        alertDialog.show();
+        manualCorrectionDialogFragment.showNow(getChildFragmentManager(),
+                manualCorrectionDialogFragment.getClass().getName());
     }
 
     public void onShowFabMenu() {
@@ -822,9 +777,7 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel>{
             assert imm != null;
             imm.hideSoftInputFromWindow(getActivity().getCurrentFocus().getWindowToken(), 0);
         }
-        catch (Exception e){
-            e.printStackTrace();
-        }
+        catch (Exception ignored){}
 
         showFabs();
     }
@@ -873,15 +826,19 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel>{
     private void addPlayAction(){
         mPlayPreviewMenuItem.setOnMenuItemClickListener(null);
         mPlayPreviewMenuItem.setOnMenuItemClickListener(item -> {
-            try {
                 if(PreferenceManager.getDefaultSharedPreferences(getActivity().
-                        getApplicationContext()).getBoolean("key_use_embed_player",true))
-                    mPlayer.playPreview();
-                else
+                        getApplicationContext()).getBoolean("key_use_embed_player",true)) {
+                    try {
+                        mPlayer.playPreview();
+                    } catch (IOException e) {
+                        Snackbar snackbar = AndroidUtils.createSnackbar(mFragmentTrackDetailBinding.rootContainerDetails,
+                                R.string.cannot_play_track);
+                        snackbar.show();
+                    }
+                }
+                else {
                     mViewModel.openInExternalApp(getActivity().getApplicationContext());
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+                }
             return false;
         });
     }
@@ -954,5 +911,16 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel>{
     private OnClickListener createOnClickListener (Action action) {
 
         return null;
+    }
+
+    @Override
+    public void onAccept(ManualCorrectionDialogFragment.UIInputParams inputParams) {
+        mViewModel.performCorrection(inputParams);
+    }
+
+    @Override
+    public void onCancel() {
+        disableFields();
+        mViewModel.restorePreviousValues();
     }
 }

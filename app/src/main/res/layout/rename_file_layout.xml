@@ -10,16 +10,43 @@
   android:layout_gravity="start"
   android:splitMotionEvents="false">
 
+    <TextView
+        android:id="@+id/title_manual_correction_dialog_fragment"
+        style="@android:style/TextAppearance.Holo.DialogWindowTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="8dp"
+        android:gravity="center"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="Alerta" />
+
+    <TextView
+        android:id="@+id/content_manual_correction_dialog_fragment"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="8dp"
+        android:gravity="center_vertical"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/title_manual_correction_dialog_fragment"
+        tools:text="¿Seguro de corregir esta canción?" />
 
     <CheckBox
-      android:id="@+id/manual_checkbox_rename"
-      android:layout_width="wrap_content"
-      android:layout_height="wrap_content"
-      android:layout_marginTop="8dp"
-      android:layout_marginStart="8dp"
-      android:text="@string/message_checkbox_rename"
-      app:layout_constraintStart_toStartOf="parent"
-      app:layout_constraintTop_toTopOf="parent" />
+        android:id="@+id/manual_checkbox_rename"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="32dp"
+        android:text="@string/message_checkbox_rename"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/content_manual_correction_dialog_fragment" />
+
     <android.support.design.widget.TextInputLayout
       android:id="@+id/manual_label_rename_to"
       android:layout_width="match_parent"

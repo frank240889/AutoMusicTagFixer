@@ -1,4 +1,4 @@
-package mx.dev.franco.automusictagfixer.modelsUI.track_detail;
+package mx.dev.franco.automusictagfixer.UI.track_detail;
 
 import android.graphics.Bitmap;
 

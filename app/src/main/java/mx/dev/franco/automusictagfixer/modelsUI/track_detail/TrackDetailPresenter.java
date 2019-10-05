@@ -1,11 +1,13 @@
 package mx.dev.franco.automusictagfixer.modelsUI.track_detail;
 
-import static mx.dev.franco.automusictagfixer.UI.track_detail.TrackDetailFragment.INTENT_GET_AND_UPDATE_FROM_GALLERY;
-
 import android.content.Context;
+
 import java.util.concurrent.Executors;
+
 import javax.inject.Inject;
+
 import mx.dev.franco.automusictagfixer.R;
+import mx.dev.franco.automusictagfixer.UI.track_detail.ImageWrapper;
 import mx.dev.franco.automusictagfixer.fixer.AudioTagger;
 import mx.dev.franco.automusictagfixer.identifier.GnApiService;
 import mx.dev.franco.automusictagfixer.interfaces.AsyncOperation;
@@ -21,6 +23,8 @@ import mx.dev.franco.automusictagfixer.utilities.Constants.CorrectionActions;
 import mx.dev.franco.automusictagfixer.utilities.Tagger;
 import mx.dev.franco.automusictagfixer.utilities.TrackUtils;
 import mx.dev.franco.automusictagfixer.utilities.resource_manager.ResourceManager;
+
+import static mx.dev.franco.automusictagfixer.UI.track_detail.TrackDetailFragment.INTENT_GET_AND_UPDATE_FROM_GALLERY;
 
 public class TrackDetailPresenter implements
         Destructible, GnResponseListener.GnListener,

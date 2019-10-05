@@ -1,7 +1,5 @@
 package mx.dev.franco.automusictagfixer.utilities;
 
-import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
-
 import android.annotation.SuppressLint;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
@@ -14,6 +12,7 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.IntegerRes;
 import android.support.annotation.NonNull;
+import android.support.annotation.StringRes;
 import android.support.design.widget.Snackbar;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.FileProvider;
@@ -23,15 +22,20 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import com.crashlytics.android.Crashlytics;
 import com.gracenote.gnsdk.GnAssetFetch;
 import com.gracenote.gnsdk.GnException;
 import com.gracenote.gnsdk.GnImageSize;
+
+import org.jaudiotagger.tag.FieldKey;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+
 import mx.dev.franco.automusictagfixer.BuildConfig;
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.common.Action;
@@ -42,7 +46,8 @@ import mx.dev.franco.automusictagfixer.identifier.Result;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.utilities.Constants.CorrectionActions;
 import mx.dev.franco.automusictagfixer.utilities.resource_manager.ResourceManager;
-import org.jaudiotagger.tag.FieldKey;
+
+import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
 
 public class AndroidUtils {
 
@@ -92,6 +97,18 @@ public class AndroidUtils {
         else if(message.getIdResourceMessage() != -1) {
             snackbar.setText(message.getIdResourceMessage());
         }
+        return snackbar;
+    }
+
+    public static Snackbar createSnackbar(@NonNull View view, @NonNull String message) {
+        Snackbar snackbar = getSnackbar(view, view.getContext());
+        snackbar.setText(message);
+        return snackbar;
+    }
+
+    public static Snackbar createSnackbar(@NonNull View view, @StringRes int message) {
+        Snackbar snackbar = getSnackbar(view, view.getContext());
+        snackbar.setText(message);
         return snackbar;
     }
 
