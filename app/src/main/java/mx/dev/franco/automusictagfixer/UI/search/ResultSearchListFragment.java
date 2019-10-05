@@ -24,11 +24,8 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import java.util.List;
-
 import javax.inject.Inject;
-
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.UI.BaseFragment;
 import mx.dev.franco.automusictagfixer.UI.MainActivity;
@@ -37,7 +34,7 @@ import mx.dev.franco.automusictagfixer.UI.track_detail.TrackDetailFragment;
 import mx.dev.franco.automusictagfixer.modelsUI.search.SearchListViewModel;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
-import mx.dev.franco.automusictagfixer.utilities.Constants;
+import mx.dev.franco.automusictagfixer.utilities.Constants.CorrectionActions;
 import mx.dev.franco.automusictagfixer.utilities.ServiceUtils;
 
 public class ResultSearchListFragment extends BaseFragment implements
@@ -225,7 +222,7 @@ public class ResultSearchListFragment extends BaseFragment implements
         Track track = mAdapter.getDatasource().get(position);
         ViewWrapper viewWrapper = new ViewWrapper();
         viewWrapper.track = track;
-        viewWrapper.mode = Constants.CorrectionModes.SEMI_AUTOMATIC;
+        viewWrapper.mode = CorrectionActions.SEMI_AUTOMATIC;
         mSearchListViewModel.onItemClick(viewWrapper);
     }
 

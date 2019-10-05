@@ -10,8 +10,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.gentera.sdk.R;
-
 /**
  * A base dialog that has the basic functionality for all common dialogs.
  */
@@ -47,12 +45,4 @@ public abstract class BaseDialogFragment extends DialogFragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         return inflater.inflate(mLayout, container, false);
     }
-
-    @Override
-    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        mToolbar = view.findViewById(R.id.toolbar);
-        setToolbarInfo();
-    }
-
-
 }

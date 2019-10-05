@@ -25,7 +25,7 @@ public class Constants {
         public static String FULL_QUALIFIED_NAME = BuildConfig.APPLICATION_ID;
     }
 
-    public static class CorrectionModes {
+    public static class CorrectionActions {
         public static String MODE = "correction_mode";
         public static final int SEMI_AUTOMATIC = 1;
         public static final int MANUAL = 2;

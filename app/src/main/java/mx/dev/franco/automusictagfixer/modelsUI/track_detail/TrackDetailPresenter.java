@@ -1,11 +1,10 @@
 package mx.dev.franco.automusictagfixer.modelsUI.track_detail;
 
+import static mx.dev.franco.automusictagfixer.UI.track_detail.TrackDetailFragment.INTENT_GET_AND_UPDATE_FROM_GALLERY;
+
 import android.content.Context;
-
 import java.util.concurrent.Executors;
-
 import javax.inject.Inject;
-
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.fixer.AudioTagger;
 import mx.dev.franco.automusictagfixer.identifier.GnApiService;
@@ -18,11 +17,10 @@ import mx.dev.franco.automusictagfixer.persistence.repository.TrackRepository;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
+import mx.dev.franco.automusictagfixer.utilities.Constants.CorrectionActions;
 import mx.dev.franco.automusictagfixer.utilities.Tagger;
 import mx.dev.franco.automusictagfixer.utilities.TrackUtils;
 import mx.dev.franco.automusictagfixer.utilities.resource_manager.ResourceManager;
-
-import static mx.dev.franco.automusictagfixer.UI.track_detail.TrackDetailFragment.INTENT_GET_AND_UPDATE_FROM_GALLERY;
 
 public class TrackDetailPresenter implements
         Destructible, GnResponseListener.GnListener,
@@ -49,7 +47,7 @@ public class TrackDetailPresenter implements
     private Cache<Integer, GnResponseListener.IdentificationResults> mCache = new DownloadedTrackDataCacheImpl.Builder().build();
     private FixerService mFixer;
     private AsyncFileSaver mFileSaver;
-    private int mCorrectionMode = Constants.CorrectionModes.VIEW_INFO;
+    private int mCorrectionMode = CorrectionActions.VIEW_INFO;
     private int mRecognition = TrackIdentifier.ALL_TAGS;
     private int mDataFrom;
     private boolean mIsFloatingActionMenuOpen;
@@ -110,7 +108,7 @@ public class TrackDetailPresenter implements
 
         if(mView != null) {
             setTags(result);
-            if (mCorrectionMode == Constants.CorrectionModes.SEMI_AUTOMATIC) {
+            if (mCorrectionMode == CorrectionActions.SEMI_AUTOMATIC) {
                 startIdentification(TrackIdentifier.ALL_TAGS);
             }
         }
@@ -845,10 +843,10 @@ public class TrackDetailPresenter implements
         }
     }
 
-    public void validateImageSize(ImageSize imageSize) {
+    public void validateImageSize(ImageWrapper imageWrapper) {
         if(mView != null) {
-            if (imageSize.height <= 2000 || imageSize.width <= 2000) {
-                setNewCoverFromGallery(imageSize);
+            if (imageWrapper.height <= 2000 || imageWrapper.width <= 2000) {
+                setNewCoverFromGallery(imageWrapper);
             } else {
                 mView.onInvalidImage();
             }
@@ -857,11 +855,11 @@ public class TrackDetailPresenter implements
 
     /**
      * Updates the cover
-     * @param imageSize The wrapper containing the image
+     * @param imageWrapper The wrapper containing the image
      */
-    private void setNewCoverFromGallery(ImageSize imageSize){
-        mCurrentCover = AndroidUtils.generateCover(imageSize.bitmap);
-        if (imageSize.requestCode == INTENT_GET_AND_UPDATE_FROM_GALLERY) {
+    private void setNewCoverFromGallery(ImageWrapper imageWrapper){
+        mCurrentCover = AndroidUtils.generateCover(imageWrapper.bitmap);
+        if (imageWrapper.requestCode == INTENT_GET_AND_UPDATE_FROM_GALLERY) {
             FixerService.CorrectionParams correctionParams = new FixerService.CorrectionParams();
             correctionParams.dataFrom = Constants.MANUAL;
             correctionParams.mode = Tagger.MODE_ADD_COVER;

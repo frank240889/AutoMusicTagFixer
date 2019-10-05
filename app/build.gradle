@@ -35,7 +35,7 @@ android {
      * download the build tools using the SDK Manager.
      */
     lintOptions { checkReleaseBuilds true }
-    compileSdkVersion 27
+    compileSdkVersion 29
     buildToolsVersion '28.0.3'
     /**
      * The defaultConfig {} block encapsulates default settings and entries for all
@@ -52,7 +52,7 @@ android {
          */
         applicationId 'mx.dev.franco.automusictagfixer'
         minSdkVersion 21
-        targetSdkVersion 27
+        targetSdkVersion 28
         versionCode 17
         versionName "1.1.7"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"

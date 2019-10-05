@@ -5,7 +5,7 @@ import android.graphics.Bitmap;
 /**
  * Wrapper class for bitmap class android.
  */
-public class ImageSize {
+public class ImageWrapper {
     public int width;
     public int height;
     public Bitmap bitmap;

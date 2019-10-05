@@ -3,8 +3,6 @@ package mx.dev.franco.automusictagfixer.utilities;
 import android.content.Context;
 import android.media.MediaPlayer;
 import android.os.PowerManager;
-import android.util.Log;
-
 import java.io.File;
 import java.io.IOException;
 
@@ -13,16 +11,16 @@ import java.io.IOException;
  */
 
 public final class SimpleMediaPlayer extends MediaPlayer implements MediaPlayer.OnCompletionListener, MediaPlayer.OnErrorListener {
-    public interface OnEventDispatchedListener{
+    public interface OnMediaPlayerEventListener {
         void onStartPlaying();
         void onStopPlaying();
-        void onCompletionPlaying();
+        void onCompletedPlaying();
         void onErrorPlaying(int what, int extra);
     }
 
 
     private static SimpleMediaPlayer sMediaPlayer;
-    private OnEventDispatchedListener mListener;
+    private OnMediaPlayerEventListener mListener;
     private String mCurrentPath;
 
     /**
@@ -37,7 +35,7 @@ public final class SimpleMediaPlayer extends MediaPlayer implements MediaPlayer.
         setOnErrorListener(this);
     }
 
-    public void addListener(OnEventDispatchedListener listener){
+    public void addListener(OnMediaPlayerEventListener listener){
         mListener = listener;
     }
 
@@ -118,11 +116,10 @@ public final class SimpleMediaPlayer extends MediaPlayer implements MediaPlayer.
      */
     @Override
     public void onCompletion(MediaPlayer mp) {
-        Log.d("OnCompletion","OnCompletion");
         stop();
         reset();
         if(mListener != null)
-            mListener.onCompletionPlaying();
+            mListener.onCompletedPlaying();
     }
 
 

@@ -1,5 +1,7 @@
 package mx.dev.franco.automusictagfixer.UI.track_detail;
 
+import static mx.dev.franco.automusictagfixer.utilities.Constants.GOOGLE_SEARCH;
+
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.app.Activity;
@@ -25,6 +27,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
@@ -33,51 +36,48 @@ import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
 import com.bumptech.glide.request.RequestOptions;
-
 import java.io.IOException;
 import java.util.ArrayList;
-
 import javax.inject.Inject;
-
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.UI.BaseFragment;
 import mx.dev.franco.automusictagfixer.UI.MainActivity;
 import mx.dev.franco.automusictagfixer.UI.results.IdentificationResultsFragment;
 import mx.dev.franco.automusictagfixer.UI.sd_card_instructions.SdCardInstructionsActivity;
+import mx.dev.franco.automusictagfixer.common.Action;
 import mx.dev.franco.automusictagfixer.databinding.FragmentTrackDetailBinding;
-import mx.dev.franco.automusictagfixer.modelsUI.track_detail.ImageSize;
+import mx.dev.franco.automusictagfixer.modelsUI.track_detail.ImageWrapper;
+import mx.dev.franco.automusictagfixer.utilities.ActionableMessage;
 import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
+import mx.dev.franco.automusictagfixer.utilities.Constants.CorrectionActions;
 import mx.dev.franco.automusictagfixer.utilities.GlideApp;
+import mx.dev.franco.automusictagfixer.utilities.Message;
 import mx.dev.franco.automusictagfixer.utilities.RequiredPermissions;
 import mx.dev.franco.automusictagfixer.utilities.SimpleMediaPlayer;
+import mx.dev.franco.automusictagfixer.utilities.SimpleMediaPlayer.OnMediaPlayerEventListener;
 import mx.dev.franco.automusictagfixer.utilities.Tagger;
 import mx.dev.franco.automusictagfixer.utilities.TrackUtils;
-
-import static mx.dev.franco.automusictagfixer.utilities.Constants.GOOGLE_SEARCH;
 
 /**
  * Use the {@link TrackDetailFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> implements SimpleMediaPlayer.OnEventDispatchedListener {
+public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel>{
 
     public static final String TAG = TrackDetailFragment.class.getName();
 
     //Menu items
-    private MenuItem mPlayPreviewButton;
-    private MenuItem mUpdateCoverButton;
-    private MenuItem mExtractCoverButton;
-    private MenuItem mRemoveItem;
-    private MenuItem mSearchInWebItem;
+    private MenuItem mPlayPreviewMenuItem;
+    private MenuItem mUpdateCoverMenuItem;
+    private MenuItem mExtractCoverMenuItem;
+    private MenuItem mRemoveMenuItem;
+    private MenuItem mSearchInWebMenuItem;
     private ActionBar mActionBar;
-
     private FragmentTrackDetailBinding mFragmentTrackDetailBinding;
-
     @Inject
     SimpleMediaPlayer mPlayer;
 
@@ -93,7 +93,26 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        mPlayer.addListener(this);
+        mPlayer.addListener(new OnMediaPlayerEventListener() {
+            @Override
+            public void onStartPlaying() {
+                mPlayPreviewMenuItem.setIcon(R.drawable.ic_stop_white_24px);
+                addStopAction();
+            }
+            @Override
+            public void onStopPlaying() {
+                mPlayPreviewMenuItem.setIcon(R.drawable.ic_play_arrow_white_24px);
+                addPlayAction();
+            }
+            @Override
+            public void onCompletedPlaying() {
+                mPlayPreviewMenuItem.setIcon(R.drawable.ic_play_arrow_white_24px);
+            }
+            @Override
+            public void onErrorPlaying(int what, int extra) {
+                mPlayPreviewMenuItem.setEnabled(false);
+            }
+        });
     }
 
     @Override
@@ -101,16 +120,19 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
         super.onCreate(savedInstanceState);
         Bundle bundle = getArguments();
         if(bundle != null)
-           mViewModel.setCorrectionMode(bundle.getInt(Constants.CorrectionModes.MODE,Constants.CorrectionModes.VIEW_INFO));
+            mViewModel.setInitialAction(
+                bundle.getInt(CorrectionActions.MODE, CorrectionActions.VIEW_INFO));
         else
-            mViewModel.setCorrectionMode(Constants.CorrectionModes.VIEW_INFO);
+            mViewModel.setInitialAction(CorrectionActions.VIEW_INFO);
 
         setHasOptionsMenu(true);
     }
 
     @Override
     public TrackDetailViewModel getViewModel() {
-        return ViewModelProviders.of(this, androidViewModelFactory).get(TrackDetailViewModel.class);
+        return ViewModelProviders.
+            of(this, androidViewModelFactory).
+            get(TrackDetailViewModel.class);
     }
 
     @Override
@@ -128,9 +150,7 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-
         ((MainActivity)getActivity()).setSupportActionBar(mFragmentTrackDetailBinding.toolbar);
-
         mFragmentTrackDetailBinding.collapsingToolbarLayout.setTitleEnabled(false);
         mActionBar = ((MainActivity)getActivity()).getSupportActionBar();
         mActionBar.setDisplayShowTitleEnabled(false);
@@ -145,14 +165,13 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        super.onCreateOptionsMenu(menu, inflater);
         menu.clear();
         inflater.inflate(R.menu.menu_details_track_dialog, menu);
-        mPlayPreviewButton = menu.findItem(R.id.action_play);
-        mExtractCoverButton = menu.findItem(R.id.action_extract_cover);
-        mUpdateCoverButton = menu.findItem(R.id.action_update_cover);
-        mRemoveItem = menu.findItem(R.id.action_remove_cover);
-        mSearchInWebItem = menu.findItem(R.id.action_web_search);
+        mPlayPreviewMenuItem = menu.findItem(R.id.action_play);
+        mExtractCoverMenuItem = menu.findItem(R.id.action_extract_cover);
+        mUpdateCoverMenuItem = menu.findItem(R.id.action_update_cover);
+        mRemoveMenuItem = menu.findItem(R.id.action_remove_cover);
+        mSearchInWebMenuItem = menu.findItem(R.id.action_web_search);
     }
 
     /**
@@ -174,12 +193,12 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
                     try {
                         Uri imageData = data.getData();
                         Bitmap bitmap = MediaStore.Images.Media.getBitmap(getActivity().getContentResolver(), imageData);
-                        ImageSize imageSize = new ImageSize();
-                        imageSize.width = bitmap.getWidth();
-                        imageSize.height = bitmap.getHeight();
-                        imageSize.bitmap = bitmap;
-                        imageSize.requestCode = requestCode;
-                        mViewModel.validateImageSize(imageSize);
+                        ImageWrapper imageWrapper = new ImageWrapper();
+                        imageWrapper.width = bitmap.getWidth();
+                        imageWrapper.height = bitmap.getHeight();
+                        imageWrapper.bitmap = bitmap;
+                        imageWrapper.requestCode = requestCode;
+                        mViewModel.validateImageSize(imageWrapper);
                     } catch(IOException e){
                         e.printStackTrace();
                         Snackbar snackbar = AndroidUtils.getSnackbar(
@@ -209,9 +228,7 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
                     msg = getString(R.string.saf_denied);
                 }
 
-                Toast toast = AndroidUtils.getToast(getActivity().getApplicationContext());
-                toast.setText(msg);
-                toast.show();
+                AndroidUtils.showToast(msg, getActivity());
                 break;
         }
 
@@ -232,7 +249,6 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
     public void onDetach() {
         super.onDetach();
         mPlayer.removeListener();
-
         mPlayer = null;
     }
 
@@ -532,28 +548,6 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
         alertDialog.show();
     }
 
-    @Override
-    public void onStartPlaying() {
-        mPlayPreviewButton.setIcon(R.drawable.ic_stop_white_24px);
-        addStopAction();
-    }
-
-    @Override
-    public void onStopPlaying() {
-        mPlayPreviewButton.setIcon(R.drawable.ic_play_arrow_white_24px);
-        addPlayAction();
-    }
-
-    @Override
-    public void onCompletionPlaying() {
-        mPlayPreviewButton.setIcon(R.drawable.ic_play_arrow_white_24px);
-    }
-
-    @Override
-    public void onErrorPlaying(int what, int extra) {
-        mPlayPreviewButton.setEnabled(false);
-    }
-
     public void onShowFabMenu() {
         showFABMenu();
     }
@@ -584,7 +578,7 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
      * @param enable true for enable, false to disable
      */
     private void enableMiniFabs(boolean enable){
-        mUpdateCoverButton.setEnabled(enable);
+        mUpdateCoverMenuItem.setEnabled(enable);
         mFragmentTrackDetailBinding.toolbarCoverArt.setEnabled(enable);
         mFragmentTrackDetailBinding.fabDownloadCover.setEnabled(enable);
         mFragmentTrackDetailBinding.fabEditTrackInfo.setEnabled(enable);
@@ -661,7 +655,7 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
             //set alpha of cover depending on offset of expanded toolbar cover height,
             mFragmentTrackDetailBinding.toolbarCoverArt.setAlpha(1.0f - Math.abs(verticalOffset/(float)appBarLayout.getTotalScrollRange()));
             //when toolbar is fully collapsed show name of audio file in toolbar and back button
-            if(Math.abs(verticalOffset)-appBarLayout.getTotalScrollRange() == 0) {
+            if(Math.abs(verticalOffset) - appBarLayout.getTotalScrollRange() == 0) {
                 mFragmentTrackDetailBinding.collapsingToolbarLayout.setTitleEnabled(true);
                 mFragmentTrackDetailBinding.collapsingToolbarLayout.setTitle(
                         mFragmentTrackDetailBinding.titleBottomTransparentLayer.getText().toString());
@@ -713,7 +707,7 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
                 mFragmentTrackDetailBinding.fabSaveInfo.setOnClickListener(null);
                 mFragmentTrackDetailBinding.fabSaveInfo.setOnClickListener(v -> mViewModel.validateInputData());
                 mFragmentTrackDetailBinding.toolbarCoverArt.setEnabled(false);
-                mUpdateCoverButton.setEnabled(false);
+                mUpdateCoverMenuItem.setEnabled(false);
                 editMode();
             }
         });
@@ -745,7 +739,7 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
                 .into(mFragmentTrackDetailBinding.toolbarCoverArt);
     }
 
-    public void searchInfoForTrack(){
+    private void searchInfoForTrack(){
         String title = mFragmentTrackDetailBinding.layoutContentDetailsTrack.trackNameDetails.
                 getText().toString();
         String artist = mFragmentTrackDetailBinding.layoutContentDetailsTrack.artistNameDetails.
@@ -850,12 +844,12 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
 
 
     private void addToolbarButtonsListeners(){
-        mExtractCoverButton.setOnMenuItemClickListener(menuItem -> {
+        mExtractCoverMenuItem.setOnMenuItemClickListener(menuItem -> {
             mViewModel.saveAsImageFileFrom(Constants.MANUAL);
             return false;
         });
 
-        mUpdateCoverButton.setOnMenuItemClickListener(menuItem -> {
+        mUpdateCoverMenuItem.setOnMenuItemClickListener(menuItem -> {
             mViewModel.hideFabMenu();
             editCover(TrackDetailFragment.INTENT_GET_AND_UPDATE_FROM_GALLERY);
             return false;
@@ -863,22 +857,22 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
 
         addPlayAction();
 
-        mRemoveItem.setOnMenuItemClickListener(item -> {
+        mRemoveMenuItem.setOnMenuItemClickListener(item -> {
             mViewModel.removeCover();
             return false;
         });
 
         //performs a web trackSearch in navigator
         //using the title and artist name
-        mSearchInWebItem.setOnMenuItemClickListener(item -> {
+        mSearchInWebMenuItem.setOnMenuItemClickListener(item -> {
             searchInfoForTrack();
             return false;
         });
     }
 
     private void addPlayAction(){
-        mPlayPreviewButton.setOnMenuItemClickListener(null);
-        mPlayPreviewButton.setOnMenuItemClickListener(item -> {
+        mPlayPreviewMenuItem.setOnMenuItemClickListener(null);
+        mPlayPreviewMenuItem.setOnMenuItemClickListener(item -> {
             try {
                 if(PreferenceManager.getDefaultSharedPreferences(getActivity().
                         getApplicationContext()).getBoolean("key_use_embed_player",true))
@@ -893,8 +887,8 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
     }
 
     private void addStopAction(){
-        mPlayPreviewButton.setOnMenuItemClickListener(null);
-        mPlayPreviewButton.setOnMenuItemClickListener(item -> {
+        mPlayPreviewMenuItem.setOnMenuItemClickListener(null);
+        mPlayPreviewMenuItem.setOnMenuItemClickListener(item -> {
             mPlayer.stopPreview();
             return false;
         });
@@ -905,6 +899,24 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
         if(bundle != null)
             mViewModel.loadInfoTrack(bundle.getInt(Constants.MEDIA_STORE_ID,-1));
 
+    }
+
+    @Override
+    protected void onMessage(Message message){
+        Snackbar snackbar = AndroidUtils.createSnackbar(
+            mFragmentTrackDetailBinding.rootContainerDetails,
+            message
+            );
+        snackbar.show();
+    }
+
+    @Override
+    protected void onActionableMessage(ActionableMessage actionableMessage) {
+        Snackbar snackbar = AndroidUtils.createActionableSnackbar(
+            mFragmentTrackDetailBinding.rootContainerDetails,
+            actionableMessage,
+            createOnClickListener(actionableMessage.getAction()));
+        snackbar.show();
     }
 
     @Override
@@ -937,5 +949,10 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
         });
 
         return animation;
+    }
+
+    private OnClickListener createOnClickListener (Action action) {
+
+        return null;
     }
 }

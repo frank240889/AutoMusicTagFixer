@@ -3,14 +3,14 @@ package mx.dev.franco.automusictagfixer.UI;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-
-import javax.inject.Inject;
-
 import dagger.android.AndroidInjector;
 import dagger.android.DispatchingAndroidInjector;
 import dagger.android.support.AndroidSupportInjection;
 import dagger.android.support.HasSupportFragmentInjector;
+import javax.inject.Inject;
 import mx.dev.franco.automusictagfixer.interfaces.OnBackPressedListener;
+import mx.dev.franco.automusictagfixer.utilities.ActionableMessage;
+import mx.dev.franco.automusictagfixer.utilities.Message;
 
 /**
  * Base fragment that abstract the common functionality for fragments
@@ -21,7 +21,7 @@ import mx.dev.franco.automusictagfixer.interfaces.OnBackPressedListener;
 public abstract class BaseFragment<ViewModel> extends Fragment implements
         OnBackPressedListener, HasSupportFragmentInjector {
     @Inject
-    DispatchingAndroidInjector<Fragment> fragmentDispatchingAndroidInjector;
+    protected DispatchingAndroidInjector<Fragment> fragmentDispatchingAndroidInjector;
     @Inject
     protected AndroidViewModelFactory androidViewModelFactory;
 
@@ -78,5 +78,9 @@ public abstract class BaseFragment<ViewModel> extends Fragment implements
     public AndroidInjector<Fragment> supportFragmentInjector() {
         return fragmentDispatchingAndroidInjector;
     }
+
+    protected void onMessage(Message message){}
+
+    protected void onActionableMessage(ActionableMessage actionableMessage) { }
 
 }

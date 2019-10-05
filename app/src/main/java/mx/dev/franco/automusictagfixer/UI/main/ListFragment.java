@@ -32,11 +32,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import java.util.Objects;
-
 import javax.inject.Inject;
-
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.UI.BaseFragment;
 import mx.dev.franco.automusictagfixer.UI.MainActivity;
@@ -51,6 +48,7 @@ import mx.dev.franco.automusictagfixer.persistence.room.database.TrackContract;
 import mx.dev.franco.automusictagfixer.services.FixerTrackService;
 import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
+import mx.dev.franco.automusictagfixer.utilities.Constants.CorrectionActions;
 import mx.dev.franco.automusictagfixer.utilities.RequiredPermissions;
 import mx.dev.franco.automusictagfixer.utilities.ServiceUtils;
 
@@ -445,7 +443,7 @@ public class ListFragment extends BaseFragment implements
     public void onCoverClick(int position, View view) {
         ViewWrapper viewWrapper = new ViewWrapper();
         viewWrapper.position = position;
-        viewWrapper.mode = Constants.CorrectionModes.VIEW_INFO;
+        viewWrapper.mode = CorrectionActions.VIEW_INFO;
         mListViewModel.onClickCover(viewWrapper);
     }
 
@@ -463,7 +461,7 @@ public class ListFragment extends BaseFragment implements
     public void onItemClick(int position, View view) {
         ViewWrapper viewWrapper = new ViewWrapper();
         viewWrapper.position = position;
-        viewWrapper.mode = Constants.CorrectionModes.SEMI_AUTOMATIC;
+        viewWrapper.mode = CorrectionActions.SEMI_AUTOMATIC;
         mListViewModel.onItemClick(viewWrapper);
     }
 

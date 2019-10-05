@@ -5,8 +5,7 @@ import android.arch.lifecycle.AndroidViewModel;
 import android.arch.lifecycle.MutableLiveData;
 import android.content.Context;
 import android.support.annotation.NonNull;
-
-import mx.dev.franco.automusictagfixer.modelsUI.track_detail.ImageSize;
+import mx.dev.franco.automusictagfixer.modelsUI.track_detail.ImageWrapper;
 
 public class TrackDetailViewModel extends AndroidViewModel {
     public MutableLiveData<String> title;
@@ -31,11 +30,11 @@ public class TrackDetailViewModel extends AndroidViewModel {
         title = new MutableLiveData<>();
     }
 
-    public void setCorrectionMode(int correctionMode) {
+    public void setInitialAction(int correctionMode) {
 
     }
 
-    public void validateImageSize(ImageSize imageSize) {
+    public void validateImageSize(ImageWrapper imageWrapper) {
 
     }
 
@@ -90,6 +89,10 @@ public class TrackDetailViewModel extends AndroidViewModel {
     }
 
     public void loadInfoTrack(int anInt) {
+
+    }
+
+    public void removeCover() {
 
     }
 }
