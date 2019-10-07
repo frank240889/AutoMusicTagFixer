@@ -96,4 +96,8 @@ public class TrackDetailViewModel extends AndroidViewModel {
     public void removeCover() {
 
     }
+
+    public String getTrackId() {
+        return null;
+    }
 }

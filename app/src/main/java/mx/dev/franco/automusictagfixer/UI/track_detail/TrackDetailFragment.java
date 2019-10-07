@@ -55,7 +55,6 @@ import mx.dev.franco.automusictagfixer.utilities.Message;
 import mx.dev.franco.automusictagfixer.utilities.RequiredPermissions;
 import mx.dev.franco.automusictagfixer.utilities.SimpleMediaPlayer;
 import mx.dev.franco.automusictagfixer.utilities.SimpleMediaPlayer.OnMediaPlayerEventListener;
-import mx.dev.franco.automusictagfixer.utilities.TrackUtils;
 
 import static mx.dev.franco.automusictagfixer.utilities.Constants.GOOGLE_SEARCH;
 
@@ -214,7 +213,7 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
                     // The document selected by the user won't be returned in the intent.
                     // Instead, a URI to that document will be contained in the return intent
                     // provided to this method as a parameter.  Pull that uri using "resultData.getData()"
-                    boolean res = AndroidUtils.grantPermissionSD(getActivity().getApplicationContext(), data);;
+                    boolean res = AndroidUtils.grantPermissionSD(getActivity().getApplicationContext(), data);
                     if (res) {
                         msg = getString(R.string.toast_apply_tags_again);
                     }
@@ -291,15 +290,6 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
         onCoverChanged(value);
     }
 
-    public void setFilename(String value) {
-        mFragmentTrackDetailBinding.titleBottomTransparentLayer.setText(TrackUtils.getFilename(value));
-    }
-
-    public void setPath(String value) {
-        mFragmentTrackDetailBinding.layoutContentDetailsTrack.trackPath.setText(value);
-        setupMediaPlayer(value);
-    }
-
     public void setStateMessage(String message, boolean visible) {
         mFragmentTrackDetailBinding.layoutContentDetailsTrack.statusMessage.setVisibility(View.VISIBLE);
         mFragmentTrackDetailBinding.layoutContentDetailsTrack.statusMessage.setText(message);
@@ -358,11 +348,10 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
 
     /**
      * Loads the identification results and shows to the user.
-     * @param results The object containing the data.
      */
     public void onLoadIdentificationResults() {
         IdentificationResultsFragment identificationResultsFragment =
-                IdentificationResultsFragment.newInstance(results, false);
+                IdentificationResultsFragment.newInstance(mViewModel.getTrackId());
         identificationResultsFragment.show(getChildFragmentManager(),
                 IdentificationResultsFragment.class.getName());
     }

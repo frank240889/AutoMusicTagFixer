@@ -11,6 +11,9 @@ import mx.dev.franco.automusictagfixer.UI.ResultsViewModel;
 import mx.dev.franco.automusictagfixer.identifier.Identifier;
 import mx.dev.franco.automusictagfixer.interfaces.Cache;
 
+/**
+ * This class load the results for the identified track.
+ */
 public class TagsResultsViewModel extends ResultsViewModel {
     private Cache<String, List<Identifier.IdentificationResults>> mCache;
 
