@@ -1,3 +1,6 @@
 package mx.dev.franco.automusictagfixer.common;
 
-public enum Action {}
+public enum Action {
+    NONE,
+    RETRY,
+}

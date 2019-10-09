@@ -16,7 +16,7 @@ import android.view.ViewGroup;
 public abstract class BaseDialogFragment extends DialogFragment {
     public static final String LAYOUT_ID = "layout_id";
 
-    @LayoutRes int mLayout;
+    protected @LayoutRes int mLayout;
 
     public BaseDialogFragment() {}
 

@@ -4,15 +4,15 @@ import mx.dev.franco.automusictagfixer.persistence.room.Track;
 
 public class MetadataReaderResult {
     private Track track;
-    private AudioTagger.AudioTaggerResult resultCorrection;
+    private AudioTagger.AudioFields audioFields;
 
     public MetadataReaderResult() {
     }
 
-    public MetadataReaderResult(Track track, AudioTagger.AudioTaggerResult resultCorrection) {
+    public MetadataReaderResult(Track track, AudioTagger.AudioFields audioFields) {
         this();
         this.track = track;
-        this.resultCorrection = resultCorrection;
+        this.audioFields = audioFields;
     }
 
     public Track getTrack() {
@@ -23,11 +23,11 @@ public class MetadataReaderResult {
         this.track = track;
     }
 
-    public AudioTagger.AudioTaggerResult getResultCorrection() {
-        return resultCorrection;
+    public AudioTagger.AudioFields getFields() {
+        return audioFields;
     }
 
-    public void setResultCorrection(AudioTagger.AudioTaggerResult resultCorrection) {
-        this.resultCorrection = resultCorrection;
+    public void setFields(AudioTagger.AudioFields resultCorrection) {
+        this.audioFields = resultCorrection;
     }
 }

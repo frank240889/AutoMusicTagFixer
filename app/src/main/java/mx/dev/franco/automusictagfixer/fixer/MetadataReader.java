@@ -1,5 +1,7 @@
 package mx.dev.franco.automusictagfixer.fixer;
 
+import android.support.annotation.NonNull;
+
 import org.jaudiotagger.audio.exceptions.CannotReadException;
 import org.jaudiotagger.audio.exceptions.InvalidAudioFrameException;
 import org.jaudiotagger.audio.exceptions.ReadOnlyFileException;
@@ -7,18 +9,18 @@ import org.jaudiotagger.tag.TagException;
 
 import java.io.IOException;
 
+import javax.annotation.Nullable;
+
 import mx.dev.franco.automusictagfixer.interfaces.AsyncOperation;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
 
 public class MetadataReader extends AbstractMetadataFixer<Void, Void, AudioTagger.AudioFields> {
-    private Throwable mError;
     private AsyncOperation<Track, MetadataReaderResult, Track, MetadataReaderResult> mCallback;
-    private AudioMetadataTagger.InputParams mInputParams;
-    public MetadataReader(AsyncOperation<Track, MetadataReaderResult, Track, MetadataReaderResult> callback, AudioMetadataTagger fileTagger,
-                          AudioMetadataTagger.InputParams inputParams, Track track) {
+    public MetadataReader(@Nullable AsyncOperation<Track, MetadataReaderResult, Track, MetadataReaderResult> callback,
+                          @NonNull AudioMetadataTagger fileTagger,
+                          @NonNull Track track) {
         super(fileTagger,track);
         mCallback = callback;
-        mInputParams = inputParams;
     }
 
     @Override
@@ -37,7 +39,10 @@ public class MetadataReader extends AbstractMetadataFixer<Void, Void, AudioTagge
                 TagException|
                 InvalidAudioFrameException e) {
             e.printStackTrace();
-            return new AudioTagger.AudioFields(AudioTagger.COULD_NOT_READ_TAGS);
+            AudioTagger.AudioFields result =
+                    new AudioTagger.AudioFields(AudioTagger.COULD_NOT_READ_TAGS);
+            result.setError(e);
+            return result;
         }
     }
 

@@ -44,6 +44,10 @@ public class Track {
         mPath = path;
     }
 
+    public Track(Track track) {
+        this(track.getTitle(), track.getArtist(), track.getAlbum(), track.getPath());
+    }
+
     public int getMediaStoreId(){
         return mMediaStoreId;
     }

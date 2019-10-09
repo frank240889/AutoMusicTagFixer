@@ -14,8 +14,7 @@ public class Result implements Identifier.IdentificationResults {
     private String genre = "";
     private Map<GnImageSize, String> covers = new LinkedHashMap<>();
 
-    public Result() {
-    }
+    public Result() {}
 
     public Result(String title, String artist, String album, String trackNumber, String trackYear, String genre, Map<GnImageSize, String> covers) {
         this();

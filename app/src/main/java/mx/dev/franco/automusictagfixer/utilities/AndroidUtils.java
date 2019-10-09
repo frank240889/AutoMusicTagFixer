@@ -10,8 +10,8 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.support.annotation.IntegerRes;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.StringRes;
 import android.support.design.widget.Snackbar;
 import android.support.v4.content.ContextCompat;
@@ -81,7 +81,7 @@ public class AndroidUtils {
         toast.show();
     }
 
-    public static void showToast(@IntegerRes int message, @NonNull Context context) {
+    public static void showToast(@StringRes int message, @NonNull Context context) {
         Toast toast = getToast(context);
         if(message != -1) {
             toast.setText(message);
@@ -391,6 +391,39 @@ public class AndroidUtils {
                     tags.put(FieldKey.COVER_ART, coverUrl);
             }
         }
+
+        return new AudioMetadataTagger.InputParams(tags);
+    }
+
+    public static AudioMetadataTagger.InputParams createInputParams(@Nullable String title,
+                                                                    @Nullable String artist,
+                                                                    @Nullable String album,
+                                                                    @Nullable String genre,
+                                                                    @Nullable String trackNumber,
+                                                                    @Nullable String trackYear,
+                                                                    @Nullable byte[] cover
+                                                                    ) {
+
+        Map<FieldKey, Object> tags = new ArrayMap<>();
+        if(title != null && !title.isEmpty())
+            tags.put(FieldKey.TITLE, title);
+
+        if(artist != null && !artist.isEmpty())
+            tags.put(FieldKey.ARTIST, artist);
+
+        if(album != null && !album.isEmpty())
+            tags.put(FieldKey.ALBUM, album);
+
+        if(genre != null && !genre.isEmpty())
+            tags.put(FieldKey.GENRE, genre);
+
+        if(trackYear != null && !trackYear.isEmpty())
+            tags.put(FieldKey.YEAR, trackYear);
+
+        if(trackNumber != null && !trackNumber.isEmpty())
+            tags.put(FieldKey.TRACK, trackNumber);
+        if(cover != null)
+            tags.put(FieldKey.COVER_ART, cover);
 
         return new AudioMetadataTagger.InputParams(tags);
     }

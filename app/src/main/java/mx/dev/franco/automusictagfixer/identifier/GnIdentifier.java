@@ -66,6 +66,8 @@ public class GnIdentifier implements Identifier<Track, List<IdentificationResult
                     List<IdentificationResults> results = processResponse(gnResponseAlbums);
                     if(identificationListener != null)
                         identificationListener.onIdentificationFinished(results, track);
+
+                    identificationListener = null;
                 }
 
                 @Override
@@ -75,12 +77,14 @@ public class GnIdentifier implements Identifier<Track, List<IdentificationResult
                 public void musicIdFileResultNotFound(GnMusicIdFileInfo gnMusicIdFileInfo, long l, long l1, IGnCancellable iGnCancellable) {
                     if(identificationListener != null)
                         identificationListener.onIdentificationNotFound(track);
+                    identificationListener = null;
                 }
 
                 @Override
                 public void musicIdFileComplete(GnError gnError) {
                     if(identificationListener != null)
                         identificationListener.onIdentificationError(track, gnError.toString());
+                    identificationListener = null;
                 }
 
                 @Override

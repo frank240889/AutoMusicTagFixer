@@ -3,8 +3,11 @@ package mx.dev.franco.automusictagfixer.utilities;
 import android.content.Context;
 import android.media.MediaPlayer;
 import android.os.PowerManager;
+
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by franco on 29/03/17.
@@ -18,7 +21,7 @@ public final class SimpleMediaPlayer extends MediaPlayer implements MediaPlayer.
         void onErrorPlaying(int what, int extra);
     }
 
-
+    private List<OnMediaPlayerEventListener> mListeners = new ArrayList<>();
     private static SimpleMediaPlayer sMediaPlayer;
     private OnMediaPlayerEventListener mListener;
     private String mCurrentPath;
@@ -36,11 +39,15 @@ public final class SimpleMediaPlayer extends MediaPlayer implements MediaPlayer.
     }
 
     public void addListener(OnMediaPlayerEventListener listener){
-        mListener = listener;
+        mListeners.add(listener);
     }
 
-    public void removeListener(){
-        mListener = null;
+    private void removeListener(OnMediaPlayerEventListener listener) {
+        mListeners.remove(listener);
+    }
+
+    public void removeListeners(){
+        mListeners.clear();
         mCurrentPath = null;
     }
 

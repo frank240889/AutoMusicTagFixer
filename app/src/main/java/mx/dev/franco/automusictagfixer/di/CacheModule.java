@@ -15,7 +15,7 @@ public class CacheModule {
 
 @Singleton
 @Provides
-Cache<String, List<Identifier.IdentificationResults>> providesCache() {
-    return new DownloadedTrackDataCacheImpl();
-}
+    Cache<String, List<Identifier.IdentificationResults>> providesCache() {
+        return new DownloadedTrackDataCacheImpl();
+    }
 }

@@ -1397,27 +1397,27 @@ public class AudioTagger {
 
 
     public static class AudioFields extends AudioTaggerResult {
-        public String title = "";
-        public String artist = "";
-        public String album = "";
-        public String trackNumber = "";
-        public String trackYear = "";
-        public String genre = "";
-        public byte[] cover = null;
+        private String title = "";
+        private String artist = "";
+        private String album = "";
+        private String trackNumber = "";
+        private String trackYear = "";
+        private String genre = "";
+        private byte[] cover = null;
 
-        public String fileName = "";
-        public String path = "";
+        private String fileName = "";
+        private String path = "";
 
-        public String duration = "";
-        public String bitrate = "";
-        public String frequency = "";
-        public String resolution = "";
-        public String channels = "";
-        public String fileType = "";
-        public String extension = "";
-        public String mimeType = "";
-        public String imageSize = "Sin carátula.";
-        public String fileSize = "";
+        private String duration = "";
+        private String bitrate = "";
+        private String frequency = "";
+        private String resolution = "";
+        private String channels = "";
+        private String fileType = "";
+        private String extension = "";
+        private String mimeType = "";
+        private String imageSize = "";
+        private String fileSize = "";
 
         public AudioFields(){
             super(SUCCESS);

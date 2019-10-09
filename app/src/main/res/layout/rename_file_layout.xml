@@ -57,7 +57,7 @@
       android:layout_below="@id/manual_checkbox_rename"
       android:paddingStart="8dp"
       android:paddingEnd="8dp"
-      android:labelFor="@id/rename_to"
+      android:labelFor="@id/new_name_edit_text"
       android:theme="@style/CustomEditTextHint"
       android:visibility="gone"
       app:layout_constraintEnd_toEndOf="parent"
