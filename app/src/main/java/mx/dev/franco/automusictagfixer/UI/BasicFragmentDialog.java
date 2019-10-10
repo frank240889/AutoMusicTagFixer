@@ -1,4 +1,4 @@
-package mx.dev.franco.automusictagfixer.UI.track_detail;
+package mx.dev.franco.automusictagfixer.UI;
 
 import android.content.Context;
 import android.os.Bundle;
@@ -12,7 +12,6 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import mx.dev.franco.automusictagfixer.R;
-import mx.dev.franco.automusictagfixer.UI.BaseDialogFragment;
 
 public class BasicFragmentDialog extends BaseDialogFragment {
     private static final String TITLE = "title";
@@ -93,11 +92,13 @@ public class BasicFragmentDialog extends BaseDialogFragment {
         negative.setText(mNegativeText);
 
         positive.setOnClickListener(view1 -> {
+            dismiss();
                 if(mOnClickBasicFragmentDialogListener != null)
                     mOnClickBasicFragmentDialogListener.onPositiveButton();
         });
 
         negative.setOnClickListener(view12 -> {
+            dismiss();
                 if(mOnClickBasicFragmentDialogListener != null)
                     mOnClickBasicFragmentDialogListener.onNegativeButton();
         });

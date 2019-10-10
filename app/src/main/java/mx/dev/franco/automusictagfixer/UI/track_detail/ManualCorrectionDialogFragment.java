@@ -15,7 +15,6 @@ import android.widget.TextView;
 
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.UI.BaseDialogFragment;
-import mx.dev.franco.automusictagfixer.fixer.AudioMetadataTagger;
 import mx.dev.franco.automusictagfixer.fixer.AudioTagger;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
 
@@ -101,26 +100,4 @@ public class ManualCorrectionDialogFragment extends BaseDialogFragment {
   }
 
 
-
-  public static final class UIInputParams extends AudioMetadataTagger.InputParams {
-    private boolean renameFile;
-    private int correctionMode;
-    public UIInputParams(){}
-
-    public boolean isRenameFile() {
-      return renameFile;
-    }
-
-    public void setRenameFile(boolean renameFile) {
-      this.renameFile = renameFile;
-    }
-
-    public int getCorrectionMode() {
-      return correctionMode;
-    }
-
-    public void setCorrectionMode(int correctionMode) {
-      this.correctionMode = correctionMode;
-    }
-  }
 }

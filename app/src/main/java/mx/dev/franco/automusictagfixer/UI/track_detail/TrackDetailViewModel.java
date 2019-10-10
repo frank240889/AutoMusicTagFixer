@@ -18,6 +18,7 @@ import mx.dev.franco.automusictagfixer.UI.SingleLiveEvent;
 import mx.dev.franco.automusictagfixer.fixer.AudioMetadataTagger;
 import mx.dev.franco.automusictagfixer.fixer.AudioTagger;
 import mx.dev.franco.automusictagfixer.fixer.MetadataReaderResult;
+import mx.dev.franco.automusictagfixer.fixer.MetadataWriterResult;
 import mx.dev.franco.automusictagfixer.identifier.Identifier;
 import mx.dev.franco.automusictagfixer.identifier.Result;
 import mx.dev.franco.automusictagfixer.interfaces.Cache;
@@ -54,6 +55,8 @@ public class TrackDetailViewModel extends AndroidViewModel {
     private SingleLiveEvent<Message> mLiveMessage = new SingleLiveEvent<>();
     private SingleLiveEvent<ActionableMessage> mLiveActionableMessage = new SingleLiveEvent<>();
     private LiveData<Message> mResultReading;
+    private LiveData<Message> mResultWriting;
+    private LiveData<Message> mResultRenaming;
     private SingleLiveEvent<String> mResultsIdentificationLiveData = new SingleLiveEvent<>();
     private SingleLiveEvent<ValidationWrapper> mInputsInvalidLiveData = new SingleLiveEvent<>();
 
@@ -65,6 +68,7 @@ public class TrackDetailViewModel extends AndroidViewModel {
     private Cache<String, List<Identifier.IdentificationResults>> mResultsCache;
 
     private int mCorrectionMode = Constants.CorrectionActions.VIEW_INFO;
+    private UIInputParams mCorrectionParams;
 
     @Inject
     public TrackDetailViewModel(@NonNull Application application,
@@ -117,6 +121,47 @@ public class TrackDetailViewModel extends AndroidViewModel {
         return mResultReading;
     }
 
+    public LiveData<Message> observeWritingResult() {
+        LiveData<Resource<MetadataWriterResult>> resultWriter = mDataTrackRepository.getResultWriter();
+        mResultWriting = Transformations.map(resultWriter, new Function<Resource<MetadataWriterResult>, Message>() {
+            @Override
+            public Message apply(Resource<MetadataWriterResult> input) {
+                Message message = null;
+                if(input.data.getResultCorrection().getCode() == AudioTagger.SUCCESS) {
+                    if(mCorrectionParams.renameFile() ){
+                        mDataTrackRepository.renameFile(mCorrectionParams);
+                    }
+                    else {
+
+                    }
+                }
+                else {
+
+                }
+                return message;
+            }
+        });
+        return mResultWriting;
+    }
+
+    public LiveData<Message> observeRenamingResult() {
+        LiveData<Resource<AudioTagger.ResultRename>> resultRename = mDataTrackRepository.getResultRename();
+        mResultRenaming = Transformations.map(resultRename, new Function<Resource<AudioTagger.ResultRename>, Message>() {
+            @Override
+            public Message apply(Resource<AudioTagger.ResultRename> input) {
+                Message message = null;
+                if(input.status == Resource.Status.SUCCESS) {
+
+                }
+                else {
+
+                }
+                return message;
+            }
+        });
+        return mResultRenaming;
+    }
+
     public LiveData<Message> observeMessage(){
         return mLiveMessage;
     }
@@ -166,6 +211,7 @@ public class TrackDetailViewModel extends AndroidViewModel {
     }
 
     public void performCorrection(AudioMetadataTagger.InputParams correctionParams) {
+        mCorrectionParams = (UIInputParams) correctionParams;
         if(correctionParams == null) {
             performCorrection();
         }
@@ -174,7 +220,7 @@ public class TrackDetailViewModel extends AndroidViewModel {
             int id = Integer.parseInt(((CorrectionParams)correctionParams).getId());
             Result result = (Result) results.get(id);
             AudioMetadataTagger.InputParams inputParams = AndroidUtils.createInputParams(result);
-            mDataTrackRepository.fixTrack(inputParams);
+            mDataTrackRepository.fixTrack(inputParams, getApplication());
         }
     }
 
@@ -203,7 +249,7 @@ public class TrackDetailViewModel extends AndroidViewModel {
             inputParams.setTargetFile(getTrack().getPath());
             inputParams.setCodeRequest(AudioTagger.MODE_OVERWRITE_ALL_TAGS);
 
-            mDataTrackRepository.fixTrack(inputParams);
+            mDataTrackRepository.fixTrack(inputParams, getApplication());
         }
 
     }

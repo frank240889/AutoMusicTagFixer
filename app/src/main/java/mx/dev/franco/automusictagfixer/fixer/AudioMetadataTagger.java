@@ -11,7 +11,6 @@ import java.io.IOException;
 import java.util.Map;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
 
 import mx.dev.franco.automusictagfixer.interfaces.AudioMetadataManager;
 
@@ -23,7 +22,6 @@ public class AudioMetadataTagger implements AudioMetadataManager<AudioMetadataTa
 
     private AudioTagger tagger;
 
-    @Inject
     public AudioMetadataTagger(AudioTagger tagger){
         this.tagger = tagger;
     }

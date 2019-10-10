@@ -37,24 +37,41 @@ public class MetadataWriter extends AbstractMetadataFixer<Context, Void, AudioTa
     @Override
     protected AudioTagger.ResultCorrection doInBackground(Context... contexts) {
         AudioTagger.ResultCorrection resultCorrection = null;
-        try {
-            //Check if exist cover and fetch from url, then replace it in the same key.
-            String url = (String) mInputParams.getFields().get(FieldKey.COVER_ART);
-            if(url != null && !url.isEmpty()) {
-                byte[] cover = new GnAssetFetch(GnApiService.getInstance(contexts[0]).getGnUser(), url).data();
-                mInputParams.getFields().put(FieldKey.COVER_ART, cover);
+        Object coverData = mInputParams.getFields().get(FieldKey.COVER_ART);
+        //Check if exist cover as URL and fetch its data, then replace it in the same key.
+        if(coverData instanceof String) {
+            String url = (String) coverData;
+            if(!url.isEmpty()) {
+                try {
+                    byte[] cover = new GnAssetFetch(GnApiService.getInstance(contexts[0]).getGnUser(), url).data();
+                    mInputParams.getFields().put(FieldKey.COVER_ART, cover);
+                    resultCorrection = mFileTagger.writeMetadata(mInputParams);
+                } catch (IOException |
+                        ReadOnlyFileException |
+                        CannotReadException |
+                        TagException |
+                        InvalidAudioFrameException |
+                        GnException e) {
+                    e.printStackTrace();
+                    resultCorrection = new AudioTagger.ResultCorrection(AudioTagger.COULD_NOT_APPLY_TAGS, null);
+                    resultCorrection.setError(e);
+                }
             }
-            resultCorrection = mFileTagger.writeMetadata(mInputParams);
-        } catch (IOException|
-                ReadOnlyFileException|
-                CannotReadException|
-                TagException|
-                InvalidAudioFrameException|
-                GnException e) {
-            e.printStackTrace();
-            resultCorrection = new AudioTagger.ResultCorrection(AudioTagger.COULD_NOT_APPLY_TAGS, null);
-            resultCorrection.setError(e);
         }
+        else {
+            try {
+                resultCorrection = mFileTagger.writeMetadata(mInputParams);
+            } catch (IOException |
+                    ReadOnlyFileException |
+                    CannotReadException |
+                    TagException |
+                    InvalidAudioFrameException e) {
+                e.printStackTrace();
+                resultCorrection = new AudioTagger.ResultCorrection(AudioTagger.COULD_NOT_APPLY_TAGS, null);
+                resultCorrection.setError(e);
+            }
+        }
+
 
         return resultCorrection;
     }

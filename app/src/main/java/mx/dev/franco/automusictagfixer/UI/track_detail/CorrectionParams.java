@@ -1,8 +1,6 @@
 package mx.dev.franco.automusictagfixer.UI.track_detail;
 
-import mx.dev.franco.automusictagfixer.fixer.AudioMetadataTagger;
-
-public class CorrectionParams extends AudioMetadataTagger.InputParams {
+public class CorrectionParams extends UIInputParams {
     private String fileName;
     private String id;
 

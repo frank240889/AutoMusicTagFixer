@@ -4,9 +4,9 @@ import mx.dev.franco.automusictagfixer.interfaces.AsyncOperation;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
 
 public class FileRenamer extends AbstractMetadataFixer<Void, Void, AudioTagger.ResultRename> {
-    private AsyncOperation<Track, MetadataWriterResult, Track, MetadataWriterResult> mCallback;
+    private AsyncOperation<Track, AudioTagger.ResultRename, Track, AudioTagger.ResultRename> mCallback;
     private String mNewName;
-    public FileRenamer(AsyncOperation<Track, MetadataWriterResult, Track, MetadataWriterResult> callback,
+    public FileRenamer(AsyncOperation<Track, AudioTagger.ResultRename, Track, AudioTagger.ResultRename> callback,
                        AudioMetadataTagger fileTagger,
                        Track track, String newName) {
         super(fileTagger, track);
@@ -38,12 +38,11 @@ public class FileRenamer extends AbstractMetadataFixer<Void, Void, AudioTagger.R
     @Override
     protected void onPostExecute(AudioTagger.ResultRename resultCorrection) {
         if(mCallback != null) {
-            MetadataWriterResult result = new MetadataWriterResult(track, resultCorrection);
             if(resultCorrection.getCode() != AudioTagger.SUCCESS) {
-                mCallback.onAsyncOperationError(result);
+                mCallback.onAsyncOperationError(resultCorrection);
             }
             else {
-                mCallback.onAsyncOperationFinished(result);
+                mCallback.onAsyncOperationFinished(resultCorrection);
             }
         }
     }

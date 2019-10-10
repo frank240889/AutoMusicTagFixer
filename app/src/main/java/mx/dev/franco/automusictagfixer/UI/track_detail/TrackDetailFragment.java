@@ -37,6 +37,7 @@ import javax.inject.Inject;
 
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.UI.BaseFragment;
+import mx.dev.franco.automusictagfixer.UI.BasicFragmentDialog;
 import mx.dev.franco.automusictagfixer.UI.MainActivity;
 import mx.dev.franco.automusictagfixer.UI.results.IdentificationResultsFragment;
 import mx.dev.franco.automusictagfixer.UI.sd_card_instructions.SdCardInstructionsActivity;
@@ -910,7 +911,7 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
     }
 
     @Override
-    public void onAccept(ManualCorrectionDialogFragment.UIInputParams inputParams) {
+    public void onAccept(UIInputParams inputParams) {
         mViewModel.performCorrection(inputParams);
     }
 
