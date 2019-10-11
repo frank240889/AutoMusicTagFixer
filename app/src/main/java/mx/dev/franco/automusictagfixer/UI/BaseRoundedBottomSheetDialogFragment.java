@@ -16,22 +16,18 @@ import mx.dev.franco.automusictagfixer.R;
 
 /**
  * @author Franco Castillo
- * A simple bottom sheet dialog fragment with rounded corners.
+ * A simple bottom sheet dialog fragment with rounded corners used as base for all bottom sheet fragments.
  */
-public class RoundedBottomSheetDialogFragment extends BottomSheetDialogFragment {
-    protected static final String LAYOUT = "layout";
-    protected static final String TRACK_ID = "track_id";
+public abstract class BaseRoundedBottomSheetDialogFragment extends BottomSheetDialogFragment {
+    protected static final String LAYOUT_ID = "layout";
     private @LayoutRes int mLayout = -1;
-    private String mTrackId;
-
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Bundle arguments =  getArguments();
         if(arguments != null) {
-            mLayout = arguments.getInt(LAYOUT);
-            mTrackId = arguments.getString(TRACK_ID);
+            mLayout = arguments.getInt(LAYOUT_ID);
         }
     }
 
@@ -50,6 +46,4 @@ public class RoundedBottomSheetDialogFragment extends BottomSheetDialogFragment 
     public int getTheme() {
         return R.style.BottomSheetDialogTheme;
     }
-
-    protected void onLoading(boolean loading){}
 }

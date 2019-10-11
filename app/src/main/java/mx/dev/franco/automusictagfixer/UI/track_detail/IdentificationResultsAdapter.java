@@ -24,6 +24,9 @@ import mx.dev.franco.automusictagfixer.identifier.Result;
 
 public class IdentificationResultsAdapter extends RecyclerView.Adapter<ResultItemHolder> implements Observer<List<Identifier.IdentificationResults>> {
     private List<Identifier.IdentificationResults> mIdentificationResults = new ArrayList<>();
+
+    public IdentificationResultsAdapter(){}
+
     @NonNull
     @Override
     public ResultItemHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {

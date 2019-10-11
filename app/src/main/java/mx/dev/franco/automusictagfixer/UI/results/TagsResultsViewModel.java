@@ -7,7 +7,7 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-import mx.dev.franco.automusictagfixer.UI.ResultsViewModel;
+import mx.dev.franco.automusictagfixer.UI.track_detail.ResultsViewModel;
 import mx.dev.franco.automusictagfixer.identifier.Identifier;
 import mx.dev.franco.automusictagfixer.interfaces.Cache;
 

@@ -318,5 +318,7 @@
     <string name="cannot_play_track">El reproductor interno no pudo reproducir la canción, usa uno externo.</string>
     <string name="attention">Atención</string>
     <string name="cannot_read_file">No se puede leer este archivo.</string>
+    <string name="changes_applied">Cambios aplicados.</string>
+    <string name="changes_partially_applied">Se aplicaron las etiquetas pero no se pudo renombrar el archivo.</string>
 
 </resources>

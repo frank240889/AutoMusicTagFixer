@@ -21,8 +21,8 @@ import mx.dev.franco.automusictagfixer.utilities.Constants;
 public class ManualCorrectionDialogFragment extends BaseDialogFragment {
 
   public interface OnManualCorrectionListener {
-    void onAccept(UIInputParams inputParams);
-    void onCancel();
+    void onManualCorrection(ManualCorrectionParams inputParams);
+    void onCancelManualCorrection();
   }
 
   private OnManualCorrectionListener mOnManualCorrectionListener;
@@ -52,20 +52,20 @@ public class ManualCorrectionDialogFragment extends BaseDialogFragment {
 
   @Override
   public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-    UIInputParams uiInputParams = new UIInputParams();
+    ManualCorrectionParams manualCorrectionParams = new ManualCorrectionParams();
     final CheckBox checkBox = view.findViewById(R.id.manual_checkbox_rename);
     Button acceptButton = view.findViewById(R.id.accept_button);
     Button cancelButton = view.findViewById(R.id.cancel_button);
 
     acceptButton.setOnClickListener(v -> {
-              uiInputParams.setCorrectionMode(Constants.MANUAL);
-              uiInputParams.setCodeRequest(AudioTagger.MODE_OVERWRITE_ALL_TAGS);
-              mOnManualCorrectionListener.onAccept(uiInputParams);
+              manualCorrectionParams.setCorrectionMode(Constants.MANUAL);
+              manualCorrectionParams.setCodeRequest(AudioTagger.MODE_OVERWRITE_ALL_TAGS);
+              mOnManualCorrectionListener.onManualCorrection(manualCorrectionParams);
       dismiss();
     });
 
     cancelButton.setOnClickListener(v -> {
-      mOnManualCorrectionListener.onCancel();
+      mOnManualCorrectionListener.onCancelManualCorrection();
       dismiss();
     });
 
@@ -76,7 +76,7 @@ public class ManualCorrectionDialogFragment extends BaseDialogFragment {
       public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
       @Override
       public void onTextChanged(CharSequence s, int start, int before, int count) {
-        uiInputParams.setTargetFile(editText.getText().toString());
+        manualCorrectionParams.setTargetFile(editText.getText().toString());
       }
       @Override
       public void afterTextChanged(Editable s) {}
@@ -87,14 +87,14 @@ public class ManualCorrectionDialogFragment extends BaseDialogFragment {
         textInputLayout.setVisibility(View.GONE);
         textView.setVisibility(View.GONE);
         editText.setText("");
-        uiInputParams.setTargetFile(null);
-        uiInputParams.setRenameFile(false);
+        manualCorrectionParams.setNewName(null);
+        manualCorrectionParams.setRenameFile(false);
       }
       else{
         textInputLayout.setVisibility(View.VISIBLE);
         textView.setVisibility(View.VISIBLE);
-        uiInputParams.setTargetFile(editText.getText().toString());
-        uiInputParams.setRenameFile(true);
+        manualCorrectionParams.setNewName(editText.getText().toString());
+        manualCorrectionParams.setRenameFile(true);
       }
     });
   }

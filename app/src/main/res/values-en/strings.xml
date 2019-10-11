@@ -314,5 +314,6 @@
     <string name="cannot_play_track">The embedded player could not play the track, please use another external.</string>
     <string name="attention">Attention</string>
     <string name="cannot_read_file">Can not read this file.</string>
+    <string name="changes_applied">Changes applied.</string>
 
 </resources>

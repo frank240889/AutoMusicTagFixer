@@ -13,7 +13,7 @@ import android.widget.TextView;
 
 import mx.dev.franco.automusictagfixer.R;
 
-public class BasicFragmentDialog extends BaseDialogFragment {
+public class InformativeFragmentDialog extends BaseDialogFragment {
     private static final String TITLE = "title";
     private static final String CONTENT = "content";
     private static final String POSITIVE_BUTTON_TEXT = "positive_button_text";
@@ -36,10 +36,10 @@ public class BasicFragmentDialog extends BaseDialogFragment {
 
     private OnClickBasicFragmentDialogListener mOnClickBasicFragmentDialogListener;
 
-    public static BasicFragmentDialog newInstance(@StringRes int title,
-                                                 @StringRes int content,
-                                                 @StringRes int positiveButtonText,
-                                                 @StringRes int negativeButtonText){
+    public static InformativeFragmentDialog newInstance(@StringRes int title,
+                                                        @StringRes int content,
+                                                        @StringRes int positiveButtonText,
+                                                        @StringRes int negativeButtonText){
         Bundle bundle = new Bundle();
         bundle.putInt(LAYOUT_ID, R.layout.layout_basic_dialog);
         bundle.putInt(TITLE, title);
@@ -47,9 +47,9 @@ public class BasicFragmentDialog extends BaseDialogFragment {
         bundle.putInt(POSITIVE_BUTTON_TEXT, positiveButtonText);
         bundle.putInt(NEGATIVE_BUTTON_TEXT, negativeButtonText);
 
-        BasicFragmentDialog basicFragmentDialog = new BasicFragmentDialog();
-        basicFragmentDialog.setArguments(bundle);
-        return basicFragmentDialog;
+        InformativeFragmentDialog informativeFragmentDialog = new InformativeFragmentDialog();
+        informativeFragmentDialog.setArguments(bundle);
+        return informativeFragmentDialog;
 
     }
 

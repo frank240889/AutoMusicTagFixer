@@ -14,29 +14,27 @@ import android.widget.CheckBox;
 import android.widget.EditText;
 
 import mx.dev.franco.automusictagfixer.R;
-import mx.dev.franco.automusictagfixer.UI.RoundedBottomSheetDialogFragment;
-import mx.dev.franco.automusictagfixer.UI.track_detail.CorrectionParams;
+import mx.dev.franco.automusictagfixer.UI.BaseRoundedBottomSheetDialogFragment;
 import mx.dev.franco.automusictagfixer.UI.track_detail.IdentificationResultsAdapter;
+import mx.dev.franco.automusictagfixer.UI.track_detail.SemiAutoCorrectionParams;
 import mx.dev.franco.automusictagfixer.fixer.AudioTagger;
 
-import static mx.dev.franco.automusictagfixer.UI.ResultsFragment.LAYOUT_ID;
-
-public class IdentificationResultsFragment extends RoundedBottomSheetDialogFragment {
+public class IdentificationResultsFragmentBase extends BaseRoundedBottomSheetDialogFragment {
     public interface OnResultSelectedListener {
-        void applyTagsButton(CorrectionParams correctionParams);
+        void applyTagsButton(SemiAutoCorrectionParams semiAutoCorrectionParams);
     }
 
     private OnResultSelectedListener mOnResultSelectedListener;
-    private CorrectionParams mCorrectionParams;
+    private SemiAutoCorrectionParams mSemiAutoCorrectionParams;
     private int mCenteredItem = -1;
 
-    public IdentificationResultsFragment(){}
+    public IdentificationResultsFragmentBase(){}
 
-    public static IdentificationResultsFragment newInstance(String id) {
+    public static IdentificationResultsFragmentBase newInstance(String id) {
         Bundle arguments = new Bundle();
         arguments.putInt(LAYOUT_ID, R.layout.layout_results_track_id);
         arguments.putString(TRACK_ID, id);
-        IdentificationResultsFragment identificationResultsFragment = new IdentificationResultsFragment();
+        IdentificationResultsFragmentBase identificationResultsFragment = new IdentificationResultsFragmentBase();
         identificationResultsFragment.setArguments(arguments);
         return identificationResultsFragment;
     }
@@ -52,7 +50,7 @@ public class IdentificationResultsFragment extends RoundedBottomSheetDialogFragm
             throw new RuntimeException(context.toString() + " must implement " +
                     OnResultSelectedListener.class.getCanonicalName());
 
-        mCorrectionParams = new CorrectionParams();
+        mSemiAutoCorrectionParams = new SemiAutoCorrectionParams();
     }
 
     @Override
@@ -88,7 +86,7 @@ public class IdentificationResultsFragment extends RoundedBottomSheetDialogFragm
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                mCorrectionParams.setFileName(s.toString());
+                mSemiAutoCorrectionParams.setNewName(s.toString());
             }
             @Override
             public void afterTextChanged(Editable s) {}
@@ -101,15 +99,15 @@ public class IdentificationResultsFragment extends RoundedBottomSheetDialogFragm
         });
 
         missingTagsButton.setOnClickListener(view1 -> {
-            mCorrectionParams.setCodeRequest(AudioTagger.MODE_WRITE_ONLY_MISSING);
-            mCorrectionParams.setId(mCenteredItem+"");
-            mOnResultSelectedListener.applyTagsButton(mCorrectionParams);
+            mSemiAutoCorrectionParams.setCodeRequest(AudioTagger.MODE_WRITE_ONLY_MISSING);
+            mSemiAutoCorrectionParams.setPosition(mCenteredItem+"");
+            mOnResultSelectedListener.applyTagsButton(mSemiAutoCorrectionParams);
         });
 
         allTagsButton.setOnClickListener(view12 -> {
-            mCorrectionParams.setCodeRequest(AudioTagger.MODE_OVERWRITE_ALL_TAGS);
-            mCorrectionParams.setId(mCenteredItem+"");
-            mOnResultSelectedListener.applyTagsButton(mCorrectionParams);
+            mSemiAutoCorrectionParams.setCodeRequest(AudioTagger.MODE_OVERWRITE_ALL_TAGS);
+            mSemiAutoCorrectionParams.setPosition(mCenteredItem+"");
+            mOnResultSelectedListener.applyTagsButton(mSemiAutoCorrectionParams);
         });
     }
 

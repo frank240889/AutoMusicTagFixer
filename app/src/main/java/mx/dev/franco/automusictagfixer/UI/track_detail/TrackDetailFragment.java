@@ -3,7 +3,6 @@ package mx.dev.franco.automusictagfixer.UI.track_detail;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.app.Activity;
-import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
 import android.content.Intent;
@@ -37,16 +36,18 @@ import javax.inject.Inject;
 
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.UI.BaseFragment;
-import mx.dev.franco.automusictagfixer.UI.BasicFragmentDialog;
+import mx.dev.franco.automusictagfixer.UI.InformativeFragmentDialog;
 import mx.dev.franco.automusictagfixer.UI.MainActivity;
-import mx.dev.franco.automusictagfixer.UI.results.IdentificationResultsFragment;
+import mx.dev.franco.automusictagfixer.UI.results.IdentificationResultsFragmentBase;
 import mx.dev.franco.automusictagfixer.UI.sd_card_instructions.SdCardInstructionsActivity;
 import mx.dev.franco.automusictagfixer.common.Action;
 import mx.dev.franco.automusictagfixer.databinding.FragmentTrackDetailBinding;
+import mx.dev.franco.automusictagfixer.identifier.IdentificationParams;
 import mx.dev.franco.automusictagfixer.utilities.ActionableMessage;
 import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
 import mx.dev.franco.automusictagfixer.utilities.Constants.CorrectionActions;
+import mx.dev.franco.automusictagfixer.utilities.IdentificationType;
 import mx.dev.franco.automusictagfixer.utilities.Message;
 import mx.dev.franco.automusictagfixer.utilities.RequiredPermissions;
 import mx.dev.franco.automusictagfixer.utilities.SimpleMediaPlayer;
@@ -59,7 +60,9 @@ import static mx.dev.franco.automusictagfixer.utilities.Constants.GOOGLE_SEARCH;
  * create an instance of this fragment.
  */
 public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> implements
-    ManualCorrectionDialogFragment.OnManualCorrectionListener, IdentificationResultsFragment.OnResultSelectedListener {
+    ManualCorrectionDialogFragment.OnManualCorrectionListener,
+        CoverIdentificationResultsFragmentBase.OnCoverCorrectionListener,
+        SemiAutoCorrectionDialogFragment.OnSemiAutoCorrectionListener {
 
     public static final String TAG = TrackDetailFragment.class.getName();
 
@@ -123,20 +126,35 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
         else
             mViewModel.setInitialAction(CorrectionActions.VIEW_INFO);
 
-        mViewModel.observeReadingResult().observe(this, new Observer<Message>() {
-            @Override
-            public void onChanged(@Nullable Message message) {
-                if(message == null) {
-                    onSuccessLoad();
-                }
+        mViewModel.observeReadingResult().observe(this, message -> {
+            if(message == null) {
+                onSuccessLoad();
             }
         });
 
         mViewModel.observeActionableMessage().observe(this, this::onActionableMessage);
         mViewModel.observeMessage().observe(this, this::onMessage);
-        mViewModel.observeResultIdentification().observe(this, this::onIdentificationResultsFound);
+        mViewModel.observeResultIdentification().observe(this, this::onIdentificationResults);
+        mViewModel.observeLoadingState().observe(this, this::loading);
 
         setHasOptionsMenu(true);
+    }
+
+
+    private void onIdentificationResults(IdentificationType actionableMessage) {
+        if(actionableMessage.getAction() == Action.SUCCESS) {
+
+        }
+        else if(actionableMessage.getAction() == Action.)
+            return;
+        else if( == )
+
+        OnClickListener onClickListener = createOnClickListener(actionableMessage.getAction());
+        Snackbar snackbar = AndroidUtils.createActionableSnackbar(
+                mFragmentTrackDetailBinding.rootContainerDetails,
+                actionableMessage, onClickListener);
+
+        snackbar.show();
     }
 
     @Override
@@ -276,24 +294,24 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
      * Callback to confirm the deletion of current cover;
      */
     public void onConfirmRemovingCover() {
-        BasicFragmentDialog basicFragmentDialog = BasicFragmentDialog.
+        InformativeFragmentDialog informativeFragmentDialog = InformativeFragmentDialog.
                 newInstance(R.string.attention,
                         R.string.message_remove_cover_art_dialog,
                         R.string.accept, R.string.cancel_button);
-        basicFragmentDialog.showNow(getChildFragmentManager(),
-                basicFragmentDialog.getClass().getCanonicalName());
+        informativeFragmentDialog.showNow(getChildFragmentManager(),
+                informativeFragmentDialog.getClass().getCanonicalName());
 
-        basicFragmentDialog.setOnClickBasicFragmentDialogListener(
-                new BasicFragmentDialog.OnClickBasicFragmentDialogListener() {
+        informativeFragmentDialog.setOnClickBasicFragmentDialogListener(
+                new InformativeFragmentDialog.OnClickBasicFragmentDialogListener() {
                     @Override
                     public void onPositiveButton() {
-                        basicFragmentDialog.dismiss();
+                        informativeFragmentDialog.dismiss();
                         mViewModel.confirmRemoveCover();
                     }
 
                     @Override
                     public void onNegativeButton() {
-                        basicFragmentDialog.dismiss();
+                        informativeFragmentDialog.dismiss();
                     }
                 }
         );
@@ -367,45 +385,58 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
      * Loads the identification results and shows to the user.
      */
     private void onIdentificationResultsFound(String trackId) {
-        IdentificationResultsFragment identificationResultsFragment =
-                IdentificationResultsFragment.newInstance(trackId);
+        IdentificationResultsFragmentBase identificationResultsFragment =
+                IdentificationResultsFragmentBase.newInstance(trackId);
         identificationResultsFragment.show(getChildFragmentManager(),
-                IdentificationResultsFragment.class.getName());
+                IdentificationResultsFragmentBase.class.getName());
     }
 
     /**
-     * Callback from {@link IdentificationResultsFragment} when
+     * Callback from {@link IdentificationResultsFragmentBase} when
      * user pressed apply only missing tags button
      */
-    public void onMissingTagsButton(CorrectionParams correctionParams) {
-        mViewModel.performCorrection(correctionParams);
+    @Override
+    public void onMissingTagsButton(SemiAutoCorrectionParams semiAutoCorrectionParams) {
+        mViewModel.performCorrection(semiAutoCorrectionParams);
     }
 
     /**
-     * Callback from {@link IdentificationResultsFragment} when
+     * Callback from {@link IdentificationResultsFragmentBase} when
      * user pressed apply all tags button
      */
-    public void onOverwriteTagsButton(CorrectionParams correctionParams) {
-        mViewModel.performCorrection(correctionParams);
+    @Override
+    public void onOverwriteTagsButton(SemiAutoCorrectionParams semiAutoCorrectionParams) {
+        mViewModel.performCorrection(semiAutoCorrectionParams);
+    }
+
+    @Override
+    public void onManualCorrection(ManualCorrectionParams inputParams) {
+        mViewModel.performCorrection(inputParams);
+    }
+
+    @Override
+    public void onCancelManualCorrection() {
+        disableFields();
+        mViewModel.restorePreviousValues();
+    }
+
+
+    @Override
+    public void saveAsImageButton(CoverCorrectionParams coverCorrectionParams) {
+
+    }
+
+    @Override
+    public void saveAsCover(CoverCorrectionParams coverCorrectionParams) {
+
     }
 
     /**
-     * Callback from {@link IdentificationResultsFragment} when
+     * Callback from {@link IdentificationResultsFragmentBase} when
      * user pressed save cover as image button
      */
     public void onSaveAsImageFile() {
         mViewModel.saveAsImageFileFrom(Constants.CACHED);
-    }
-
-    /**
-     * Loads the identification results and shows to the user.
-     * @param results The object containing the data.
-     */
-    public void onLoadCoverIdentificationResults(GnResponseListener.IdentificationResults results) {
-        IdentificationResultsFragment identificationResultsFragment =
-                IdentificationResultsFragment.newInstance(results, true);
-        identificationResultsFragment.show(getChildFragmentManager(),
-                IdentificationResultsFragment.class.getName());
     }
 
     /**
@@ -428,14 +459,6 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
                 mFragmentTrackDetailBinding.rootContainerDetails, getActivity().getApplicationContext());
         snackbar.setText(message);
         snackbar.show();
-    }
-
-    public void onEnableFabs() {
-        enableMiniFabs(true);
-    }
-
-    public void onDisableFabs() {
-        enableMiniFabs(false);
     }
 
     /**
@@ -576,13 +599,11 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
         });
 
         //runs track id
-        mFragmentTrackDetailBinding.fabAutofix.setOnClickListener(v -> {
-            mViewModel.startIdentification();
-        });
+        mFragmentTrackDetailBinding.fabAutofix.setOnClickListener(v ->
+                mViewModel.startIdentification(new IdentificationParams(IdentificationParams.ALL_TAGS)));
 
-        mFragmentTrackDetailBinding.fabDownloadCover.setOnClickListener(v -> {
-            mViewModel.startIdentification();
-        });
+        mFragmentTrackDetailBinding.fabDownloadCover.setOnClickListener(v ->
+                mViewModel.startIdentification(new IdentificationParams(IdentificationParams.ONLY_COVER)));
 
         //shows or hides mini fabs
         mFragmentTrackDetailBinding.fabMenu.setOnClickListener(view -> {
@@ -908,21 +929,5 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
     private OnClickListener createOnClickListener (Action action) {
 
         return null;
-    }
-
-    @Override
-    public void onAccept(UIInputParams inputParams) {
-        mViewModel.performCorrection(inputParams);
-    }
-
-    @Override
-    public void onCancel() {
-        disableFields();
-        mViewModel.restorePreviousValues();
-    }
-
-    @Override
-    public void applyTagsButton(CorrectionParams correctionParams) {
-        mViewModel.performCorrection(correctionParams);
     }
 }

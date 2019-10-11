@@ -30,7 +30,11 @@ public class Resource<T> {
         return new Resource<>(Status.LOADING, data);
     }
 
+    public static <T> Resource<T> cancelled(@Nullable T data) {
+        return new Resource<>(Status.CANCELLED, data);
+    }
+
     public enum Status {
-        SUCCESS, ERROR, LOADING
+        SUCCESS, ERROR, LOADING, CANCELLED
     }
 }
