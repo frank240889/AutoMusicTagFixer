@@ -30,6 +30,10 @@ public class IdentificationManager {
         mOnActionableMessage = new SingleLiveEvent<>();
     }
 
+    /**
+     * Livedata to inform a task is in progress.
+     * @return A livedata with boolean value.
+     */
     public LiveData<Boolean> observeLoadingState() {
         return mLoadingStateLiveData;
     }
@@ -49,25 +53,25 @@ public class IdentificationManager {
             public void onIdentificationFinished(List<Identifier.IdentificationResults> result, Track file) {
                 mLoadingStateLiveData.setValue(false);
                 mResultsCache.add(file.getMediaStoreId()+"", result);
-                mOnActionableMessage.setValue(Resource.success(new ActionableMessage(Action.SUCCESS, null)));
+                mOnActionableMessage.setValue(Resource.success(new ActionableMessage(Action.SUCCESS_IDENTIFICATION, null)));
             }
 
             @Override
             public void onIdentificationError(Track file, String error) {
                 mLoadingStateLiveData.setValue(false);
-                mOnActionableMessage.setValue(Resource.error(new ActionableMessage(Action.RETRY, error)));
+                mOnActionableMessage.setValue(Resource.error(new ActionableMessage(Action.RETRY_ON_ERROR, error)));
             }
 
             @Override
             public void onIdentificationCancelled(Track file) {
                 mLoadingStateLiveData.setValue(false);
-                mOnActionableMessage.setValue(Resource.cancelled(new ActionableMessage(Action.NONE, )));
+                mOnActionableMessage.setValue(Resource.cancelled(new ActionableMessage(Action.CANCELLED_IDENTIFICATION, R.string.identification_cancelled)));
             }
 
             @Override
             public void onIdentificationNotFound(Track file) {
                 mLoadingStateLiveData.setValue(false);
-                mOnActionableMessage.setValue(Resource.error(new ActionableMessage(Action.NONE, R.string.no_found_tags)));
+                mOnActionableMessage.setValue(Resource.error(new ActionableMessage(Action.RETRY_IDENTIFICATION, R.string.no_found_tags)));
             }
         });
         mIdentifier.identify(track);

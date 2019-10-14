@@ -136,25 +136,9 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
         mViewModel.observeMessage().observe(this, this::onMessage);
         mViewModel.observeResultIdentification().observe(this, this::onIdentificationResults);
         mViewModel.observeLoadingState().observe(this, this::loading);
+        mViewModel.observeInputsValidation().observe(this, this::onInputDataInvalid);
 
         setHasOptionsMenu(true);
-    }
-
-
-    private void onIdentificationResults(IdentificationType actionableMessage) {
-        if(actionableMessage.getAction() == Action.SUCCESS) {
-
-        }
-        else if(actionableMessage.getAction() == Action.)
-            return;
-        else if( == )
-
-        OnClickListener onClickListener = createOnClickListener(actionableMessage.getAction());
-        Snackbar snackbar = AndroidUtils.createActionableSnackbar(
-                mFragmentTrackDetailBinding.rootContainerDetails,
-                actionableMessage, onClickListener);
-
-        snackbar.show();
     }
 
     @Override
@@ -165,7 +149,7 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         mFragmentTrackDetailBinding = DataBindingUtil.inflate(inflater,
                 R.layout.fragment_track_detail,
@@ -382,16 +366,6 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
     }
 
     /**
-     * Loads the identification results and shows to the user.
-     */
-    private void onIdentificationResultsFound(String trackId) {
-        IdentificationResultsFragmentBase identificationResultsFragment =
-                IdentificationResultsFragmentBase.newInstance(trackId);
-        identificationResultsFragment.show(getChildFragmentManager(),
-                IdentificationResultsFragmentBase.class.getName());
-    }
-
-    /**
      * Callback from {@link IdentificationResultsFragmentBase} when
      * user pressed apply only missing tags button
      */
@@ -420,15 +394,14 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
         mViewModel.restorePreviousValues();
     }
 
-
     @Override
     public void saveAsImageButton(CoverCorrectionParams coverCorrectionParams) {
-
+        mViewModel.performCorrection(coverCorrectionParams);
     }
 
     @Override
     public void saveAsCover(CoverCorrectionParams coverCorrectionParams) {
-
+        mViewModel.performCorrection(coverCorrectionParams);
     }
 
     /**
@@ -506,14 +479,11 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
         onDisableEditMode();
     }
 
-    /**
-     * Callback when user pressed mSaveButton and input data is invalid.
-     */
-    public void alertInvalidData(String message, int field) {
-        EditText editText = mFragmentTrackDetailBinding.getRoot().findViewById(field);
+    private void onInputDataInvalid(ValidationWrapper validationWrapper) {
+        EditText editText = mFragmentTrackDetailBinding.getRoot().findViewById(validationWrapper.getField());
         Animation animation = AnimationUtils.loadAnimation(getActivity().getApplicationContext(), R.anim.blink);
         editText.requestFocus();
-        editText.setError(message);
+        editText.setError(validationWrapper.getMessage().getMessage());
         editText.setAnimation(animation);
         editText.startAnimation(animation);
         InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
@@ -524,7 +494,7 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
     /**
      * Callback when user pressed mSaveButton and input data is valid.
      */
-    public void onDataValid() {
+    public void onInputDataValid() {
         ManualCorrectionDialogFragment manualCorrectionDialogFragment =
                 ManualCorrectionDialogFragment.newInstance();
 
@@ -623,6 +593,10 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
 
     }
 
+    /**
+     * Adds a effect to fading down the cover when user scroll up and fading up to the cover when user
+     * scrolls down.
+     */
     private void addAppBarOffsetListener(){
         mFragmentTrackDetailBinding.appBarLayout.addOnOffsetChangedListener((appBarLayout, verticalOffset) -> {
             //set alpha of cover depending on offset of expanded toolbar cover height,
@@ -646,7 +620,9 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
         });
     }
 
-
+    /**
+     * Disable the Save Fab button.
+     */
     private void showFabs(){
         mFragmentTrackDetailBinding.fabDownloadCover.show();
         mFragmentTrackDetailBinding.fabEditTrackInfo.show();
@@ -655,6 +631,9 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
         mFragmentTrackDetailBinding.fabSaveInfo.hide();
     }
 
+    /**
+     * Enable the Save Fab button.
+     */
     private void editMode(){
         mFragmentTrackDetailBinding.fabDownloadCover.hide();
         mFragmentTrackDetailBinding.fabEditTrackInfo.hide();
@@ -688,13 +667,15 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
 
 
     /**
-     * Initializes MediaPlayer and setup
-     * of fields
+     * Set the path to the current track for media playback.
      */
     private void setupMediaPlayer(){
         mPlayer.setPath(mViewModel.getTrack().getPath());
     }
 
+    /**
+     * Callback to handle correctly the onBackPressed callback from host activity.
+     */
     @Override
     public void onBackPressed(){
         if(mIsFloatingActionMenuOpen){
@@ -712,6 +693,9 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
         mFragmentTrackDetailBinding.appBarLayout.setExpanded(true);
     }
 
+    /**
+     * Starts a external app to search info about the current track.
+     */
     private void searchInfoForTrack(){
         String title = mFragmentTrackDetailBinding.layoutContentDetailsTrack.trackNameDetails.
                 getText().toString();
@@ -751,7 +735,7 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
     }
 
     /**
-     * Remove onIdentificationError tags
+     * Remove error tags from editable fields.
      */
     private void removeErrorTags(){
         //get descendants instances of edit text
@@ -813,7 +797,9 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
         startActivityForResult(selectorImageIntent,codeIntent);
     }
 
-
+    /**
+     * Set the listeners to FAB buttons.
+     */
     private void addToolbarButtonsListeners(){
         mExtractCoverMenuItem.setOnMenuItemClickListener(menuItem -> {
             mViewModel.saveAsImageFileFrom(Constants.MANUAL);
@@ -840,7 +826,9 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
             return false;
         });
     }
-
+    /**
+     * Alternates the stop to the play action.
+     */
     private void addPlayAction(){
         mPlayPreviewMenuItem.setOnMenuItemClickListener(null);
         mPlayPreviewMenuItem.setOnMenuItemClickListener(item -> {
@@ -861,6 +849,9 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
         });
     }
 
+    /**
+     * Alternates the play to the stop action.
+     */
     private void addStopAction(){
         mPlayPreviewMenuItem.setOnMenuItemClickListener(null);
         mPlayPreviewMenuItem.setOnMenuItemClickListener(item -> {
@@ -876,6 +867,10 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
 
     }
 
+    /**
+     * Shows a message into a Snackbar
+     * @param message The message object to show.
+     */
     @Override
     protected void onMessage(Message message){
         Snackbar snackbar = AndroidUtils.createSnackbar(
@@ -885,6 +880,10 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
         snackbar.show();
     }
 
+    /**
+     * Shows a message and an action into a Snackbar.
+     * @param actionableMessage The message object with action to take.
+     */
     @Override
     protected void onActionableMessage(ActionableMessage actionableMessage) {
         Snackbar snackbar = AndroidUtils.createActionableSnackbar(
@@ -894,6 +893,13 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
         snackbar.show();
     }
 
+    /**
+     * Animates the transition from previous fragment to this fragment.
+     * @param transit
+     * @param enter
+     * @param nextAnim
+     * @return
+     */
     @Override
     public Animation onCreateAnimation(int transit, boolean enter, int nextAnim) {
         Animation animation = super.onCreateAnimation(transit, enter, nextAnim);
@@ -926,8 +932,33 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
         return animation;
     }
 
+    /**
+     * Creates a OnClickListener object to respond according to an Action object.
+     * @param action The action to execute.
+     * @return A OnclickListener object.
+     */
     private OnClickListener createOnClickListener (Action action) {
 
         return null;
+    }
+
+
+    private void onIdentificationResults(IdentificationType actionableMessage) {
+        if(actionableMessage.getAction() != Action.SUCCESS_IDENTIFICATION)
+            return;
+
+        if(actionableMessage.getIdentificationType() == IdentificationType.ALL_TAGS){
+            SemiAutoCorrectionDialogFragment semiAutoCorrectionDialogFragment =
+                    SemiAutoCorrectionDialogFragment.newInstance(mViewModel.getTrack().getMediaStoreId()+"");
+            semiAutoCorrectionDialogFragment.show(getChildFragmentManager(),
+                    semiAutoCorrectionDialogFragment.getClass().getCanonicalName());
+
+        }
+        else {
+            CoverIdentificationResultsFragmentBase coverIdentificationResultsFragmentBase =
+                    CoverIdentificationResultsFragmentBase.newInstance(mViewModel.getTrack().getMediaStoreId()+"");
+            coverIdentificationResultsFragmentBase.show(getChildFragmentManager(),
+                    coverIdentificationResultsFragmentBase.getClass().getCanonicalName());
+        }
     }
 }

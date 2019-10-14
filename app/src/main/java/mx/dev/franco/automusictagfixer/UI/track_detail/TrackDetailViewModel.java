@@ -30,6 +30,7 @@ import mx.dev.franco.automusictagfixer.utilities.Message;
 import mx.dev.franco.automusictagfixer.utilities.Resource;
 
 import static mx.dev.franco.automusictagfixer.common.Action.NONE;
+import static mx.dev.franco.automusictagfixer.common.Action.SUCCESS_IDENTIFICATION;
 
 public class TrackDetailViewModel extends AndroidViewModel {
 
@@ -110,10 +111,18 @@ public class TrackDetailViewModel extends AndroidViewModel {
                 mStateMerger.setValue(aBoolean));
     }
 
+    /**
+     * Livedata to inform to UI the progress of a task.
+     * @return A live data object holding a boolean value.
+     */
     public LiveData<Boolean> observeLoadingState() {
         return mStateMerger;
     }
 
+    /**
+     * Livedata to inform if track could be loaded.
+     * @return Livedata holding a {@link Message} object or null.
+     */
     public LiveData<Message> observeReadingResult() {
         LiveData<Resource<MetadataReaderResult>> resultReader = mDataTrackRepository.getResultReader();
         mResultReading = Transformations.map(resultReader, input -> {
@@ -177,11 +186,24 @@ public class TrackDetailViewModel extends AndroidViewModel {
      */
     public LiveData<IdentificationType> observeResultIdentification() {
         LiveData<Resource<ActionableMessage>> resultIdentification = mIdentificationManager.observeActionableMessage();
-        mResultsIdentificationLiveData = Transformations.map(resultIdentification, input -> {
-            IdentificationType identificationType = new IdentificationType();
-            identificationType.setIdentificationType(mIdentificationParams.getIdentificationType());
-            return identificationType;
-        })
+        mResultsIdentificationLiveData = Transformations.map(resultIdentification, new Function<Resource<ActionableMessage>, IdentificationType>() {
+            @Override
+            public IdentificationType apply(Resource<ActionableMessage> input) {
+
+                if(input.data.getAction() == SUCCESS_IDENTIFICATION) {
+                    IdentificationType identificationType = new IdentificationType();
+                    identificationType.setIdentificationType(mIdentificationParams.getIdentificationType());
+                    return identificationType;
+                }
+                else {
+                    if(input.status == Resource.Status.ERROR || input.status == Resource.Status.CANCELLED)  {
+                        mLiveActionableMessage.setValue(input.data);
+                    }
+                }
+
+                return null;
+            }
+        });
         return mResultsIdentificationLiveData;
     }
 
@@ -275,6 +297,10 @@ public class TrackDetailViewModel extends AndroidViewModel {
 
     }
 
+    /**
+     * Identifies the track.
+     * @param identificationParams Input parameters that could be useful for this identification.
+     */
     public void startIdentification(IdentificationParams identificationParams) {
         mIdentificationParams = identificationParams;
         mIdentificationManager.startIdentification(mDataTrackRepository.getTrack());

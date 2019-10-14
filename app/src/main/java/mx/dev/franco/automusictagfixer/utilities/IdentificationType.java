@@ -3,7 +3,11 @@ package mx.dev.franco.automusictagfixer.utilities;
 import mx.dev.franco.automusictagfixer.common.Action;
 
 public class IdentificationType extends ActionableMessage {
-    private int identificationType;
+    public static final int ALL_TAGS = 0;
+    public static final int ONLY_COVER = 1;
+
+
+    private int identificationType = ALL_TAGS;
 
     public IdentificationType() {
         super();
