@@ -65,6 +65,7 @@ public class AudioMetadataTagger implements AudioMetadataManager<AudioMetadataTa
         private String targetFile;
         private Map<FieldKey, Object> fields;
         private int codeRequest;
+        private String newName;
 
         public InputParams() {
         }
@@ -110,6 +111,14 @@ public class AudioMetadataTagger implements AudioMetadataManager<AudioMetadataTa
 
         public void setCodeRequest(int codeRequest) {
             this.codeRequest = codeRequest;
+        }
+        
+        public String getNewName() {
+            return newName;
+        }
+
+        public void setNewName(String newName) {
+            this.newName = newName;
         }
     }
 }

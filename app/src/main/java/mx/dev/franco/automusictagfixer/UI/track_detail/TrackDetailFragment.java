@@ -128,7 +128,7 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
 
         mViewModel.observeReadingResult().observe(this, message -> {
             if(message == null) {
-                onSuccessLoad();
+                onSuccessLoad(null);
             }
         });
 
@@ -136,8 +136,10 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
         mViewModel.observeMessage().observe(this, this::onMessage);
         mViewModel.observeResultIdentification().observe(this, this::onIdentificationResults);
         mViewModel.observeLoadingState().observe(this, this::loading);
-        mViewModel.observeInputsValidation().observe(this, this::onInputDataInvalid);
-
+        mViewModel.observeConfirmationRemoveCover().observe(this, this::onConfirmRemovingCover);
+        mViewModel.observeInvalidInputsValidation().observe(this, this::onInputDataInvalid);
+        mViewModel.observeWritingResult().observe(this, this::onActionableMessage);
+        mViewModel.observeRenamingResult().observe(this, this::onMessage);
         setHasOptionsMenu(true);
     }
 
@@ -226,7 +228,7 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
                 break;
 
             case RequiredPermissions.REQUEST_PERMISSION_SAF:
-                String msg = "";
+                String msg;
                 if (resultCode == Activity.RESULT_OK) {
                     // The document selected by the user won't be returned in the intent.
                     // Instead, a URI to that document will be contained in the return intent
@@ -277,7 +279,7 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
     /**
      * Callback to confirm the deletion of current cover;
      */
-    public void onConfirmRemovingCover() {
+    private void onConfirmRemovingCover(Void voids) {
         InformativeFragmentDialog informativeFragmentDialog = InformativeFragmentDialog.
                 newInstance(R.string.attention,
                         R.string.message_remove_cover_art_dialog,
@@ -344,7 +346,7 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
      * loaded.
      * @param path The path of the file loaded
      */
-    private void onSuccessLoad() {
+    private void onSuccessLoad(Message message) {
         //pressing back from toolbar, close activity
         mFragmentTrackDetailBinding.toolbar.setNavigationOnClickListener(view ->
                 TrackDetailFragment.super.callSuperOnBackPressed());
@@ -494,7 +496,7 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
     /**
      * Callback when user pressed mSaveButton and input data is valid.
      */
-    public void onInputDataValid() {
+    private void onInputDataValid(ValidationWrapper validationWrapper) {
         ManualCorrectionDialogFragment manualCorrectionDialogFragment =
                 ManualCorrectionDialogFragment.newInstance();
 

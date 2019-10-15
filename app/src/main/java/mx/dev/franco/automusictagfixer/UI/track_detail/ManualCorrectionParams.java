@@ -5,7 +5,6 @@ import mx.dev.franco.automusictagfixer.fixer.AudioMetadataTagger;
 public class ManualCorrectionParams extends AudioMetadataTagger.InputParams {
   private boolean renameFile;
   private int correctionMode;
-  private String newName;
 
   public ManualCorrectionParams(){}
 
@@ -23,14 +22,6 @@ public class ManualCorrectionParams extends AudioMetadataTagger.InputParams {
 
   public void setCorrectionMode(int correctionMode) {
     this.correctionMode = correctionMode;
-  }
-
-  public String getNewName() {
-    return newName;
-  }
-
-  public void setNewName(String newName) {
-    this.newName = newName;
   }
 
 }

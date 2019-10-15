@@ -176,7 +176,7 @@ public class DataTrackRepository {
                 mLoadingStateLiveData.setValue(false);
                 mFileRenamerLiveData.setValue(Resource.error(error));
             }
-        }, mMetadataTagger, mTrack, uiInputParams.getFileName());
+        }, mMetadataTagger, mTrack, uiInputParams.getNewName());
 
         mFileRenamer.executeOnExecutor(Executors.newCachedThreadPool());
     }
@@ -239,7 +239,10 @@ public class DataTrackRepository {
 
 
     public void removeCover() {
-
+        AudioMetadataTagger.InputParams inputParams = new AudioMetadataTagger.InputParams();
+        inputParams.setCodeRequest(AudioTagger.MODE_REMOVE_COVER);
+        inputParams.setTargetFile(mTrack.getPath());
+        doCorrection(inputParams);
     }
 
     public void changeCover(ImageWrapper imageWrapper) {

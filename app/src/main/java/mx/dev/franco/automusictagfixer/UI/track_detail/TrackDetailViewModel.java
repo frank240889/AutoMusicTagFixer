@@ -34,7 +34,7 @@ import static mx.dev.franco.automusictagfixer.common.Action.SUCCESS_IDENTIFICATI
 
 public class TrackDetailViewModel extends AndroidViewModel {
 
-    //Two-way binded livedata objects.
+    //Two-way bind livedata objects.
     public MutableLiveData<String> title;
     public MutableLiveData<String> artist;
     public MutableLiveData<String> album;
@@ -43,7 +43,7 @@ public class TrackDetailViewModel extends AndroidViewModel {
     public MutableLiveData<String> genre;
     public MutableLiveData<byte[]> cover;
 
-    //One way binded livedata objects.
+    //One way bind livedata objects.
     public MutableLiveData<String> filesize;
     public MutableLiveData<String> channels;
     public MutableLiveData<String> type;
@@ -59,6 +59,7 @@ public class TrackDetailViewModel extends AndroidViewModel {
     private SingleLiveEvent<ValidationWrapper> mInputsInvalidLiveData = new SingleLiveEvent<>();
     private SingleLiveEvent<Message> mLiveMessage = new SingleLiveEvent<>();
     private SingleLiveEvent<ActionableMessage> mLiveActionableMessage = new SingleLiveEvent<>();
+    private SingleLiveEvent<Void> mLiveConfirmationDeleteCover = new SingleLiveEvent<>();
 
     private LiveData<Message> mResultReading;
     private LiveData<ActionableMessage> mResultWriting;
@@ -186,23 +187,20 @@ public class TrackDetailViewModel extends AndroidViewModel {
      */
     public LiveData<IdentificationType> observeResultIdentification() {
         LiveData<Resource<ActionableMessage>> resultIdentification = mIdentificationManager.observeActionableMessage();
-        mResultsIdentificationLiveData = Transformations.map(resultIdentification, new Function<Resource<ActionableMessage>, IdentificationType>() {
-            @Override
-            public IdentificationType apply(Resource<ActionableMessage> input) {
+        mResultsIdentificationLiveData = Transformations.map(resultIdentification, input -> {
 
-                if(input.data.getAction() == SUCCESS_IDENTIFICATION) {
-                    IdentificationType identificationType = new IdentificationType();
-                    identificationType.setIdentificationType(mIdentificationParams.getIdentificationType());
-                    return identificationType;
-                }
-                else {
-                    if(input.status == Resource.Status.ERROR || input.status == Resource.Status.CANCELLED)  {
-                        mLiveActionableMessage.setValue(input.data);
-                    }
-                }
-
-                return null;
+            if(input.data.getAction() == SUCCESS_IDENTIFICATION) {
+                IdentificationType identificationType = new IdentificationType();
+                identificationType.setIdentificationType(mIdentificationParams.getIdentificationType());
+                return identificationType;
             }
+            else {
+                if(input.status == Resource.Status.ERROR || input.status == Resource.Status.CANCELLED)  {
+                    mLiveActionableMessage.setValue(input.data);
+                }
+            }
+
+            return null;
         });
         return mResultsIdentificationLiveData;
     }
@@ -216,8 +214,12 @@ public class TrackDetailViewModel extends AndroidViewModel {
     }
 
 
-    public LiveData<ValidationWrapper> observeInputsValidation() {
+    public LiveData<ValidationWrapper> observeInvalidInputsValidation() {
         return mInputsInvalidLiveData;
+    }
+
+    public LiveData<Void> observeConfirmationRemoveCover() {
+        return mLiveConfirmationDeleteCover;
     }
 
     public void setInitialAction(int correctionMode) {
@@ -248,7 +250,7 @@ public class TrackDetailViewModel extends AndroidViewModel {
 
     public void performCorrection(AudioMetadataTagger.InputParams correctionParams) {
         mCorrectionParams = (ManualCorrectionParams) correctionParams;
-        if(correctionParams == null) {
+        if(mCorrectionParams.getCorrectionMode() == Constants.MANUAL) {
             performCorrection();
         }
         else {
@@ -266,12 +268,19 @@ public class TrackDetailViewModel extends AndroidViewModel {
             String trackNumber = this.number.getValue();
             String genre = this.genre.getValue();
 
-            title = AudioTagger.StringUtilities.trimString(title);
-            artist = AudioTagger.StringUtilities.trimString(artist);
-            album = AudioTagger.StringUtilities.trimString(album);
-            trackYear = AudioTagger.StringUtilities.trimString(trackYear);
-            trackNumber = AudioTagger.StringUtilities.trimString(trackNumber);
-            genre = AudioTagger.StringUtilities.trimString(genre);
+            if(title != null && !title.isEmpty())
+                title = AudioTagger.StringUtilities.trimString(title);
+            if(artist != null && !artist.isEmpty())
+                artist = AudioTagger.StringUtilities.trimString(artist);
+            if(album != null && !album.isEmpty())
+                album = AudioTagger.StringUtilities.trimString(album);
+            if(trackYear != null && !trackYear.isEmpty())
+                trackYear = AudioTagger.StringUtilities.trimString(trackYear);
+            if(trackNumber != null && !trackNumber.isEmpty())
+                trackNumber = AudioTagger.StringUtilities.trimString(trackNumber);
+            if(genre != null && !genre.isEmpty())
+                genre = AudioTagger.StringUtilities.trimString(genre);
+            if(this.)
             byte[] cover = this.cover.getValue();
 
 
@@ -315,7 +324,12 @@ public class TrackDetailViewModel extends AndroidViewModel {
     }
 
     public void removeCover() {
+        if(mAudioFields.getCover() != null) {
 
+        }
+        else {
+
+        }
     }
 
     public Track getTrack() {
