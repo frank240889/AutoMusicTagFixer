@@ -63,7 +63,7 @@ public final class TrackUtils {
 
     public static String getFileSize(String path){
         File file = new File(path);
-        if(!Tagger.checkFileIntegrity(file))
+        if(!AudioTagger.checkFileIntegrity(file))
             return "0 Mb";
 
         return getFileSize(file.length());

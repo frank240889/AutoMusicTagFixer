@@ -1,6 +1,6 @@
 package mx.dev.franco.automusictagfixer.covermanager;
 
-import mx.dev.franco.automusictagfixer.utilities.Tagger;
+import mx.dev.franco.automusictagfixer.fixer.AudioTagger;
 
 public class CoverExtractionRunnable implements Runnable {
     // Sets the log tag
@@ -19,7 +19,7 @@ public class CoverExtractionRunnable implements Runnable {
 
     @Override
     public void run() {
-        byte[] cover = Tagger.getCover(mCoverRunnable.getPath());
+        byte[] cover = AudioTagger.getCover(mCoverRunnable.getPath());
         mCoverRunnable.setCover(cover);
         if(cover == null) {
             mCoverRunnable.handleExtractionState(EXTRACTION_STATE_FAILED);

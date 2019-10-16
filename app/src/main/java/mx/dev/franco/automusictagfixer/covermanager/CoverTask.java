@@ -2,7 +2,7 @@ package mx.dev.franco.automusictagfixer.covermanager;
 
 import java.lang.ref.WeakReference;
 
-import mx.dev.franco.automusictagfixer.UI.AudioHolder;
+import mx.dev.franco.automusictagfixer.ui.AudioHolder;
 
 public class CoverTask implements ICoverRunnable {
     private WeakReference<AudioHolder> mAudioItemHolderWeakReference;

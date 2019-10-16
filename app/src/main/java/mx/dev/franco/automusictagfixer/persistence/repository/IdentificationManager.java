@@ -9,11 +9,11 @@ import java.util.List;
 import javax.inject.Inject;
 
 import mx.dev.franco.automusictagfixer.R;
-import mx.dev.franco.automusictagfixer.UI.SingleLiveEvent;
 import mx.dev.franco.automusictagfixer.common.Action;
 import mx.dev.franco.automusictagfixer.identifier.Identifier;
 import mx.dev.franco.automusictagfixer.interfaces.Cache;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
+import mx.dev.franco.automusictagfixer.ui.SingleLiveEvent;
 import mx.dev.franco.automusictagfixer.utilities.ActionableMessage;
 import mx.dev.franco.automusictagfixer.utilities.Resource;
 
@@ -80,5 +80,9 @@ public class IdentificationManager {
     public void cancelIdentification() {
         if(mIdentifier != null)
             mIdentifier.cancel();
+    }
+
+    public List<Identifier.IdentificationResults> getResult(String id) {
+        return mResultsCache.load(id);
     }
 }

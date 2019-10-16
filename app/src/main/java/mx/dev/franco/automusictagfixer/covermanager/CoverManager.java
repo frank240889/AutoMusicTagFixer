@@ -22,7 +22,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import mx.dev.franco.automusictagfixer.R;
-import mx.dev.franco.automusictagfixer.UI.AudioHolder;
+import mx.dev.franco.automusictagfixer.ui.AudioHolder;
 import mx.dev.franco.automusictagfixer.utilities.GlideApp;
 
 /**

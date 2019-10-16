@@ -10,9 +10,6 @@ import java.util.concurrent.Executors;
 
 import javax.inject.Inject;
 
-import mx.dev.franco.automusictagfixer.UI.SingleLiveEvent;
-import mx.dev.franco.automusictagfixer.UI.track_detail.ImageWrapper;
-import mx.dev.franco.automusictagfixer.UI.track_detail.SemiAutoCorrectionParams;
 import mx.dev.franco.automusictagfixer.fixer.AbstractMetadataFixer;
 import mx.dev.franco.automusictagfixer.fixer.AudioMetadataTagger;
 import mx.dev.franco.automusictagfixer.fixer.AudioTagger;
@@ -23,13 +20,15 @@ import mx.dev.franco.automusictagfixer.fixer.MetadataWriter;
 import mx.dev.franco.automusictagfixer.fixer.MetadataWriterResult;
 import mx.dev.franco.automusictagfixer.fixer.TrackInformationLoader;
 import mx.dev.franco.automusictagfixer.identifier.Identifier;
-import mx.dev.franco.automusictagfixer.identifier.Result;
 import mx.dev.franco.automusictagfixer.interfaces.AsyncOperation;
 import mx.dev.franco.automusictagfixer.interfaces.Cache;
 import mx.dev.franco.automusictagfixer.persistence.cache.DownloadedTrackDataCacheImpl;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.persistence.room.TrackRoomDatabase;
-import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
+import mx.dev.franco.automusictagfixer.ui.SingleLiveEvent;
+import mx.dev.franco.automusictagfixer.ui.trackdetail.ImageWrapper;
+import mx.dev.franco.automusictagfixer.ui.trackdetail.InputCorrectionParams;
+import mx.dev.franco.automusictagfixer.ui.trackdetail.SemiAutoCorrectionParams;
 import mx.dev.franco.automusictagfixer.utilities.Resource;
 
 public class DataTrackRepository {
@@ -164,6 +163,7 @@ public class DataTrackRepository {
             public void onAsyncOperationFinished(AudioTagger.ResultRename result) {
                 mLoadingStateLiveData.setValue(false);
                 mFileRenamerLiveData.setValue(Resource.success(result));
+                loadDataTrack(mTrack.getMediaStoreId());
             }
 
             @Override
@@ -192,25 +192,7 @@ public class DataTrackRepository {
      * Exposes a public method to make the correction.
      * @param correctionParams The params required by {@link AudioTagger}
      */
-    public void performCorrection(AudioMetadataTagger.InputParams correctionParams) {
-        if(correctionParams == null) {
-
-        }
-        else {
-            List<Identifier.IdentificationResults> results = mResultsCache.load(getTrack().getMediaStoreId()+"");
-            int id = Integer.parseInt(((SemiAutoCorrectionParams)correctionParams).getPosition());
-            Result result = (Result) results.get(id);
-            AudioMetadataTagger.InputParams inputParams = AndroidUtils.createInputParams(result);
-            doCorrection(inputParams);
-        }
-
-    }
-
-    /**
-     * Make the correction of track.
-     * @param correctionParams The params to pass to the {@link AudioTagger}
-     */
-    private void doCorrection(AudioMetadataTagger.InputParams correctionParams) {
+    public void performCorrection(InputCorrectionParams correctionParams) {
         mMetadataWriter = new MetadataWriter(new AsyncOperation<Track, MetadataWriterResult, Track, MetadataWriterResult>() {
             @Override
             public void onAsyncOperationStarted(Track params) {
@@ -221,6 +203,7 @@ public class DataTrackRepository {
             public void onAsyncOperationFinished(MetadataWriterResult result) {
                 mLoadingStateLiveData.setValue(false);
                 mMetadataWriterResultLiveData.setValue(Resource.success(result));
+                loadDataTrack(mTrack.getMediaStoreId());
             }
 
             @Override
@@ -237,12 +220,10 @@ public class DataTrackRepository {
         mMetadataWriter.executeOnExecutor(Executors.newCachedThreadPool(), mContext);
     }
 
-
     public void removeCover() {
         AudioMetadataTagger.InputParams inputParams = new AudioMetadataTagger.InputParams();
         inputParams.setCodeRequest(AudioTagger.MODE_REMOVE_COVER);
         inputParams.setTargetFile(mTrack.getPath());
-        doCorrection(inputParams);
     }
 
     public void changeCover(ImageWrapper imageWrapper) {

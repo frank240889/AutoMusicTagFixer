@@ -4,8 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools">
     <data>
             <variable
-                name="viewModel"
-                type="mx.dev.franco.automusictagfixer.UI.track_detail.TrackDetailViewModel" />
+                name="viewmodel"
+                type="mx.dev.franco.automusictagfixer.ui.trackdetail.TrackDetailViewModel" />
     </data>
 
     <android.support.v4.widget.NestedScrollView
@@ -135,7 +135,7 @@
                             android:inputType="text|textNoSuggestions"
                             android:maxLength="100"
                             android:maxLines="1"
-                            android:text="@={viewModel.title}" />
+                            android:text="@={viewmodel.title}" />
                     </android.support.design.widget.TextInputLayout>
 
                     <android.support.design.widget.TextInputLayout
@@ -161,7 +161,7 @@
                             android:inputType="text|textNoSuggestions"
                             android:maxLength="100"
                             android:maxLines="1"
-                            android:text="@={viewModel.artist}" />
+                            android:text="@={viewmodel.artist}" />
                     </android.support.design.widget.TextInputLayout>
 
                     <android.support.design.widget.TextInputLayout
@@ -188,7 +188,7 @@
                             android:inputType="text|textNoSuggestions"
                             android:maxLength="150"
                             android:maxLines="1"
-                            android:text="@={viewModel.album}" />
+                            android:text="@={viewmodel.album}" />
                     </android.support.design.widget.TextInputLayout>
 
                     <android.support.design.widget.TextInputLayout
@@ -214,7 +214,7 @@
                             android:inputType="text|textNoSuggestions"
                             android:maxLength="80"
                             android:maxLines="1"
-                            android:text="@={viewModel.genre}" />
+                            android:text="@={viewmodel.genre}" />
                     </android.support.design.widget.TextInputLayout>
 
                     <android.support.design.widget.TextInputLayout
@@ -240,7 +240,7 @@
                             android:inputType="number"
                             android:maxLength="4"
                             android:maxLines="1"
-                            android:text="@={viewModel.number}" />
+                            android:text="@={viewmodel.number}" />
                     </android.support.design.widget.TextInputLayout>
 
                     <android.support.design.widget.TextInputLayout
@@ -266,7 +266,7 @@
                             android:inputType="number"
                             android:maxLength="4"
                             android:maxLines="1"
-                            android:text="@={viewModel.year}" />
+                            android:text="@={viewmodel.year}" />
                     </android.support.design.widget.TextInputLayout>
 
                     <TextView
@@ -347,7 +347,7 @@
                         android:visibility="visible"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toTopOf="parent"
-                        android:text="@{viewModel.filesize}"
+                        android:text="@{viewmodel.filesize}"
                         tools:text="13mb" />
 
                     <TextView
@@ -364,7 +364,7 @@
                         android:visibility="visible"
                         app:layout_constraintStart_toEndOf="@+id/file_size"
                         app:layout_constraintTop_toTopOf="parent"
-                        android:text="@{viewModel.channels}"
+                        android:text="@{viewmodel.channels}"
                         tools:text="Joint Stereo" />
 
                     <TextView
@@ -381,7 +381,7 @@
                         android:visibility="visible"
                         app:layout_constraintStart_toEndOf="@+id/channels"
                         app:layout_constraintTop_toTopOf="parent"
-                        android:text="@{viewModel.type}"
+                        android:text="@{viewmodel.type}"
                         tools:text="MPEG-1 Layer 3" />
 
                     <TextView
@@ -398,7 +398,7 @@
                         android:visibility="visible"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="@+id/file_size"
-                        android:text="@{viewModel.resolution}"
+                        android:text="@{viewmodel.resolution}"
                         tools:text="16 bits" />
 
                     <TextView
@@ -416,7 +416,7 @@
                         android:visibility="visible"
                         app:layout_constraintStart_toEndOf="@+id/resolution"
                         app:layout_constraintTop_toBottomOf="@+id/channels"
-                        android:text="@{viewModel.frequency}"
+                        android:text="@{viewmodel.frequency}"
                         tools:text="44.1 Khz" />
 
                     <TextView
@@ -431,7 +431,7 @@
                         android:gravity="center_vertical"
                         app:layout_constraintStart_toEndOf="@+id/frequency"
                         app:layout_constraintTop_toBottomOf="@+id/track_type"
-                        android:text="@{viewModel.bitrate}"
+                        android:text="@{viewmodel.bitrate}"
                         tools:text="128 Kbps" />
 
                     <TextView
@@ -448,7 +448,7 @@
                         android:visibility="visible"
                         app:layout_constraintStart_toEndOf="@+id/bitrate"
                         app:layout_constraintTop_toBottomOf="@+id/track_type"
-                        android:text="@{viewModel.length}"
+                        android:text="@{viewmodel.length}"
                         tools:text="5'06''" />
 
                     <TextView
@@ -470,7 +470,7 @@
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="@+id/resolution"
-                        android:text="@{viewModel.absolutePath}"
+                        android:text="@{viewmodel.absolutePath}"
                         tools:text="/storage/emulated/0/Music" />
 
                 </android.support.constraint.ConstraintLayout>

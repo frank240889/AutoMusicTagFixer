@@ -40,10 +40,12 @@ import mx.dev.franco.automusictagfixer.BuildConfig;
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.common.Action;
 import mx.dev.franco.automusictagfixer.fixer.AudioMetadataTagger;
+import mx.dev.franco.automusictagfixer.fixer.AudioTagger;
 import mx.dev.franco.automusictagfixer.identifier.GnApiService;
 import mx.dev.franco.automusictagfixer.identifier.Identifier;
 import mx.dev.franco.automusictagfixer.identifier.Result;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
+import mx.dev.franco.automusictagfixer.ui.trackdetail.InputCorrectionParams;
 import mx.dev.franco.automusictagfixer.utilities.Constants.CorrectionActions;
 import mx.dev.franco.automusictagfixer.utilities.resource_manager.ResourceManager;
 
@@ -274,28 +276,28 @@ public class AndroidUtils {
         public static String getErrorMessage(ResourceManager resourceManager, int errorCode){
             String errorMessage;
             switch (errorCode){
-                case Tagger.COULD_NOT_APPLY_COVER:
+                case AudioTagger.COULD_NOT_APPLY_COVER:
                     errorMessage = resourceManager.getString(R.string.message_could_not_apply_cover);
                     break;
-                case Tagger.COULD_NOT_APPLY_TAGS:
+                case AudioTagger.COULD_NOT_APPLY_TAGS:
                     errorMessage = resourceManager.getString(R.string.message_could_not_apply_tags);
                     break;
-                case Tagger.COULD_NOT_COPY_BACK_TO_ORIGINAL_LOCATION:
+                case AudioTagger.COULD_NOT_COPY_BACK_TO_ORIGINAL_LOCATION:
                     errorMessage = resourceManager.getString(R.string.message_could_copy_back);
                     break;
-                case Tagger.COULD_NOT_CREATE_AUDIOFILE:
+                case AudioTagger.COULD_NOT_CREATE_AUDIOFILE:
                     errorMessage = resourceManager.getString(R.string.message_could_not_create_audio_file);
                     break;
-                case Tagger.COULD_NOT_CREATE_TEMP_FILE:
+                case AudioTagger.COULD_NOT_CREATE_TEMP_FILE:
                     errorMessage = resourceManager.getString(R.string.message_could_not_create_temp_file);
                     break;
-                case Tagger.COULD_NOT_GET_URI_SD_ROOT_TREE:
+                case AudioTagger.COULD_NOT_GET_URI_SD_ROOT_TREE:
                     errorMessage = resourceManager.getString(R.string.message_uri_tree_not_set);
                     break;
-                case Tagger.COULD_NOT_READ_TAGS:
+                case AudioTagger.COULD_NOT_READ_TAGS:
                     errorMessage = resourceManager.getString(R.string.message_could_not_read_tags);
                     break;
-                case Tagger.COULD_NOT_REMOVE_COVER:
+                case AudioTagger.COULD_NOT_REMOVE_COVER:
                     errorMessage = resourceManager.getString(R.string.message_could_not_remove_cover);
                     break;
                 default:
@@ -309,28 +311,28 @@ public class AndroidUtils {
         public static String getErrorMessage(Context context, int errorCode){
             String errorMessage;
             switch (errorCode){
-                case Tagger.COULD_NOT_APPLY_COVER:
+                case AudioTagger.COULD_NOT_APPLY_COVER:
                     errorMessage = context.getString(R.string.message_could_not_apply_cover);
                     break;
-                case Tagger.COULD_NOT_APPLY_TAGS:
+                case AudioTagger.COULD_NOT_APPLY_TAGS:
                     errorMessage = context.getString(R.string.message_could_not_apply_tags);
                     break;
-                case Tagger.COULD_NOT_COPY_BACK_TO_ORIGINAL_LOCATION:
+                case AudioTagger.COULD_NOT_COPY_BACK_TO_ORIGINAL_LOCATION:
                     errorMessage = context.getString(R.string.message_could_copy_back);
                     break;
-                case Tagger.COULD_NOT_CREATE_AUDIOFILE:
+                case AudioTagger.COULD_NOT_CREATE_AUDIOFILE:
                     errorMessage = context.getString(R.string.message_could_not_create_audio_file);
                     break;
-                case Tagger.COULD_NOT_CREATE_TEMP_FILE:
+                case AudioTagger.COULD_NOT_CREATE_TEMP_FILE:
                     errorMessage = context.getString(R.string.message_could_not_create_temp_file);
                     break;
-                case Tagger.COULD_NOT_GET_URI_SD_ROOT_TREE:
+                case AudioTagger.COULD_NOT_GET_URI_SD_ROOT_TREE:
                     errorMessage = context.getString(R.string.message_uri_tree_not_set);
                     break;
-                case Tagger.COULD_NOT_READ_TAGS:
+                case AudioTagger.COULD_NOT_READ_TAGS:
                     errorMessage = context.getString(R.string.message_could_not_read_tags);
                     break;
-                case Tagger.COULD_NOT_REMOVE_COVER:
+                case AudioTagger.COULD_NOT_REMOVE_COVER:
                     errorMessage = context.getString(R.string.message_could_not_remove_cover);
                     break;
                 default:
@@ -343,7 +345,8 @@ public class AndroidUtils {
     }
 
 
-    public static AudioMetadataTagger.InputParams createInputParams(Identifier.IdentificationResults result) {
+    public static void createInputParams(Identifier.IdentificationResults result,
+                                                          InputCorrectionParams correctionParams) {
         Result r = (Result) result;
         Map<FieldKey, Object> tags = new ArrayMap<>();
         if(!r.getTitle().isEmpty())
@@ -392,16 +395,16 @@ public class AndroidUtils {
             }
         }
 
-        return new AudioMetadataTagger.InputParams(tags);
+        correctionParams.setFields(tags);
     }
 
-    public static AudioMetadataTagger.InputParams createInputParams(@Nullable String title,
-                                                                    @Nullable String artist,
-                                                                    @Nullable String album,
-                                                                    @Nullable String genre,
-                                                                    @Nullable String trackNumber,
-                                                                    @Nullable String trackYear,
-                                                                    @Nullable byte[] cover
+    public static InputCorrectionParams createInputParams(@Nullable String title,
+                                                          @Nullable String artist,
+                                                          @Nullable String album,
+                                                          @Nullable String genre,
+                                                          @Nullable String trackNumber,
+                                                          @Nullable String trackYear,
+                                                          @Nullable byte[] cover
                                                                     ) {
 
         Map<FieldKey, Object> tags = new ArrayMap<>();
@@ -425,7 +428,40 @@ public class AndroidUtils {
         if(cover != null)
             tags.put(FieldKey.COVER_ART, cover);
 
-        return new AudioMetadataTagger.InputParams(tags);
+        return new InputCorrectionParams(tags);
+    }
+
+    public static void createInputParams(@Nullable String title,
+                                                          @Nullable String artist,
+                                                          @Nullable String album,
+                                                          @Nullable String genre,
+                                                          @Nullable String trackNumber,
+                                                          @Nullable String trackYear,
+                                                          @Nullable byte[] cover,
+    AudioMetadataTagger.InputParams inputParams) {
+
+        Map<FieldKey, Object> tags = new ArrayMap<>();
+        if(title != null && !title.isEmpty())
+            tags.put(FieldKey.TITLE, title);
+
+        if(artist != null && !artist.isEmpty())
+            tags.put(FieldKey.ARTIST, artist);
+
+        if(album != null && !album.isEmpty())
+            tags.put(FieldKey.ALBUM, album);
+
+        if(genre != null && !genre.isEmpty())
+            tags.put(FieldKey.GENRE, genre);
+
+        if(trackYear != null && !trackYear.isEmpty())
+            tags.put(FieldKey.YEAR, trackYear);
+
+        if(trackNumber != null && !trackNumber.isEmpty())
+            tags.put(FieldKey.TRACK, trackNumber);
+        if(cover != null)
+            tags.put(FieldKey.COVER_ART, cover);
+
+        inputParams.setFields(tags);
     }
 
     public static String getBetterQualityCover(Map<GnImageSize, String> covers) {

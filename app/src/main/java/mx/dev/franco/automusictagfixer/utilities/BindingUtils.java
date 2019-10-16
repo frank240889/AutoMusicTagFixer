@@ -9,7 +9,7 @@ import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
 import com.bumptech.glide.request.RequestOptions;
 
 import mx.dev.franco.automusictagfixer.R;
-import mx.dev.franco.automusictagfixer.UI.BaseFragment;
+import mx.dev.franco.automusictagfixer.ui.BaseFragment;
 
 public class BindingUtils {
     @BindingAdapter({"imageCover"})

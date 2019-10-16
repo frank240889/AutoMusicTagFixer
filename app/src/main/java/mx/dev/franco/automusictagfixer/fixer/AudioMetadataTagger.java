@@ -67,6 +67,7 @@ public class AudioMetadataTagger implements AudioMetadataManager<AudioMetadataTa
         private int codeRequest;
         private String newName;
 
+
         public InputParams() {
         }
 

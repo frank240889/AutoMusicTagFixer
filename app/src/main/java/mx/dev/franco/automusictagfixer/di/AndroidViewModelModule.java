@@ -6,9 +6,9 @@ import android.arch.lifecycle.ViewModelProvider;
 import dagger.Binds;
 import dagger.Module;
 import dagger.multibindings.IntoMap;
-import mx.dev.franco.automusictagfixer.UI.AndroidViewModelFactory;
-import mx.dev.franco.automusictagfixer.UI.track_detail.TrackDetailViewModel;
 import mx.dev.franco.automusictagfixer.modelsUI.main.ListViewModel;
+import mx.dev.franco.automusictagfixer.ui.AndroidViewModelFactory;
+import mx.dev.franco.automusictagfixer.ui.trackdetail.TrackDetailViewModel;
 
 
 /**
