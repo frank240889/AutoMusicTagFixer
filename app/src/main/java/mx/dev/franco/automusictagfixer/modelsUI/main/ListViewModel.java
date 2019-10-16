@@ -7,11 +7,8 @@ import android.arch.lifecycle.MutableLiveData;
 import android.arch.lifecycle.Transformations;
 import android.support.annotation.IntegerRes;
 import android.support.annotation.NonNull;
-
 import java.util.List;
-
 import javax.inject.Inject;
-
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.fixer.AudioTagger;
 import mx.dev.franco.automusictagfixer.persistence.repository.TrackRepository;
@@ -44,16 +41,19 @@ public class ListViewModel extends AndroidViewModel {
     private MutableLiveData<String> mObservableMessage2;
     //The current list of tracks.
     private List<Track> mCurrentList;
-    @Inject
     public TrackRepository trackRepository;
-    @Inject
+
     public AbstractSharedPreferences sharedPreferences;
-    @Inject
     public ServiceUtils serviceUtils;
 
-
-    public ListViewModel(@NonNull Application application) {
+    @Inject
+    public ListViewModel(@NonNull Application application, TrackRepository trackRepository,
+            AbstractSharedPreferences abstractSharedPreferences, ServiceUtils serviceUtils) {
         super(application);
+        this.trackRepository = trackRepository;
+        this.sharedPreferences = abstractSharedPreferences;
+        this.serviceUtils = serviceUtils;
+
         mObservableProgress = trackRepository.observeProgress();
         mObservableMessage2 = trackRepository.observeMessage();
     }

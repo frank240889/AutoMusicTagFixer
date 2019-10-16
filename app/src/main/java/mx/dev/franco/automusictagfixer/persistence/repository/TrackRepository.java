@@ -7,11 +7,10 @@ import android.arch.persistence.db.SimpleSQLiteQuery;
 import android.arch.persistence.db.SupportSQLiteQuery;
 import android.content.Context;
 import android.os.AsyncTask;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executors;
-
+import javax.inject.Inject;
 import mx.dev.franco.automusictagfixer.interfaces.AsyncOperation;
 import mx.dev.franco.automusictagfixer.modelsUI.AsyncOperation.TrackChecker;
 import mx.dev.franco.automusictagfixer.modelsUI.AsyncOperation.TrackInserter;
@@ -40,6 +39,7 @@ public class TrackRepository {
     private String mCurrentOrder;
     private Context mContext;
 
+    @Inject
     public TrackRepository(TrackRoomDatabase db,
                            AbstractSharedPreferences abstractSharedPreferences,
                            Context context){

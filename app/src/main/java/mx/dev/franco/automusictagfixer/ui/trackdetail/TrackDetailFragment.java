@@ -333,7 +333,7 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
     }
 
     /**
-     * Callback from {@link IdentificationResultsFragmentBase} when
+     * Callback from {@link SemiAutoCorrectionDialogFragment} when
      * user pressed apply only missing tags button
      */
     @Override
@@ -342,7 +342,7 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
     }
 
     /**
-     * Callback from {@link IdentificationResultsFragmentBase} when
+     * Callback from {@link SemiAutoCorrectionDialogFragment} when
      * user pressed apply all tags button
      */
     @Override
@@ -370,11 +370,7 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
     public void saveAsCover(CoverCorrectionParams coverCorrectionParams) {
         mViewModel.performCorrection(coverCorrectionParams);
     }
-
-    /**
-     * Callback from {@link IdentificationResultsFragmentBase} when
-     * user pressed save cover as image button
-     */
+    
     public void onSaveAsImageFile() {
         mViewModel.saveAsImageFileFrom(Constants.CACHED);
     }

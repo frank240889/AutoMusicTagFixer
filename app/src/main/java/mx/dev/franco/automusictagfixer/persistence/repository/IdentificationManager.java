@@ -3,15 +3,13 @@ package mx.dev.franco.automusictagfixer.persistence.repository;
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MutableLiveData;
 import android.support.annotation.NonNull;
-
 import java.util.List;
-
 import javax.inject.Inject;
-
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.common.Action;
 import mx.dev.franco.automusictagfixer.identifier.Identifier;
 import mx.dev.franco.automusictagfixer.interfaces.Cache;
+import mx.dev.franco.automusictagfixer.persistence.cache.DownloadedTrackDataCacheImpl;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.ui.SingleLiveEvent;
 import mx.dev.franco.automusictagfixer.utilities.ActionableMessage;
@@ -25,7 +23,7 @@ public class IdentificationManager {
     private Cache<String, List<Identifier.IdentificationResults>> mResultsCache;
 
     @Inject
-    public IdentificationManager(@NonNull Cache<String, List<Identifier.IdentificationResults>> cache){
+    public IdentificationManager(@NonNull DownloadedTrackDataCacheImpl cache){
         mResultsCache = cache;
         mOnActionableMessage = new SingleLiveEvent<>();
     }

@@ -4,11 +4,9 @@ import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
-
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-
 import mx.dev.franco.automusictagfixer.interfaces.AsyncOperation;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
 
@@ -32,10 +30,13 @@ public class MediaStoreReader extends AsyncTask<Context, Void, List<Track>> {
     protected List<Track> doInBackground(Context... context) {
         Cursor cursor = MediaStoreRetriever.getAllFromDevice(context[0]);
         List<Track> tracks = new ArrayList<>();
-        while (cursor.moveToNext()){
-            Track track = buildTrack(cursor);
-            tracks.add(track);
+        if(cursor.getCount() > 0) {
+            while (cursor.moveToNext()) {
+                Track track = buildTrack(cursor);
+                tracks.add(track);
+            }
         }
+
 
         return tracks;
     }
