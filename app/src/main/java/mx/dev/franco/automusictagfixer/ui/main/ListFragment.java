@@ -159,8 +159,6 @@ public class ListFragment extends BaseFragment<ListViewModel> implements
         mRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(), 1));
         mRecyclerView.setHasFixedSize(true);
         mRecyclerView.setItemViewCacheSize(10);
-        mRecyclerView.setDrawingCacheEnabled(true);
-        mRecyclerView.setDrawingCacheQuality(View.DRAWING_CACHE_QUALITY_LOW);
         mRecyclerView.setHapticFeedbackEnabled(true);
         mRecyclerView.setSoundEffectsEnabled(true);
         mRecyclerView.setAdapter(mAdapter);

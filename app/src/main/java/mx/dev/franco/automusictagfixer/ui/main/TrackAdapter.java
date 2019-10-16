@@ -1,5 +1,8 @@
 package mx.dev.franco.automusictagfixer.ui.main;
 
+import static android.view.View.GONE;
+import static android.view.View.VISIBLE;
+
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -9,17 +12,13 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-
 import com.bumptech.glide.Glide;
-
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
 import java.util.concurrent.Executors;
-
 import javax.inject.Inject;
-
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.covermanager.CoverManager;
 import mx.dev.franco.automusictagfixer.interfaces.AsyncOperation;
@@ -31,9 +30,6 @@ import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.persistence.room.TrackState;
 import mx.dev.franco.automusictagfixer.services.FixerTrackService;
 import mx.dev.franco.automusictagfixer.utilities.ServiceUtils;
-
-import static android.view.View.GONE;
-import static android.view.View.VISIBLE;
 
 public class TrackAdapter extends RecyclerView.Adapter<AudioItemHolder> implements
         Destructible {
@@ -51,6 +47,11 @@ public class TrackAdapter extends RecyclerView.Adapter<AudioItemHolder> implemen
     public TrackAdapter(AudioItemHolder.ClickListener listener){
         this();
         mListener = listener;
+    }
+
+    @Override
+    public void onAttachedToRecyclerView(@NonNull RecyclerView recyclerView) {
+        serviceUtils = ServiceUtils.getInstance(recyclerView.getContext());
     }
 
     /**

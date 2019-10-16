@@ -89,7 +89,6 @@ public class TrackRepository {
 
     /**
      * Recover tracks from MediaStore the first time the app is opened.
-     * @param iRetriever
      */
     public void fetchTracks(){
         boolean databaseCreationCompleted = mAbstractSharedPreferences.getBoolean(Constants.COMPLETE_READ);
