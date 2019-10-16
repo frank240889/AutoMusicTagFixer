@@ -24,11 +24,8 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import java.util.List;
-
 import javax.inject.Inject;
-
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.modelsUI.search.SearchListViewModel;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
@@ -73,6 +70,12 @@ public class ResultSearchListFragment extends BaseFragment implements
         super.onAttach(context);
         mAdapter = new SearchTrackAdapter(this);
         ((MainActivity)getActivity()).mDrawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
+    }
+
+    @Override
+    protected Object getViewModel() {
+        return ViewModelProviders.
+            of(this, androidViewModelFactory).get(SearchListViewModel.class);
     }
 
     @Override

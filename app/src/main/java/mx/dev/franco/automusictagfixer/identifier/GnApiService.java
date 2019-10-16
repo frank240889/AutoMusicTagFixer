@@ -4,7 +4,6 @@ import android.content.Context;
 import android.support.annotation.Nullable;
 import android.support.v4.util.ArrayMap;
 import android.util.Log;
-
 import com.crashlytics.android.Crashlytics;
 import com.gracenote.gnsdk.GnDescriptor;
 import com.gracenote.gnsdk.GnException;
@@ -16,7 +15,6 @@ import com.gracenote.gnsdk.GnManager;
 import com.gracenote.gnsdk.GnRegion;
 import com.gracenote.gnsdk.GnUser;
 import com.gracenote.gnsdk.GnUserStore;
-
 import java.util.Map;
 
 /**
@@ -91,12 +89,7 @@ public class GnApiService {
         }
         return sInstance;
     }
-
-    @Deprecated
-    public static void init(Context application) {
-
-    }
-
+    
     /**
      * Initializes the API making a max of {@link #MAX_RETRIES}.
      */

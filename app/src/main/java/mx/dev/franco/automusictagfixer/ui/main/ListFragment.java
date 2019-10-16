@@ -32,11 +32,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import java.util.Objects;
-
 import javax.inject.Inject;
-
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.interfaces.LongRunningTaskListener;
 import mx.dev.franco.automusictagfixer.interfaces.ProcessingListener;
@@ -371,7 +368,7 @@ public class ListFragment extends BaseFragment<ListViewModel> implements
 
     @Override
     protected ListViewModel getViewModel() {
-        ViewModelProviders.of(this).get(ListViewModel.class);
+        return ViewModelProviders.of(this, androidViewModelFactory).get(ListViewModel.class);
     }
 
     @Override

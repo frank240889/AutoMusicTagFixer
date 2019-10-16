@@ -7,20 +7,18 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
 import com.bumptech.glide.request.RequestOptions;
 import com.gracenote.gnsdk.GnImageSize;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.identifier.Identifier;
 import mx.dev.franco.automusictagfixer.identifier.Result;
+import mx.dev.franco.automusictagfixer.utilities.GlideApp;
 
 public class IdentificationResultsAdapter extends RecyclerView.Adapter<ResultItemHolder> implements Observer<List<Identifier.IdentificationResults>> {
     private List<Identifier.IdentificationResults> mIdentificationResults = new ArrayList<>();
@@ -48,7 +46,7 @@ public class IdentificationResultsAdapter extends RecyclerView.Adapter<ResultIte
         String urlImage = getUrl(result.getCovers());
         if(urlImage != null) {
             GlideApp.with(holder.itemView.getContext()).
-                    load()
+                    load(urlImage)
                     .thumbnail(0.5f)
                     .error(R.drawable.ic_album_white_48px)
                     .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.AUTOMATIC))

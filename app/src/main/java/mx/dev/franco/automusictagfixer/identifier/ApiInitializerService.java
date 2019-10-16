@@ -11,13 +11,12 @@ import android.support.annotation.Nullable;
  */
 public class ApiInitializerService extends Service {
     private Thread mThread;
-    private GnApiService mGnApiService;
 
     @Override
     public void onCreate() {
-        GnApiService.init(this);
+        GnApiService.getInstance(this);
         mThread = new Thread(() -> {
-            mGnApiService.initializeAPI();
+            GnApiService.getInstance(this).initializeAPI();
             stopSelf();
         });
         mThread.start();
@@ -28,7 +27,6 @@ public class ApiInitializerService extends Service {
         if(mThread != null && !mThread.isInterrupted()) {
             mThread.interrupt();
         }
-        mGnApiService = null;
         mThread = null;
     }
 

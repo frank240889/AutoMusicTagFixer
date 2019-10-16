@@ -1,5 +1,7 @@
 package mx.dev.franco.automusictagfixer.ui.trackdetail;
 
+import static mx.dev.franco.automusictagfixer.utilities.Constants.GOOGLE_SEARCH;
+
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.app.Activity;
@@ -27,12 +29,9 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
-
 import java.io.IOException;
 import java.util.ArrayList;
-
 import javax.inject.Inject;
-
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.common.Action;
 import mx.dev.franco.automusictagfixer.databinding.FragmentTrackDetailBinding;
@@ -40,7 +39,6 @@ import mx.dev.franco.automusictagfixer.identifier.IdentificationParams;
 import mx.dev.franco.automusictagfixer.ui.BaseFragment;
 import mx.dev.franco.automusictagfixer.ui.InformativeFragmentDialog;
 import mx.dev.franco.automusictagfixer.ui.MainActivity;
-import mx.dev.franco.automusictagfixer.ui.results.IdentificationResultsFragmentBase;
 import mx.dev.franco.automusictagfixer.ui.sdcardinstructions.SdCardInstructionsActivity;
 import mx.dev.franco.automusictagfixer.utilities.ActionableMessage;
 import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
@@ -51,8 +49,6 @@ import mx.dev.franco.automusictagfixer.utilities.Message;
 import mx.dev.franco.automusictagfixer.utilities.RequiredPermissions;
 import mx.dev.franco.automusictagfixer.utilities.SimpleMediaPlayer;
 import mx.dev.franco.automusictagfixer.utilities.SimpleMediaPlayer.OnMediaPlayerEventListener;
-
-import static mx.dev.franco.automusictagfixer.utilities.Constants.GOOGLE_SEARCH;
 
 /**
  * Use the {@link TrackDetailFragment#newInstance} factory method to

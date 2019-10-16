@@ -12,11 +12,9 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
-
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.fixer.AudioTagger;
 import mx.dev.franco.automusictagfixer.ui.ResultsFragmentBase;
-import mx.dev.franco.automusictagfixer.ui.results.IdentificationResultsFragmentBase;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
 
 public class SemiAutoCorrectionDialogFragment extends ResultsFragmentBase<ResultsViewModel> {
@@ -46,11 +44,11 @@ public class SemiAutoCorrectionDialogFragment extends ResultsFragmentBase<Result
     super.onAttach(context);
     if(getParentFragment() instanceof OnSemiAutoCorrectionListener)
       mOnSemiAutoCorrectionListener = (OnSemiAutoCorrectionListener) getParentFragment();
-    else if(context instanceof IdentificationResultsFragmentBase.OnResultSelectedListener)
+    else if(context instanceof OnSemiAutoCorrectionListener)
       mOnSemiAutoCorrectionListener = (OnSemiAutoCorrectionListener) context;
     else
       throw new RuntimeException(context.toString() + " must implement " +
-              IdentificationResultsFragmentBase.OnResultSelectedListener.class.getCanonicalName());
+          OnSemiAutoCorrectionListener.class.getCanonicalName());
 
     mSemiAutoCorrectionParams = new SemiAutoCorrectionParams();
     mSemiAutoCorrectionParams.setCorrectionMode(Constants.CACHED);
