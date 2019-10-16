@@ -11,7 +11,6 @@
         android:id="@+id/app_bar"
         android:layout_width="match_parent"
         android:layout_height="@dimen/app_bar_height"
-        android:background="@color/grey_900"
         android:elevation="4dp"
         app:elevation="4dp"
         android:fitsSystemWindows="true">
@@ -41,7 +40,6 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="@dimen/fab_margin"
-        android:tint="@color/grey_800"
         app:useCompatPadding="true"
         app:layout_anchor="@id/app_bar"
         app:layout_anchorGravity="bottom|end"

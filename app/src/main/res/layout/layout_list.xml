@@ -69,7 +69,6 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_margin="@dimen/fab_margin"
-        android:tint="@color/grey_800"
         app:useCompatPadding="true"
         android:src="@drawable/ic_photo_filter_white_24px" />
 
@@ -79,7 +78,6 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_margin="@dimen/fab_margin"
-        android:tint="@color/grey_800"
         app:useCompatPadding="true"
         android:src="@drawable/ic_stop_white_24dp"/>
 

@@ -654,7 +654,7 @@ public class FixerTrackService extends Service {
                     .setContentText(status != null ? status : "")
                     .setSubText(contentText != null ? contentText : getString(R.string.fixing_task))
                     .setAutoCancel(true)
-                    .setColor(ContextCompat.getColor(getApplicationContext(), R.color.grey_800))
+                    .setColor(ContextCompat.getColor(getApplicationContext(), R.color.primaryColor))
                     .setTicker(getString(R.string.app_name))
                     .setSmallIcon(R.drawable.ic_stat_name)
                     .setLargeIcon(Bitmap.createScaledBitmap(icon, 128, 128, false))

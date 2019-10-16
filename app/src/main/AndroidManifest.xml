@@ -28,7 +28,6 @@
             android:name=".ui.SplashActivity"
             android:configChanges="orientation|screenSize"
             android:screenOrientation="portrait"
-            android:theme="@style/SplashTheme"
             tools:ignore="InnerclassSeparator">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -48,14 +47,12 @@
             android:label="@string/title_activity_main"
             android:launchMode="singleTop"
             android:screenOrientation="portrait"
-            android:theme="@style/MainActivityTheme"
             android:windowSoftInputMode="adjustResize"
             tools:ignore="InnerclassSeparator"></activity>
         <activity
             android:name=".ui.sdcardinstructions.SdCardInstructionsActivity"
             android:parentActivityName=".ui.MainActivity"
             android:screenOrientation="portrait"
-            android:theme="@style/MyTransparentTheme"
             tools:ignore="InnerclassSeparator" />
         <activity
             android:name=".ui.faq.QuestionsActivity"
@@ -63,7 +60,6 @@
             android:label="@string/faq"
             android:parentActivityName=".ui.MainActivity"
             android:screenOrientation="portrait"
-            android:theme="@style/QuestionsTheme"
             tools:ignore="InnerclassSeparator">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
@@ -75,7 +71,6 @@
             android:label="@string/title_activity_scrolling_about"
             android:parentActivityName=".ui.MainActivity"
             android:screenOrientation="portrait"
-            android:theme="@style/AboutTheme"
             tools:ignore="InnerclassSeparator">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
@@ -99,10 +94,6 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider> <!-- We need this service for start or schedule GNSDK API initialization -->
-        <service
-            android:name=".services.ScheduleJobService"
-            android:label="DetectionService"
-            android:permission="android.permission.BIND_JOB_SERVICE" /> <!-- Service that runs in background thread and have the ability to run if app is closed -->
         <service
             android:name=".services.FixerTrackService"
             android:exported="false"

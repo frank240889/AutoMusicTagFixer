@@ -58,7 +58,6 @@
       android:paddingStart="8dp"
       android:paddingEnd="8dp"
       android:labelFor="@id/new_name_edit_text"
-      android:theme="@style/CustomEditTextHint"
       android:visibility="gone"
       app:layout_constraintEnd_toEndOf="parent"
       app:layout_constraintStart_toStartOf="parent"

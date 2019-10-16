@@ -1,112 +1,15 @@
 <resources>
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat.NoActionBar">
+    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="android:colorPrimary">@color/primaryColor</item>
         <item name="android:colorPrimaryDark">@color/primaryDarkColor</item>
         <item name="android:colorAccent">@color/primaryLightColor</item>
-        <item name="android:colorControlActivated">@color/primaryColor</item>
-        <item name="android:colorControlHighlight">@color/primaryLightColor</item>
-        <item name="android:windowContentTransitions">true</item>
-        <item name="android:windowTranslucentStatus">true</item>
-        <item name="android:windowTranslucentNavigation">false</item>
     </style>
-
-    <style name="MainActivityTheme" parent="AppTheme">
-        <item name="colorAccent">@color/primaryColor</item>
-        <item name="android:splitMotionEvents">false</item>
-        <item name="android:windowEnableSplitTouch">false</item>
-    </style>
-
-    <!--Style details track details activity-->
-    <style name="DetailsTrackDialogTheme" parent="AppTheme">
-        <item name="colorAccent">@color/primaryColor</item>
-    </style>
-
-    <!--Style splash-->
-    <style name="SplashTheme" parent="Theme.AppCompat.NoActionBar">
-        <item name="android:windowBackground">@drawable/background_splash</item>
-        <item name="android:windowTranslucentNavigation">true</item>
-        <item name="android:buttonStyle">@color/primaryColor</item>
-        <item name="colorAccent">@color/primaryColor</item>
-        <item name="android:fontFamily">@font/montserrat</item>
-    </style>
-
-    <!--Style details track dialog activity-->
-    <style name="AboutTheme" parent="AppTheme">
-        <item name="colorAccent">@color/primaryColor</item>
-        <item name="colorPrimaryDark">@color/grey_900</item>
-    </style>
-
-    <!--Style details questions activity-->
-    <style name="QuestionsTheme" parent="AppTheme">
-        <item name="colorAccent">@color/primaryColor</item>
-    </style>
-
-    <style name="MyTransparentTheme" parent="Theme.AppCompat.NoActionBar">
-        <item name="android:windowIsTranslucent">true</item>
-        <item name="android:windowBackground">@android:color/transparent</item>
-    </style>
-
 
     <style name="SettingsStyle" parent="Theme.AppCompat">
-        <item name="android:textColorPrimary">@android:color/primary_text_dark</item>
-        <item name="android:colorControlActivated">@color/primaryColor</item>
-        <item name="android:colorAccent">@color/primaryColor</item>
         <item name="android:colorPrimary">@color/primaryColor</item>
-        <item name="android:colorControlHighlight">@color/primaryLightColor</item>
-        <item name="actionBarTheme">@style/MyApp.ActionBarTheme</item>
-        <item name="colorAccent">@color/primaryColor</item>
+        <item name="android:colorPrimaryDark">@color/primaryDarkColor</item>
+        <item name="android:colorAccent">@color/primaryLightColor</item>
     </style>
-
-    <style name="MyApp.ActionBarTheme" parent="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
-        <item name="android:colorControlHighlight">@color/primaryLightColor</item>
-    </style>
-
-
-    <!-- TextInputLayout style-->
-    <style name="CustomEditTextHint" parent="AppTheme">
-        <item name="colorAccent">@color/primaryLightColor</item>
-    </style>
-
-
-    <style name="CustomToast" parent="TextAppearance.AppCompat.Small">
-        <item name="android:textColor">@color/grey_800</item>
-        <item name="android:padding">16dp</item>
-        <item name="android:textSize">14sp</item>
-    </style>
-
-    <style name="Button.Yellow" parent="Widget.AppCompat.Button.Colored">
-        <item name="android:textColor">@color/grey_900</item>
-        <item name="android:backgroundTint">@color/primaryColor</item>
-    </style>
-
-    <style name="Button.Flat.Primary" parent="Theme.AppCompat.Light">
-        <item name="android:buttonStyle">
-            @style/Widget.AppCompat.Button.Borderless.Colored
-        </item>
-        <item name="colorAccent">@color/primaryColor</item>
-    </style>
-
-    <style name="TextAppearance1" parent="android:TextAppearance">
-        <item name="android:fontFamily">@font/montserrat</item>
-        <item name="android:textSize">14sp</item>
-    </style>
-
-    <!-- set the rounded drawable as background to your bottom sheet -->
-    <style name="BottomSheet" parent="@style/Widget.Design.BottomSheet.Modal">
-        <item name="android:background">@drawable/bg_rounded_bottom_sheet_dialog_fragment</item>
-    </style>
-
-    <style name="BaseBottomSheetDialog" parent="@style/Theme.Design.Light.BottomSheetDialog">
-        <item name="android:windowIsFloating">false</item>
-        <item name="bottomSheetStyle">@style/BottomSheet</item>
-    </style>
-
-    <style name="BottomSheetDialogTheme" parent="BaseBottomSheetDialog">
-        <item name="android:statusBarColor">@android:color/transparent</item>
-        <item name="android:navigationBarColor">@color/grey_850</item>
-    </style>
-
-
 
 </resources>

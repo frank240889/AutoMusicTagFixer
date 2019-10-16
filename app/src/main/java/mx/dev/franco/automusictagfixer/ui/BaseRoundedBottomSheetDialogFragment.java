@@ -11,8 +11,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import mx.dev.franco.automusictagfixer.R;
-
 
 /**
  * @author Franco Castillo
@@ -40,10 +38,5 @@ public abstract class BaseRoundedBottomSheetDialogFragment extends BottomSheetDi
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         return new BottomSheetDialog(getContext(), getTheme());
-    }
-
-    @Override
-    public int getTheme() {
-        return R.style.BottomSheetDialogTheme;
     }
 }

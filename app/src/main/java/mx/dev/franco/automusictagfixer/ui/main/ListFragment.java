@@ -178,13 +178,9 @@ public class ListFragment extends BaseFragment<ListViewModel> implements
 
         //Color of progress bar of refresh layout
         mSwipeRefreshLayout.setColorSchemeColors(
-                ContextCompat.getColor(getActivity(), R.color.true_black),
-                ContextCompat.getColor(getActivity(), R.color.grey_900),
-                ContextCompat.getColor(getActivity(), R.color.transparent),
-                ContextCompat.getColor(getActivity(), R.color.grey_850),
-                ContextCompat.getColor(getActivity(), R.color.grey_800),
-                ContextCompat.getColor(getActivity(), R.color.grey_700)
-
+                ContextCompat.getColor(getActivity(), R.color.primaryColor),
+                ContextCompat.getColor(getActivity(), R.color.primaryDarkColor),
+                ContextCompat.getColor(getActivity(), R.color.primaryLightColor)
         );
         mSwipeRefreshLayout.setProgressBackgroundColorSchemeColor(getActivity().
                 getResources().getColor(R.color.primaryColor));

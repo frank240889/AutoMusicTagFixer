@@ -1,5 +1,7 @@
 package mx.dev.franco.automusictagfixer.utilities;
 
+import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
+
 import android.annotation.SuppressLint;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
@@ -22,20 +24,15 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import com.crashlytics.android.Crashlytics;
 import com.gracenote.gnsdk.GnAssetFetch;
 import com.gracenote.gnsdk.GnException;
 import com.gracenote.gnsdk.GnImageSize;
-
-import org.jaudiotagger.tag.FieldKey;
-
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
 import mx.dev.franco.automusictagfixer.BuildConfig;
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.common.Action;
@@ -48,8 +45,7 @@ import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.ui.trackdetail.InputCorrectionParams;
 import mx.dev.franco.automusictagfixer.utilities.Constants.CorrectionActions;
 import mx.dev.franco.automusictagfixer.utilities.resource_manager.ResourceManager;
-
-import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
+import org.jaudiotagger.tag.FieldKey;
 
 public class AndroidUtils {
 
@@ -57,12 +53,12 @@ public class AndroidUtils {
         @SuppressLint("ShowToast") Toast toast = Toast.makeText(context.getApplicationContext(), "", Toast.LENGTH_LONG);
         View view = toast.getView();
         TextView text = view.findViewById(android.R.id.message);
-        text.setTextColor(ContextCompat.getColor(context.getApplicationContext(), R.color.grey_900));
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        text.setTextColor(ContextCompat.getColor(context.getApplicationContext(), R.color.primaryColor));
+        /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             text.setTextAppearance(R.style.CustomToast);
         } else {
             text.setTextAppearance(context.getApplicationContext(), R.style.CustomToast);
-        }
+        }*/
         view.setBackground(ContextCompat.getDrawable(context.getApplicationContext(), R.drawable.background_custom_toast));
         toast.setGravity(Gravity.CENTER, 0, 0);
         return toast;
@@ -171,8 +167,8 @@ public class AndroidUtils {
         Snackbar snackbar = Snackbar.make(viewToAttach,"",Snackbar.LENGTH_SHORT);
         TextView tv = snackbar.getView().findViewById(android.support.design.R.id.snackbar_text);
         snackbar.getView().setBackgroundColor(ContextCompat.getColor(context.getApplicationContext(),R.color.primaryLightColor));
-        tv.setTextColor(ContextCompat.getColor(context.getApplicationContext(),R.color.grey_800));
-        snackbar.setActionTextColor(ContextCompat.getColor(context.getApplicationContext(),R.color.grey_800));
+        tv.setTextColor(ContextCompat.getColor(context.getApplicationContext(),R.color.primaryColor));
+        snackbar.setActionTextColor(ContextCompat.getColor(context.getApplicationContext(),R.color.primaryColor));
         return snackbar;
     }
 

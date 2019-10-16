@@ -1,21 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!--color name="primaryColor">#90caf9</color>
-    <color name="primaryLightColor">#c3fdff</color>
-    <color name="primaryDarkColor">#5d99c6</color-->
-    <color name="primaryColor">#fbc02d</color>
-    <color name="primaryLightColor">#fff263</color>
-    <color name="primaryDarkColor">#c49000</color>
-
-    <color name="true_black">#000000</color>
-    <color name="true_white">#ffffff</color>
-    <color name="md_statusbar_translucent">#4000</color>
-    <color name="grey_900">#212121</color>
-    <color name="grey_850">#303030</color>
-    <color name="grey_800">#424242</color>
-    <color name="grey_700">#515151</color>
-
-    <color name="black_overlay">#66000000</color>
-    <color name="darker">#121212</color>
-
+    <color name="primaryColor">#008577</color>
+    <color name="primaryLightColor">#00574B</color>
+    <color name="primaryDarkColor">#D81B60</color>
 </resources>
+    

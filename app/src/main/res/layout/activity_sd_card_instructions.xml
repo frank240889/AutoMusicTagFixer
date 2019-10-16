@@ -53,7 +53,6 @@
             android:layout_below="@id/instructions_step1"
             android:layout_centerHorizontal="true"
             android:padding="8dp"
-            android:theme="@style/Button.Yellow"
             android:text="@string/enable" />
 
 
