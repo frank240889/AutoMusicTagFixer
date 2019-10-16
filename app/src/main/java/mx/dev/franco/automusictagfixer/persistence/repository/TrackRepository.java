@@ -136,7 +136,7 @@ public class TrackRepository {
                 }
             }
         });
-        mediaStoreReader.executeOnExecutor(Executors.newCachedThreadPool());
+        mediaStoreReader.executeOnExecutor(Executors.newCachedThreadPool(), mContext);
     }
 
     public void setChecked(Track track){
