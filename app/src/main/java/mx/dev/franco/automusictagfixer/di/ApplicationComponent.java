@@ -2,18 +2,22 @@ package mx.dev.franco.automusictagfixer.di;
 
 
 import android.app.Application;
+
+import javax.inject.Singleton;
+
 import dagger.BindsInstance;
 import dagger.Component;
 import dagger.android.AndroidInjector;
 import dagger.android.support.AndroidSupportInjectionModule;
-import javax.inject.Singleton;
 import mx.dev.franco.automusictagfixer.AutoMusicTagFixer;
 import mx.dev.franco.automusictagfixer.ui.main.TrackAdapter;
 
 @Component(modules = {
         AndroidSupportInjectionModule.class,
         ApplicationModule.class,
+        ServiceModule.class,
         ServiceUtilsModule.class,
+        ResourceManagerModule.class,
         ActivityModule.class,
         FragmentModule.class,
         DatabaseModule.class,

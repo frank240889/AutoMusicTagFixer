@@ -118,7 +118,6 @@
                 android:layout_alignParentTop="true"
                 android:layout_alignParentEnd="true"
                 android:background="?android:attr/selectableItemBackgroundBorderless"
-                android:tint="@color/primaryLightColor"
                 android:tintMode="src_atop"
                 android:visibility="gone"
                 app:layout_constraintBottom_toBottomOf="parent"

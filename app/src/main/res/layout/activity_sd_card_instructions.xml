@@ -23,7 +23,6 @@
             android:layout_alignParentTop="true"
             android:layout_alignParentEnd="true"
             android:padding="8dp"
-            android:tint="@color/primaryColor"
             android:background="?android:attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_close_white_24px"/>
         <TextView

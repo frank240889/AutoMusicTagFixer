@@ -178,7 +178,7 @@ dependencies {
     implementation "android.arch.lifecycle:extensions:$rootProject.archLifecycleVersion"
     annotationProcessor "android.arch.lifecycle:compiler:$rootProject.archLifecycleVersion"
 
-    //implementation 'com.facebook.stetho:stetho:1.5.0'
+    implementation 'com.facebook.stetho:stetho:1.5.1'
 
     implementation 'agency.tango.android:material-intro-screen:0.0.5'
     implementation 'com.google.code.findbugs:jsr305:3.0.2'

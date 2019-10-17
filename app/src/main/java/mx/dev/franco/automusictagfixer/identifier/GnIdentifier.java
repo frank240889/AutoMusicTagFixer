@@ -150,7 +150,8 @@ public class GnIdentifier implements Identifier<Track, List<IdentificationResult
             GnAlbum gnAlbum = null;
             try {
                 gnAlbum = albumIterator.next();
-                processAlbum(gnAlbum);
+                Result result = processAlbum(gnAlbum);
+                results.add(result);
             } catch (GnException e) {
                 e.printStackTrace();
             }

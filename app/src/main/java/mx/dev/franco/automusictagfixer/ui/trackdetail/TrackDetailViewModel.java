@@ -49,6 +49,7 @@ public class TrackDetailViewModel extends AndroidViewModel {
     public MutableLiveData<String> year;
     public MutableLiveData<String> genre;
     public MutableLiveData<byte[]> cover;
+    public MutableLiveData<String> imageSize;
 
     //One way bind livedata objects.
     public MutableLiveData<String> filesize;
@@ -59,6 +60,7 @@ public class TrackDetailViewModel extends AndroidViewModel {
     public MutableLiveData<String> bitrate;
     public MutableLiveData<String> length;
     public MutableLiveData<String> absolutePath;
+    public MutableLiveData<String> filename;
 
     //MediatorLiveData to observe loading state of multiple sources.
     private MediatorLiveData<Boolean> mStateMerger;
@@ -97,7 +99,9 @@ public class TrackDetailViewModel extends AndroidViewModel {
         year = new MutableLiveData<>();
         genre = new MutableLiveData<>();
         cover = new MutableLiveData<>();
+        imageSize = new MediatorLiveData<>();
 
+        filename = new MutableLiveData<>();
         filesize = new MutableLiveData<>();
         channels = new MutableLiveData<>();
         type = new MutableLiveData<>();
@@ -376,6 +380,11 @@ public class TrackDetailViewModel extends AndroidViewModel {
     private void setNoEditableInfo(AudioTagger.AudioFields audioFields) {
         filesize.setValue(audioFields.getFileSize());
         absolutePath.setValue(audioFields.getPath());
+        String coverSize = audioFields.getImageSize() != null ?
+                audioFields.getImageSize() + " " + getApplication().getString(R.string.pixels) :
+                getApplication().getString(R.string.missing_cover);
+        imageSize.setValue(coverSize);
+        filename.setValue(audioFields.getFileName());
     }
 
     private void setFixedInfo(AudioTagger.AudioFields audioFields) {

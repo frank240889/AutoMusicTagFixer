@@ -3,11 +3,15 @@ package mx.dev.franco.automusictagfixer.persistence.repository;
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MutableLiveData;
 import android.support.annotation.NonNull;
+
 import java.util.List;
+
 import javax.inject.Inject;
+
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.common.Action;
 import mx.dev.franco.automusictagfixer.identifier.Identifier;
+import mx.dev.franco.automusictagfixer.identifier.IdentifierFactory;
 import mx.dev.franco.automusictagfixer.interfaces.Cache;
 import mx.dev.franco.automusictagfixer.persistence.cache.DownloadedTrackDataCacheImpl;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
@@ -17,15 +21,19 @@ import mx.dev.franco.automusictagfixer.utilities.Resource;
 
 public class IdentificationManager {
 
-    private MutableLiveData<Boolean> mLoadingStateLiveData = new MutableLiveData<>();
+    private MutableLiveData<Boolean> mLoadingStateLiveData;
     private SingleLiveEvent<Resource<ActionableMessage>> mOnActionableMessage;
     private Identifier<Track, List<Identifier.IdentificationResults>> mIdentifier;
     private Cache<String, List<Identifier.IdentificationResults>> mResultsCache;
+    private IdentifierFactory identifierFactory;
 
     @Inject
-    public IdentificationManager(@NonNull DownloadedTrackDataCacheImpl cache){
+    public IdentificationManager(@NonNull DownloadedTrackDataCacheImpl cache, IdentifierFactory identifierFactory){
         mResultsCache = cache;
+        this.identifierFactory = identifierFactory;
+        mIdentifier = identifierFactory.create(IdentifierFactory.FINGERPRINT_IDENTIFIER);
         mOnActionableMessage = new SingleLiveEvent<>();
+        mLoadingStateLiveData = new MutableLiveData<>();
     }
 
     /**

@@ -8,6 +8,7 @@ import dagger.Module;
 import dagger.multibindings.IntoMap;
 import mx.dev.franco.automusictagfixer.modelsUI.main.ListViewModel;
 import mx.dev.franco.automusictagfixer.ui.AndroidViewModelFactory;
+import mx.dev.franco.automusictagfixer.ui.search.SearchListViewModel;
 import mx.dev.franco.automusictagfixer.ui.trackdetail.TrackDetailViewModel;
 
 
@@ -27,6 +28,11 @@ public abstract class AndroidViewModelModule {
     @Binds
     @IntoMap
     @ViewModelKey(TrackDetailViewModel.class)
-    abstract ViewModel provideTrackDetailViewModel(TrackDetailViewModel eventDetailViewModel);
+    abstract ViewModel provideTrackDetailViewModel(TrackDetailViewModel trackDetailViewModel);
+
+    @Binds
+    @IntoMap
+    @ViewModelKey(SearchListViewModel.class)
+    abstract ViewModel provideSearchListViewModel(SearchListViewModel searchListViewModel);
 
 }

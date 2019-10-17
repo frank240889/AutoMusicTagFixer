@@ -78,6 +78,7 @@ public class DataTrackRepository {
 
         mMetadataReaderResultLiveData = new SingleLiveEvent<>();
         mMetadataWriterResultLiveData = new SingleLiveEvent<>();
+        mFileRenamerLiveData = new SingleLiveEvent<>();
         mLoadingStateLiveData = new MutableLiveData<>();
     }
 

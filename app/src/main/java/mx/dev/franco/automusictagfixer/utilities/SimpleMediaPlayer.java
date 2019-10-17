@@ -81,8 +81,8 @@ public final class SimpleMediaPlayer extends MediaPlayer implements MediaPlayer.
         setDataSource(path);
         prepare();
         start();
-        if(mListener != null)
-            mListener.onStartPlaying();
+        for(OnMediaPlayerEventListener listener : mListeners)
+            listener.onStartPlaying();
     }
 
     public void playPreview() throws IOException {
@@ -98,8 +98,8 @@ public final class SimpleMediaPlayer extends MediaPlayer implements MediaPlayer.
         setDataSource(mCurrentPath);
         prepare();
         start();
-        if(mListener != null)
-            mListener.onStartPlaying();
+        for(OnMediaPlayerEventListener listener : mListeners)
+            listener.onStartPlaying();
     }
 
     public void setPath(String path) {
@@ -111,8 +111,8 @@ public final class SimpleMediaPlayer extends MediaPlayer implements MediaPlayer.
         if(isPlaying()) {
             stop();
             reset();
-            if(mListener != null)
-                mListener.onStopPlaying();
+            for(OnMediaPlayerEventListener listener : mListeners)
+                listener.onStopPlaying();
         }
     }
 
@@ -125,15 +125,15 @@ public final class SimpleMediaPlayer extends MediaPlayer implements MediaPlayer.
     public void onCompletion(MediaPlayer mp) {
         stop();
         reset();
-        if(mListener != null)
-            mListener.onCompletedPlaying();
+        for(OnMediaPlayerEventListener listener : mListeners)
+            listener.onCompletedPlaying();
     }
 
 
     @Override
     public boolean onError(MediaPlayer mp, int what, int extra) {
-        if(mListener != null)
-            mListener.onErrorPlaying(what,extra);
+        for(OnMediaPlayerEventListener listener : mListeners)
+            listener.onErrorPlaying(what,extra);
         return false;
     }
 }

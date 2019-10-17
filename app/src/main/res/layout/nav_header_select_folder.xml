@@ -45,7 +45,6 @@
         android:layout_marginBottom="16dp"
         android:fontFamily="@font/montserrat"
         android:text="@string/app_name"
-        android:textColor="@color/primaryLightColor"
         android:textSize="18sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toEndOf="@+id/logo_drawer" />
@@ -59,7 +58,6 @@
         android:layout_marginBottom="16dp"
         android:fontFamily="@font/montserrat"
         android:text="@string/app_version"
-        android:textColor="@color/primaryLightColor"
         android:textSize="18sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />

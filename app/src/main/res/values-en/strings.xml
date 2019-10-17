@@ -55,7 +55,7 @@
     <string name="file_status_incomplete">Missing some tags, try adding them manually.</string>
     <string name="file_status_no_processed">No tags have yet been searched for this song.</string>
 
-    <string name="no_songs_to_correct">Select songs to use automatic mode or click on any.</string>
+    <string name="no_songs_to_correct">Select songs to use automatic mode.</string>
     <string name="title_activity_settings">Configuration</string>
 
 

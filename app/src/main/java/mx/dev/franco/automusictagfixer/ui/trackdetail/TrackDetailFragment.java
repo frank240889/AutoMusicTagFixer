@@ -1,7 +1,5 @@
 package mx.dev.franco.automusictagfixer.ui.trackdetail;
 
-import static mx.dev.franco.automusictagfixer.utilities.Constants.GOOGLE_SEARCH;
-
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.app.Activity;
@@ -29,9 +27,12 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
+
 import java.io.IOException;
 import java.util.ArrayList;
+
 import javax.inject.Inject;
+
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.common.Action;
 import mx.dev.franco.automusictagfixer.databinding.FragmentTrackDetailBinding;
@@ -49,6 +50,8 @@ import mx.dev.franco.automusictagfixer.utilities.Message;
 import mx.dev.franco.automusictagfixer.utilities.RequiredPermissions;
 import mx.dev.franco.automusictagfixer.utilities.SimpleMediaPlayer;
 import mx.dev.franco.automusictagfixer.utilities.SimpleMediaPlayer.OnMediaPlayerEventListener;
+
+import static mx.dev.franco.automusictagfixer.utilities.Constants.GOOGLE_SEARCH;
 
 /**
  * Use the {@link TrackDetailFragment#newInstance} factory method to
@@ -417,7 +420,7 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
     }
 
     public void onDisableEditModeAndRestore() {
-        onDisableEditMode();
+        disableFields();
     }
 
     private void onInputDataInvalid(ValidationWrapper validationWrapper) {
@@ -470,8 +473,12 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
         mFragmentTrackDetailBinding.fabMenu.animate().rotation(-400);
         mFragmentTrackDetailBinding.fabAutofix.animate().translationY(-getResources().getDimension(R.dimen.standard_55));
         mFragmentTrackDetailBinding.fabEditTrackInfo.animate().translationY(-getResources().getDimension(R.dimen.standard_105));
-        mFragmentTrackDetailBinding.fabDownloadCover.animate().translationY(-getResources().getDimension(R.dimen.standard_155));
-        mIsFloatingActionMenuOpen = true;
+        mFragmentTrackDetailBinding.fabDownloadCover.animate().setListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                mIsFloatingActionMenuOpen = true;
+            }
+        }).translationY(-getResources().getDimension(R.dimen.standard_155));
     }
 
     /**
@@ -481,8 +488,12 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
         mFragmentTrackDetailBinding.fabMenu.animate().rotation(0);
         mFragmentTrackDetailBinding.fabAutofix.animate().translationY(0);
         mFragmentTrackDetailBinding.fabEditTrackInfo.animate().translationY(0);
-        mFragmentTrackDetailBinding.fabDownloadCover.animate().translationY(0);
-        mIsFloatingActionMenuOpen = false;
+        mFragmentTrackDetailBinding.fabDownloadCover.animate().setListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                mIsFloatingActionMenuOpen = false;
+            }
+        }).translationY(0);
     }
 
     /**
@@ -505,8 +516,8 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
     private void addFloatingActionButtonListeners(){
         //enable manual mode
         mFragmentTrackDetailBinding.fabEditTrackInfo.setOnClickListener(v -> {
+            closeFABMenu();
             disableAppBarLayout();
-            enableFieldsToEdit();
         });
 
         //runs track id
@@ -595,8 +606,7 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
         mFragmentTrackDetailBinding.fabMenu.animate().rotation(0).setListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationEnd(Animator animation) {
-                mFragmentTrackDetailBinding.fabMenu.hide();
-                mFragmentTrackDetailBinding.fabSaveInfo.show();
+                editMode();
                 mFragmentTrackDetailBinding.fabSaveInfo.setOnClickListener(null);
                 mFragmentTrackDetailBinding.fabSaveInfo.setOnClickListener(new OnClickListener() {
                     @Override
@@ -608,7 +618,7 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
                 });
                 mFragmentTrackDetailBinding.toolbarCoverArt.setEnabled(false);
                 mUpdateCoverMenuItem.setEnabled(false);
-                editMode();
+                enableFieldsToEdit();
             }
         });
     }
@@ -630,7 +640,7 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
             closeFABMenu();
         }
         else if(mEditMode) {
-            onDisableEditMode();
+            disableFields();
         }
         else {
             callSuperOnBackPressed();
@@ -680,6 +690,7 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
         InputMethodManager imm =(InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
         imm.showSoftInput(mFragmentTrackDetailBinding.layoutContentDetailsTrack.trackNameDetails,
                 InputMethodManager.SHOW_IMPLICIT);
+        mEditMode = true;
     }
 
     /**
@@ -728,8 +739,9 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
             imm.hideSoftInputFromWindow(getActivity().getCurrentFocus().getWindowToken(), 0);
         }
         catch (Exception ignored){}
-
         showFabs();
+
+        mEditMode = false;
     }
 
     /**

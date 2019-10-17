@@ -24,10 +24,12 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import java.util.List;
+
 import javax.inject.Inject;
+
 import mx.dev.franco.automusictagfixer.R;
-import mx.dev.franco.automusictagfixer.modelsUI.search.SearchListViewModel;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.ui.BaseFragment;
 import mx.dev.franco.automusictagfixer.ui.MainActivity;
@@ -37,7 +39,7 @@ import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 import mx.dev.franco.automusictagfixer.utilities.Constants.CorrectionActions;
 import mx.dev.franco.automusictagfixer.utilities.ServiceUtils;
 
-public class ResultSearchListFragment extends BaseFragment implements
+public class ResultSearchListFragment extends BaseFragment<SearchListViewModel> implements
         FoundItemHolder.ClickListener{
     public static final String TAG = ResultSearchListFragment.class.getName();
 
@@ -54,7 +56,6 @@ public class ResultSearchListFragment extends BaseFragment implements
 
     @Inject
     ServiceUtils serviceUtils;
-    private View mLayout;
     private EditText mSearchBox;
 
     public static ResultSearchListFragment newInstance() {
@@ -73,7 +74,7 @@ public class ResultSearchListFragment extends BaseFragment implements
     }
 
     @Override
-    protected Object getViewModel() {
+    protected SearchListViewModel getViewModel() {
         return ViewModelProviders.
             of(this, androidViewModelFactory).get(SearchListViewModel.class);
     }
@@ -93,20 +94,10 @@ public class ResultSearchListFragment extends BaseFragment implements
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        mLayout = inflater.inflate(R.layout.fragment_result_search_list, container, false);
-        mToolbar = mLayout.findViewById(R.id.toolbar);
-        mSearchBox = mLayout.findViewById(R.id.search_box);
-        mSearchBox.setOnEditorActionListener((v, actionId, event) -> {
-            if(actionId == EditorInfo.IME_ACTION_SEARCH || actionId == EditorInfo.IME_ACTION_UNSPECIFIED){
-                mQuery = mSearchBox.getText().toString();
-                mSearchListViewModel.search(mQuery);
-                hideKeyboard();
-            }
-
-            return false;
-        });
-        return mLayout;
+        return inflater.inflate(R.layout.fragment_result_search_list, container, false);
     }
+
+
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
@@ -127,7 +118,18 @@ public class ResultSearchListFragment extends BaseFragment implements
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
+
+        mToolbar = view.findViewById(R.id.toolbar);
+        mSearchBox = view.findViewById(R.id.search_box);
+        mSearchBox.setOnEditorActionListener((v, actionId, event) -> {
+            if(actionId == EditorInfo.IME_ACTION_SEARCH || actionId == EditorInfo.IME_ACTION_UNSPECIFIED){
+                mQuery = mSearchBox.getText().toString();
+                mSearchListViewModel.search(mQuery);
+                hideKeyboard();
+            }
+
+            return false;
+        });
 
         //attach adapter to our recyclerview
         mRecyclerView = view.findViewById(R.id.found_tracks_recycler_view);

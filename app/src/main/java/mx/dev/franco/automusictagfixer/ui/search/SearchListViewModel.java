@@ -1,4 +1,4 @@
-package mx.dev.franco.automusictagfixer.modelsUI.search;
+package mx.dev.franco.automusictagfixer.ui.search;
 
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MutableLiveData;
@@ -25,14 +25,18 @@ public class SearchListViewModel extends ViewModel {
     private MutableLiveData<String> mTrackIsProcessing = new MutableLiveData<>();
     private MutableLiveData<ViewWrapper> mTrackInaccessible = new MutableLiveData<>();
     private MutableLiveData<Boolean> mShowProgress = new MutableLiveData<>();
-    @Inject
-    public TrackRepository trackRepository;
-    @Inject
-    public ResourceManager resourceManager;
-    @Inject
-    public AbstractSharedPreferences sharedPreferences;
+    private TrackRepository trackRepository;
+    private ResourceManager resourceManager;
+    private AbstractSharedPreferences sharedPreferences;
 
-    public SearchListViewModel() {
+    @Inject
+    public SearchListViewModel(TrackRepository trackRepository,
+                               ResourceManager resourceManager,
+                               AbstractSharedPreferences sharedPreferences) {
+        this.trackRepository = trackRepository;
+        this.resourceManager = resourceManager;
+        this.sharedPreferences = sharedPreferences;
+
         mTracks = trackRepository.getSearchResults();
     }
 

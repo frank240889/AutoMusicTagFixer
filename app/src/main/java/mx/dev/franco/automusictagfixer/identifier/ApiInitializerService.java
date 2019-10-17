@@ -16,7 +16,7 @@ public class ApiInitializerService extends Service {
     public void onCreate() {
         GnApiService.getInstance(this);
         mThread = new Thread(() -> {
-            GnApiService.getInstance(this).initializeAPI();
+            GnApiService.getInstance(this).initializeAPI(null);
             stopSelf();
         });
         mThread.start();

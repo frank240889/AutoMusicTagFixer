@@ -55,7 +55,7 @@
     <string name="file_status_incomplete">Faltan algunas etiquetas, prueba a añadirlas manualmente.</string>
     <string name="file_status_no_processed">Aún no se han buscado etiquetas para esta canción.</string>
 
-    <string name="no_songs_to_correct">Selecciona canciones para usar el modo automático o pulsa sobre cualquiera.</string>
+    <string name="no_songs_to_correct">Selecciona canciones para usar el modo automático.</string>
     <string name="title_activity_settings">Configuración</string>
 
 
@@ -307,7 +307,7 @@
     <string name="identification_cancelled">Identificación cancelada</string>
     <string name="image_drawer_credits">Imagen en drawer.</string>
     <string name="identification_results_language">Idioma</string>
-    <string name="pixels">Pixeles</string>
+    <string name="pixels">Píxeles</string>
     <string name="missing_cover">Sin carátula</string>
     <string name="app_version" translatable="false">1.1</string>
     <string name="results_found">Coincidencias encontradas</string>

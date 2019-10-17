@@ -30,10 +30,10 @@ public interface TrackDAO {
     @Query("SELECT COUNT(*) FROM track_table")
     int count();
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     void insert(Track track);
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     void insert(List<Track> tracks);
 
     @Update

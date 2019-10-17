@@ -96,7 +96,7 @@ public class AudioTagger {
 
     private Context mContext;
     private static final int BUFFER_SIZE = 131072;//->128Kb
-    private static final float KILOBYTE = 1048576;
+    private static final float KILOBYTE = 1024;
 
 
     //Used as a support for storage operations
@@ -1221,19 +1221,10 @@ public class AudioTagger {
     @Nullable
     public static String getFileSize(long size){
         if(size <= 0)
-            return null;
+            return "0 Kb";
 
-        float s = size ;/// KILOBYTE;
-        String str = String.valueOf(s);
-        //int l = str.length();
-        String readableSize = "";
-        /*if(l > 4)
-            readableSize = str.substring(0,4);
-        else
-            readableSize =str.substring(0,3);*/
-        readableSize += " kb";
-
-        return readableSize;
+        float s = size/KILOBYTE;
+        return String.format(Locale.getDefault(),"%.2f", s) + " Kb";
     }
 
     public static String getFileSize(String path){

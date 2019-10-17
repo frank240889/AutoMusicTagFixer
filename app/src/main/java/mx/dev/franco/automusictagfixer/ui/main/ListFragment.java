@@ -32,8 +32,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import java.util.Objects;
+
 import javax.inject.Inject;
+
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.interfaces.LongRunningTaskListener;
 import mx.dev.franco.automusictagfixer.interfaces.ProcessingListener;
@@ -180,8 +183,8 @@ public class ListFragment extends BaseFragment<ListViewModel> implements
                 ContextCompat.getColor(getActivity(), R.color.primaryDarkColor),
                 ContextCompat.getColor(getActivity(), R.color.primaryLightColor)
         );*/
-        mSwipeRefreshLayout.setProgressBackgroundColorSchemeColor(getActivity().
-                getResources().getColor(R.color.primaryColor));
+        /*mSwipeRefreshLayout.setProgressBackgroundColorSchemeColor(getActivity().
+                getResources().getColor(R.color.primaryColor));*/
 
         setHasOptionsMenu(true);
 
@@ -246,7 +249,7 @@ public class ListFragment extends BaseFragment<ListViewModel> implements
                             addToBackStack(resultSearchListFragment.getClass().getName()).
                             add(R.id.container_fragments, resultSearchListFragment,
                                     resultSearchListFragment.getClass().getName()).
-                            commitNow();
+                            commit();
 
                 break;
             case R.id.action_refresh:
@@ -475,7 +478,7 @@ public class ListFragment extends BaseFragment<ListViewModel> implements
 
         ((MainActivity)getActivity()).mDrawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
         trackDetailFragment = (TrackDetailFragment) getActivity().
-                getSupportFragmentManager().findFragmentByTag(TrackDetailFragment.TAG);
+                getSupportFragmentManager().findFragmentByTag(TrackDetailFragment.class.getName());
         if(trackDetailFragment != null){
 
             trackDetailFragment.load(AndroidUtils.getBundle(viewWrapper.track.getMediaStoreId(),
@@ -490,8 +493,9 @@ public class ListFragment extends BaseFragment<ListViewModel> implements
                     setCustomAnimations(R.anim.slide_in_right,
                             R.anim.slide_out_left, R.anim.slide_in_left,
                             R.anim.slide_out_right).
-                    addToBackStack(TrackDetailFragment.TAG).
-                    add(R.id.container_fragments, trackDetailFragment, TrackDetailFragment.TAG).
+                    addToBackStack(trackDetailFragment.getClass().getName()).
+                    add(R.id.container_fragments,
+                            trackDetailFragment, trackDetailFragment.getClass().getName()).
                     commit();
         }
 
@@ -533,6 +537,7 @@ public class ListFragment extends BaseFragment<ListViewModel> implements
     private void startCorrection(int id) {
         Intent intent = new Intent(getActivity(),FixerTrackService.class);
         intent.putExtra(Constants.MEDIA_STORE_ID, id);
+        intent.setAction(Constants.Actions.ACTION_START_TASK);
         //if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
         //    getContext().startForegroundService(intent);
         //}
@@ -565,10 +570,8 @@ public class ListFragment extends BaseFragment<ListViewModel> implements
 
     @Override
     public void onLongRunningTaskMessage(String error) {
-        Toast toast = AndroidUtils.getToast(getActivity().getApplicationContext());
-        toast.setText(error);
-        toast.setDuration(Toast.LENGTH_SHORT);
-        toast.show();
+        Snackbar snackbar = AndroidUtils.createSnackbar(mSwipeRefreshLayout, error);
+        snackbar.show();
     }
 
     @Override

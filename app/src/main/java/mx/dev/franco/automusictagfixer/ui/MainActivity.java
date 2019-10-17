@@ -1,10 +1,5 @@
 package mx.dev.franco.automusictagfixer.ui;
 
-import static mx.dev.franco.automusictagfixer.utilities.Constants.Actions.ACTION_BROADCAST_MESSAGE;
-import static mx.dev.franco.automusictagfixer.utilities.Constants.Actions.ACTION_COMPLETE_TASK;
-import static mx.dev.franco.automusictagfixer.utilities.Constants.Actions.ACTION_START_TASK;
-import static mx.dev.franco.automusictagfixer.utilities.Constants.Actions.START_PROCESSING_FOR;
-
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -25,12 +20,15 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
 import android.view.Window;
 import android.view.WindowManager;
+
+import javax.inject.Inject;
+
 import dagger.android.AndroidInjection;
 import dagger.android.AndroidInjector;
 import dagger.android.DispatchingAndroidInjector;
 import dagger.android.support.HasSupportFragmentInjector;
-import javax.inject.Inject;
 import mx.dev.franco.automusictagfixer.R;
+import mx.dev.franco.automusictagfixer.identifier.ApiInitializerService;
 import mx.dev.franco.automusictagfixer.interfaces.LongRunningTaskListener;
 import mx.dev.franco.automusictagfixer.interfaces.ProcessingListener;
 import mx.dev.franco.automusictagfixer.receivers.ResponseReceiver;
@@ -40,6 +38,11 @@ import mx.dev.franco.automusictagfixer.ui.faq.QuestionsActivity;
 import mx.dev.franco.automusictagfixer.ui.main.ListFragment;
 import mx.dev.franco.automusictagfixer.ui.settings.SettingsActivity;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
+
+import static mx.dev.franco.automusictagfixer.utilities.Constants.Actions.ACTION_BROADCAST_MESSAGE;
+import static mx.dev.franco.automusictagfixer.utilities.Constants.Actions.ACTION_COMPLETE_TASK;
+import static mx.dev.franco.automusictagfixer.utilities.Constants.Actions.ACTION_START_TASK;
+import static mx.dev.franco.automusictagfixer.utilities.Constants.Actions.START_PROCESSING_FOR;
 
 public class MainActivity extends AppCompatActivity implements ResponseReceiver.OnResponse,
         NavigationView.OnNavigationItemSelectedListener,
@@ -57,6 +60,9 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
     protected void onCreate(final Bundle savedInstanceState) {
         AndroidInjection.inject(this);
         super.onCreate(savedInstanceState);
+        Intent intent = new Intent(getApplicationContext(), ApiInitializerService.class);
+
+            startService(intent);
         //windows is the top level in the view hierarchy,
         //it has a single Surface in which the contents of the window is rendered
         //A Surface is an object holding pixels that are being composited to the screen.

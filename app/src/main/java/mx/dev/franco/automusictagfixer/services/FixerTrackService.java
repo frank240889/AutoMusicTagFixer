@@ -18,12 +18,16 @@ import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 import android.support.v4.app.NotificationCompat;
-import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executors;
+
 import javax.inject.Inject;
+
+import dagger.android.AndroidInjection;
+import dagger.android.DispatchingAndroidInjector;
 import mx.dev.franco.automusictagfixer.BuildConfig;
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.fixer.AudioMetadataTagger;
@@ -61,6 +65,9 @@ public class FixerTrackService extends Service {
     public static String CLASS_NAME = FixerTrackService.class.getName();
 
     @Inject
+    DispatchingAndroidInjector<Service> serviceDispatchingAndroidInjector;
+
+    @Inject
     TrackRepository mTrackRepository;
     @Inject
     TrackRoomDatabase mTrackRoomDatabase;
@@ -83,7 +90,6 @@ public class FixerTrackService extends Service {
     private List<Integer> mTrackIds = new ArrayList<>();
     private ServiceState mServiceState = ServiceState.NOT_RUNNING;
     private FixerState mFixerState;
-    private Intent mRecycledIntent = new Intent();
 
     /**
      * Creates a Service.  Invoked by your subclass's constructor.
@@ -94,6 +100,7 @@ public class FixerTrackService extends Service {
 
     @Override
     public void onCreate(){
+        AndroidInjection.inject(this);
         super.onCreate();
         broadcastStartingCorrection();
     }
@@ -222,7 +229,7 @@ public class FixerTrackService extends Service {
 
     private boolean canContinue(){
         if(mGnApiService.isApiInitializing()|| !mGnApiService.isApiInitialized()){
-            mGnApiService.initializeAPI();
+            mGnApiService.initializeAPI(null);
             return false;
         }
         return true;
@@ -536,7 +543,6 @@ public class FixerTrackService extends Service {
         mTrackIds.clear();
         mTrackIds = null;
         mResourceManager = null;
-        mRecycledIntent = null;
     }
 
     private void stopServiceAndRemoveFromForeground() {
@@ -561,25 +567,25 @@ public class FixerTrackService extends Service {
     }
 
     private void broadcastStartingCorrection(){
-        mRecycledIntent.setAction(Constants.Actions.ACTION_START_TASK);
-        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(mRecycledIntent);
+        Intent intent = new Intent(Constants.Actions.ACTION_START_TASK);
+        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
     }
 
     private void broadcastCompleteCorrection(){
-        mRecycledIntent.setAction(Constants.Actions.ACTION_COMPLETE_TASK);
-        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(mRecycledIntent);
+        Intent intent = new Intent(Constants.Actions.ACTION_COMPLETE_TASK);
+        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
     }
 
     private void broadcastCorrectionForId(Track track) {
-        mRecycledIntent.setAction(Constants.Actions.START_PROCESSING_FOR);
-        mRecycledIntent.putExtra(Constants.MEDIA_STORE_ID, track.getMediaStoreId());
-        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcastSync(mRecycledIntent);
+        Intent intent = new Intent(Constants.Actions.START_PROCESSING_FOR);
+        intent.putExtra(Constants.MEDIA_STORE_ID, track.getMediaStoreId());
+        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcastSync(intent);
     }
 
     private void broadcastMessage(String message) {
-        mRecycledIntent.setAction(Constants.Actions.ACTION_BROADCAST_MESSAGE);
-        mRecycledIntent.putExtra("message", message);
-        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(mRecycledIntent);
+        Intent intent = new Intent(Constants.Actions.ACTION_BROADCAST_MESSAGE);
+        intent.putExtra("message", message);
+        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
     }
 
     private void stopIdentification(){
@@ -654,7 +660,7 @@ public class FixerTrackService extends Service {
                     .setContentText(status != null ? status : "")
                     .setSubText(contentText != null ? contentText : getString(R.string.fixing_task))
                     .setAutoCancel(true)
-                    .setColor(ContextCompat.getColor(getApplicationContext(), R.color.primaryColor))
+                    //.setColor(ContextCompat.getColor(getApplicationContext(), R.color.primaryColor))
                     .setTicker(getString(R.string.app_name))
                     .setSmallIcon(R.drawable.ic_stat_name)
                     .setLargeIcon(Bitmap.createScaledBitmap(icon, 128, 128, false))
