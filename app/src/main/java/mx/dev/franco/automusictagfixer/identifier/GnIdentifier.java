@@ -1,5 +1,8 @@
 package mx.dev.franco.automusictagfixer.identifier;
 
+import android.os.Handler;
+import android.os.Looper;
+
 import com.gracenote.gnsdk.GnAlbum;
 import com.gracenote.gnsdk.GnAlbumIterator;
 import com.gracenote.gnsdk.GnContent;
@@ -39,10 +42,12 @@ public class GnIdentifier implements Identifier<Track, List<IdentificationResult
     private GnMusicIdFileInfo gnMusicIdFileInfo;
     private GnMusicIdFileInfoManager gnMusicIdFileInfoManager;
     private Track track;
+    private Handler mHandler;
 
     public GnIdentifier(GnApiService gnApiService, AbstractSharedPreferences sharedPreferences){
         this.gnApiService = gnApiService;
         this.sharedPreferences = sharedPreferences;
+        mHandler = new Handler(Looper.getMainLooper());
     }
 
     /**
@@ -64,10 +69,15 @@ public class GnIdentifier implements Identifier<Track, List<IdentificationResult
                 @Override
                 public void musicIdFileAlbumResult(GnResponseAlbums gnResponseAlbums, long l, long l1, IGnCancellable iGnCancellable) {
                     List<IdentificationResults> results = processResponse(gnResponseAlbums);
-                    if(identificationListener != null)
-                        identificationListener.onIdentificationFinished(results, track);
+                    mHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            if(identificationListener != null)
+                                identificationListener.onIdentificationFinished(results, track);
 
-                    identificationListener = null;
+                            identificationListener = null;
+                        }
+                    });
                 }
 
                 @Override
@@ -75,16 +85,26 @@ public class GnIdentifier implements Identifier<Track, List<IdentificationResult
 
                 @Override
                 public void musicIdFileResultNotFound(GnMusicIdFileInfo gnMusicIdFileInfo, long l, long l1, IGnCancellable iGnCancellable) {
-                    if(identificationListener != null)
-                        identificationListener.onIdentificationNotFound(track);
-                    identificationListener = null;
+                    mHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            if(identificationListener != null)
+                                identificationListener.onIdentificationNotFound(track);
+                            identificationListener = null;
+                        }
+                    });
                 }
 
                 @Override
                 public void musicIdFileComplete(GnError gnError) {
-                    if(identificationListener != null)
-                        identificationListener.onIdentificationError(track, gnError.toString());
-                    identificationListener = null;
+                    mHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            if(identificationListener != null)
+                                identificationListener.onIdentificationError(track, "Error");
+                            identificationListener = null;
+                        }
+                    });
                 }
 
                 @Override
@@ -103,13 +123,13 @@ public class GnIdentifier implements Identifier<Track, List<IdentificationResult
             gnMusicIdFileInfo.trackTitle(track.getTitle());
             gnMusicIdFileInfo.trackArtist(track.getArtist());
             gnMusicIdFileInfo.albumTitle(track.getAlbum());
-            mGnMusicIdFile.doTrackIdAsync(GnMusicIdFileProcessType.kQueryReturnSingle, GnMusicIdFileResponseType.kResponseAlbums);
+            mGnMusicIdFile.doTrackIdAsync(GnMusicIdFileProcessType.kQueryReturnAll, GnMusicIdFileResponseType.kResponseAlbums);
         } catch (GnException e) {
             e.printStackTrace();
             if(identificationListener != null)
                 identificationListener.onIdentificationError(track, e.toString());
 
-            identificationListener = null;
+            //identificationListener = null;
         }
 
     }
@@ -147,7 +167,7 @@ public class GnIdentifier implements Identifier<Track, List<IdentificationResult
         GnAlbumIterator albumIterator = gnResponseAlbums.albums().getIterator();
 
         while(albumIterator.hasNext()) {
-            GnAlbum gnAlbum = null;
+            GnAlbum gnAlbum;
             try {
                 gnAlbum = albumIterator.next();
                 Result result = processAlbum(gnAlbum);

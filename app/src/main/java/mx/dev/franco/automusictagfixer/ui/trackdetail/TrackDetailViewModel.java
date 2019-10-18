@@ -203,6 +203,7 @@ public class TrackDetailViewModel extends AndroidViewModel {
 
             if(input.data.getAction() == SUCCESS_IDENTIFICATION) {
                 IdentificationType identificationType = new IdentificationType();
+                identificationType.setAction(SUCCESS_IDENTIFICATION);
                 identificationType.setIdentificationType(mIdentificationParams.getIdentificationType());
                 return identificationType;
             }

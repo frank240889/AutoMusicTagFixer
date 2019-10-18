@@ -7,17 +7,20 @@ import android.arch.persistence.db.SimpleSQLiteQuery;
 import android.arch.persistence.db.SupportSQLiteQuery;
 import android.content.Context;
 import android.os.AsyncTask;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executors;
+
 import javax.inject.Inject;
+
 import mx.dev.franco.automusictagfixer.interfaces.AsyncOperation;
-import mx.dev.franco.automusictagfixer.modelsUI.AsyncOperation.TrackChecker;
-import mx.dev.franco.automusictagfixer.modelsUI.AsyncOperation.TrackInserter;
-import mx.dev.franco.automusictagfixer.modelsUI.AsyncOperation.TrackRemover;
-import mx.dev.franco.automusictagfixer.modelsUI.AsyncOperation.TrackUnchecker;
-import mx.dev.franco.automusictagfixer.modelsUI.AsyncOperation.TrackUpdater;
 import mx.dev.franco.automusictagfixer.persistence.mediastore.MediaStoreReader;
+import mx.dev.franco.automusictagfixer.persistence.repository.AsyncOperation.TrackChecker;
+import mx.dev.franco.automusictagfixer.persistence.repository.AsyncOperation.TrackInserter;
+import mx.dev.franco.automusictagfixer.persistence.repository.AsyncOperation.TrackRemover;
+import mx.dev.franco.automusictagfixer.persistence.repository.AsyncOperation.TrackUnchecker;
+import mx.dev.franco.automusictagfixer.persistence.repository.AsyncOperation.TrackUpdater;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.persistence.room.TrackDAO;
 import mx.dev.franco.automusictagfixer.persistence.room.TrackRoomDatabase;

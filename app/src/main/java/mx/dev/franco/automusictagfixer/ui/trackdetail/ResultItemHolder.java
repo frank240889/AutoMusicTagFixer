@@ -21,6 +21,7 @@ public class ResultItemHolder extends AudioHolder {
         title = itemView.findViewById(R.id.track_id_title);
         artist = itemView.findViewById(R.id.track_id_artist);
         genre = itemView.findViewById(R.id.trackid_genre);
+        album = itemView.findViewById(R.id.trackid_album);
         trackNumber = itemView.findViewById(R.id.track_id_number);
         trackYear = itemView.findViewById(R.id.track_id_year);
     }

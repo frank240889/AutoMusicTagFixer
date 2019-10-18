@@ -20,6 +20,7 @@ import mx.dev.franco.automusictagfixer.ui.main.TrackAdapter;
         ResourceManagerModule.class,
         ActivityModule.class,
         FragmentModule.class,
+        ChildFragmentModule.class,
         DatabaseModule.class,
         CacheModule.class,
         DatabaseModule.class,

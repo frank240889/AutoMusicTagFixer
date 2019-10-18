@@ -2,6 +2,7 @@ package mx.dev.franco.automusictagfixer.ui;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 
 import javax.inject.Inject;
@@ -46,7 +47,11 @@ public abstract class BaseFragment<ViewModel> extends Fragment implements
         super.onAttach(context);
         if(context instanceof OnConfirmBackPressedListener)
             mOnConfirmBackPressedListener = (OnConfirmBackPressedListener) context;
+    }
 
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
         mViewModel = getViewModel();
     }
 

@@ -2,8 +2,12 @@ package mx.dev.franco.automusictagfixer.identifier;
 
 import android.app.Service;
 import android.content.Intent;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.support.annotation.Nullable;
+
+import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 
 /**
  * @author Franco Castillo
@@ -17,6 +21,13 @@ public class ApiInitializerService extends Service {
         GnApiService.getInstance(this);
         mThread = new Thread(() -> {
             GnApiService.getInstance(this).initializeAPI(null);
+            Handler handler = new Handler(Looper.getMainLooper());
+            handler.post(new Runnable() {
+                @Override
+                public void run() {
+                    AndroidUtils.showToast("inicializada", ApiInitializerService.this);
+                }
+            });
             stopSelf();
         });
         mThread.start();

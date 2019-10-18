@@ -1,5 +1,6 @@
 package mx.dev.franco.automusictagfixer.ui.trackdetail;
 
+import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -90,5 +91,10 @@ public class CoverIdentificationResultsFragmentBase extends ResultsFragmentBase<
     public void onDetach() {
         super.onDetach();
         mOnCoverCorrectionListener = null;
+    }
+
+    @Override
+    protected ResultsViewModel getViewModel() {
+        return ViewModelProviders.of(this, androidViewModelFactory).get(ResultsViewModel.class);
     }
 }

@@ -1,7 +1,12 @@
 package mx.dev.franco.automusictagfixer.ui;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+
+import javax.inject.Inject;
+
+import dagger.android.support.AndroidSupportInjection;
 
 /**
  * Base bottom fragment sheet dialog with view model and track feature added.
@@ -10,8 +15,18 @@ import android.support.annotation.Nullable;
 public abstract class ResultsFragmentBase<ViewModel> extends BaseRoundedBottomSheetDialogFragment {
     protected static final String TRACK_ID = "track_id";
     protected String mTrackId;
+    protected ViewModel mViewModel;
+    @Inject
+    protected AndroidViewModelFactory androidViewModelFactory;
+
 
     public ResultsFragmentBase(){}
+
+    @Override
+    public void onAttach(Context context) {
+        AndroidSupportInjection.inject(this);
+        super.onAttach(context);
+    }
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -19,11 +34,11 @@ public abstract class ResultsFragmentBase<ViewModel> extends BaseRoundedBottomSh
         Bundle arguments = getArguments();
         if(arguments != null)
             mTrackId = arguments.getString(TRACK_ID);
+
+        mViewModel = getViewModel();
     }
 
-    protected ViewModel getViewModel(){
-        return null;
-    }
+    protected abstract ViewModel getViewModel();
 
     protected void onLoading(boolean loading){}
 }

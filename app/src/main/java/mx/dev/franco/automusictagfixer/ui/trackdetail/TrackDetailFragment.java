@@ -521,11 +521,13 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
         });
 
         //runs track id
-        mFragmentTrackDetailBinding.fabAutofix.setOnClickListener(v ->
-                mViewModel.startIdentification(new IdentificationParams(IdentificationParams.ALL_TAGS)));
+        mFragmentTrackDetailBinding.fabAutofix.setOnClickListener(v ->{
+                closeFABMenu();
+                mViewModel.startIdentification(new IdentificationParams(IdentificationParams.ALL_TAGS));});
 
-        mFragmentTrackDetailBinding.fabDownloadCover.setOnClickListener(v ->
-                mViewModel.startIdentification(new IdentificationParams(IdentificationParams.ONLY_COVER)));
+        mFragmentTrackDetailBinding.fabDownloadCover.setOnClickListener(v ->{
+                closeFABMenu();
+                mViewModel.startIdentification(new IdentificationParams(IdentificationParams.ONLY_COVER));});
 
         //shows or hides mini fabs
         mFragmentTrackDetailBinding.fabMenu.setOnClickListener(view -> {
@@ -539,7 +541,7 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
 
         //updates only cover art
         mFragmentTrackDetailBinding.toolbarCoverArt.setOnClickListener(v -> {
-            hideAllFabs();
+            closeFABMenu();
             editCover(TrackDetailFragment.INTENT_GET_AND_UPDATE_FROM_GALLERY);
         });
 

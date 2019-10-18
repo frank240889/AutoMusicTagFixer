@@ -8,15 +8,26 @@ import android.support.annotation.NonNull;
 
 import java.util.List;
 
+import javax.inject.Inject;
+
 import mx.dev.franco.automusictagfixer.identifier.Identifier;
+import mx.dev.franco.automusictagfixer.interfaces.Cache;
+import mx.dev.franco.automusictagfixer.persistence.cache.DownloadedTrackDataCacheImpl;
+import mx.dev.franco.automusictagfixer.ui.SingleLiveEvent;
 
 public class ResultsViewModel extends AndroidViewModel {
     protected MutableLiveData<Boolean> mProgressObservable;
     protected MutableLiveData<List<Identifier.IdentificationResults>> mObservableResults;
+    //The cache where are stored temporally the identification results.
+    private Cache<String, List<Identifier.IdentificationResults>> mResultsCache;
 
-    public ResultsViewModel(@NonNull Application application) {
+    @Inject
+    public ResultsViewModel(@NonNull Application application,
+                            @NonNull DownloadedTrackDataCacheImpl cache) {
         super(application);
+        mResultsCache = cache;
         mProgressObservable = new MutableLiveData<>();
+        mObservableResults = new SingleLiveEvent<>();
     }
 
     public LiveData<Boolean> observeProgress() {
@@ -27,5 +38,10 @@ public class ResultsViewModel extends AndroidViewModel {
         return mObservableResults;
     }
 
-    public void fetchResults(String id){};
+    public void fetchResults(String id){
+        mProgressObservable.setValue(true);
+        List<Identifier.IdentificationResults> results = mResultsCache.load(id);
+        mObservableResults.setValue(results);
+        mProgressObservable.setValue(false);
+    }
 }
