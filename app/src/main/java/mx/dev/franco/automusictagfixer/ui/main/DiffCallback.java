@@ -1,11 +1,9 @@
-package mx.dev.franco.automusictagfixer.modelsUI.main;
+package mx.dev.franco.automusictagfixer.ui.main;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.util.DiffUtil;
-
 import java.util.List;
-
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
 
 public class DiffCallback extends DiffUtil.Callback{

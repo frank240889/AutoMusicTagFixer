@@ -2,12 +2,11 @@ package mx.dev.franco.automusictagfixer.di;
 
 import android.arch.lifecycle.ViewModel;
 import android.arch.lifecycle.ViewModelProvider;
-
 import dagger.Binds;
 import dagger.Module;
 import dagger.multibindings.IntoMap;
-import mx.dev.franco.automusictagfixer.modelsUI.main.ListViewModel;
 import mx.dev.franco.automusictagfixer.ui.AndroidViewModelFactory;
+import mx.dev.franco.automusictagfixer.ui.main.ListViewModel;
 import mx.dev.franco.automusictagfixer.ui.search.SearchListViewModel;
 import mx.dev.franco.automusictagfixer.ui.trackdetail.ResultsViewModel;
 import mx.dev.franco.automusictagfixer.ui.trackdetail.TrackDetailViewModel;

@@ -32,15 +32,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import java.util.Objects;
-
 import javax.inject.Inject;
-
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.interfaces.LongRunningTaskListener;
 import mx.dev.franco.automusictagfixer.interfaces.ProcessingListener;
-import mx.dev.franco.automusictagfixer.modelsUI.main.ListViewModel;
 import mx.dev.franco.automusictagfixer.persistence.repository.TrackRepository;
 import mx.dev.franco.automusictagfixer.persistence.room.database.TrackContract;
 import mx.dev.franco.automusictagfixer.services.FixerTrackService;

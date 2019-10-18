@@ -1,5 +1,8 @@
 package mx.dev.franco.automusictagfixer.ui.trackdetail;
 
+import static mx.dev.franco.automusictagfixer.common.Action.NONE;
+import static mx.dev.franco.automusictagfixer.common.Action.SUCCESS_IDENTIFICATION;
+
 import android.app.Application;
 import android.arch.core.util.Function;
 import android.arch.lifecycle.AndroidViewModel;
@@ -10,23 +13,18 @@ import android.arch.lifecycle.Transformations;
 import android.content.Context;
 import android.support.annotation.NonNull;
 import android.util.ArrayMap;
-
-import org.jaudiotagger.tag.FieldKey;
-
 import java.util.List;
 import java.util.Map;
-
 import javax.inject.Inject;
-
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.fixer.AudioTagger;
 import mx.dev.franco.automusictagfixer.fixer.MetadataReaderResult;
 import mx.dev.franco.automusictagfixer.fixer.MetadataWriterResult;
+import mx.dev.franco.automusictagfixer.identifier.IdentificationManager;
 import mx.dev.franco.automusictagfixer.identifier.IdentificationParams;
 import mx.dev.franco.automusictagfixer.identifier.Identifier;
 import mx.dev.franco.automusictagfixer.identifier.Result;
 import mx.dev.franco.automusictagfixer.persistence.repository.DataTrackRepository;
-import mx.dev.franco.automusictagfixer.persistence.repository.IdentificationManager;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.ui.SingleLiveEvent;
 import mx.dev.franco.automusictagfixer.utilities.ActionableMessage;
@@ -35,9 +33,7 @@ import mx.dev.franco.automusictagfixer.utilities.Constants;
 import mx.dev.franco.automusictagfixer.utilities.IdentificationType;
 import mx.dev.franco.automusictagfixer.utilities.Message;
 import mx.dev.franco.automusictagfixer.utilities.Resource;
-
-import static mx.dev.franco.automusictagfixer.common.Action.NONE;
-import static mx.dev.franco.automusictagfixer.common.Action.SUCCESS_IDENTIFICATION;
+import org.jaudiotagger.tag.FieldKey;
 
 public class TrackDetailViewModel extends AndroidViewModel {
 

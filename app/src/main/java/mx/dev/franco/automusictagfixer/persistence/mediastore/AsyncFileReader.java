@@ -4,14 +4,11 @@ import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
-
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-
 import javax.inject.Inject;
-
 import mx.dev.franco.automusictagfixer.interfaces.AsyncOperation;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.persistence.room.TrackDAO;
@@ -19,6 +16,7 @@ import mx.dev.franco.automusictagfixer.persistence.room.TrackRoomDatabase;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
 import mx.dev.franco.automusictagfixer.utilities.shared_preferences.AbstractSharedPreferences;
 
+//Todo: extract removing tracks functionality from here.
 public class AsyncFileReader extends AsyncTask<Void, Void, Void> {
     public static final int INSERT_ALL = 0;
     public static final int UPDATE_LIST = 1;

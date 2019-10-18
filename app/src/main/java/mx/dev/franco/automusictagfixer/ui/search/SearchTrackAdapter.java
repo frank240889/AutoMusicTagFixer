@@ -9,24 +9,20 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-
 import com.bumptech.glide.Glide;
-
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
-
 import javax.inject.Inject;
-
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.covermanager.CoverManager;
 import mx.dev.franco.automusictagfixer.interfaces.AsyncOperation;
 import mx.dev.franco.automusictagfixer.interfaces.Destructible;
-import mx.dev.franco.automusictagfixer.modelsUI.main.DiffExecutor;
-import mx.dev.franco.automusictagfixer.modelsUI.main.DiffResults;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.ui.AudioHolder;
+import mx.dev.franco.automusictagfixer.ui.main.DiffExecutor;
+import mx.dev.franco.automusictagfixer.ui.main.DiffResults;
 import mx.dev.franco.automusictagfixer.utilities.ServiceUtils;
 
 public class SearchTrackAdapter extends RecyclerView.Adapter<FoundItemHolder> implements

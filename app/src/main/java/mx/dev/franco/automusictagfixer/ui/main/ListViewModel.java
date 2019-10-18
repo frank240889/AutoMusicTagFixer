@@ -1,4 +1,4 @@
-package mx.dev.franco.automusictagfixer.modelsUI.main;
+package mx.dev.franco.automusictagfixer.ui.main;
 
 import android.app.Application;
 import android.arch.lifecycle.AndroidViewModel;
@@ -16,7 +16,6 @@ import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.persistence.room.TrackState;
 import mx.dev.franco.automusictagfixer.services.FixerTrackService;
 import mx.dev.franco.automusictagfixer.ui.SingleLiveEvent;
-import mx.dev.franco.automusictagfixer.ui.main.ViewWrapper;
 import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 import mx.dev.franco.automusictagfixer.utilities.Resource;
 import mx.dev.franco.automusictagfixer.utilities.ServiceUtils;
