@@ -905,7 +905,7 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
 
 
     private void onIdentificationResults(IdentificationType actionableMessage) {
-        if(actionableMessage.getAction() != Action.SUCCESS_IDENTIFICATION)
+        if(actionableMessage != null && actionableMessage.getAction() != Action.SUCCESS_IDENTIFICATION)
             return;
 
         if(actionableMessage.getIdentificationType() == IdentificationType.ALL_TAGS){

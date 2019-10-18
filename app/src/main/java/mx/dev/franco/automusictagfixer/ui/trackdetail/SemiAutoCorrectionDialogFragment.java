@@ -93,13 +93,10 @@ public class SemiAutoCorrectionDialogFragment extends ResultsFragmentBase<Result
           View snapView = snapHelper.findSnapView(layoutManager);
           if(snapView != null) {
             mCenteredItem = layoutManager.getPosition(snapView);
-            layoutManager.scrollToPosition(mCenteredItem);
+            listResults.smoothScrollToPosition(mCenteredItem);
           }
         }
       }
-
-      @Override
-      public void onScrolled(RecyclerView recyclerView, int dx, int dy) {}
     });
 
     newNameEditText.addTextChangedListener(new TextWatcher() {
@@ -138,7 +135,7 @@ public class SemiAutoCorrectionDialogFragment extends ResultsFragmentBase<Result
 
   @Override
   protected void onLoading(boolean loading) {
-
+    getView().findViewById(R.id.loading_progress_bar).setVisibility(loading ? View.VISIBLE : View.GONE);
   }
 
   @Override
