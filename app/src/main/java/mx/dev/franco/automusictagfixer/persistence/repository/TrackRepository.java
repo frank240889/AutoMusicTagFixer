@@ -113,7 +113,7 @@ public class TrackRepository {
                     }
                 }
             });
-            mediaStoreReader.executeOnExecutor(Executors.newCachedThreadPool());
+            mediaStoreReader.executeOnExecutor(Executors.newCachedThreadPool(), mContext);
         }
         else {
             mProgressObservable.setValue(false);

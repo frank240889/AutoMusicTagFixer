@@ -72,7 +72,6 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center_vertical"
-                        android:layout_marginStart="10dp"
                         android:drawableStart="@drawable/ic_insert_drive_file_white_24px"
                         android:gravity="center_vertical"
                         android:text="@{viewModel.filename}"
@@ -95,56 +94,26 @@
             layout="@layout/content_details_track"
             app:viewmodel="@{viewModel}"/>
 
-        <android.support.design.widget.FloatingActionButton
-            android:id="@+id/fab_edit_track_info"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom|end"
-            android:layout_margin="@dimen/standard_24"
-            app:fabSize="mini"
-            android:visibility="gone"
-            app:useCompatPadding="true"
-            android:src="@drawable/ic_edit_white" />
-
-        <android.support.design.widget.FloatingActionButton
-            android:id="@+id/fab_download_cover"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom|end"
-            android:layout_margin="@dimen/standard_24"
-            app:fabSize="mini"
-            android:visibility="gone"
-            app:useCompatPadding="true"
-            android:src="@drawable/ic_photo_white" />
-
-        <android.support.design.widget.FloatingActionButton
+        <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
             android:id="@+id/fab_autofix"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom|end"
             android:layout_margin="@dimen/standard_24"
-            app:fabSize="mini"
             android:visibility="gone"
+            android:text="@string/title_identify_track"
             app:useCompatPadding="true"
+            tools:visibility="visible"
             android:src="@drawable/ic_photo_filter_white_24px" />
 
-        <android.support.design.widget.FloatingActionButton
-            android:id="@+id/fab_menu"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom|end"
-            android:layout_margin="@dimen/fab_margin"
-            android:visibility="gone"
-            app:useCompatPadding="true"
-            android:src="@drawable/ic_add_white_24px" />
-
-        <android.support.design.widget.FloatingActionButton
+        <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
             android:id="@+id/fab_save_info"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom|end"
             android:layout_margin="@dimen/fab_margin"
             android:visibility="gone"
+            android:text="@string/save_changes"
             app:useCompatPadding="true"
             android:src="@drawable/ic_save_white_24px" />
 

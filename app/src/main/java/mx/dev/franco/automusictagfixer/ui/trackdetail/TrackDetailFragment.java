@@ -1,7 +1,5 @@
 package mx.dev.franco.automusictagfixer.ui.trackdetail;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
 import android.app.Activity;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
@@ -66,13 +64,14 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
 
     //Menu items
     private MenuItem mPlayPreviewMenuItem;
+    private MenuItem mManualEditMenuItem;
+    private MenuItem mIdentifyCoverMenuItem;
     private MenuItem mUpdateCoverMenuItem;
     private MenuItem mExtractCoverMenuItem;
     private MenuItem mRemoveMenuItem;
     private MenuItem mSearchInWebMenuItem;
     private ActionBar mActionBar;
     private FragmentTrackDetailBinding mFragmentTrackDetailBinding;
-    private boolean mIsFloatingActionMenuOpen = false;
     private boolean mEditMode = false;
 
     @Inject
@@ -167,7 +166,7 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
         mFragmentTrackDetailBinding.collapsingToolbarLayout.setTitleEnabled(false);
         mActionBar = ((MainActivity)getActivity()).getSupportActionBar();
         mActionBar.setDisplayShowTitleEnabled(false);
-        hideAllFabs();
+        hideFabs();
     }
 
     @Override
@@ -181,8 +180,10 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
         menu.clear();
         inflater.inflate(R.menu.menu_details_track_dialog, menu);
         mPlayPreviewMenuItem = menu.findItem(R.id.action_play);
-        mExtractCoverMenuItem = menu.findItem(R.id.action_extract_cover);
+        mManualEditMenuItem = menu.findItem(R.id.action_edit_manual);
+        mIdentifyCoverMenuItem = menu.findItem(R.id.action_identify_cover);
         mUpdateCoverMenuItem = menu.findItem(R.id.action_update_cover);
+        mExtractCoverMenuItem = menu.findItem(R.id.action_extract_cover);
         mRemoveMenuItem = menu.findItem(R.id.action_remove_cover);
         mSearchInWebMenuItem = menu.findItem(R.id.action_web_search);
     }
@@ -461,50 +462,15 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
     private void enableMiniFabs(boolean enable){
         mUpdateCoverMenuItem.setEnabled(enable);
         mFragmentTrackDetailBinding.toolbarCoverArt.setEnabled(enable);
-        mFragmentTrackDetailBinding.fabDownloadCover.setEnabled(enable);
-        mFragmentTrackDetailBinding.fabEditTrackInfo.setEnabled(enable);
         mFragmentTrackDetailBinding.fabAutofix.setEnabled(enable);
-    }
-
-    /**
-     * Shows mini fabs
-     */
-    private void showFABMenu(){
-        mFragmentTrackDetailBinding.fabMenu.animate().rotation(-400);
-        mFragmentTrackDetailBinding.fabAutofix.animate().translationY(-getResources().getDimension(R.dimen.standard_55));
-        mFragmentTrackDetailBinding.fabEditTrackInfo.animate().translationY(-getResources().getDimension(R.dimen.standard_105));
-        mFragmentTrackDetailBinding.fabDownloadCover.animate().setListener(new AnimatorListenerAdapter() {
-            @Override
-            public void onAnimationEnd(Animator animation) {
-                mIsFloatingActionMenuOpen = true;
-            }
-        }).translationY(-getResources().getDimension(R.dimen.standard_155));
-    }
-
-    /**
-     * Hides mini fabs
-     */
-    private void closeFABMenu() {
-        mFragmentTrackDetailBinding.fabMenu.animate().rotation(0);
-        mFragmentTrackDetailBinding.fabAutofix.animate().translationY(0);
-        mFragmentTrackDetailBinding.fabEditTrackInfo.animate().translationY(0);
-        mFragmentTrackDetailBinding.fabDownloadCover.animate().setListener(new AnimatorListenerAdapter() {
-            @Override
-            public void onAnimationEnd(Animator animation) {
-                mIsFloatingActionMenuOpen = false;
-            }
-        }).translationY(0);
     }
 
     /**
      * This method creates the references to visual elements
      * in layout
      */
-    private void hideAllFabs(){
-        mFragmentTrackDetailBinding.fabDownloadCover.hide();
-        mFragmentTrackDetailBinding.fabEditTrackInfo.hide();
+    private void hideFabs(){
         mFragmentTrackDetailBinding.fabAutofix.hide();
-        mFragmentTrackDetailBinding.fabMenu.hide();
         mFragmentTrackDetailBinding.fabSaveInfo.hide();
     }
 
@@ -514,37 +480,17 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
      */
 
     private void addFloatingActionButtonListeners(){
-        //enable manual mode
-        mFragmentTrackDetailBinding.fabEditTrackInfo.setOnClickListener(v -> {
-            closeFABMenu();
-            disableAppBarLayout();
-        });
-
         //runs track id
         mFragmentTrackDetailBinding.fabAutofix.setOnClickListener(v ->{
-                closeFABMenu();
-                mViewModel.startIdentification(new IdentificationParams(IdentificationParams.ALL_TAGS));});
-
-        mFragmentTrackDetailBinding.fabDownloadCover.setOnClickListener(v ->{
-                closeFABMenu();
-                mViewModel.startIdentification(new IdentificationParams(IdentificationParams.ONLY_COVER));});
-
-        //shows or hides mini fabs
-        mFragmentTrackDetailBinding.fabMenu.setOnClickListener(view -> {
-            if(!mIsFloatingActionMenuOpen) {
-                showFABMenu();
-            }
-            else {
-                closeFABMenu();
-            }
+                mViewModel.startIdentification(new IdentificationParams(IdentificationParams.ALL_TAGS));
         });
 
-        //updates only cover art
-        mFragmentTrackDetailBinding.toolbarCoverArt.setOnClickListener(v -> {
-            closeFABMenu();
-            editCover(TrackDetailFragment.INTENT_GET_AND_UPDATE_FROM_GALLERY);
-        });
+        mFragmentTrackDetailBinding.fabSaveInfo.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
 
+            }
+        });
     }
 
     /**
@@ -578,10 +524,7 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
      * Disable the Save Fab button.
      */
     private void showFabs(){
-        mFragmentTrackDetailBinding.fabDownloadCover.show();
-        mFragmentTrackDetailBinding.fabEditTrackInfo.show();
         mFragmentTrackDetailBinding.fabAutofix.show();
-        mFragmentTrackDetailBinding.fabMenu.show();
         mFragmentTrackDetailBinding.fabSaveInfo.hide();
     }
 
@@ -589,10 +532,7 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
      * Enable the Save Fab button.
      */
     private void editMode(){
-        mFragmentTrackDetailBinding.fabDownloadCover.hide();
-        mFragmentTrackDetailBinding.fabEditTrackInfo.hide();
         mFragmentTrackDetailBinding.fabAutofix.hide();
-        mFragmentTrackDetailBinding.fabMenu.hide();
         mFragmentTrackDetailBinding.fabSaveInfo.show();
     }
 
@@ -604,25 +544,16 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
         //shrink toolbar to make it easy to user
         //focus in editing tags
         mFragmentTrackDetailBinding.appBarLayout.setExpanded(false);
-
-        mFragmentTrackDetailBinding.fabMenu.animate().rotation(0).setListener(new AnimatorListenerAdapter() {
-            @Override
-            public void onAnimationEnd(Animator animation) {
-                editMode();
-                mFragmentTrackDetailBinding.fabSaveInfo.setOnClickListener(null);
-                mFragmentTrackDetailBinding.fabSaveInfo.setOnClickListener(new OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        ManualCorrectionDialogFragment manualCorrectionDialogFragment = ManualCorrectionDialogFragment.newInstance();
-                        manualCorrectionDialogFragment.show(getChildFragmentManager(),
-                                manualCorrectionDialogFragment.getClass().getCanonicalName());
-                    }
-                });
-                mFragmentTrackDetailBinding.toolbarCoverArt.setEnabled(false);
-                mUpdateCoverMenuItem.setEnabled(false);
-                enableFieldsToEdit();
-            }
+        editMode();
+        mFragmentTrackDetailBinding.fabSaveInfo.setOnClickListener(null);
+        mFragmentTrackDetailBinding.fabSaveInfo.setOnClickListener(v -> {
+            ManualCorrectionDialogFragment manualCorrectionDialogFragment = ManualCorrectionDialogFragment.newInstance();
+            manualCorrectionDialogFragment.show(getChildFragmentManager(),
+                    manualCorrectionDialogFragment.getClass().getCanonicalName());
         });
+        mFragmentTrackDetailBinding.toolbarCoverArt.setEnabled(false);
+        mUpdateCoverMenuItem.setEnabled(false);
+        enableFieldsToEdit();
     }
 
 
@@ -638,10 +569,7 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
      */
     @Override
     public void onBackPressed(){
-        if(mIsFloatingActionMenuOpen){
-            closeFABMenu();
-        }
-        else if(mEditMode) {
+        if(mEditMode) {
             disableFields();
         }
         else {
@@ -769,7 +697,7 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
         });
 
         mUpdateCoverMenuItem.setOnMenuItemClickListener(menuItem -> {
-            hideAllFabs();
+            hideFabs();
             editCover(TrackDetailFragment.INTENT_GET_AND_UPDATE_FROM_GALLERY);
             return false;
         });
@@ -786,6 +714,22 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
         mSearchInWebMenuItem.setOnMenuItemClickListener(item -> {
             searchInfoForTrack();
             return false;
+        });
+
+        mManualEditMenuItem.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                disableAppBarLayout();
+                return false;
+            }
+        });
+
+        mIdentifyCoverMenuItem.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                mViewModel.startIdentification(new IdentificationParams(IdentificationParams.ONLY_COVER));
+                return false;
+            }
         });
     }
     /**
@@ -908,18 +852,20 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
         if(actionableMessage != null && actionableMessage.getAction() != Action.SUCCESS_IDENTIFICATION)
             return;
 
-        if(actionableMessage.getIdentificationType() == IdentificationType.ALL_TAGS){
-            SemiAutoCorrectionDialogFragment semiAutoCorrectionDialogFragment =
-                    SemiAutoCorrectionDialogFragment.newInstance(mViewModel.getTrack().getMediaStoreId()+"");
-            semiAutoCorrectionDialogFragment.show(getChildFragmentManager(),
-                    semiAutoCorrectionDialogFragment.getClass().getCanonicalName());
+        if (actionableMessage != null) {
+            if(actionableMessage.getIdentificationType() == IdentificationType.ALL_TAGS){
+                SemiAutoCorrectionDialogFragment semiAutoCorrectionDialogFragment =
+                        SemiAutoCorrectionDialogFragment.newInstance(mViewModel.getTrack().getMediaStoreId()+"");
+                semiAutoCorrectionDialogFragment.show(getChildFragmentManager(),
+                        semiAutoCorrectionDialogFragment.getClass().getCanonicalName());
 
-        }
-        else {
-            CoverIdentificationResultsFragmentBase coverIdentificationResultsFragmentBase =
-                    CoverIdentificationResultsFragmentBase.newInstance(mViewModel.getTrack().getMediaStoreId()+"");
-            coverIdentificationResultsFragmentBase.show(getChildFragmentManager(),
-                    coverIdentificationResultsFragmentBase.getClass().getCanonicalName());
+            }
+            else {
+                CoverIdentificationResultsFragmentBase coverIdentificationResultsFragmentBase =
+                        CoverIdentificationResultsFragmentBase.newInstance(mViewModel.getTrack().getMediaStoreId()+"");
+                coverIdentificationResultsFragmentBase.show(getChildFragmentManager(),
+                        coverIdentificationResultsFragmentBase.getClass().getCanonicalName());
+            }
         }
     }
 }

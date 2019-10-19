@@ -315,5 +315,9 @@
     <string name="attention">Attention</string>
     <string name="cannot_read_file">Can not read this file.</string>
     <string name="changes_applied">Changes applied.</string>
-
+    <string name="changes_partially_applied">Tags applied but cannot renamed file.</string>
+    <string name="title_edit_track">Edit tags</string>
+    <string name="title_identify_cover">Identify cover</string>
+    <string name="title_identify_track">Identify</string>
+    <string name="save_changes">Save</string>
 </resources>

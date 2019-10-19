@@ -3,8 +3,11 @@ package mx.dev.franco.automusictagfixer.identifier;
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MutableLiveData;
 import android.support.annotation.NonNull;
+
 import java.util.List;
+
 import javax.inject.Inject;
+
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.common.Action;
 import mx.dev.franco.automusictagfixer.interfaces.Cache;
@@ -81,6 +84,7 @@ public class IdentificationManager {
     public void cancelIdentification() {
         if(mIdentifier != null)
             mIdentifier.cancel();
+        mIdentifier = null;
     }
 
     public List<Identifier.IdentificationResults> getResult(String id) {

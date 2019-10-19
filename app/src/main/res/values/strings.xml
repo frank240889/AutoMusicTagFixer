@@ -320,5 +320,8 @@
     <string name="cannot_read_file">No se puede leer este archivo.</string>
     <string name="changes_applied">Cambios aplicados.</string>
     <string name="changes_partially_applied">Se aplicaron las etiquetas pero no se pudo renombrar el archivo.</string>
-
+    <string name="title_edit_track">Editar etiquetas</string>
+    <string name="title_identify_cover">Identificar carátula</string>
+    <string name="title_identify_track">Identificar</string>
+    <string name="save_changes">Guardar</string>
 </resources>
