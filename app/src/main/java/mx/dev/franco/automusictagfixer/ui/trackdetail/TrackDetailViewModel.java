@@ -1,15 +1,16 @@
 package mx.dev.franco.automusictagfixer.ui.trackdetail;
 
 import android.app.Application;
-import android.arch.core.util.Function;
-import android.arch.lifecycle.AndroidViewModel;
-import android.arch.lifecycle.LiveData;
-import android.arch.lifecycle.MediatorLiveData;
-import android.arch.lifecycle.MutableLiveData;
-import android.arch.lifecycle.Transformations;
 import android.content.Context;
-import android.support.annotation.NonNull;
 import android.util.ArrayMap;
+
+import androidx.annotation.NonNull;
+import androidx.arch.core.util.Function;
+import androidx.lifecycle.AndroidViewModel;
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MediatorLiveData;
+import androidx.lifecycle.MutableLiveData;
+import androidx.lifecycle.Transformations;
 
 import org.jaudiotagger.tag.FieldKey;
 
@@ -212,6 +213,8 @@ public class TrackDetailViewModel extends AndroidViewModel {
                     IdentificationType identificationType = new IdentificationType();
                     identificationType.setAction(NONE);
                     identificationType.setIdentificationType(mIdentificationParams.getIdentificationType());
+                    if(input.status == Resource.Status.CANCELLED)
+                        identificationType.setIdResourceMessage(input.data.getIdResourceMessage());
                     mLiveActionableMessage.setValue(identificationType);
                 }
             }

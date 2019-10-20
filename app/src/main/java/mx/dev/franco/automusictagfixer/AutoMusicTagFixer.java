@@ -3,7 +3,8 @@ package mx.dev.franco.automusictagfixer;
 import android.app.Activity;
 import android.app.Application;
 import android.app.Service;
-import android.support.v7.app.AppCompatDelegate;
+
+import androidx.appcompat.app.AppCompatDelegate;
 
 import com.crashlytics.android.Crashlytics;
 import com.crashlytics.android.core.CrashlyticsCore;

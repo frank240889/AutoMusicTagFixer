@@ -8,21 +8,21 @@
             type="mx.dev.franco.automusictagfixer.ui.trackdetail.TrackDetailViewModel" />
     </data>
 
-    <android.support.design.widget.CoordinatorLayout
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:id="@+id/root_container_details"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:fitsSystemWindows="true"
         android:background="@color/white"
         tools:showIn="@layout/activity_track_details">
-        <android.support.design.widget.AppBarLayout
+        <com.google.android.material.appbar.AppBarLayout
             android:id="@+id/app_bar_layout"
             android:layout_width="match_parent"
             android:layout_height="416dp"
             android:elevation="4dp"
             app:elevation="4dp">
 
-            <android.support.design.widget.CollapsingToolbarLayout
+            <com.google.android.material.appbar.CollapsingToolbarLayout
                 android:id="@+id/collapsing_toolbar_layout"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
@@ -79,16 +79,16 @@
                         android:textSize="18sp" />
 
                 </FrameLayout>
-                <android.support.v7.widget.Toolbar
+                <androidx.appcompat.widget.Toolbar
                     android:id="@+id/toolbar"
                     android:layout_width="match_parent"
                     android:layout_height="?android:attr/actionBarSize"
                     android:elevation="4dp"
                     app:layout_collapseMode="pin">
 
-                </android.support.v7.widget.Toolbar>
-            </android.support.design.widget.CollapsingToolbarLayout>
-        </android.support.design.widget.AppBarLayout>
+                </androidx.appcompat.widget.Toolbar>
+            </com.google.android.material.appbar.CollapsingToolbarLayout>
+        </com.google.android.material.appbar.AppBarLayout>
 
         <include android:id="@+id/layout_content_details_track"
             layout="@layout/content_details_track"
@@ -99,12 +99,12 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom|end"
-            android:layout_margin="@dimen/standard_24"
+            android:layout_margin="@dimen/fab_margin"
             android:visibility="gone"
             android:text="@string/title_identify_track"
+            app:icon="@drawable/ic_photo_filter_white_24px"
             app:useCompatPadding="true"
-            tools:visibility="visible"
-            android:src="@drawable/ic_photo_filter_white_24px" />
+            tools:visibility="visible"/>
 
         <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
             android:id="@+id/fab_save_info"
@@ -115,7 +115,7 @@
             android:visibility="gone"
             android:text="@string/save_changes"
             app:useCompatPadding="true"
-            android:src="@drawable/ic_save_white_24px" />
+            app:icon="@drawable/ic_save_white_24px" />
 
-    </android.support.design.widget.CoordinatorLayout>
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
 </layout>

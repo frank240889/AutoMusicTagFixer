@@ -21,7 +21,7 @@
 
 -keep class com.gracenote.** { *; }
 -keep class org.jaudiotagger.** { *; }
--keep class android.support.v7.widget.SearchView { *; }
+-keep class androidx.appcompat.widget.SearchView { *; }
 -keep class com.google.** { *; }
 -keep class com.android.** { *; }
 #Fabric uses annotations internally

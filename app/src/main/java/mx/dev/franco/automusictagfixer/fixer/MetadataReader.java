@@ -1,6 +1,6 @@
 package mx.dev.franco.automusictagfixer.fixer;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import org.jaudiotagger.audio.exceptions.CannotReadException;
 import org.jaudiotagger.audio.exceptions.InvalidAudioFrameException;

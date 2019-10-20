@@ -1,8 +1,11 @@
 package mx.dev.franco.automusictagfixer.ui.main;
 
 import android.os.AsyncTask;
-import android.support.v7.util.DiffUtil;
+
+import androidx.recyclerview.widget.DiffUtil;
+
 import java.util.List;
+
 import mx.dev.franco.automusictagfixer.interfaces.AsyncOperation;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
 

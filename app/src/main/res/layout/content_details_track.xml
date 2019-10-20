@@ -8,7 +8,7 @@
                 type="mx.dev.franco.automusictagfixer.ui.trackdetail.TrackDetailViewModel" />
     </data>
 
-    <android.support.v4.widget.NestedScrollView
+    <androidx.core.widget.NestedScrollView
         android:id="@+id/content_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -16,7 +16,7 @@
         tools:showIn="@layout/fragment_track_detail"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-        <android.support.constraint.ConstraintLayout
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/root_container_details"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
@@ -25,7 +25,7 @@
             android:animateLayoutChanges="true"
             app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-            <android.support.v7.widget.CardView
+            <androidx.cardview.widget.CardView
                 android:id="@+id/cardview_content"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -38,14 +38,14 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent">
 
-                <android.support.constraint.ConstraintLayout
+                <androidx.constraintlayout.widget.ConstraintLayout
                     android:id="@+id/editable_data_container"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:elevation="@dimen/dialog_elevation"
                     android:splitMotionEvents="false">
 
-                    <android.support.constraint.ConstraintLayout
+                    <androidx.constraintlayout.widget.ConstraintLayout
                         android:id="@+id/progress_container"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
@@ -105,10 +105,10 @@
                             app:layout_constraintBottom_toBottomOf="parent"
                             app:layout_constraintStart_toStartOf="parent"
                             app:layout_constraintTop_toTopOf="parent" />
-                    </android.support.constraint.ConstraintLayout>
+                    </androidx.constraintlayout.widget.ConstraintLayout>
 
 
-                    <android.support.design.widget.TextInputLayout
+                    <com.google.android.material.textfield.TextInputLayout
                         android:id="@+id/track_name_details_layout"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -118,9 +118,10 @@
                         android:layout_marginEnd="8dp"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@+id/progress_container">
+                        app:layout_constraintTop_toBottomOf="@+id/progress_container"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
 
-                        <android.support.design.widget.TextInputEditText
+                        <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/track_name_details"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
@@ -132,9 +133,9 @@
                             android:maxLength="100"
                             android:maxLines="1"
                             android:text="@={viewmodel.title}" />
-                    </android.support.design.widget.TextInputLayout>
+                    </com.google.android.material.textfield.TextInputLayout>
 
-                    <android.support.design.widget.TextInputLayout
+                    <com.google.android.material.textfield.TextInputLayout
                         android:id="@+id/artist_name_details_layout"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -144,9 +145,10 @@
                         android:layout_marginEnd="8dp"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@+id/track_name_details_layout">
+                        app:layout_constraintTop_toBottomOf="@+id/track_name_details_layout"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
 
-                        <android.support.design.widget.TextInputEditText
+                        <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/artist_name_details"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
@@ -157,9 +159,9 @@
                             android:maxLength="100"
                             android:maxLines="1"
                             android:text="@={viewmodel.artist}" />
-                    </android.support.design.widget.TextInputLayout>
+                    </com.google.android.material.textfield.TextInputLayout>
 
-                    <android.support.design.widget.TextInputLayout
+                    <com.google.android.material.textfield.TextInputLayout
                         android:id="@+id/album_name_details_layout"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
@@ -169,9 +171,10 @@
                         android:layout_marginEnd="8dp"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@+id/artist_name_details_layout">
+                        app:layout_constraintTop_toBottomOf="@+id/artist_name_details_layout"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
 
-                        <android.support.design.widget.TextInputEditText
+                        <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/album_name_details"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
@@ -183,9 +186,9 @@
                             android:maxLength="150"
                             android:maxLines="1"
                             android:text="@={viewmodel.album}" />
-                    </android.support.design.widget.TextInputLayout>
+                    </com.google.android.material.textfield.TextInputLayout>
 
-                    <android.support.design.widget.TextInputLayout
+                    <com.google.android.material.textfield.TextInputLayout
                         android:id="@+id/track_genre_layout"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -195,9 +198,10 @@
                         android:layout_marginEnd="8dp"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@+id/album_name_details_layout">
+                        app:layout_constraintTop_toBottomOf="@+id/album_name_details_layout"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
 
-                        <android.support.design.widget.TextInputEditText
+                        <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/track_genre"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
@@ -208,9 +212,9 @@
                             android:maxLength="80"
                             android:maxLines="1"
                             android:text="@={viewmodel.genre}" />
-                    </android.support.design.widget.TextInputLayout>
+                    </com.google.android.material.textfield.TextInputLayout>
 
-                    <android.support.design.widget.TextInputLayout
+                    <com.google.android.material.textfield.TextInputLayout
                         android:id="@+id/track_number_layout"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -220,9 +224,10 @@
                         android:layout_marginEnd="8dp"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@+id/track_genre_layout">
+                        app:layout_constraintTop_toBottomOf="@+id/track_genre_layout"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
 
-                        <android.support.design.widget.TextInputEditText
+                        <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/track_number"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
@@ -233,9 +238,9 @@
                             android:maxLength="4"
                             android:maxLines="1"
                             android:text="@={viewmodel.number}" />
-                    </android.support.design.widget.TextInputLayout>
+                    </com.google.android.material.textfield.TextInputLayout>
 
-                    <android.support.design.widget.TextInputLayout
+                    <com.google.android.material.textfield.TextInputLayout
                         android:id="@+id/track_year_layout"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -245,9 +250,10 @@
                         android:layout_marginEnd="8dp"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@+id/track_number_layout">
+                        app:layout_constraintTop_toBottomOf="@+id/track_number_layout"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
 
-                        <android.support.design.widget.TextInputEditText
+                        <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/track_year"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
@@ -258,7 +264,7 @@
                             android:maxLength="4"
                             android:maxLines="1"
                             android:text="@={viewmodel.year}" />
-                    </android.support.design.widget.TextInputLayout>
+                    </com.google.android.material.textfield.TextInputLayout>
 
                     <TextView
                         android:id="@+id/imageSize"
@@ -299,10 +305,10 @@
                         app:layout_constraintTop_toBottomOf="@+id/track_year_layout"
                         tools:visibility="visible" />
 
-                </android.support.constraint.ConstraintLayout>
-            </android.support.v7.widget.CardView>
+                </androidx.constraintlayout.widget.ConstraintLayout>
+            </androidx.cardview.widget.CardView>
 
-            <android.support.v7.widget.CardView
+            <androidx.cardview.widget.CardView
                 android:id="@+id/cardview_extra_info_content"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -320,7 +326,7 @@
                 app:layout_constraintTop_toBottomOf="@+id/cardview_content"
                 app:layout_constraintVertical_bias="0.0">
 
-                <android.support.constraint.ConstraintLayout
+                <androidx.constraintlayout.widget.ConstraintLayout
                     android:id="@+id/extra_data_container"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -461,9 +467,9 @@
                         android:text="@{viewmodel.absolutePath}"
                         tools:text="/storage/emulated/0/Music" />
 
-                </android.support.constraint.ConstraintLayout>
-            </android.support.v7.widget.CardView>
-        </android.support.constraint.ConstraintLayout>
+                </androidx.constraintlayout.widget.ConstraintLayout>
+            </androidx.cardview.widget.CardView>
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
-    </android.support.v4.widget.NestedScrollView>
+    </androidx.core.widget.NestedScrollView>
 </layout>

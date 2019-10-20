@@ -1,8 +1,9 @@
 package mx.dev.franco.automusictagfixer.fixer;
 
-import android.arch.persistence.db.SimpleSQLiteQuery;
-import android.arch.persistence.db.SupportSQLiteQuery;
 import android.os.AsyncTask;
+
+import androidx.sqlite.db.SimpleSQLiteQuery;
+import androidx.sqlite.db.SupportSQLiteQuery;
 
 import java.util.List;
 

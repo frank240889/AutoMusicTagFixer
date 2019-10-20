@@ -1,19 +1,14 @@
 package mx.dev.franco.automusictagfixer.ui.trackdetail;
 
 import android.app.Activity;
-import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
 import android.content.Intent;
-import android.databinding.DataBindingUtil;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.provider.MediaStore;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.design.widget.Snackbar;
-import android.support.v7.app.ActionBar;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -25,6 +20,15 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.ActionBar;
+import androidx.core.widget.NestedScrollView;
+import androidx.databinding.DataBindingUtil;
+import androidx.lifecycle.ViewModelProviders;
+
+import com.google.android.material.snackbar.Snackbar;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -325,6 +329,7 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
 
         addFloatingActionButtonListeners();
         addAppBarOffsetListener();
+        addShrinkEffect();
         addToolbarButtonsListeners();
         showFabs();
         setupMediaPlayer();
@@ -334,6 +339,16 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
                 layoutContentDetailsTrack.
                 cancelIdentification.
                 setOnClickListener(v -> mViewModel.cancelIdentification());
+    }
+
+    private void addShrinkEffect() {
+        mFragmentTrackDetailBinding.layoutContentDetailsTrack.contentContainer.setOnScrollChangeListener(new NestedScrollView.OnScrollChangeListener() {
+            @Override
+            public void onScrollChange(NestedScrollView v, int scrollX, int scrollY, int oldScrollX, int oldScrollY) {
+                Log.d("scrollx", scrollX+"");
+                Log.d("scrolly", scrollY+"");
+            }
+        });
     }
 
     /**
@@ -488,7 +503,9 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
         mFragmentTrackDetailBinding.fabSaveInfo.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-
+                ManualCorrectionDialogFragment manualCorrectionDialogFragment = ManualCorrectionDialogFragment.newInstance();
+                manualCorrectionDialogFragment.show(getChildFragmentManager(),
+                        manualCorrectionDialogFragment.getClass().getCanonicalName());
             }
         });
     }
@@ -532,30 +549,49 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
      * Enable the Save Fab button.
      */
     private void editMode(){
+        disableAppBarLayout();
+        enableFieldsToEdit();
+        disableEditModeElements();
+        mEditMode = true;
         mFragmentTrackDetailBinding.fabAutofix.hide();
         mFragmentTrackDetailBinding.fabSaveInfo.show();
+    }
+
+    private void disableEditModeElements() {
+        mManualEditMenuItem.setEnabled(false);
+        mIdentifyCoverMenuItem.setEnabled(false);
+        mRemoveMenuItem.setEnabled(false);
+        mUpdateCoverMenuItem.setEnabled(false);
+        mFragmentTrackDetailBinding.fabAutofix.setEnabled(false);
+    }
+
+    private void enableEditModeElements() {
+        mManualEditMenuItem.setEnabled(true);
+        mIdentifyCoverMenuItem.setEnabled(true);
+        mRemoveMenuItem.setEnabled(true);
+        mUpdateCoverMenuItem.setEnabled(true);
+        mFragmentTrackDetailBinding.fabAutofix.setEnabled(true);
     }
 
     /**
      * Enters edit mode, for modify manually
      * the information about the song
      */
-    private void disableAppBarLayout(){
+    private void disableAppBarLayout() {
         //shrink toolbar to make it easy to user
         //focus in editing tags
         mFragmentTrackDetailBinding.appBarLayout.setExpanded(false);
-        editMode();
-        mFragmentTrackDetailBinding.fabSaveInfo.setOnClickListener(null);
-        mFragmentTrackDetailBinding.fabSaveInfo.setOnClickListener(v -> {
-            ManualCorrectionDialogFragment manualCorrectionDialogFragment = ManualCorrectionDialogFragment.newInstance();
-            manualCorrectionDialogFragment.show(getChildFragmentManager(),
-                    manualCorrectionDialogFragment.getClass().getCanonicalName());
-        });
-        mFragmentTrackDetailBinding.toolbarCoverArt.setEnabled(false);
-        mUpdateCoverMenuItem.setEnabled(false);
-        enableFieldsToEdit();
     }
 
+    /**
+     * Exits edit mode, for modify manually
+     * the information about the song
+     */
+    private void enableAppBarLayout() {
+        //shrink toolbar to make it easy to user
+        //focus in editing tags
+        mFragmentTrackDetailBinding.appBarLayout.setExpanded(true);
+    }
 
     /**
      * Set the path to the current track for media playback.
@@ -570,7 +606,10 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
     @Override
     public void onBackPressed(){
         if(mEditMode) {
+            enableEditModeElements();
+            showFabs();
             disableFields();
+            enableAppBarLayout();
         }
         else {
             callSuperOnBackPressed();
@@ -620,7 +659,6 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
         InputMethodManager imm =(InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
         imm.showSoftInput(mFragmentTrackDetailBinding.layoutContentDetailsTrack.trackNameDetails,
                 InputMethodManager.SHOW_IMPLICIT);
-        mEditMode = true;
     }
 
     /**
@@ -643,9 +681,7 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
      * leaves out from edit mode
      */
     private void disableFields(){
-
         removeErrorTags();
-
         mFragmentTrackDetailBinding.layoutContentDetailsTrack.trackNameDetails.clearFocus();
         mFragmentTrackDetailBinding.layoutContentDetailsTrack.trackNameDetails.setEnabled(false);
         mFragmentTrackDetailBinding.layoutContentDetailsTrack.artistNameDetails.clearFocus();
@@ -669,7 +705,6 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
             imm.hideSoftInputFromWindow(getActivity().getCurrentFocus().getWindowToken(), 0);
         }
         catch (Exception ignored){}
-        showFabs();
 
         mEditMode = false;
     }
@@ -716,20 +751,14 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
             return false;
         });
 
-        mManualEditMenuItem.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
-            @Override
-            public boolean onMenuItemClick(MenuItem item) {
-                disableAppBarLayout();
-                return false;
-            }
+        mManualEditMenuItem.setOnMenuItemClickListener(item -> {
+            editMode();
+            return false;
         });
 
-        mIdentifyCoverMenuItem.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
-            @Override
-            public boolean onMenuItemClick(MenuItem item) {
-                mViewModel.startIdentification(new IdentificationParams(IdentificationParams.ONLY_COVER));
-                return false;
-            }
+        mIdentifyCoverMenuItem.setOnMenuItemClickListener(item -> {
+            mViewModel.startIdentification(new IdentificationParams(IdentificationParams.ONLY_COVER));
+            return false;
         });
     }
     /**

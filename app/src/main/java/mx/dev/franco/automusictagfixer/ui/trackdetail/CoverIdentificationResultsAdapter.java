@@ -30,16 +30,16 @@ import mx.dev.franco.automusictagfixer.identifier.Identifier;
 import mx.dev.franco.automusictagfixer.identifier.Result;
 import mx.dev.franco.automusictagfixer.utilities.GlideApp;
 
-public class IdentificationResultsAdapter extends RecyclerView.Adapter<ResultItemHolder> implements Observer<List<Identifier.IdentificationResults>> {
+public class CoverIdentificationResultsAdapter extends RecyclerView.Adapter<ResultItemHolder> implements Observer<List<Identifier.IdentificationResults>> {
     private List<Identifier.IdentificationResults> mIdentificationResults = new ArrayList<>();
 
-    public IdentificationResultsAdapter(){}
+    public CoverIdentificationResultsAdapter(){}
 
     @NonNull
     @Override
     public ResultItemHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext()).
-                inflate(R.layout.result_item_list, parent, false);
+                inflate(R.layout.cover_result_item_list, parent, false);
 
         return new ResultItemHolder(view);
     }
@@ -47,53 +47,6 @@ public class IdentificationResultsAdapter extends RecyclerView.Adapter<ResultIte
     @Override
     public void onBindViewHolder(@NonNull ResultItemHolder holder, int position) {
         Result result = (Result) mIdentificationResults.get(position);
-        if(result.getTitle() != null && !result.getTitle().isEmpty()) {
-            holder.title.setVisibility(View.VISIBLE);
-            holder.title.setText(result.getTitle());
-        }
-        else {
-            holder.title.setVisibility(View.GONE);
-        }
-
-        if(result.getArtist() != null && !result.getArtist().isEmpty()) {
-            holder.artist.setText(result.getArtist());
-            holder.artist.setVisibility(View.VISIBLE);
-        }
-        else {
-            holder.artist.setVisibility(View.GONE);
-        }
-
-        if(result.getAlbum() != null && !result.getAlbum().isEmpty()) {
-            holder.album.setText(result.getAlbum());
-            holder.album.setVisibility(View.VISIBLE);
-        }
-        else {
-            holder.album.setVisibility(View.GONE);
-        }
-
-        if(result.getGenre() != null && !result.getGenre().isEmpty()) {
-            holder.genre.setText(result.getGenre());
-            holder.genre.setVisibility(View.VISIBLE);
-        }
-        else {
-            holder.genre.setVisibility(View.GONE);
-        }
-
-        if(result.getTrackYear() != null && !result.getTrackYear().isEmpty()) {
-            holder.trackYear.setText(result.getTrackYear());
-            holder.trackYear.setVisibility(View.VISIBLE);
-        }
-        else {
-            holder.trackYear.setVisibility(View.GONE);
-        }
-
-        if(result.getTrackNumber() != null && !result.getTrackNumber().isEmpty()) {
-            holder.trackNumber.setText(result.getTrackNumber());
-            holder.trackNumber.setVisibility(View.VISIBLE);
-        }
-        else {
-            holder.trackNumber.setVisibility(View.GONE);
-        }
 
         String urlImage = getUrl(result.getCovers());
         if(urlImage != null) {

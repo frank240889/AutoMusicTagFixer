@@ -1,8 +1,9 @@
 package mx.dev.franco.automusictagfixer.utilities;
 
-import android.arch.lifecycle.MutableLiveData;
-import android.databinding.BindingAdapter;
 import android.widget.ImageView;
+
+import androidx.databinding.BindingAdapter;
+import androidx.lifecycle.MutableLiveData;
 
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;

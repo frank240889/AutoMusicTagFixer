@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.v7.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/item_card"
@@ -11,7 +11,7 @@
     android:clickable="true"
     android:focusable="true">
 
-    <android.support.constraint.ConstraintLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/container_elements"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
@@ -31,7 +31,7 @@
             app:srcCompat="@drawable/ic_album_white_48px" />
 
 
-        <android.support.constraint.ConstraintLayout
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/container_track_info"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -102,9 +102,9 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/artist_name"
                 tools:text="Gianluca Grignani" />
-        </android.support.constraint.ConstraintLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
-        <android.support.constraint.ConstraintLayout
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             app:layout_constraintEnd_toEndOf="@+id/progress"
@@ -126,8 +126,8 @@
                 app:layout_constraintTop_toTopOf="parent"
                 tools:src="@drawable/ic_done_all_white_24px"
                 tools:visibility="visible" />
-        </android.support.constraint.ConstraintLayout>
-        <android.support.constraint.ConstraintLayout
+        </androidx.constraintlayout.widget.ConstraintLayout>
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/progress"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -171,6 +171,6 @@
                 app:layout_constraintTop_toTopOf="parent"
                 tools:visibility="visible" />
 
-        </android.support.constraint.ConstraintLayout>
-    </android.support.constraint.ConstraintLayout>
-</android.support.v7.widget.CardView>
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.cardview.widget.CardView>

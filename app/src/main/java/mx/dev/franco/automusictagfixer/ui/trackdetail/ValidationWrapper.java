@@ -1,6 +1,6 @@
 package mx.dev.franco.automusictagfixer.ui.trackdetail;
 
-import android.support.annotation.IntegerRes;
+import androidx.annotation.IntegerRes;
 
 import mx.dev.franco.automusictagfixer.utilities.Message;
 

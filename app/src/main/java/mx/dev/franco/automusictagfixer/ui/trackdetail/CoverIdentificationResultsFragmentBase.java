@@ -1,14 +1,17 @@
 package mx.dev.franco.automusictagfixer.ui.trackdetail;
 
-import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.Button;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.lifecycle.ViewModelProviders;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.LinearSnapHelper;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.recyclerview.widget.SnapHelper;
 
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.ui.ResultsFragmentBase;
@@ -21,8 +24,9 @@ public class CoverIdentificationResultsFragmentBase extends ResultsFragmentBase<
         void saveAsCover(CoverCorrectionParams coverCorrectionParams);
     }
     private OnCoverCorrectionListener mOnCoverCorrectionListener;
-    private int mCenteredPosition;
+    private int mCenteredItem;
     private CoverCorrectionParams mCoverCorrectionParams;
+    CoverIdentificationResultsAdapter adapter;
     public CoverIdentificationResultsFragmentBase(){}
 
     public static CoverIdentificationResultsFragmentBase newInstance(String id) {
@@ -32,6 +36,14 @@ public class CoverIdentificationResultsFragmentBase extends ResultsFragmentBase<
         CoverIdentificationResultsFragmentBase identificationResultsFragment = new CoverIdentificationResultsFragmentBase();
         identificationResultsFragment.setArguments(arguments);
         return identificationResultsFragment;
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        mViewModel.observeProgress().observe(this, this::onLoading);
+        mViewModel.observeResults().observe(this, adapter);
+        mViewModel.fetchResults(mTrackId);
     }
 
     @Override
@@ -47,6 +59,7 @@ public class CoverIdentificationResultsFragmentBase extends ResultsFragmentBase<
 
         mCoverCorrectionParams = new CoverCorrectionParams();
         mCoverCorrectionParams.setCorrectionMode(Constants.CACHED);
+        adapter = new CoverIdentificationResultsAdapter();
     }
 
     @Override
@@ -54,29 +67,29 @@ public class CoverIdentificationResultsFragmentBase extends ResultsFragmentBase<
         Button saveAsCoverButton = view.findViewById(R.id.save_as_cover_button);
         Button saveAsImageFileButton = view.findViewById(R.id.save_as_image_file_button);
 
-        //Todo: change the adapter with the appropriate adapter.
-        RecyclerView listResults = view.findViewById(R.id.results_list);
+        RecyclerView listResults = view.findViewById(R.id.cover_results_list);
+        SnapHelper snapHelper = new LinearSnapHelper();
+        snapHelper.attachToRecyclerView(listResults);
+        LinearLayoutManager layoutManager = new LinearLayoutManager(listResults.getContext());
+        layoutManager.setOrientation(LinearLayoutManager.HORIZONTAL);
+        listResults.setLayoutManager(layoutManager);
+        listResults.setItemViewCacheSize(5);
+        listResults.setAdapter(adapter);
 
         listResults.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
                 if(newState == RecyclerView.SCROLL_STATE_IDLE) {
-                    int firstVisible = ((LinearLayoutManager)recyclerView.getLayoutManager()).findFirstVisibleItemPosition();
-                    int lastVisible = ((LinearLayoutManager)recyclerView.getLayoutManager()).findLastVisibleItemPosition();
-                    mCenteredPosition = lastVisible - firstVisible;
-                    recyclerView.scrollToPosition(mCenteredPosition);
+                    View snapView = snapHelper.findSnapView(layoutManager);
+                    if(snapView != null) {
+                        mCenteredItem = layoutManager.getPosition(snapView);
+                        listResults.smoothScrollToPosition(mCenteredItem);
+                    }
                 }
             }
-
-            @Override
-            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {}
         });
 
-        LinearLayoutManager layoutManager = new LinearLayoutManager(listResults.getContext());
-        listResults.setLayoutManager(layoutManager);
-        listResults.setItemViewCacheSize(5);
-        IdentificationResultsAdapter adapter = new IdentificationResultsAdapter();
-        listResults.setAdapter(adapter);
+
 
         saveAsCoverButton.setOnClickListener(v ->
                 mOnCoverCorrectionListener.saveAsCover(mCoverCorrectionParams));

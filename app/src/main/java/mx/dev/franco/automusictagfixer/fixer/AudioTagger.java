@@ -6,14 +6,15 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Environment;
 import android.provider.DocumentsContract;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v4.content.ContextCompat;
-import android.support.v4.provider.DocumentFile;
-import android.support.v4.util.ArrayMap;
 import android.util.Log;
 import android.util.SparseArray;
 import android.webkit.MimeTypeMap;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.collection.ArrayMap;
+import androidx.core.content.ContextCompat;
+import androidx.documentfile.provider.DocumentFile;
 
 import com.crashlytics.android.Crashlytics;
 

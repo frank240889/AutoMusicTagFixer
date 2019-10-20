@@ -4,18 +4,27 @@ import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
+
+import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+
 import mx.dev.franco.automusictagfixer.interfaces.AsyncOperation;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
+import mx.dev.franco.automusictagfixer.persistence.room.TrackDAO;
 
 public class MediaStoreReader extends AsyncTask<Context, Void, List<Track>> {
     private AsyncOperation<Void, List<Track>, Void, Void> mCallback;
-
+    private TrackDAO mTrackDao;
     public MediaStoreReader(AsyncOperation<Void, List<Track>, Void, Void> listener){
         this();
         mCallback = listener;
+    }
+
+    public MediaStoreReader(AsyncOperation<Void, List<Track>, Void, Void> listener, TrackDAO trackDao) {
+        this(listener);
+        mTrackDao = trackDao;
     }
 
     public MediaStoreReader(){}
@@ -28,6 +37,9 @@ public class MediaStoreReader extends AsyncTask<Context, Void, List<Track>> {
 
     @Override
     protected List<Track> doInBackground(Context... context) {
+        if(mTrackDao != null)
+            removeInexistentTracks();
+
         Cursor cursor = MediaStoreRetriever.getAllFromDevice(context[0]);
         List<Track> tracks = new ArrayList<>();
         if(cursor.getCount() > 0) {
@@ -45,12 +57,18 @@ public class MediaStoreReader extends AsyncTask<Context, Void, List<Track>> {
     protected void onPostExecute(List<Track> result) {
         if(mCallback != null)
             mCallback.onAsyncOperationFinished(result);
+
+        mCallback = null;
+        mTrackDao = null;
     }
 
     @Override
     public void onCancelled(){
         if(mCallback != null)
             mCallback.onAsyncOperationFinished(new ArrayList<>());
+
+        mCallback = null;
+        mTrackDao = null;
     }
 
     /**
@@ -72,6 +90,22 @@ public class MediaStoreReader extends AsyncTask<Context, Void, List<Track>> {
         Track track = new Track(title,artist,album,fullPath);
         track.setMediaStoreId(mediaStoreId);
         return track;
+    }
+
+    private void removeInexistentTracks(){
+        List<Track> tracksToRemove = new ArrayList<>();
+        List<Track> currentTracks = mTrackDao.getTracks();
+        if(currentTracks == null || currentTracks.size() == 0)
+            return;
+
+        for(Track track:currentTracks){
+            File file = new File(track.getPath());
+            if(!file.exists()){
+                tracksToRemove.add(track);
+            }
+        }
+        if(tracksToRemove.size() > 0)
+            mTrackDao.deleteBatch(tracksToRemove);
     }
 
 }

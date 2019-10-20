@@ -1,12 +1,13 @@
 package mx.dev.franco.automusictagfixer.persistence.repository;
 
-import android.arch.lifecycle.LiveData;
-import android.arch.lifecycle.MediatorLiveData;
-import android.arch.lifecycle.MutableLiveData;
-import android.arch.persistence.db.SimpleSQLiteQuery;
-import android.arch.persistence.db.SupportSQLiteQuery;
 import android.content.Context;
 import android.os.AsyncTask;
+
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MediatorLiveData;
+import androidx.lifecycle.MutableLiveData;
+import androidx.sqlite.db.SimpleSQLiteQuery;
+import androidx.sqlite.db.SupportSQLiteQuery;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -137,7 +138,7 @@ public class TrackRepository {
                     insert(result);
                 }
             }
-        });
+        }, mTrackDao);
         mediaStoreReader.executeOnExecutor(Executors.newCachedThreadPool(), mContext);
     }
 

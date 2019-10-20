@@ -1,7 +1,7 @@
 package mx.dev.franco.automusictagfixer.persistence.cache;
 
 
-import android.support.v4.util.ArrayMap;
+import androidx.collection.ArrayMap;
 
 import java.util.List;
 import java.util.Map;

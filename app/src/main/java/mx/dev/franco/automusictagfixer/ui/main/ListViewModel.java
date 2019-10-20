@@ -1,14 +1,18 @@
 package mx.dev.franco.automusictagfixer.ui.main;
 
 import android.app.Application;
-import android.arch.lifecycle.AndroidViewModel;
-import android.arch.lifecycle.LiveData;
-import android.arch.lifecycle.MutableLiveData;
-import android.arch.lifecycle.Transformations;
-import android.support.annotation.IntegerRes;
-import android.support.annotation.NonNull;
+
+import androidx.annotation.IntegerRes;
+import androidx.annotation.NonNull;
+import androidx.lifecycle.AndroidViewModel;
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
+import androidx.lifecycle.Transformations;
+
 import java.util.List;
+
 import javax.inject.Inject;
+
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.fixer.AudioTagger;
 import mx.dev.franco.automusictagfixer.persistence.repository.TrackRepository;

@@ -1,6 +1,7 @@
 package mx.dev.franco.automusictagfixer.ui.main;
 
-import android.support.v7.util.DiffUtil;
+import androidx.recyclerview.widget.DiffUtil;
+
 import java.util.List;
 
 public class DiffResults<T> {

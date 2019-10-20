@@ -3,11 +3,14 @@ package mx.dev.franco.automusictagfixer.utilities;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.support.annotation.NonNull;
 import android.webkit.MimeTypeMap;
+
+import androidx.annotation.NonNull;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.fixer.AudioTagger;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
