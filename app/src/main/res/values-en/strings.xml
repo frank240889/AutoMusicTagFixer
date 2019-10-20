@@ -320,4 +320,5 @@
     <string name="title_identify_cover">Identify cover</string>
     <string name="title_identify_track">Identify</string>
     <string name="save_changes">Save</string>
+    <string name="apply_next_tags">Apply changes?</string>
 </resources>

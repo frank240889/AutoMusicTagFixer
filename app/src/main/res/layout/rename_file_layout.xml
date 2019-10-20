@@ -1,28 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-  xmlns:app="http://schemas.android.com/apk/res-auto"
-  xmlns:tools="http://schemas.android.com/tools"
-  android:id="@+id/manual_correction_container"
-  android:layout_width="match_parent"
-  android:layout_height="match_parent"
-  android:layout_margin="8dp"
-  android:layout_alignParentStart="true"
-  android:layout_gravity="start"
-  android:splitMotionEvents="false">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/manual_correction_container"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_alignParentStart="true"
+    android:layout_gravity="start"
+    android:layout_margin="8dp"
+    android:splitMotionEvents="false">
 
     <TextView
         android:id="@+id/title_manual_correction_dialog_fragment"
-        style="@android:style/TextAppearance.Holo.DialogWindowTitle"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="16dp"
         android:layout_marginEnd="8dp"
         android:gravity="center"
+        android:text="@string/manual"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:text="Alerta" />
+        app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/content_manual_correction_dialog_fragment"
@@ -32,10 +31,10 @@
         android:layout_marginTop="16dp"
         android:layout_marginEnd="8dp"
         android:gravity="center_vertical"
+        android:text="@string/apply_next_tags"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/title_manual_correction_dialog_fragment"
-        tools:text="¿Seguro de corregir esta canción?" />
+        app:layout_constraintTop_toBottomOf="@id/title_manual_correction_dialog_fragment" />
 
     <CheckBox
         android:id="@+id/manual_checkbox_rename"
@@ -48,62 +47,72 @@
         app:layout_constraintTop_toBottomOf="@id/content_manual_correction_dialog_fragment" />
 
     <com.google.android.material.textfield.TextInputLayout
-      android:id="@+id/manual_label_rename_to"
-      android:layout_width="match_parent"
-      android:layout_height="wrap_content"
-      android:layout_marginTop="24dp"
-      android:layout_marginStart="8dp"
-      android:layout_marginEnd="8dp"
-      android:layout_below="@id/manual_checkbox_rename"
-      android:paddingStart="8dp"
-      android:paddingEnd="8dp"
-      android:labelFor="@id/new_name_edit_text"
-      android:visibility="gone"
-      app:layout_constraintEnd_toEndOf="parent"
-      app:layout_constraintStart_toStartOf="parent"
-      app:layout_constraintTop_toBottomOf="@+id/manual_checkbox_rename"
-      tools:visibility="visible">
-        <EditText
-          android:id="@+id/manual_rename_to"
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:hint="@string/hint_rename" />
+        android:id="@+id/manual_label_rename_to"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/manual_checkbox_rename"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="24dp"
+        android:layout_marginEnd="8dp"
+        android:labelFor="@id/new_name_edit_text"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/manual_checkbox_rename"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        tools:visibility="visible">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/manual_rename_to"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/hint_rename" />
     </com.google.android.material.textfield.TextInputLayout>
+
     <TextView
-      android:id="@+id/manual_message_rename_hint"
-      android:layout_width="0dp"
-      android:layout_height="wrap_content"
-      android:layout_marginTop="4dp"
-      android:layout_marginStart="8dp"
-      android:layout_marginEnd="8dp"
-      android:layout_below="@id/manual_label_rename_to"
-      android:paddingStart="8dp"
-      android:paddingEnd="8dp"
-      android:gravity="center_horizontal"
-      android:maxLines="1"
-      android:singleLine="true"
-      android:text="@string/message_rename"
-      android:textSize="12sp"
-      android:visibility="gone"
-      app:layout_constraintEnd_toEndOf="parent"
-      app:layout_constraintStart_toStartOf="parent"
-      app:layout_constraintTop_toBottomOf="@+id/manual_label_rename_to"
-      tools:visibility="visible" />
+        android:id="@+id/manual_message_rename_hint"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/manual_label_rename_to"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginEnd="8dp"
+        android:gravity="center_horizontal"
+        android:maxLines="1"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:singleLine="true"
+        android:text="@string/message_rename"
+        android:textSize="12sp"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/manual_label_rename_to"
+        tools:visibility="visible" />
+
     <Button
-      android:id="@+id/accept_button"
-      android:layout_width="wrap_content"
-      android:layout_height="wrap_content"
-      android:layout_marginTop="32dp"
-      android:text="@string/cancel_button"
-      app:layout_constraintEnd_toEndOf="parent"
-      app:layout_constraintTop_toBottomOf="@+id/manual_message_rename_hint" />
+        android:id="@+id/accept_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        android:layout_marginEnd="24dp"
+        android:layout_marginBottom="16dp"
+        android:text="@string/cancel_button"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/manual_message_rename_hint" />
+
     <Button
-      android:id="@+id/cancel_button"
-      android:layout_width="wrap_content"
-      android:layout_height="wrap_content"
-      android:layout_marginTop="32dp"
-      android:layout_marginEnd="16dp"
-      android:text="@string/accept"
-      app:layout_constraintEnd_toStartOf="@+id/accept_button"
-      app:layout_constraintTop_toBottomOf="@+id/manual_message_rename_hint" />
+        android:id="@+id/cancel_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="16dp"
+        android:text="@string/accept"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/accept_button"
+        app:layout_constraintTop_toBottomOf="@+id/manual_message_rename_hint" />
 </androidx.constraintlayout.widget.ConstraintLayout>

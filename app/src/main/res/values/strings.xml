@@ -324,4 +324,5 @@
     <string name="title_identify_cover">Identificar carátula</string>
     <string name="title_identify_track">Identificar</string>
     <string name="save_changes">Guardar</string>
+    <string name="apply_next_tags">¿Aplicar los cambios?</string>
 </resources>

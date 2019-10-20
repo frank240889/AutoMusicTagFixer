@@ -1,9 +1,13 @@
 package mx.dev.franco.automusictagfixer.ui.trackdetail;
 
+import android.app.Dialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.view.View;
+import android.view.ViewTreeObserver;
 import android.widget.Button;
+import android.widget.FrameLayout;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -12,6 +16,9 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.LinearSnapHelper;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.SnapHelper;
+
+import com.google.android.material.bottomsheet.BottomSheetBehavior;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.ui.ResultsFragmentBase;
@@ -96,7 +103,6 @@ public class CoverIdentificationResultsFragmentBase extends ResultsFragmentBase<
 
         saveAsImageFileButton.setOnClickListener(v ->
                 mOnCoverCorrectionListener.saveAsImageButton(mCoverCorrectionParams));
-
     }
 
 
@@ -109,5 +115,23 @@ public class CoverIdentificationResultsFragmentBase extends ResultsFragmentBase<
     @Override
     protected ResultsViewModel getViewModel() {
         return ViewModelProviders.of(this, androidViewModelFactory).get(ResultsViewModel.class);
+    }
+
+    @NonNull @Override
+    public Dialog onCreateDialog(Bundle savedInstanceState) {
+
+        BottomSheetDialog dialog = (BottomSheetDialog) super.onCreateDialog(savedInstanceState);
+
+        dialog.setOnShowListener(new DialogInterface.OnShowListener() {
+            @Override
+            public void onShow(DialogInterface dialog) {
+                BottomSheetDialog d = (BottomSheetDialog) dialog;
+
+                FrameLayout bottomSheet = (FrameLayout) d.findViewById(com.google.android.material.R.id.design_bottom_sheet);
+                BottomSheetBehavior.from(bottomSheet).setState(BottomSheetBehavior.STATE_EXPANDED);
+            }
+        });
+        // Do something with your dialog like setContentView() or whatever
+        return dialog;
     }
 }

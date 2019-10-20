@@ -73,9 +73,10 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/checkbox_rename"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                 tools:visibility="visible">
 
-                <EditText
+                <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/new_name_edit_text"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -119,9 +120,9 @@
                 android:id="@+id/missing_tags_button"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:layout_marginEnd="8dp"
-                android:layout_marginBottom="8dp"
+                android:layout_marginTop="32dp"
+                android:layout_marginEnd="24dp"
+                android:layout_marginBottom="16dp"
                 android:text="@string/all_tags"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
@@ -131,8 +132,8 @@
                 android:id="@+id/all_tags_button"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="8dp"
-                android:layout_marginBottom="8dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginBottom="16dp"
                 android:text="@string/missing_tags"
                 app:layout_constraintBottom_toBottomOf="@+id/missing_tags_button"
                 app:layout_constraintEnd_toStartOf="@+id/missing_tags_button"

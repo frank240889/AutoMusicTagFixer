@@ -215,6 +215,8 @@ public class TrackDetailViewModel extends AndroidViewModel {
                     identificationType.setIdentificationType(mIdentificationParams.getIdentificationType());
                     if(input.status == Resource.Status.CANCELLED)
                         identificationType.setIdResourceMessage(input.data.getIdResourceMessage());
+                    else
+                        identificationType.setMessage(input.data.getMessage());
                     mLiveActionableMessage.setValue(identificationType);
                 }
             }

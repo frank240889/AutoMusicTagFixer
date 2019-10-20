@@ -36,9 +36,7 @@ public abstract class BaseDialogFragment extends DialogFragment {
 
     @Override
     public int getTheme() {
-        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP ?
-                android.R.style.Theme_Material_Light :
-                android.R.style.Theme_Light_Panel;
+        return android.R.style.Theme_Material_Light_Dialog;
     }
 
     @Nullable
