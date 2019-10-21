@@ -1,7 +1,6 @@
-package mx.dev.franco.automusictagfixer.utilities;
+package mx.dev.franco.automusictagfixer.filemanager;
 
 import android.os.Environment;
-import android.util.Log;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -9,6 +8,10 @@ import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 /**
  * Created by franco on 3/10/17.
@@ -27,14 +30,14 @@ public final class ImageFileSaver {
     /**
      *
      * @param data Image data
-     * @param title The title of song if exist
+     * @param imageName The title of song if exist
      * @param artist The artist of song if exist
      * @param album The album of song if exist
      * @return string absolute path where image was saved or
      *                  any other string representing the onIdentificationError.
      * @throws IOException
      */
-    public static String saveImageFile(byte[] data, String title, String artist, String album) throws IOException {
+    public static String saveImageFile(@Nonnull byte[] data, @Nullable String imageName) throws IOException {
 
         //No data to write
         if(data == null)
@@ -42,7 +45,6 @@ public final class ImageFileSaver {
 
         //External storage es not writable
         if(!isExternalStorageWritable()){
-            Log.e("onIdentificationError", "no external storage writable");
             return NO_EXTERNAL_STORAGE_WRITABLE;
         }
 
@@ -50,9 +52,11 @@ public final class ImageFileSaver {
         //Retrieve folder app, and if doesn't exist create it before
         File pathToFile = getAlbumStorageDir();
 
+        if(imageName == null || imageName.isEmpty())
+            imageName = GENERIC_NAME;
+
         //File object representing the new image file
-        File imageFileCreated = null;
-        imageFileCreated = createFile(pathToFile, title, artist, album);
+        File imageFileCreated = createFile(pathToFile, imageName);
 
         //Stream to write
         FileOutputStream fos = null;
@@ -77,30 +81,16 @@ public final class ImageFileSaver {
      * current data and time to avoid repeat
      * file names
      * @param pathToFile Absolute path where will be saved the image
-     * @param title The title of song if exist
+     * @param imageFile The title of song if exist
      * @param artist The artist of song if exist
      * @param album The album of song if exist
      * @return File representing the image
      */
-    private static File createFile(File pathToFile, String title, String artist, String album) {
+    private static File createFile(File pathToFile, String imageFile) {
         //Get and format date
         Date date = new Date();
-        DateFormat now = new SimpleDateFormat("yyyyMMdd_HHmmss");
-        String newFileName = null;
-        //Name of image maybe title, artist, album or filename provided from pathToFile
-        if(!title.equals("")) {
-            newFileName = title + "_" + now.format(date);
-        }
-        else if(!artist.equals("")) {
-            newFileName = artist + "_"  + now.format(date);
-        }
-        else if(!album.equals("")){
-            newFileName = album + "_"  + now.format(date);
-        }
-        else {
-            //get only name without extension
-           newFileName =  GENERIC_NAME + "_" + now.format(date);
-        }
+        DateFormat now = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault());
+        String newFileName = imageFile + "_" + now.format(date);
 
         return new File(pathToFile.getAbsolutePath() + SLASH + newFileName + DOT + EXTENSION);
     }

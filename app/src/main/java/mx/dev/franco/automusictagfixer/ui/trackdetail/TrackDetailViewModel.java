@@ -17,9 +17,13 @@ import org.jaudiotagger.tag.FieldKey;
 import java.util.List;
 import java.util.Map;
 
+import javax.annotation.Nonnull;
 import javax.inject.Inject;
 
 import mx.dev.franco.automusictagfixer.R;
+import mx.dev.franco.automusictagfixer.common.Action;
+import mx.dev.franco.automusictagfixer.filemanager.FileManager;
+import mx.dev.franco.automusictagfixer.filemanager.ImageFileSaver;
 import mx.dev.franco.automusictagfixer.fixer.AudioTagger;
 import mx.dev.franco.automusictagfixer.fixer.MetadataReaderResult;
 import mx.dev.franco.automusictagfixer.fixer.MetadataWriterResult;
@@ -84,14 +88,18 @@ public class TrackDetailViewModel extends AndroidViewModel {
     private int mCorrectionMode = Constants.CorrectionActions.VIEW_INFO;
     private InputCorrectionParams mCorrectionParams;
     private IdentificationParams mIdentificationParams;
+    private FileManager mFileManager;
+    private LiveData<ActionableMessage> mResultFileSaving;
 
     @Inject
     public TrackDetailViewModel(@NonNull Application application,
                                 @NonNull DataTrackRepository dataTrackRepository,
-                                @NonNull IdentificationManager identificationManager) {
+                                @NonNull IdentificationManager identificationManager,
+                                @Nonnull FileManager fileManager) {
         super(application);
         mDataTrackRepository = dataTrackRepository;
         mIdentificationManager = identificationManager;
+        mFileManager = fileManager;
 
         title = new MutableLiveData<>();
         artist = new MutableLiveData<>();
@@ -117,10 +125,14 @@ public class TrackDetailViewModel extends AndroidViewModel {
         //Merge state loading into one live data to observe.
         LiveData<Boolean> stateTrackDataRepository = mDataTrackRepository.observeLoadingState();
         LiveData<Boolean> identificationRepositoryState = mIdentificationManager.observeLoadingState();
+        LiveData<Boolean> fileSaverResultState = mFileManager.observeLoadingState();
         mStateMerger.addSource(stateTrackDataRepository, aBoolean ->
                 mStateMerger.setValue(aBoolean));
 
         mStateMerger.addSource(identificationRepositoryState, aBoolean ->
+                mStateMerger.setValue(aBoolean));
+
+        mStateMerger.addSource(fileSaverResultState, aBoolean ->
                 mStateMerger.setValue(aBoolean));
     }
 
@@ -226,6 +238,26 @@ public class TrackDetailViewModel extends AndroidViewModel {
         return mResultsIdentificationLiveData;
     }
 
+    public LiveData<ActionableMessage> observeCoverSavingResult() {
+        LiveData<Resource<String>> resultSaving = mFileManager.observeResultFileSaving();
+        mResultFileSaving = Transformations.map(resultSaving, input -> {
+            ActionableMessage actionableMessage = new ActionableMessage();
+            if(input.status == Resource.Status.SUCCESS) {
+                actionableMessage.setAction(Action.SEE_COVER_SAVED);
+                String pathToFile = getApplication().getString(R.string.cover_saved);
+                actionableMessage.setMessage(String.format(pathToFile, input.data));
+            }
+            else {
+                actionableMessage.setAction(Action.SEE_DETAILS_COVER_NOT_SAVED);
+                actionableMessage.setIdResourceMessage(R.string.cover_not_saved);
+            }
+
+            return actionableMessage;
+        });
+
+        return mResultFileSaving;
+    }
+
     public LiveData<Message> observeMessage(){
         return mLiveMessage;
     }
@@ -279,10 +311,9 @@ public class TrackDetailViewModel extends AndroidViewModel {
      */
     public void confirmRemoveCover() {
         if(mAudioFields.getCover() != null) {
-            InputCorrectionParams inputParams = new InputCorrectionParams();
-            inputParams.setCodeRequest(AudioTagger.MODE_REMOVE_COVER);
-            inputParams.setFields(new ArrayMap<>());
-            mDataTrackRepository.performCorrection(inputParams);
+            mCorrectionParams = new CoverCorrectionParams();
+            mCorrectionParams.setCodeRequest(AudioTagger.MODE_REMOVE_COVER);
+            mDataTrackRepository.removeCover(mCorrectionParams);
         }
         else {
             Message message = new Message(R.string.does_not_exist_cover);
@@ -375,10 +406,10 @@ public class TrackDetailViewModel extends AndroidViewModel {
 
     public void removeCover() {
         if(mAudioFields.getCover() != null) {
-
+            mLiveConfirmationDeleteCover.setValue(null);
         }
         else {
-
+            mLiveMessage.setValue(new Message(R.string.does_not_exist_cover));
         }
     }
 
@@ -495,5 +526,23 @@ public class TrackDetailViewModel extends AndroidViewModel {
 
     public void saveChanges() {
 
+    }
+
+    public void extractCover() {
+        byte[] cover = this.cover.getValue();
+        if(cover != null) {
+            String imageName = null;
+            if(title.getValue() != null && !title.getValue().isEmpty()) {
+                imageName = title.getValue();
+            }
+            else {
+                imageName = ImageFileSaver.GENERIC_NAME;
+            }
+            mFileManager.saveFile(cover, imageName);
+
+        }
+        else {
+            mLiveMessage.setValue(new Message(R.string.does_not_exist_cover));
+        }
     }
 }

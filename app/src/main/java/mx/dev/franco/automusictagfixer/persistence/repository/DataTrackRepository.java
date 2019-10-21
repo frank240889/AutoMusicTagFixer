@@ -222,10 +222,10 @@ public class DataTrackRepository {
         mMetadataWriter.executeOnExecutor(Executors.newCachedThreadPool(), mContext);
     }
 
-    public void removeCover() {
-        AudioMetadataTagger.InputParams inputParams = new AudioMetadataTagger.InputParams();
-        inputParams.setCodeRequest(AudioTagger.MODE_REMOVE_COVER);
+    public void removeCover(InputCorrectionParams inputParams) {
+        inputParams.setRenameFile(false);
         inputParams.setTargetFile(mTrack.getPath());
+        performCorrection(inputParams);
     }
 
     public void changeCover(ImageWrapper imageWrapper) {

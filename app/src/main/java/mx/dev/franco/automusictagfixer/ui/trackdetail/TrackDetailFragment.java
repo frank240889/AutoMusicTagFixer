@@ -8,7 +8,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.provider.MediaStore;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -24,7 +23,6 @@ import android.widget.EditText;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
-import androidx.core.widget.NestedScrollView;
 import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.ViewModelProviders;
 
@@ -141,6 +139,7 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
         mViewModel.observeInvalidInputsValidation().observe(this, this::onInputDataInvalid);
         mViewModel.observeWritingResult().observe(this, this::onActionableMessage);
         mViewModel.observeRenamingResult().observe(this, this::onMessage);
+        mViewModel.observeCoverSavingResult().observe(this, this::onActionableMessage);
         setHasOptionsMenu(true);
     }
 
@@ -329,7 +328,6 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
 
         addFloatingActionButtonListeners();
         addAppBarOffsetListener();
-        addShrinkEffect();
         addToolbarButtonsListeners();
         showFabs();
         setupMediaPlayer();
@@ -339,16 +337,6 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
                 layoutContentDetailsTrack.
                 cancelIdentification.
                 setOnClickListener(v -> mViewModel.cancelIdentification());
-    }
-
-    private void addShrinkEffect() {
-        mFragmentTrackDetailBinding.layoutContentDetailsTrack.contentContainer.setOnScrollChangeListener(new NestedScrollView.OnScrollChangeListener() {
-            @Override
-            public void onScrollChange(NestedScrollView v, int scrollX, int scrollY, int oldScrollX, int oldScrollY) {
-                Log.d("scrollx", scrollX+"");
-                Log.d("scrolly", scrollY+"");
-            }
-        });
     }
 
     /**
@@ -727,7 +715,7 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
      */
     private void addToolbarButtonsListeners(){
         mExtractCoverMenuItem.setOnMenuItemClickListener(menuItem -> {
-            mViewModel.saveAsImageFileFrom(Constants.MANUAL);
+            mViewModel.extractCover();
             return false;
         });
 

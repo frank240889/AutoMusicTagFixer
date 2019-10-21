@@ -42,7 +42,7 @@ public final class SimpleMediaPlayer extends MediaPlayer implements MediaPlayer.
         mListeners.add(listener);
     }
 
-    private void removeListener(OnMediaPlayerEventListener listener) {
+    public void removeListener(OnMediaPlayerEventListener listener) {
         mListeners.remove(listener);
     }
 

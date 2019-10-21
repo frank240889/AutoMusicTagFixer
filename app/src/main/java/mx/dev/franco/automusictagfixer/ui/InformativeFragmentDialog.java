@@ -2,9 +2,7 @@ package mx.dev.franco.automusictagfixer.ui;
 
 import android.content.Context;
 import android.os.Bundle;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
 
@@ -14,7 +12,7 @@ import androidx.annotation.StringRes;
 
 import mx.dev.franco.automusictagfixer.R;
 
-public class InformativeFragmentDialog extends BaseDialogFragment {
+public class InformativeFragmentDialog extends BaseRoundedBottomSheetDialogFragment {
     private static final String TITLE = "title";
     private static final String CONTENT = "content";
     private static final String POSITIVE_BUTTON_TEXT = "positive_button_text";
@@ -72,12 +70,6 @@ public class InformativeFragmentDialog extends BaseDialogFragment {
             mPositiveText = getArguments().getInt(POSITIVE_BUTTON_TEXT);
             mNegativeText = getArguments().getInt(NEGATIVE_BUTTON_TEXT);
         }
-    }
-
-    @Nullable
-    @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(mLayout, container, false);
     }
 
     @Override
