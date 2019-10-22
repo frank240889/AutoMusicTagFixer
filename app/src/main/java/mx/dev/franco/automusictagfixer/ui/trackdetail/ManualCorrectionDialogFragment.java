@@ -7,7 +7,6 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
-import android.view.ViewTreeObserver;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
@@ -23,7 +22,6 @@ import com.google.android.material.textfield.TextInputLayout;
 
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.fixer.AudioTagger;
-import mx.dev.franco.automusictagfixer.ui.BaseDialogFragment;
 import mx.dev.franco.automusictagfixer.ui.BaseRoundedBottomSheetDialogFragment;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
 
@@ -63,8 +61,8 @@ public class ManualCorrectionDialogFragment extends BaseRoundedBottomSheetDialog
   public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
     ManualCorrectionParams manualCorrectionParams = new ManualCorrectionParams();
     final CheckBox checkBox = view.findViewById(R.id.manual_checkbox_rename);
-    Button acceptButton = view.findViewById(R.id.accept_button);
-    Button cancelButton = view.findViewById(R.id.cancel_button);
+    Button acceptButton = view.findViewById(R.id.accept_changes);
+    Button cancelButton = view.findViewById(R.id.cancel_changes);
 
     acceptButton.setOnClickListener(v -> {
               manualCorrectionParams.setCorrectionMode(Constants.MANUAL);

@@ -137,10 +137,17 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
         mViewModel.observeLoadingState().observe(this, this::loading);
         mViewModel.observeConfirmationRemoveCover().observe(this, this::onConfirmRemovingCover);
         mViewModel.observeInvalidInputsValidation().observe(this, this::onInputDataInvalid);
-        mViewModel.observeWritingResult().observe(this, this::onActionableMessage);
+        mViewModel.observeWritingResult().observe(this, this::onWritingResult);
         mViewModel.observeRenamingResult().observe(this, this::onMessage);
         mViewModel.observeCoverSavingResult().observe(this, this::onActionableMessage);
         setHasOptionsMenu(true);
+    }
+
+    private void onWritingResult(ActionableMessage actionableMessage) {
+        enableEditModeElements();
+        showFabs();
+        disableFields();
+        onActionableMessage(actionableMessage);
     }
 
     @Override
@@ -297,19 +304,16 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
         onCoverChanged(value);
     }
 
-    public void setStateMessage(String message, boolean visible) {
-        mFragmentTrackDetailBinding.layoutContentDetailsTrack.statusMessage.setVisibility(View.VISIBLE);
-        mFragmentTrackDetailBinding.layoutContentDetailsTrack.statusMessage.setText(message);
-    }
-
     public void loading(boolean showProgress) {
         if(showProgress) {
             mFragmentTrackDetailBinding.
                     layoutContentDetailsTrack.progressContainer.setVisibility(View.VISIBLE);
+            disableEditModeElements();
         }
         else {
             mFragmentTrackDetailBinding.
                     layoutContentDetailsTrack.progressContainer.setVisibility(View.GONE);
+            enableEditModeElements();
         }
     }
 
@@ -423,9 +427,6 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
         disableFields();
     }
 
-    public void onDisableEditModeAndRestore() {
-        disableFields();
-    }
 
     private void onInputDataInvalid(ValidationWrapper validationWrapper) {
         EditText editText = mFragmentTrackDetailBinding.getRoot().findViewById(validationWrapper.getField());
@@ -598,6 +599,8 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
             showFabs();
             disableFields();
             enableAppBarLayout();
+            removeErrorTags();
+            mViewModel.restorePreviousValues();
         }
         else {
             callSuperOnBackPressed();
@@ -720,7 +723,6 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
         });
 
         mUpdateCoverMenuItem.setOnMenuItemClickListener(menuItem -> {
-            hideFabs();
             editCover(TrackDetailFragment.INTENT_GET_AND_UPDATE_FROM_GALLERY);
             return false;
         });

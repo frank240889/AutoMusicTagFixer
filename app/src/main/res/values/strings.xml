@@ -297,7 +297,7 @@
     <string name="match_found">Coincidencia encontrada.</string>
     <string name="could_not_correct_file">No se pudo corregir el archivo.</string>
     <string name="error_in_correction">Error</string>
-    <string name="empty_tag">Etiqueta vacía</string>
+    <string name="empty_tag">Etiqueta inválida.</string>
     <string name="tag_too_long">Etiqueta muy larga</string>
     <string name="updating_list">Actualizando lista…</string>
     <string name="begin_processing">Iniciando identificación…</string>

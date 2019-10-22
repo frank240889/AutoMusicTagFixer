@@ -195,6 +195,7 @@ public class DataTrackRepository {
      * @param correctionParams The params required by {@link AudioTagger}
      */
     public void performCorrection(InputCorrectionParams correctionParams) {
+        correctionParams.setTargetFile(mTrack.getPath());
         mMetadataWriter = new MetadataWriter(new AsyncOperation<Track, MetadataWriterResult, Track, MetadataWriterResult>() {
             @Override
             public void onAsyncOperationStarted(Track params) {
@@ -222,9 +223,9 @@ public class DataTrackRepository {
         mMetadataWriter.executeOnExecutor(Executors.newCachedThreadPool(), mContext);
     }
 
+
     public void removeCover(InputCorrectionParams inputParams) {
         inputParams.setRenameFile(false);
-        inputParams.setTargetFile(mTrack.getPath());
         performCorrection(inputParams);
     }
 

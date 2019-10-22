@@ -7,7 +7,6 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
-import android.view.ViewTreeObserver;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
@@ -39,7 +38,7 @@ public class SemiAutoCorrectionDialogFragment extends ResultsFragmentBase<Result
 
   private OnSemiAutoCorrectionListener mOnSemiAutoCorrectionListener;
   private SemiAutoCorrectionParams mSemiAutoCorrectionParams;
-  private int mCenteredItem = -1;
+  private int mCenteredItem = 0;
   private IdentificationResultsAdapter adapter;
 
   public SemiAutoCorrectionDialogFragment(){}
@@ -131,12 +130,14 @@ public class SemiAutoCorrectionDialogFragment extends ResultsFragmentBase<Result
     missingTagsButton.setOnClickListener(view1 -> {
       mSemiAutoCorrectionParams.setCodeRequest(AudioTagger.MODE_WRITE_ONLY_MISSING);
       mSemiAutoCorrectionParams.setPosition(mCenteredItem+"");
+      dismiss();
       mOnSemiAutoCorrectionListener.onMissingTagsButton(mSemiAutoCorrectionParams);
     });
 
     allTagsButton.setOnClickListener(view12 -> {
       mSemiAutoCorrectionParams.setCodeRequest(AudioTagger.MODE_OVERWRITE_ALL_TAGS);
       mSemiAutoCorrectionParams.setPosition(mCenteredItem+"");
+      dismiss();
       mOnSemiAutoCorrectionListener.onOverwriteTagsButton(mSemiAutoCorrectionParams);
     });
   }

@@ -294,7 +294,7 @@
     <string name="match_found">Match found.</string>
     <string name="could_not_correct_file">Could not correct file.</string>
     <string name="error_in_correction">Error</string>
-    <string name="empty_tag">Empty tag</string>
+    <string name="empty_tag">Invalid tag.</string>
     <string name="tag_too_long">Tag to long</string>
     <string name="updating_list">Updating list…</string>
     <string name="begin_processing">Starting identification…</string>
