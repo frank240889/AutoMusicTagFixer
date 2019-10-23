@@ -30,6 +30,8 @@ import mx.dev.franco.automusictagfixer.identifier.IdentificationManager;
 import mx.dev.franco.automusictagfixer.identifier.IdentificationParams;
 import mx.dev.franco.automusictagfixer.identifier.Identifier;
 import mx.dev.franco.automusictagfixer.identifier.Result;
+import mx.dev.franco.automusictagfixer.persistence.mediastore.MediaStoreManager;
+import mx.dev.franco.automusictagfixer.persistence.mediastore.MediaStoreResult;
 import mx.dev.franco.automusictagfixer.persistence.repository.DataTrackRepository;
 import mx.dev.franco.automusictagfixer.persistence.repository.TrackRepository;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
@@ -90,19 +92,23 @@ public class TrackDetailViewModel extends AndroidViewModel {
     private InputCorrectionParams mCorrectionParams;
     private IdentificationParams mIdentificationParams;
     private FileManager mFileManager;
+    private MediaStoreManager mMediaStoreManager;
     private LiveData<ActionableMessage> mResultFileSaving;
+    private LiveData<Message> mMediaStoreResult;
 
     @Inject
     public TrackDetailViewModel(@NonNull Application application,
                                 @NonNull DataTrackRepository dataTrackRepository,
                                 @Nonnull TrackRepository trackRepository,
                                 @NonNull IdentificationManager identificationManager,
-                                @Nonnull FileManager fileManager) {
+                                @Nonnull FileManager fileManager,
+                                @Nonnull MediaStoreManager mediaStoreManager) {
         super(application);
         mTrackRepository = trackRepository;
         mDataTrackRepository = dataTrackRepository;
         mIdentificationManager = identificationManager;
         mFileManager = fileManager;
+        mMediaStoreManager = mediaStoreManager;
 
         title = new MutableLiveData<>();
         artist = new MutableLiveData<>();
@@ -129,6 +135,11 @@ public class TrackDetailViewModel extends AndroidViewModel {
         LiveData<Boolean> stateTrackDataRepository = mDataTrackRepository.observeLoadingState();
         LiveData<Boolean> identificationRepositoryState = mIdentificationManager.observeLoadingState();
         LiveData<Boolean> fileSaverResultState = mFileManager.observeLoadingState();
+        LiveData<Boolean> mediaStoreManagerState = mMediaStoreManager.observeLoadingState();
+
+        mStateMerger.addSource(mediaStoreManagerState, aBoolean ->
+                mStateMerger.setValue(aBoolean));
+
         mStateMerger.addSource(stateTrackDataRepository, aBoolean ->
                 mStateMerger.setValue(aBoolean));
 
@@ -179,37 +190,51 @@ public class TrackDetailViewModel extends AndroidViewModel {
                     mDataTrackRepository.renameFile(mCorrectionParams);
                 }
                 else {
-                    message = new ActionableMessage(NONE, R.string.changes_applied);
-                    Track track = mDataTrackRepository.getTrack();
-                    track.setProcessing(0);
-                    mTrackRepository.update(track);
+                    if(input.data.getResultCorrection().getTagsUpdated() != null)
+                        mMediaStoreManager.updateMediaStore(input.data.getResultCorrection().getTagsUpdated(),
+                            MediaStoreResult.UPDATE_TAGS, getTrack().getMediaStoreId());
                 }
             }
             else {
                 message = new ActionableMessage(NONE,R.string.could_not_correct_file,
                         input.data.getResultCorrection().getError().getMessage());
-                Track track = mDataTrackRepository.getTrack();
-                track.setProcessing(0);
-                mTrackRepository.update(track);
             }
             return message;
         });
         return mResultWriting;
     }
 
+    public LiveData<Message> observeMediaStoreResult() {
+        LiveData<MediaStoreResult> mediaStoreResultLiveData = mMediaStoreManager.observeMediaStoreResult();
+        mMediaStoreResult = Transformations.map(mediaStoreResultLiveData, input -> {
+
+            if(input.getTask() == MediaStoreResult.UPDATE_TAGS){
+                if(input.getTags() != null)
+                    mDataTrackRepository.updateTrack(input.getTags());
+            }
+            else {
+                if(input.getNewPath() != null)
+                    mDataTrackRepository.updateTrack(input.getNewPath());
+            }
+
+            return new Message(R.string.changes_applied);
+        });
+        return mMediaStoreResult;
+    }
+
     public LiveData<Message> observeRenamingResult() {
         LiveData<Resource<AudioTagger.ResultRename>> resultRename = mDataTrackRepository.getResultRename();
         mResultRenaming = Transformations.map(resultRename, input -> {
-            Message message;
+            Message message = null;
             if(input.status == Resource.Status.SUCCESS) {
-                message = new Message(R.string.changes_applied);
+                Map<FieldKey, Object> map = new ArrayMap<>();
+                map.put(FieldKey.CUSTOM1, input.data.getNewAbsolutePath());
+                mMediaStoreManager.updateMediaStore(map,
+                        MediaStoreResult.UPDATE_RENAMED_FILE, getTrack().getMediaStoreId());
             }
             else {
                 message = new Message(R.string.changes_partially_applied);
             }
-            Track track = mDataTrackRepository.getTrack();
-            track.setProcessing(0);
-            mTrackRepository.update(track);
 
             return message;
         });

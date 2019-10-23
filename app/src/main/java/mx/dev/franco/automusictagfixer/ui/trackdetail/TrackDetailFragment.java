@@ -140,6 +140,7 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
         mViewModel.observeWritingResult().observe(this, this::onWritingResult);
         mViewModel.observeRenamingResult().observe(this, this::onMessage);
         mViewModel.observeCoverSavingResult().observe(this, this::onActionableMessage);
+        mViewModel.observeMediaStoreResult().observe(this, this::onMessage);
         setHasOptionsMenu(true);
     }
 
@@ -797,6 +798,9 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
      */
     @Override
     protected void onMessage(Message message){
+        if(message == null)
+            return;
+
         Snackbar snackbar = AndroidUtils.createSnackbar(
             mFragmentTrackDetailBinding.rootContainerDetails,
             message
@@ -810,6 +814,9 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
      */
     @Override
     protected void onActionableMessage(ActionableMessage actionableMessage) {
+        if(actionableMessage == null)
+            return;
+
         Snackbar snackbar = AndroidUtils.createActionableSnackbar(
             mFragmentTrackDetailBinding.rootContainerDetails,
             actionableMessage,

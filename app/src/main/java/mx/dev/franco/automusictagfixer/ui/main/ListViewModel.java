@@ -4,6 +4,7 @@ import android.app.Application;
 
 import androidx.annotation.IntegerRes;
 import androidx.annotation.NonNull;
+import androidx.arch.core.util.Function;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
@@ -11,16 +12,20 @@ import androidx.lifecycle.Transformations;
 
 import java.util.List;
 
+import javax.annotation.Nonnull;
 import javax.inject.Inject;
 
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.fixer.AudioTagger;
+import mx.dev.franco.automusictagfixer.persistence.mediastore.MediaStoreManager;
 import mx.dev.franco.automusictagfixer.persistence.repository.TrackRepository;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.persistence.room.TrackState;
 import mx.dev.franco.automusictagfixer.services.FixerTrackService;
 import mx.dev.franco.automusictagfixer.ui.SingleLiveEvent;
 import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
+import mx.dev.franco.automusictagfixer.utilities.Constants;
+import mx.dev.franco.automusictagfixer.utilities.Message;
 import mx.dev.franco.automusictagfixer.utilities.Resource;
 import mx.dev.franco.automusictagfixer.utilities.ServiceUtils;
 import mx.dev.franco.automusictagfixer.utilities.shared_preferences.AbstractSharedPreferences;
@@ -48,15 +53,22 @@ public class ListViewModel extends AndroidViewModel {
 
     public AbstractSharedPreferences sharedPreferences;
     public ServiceUtils serviceUtils;
+    private MediaStoreManager mMediaStoreManager;
+    private AbstractSharedPreferences mAbstractSharedPreferences;
+    private LiveData<Message> mResultsAudioFilesMediaStore;
+
 
     @Inject
     public ListViewModel(@NonNull Application application, TrackRepository trackRepository,
-            AbstractSharedPreferences abstractSharedPreferences, ServiceUtils serviceUtils) {
+            AbstractSharedPreferences abstractSharedPreferences,
+                         ServiceUtils serviceUtils,
+                         @Nonnull MediaStoreManager mediaStoreManager) {
         super(application);
         this.trackRepository = trackRepository;
         this.sharedPreferences = abstractSharedPreferences;
         this.serviceUtils = serviceUtils;
-
+        mMediaStoreManager = mediaStoreManager;
+        mAbstractSharedPreferences = abstractSharedPreferences;
         mObservableProgress = trackRepository.observeProgress();
         mObservableMessage2 = trackRepository.observeMessage();
     }
@@ -113,6 +125,32 @@ public class ListViewModel extends AndroidViewModel {
             return mCurrentList;
         });
         return mTracks;
+    }
+
+    public LiveData<Message> observeSizeResultsMediaStore() {
+        LiveData<Resource<List<Track>>> resultsMediaStore = mMediaStoreManager.observeResult();
+        mResultsAudioFilesMediaStore = Transformations.map(resultsMediaStore, new Function<Resource<List<Track>>, Message>() {
+            @Override
+            public Message apply(Resource<List<Track>> input) {
+                Message message = null;
+                if(input.status == Resource.Status.SUCCESS) {
+                    //Save process of reading identificationCompleted and first time reading complete.
+                    mAbstractSharedPreferences.putBoolean("first_time_read", true);
+                    mAbstractSharedPreferences.putBoolean(Constants.COMPLETE_READ, true);
+                    if(input.data.size() > 0) {
+                        trackRepository.insert(input.data);
+                    }
+                    else {
+                        message = new Message(R.string.no_items_found);
+                    }
+                }
+                else {
+                    message = new Message(R.string.error);
+                }
+                return message;
+            }
+        });
+        return mResultsAudioFilesMediaStore;
     }
 
     /**
@@ -253,7 +291,6 @@ public class ListViewModel extends AndroidViewModel {
 
     /**
      * Verifies if an slot of SD card is present and if an SD card is inserted.
-     * @param context The context.
      */
     public void checkSdIsPresent() {
         boolean isPresentSD = AudioTagger.StorageHelper.getInstance(getApplication().getApplicationContext()).

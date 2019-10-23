@@ -1,12 +1,16 @@
 package mx.dev.franco.automusictagfixer.persistence.repository;
 
 import android.content.Context;
+import android.os.AsyncTask;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
+import org.jaudiotagger.tag.FieldKey;
+
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Executors;
 
 import javax.inject.Inject;
@@ -24,6 +28,7 @@ import mx.dev.franco.automusictagfixer.identifier.Identifier;
 import mx.dev.franco.automusictagfixer.interfaces.AsyncOperation;
 import mx.dev.franco.automusictagfixer.interfaces.Cache;
 import mx.dev.franco.automusictagfixer.persistence.cache.DownloadedTrackDataCacheImpl;
+import mx.dev.franco.automusictagfixer.persistence.repository.AsyncOperation.TrackUpdater;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.persistence.room.TrackRoomDatabase;
 import mx.dev.franco.automusictagfixer.ui.SingleLiveEvent;
@@ -155,6 +160,8 @@ public class DataTrackRepository {
      */
     public void renameFile(AudioMetadataTagger.InputParams correctionParams) {
         SemiAutoCorrectionParams uiInputParams = (SemiAutoCorrectionParams) correctionParams;
+        if(uiInputParams.renameFile() && uiInputParams.getNewName().isEmpty())
+
         mFileRenamer = new FileRenamer(new AsyncOperation<Track, AudioTagger.ResultRename, Track, AudioTagger.ResultRename>() {
             @Override
             public void onAsyncOperationStarted(Track params) {
@@ -231,5 +238,27 @@ public class DataTrackRepository {
 
     public void changeCover(ImageWrapper imageWrapper) {
 
+    }
+
+    public void updateTrack(Map<FieldKey, Object> tags) {
+        String title = (String) tags.get(FieldKey.TITLE);
+        String artist = (String) tags.get(FieldKey.ARTIST);
+        String album = (String) tags.get(FieldKey.ALBUM);
+
+        if (title != null && !title.isEmpty()) {
+            mTrack.setTitle(title);
+        }
+        if (artist != null && !artist.isEmpty()) {
+            mTrack.setArtist(artist);
+        }
+        if (album != null && !album.isEmpty()) {
+            mTrack.setAlbum(album);
+        }
+        new TrackUpdater(mTrackRoomDatabase.trackDao()).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,mTrack);
+    }
+
+    public void updateTrack(String newPath) {
+        mTrack.setPath(newPath);
+        new TrackUpdater(mTrackRoomDatabase.trackDao()).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,mTrack);
     }
 }

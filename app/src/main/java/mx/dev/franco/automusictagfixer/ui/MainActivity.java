@@ -30,6 +30,7 @@ import dagger.android.AndroidInjector;
 import dagger.android.DispatchingAndroidInjector;
 import dagger.android.support.HasSupportFragmentInjector;
 import mx.dev.franco.automusictagfixer.R;
+import mx.dev.franco.automusictagfixer.identifier.ApiInitializerService;
 import mx.dev.franco.automusictagfixer.interfaces.LongRunningTaskListener;
 import mx.dev.franco.automusictagfixer.interfaces.ProcessingListener;
 import mx.dev.franco.automusictagfixer.receivers.ResponseReceiver;
@@ -61,6 +62,8 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
     protected void onCreate(final Bundle savedInstanceState) {
         AndroidInjection.inject(this);
         super.onCreate(savedInstanceState);
+        Intent intent = new Intent(getApplicationContext(), ApiInitializerService.class);
+        startService(intent);
         //windows is the top level in the view hierarchy,
         //it has a single Surface in which the contents of the window is rendered
         //A Surface is an object holding pixels that are being composited to the screen.

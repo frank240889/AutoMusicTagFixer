@@ -15,6 +15,7 @@ import mx.dev.franco.automusictagfixer.ui.main.TrackAdapter;
 @Component(modules = {
         AndroidSupportInjectionModule.class,
         ApplicationModule.class,
+        MediaPlayerModule.class,
         ServiceModule.class,
         ServiceUtilsModule.class,
         ResourceManagerModule.class,

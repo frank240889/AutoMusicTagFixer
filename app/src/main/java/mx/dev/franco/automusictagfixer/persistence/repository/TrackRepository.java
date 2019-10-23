@@ -228,7 +228,7 @@ public class TrackRepository {
     }
 
     @SuppressWarnings("unchecked")
-    private void insert(List<Track> tracks) {
+    public void insert(List<Track> tracks) {
         new TrackInserter(mTrackDao).
                 executeOnExecutor(Executors.newCachedThreadPool(), tracks);
     }

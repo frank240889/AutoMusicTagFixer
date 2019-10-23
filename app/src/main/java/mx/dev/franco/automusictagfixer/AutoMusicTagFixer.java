@@ -3,7 +3,6 @@ package mx.dev.franco.automusictagfixer;
 import android.app.Activity;
 import android.app.Application;
 import android.app.Service;
-import android.content.Intent;
 
 import androidx.appcompat.app.AppCompatDelegate;
 
@@ -19,7 +18,6 @@ import dagger.android.HasActivityInjector;
 import dagger.android.HasServiceInjector;
 import io.fabric.sdk.android.Fabric;
 import mx.dev.franco.automusictagfixer.di.DaggerApplicationComponent;
-import mx.dev.franco.automusictagfixer.identifier.ApiInitializerService;
 
 
 /**
@@ -36,8 +34,6 @@ public final class AutoMusicTagFixer extends Application implements HasActivityI
     @Override
     public void onCreate() {
         super.onCreate();
-        Intent intent = new Intent(getApplicationContext(), ApiInitializerService.class);
-        startService(intent);
 
         DaggerApplicationComponent.builder()
             .application(this)
