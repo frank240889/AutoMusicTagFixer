@@ -157,7 +157,7 @@ public class CoverManager {
     }
 
 
-    static public CoverTask startFetchingCover(
+    public static CoverTask startFetchingCover(
             AudioHolder audioItemHolder, String path) {
 
         /*

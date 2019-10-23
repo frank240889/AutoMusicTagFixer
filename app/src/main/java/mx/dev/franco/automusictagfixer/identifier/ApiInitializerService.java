@@ -19,7 +19,6 @@ public class ApiInitializerService extends Service {
 
     @Override
     public void onCreate() {
-        GnApiService.getInstance(this);
         mThread = new Thread(() -> {
             GnApiService.getInstance(this).initializeAPI(null);
             Handler handler = new Handler(Looper.getMainLooper());
