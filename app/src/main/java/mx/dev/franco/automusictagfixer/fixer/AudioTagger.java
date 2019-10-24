@@ -1345,7 +1345,7 @@ public class AudioTagger {
      * the result of correction
      */
     public static class ResultCorrection extends AudioTaggerResult {
-        public Map<FieldKey, Object> tagsUpdated;
+        private Map<FieldKey, Object> tagsUpdated;
 
         public ResultCorrection(){}
 

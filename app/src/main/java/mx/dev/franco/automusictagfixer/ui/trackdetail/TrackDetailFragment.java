@@ -45,11 +45,11 @@ import mx.dev.franco.automusictagfixer.utilities.ActionableMessage;
 import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
 import mx.dev.franco.automusictagfixer.utilities.Constants.CorrectionActions;
-import mx.dev.franco.automusictagfixer.utilities.IdentificationType;
 import mx.dev.franco.automusictagfixer.utilities.Message;
 import mx.dev.franco.automusictagfixer.utilities.RequiredPermissions;
 import mx.dev.franco.automusictagfixer.utilities.SimpleMediaPlayer;
 import mx.dev.franco.automusictagfixer.utilities.SimpleMediaPlayer.OnMediaPlayerEventListener;
+import mx.dev.franco.automusictagfixer.utilities.SuccessIdentification;
 
 import static mx.dev.franco.automusictagfixer.utilities.Constants.GOOGLE_SEARCH;
 
@@ -133,7 +133,8 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
 
         mViewModel.observeActionableMessage().observe(this, this::onActionableMessage);
         mViewModel.observeMessage().observe(this, this::onMessage);
-        mViewModel.observeResultIdentification().observe(this, this::onIdentificationResults);
+        mViewModel.observeSuccessIdentification().observe(this, this::onIdentificationResults);
+        mViewModel.observeFailIdentification().observe(this, this::onMessage);
         mViewModel.observeLoadingState().observe(this, this::loading);
         mViewModel.observeConfirmationRemoveCover().observe(this, this::onConfirmRemovingCover);
         mViewModel.observeInvalidInputsValidation().observe(this, this::onInputDataInvalid);
@@ -874,24 +875,19 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
     }
 
 
-    private void onIdentificationResults(IdentificationType actionableMessage) {
-        if(actionableMessage != null && actionableMessage.getAction() != Action.SUCCESS_IDENTIFICATION)
-            return;
+    private void onIdentificationResults(SuccessIdentification successIdentification) {
+        if(successIdentification.getIdentificationType() == SuccessIdentification.ALL_TAGS){
+            SemiAutoCorrectionDialogFragment semiAutoCorrectionDialogFragment =
+                    SemiAutoCorrectionDialogFragment.newInstance(successIdentification.getMediaStoreId());
+            semiAutoCorrectionDialogFragment.show(getChildFragmentManager(),
+                    semiAutoCorrectionDialogFragment.getClass().getCanonicalName());
 
-        if (actionableMessage != null) {
-            if(actionableMessage.getIdentificationType() == IdentificationType.ALL_TAGS){
-                SemiAutoCorrectionDialogFragment semiAutoCorrectionDialogFragment =
-                        SemiAutoCorrectionDialogFragment.newInstance(mViewModel.getTrack().getMediaStoreId()+"");
-                semiAutoCorrectionDialogFragment.show(getChildFragmentManager(),
-                        semiAutoCorrectionDialogFragment.getClass().getCanonicalName());
-
-            }
-            else {
-                CoverIdentificationResultsFragmentBase coverIdentificationResultsFragmentBase =
-                        CoverIdentificationResultsFragmentBase.newInstance(mViewModel.getTrack().getMediaStoreId()+"");
-                coverIdentificationResultsFragmentBase.show(getChildFragmentManager(),
-                        coverIdentificationResultsFragmentBase.getClass().getCanonicalName());
-            }
+        }
+        else {
+            CoverIdentificationResultsFragmentBase coverIdentificationResultsFragmentBase =
+                    CoverIdentificationResultsFragmentBase.newInstance(successIdentification.getMediaStoreId());
+            coverIdentificationResultsFragmentBase.show(getChildFragmentManager(),
+                    coverIdentificationResultsFragmentBase.getClass().getCanonicalName());
         }
     }
 }

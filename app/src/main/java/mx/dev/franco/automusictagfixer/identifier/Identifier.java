@@ -41,4 +41,41 @@ public interface Identifier<I, R> {
      * Interface that implement the classes to hold the results.
      */
     interface IdentificationResults {}
+
+
+    enum IdentificationState {
+        STARTING_IDENTIFICATION,
+        IDENTIFICATION_FINISHED,
+        IDENTIFICATION_ERROR,
+        IDENTIFICATION_CANCELLED,
+        IDENTIFICATION_NOT_FOUND
+    }
+
+    class IdentificationStatus {
+        private IdentificationState identificationState;
+        private String message;
+
+        public IdentificationStatus() {}
+
+        public IdentificationStatus(IdentificationState identificationState, String message) {
+            this.identificationState = identificationState;
+            this.message = message;
+        }
+
+        public IdentificationState getIdentificationState() {
+            return identificationState;
+        }
+
+        public void setIdentificationState(IdentificationState identificationState) {
+            this.identificationState = identificationState;
+        }
+
+        public String getMessage() {
+            return message;
+        }
+
+        public void setMessage(String message) {
+            this.message = message;
+        }
+    }
 }

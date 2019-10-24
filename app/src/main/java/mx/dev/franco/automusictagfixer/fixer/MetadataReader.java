@@ -49,13 +49,22 @@ public class MetadataReader extends AbstractMetadataFixer<Void, Void, AudioTagge
     @Override
     protected void onPostExecute(AudioTagger.AudioFields audioFields) {
         if(mCallback != null) {
-            MetadataReaderResult readerResult = new MetadataReaderResult(track, audioFields);
-            if(audioFields.getCode() != AudioTagger.SUCCESS) {
+            MetadataReaderResult readerResult;
+            if(audioFields == null) {
+                audioFields = new AudioTagger.AudioFields(AudioTagger.COULD_NOT_READ_TAGS);
+                readerResult = new MetadataReaderResult(track, audioFields);
                 mCallback.onAsyncOperationError(readerResult);
             }
             else {
-                mCallback.onAsyncOperationFinished(readerResult);
+                readerResult = new MetadataReaderResult(track, audioFields);
+                if(audioFields.getCode() != AudioTagger.SUCCESS) {
+                    mCallback.onAsyncOperationError(readerResult);
+                }
+                else {
+                    mCallback.onAsyncOperationFinished(readerResult);
+                }
             }
+
         }
     }
 

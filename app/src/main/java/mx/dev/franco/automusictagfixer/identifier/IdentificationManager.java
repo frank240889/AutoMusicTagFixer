@@ -12,21 +12,20 @@ import java.util.List;
 import javax.inject.Inject;
 
 import mx.dev.franco.automusictagfixer.R;
-import mx.dev.franco.automusictagfixer.common.Action;
+import mx.dev.franco.automusictagfixer.identifier.Identifier.IdentificationListener;
+import mx.dev.franco.automusictagfixer.identifier.Identifier.IdentificationStatus;
 import mx.dev.franco.automusictagfixer.interfaces.Cache;
 import mx.dev.franco.automusictagfixer.persistence.cache.DownloadedTrackDataCacheImpl;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.ui.SingleLiveEvent;
-import mx.dev.franco.automusictagfixer.utilities.ActionableMessage;
-import mx.dev.franco.automusictagfixer.utilities.Resource;
 
 public class IdentificationManager {
 
     private MutableLiveData<Boolean> mLoadingStateLiveData;
-    private SingleLiveEvent<Resource<ActionableMessage>> mOnActionableMessage;
+    private SingleLiveEvent<IdentificationStatus> mOnSuccessIdentificationLiveData;
+    private SingleLiveEvent<IdentificationStatus> mOnFailIdentificationLiveData;
     private Identifier<Track, List<Identifier.IdentificationResults>> mIdentifier;
     private Cache<String, List<Identifier.IdentificationResults>> mResultsCache;
-    private IdentifierFactory identifierFactory;
     private boolean mIdentifying = false;
     private GnApiService mApiService;
     private Context mContext;
@@ -39,9 +38,9 @@ public class IdentificationManager {
         mApiService = gnApiService;
         mResultsCache = cache;
         mContext = context;
-        this.identifierFactory = identifierFactory;
         mIdentifier = identifierFactory.create(IdentifierFactory.FINGERPRINT_IDENTIFIER);
-        mOnActionableMessage = new SingleLiveEvent<>();
+        mOnSuccessIdentificationLiveData = new SingleLiveEvent<>();
+        mOnFailIdentificationLiveData = new SingleLiveEvent<>();
         mLoadingStateLiveData = new MutableLiveData<>();
     }
 
@@ -53,24 +52,30 @@ public class IdentificationManager {
         return mLoadingStateLiveData;
     }
 
-    public LiveData<Resource<ActionableMessage>> observeActionableMessage() {
-        return mOnActionableMessage;
+    public LiveData<IdentificationStatus> observeSuccessIdentification() {
+        return mOnSuccessIdentificationLiveData;
+    }
+
+    public LiveData<IdentificationStatus> observeFailIdentification() {
+        return mOnFailIdentificationLiveData;
     }
 
     public void startIdentification(Track track) {
         if(!mApiService.isApiInitialized()) {
             Intent intent = new Intent(mContext, ApiInitializerService.class);
             mContext.startService(intent);
-            mOnActionableMessage.setValue(Resource.error(new ActionableMessage(Action.RETRY_ON_ERROR, R.string.initializing_recognition_api)));
+            String msg = mContext.getString(R.string.initializing_recognition_api);
+            mOnFailIdentificationLiveData.setValue(new IdentificationStatus(Identifier.IdentificationState.IDENTIFICATION_ERROR, msg));
         }
         else if(mApiService.isApiInitializing()) {
-            mOnActionableMessage.setValue(Resource.error(new ActionableMessage(Action.RETRY_ON_ERROR, R.string.initializing_recognition_api)));
+            String msg = mContext.getString(R.string.initializing_recognition_api);
+            mOnFailIdentificationLiveData.setValue(new IdentificationStatus(Identifier.IdentificationState.IDENTIFICATION_ERROR, msg));
         }
         else {
             if(mIdentifying)
                 return;
 
-            mIdentifier.registerCallback(new Identifier.IdentificationListener<List<Identifier.IdentificationResults>, Track>() {
+            mIdentifier.registerCallback(new IdentificationListener<List<Identifier.IdentificationResults>, Track>() {
                 @Override
                 public void onIdentificationStart(Track file) {
                     mLoadingStateLiveData.setValue(true);
@@ -81,28 +86,31 @@ public class IdentificationManager {
                 public void onIdentificationFinished(List<Identifier.IdentificationResults> result, Track file) {
                     mLoadingStateLiveData.setValue(false);
                     mResultsCache.add(file.getMediaStoreId()+"", result);
-                    mOnActionableMessage.setValue(Resource.success(new ActionableMessage(Action.SUCCESS_IDENTIFICATION, null)));
+                    String msg = mContext.getString(R.string.complete_identification);
+                    mOnSuccessIdentificationLiveData.setValue(new IdentificationStatus(Identifier.IdentificationState.IDENTIFICATION_FINISHED, msg));
                     mIdentifying = false;
                 }
 
                 @Override
                 public void onIdentificationError(Track file, String error) {
                     mLoadingStateLiveData.setValue(false);
-                    mOnActionableMessage.setValue(Resource.error(new ActionableMessage(Action.RETRY_ON_ERROR, error)));
+                    mOnFailIdentificationLiveData.setValue(new IdentificationStatus(Identifier.IdentificationState.IDENTIFICATION_ERROR, error));
                     mIdentifying = false;
                 }
 
                 @Override
                 public void onIdentificationCancelled(Track file) {
                     mLoadingStateLiveData.setValue(false);
-                    mOnActionableMessage.setValue(Resource.cancelled(new ActionableMessage(Action.CANCELLED_IDENTIFICATION, R.string.identification_cancelled)));
+                    String msg = mContext.getString(R.string.identification_cancelled);
+                    mOnFailIdentificationLiveData.setValue(new IdentificationStatus(Identifier.IdentificationState.IDENTIFICATION_CANCELLED, msg));
                     mIdentifying = false;
                 }
 
                 @Override
                 public void onIdentificationNotFound(Track file) {
                     mLoadingStateLiveData.setValue(false);
-                    mOnActionableMessage.setValue(Resource.error(new ActionableMessage(Action.RETRY_IDENTIFICATION, R.string.no_found_tags)));
+                    String msg = mContext.getString(R.string.no_found_tags);
+                    mOnFailIdentificationLiveData.setValue(new IdentificationStatus(Identifier.IdentificationState.IDENTIFICATION_NOT_FOUND, msg));
                     mIdentifying = false;
                 }
             });

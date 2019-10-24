@@ -39,12 +39,9 @@ import mx.dev.franco.automusictagfixer.ui.SingleLiveEvent;
 import mx.dev.franco.automusictagfixer.utilities.ActionableMessage;
 import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
-import mx.dev.franco.automusictagfixer.utilities.IdentificationType;
 import mx.dev.franco.automusictagfixer.utilities.Message;
 import mx.dev.franco.automusictagfixer.utilities.Resource;
-
-import static mx.dev.franco.automusictagfixer.common.Action.NONE;
-import static mx.dev.franco.automusictagfixer.common.Action.SUCCESS_IDENTIFICATION;
+import mx.dev.franco.automusictagfixer.utilities.SuccessIdentification;
 
 public class TrackDetailViewModel extends AndroidViewModel {
 
@@ -78,9 +75,10 @@ public class TrackDetailViewModel extends AndroidViewModel {
     private SingleLiveEvent<Void> mLiveConfirmationDeleteCover = new SingleLiveEvent<>();
 
     private LiveData<Message> mResultReading;
-    private LiveData<ActionableMessage> mResultWriting;
+    private LiveData<Message> mResultWriting;
     private LiveData<Message> mResultRenaming;
-    private LiveData<IdentificationType> mResultsIdentificationLiveData;
+    private LiveData<SuccessIdentification> mResultsIdentificationLiveData;
+    private LiveData<Message> mFailIdentificationResults;
 
     private DataTrackRepository mDataTrackRepository;
     private IdentificationManager mIdentificationManager;
@@ -95,6 +93,7 @@ public class TrackDetailViewModel extends AndroidViewModel {
     private MediaStoreManager mMediaStoreManager;
     private LiveData<ActionableMessage> mResultFileSaving;
     private LiveData<Message> mMediaStoreResult;
+    private Track mTrack;
 
     @Inject
     public TrackDetailViewModel(@NonNull Application application,
@@ -167,10 +166,13 @@ public class TrackDetailViewModel extends AndroidViewModel {
         mResultReading = Transformations.map(resultReader, input -> {
             Message message = null;
             if(input.data.getFields().getCode() != AudioTagger.SUCCESS) {
-                message = new Message(R.string.could_not_read_file);
-                message.setDetails(input.data.getFields().getError().getMessage());
+                if(input.data.getFields().getError().getMessage() != null)
+                    message = new Message(input.data.getFields().getError().getMessage());
+                else
+                    message = new Message(R.string.could_not_read_file);
             }
             else {
+                mTrack = input.data.getTrack();
                 mAudioFields = input.data.getFields();
                 setEditableInfo(mAudioFields);
                 setNoEditableInfo(mAudioFields);
@@ -181,23 +183,35 @@ public class TrackDetailViewModel extends AndroidViewModel {
         return mResultReading;
     }
 
-    public LiveData<ActionableMessage> observeWritingResult() {
+    public LiveData<Message> observeWritingResult() {
         LiveData<Resource<MetadataWriterResult>> resultWriter = mDataTrackRepository.getResultWriter();
         mResultWriting = Transformations.map(resultWriter, input -> {
-            ActionableMessage message = null;
+            Message message = null;
             if(input.data.getResultCorrection().getCode() == AudioTagger.SUCCESS) {
+                //After applied tags check if rename file is set.
                 if(mCorrectionParams.renameFile()){
                     mDataTrackRepository.renameFile(mCorrectionParams);
                 }
                 else {
-                    if(input.data.getResultCorrection().getTagsUpdated() != null)
+                    //Update data in mediastore and wait for updating completion.
+                    if(input.data.getResultCorrection().getTagsUpdated() != null) {
                         mMediaStoreManager.updateMediaStore(input.data.getResultCorrection().getTagsUpdated(),
-                            MediaStoreResult.UPDATE_TAGS, getTrack().getMediaStoreId());
+                                MediaStoreResult.UPDATE_TAGS, getTrack().getMediaStoreId());
+                    }
+                    else {
+                        message = new Message(getApplication().getString(R.string.changes_applied));
+                    }
                 }
             }
             else {
-                message = new ActionableMessage(NONE,R.string.could_not_correct_file,
-                        input.data.getResultCorrection().getError().getMessage());
+                //Could not apply tags, send a message indicating that.
+                String err = "";
+                if(input.data.getResultCorrection().getError() != null &&
+                        input.data.getResultCorrection().getError().getMessage() != null)
+                    err = input.data.getResultCorrection().getError().getMessage();
+
+                String msg = getApplication().getString(R.string.message_could_not_apply_tags) + ": " + err;
+                message = new Message(msg);
             }
             return message;
         });
@@ -222,6 +236,9 @@ public class TrackDetailViewModel extends AndroidViewModel {
         return mMediaStoreResult;
     }
 
+
+    //Todo observe track updating in room
+
     public LiveData<Message> observeRenamingResult() {
         LiveData<Resource<AudioTagger.ResultRename>> resultRename = mDataTrackRepository.getResultRename();
         mResultRenaming = Transformations.map(resultRename, input -> {
@@ -245,30 +262,22 @@ public class TrackDetailViewModel extends AndroidViewModel {
      * Livedata to observe for identification tasks.
      * @return a Livedata holding the result.
      */
-    public LiveData<IdentificationType> observeResultIdentification() {
-        LiveData<Resource<ActionableMessage>> resultIdentification = mIdentificationManager.observeActionableMessage();
-        mResultsIdentificationLiveData = Transformations.map(resultIdentification, input -> {
-
-            if(input.data.getAction() == SUCCESS_IDENTIFICATION) {
-                IdentificationType identificationType = new IdentificationType();
-                identificationType.setAction(SUCCESS_IDENTIFICATION);
-                identificationType.setIdentificationType(mIdentificationParams.getIdentificationType());
-                return identificationType;
-            }
-            else {
-                if(input.status == Resource.Status.ERROR || input.status == Resource.Status.CANCELLED)  {
-                    IdentificationType identificationType = new IdentificationType();
-                    identificationType.setAction(NONE);
-                    identificationType.setIdentificationType(mIdentificationParams.getIdentificationType());
-                    identificationType.setMessage(input.data.getMessage());
-                    identificationType.setIdResourceMessage(input.data.getIdResourceMessage());
-                    mLiveActionableMessage.setValue(identificationType);
-                }
-            }
-
-            return null;
-        });
+    public LiveData<SuccessIdentification> observeSuccessIdentification() {
+        LiveData<Identifier.IdentificationStatus> resultIdentification = mIdentificationManager.observeSuccessIdentification();
+        mResultsIdentificationLiveData = Transformations.map(resultIdentification, input ->
+                new SuccessIdentification(mIdentificationParams.getIdentificationType(),
+                getTrack().getMediaStoreId()+""));
         return mResultsIdentificationLiveData;
+    }
+
+    /**
+     * Livedata to observe for identification tasks.
+     * @return a Livedata holding the result.
+     */
+    public LiveData<Message> observeFailIdentification() {
+        LiveData<Identifier.IdentificationStatus> resultIdentification = mIdentificationManager.observeFailIdentification();
+        mFailIdentificationResults = Transformations.map(resultIdentification, input -> new Message(input.getMessage()));
+        return mFailIdentificationResults;
     }
 
     public LiveData<ActionableMessage> observeCoverSavingResult() {
