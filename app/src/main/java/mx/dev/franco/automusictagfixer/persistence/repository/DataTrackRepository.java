@@ -5,6 +5,7 @@ import android.os.AsyncTask;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MediatorLiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import org.jaudiotagger.tag.FieldKey;
@@ -60,6 +61,9 @@ public class DataTrackRepository {
     private MutableLiveData<Boolean> mLoadingStateLiveData;
     //The cache where are stored temporally the identification results.
     private Cache<String, List<Identifier.IdentificationResults>> mResultsCache;
+    private LiveData<Track> mLiveTrack;
+    private SingleLiveEvent<Track> mSingleLiveEventTrack;
+    private MediatorLiveData<Track> mMediatorLiveDataTrack;
     /**
      * The context required by {@link #mMetadataWriter}
      */
@@ -86,6 +90,10 @@ public class DataTrackRepository {
         mMetadataWriterResultLiveData = new SingleLiveEvent<>();
         mFileRenamerLiveData = new SingleLiveEvent<>();
         mLoadingStateLiveData = new MutableLiveData<>();
+    }
+
+    public LiveData<Track> observeTrack() {
+        return mMediatorLiveDataTrack;
     }
 
     public LiveData<Resource<MetadataReaderResult>> getResultReader() {
