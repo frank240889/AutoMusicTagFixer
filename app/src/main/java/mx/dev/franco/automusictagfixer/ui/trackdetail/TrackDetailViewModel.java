@@ -32,7 +32,7 @@ import mx.dev.franco.automusictagfixer.identifier.Identifier;
 import mx.dev.franco.automusictagfixer.identifier.Result;
 import mx.dev.franco.automusictagfixer.persistence.mediastore.MediaStoreManager;
 import mx.dev.franco.automusictagfixer.persistence.mediastore.MediaStoreResult;
-import mx.dev.franco.automusictagfixer.persistence.repository.DataTrackRepository;
+import mx.dev.franco.automusictagfixer.persistence.repository.DataTrackManager;
 import mx.dev.franco.automusictagfixer.persistence.repository.TrackRepository;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.ui.SingleLiveEvent;
@@ -80,7 +80,7 @@ public class TrackDetailViewModel extends AndroidViewModel {
     private LiveData<SuccessIdentification> mResultsIdentificationLiveData;
     private LiveData<Message> mFailIdentificationResults;
 
-    private DataTrackRepository mDataTrackRepository;
+    private DataTrackManager mDataTrackManager;
     private IdentificationManager mIdentificationManager;
     private TrackRepository mTrackRepository;
 
@@ -93,18 +93,19 @@ public class TrackDetailViewModel extends AndroidViewModel {
     private MediaStoreManager mMediaStoreManager;
     private LiveData<ActionableMessage> mResultFileSaving;
     private LiveData<Message> mMediaStoreResult;
+    private LiveData<Track> mLiveDataTrack;
     private Track mTrack;
 
     @Inject
     public TrackDetailViewModel(@NonNull Application application,
-                                @NonNull DataTrackRepository dataTrackRepository,
+                                @NonNull DataTrackManager dataTrackManager,
                                 @Nonnull TrackRepository trackRepository,
                                 @NonNull IdentificationManager identificationManager,
                                 @Nonnull FileManager fileManager,
                                 @Nonnull MediaStoreManager mediaStoreManager) {
         super(application);
         mTrackRepository = trackRepository;
-        mDataTrackRepository = dataTrackRepository;
+        mDataTrackManager = dataTrackManager;
         mIdentificationManager = identificationManager;
         mFileManager = fileManager;
         mMediaStoreManager = mediaStoreManager;
@@ -131,7 +132,7 @@ public class TrackDetailViewModel extends AndroidViewModel {
         mStateMerger = new MediatorLiveData<>();
 
         //Merge state loading into one live data to observe.
-        LiveData<Boolean> stateTrackDataRepository = mDataTrackRepository.observeLoadingState();
+        LiveData<Boolean> stateTrackDataRepository = mDataTrackManager.observeLoadingState();
         LiveData<Boolean> identificationRepositoryState = mIdentificationManager.observeLoadingState();
         LiveData<Boolean> fileSaverResultState = mFileManager.observeLoadingState();
         LiveData<Boolean> mediaStoreManagerState = mMediaStoreManager.observeLoadingState();
@@ -162,7 +163,7 @@ public class TrackDetailViewModel extends AndroidViewModel {
      * @return Livedata holding a {@link Message} object or null.
      */
     public LiveData<Message> observeReadingResult() {
-        LiveData<Resource<MetadataReaderResult>> resultReader = mDataTrackRepository.getResultReader();
+        LiveData<Resource<MetadataReaderResult>> resultReader = mDataTrackManager.getResultReader();
         mResultReading = Transformations.map(resultReader, input -> {
             Message message = null;
             if(input.data.getFields().getCode() != AudioTagger.SUCCESS) {
@@ -184,19 +185,19 @@ public class TrackDetailViewModel extends AndroidViewModel {
     }
 
     public LiveData<Message> observeWritingResult() {
-        LiveData<Resource<MetadataWriterResult>> resultWriter = mDataTrackRepository.getResultWriter();
+        LiveData<Resource<MetadataWriterResult>> resultWriter = mDataTrackManager.getResultWriter();
         mResultWriting = Transformations.map(resultWriter, input -> {
             Message message = null;
             if(input.data.getResultCorrection().getCode() == AudioTagger.SUCCESS) {
                 //After applied tags check if rename file is set.
                 if(mCorrectionParams.renameFile()){
-                    mDataTrackRepository.renameFile(mCorrectionParams);
+                    mDataTrackManager.renameFile(mCorrectionParams);
                 }
                 else {
-                    //Update data in mediastore and wait for updating completion.
                     if(input.data.getResultCorrection().getTagsUpdated() != null) {
+                        mDataTrackManager.updateTrack(input.data.getResultCorrection().getTagsUpdated());
                         mMediaStoreManager.updateMediaStore(input.data.getResultCorrection().getTagsUpdated(),
-                                MediaStoreResult.UPDATE_TAGS, getTrack().getMediaStoreId());
+                                MediaStoreResult.UPDATE_TAGS, mTrack.getMediaStoreId());
                     }
                     else {
                         message = new Message(getApplication().getString(R.string.changes_applied));
@@ -218,36 +219,17 @@ public class TrackDetailViewModel extends AndroidViewModel {
         return mResultWriting;
     }
 
-    public LiveData<Message> observeMediaStoreResult() {
-        LiveData<MediaStoreResult> mediaStoreResultLiveData = mMediaStoreManager.observeMediaStoreResult();
-        mMediaStoreResult = Transformations.map(mediaStoreResultLiveData, input -> {
-
-            if(input.getTask() == MediaStoreResult.UPDATE_TAGS){
-                if(input.getTags() != null)
-                    mDataTrackRepository.updateTrack(input.getTags());
-            }
-            else {
-                if(input.getNewPath() != null)
-                    mDataTrackRepository.updateTrack(input.getNewPath());
-            }
-
-            return new Message(R.string.changes_applied);
-        });
-        return mMediaStoreResult;
-    }
-
-
-    //Todo observe track updating in room
-
     public LiveData<Message> observeRenamingResult() {
-        LiveData<Resource<AudioTagger.ResultRename>> resultRename = mDataTrackRepository.getResultRename();
+        LiveData<Resource<AudioTagger.ResultRename>> resultRename = mDataTrackManager.getResultRename();
         mResultRenaming = Transformations.map(resultRename, input -> {
             Message message = null;
             if(input.status == Resource.Status.SUCCESS) {
                 Map<FieldKey, Object> map = new ArrayMap<>();
                 map.put(FieldKey.CUSTOM1, input.data.getNewAbsolutePath());
+                mDataTrackManager.updateTrack(map);
                 mMediaStoreManager.updateMediaStore(map,
-                        MediaStoreResult.UPDATE_RENAMED_FILE, getTrack().getMediaStoreId());
+                        MediaStoreResult.UPDATE_RENAMED_FILE, mTrack.getMediaStoreId());
+                message = new Message(getApplication().getString(R.string.changes_applied));
             }
             else {
                 message = new Message(R.string.changes_partially_applied);
@@ -258,6 +240,16 @@ public class TrackDetailViewModel extends AndroidViewModel {
         return mResultRenaming;
     }
 
+    public LiveData<Track> observeTrack() {
+        LiveData<Track> trackLiveData = mDataTrackManager.observeTrack();
+        mLiveDataTrack = Transformations.map(trackLiveData, input -> {
+            mTrack = input;
+            mDataTrackManager.loadDataTrack(input);
+            return input;
+        });
+        return mLiveDataTrack;
+    }
+
     /**
      * Livedata to observe for identification tasks.
      * @return a Livedata holding the result.
@@ -266,7 +258,7 @@ public class TrackDetailViewModel extends AndroidViewModel {
         LiveData<Identifier.IdentificationStatus> resultIdentification = mIdentificationManager.observeSuccessIdentification();
         mResultsIdentificationLiveData = Transformations.map(resultIdentification, input ->
                 new SuccessIdentification(mIdentificationParams.getIdentificationType(),
-                getTrack().getMediaStoreId()+""));
+                mTrack.getMediaStoreId()+""));
         return mResultsIdentificationLiveData;
     }
 
@@ -326,7 +318,7 @@ public class TrackDetailViewModel extends AndroidViewModel {
      * @param trackId The id of track to load.
      */
     public void loadInfoTrack(int trackId) {
-        mDataTrackRepository.loadDataTrack(trackId);
+        mDataTrackManager.setId(trackId);
     }
 
     /**
@@ -342,7 +334,7 @@ public class TrackDetailViewModel extends AndroidViewModel {
             Map<FieldKey, Object> tags = new ArrayMap<>();
             tags.put(FieldKey.COVER_ART, AndroidUtils.generateCover(imageWrapper.bitmap));
             mCorrectionParams.setFields(tags);
-            mDataTrackRepository.performCorrection(mCorrectionParams);
+            mDataTrackManager.performCorrection(mCorrectionParams);
 
         } else {
             Message message = new Message(R.string.image_too_big);
@@ -355,12 +347,12 @@ public class TrackDetailViewModel extends AndroidViewModel {
      */
     public void confirmRemoveCover() {
         if(mAudioFields.getCover() != null) {
-            Track track = mDataTrackRepository.getTrack();
+            Track track = mTrack;
             track.setProcessing(1);
             mTrackRepository.update(track);
             mCorrectionParams = new CoverCorrectionParams();
             mCorrectionParams.setCodeRequest(AudioTagger.MODE_REMOVE_COVER);
-            mDataTrackRepository.removeCover(mCorrectionParams);
+            mDataTrackManager.removeCover(mCorrectionParams);
         }
         else {
             Message message = new Message(R.string.does_not_exist_cover);
@@ -382,16 +374,17 @@ public class TrackDetailViewModel extends AndroidViewModel {
      */
     public void performCorrection(InputCorrectionParams correctionParams) {
         mCorrectionParams = correctionParams;
+        mCorrectionParams.setTargetFile(mTrack.getPath());
         if(mCorrectionParams.getCorrectionMode() == Constants.MANUAL) {
             createAndValidateInputParams(mCorrectionParams);
         }
         else {
             //Get results from cache and make the correction.
-            List<Identifier.IdentificationResults> results = mIdentificationManager.getResult(getTrack().getMediaStoreId()+"");
+            List<Identifier.IdentificationResults> results = mIdentificationManager.getResult(mTrack.getMediaStoreId()+"");
             int id = Integer.parseInt(((SemiAutoCorrectionParams)correctionParams).getPosition());
             Result result = (Result) results.get(id);
             AndroidUtils.createInputParams(result, correctionParams);
-            mDataTrackRepository.performCorrection(correctionParams);
+            mDataTrackManager.performCorrection(correctionParams);
         }
     }
 
@@ -421,9 +414,9 @@ public class TrackDetailViewModel extends AndroidViewModel {
 
             AndroidUtils.createInputParams(title,
                     artist,album, genre, trackNumber, trackYear, cover, correctionParams);
-            correctionParams.setTargetFile(getTrack().getPath());
+            correctionParams.setTargetFile(mTrack.getPath());
             correctionParams.setCodeRequest(AudioTagger.MODE_OVERWRITE_ALL_TAGS);
-            mDataTrackRepository.performCorrection(correctionParams);
+            mDataTrackManager.performCorrection(correctionParams);
         }
         else {
             validationWrapper.setMessage(new Message(getApplication().getString(R.string.empty_tag)));
@@ -445,7 +438,7 @@ public class TrackDetailViewModel extends AndroidViewModel {
      */
     public void startIdentification(IdentificationParams identificationParams) {
         mIdentificationParams = identificationParams;
-        mIdentificationManager.startIdentification(mDataTrackRepository.getTrack());
+        mIdentificationManager.startIdentification(mTrack);
     }
 
     public void openInExternalApp(Context applicationContext) {
@@ -459,10 +452,6 @@ public class TrackDetailViewModel extends AndroidViewModel {
         else {
             mLiveMessage.setValue(new Message(R.string.does_not_exist_cover));
         }
-    }
-
-    public Track getTrack() {
-        return mDataTrackRepository.getTrack();
     }
 
     private void setNoEditableInfo(AudioTagger.AudioFields audioFields) {
@@ -569,7 +558,7 @@ public class TrackDetailViewModel extends AndroidViewModel {
     @Override
     protected void onCleared() {
         mIdentificationManager.cancelIdentification();
-        mDataTrackRepository.onCleared();
+        mDataTrackManager.onCleared();
     }
 
     public void saveChanges() {

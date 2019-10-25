@@ -94,6 +94,9 @@ public class AudioTagger {
     //No onIdentificationError is set
     public static final int NOT_SET = -1;
     private static final int SUCCESS_APPLY_COVER = 22;
+    private static final int APPLY_TAGS = 300;
+    private static final int APPLY_COVER = 301;
+    private static final int RENAME_FILE = 302;
 
     private Context mContext;
     private static final int BUFFER_SIZE = 131072;//->128Kb
@@ -282,7 +285,7 @@ public class AudioTagger {
                 Map<FieldKey, Object> tagsToUpdate = isNeededUpdateTags(overWriteTags,file, tags);
                 if(tagsToUpdate.isEmpty()){
                     resultCorrection = new ResultCorrection();
-                    resultCorrection.setCode(APPLIED_SAME_TAGS);
+                    resultCorrection.setCode(SUCCESS);
                 }
                 else {
                     resultCorrection = applyTagsForDocumentFileObject(file, tagsToUpdate, overWriteTags);
@@ -294,14 +297,14 @@ public class AudioTagger {
             Map<FieldKey, Object> tagsToUpdate = isNeededUpdateTags(overWriteTags,file, tags);
             if(tagsToUpdate.isEmpty()){
                 resultCorrection = new ResultCorrection();
-                resultCorrection.setCode(APPLIED_SAME_TAGS);
+                resultCorrection.setCode(SUCCESS);
             }
             else {
                 resultCorrection = applyTagsForFileObject(file, tagsToUpdate, overWriteTags);
             }
             resultCorrection.setTagsUpdated(tagsToUpdate);
         }
-
+        resultCorrection.setTaskExecuted(AudioTagger.APPLY_TAGS);
         return resultCorrection;
     }
 
@@ -894,7 +897,7 @@ public class AudioTagger {
                 resultCorrection = applyCoverForFileObject(coverToApply, file);
             }
         }
-
+        resultCorrection.setTaskExecuted(AudioTagger.APPLY_COVER);
         return resultCorrection;
     }
 
@@ -1307,10 +1310,18 @@ public class AudioTagger {
      * Generic class for operations result of {@link AudioTagger}
      */
     public static abstract class AudioTaggerResult {
+        private int taskExecuted;
         private int code;
         private Throwable throwable;
 
         AudioTaggerResult(){}
+
+        public AudioTaggerResult(int taskExecuted, int code, Throwable throwable) {
+            this();
+            this.taskExecuted = taskExecuted;
+            this.code = code;
+            this.throwable = throwable;
+        }
 
         public AudioTaggerResult(int code, Throwable throwable) {
             this();
@@ -1337,6 +1348,14 @@ public class AudioTagger {
 
         public void setError(Throwable throwable) {
             this.throwable = throwable;
+        }
+
+        public int getTaskExecuted() {
+            return taskExecuted;
+        }
+
+        public void setTaskExecuted(int taskExecuted) {
+            this.taskExecuted = taskExecuted;
         }
     }
 

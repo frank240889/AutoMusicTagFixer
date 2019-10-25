@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.view.View;
-import android.view.ViewTreeObserver;
 import android.widget.Button;
 import android.widget.FrameLayout;
 
@@ -31,7 +30,7 @@ public class CoverIdentificationResultsFragmentBase extends ResultsFragmentBase<
         void saveAsCover(CoverCorrectionParams coverCorrectionParams);
     }
     private OnCoverCorrectionListener mOnCoverCorrectionListener;
-    private int mCenteredItem;
+    private int mCenteredItem = 0;
     private CoverCorrectionParams mCoverCorrectionParams;
     CoverIdentificationResultsAdapter adapter;
     public CoverIdentificationResultsFragmentBase(){}
@@ -98,11 +97,15 @@ public class CoverIdentificationResultsFragmentBase extends ResultsFragmentBase<
 
 
 
-        saveAsCoverButton.setOnClickListener(v ->
-                mOnCoverCorrectionListener.saveAsCover(mCoverCorrectionParams));
+        saveAsCoverButton.setOnClickListener(v ->{
+                dismiss();
+                mCoverCorrectionParams.setPosition(mCenteredItem+"");
+                mOnCoverCorrectionListener.saveAsCover(mCoverCorrectionParams);});
 
-        saveAsImageFileButton.setOnClickListener(v ->
-                mOnCoverCorrectionListener.saveAsImageButton(mCoverCorrectionParams));
+        saveAsImageFileButton.setOnClickListener(v -> {
+                dismiss();
+                mCoverCorrectionParams.setPosition(mCenteredItem+"");
+                mOnCoverCorrectionListener.saveAsImageButton(mCoverCorrectionParams);});
     }
 
 

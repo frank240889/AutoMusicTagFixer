@@ -38,7 +38,7 @@ import mx.dev.franco.automusictagfixer.ui.trackdetail.InputCorrectionParams;
 import mx.dev.franco.automusictagfixer.ui.trackdetail.SemiAutoCorrectionParams;
 import mx.dev.franco.automusictagfixer.utilities.Resource;
 
-public class DataTrackRepository {
+public class DataTrackManager {
     //The information of track.
     private Track mTrack;
     //Helper object to read metadata asynchronously.
@@ -62,8 +62,8 @@ public class DataTrackRepository {
     //The cache where are stored temporally the identification results.
     private Cache<String, List<Identifier.IdentificationResults>> mResultsCache;
     private LiveData<Track> mLiveTrack;
-    private SingleLiveEvent<Track> mSingleLiveEventTrack;
-    private MediatorLiveData<Track> mMediatorLiveDataTrack;
+    private SingleLiveEvent<Track> mSingleLiveEventTrack = new SingleLiveEvent<>();
+    private MediatorLiveData<Track> mMediatorLiveDataTrack = new MediatorLiveData<>();
     /**
      * The context required by {@link #mMetadataWriter}
      */
@@ -77,10 +77,10 @@ public class DataTrackRepository {
      * @param context
      */
     @Inject
-    public DataTrackRepository(@NonNull AudioMetadataTagger fileTagger,
-                               @NonNull TrackRoomDatabase trackRoomDatabase,
-                               @NonNull DownloadedTrackDataCacheImpl cache,
-                               @NonNull Context context) {
+    public DataTrackManager(@NonNull AudioMetadataTagger fileTagger,
+                            @NonNull TrackRoomDatabase trackRoomDatabase,
+                            @NonNull DownloadedTrackDataCacheImpl cache,
+                            @NonNull Context context) {
         mMetadataTagger = fileTagger;
         mTrackRoomDatabase = trackRoomDatabase;
         mResultsCache = cache;
@@ -90,6 +90,16 @@ public class DataTrackRepository {
         mMetadataWriterResultLiveData = new SingleLiveEvent<>();
         mFileRenamerLiveData = new SingleLiveEvent<>();
         mLoadingStateLiveData = new MutableLiveData<>();
+    }
+
+    public void setId(int id) {
+        mLoadingStateLiveData.setValue(true);
+        LiveData<Track> liveTrack = mTrackRoomDatabase.trackDao().search(id);
+        mMediatorLiveDataTrack.addSource(liveTrack, track -> {
+            mTrack = track;
+            mLoadingStateLiveData.setValue(false);
+            mMediatorLiveDataTrack.setValue(track);
+        });
     }
 
     public LiveData<Track> observeTrack() {
@@ -112,8 +122,28 @@ public class DataTrackRepository {
         return mLoadingStateLiveData;
     }
 
-    public void loadDataTrack(int trackId) {
-        mTrackInformationLoader = new TrackInformationLoader(new AsyncOperation<Void, List<Track>, Void, Void>() {
+    public void loadDataTrack(Track track) {
+        mMetadataReader = new MetadataReader(new AsyncOperation<Track, MetadataReaderResult, Track, MetadataReaderResult>() {
+            @Override
+            public void onAsyncOperationStarted(Track params) {
+                mLoadingStateLiveData.setValue(true);
+            }
+
+            @Override
+            public void onAsyncOperationFinished(MetadataReaderResult result) {
+                mMetadataReaderResultLiveData.setValue(Resource.success(result));
+                mLoadingStateLiveData.setValue(false);
+            }
+
+            @Override
+            public void onAsyncOperationError(MetadataReaderResult error) {
+                mMetadataReaderResultLiveData.setValue(Resource.error(error));
+                mLoadingStateLiveData.setValue(false);
+            }
+        }, mMetadataTagger, track);
+
+        mMetadataReader.executeOnExecutor(Executors.newCachedThreadPool());
+        /*mTrackInformationLoader = new TrackInformationLoader(new AsyncOperation<Void, List<Track>, Void, Void>() {
 
             @Override
             public void onAsyncOperationStarted(Void params) {
@@ -129,17 +159,13 @@ public class DataTrackRepository {
             }
 
         }, mTrackRoomDatabase);
-        mTrackInformationLoader.executeOnExecutor(Executors.newCachedThreadPool(), trackId);
-    }
-
-    public Track getTrack() {
-        return new Track(mTrack);
+        mTrackInformationLoader.executeOnExecutor(Executors.newCachedThreadPool(), trackId);*/
     }
 
     /**
      * Read the metadata from audio track.
      */
-    private void readTrackInformation() {
+    /*private void readTrackInformation() {
         mMetadataReader = new MetadataReader(new AsyncOperation<Track, MetadataReaderResult, Track, MetadataReaderResult>() {
             @Override
             public void onAsyncOperationStarted(Track params) {
@@ -160,7 +186,7 @@ public class DataTrackRepository {
         }, mMetadataTagger, mTrack);
 
         mMetadataReader.executeOnExecutor(Executors.newCachedThreadPool());
-    }
+    }*/
 
     /**
      * Renames the audio file.
@@ -180,7 +206,7 @@ public class DataTrackRepository {
             public void onAsyncOperationFinished(AudioTagger.ResultRename result) {
                 mLoadingStateLiveData.setValue(false);
                 mFileRenamerLiveData.setValue(Resource.success(result));
-                loadDataTrack(mTrack.getMediaStoreId());
+                //loadDataTrack(mTrack.getMediaStoreId());
             }
 
             @Override
@@ -210,7 +236,7 @@ public class DataTrackRepository {
      * @param correctionParams The params required by {@link AudioTagger}
      */
     public void performCorrection(InputCorrectionParams correctionParams) {
-        correctionParams.setTargetFile(mTrack.getPath());
+        correctionParams.setTargetFile(correctionParams.getTargetFile());
         mMetadataWriter = new MetadataWriter(new AsyncOperation<Track, MetadataWriterResult, Track, MetadataWriterResult>() {
             @Override
             public void onAsyncOperationStarted(Track params) {
@@ -221,7 +247,7 @@ public class DataTrackRepository {
             public void onAsyncOperationFinished(MetadataWriterResult result) {
                 mLoadingStateLiveData.setValue(false);
                 mMetadataWriterResultLiveData.setValue(Resource.success(result));
-                loadDataTrack(mTrack.getMediaStoreId());
+                //loadDataTrack(mTrack.getMediaStoreId());
             }
 
             @Override

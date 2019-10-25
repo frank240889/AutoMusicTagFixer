@@ -24,6 +24,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.databinding.DataBindingUtil;
+import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
 
 import com.google.android.material.snackbar.Snackbar;
@@ -37,6 +38,7 @@ import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.common.Action;
 import mx.dev.franco.automusictagfixer.databinding.FragmentTrackDetailBinding;
 import mx.dev.franco.automusictagfixer.identifier.IdentificationParams;
+import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.ui.BaseFragment;
 import mx.dev.franco.automusictagfixer.ui.InformativeFragmentDialog;
 import mx.dev.franco.automusictagfixer.ui.MainActivity;
@@ -141,15 +143,20 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
         mViewModel.observeWritingResult().observe(this, this::onWritingResult);
         mViewModel.observeRenamingResult().observe(this, this::onMessage);
         mViewModel.observeCoverSavingResult().observe(this, this::onActionableMessage);
-        mViewModel.observeMediaStoreResult().observe(this, this::onMessage);
+        mViewModel.observeTrack().observe(this, new Observer<Track>() {
+            @Override
+            public void onChanged(Track track) {
+                mPlayer.setPath(track.getPath());
+            }
+        });
         setHasOptionsMenu(true);
     }
 
-    private void onWritingResult(ActionableMessage actionableMessage) {
+    private void onWritingResult(Message actionableMessage) {
         enableEditModeElements();
         showFabs();
         disableFields();
-        onActionableMessage(actionableMessage);
+        onMessage(actionableMessage);
     }
 
     @Override
@@ -336,7 +343,7 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
         addAppBarOffsetListener();
         addToolbarButtonsListeners();
         showFabs();
-        setupMediaPlayer();
+
 
         //Set action for "X" button
         mFragmentTrackDetailBinding.
@@ -582,13 +589,6 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
         //shrink toolbar to make it easy to user
         //focus in editing tags
         mFragmentTrackDetailBinding.appBarLayout.setExpanded(true);
-    }
-
-    /**
-     * Set the path to the current track for media playback.
-     */
-    private void setupMediaPlayer(){
-        mPlayer.setPath(mViewModel.getTrack().getPath());
     }
 
     /**
