@@ -2,6 +2,8 @@ package mx.dev.franco.automusictagfixer.ui.trackdetail;
 
 import android.app.Application;
 import android.content.Context;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.ArrayMap;
 
 import androidx.annotation.NonNull;
@@ -11,9 +13,16 @@ import androidx.lifecycle.MediatorLiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Transformations;
 
+import com.gracenote.gnsdk.GnAssetFetch;
+import com.gracenote.gnsdk.GnException;
+
 import org.jaudiotagger.tag.FieldKey;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import javax.annotation.Nonnull;
@@ -26,6 +35,7 @@ import mx.dev.franco.automusictagfixer.filemanager.ImageFileSaver;
 import mx.dev.franco.automusictagfixer.fixer.AudioTagger;
 import mx.dev.franco.automusictagfixer.fixer.MetadataReaderResult;
 import mx.dev.franco.automusictagfixer.fixer.MetadataWriterResult;
+import mx.dev.franco.automusictagfixer.identifier.GnApiService;
 import mx.dev.franco.automusictagfixer.identifier.IdentificationManager;
 import mx.dev.franco.automusictagfixer.identifier.IdentificationParams;
 import mx.dev.franco.automusictagfixer.identifier.Identifier;
@@ -200,6 +210,7 @@ public class TrackDetailViewModel extends AndroidViewModel {
                                 MediaStoreResult.UPDATE_TAGS, mTrack.getMediaStoreId());
                     }
                     else {
+                        mDataTrackManager.readAudioFile(mTrack);
                         message = new Message(getApplication().getString(R.string.changes_applied));
                     }
                 }
@@ -244,7 +255,7 @@ public class TrackDetailViewModel extends AndroidViewModel {
         LiveData<Track> trackLiveData = mDataTrackManager.observeTrack();
         mLiveDataTrack = Transformations.map(trackLiveData, input -> {
             mTrack = input;
-            mDataTrackManager.loadDataTrack(input);
+            mDataTrackManager.readAudioFile(input);
             return input;
         });
         return mLiveDataTrack;
@@ -330,11 +341,19 @@ public class TrackDetailViewModel extends AndroidViewModel {
             mCorrectionParams = new InputCorrectionParams();
             mCorrectionParams.setCorrectionMode(Constants.MANUAL);
             mCorrectionParams.setCodeRequest(AudioTagger.MODE_ADD_COVER);
+            mCorrectionParams.setTargetFile(mTrack.getPath());
             mCorrectionParams.setRenameFile(false);
             Map<FieldKey, Object> tags = new ArrayMap<>();
-            tags.put(FieldKey.COVER_ART, AndroidUtils.generateCover(imageWrapper.bitmap));
-            mCorrectionParams.setFields(tags);
-            mDataTrackManager.performCorrection(mCorrectionParams);
+            Thread thread = new Thread(() -> {
+                mStateMerger.postValue(true);
+                tags.put(FieldKey.COVER_ART, AndroidUtils.generateCover(imageWrapper.bitmap));
+                mStateMerger.postValue(false);
+                mCorrectionParams.setFields(tags);
+                Handler handler = new Handler(Looper.getMainLooper());
+                handler.post(() ->
+                        mDataTrackManager.performCorrection(mCorrectionParams));
+            });
+            thread.start();
 
         } else {
             Message message = new Message(R.string.image_too_big);
@@ -347,10 +366,8 @@ public class TrackDetailViewModel extends AndroidViewModel {
      */
     public void confirmRemoveCover() {
         if(mAudioFields.getCover() != null) {
-            Track track = mTrack;
-            track.setProcessing(1);
-            mTrackRepository.update(track);
             mCorrectionParams = new CoverCorrectionParams();
+            mCorrectionParams.setTargetFile(mTrack.getPath());
             mCorrectionParams.setCodeRequest(AudioTagger.MODE_REMOVE_COVER);
             mDataTrackManager.removeCover(mCorrectionParams);
         }
@@ -424,8 +441,23 @@ public class TrackDetailViewModel extends AndroidViewModel {
         }
     }
 
-    public void saveAsImageFileFrom(int cached) {
-
+    public void saveAsImageFileFrom(CoverCorrectionParams correctionParams) {
+        Thread thread = new Thread(() -> {
+            try {
+                byte[] cover = new GnAssetFetch(GnApiService.getInstance(getApplication()).getGnUser(),
+                        correctionParams.getGnImageSize()).data();
+                Handler handler = new Handler(Looper.getMainLooper());
+                handler.post(() -> {
+                    Date date = new Date();
+                    DateFormat now = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault());
+                    String newFilename = mAudioFields.getFileName() + "_" +now.format(date);
+                    mFileManager.saveFile(cover,  newFilename);
+                });
+            } catch (GnException e) {
+                e.printStackTrace();
+            }
+        });
+        thread.start();
     }
 
     public void restorePreviousValues() {

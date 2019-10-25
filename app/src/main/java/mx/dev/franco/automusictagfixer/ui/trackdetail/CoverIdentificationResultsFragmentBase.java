@@ -32,7 +32,7 @@ public class CoverIdentificationResultsFragmentBase extends ResultsFragmentBase<
     private OnCoverCorrectionListener mOnCoverCorrectionListener;
     private int mCenteredItem = 0;
     private CoverCorrectionParams mCoverCorrectionParams;
-    CoverIdentificationResultsAdapter adapter;
+    private CoverIdentificationResultsAdapter adapter;
     public CoverIdentificationResultsFragmentBase(){}
 
     public static CoverIdentificationResultsFragmentBase newInstance(String id) {
@@ -100,11 +100,13 @@ public class CoverIdentificationResultsFragmentBase extends ResultsFragmentBase<
         saveAsCoverButton.setOnClickListener(v ->{
                 dismiss();
                 mCoverCorrectionParams.setPosition(mCenteredItem+"");
+            mCoverCorrectionParams.setGnImageSize(mViewModel.getImageUrl(mCenteredItem));
                 mOnCoverCorrectionListener.saveAsCover(mCoverCorrectionParams);});
 
         saveAsImageFileButton.setOnClickListener(v -> {
                 dismiss();
                 mCoverCorrectionParams.setPosition(mCenteredItem+"");
+                mCoverCorrectionParams.setGnImageSize(mViewModel.getImageUrl(mCenteredItem));
                 mOnCoverCorrectionListener.saveAsImageButton(mCoverCorrectionParams);});
     }
 

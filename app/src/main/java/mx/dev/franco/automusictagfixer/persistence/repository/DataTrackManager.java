@@ -122,7 +122,7 @@ public class DataTrackManager {
         return mLoadingStateLiveData;
     }
 
-    public void loadDataTrack(Track track) {
+    public void readAudioFile(Track track) {
         mMetadataReader = new MetadataReader(new AsyncOperation<Track, MetadataReaderResult, Track, MetadataReaderResult>() {
             @Override
             public void onAsyncOperationStarted(Track params) {
@@ -206,7 +206,7 @@ public class DataTrackManager {
             public void onAsyncOperationFinished(AudioTagger.ResultRename result) {
                 mLoadingStateLiveData.setValue(false);
                 mFileRenamerLiveData.setValue(Resource.success(result));
-                //loadDataTrack(mTrack.getMediaStoreId());
+                //readAudioFile(mTrack.getMediaStoreId());
             }
 
             @Override
@@ -247,7 +247,7 @@ public class DataTrackManager {
             public void onAsyncOperationFinished(MetadataWriterResult result) {
                 mLoadingStateLiveData.setValue(false);
                 mMetadataWriterResultLiveData.setValue(Resource.success(result));
-                //loadDataTrack(mTrack.getMediaStoreId());
+                //readAudioFile(mTrack.getMediaStoreId());
             }
 
             @Override

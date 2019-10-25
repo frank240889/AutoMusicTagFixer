@@ -383,16 +383,12 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
 
     @Override
     public void saveAsImageButton(CoverCorrectionParams coverCorrectionParams) {
-        mViewModel.performCorrection(coverCorrectionParams);
+        mViewModel.saveAsImageFileFrom(coverCorrectionParams);
     }
 
     @Override
     public void saveAsCover(CoverCorrectionParams coverCorrectionParams) {
         mViewModel.performCorrection(coverCorrectionParams);
-    }
-    
-    public void onSaveAsImageFile() {
-        mViewModel.saveAsImageFileFrom(Constants.CACHED);
     }
 
     /**
