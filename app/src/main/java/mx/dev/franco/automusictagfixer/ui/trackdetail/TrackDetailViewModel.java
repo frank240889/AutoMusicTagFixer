@@ -43,7 +43,6 @@ import mx.dev.franco.automusictagfixer.identifier.Result;
 import mx.dev.franco.automusictagfixer.persistence.mediastore.MediaStoreManager;
 import mx.dev.franco.automusictagfixer.persistence.mediastore.MediaStoreResult;
 import mx.dev.franco.automusictagfixer.persistence.repository.DataTrackManager;
-import mx.dev.franco.automusictagfixer.persistence.repository.TrackRepository;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.ui.SingleLiveEvent;
 import mx.dev.franco.automusictagfixer.utilities.ActionableMessage;
@@ -92,7 +91,6 @@ public class TrackDetailViewModel extends AndroidViewModel {
 
     private DataTrackManager mDataTrackManager;
     private IdentificationManager mIdentificationManager;
-    private TrackRepository mTrackRepository;
 
     private AudioTagger.AudioFields mAudioFields;
 
@@ -102,19 +100,16 @@ public class TrackDetailViewModel extends AndroidViewModel {
     private FileManager mFileManager;
     private MediaStoreManager mMediaStoreManager;
     private LiveData<ActionableMessage> mResultFileSaving;
-    private LiveData<Message> mMediaStoreResult;
     private LiveData<Track> mLiveDataTrack;
     private Track mTrack;
 
     @Inject
     public TrackDetailViewModel(@NonNull Application application,
                                 @NonNull DataTrackManager dataTrackManager,
-                                @Nonnull TrackRepository trackRepository,
                                 @NonNull IdentificationManager identificationManager,
                                 @Nonnull FileManager fileManager,
                                 @Nonnull MediaStoreManager mediaStoreManager) {
         super(application);
-        mTrackRepository = trackRepository;
         mDataTrackManager = dataTrackManager;
         mIdentificationManager = identificationManager;
         mFileManager = fileManager;
