@@ -24,7 +24,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.databinding.DataBindingUtil;
-import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
 
 import com.google.android.material.snackbar.Snackbar;
@@ -38,7 +37,6 @@ import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.common.Action;
 import mx.dev.franco.automusictagfixer.databinding.FragmentTrackDetailBinding;
 import mx.dev.franco.automusictagfixer.identifier.IdentificationParams;
-import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.ui.BaseFragment;
 import mx.dev.franco.automusictagfixer.ui.InformativeFragmentDialog;
 import mx.dev.franco.automusictagfixer.ui.MainActivity;
@@ -133,22 +131,18 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
             }
         });
 
-        mViewModel.observeActionableMessage().observe(this, this::onActionableMessage);
-        mViewModel.observeMessage().observe(this, this::onMessage);
-        mViewModel.observeSuccessIdentification().observe(this, this::onIdentificationResults);
-        mViewModel.observeFailIdentification().observe(this, this::onMessage);
+        mViewModel.observeActionableMessage().observe(getActivity(), this::onActionableMessage);
+        mViewModel.observeMessage().observe(getActivity(), this::onMessage);
+        mViewModel.observeSuccessIdentification().observe(getActivity(), this::onIdentificationResults);
+        mViewModel.observeCachedIdentification().observe(getActivity(), this::onIdentificationResults);
+        mViewModel.observeFailIdentification().observe(getActivity(), this::onMessage);
         mViewModel.observeLoadingState().observe(this, this::loading);
-        mViewModel.observeConfirmationRemoveCover().observe(this, this::onConfirmRemovingCover);
-        mViewModel.observeInvalidInputsValidation().observe(this, this::onInputDataInvalid);
-        mViewModel.observeWritingResult().observe(this, this::onWritingResult);
-        mViewModel.observeRenamingResult().observe(this, this::onMessage);
-        mViewModel.observeCoverSavingResult().observe(this, this::onActionableMessage);
-        mViewModel.observeTrack().observe(this, new Observer<Track>() {
-            @Override
-            public void onChanged(Track track) {
-                mPlayer.setPath(track.getPath());
-            }
-        });
+        mViewModel.observeConfirmationRemoveCover().observe(getActivity(), this::onConfirmRemovingCover);
+        mViewModel.observeInvalidInputsValidation().observe(getActivity(), this::onInputDataInvalid);
+        mViewModel.observeWritingResult().observe(getActivity(), this::onWritingResult);
+        mViewModel.observeRenamingResult().observe(getActivity(), this::onMessage);
+        mViewModel.observeCoverSavingResult().observe(getActivity(), this::onActionableMessage);
+        mViewModel.observeTrack().observe(this, track -> mPlayer.setPath(track.getPath()));
         setHasOptionsMenu(true);
     }
 
@@ -766,7 +760,7 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
                     }
                 }
                 else {
-                    mViewModel.openInExternalApp(getActivity().getApplicationContext());
+                    //mViewModel.openInExternalApp(getActivity().getApplicationContext());
                 }
             return false;
         });

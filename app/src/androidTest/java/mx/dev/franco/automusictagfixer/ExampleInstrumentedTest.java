@@ -24,16 +24,16 @@ public class ExampleInstrumentedTest {
         String abs = file.getAbsolutePath() + "/6_AM.MP3";
         GnApiService.init(InstrumentationRegistry.getTargetContext().getApplicationContext());
         IdentifierFactory factory = new IdentifierFactory(GnApiService.getInstance(), null);
-        Identifier<Track, List<GnIdentifier.IdentificationResults>> identifier = factory.create(IdentifierFactory.FINGERPRINT_IDENTIFIER);
+        Identifier<Track, List<AudioFingerprintIdentifier.IdentificationResults>> identifier = factory.create(IdentifierFactory.FINGERPRINT_IDENTIFIER);
         Track track = new Track("Me faltas tu", "Los temerarios", "", abs);
-        identifier.registerCallback(new Identifier.IdentificationListener<List<GnIdentifier.IdentificationResults>, Track>() {
+        identifier.registerCallback(new Identifier.IdentificationListener<List<AudioFingerprintIdentifier.IdentificationResults>, Track>() {
             @Override
             public void onIdentificationStart(Track file) {
 
             }
 
             @Override
-            public void onIdentificationFinished(List<GnIdentifier.IdentificationResults> result) {
+            public void onIdentificationFinished(List<AudioFingerprintIdentifier.IdentificationResults> result) {
 
             }
 

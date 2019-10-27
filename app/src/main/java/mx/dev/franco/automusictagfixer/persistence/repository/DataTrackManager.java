@@ -28,7 +28,7 @@ import mx.dev.franco.automusictagfixer.fixer.TrackInformationLoader;
 import mx.dev.franco.automusictagfixer.identifier.Identifier;
 import mx.dev.franco.automusictagfixer.interfaces.AsyncOperation;
 import mx.dev.franco.automusictagfixer.interfaces.Cache;
-import mx.dev.franco.automusictagfixer.persistence.cache.DownloadedTrackDataCacheImpl;
+import mx.dev.franco.automusictagfixer.persistence.cache.IdentificationResultsCache;
 import mx.dev.franco.automusictagfixer.persistence.repository.AsyncOperation.TrackUpdater;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.persistence.room.TrackRoomDatabase;
@@ -79,7 +79,7 @@ public class DataTrackManager {
     @Inject
     public DataTrackManager(@NonNull AudioMetadataTagger fileTagger,
                             @NonNull TrackRoomDatabase trackRoomDatabase,
-                            @NonNull DownloadedTrackDataCacheImpl cache,
+                            @NonNull IdentificationResultsCache cache,
                             @NonNull Context context) {
         mMetadataTagger = fileTagger;
         mTrackRoomDatabase = trackRoomDatabase;

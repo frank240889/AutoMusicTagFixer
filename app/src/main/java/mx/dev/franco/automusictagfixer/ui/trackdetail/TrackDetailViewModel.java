@@ -1,12 +1,12 @@
 package mx.dev.franco.automusictagfixer.ui.trackdetail;
 
 import android.app.Application;
-import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.ArrayMap;
 
 import androidx.annotation.NonNull;
+import androidx.arch.core.util.Function;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MediatorLiveData;
@@ -21,7 +21,6 @@ import org.jaudiotagger.tag.FieldKey;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -35,11 +34,12 @@ import mx.dev.franco.automusictagfixer.filemanager.ImageFileSaver;
 import mx.dev.franco.automusictagfixer.fixer.AudioTagger;
 import mx.dev.franco.automusictagfixer.fixer.MetadataReaderResult;
 import mx.dev.franco.automusictagfixer.fixer.MetadataWriterResult;
+import mx.dev.franco.automusictagfixer.identifier.CoverIdentificationResult;
 import mx.dev.franco.automusictagfixer.identifier.GnApiService;
 import mx.dev.franco.automusictagfixer.identifier.IdentificationManager;
 import mx.dev.franco.automusictagfixer.identifier.IdentificationParams;
 import mx.dev.franco.automusictagfixer.identifier.Identifier;
-import mx.dev.franco.automusictagfixer.identifier.Result;
+import mx.dev.franco.automusictagfixer.identifier.TrackIdentificationResult;
 import mx.dev.franco.automusictagfixer.persistence.mediastore.MediaStoreManager;
 import mx.dev.franco.automusictagfixer.persistence.mediastore.MediaStoreResult;
 import mx.dev.franco.automusictagfixer.persistence.repository.DataTrackManager;
@@ -87,6 +87,7 @@ public class TrackDetailViewModel extends AndroidViewModel {
     private LiveData<Message> mResultWriting;
     private LiveData<Message> mResultRenaming;
     private LiveData<SuccessIdentification> mResultsIdentificationLiveData;
+    private SingleLiveEvent<SuccessIdentification> mCachedResultsIdentificationLiveData;
     private LiveData<Message> mFailIdentificationResults;
 
     private DataTrackManager mDataTrackManager;
@@ -134,6 +135,8 @@ public class TrackDetailViewModel extends AndroidViewModel {
         length = new MutableLiveData<>();
         absolutePath = new MutableLiveData<>();
 
+
+        mCachedResultsIdentificationLiveData = new SingleLiveEvent<>();
         mStateMerger = new MediatorLiveData<>();
 
         //Merge state loading into one live data to observe.
@@ -262,10 +265,22 @@ public class TrackDetailViewModel extends AndroidViewModel {
      */
     public LiveData<SuccessIdentification> observeSuccessIdentification() {
         LiveData<Identifier.IdentificationStatus> resultIdentification = mIdentificationManager.observeSuccessIdentification();
-        mResultsIdentificationLiveData = Transformations.map(resultIdentification, input ->
-                new SuccessIdentification(mIdentificationParams.getIdentificationType(),
-                mTrack.getMediaStoreId()+""));
+        mResultsIdentificationLiveData = Transformations.map(resultIdentification, new Function<Identifier.IdentificationStatus, SuccessIdentification>() {
+            @Override
+            public SuccessIdentification apply(Identifier.IdentificationStatus input) {
+                return new SuccessIdentification(mIdentificationParams.getIdentificationType(),
+                        mTrack.getMediaStoreId() + "");
+            }
+        });
         return mResultsIdentificationLiveData;
+    }
+
+    /**
+     * Livedata to observe for identification tasks.
+     * @return a Livedata holding the result.
+     */
+    public LiveData<SuccessIdentification> observeCachedIdentification() {
+        return mCachedResultsIdentificationLiveData;
     }
 
     /**
@@ -391,13 +406,32 @@ public class TrackDetailViewModel extends AndroidViewModel {
             createAndValidateInputParams(mCorrectionParams);
         }
         else {
-            //Get results from cache and make the correction.
-            List<Identifier.IdentificationResults> results = mIdentificationManager.getResult(mTrack.getMediaStoreId()+"");
-            int id = Integer.parseInt(((SemiAutoCorrectionParams)correctionParams).getPosition());
-            Result result = (Result) results.get(id);
-            AndroidUtils.createInputParams(result, correctionParams);
-            mDataTrackManager.performCorrection(correctionParams);
+            int codeRequest = mCorrectionParams.getCorrectionMode();
+
+            switch (codeRequest) {
+                case AudioTagger.MODE_ADD_COVER:
+                    processAddCover(mCorrectionParams);
+                    break;
+                case AudioTagger.MODE_OVERWRITE_ALL_TAGS:
+                case AudioTagger.MODE_WRITE_ONLY_MISSING:
+                    processApplyTags(mCorrectionParams);
+                    processAddCover(mCorrectionParams);
+                    break;
+            }
+            mDataTrackManager.performCorrection(mCorrectionParams);
         }
+    }
+
+    private void processAddCover(InputCorrectionParams correctionParam) {
+        String coverId = correctionParam.getCoverId();
+        CoverIdentificationResult result = mIdentificationManager.getCoverResult(mTrack.getMediaStoreId()+"", coverId);
+        AndroidUtils.createCoverInputParams(result, correctionParam);
+    }
+
+    private void processApplyTags(InputCorrectionParams correctionParams) {
+        String trackId = correctionParams.getTrackId();
+        TrackIdentificationResult result = mIdentificationManager.getTrackResult(mTrack.getMediaStoreId()+"", trackId);
+        AndroidUtils.createInputParams(result, correctionParams);
     }
 
     private void createAndValidateInputParams(InputCorrectionParams correctionParams){
@@ -465,11 +499,26 @@ public class TrackDetailViewModel extends AndroidViewModel {
      */
     public void startIdentification(IdentificationParams identificationParams) {
         mIdentificationParams = identificationParams;
-        mIdentificationManager.startIdentification(mTrack);
-    }
 
-    public void openInExternalApp(Context applicationContext) {
-
+        if(mIdentificationParams.getIdentificationType() == IdentificationParams.ONLY_COVER) {
+            if(mIdentificationManager.getCoverListResult(mTrack.getMediaStoreId()+"") != null &&
+                    mIdentificationManager.getCoverListResult(mTrack.getMediaStoreId()+"").size() > 0) {
+                mCachedResultsIdentificationLiveData.setValue(new SuccessIdentification(mIdentificationParams.getIdentificationType(),
+                        mTrack.getMediaStoreId() + ""));
+            }
+            else {
+                mIdentificationManager.startIdentification(mTrack);
+            }
+        }
+        else {
+            if(mIdentificationManager.getTrackListResult(mTrack.getMediaStoreId()+"") != null &&
+                mIdentificationManager.getTrackListResult(mTrack.getMediaStoreId()+"").size() > 0) {
+                mCachedResultsIdentificationLiveData.setValue(new SuccessIdentification(mIdentificationParams.getIdentificationType(),
+                        mTrack.getMediaStoreId() + ""));
+            } else {
+                    mIdentificationManager.startIdentification(mTrack);
+            }
+        }
     }
 
     public void removeCover() {

@@ -40,7 +40,17 @@ public interface Identifier<I, R> {
     /**
      * Interface that implement the classes to hold the results.
      */
-    interface IdentificationResults {}
+    abstract class IdentificationResults {
+        private String id;
+
+        public String getId() {
+            return id;
+        }
+
+        public void setId(String id) {
+            this.id = id;
+        }
+    }
 
 
     enum IdentificationState {

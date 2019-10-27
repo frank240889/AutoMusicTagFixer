@@ -39,8 +39,8 @@ import mx.dev.franco.automusictagfixer.fixer.MetadataWriter;
 import mx.dev.franco.automusictagfixer.fixer.MetadataWriterResult;
 import mx.dev.franco.automusictagfixer.fixer.TrackIdLoader;
 import mx.dev.franco.automusictagfixer.fixer.TrackInformationLoader;
+import mx.dev.franco.automusictagfixer.identifier.AudioFingerprintIdentifier;
 import mx.dev.franco.automusictagfixer.identifier.GnApiService;
-import mx.dev.franco.automusictagfixer.identifier.GnIdentifier;
 import mx.dev.franco.automusictagfixer.identifier.Identifier;
 import mx.dev.franco.automusictagfixer.interfaces.AsyncOperation;
 import mx.dev.franco.automusictagfixer.persistence.repository.TrackRepository;
@@ -247,7 +247,7 @@ public class FixerTrackService extends Service {
                 identificationError(getString(R.string.could_not_read_file), data.get(0));
             }
             else {
-                mIdentifier = new GnIdentifier(mGnApiService, mSharedPreferences);
+                mIdentifier = new AudioFingerprintIdentifier(mGnApiService, mResourceManager);
                 mIdentifier.registerCallback(new Identifier.IdentificationListener<List<Identifier.IdentificationResults>, Track>() {
                     @Override
                     public void onIdentificationStart(Track file) {

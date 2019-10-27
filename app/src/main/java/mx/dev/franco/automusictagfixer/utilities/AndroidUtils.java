@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -31,6 +32,8 @@ import org.jaudiotagger.tag.FieldKey;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -40,9 +43,11 @@ import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.common.Action;
 import mx.dev.franco.automusictagfixer.fixer.AudioMetadataTagger;
 import mx.dev.franco.automusictagfixer.fixer.AudioTagger;
+import mx.dev.franco.automusictagfixer.identifier.CoverIdentificationResult;
 import mx.dev.franco.automusictagfixer.identifier.GnApiService;
 import mx.dev.franco.automusictagfixer.identifier.Identifier;
 import mx.dev.franco.automusictagfixer.identifier.Result;
+import mx.dev.franco.automusictagfixer.identifier.TrackIdentificationResult;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.ui.trackdetail.InputCorrectionParams;
 import mx.dev.franco.automusictagfixer.utilities.Constants.CorrectionActions;
@@ -225,6 +230,10 @@ public class AndroidUtils {
         return byteArrayOutputStream.toByteArray();
     }
 
+    public static Bitmap generateBitmap(byte[] data) {
+        return BitmapFactory.decodeByteArray(data, 0, data.length - 1, null);
+    }
+
     public static Bundle getBundle(int idTrack, int correctionMode){
         Bundle bundle = new Bundle();
         bundle.putInt(Constants.MEDIA_STORE_ID, idTrack);
@@ -346,7 +355,7 @@ public class AndroidUtils {
 
     public static void createInputParams(Identifier.IdentificationResults result,
                                                           InputCorrectionParams correctionParams) {
-        Result r = (Result) result;
+        TrackIdentificationResult r = (TrackIdentificationResult) result;
         Map<FieldKey, Object> tags = new ArrayMap<>();
         if(!r.getTitle().isEmpty())
             tags.put(FieldKey.TITLE, r.getTitle());
@@ -366,34 +375,13 @@ public class AndroidUtils {
         if(!r.getTrackNumber().isEmpty())
             tags.put(FieldKey.TRACK, r.getTrackNumber());
 
-        Map<GnImageSize, String> covers = r.getCovers();
+        correctionParams.setFields(tags);
+    }
 
-        String coverUrl = null;
-        if(covers.size() > 0) {
-
-            //If is selected "De mejor calidad disponible"
-            //iterate from higher to lower quality and select the first higher quality identificationFound.
-            if (Settings.SETTING_SIZE_ALBUM_ART == GnImageSize.kImageSizeXLarge) {
-                coverUrl = getBetterQualityCover(covers);
-                if(coverUrl != null)
-                    tags.put(FieldKey.COVER_ART, coverUrl);
-            }
-            //If is selected "De menor calidad disponible"
-            //iterate from lower to higher quality and select the first lower quality identificationFound.
-            else if (Settings.SETTING_SIZE_ALBUM_ART == GnImageSize.kImageSizeThumbnail) {
-                coverUrl = getLowestQualityCover(covers);
-                if(coverUrl != null)
-                    tags.put(FieldKey.COVER_ART, coverUrl);
-            }
-            //get the first identificationFound in any of those predefined sizes:
-            //"De baja calidad", "De media calidad", "De alta calidad", "De muy alta calidad"
-            else {
-                coverUrl = covers.get(Settings.SETTING_SIZE_ALBUM_ART);
-                if(coverUrl != null)
-                    tags.put(FieldKey.COVER_ART, coverUrl);
-            }
-        }
-
+    public static void createCoverInputParams(CoverIdentificationResult r,
+                                         InputCorrectionParams correctionParams) {
+        Map<FieldKey, Object> tags = new ArrayMap<>();
+        tags.put(FieldKey.COVER_ART, r.getCover());
         correctionParams.setFields(tags);
     }
 
@@ -485,5 +473,33 @@ public class AndroidUtils {
 
     private static byte[] getAsset(String value, Context context) throws GnException {
         return new GnAssetFetch(GnApiService.getInstance(context).getGnUser(), value).data();
+    }
+
+    public static final TrackIdentificationResult createTrackResult(Result result) {
+        return new TrackIdentificationResult(result.getTitle(),
+                result.getArtist(),
+                result.getAlbum(),
+                result.getTrackNumber(),
+                result.getTrackYear(),
+                result.getGenre());
+    }
+
+    public static final List<CoverIdentificationResult> createListCoverResult(Result result, Context context) {
+        List<CoverIdentificationResult> c = new ArrayList<>();
+        Map<GnImageSize, String> covers = result.getCovers();
+        Set<Map.Entry<GnImageSize, String>> entries = covers.entrySet();
+        for(Map.Entry<GnImageSize, String> entry : entries){
+            try {
+                byte[] cover = getAsset(entry.getValue(), context);
+                Bitmap bitmap = generateBitmap(cover);
+                String size = bitmap.getWidth() + " * " + bitmap.getHeight();
+                CoverIdentificationResult coverIdentificationResult = new CoverIdentificationResult(cover, size, entry.getKey());
+                coverIdentificationResult.setId(result.getId());
+                c.add(coverIdentificationResult);
+            } catch (IllegalArgumentException | GnException e) {
+                e.printStackTrace();
+            }
+        }
+        return c;
     }
 }

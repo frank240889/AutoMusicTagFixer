@@ -1,12 +1,18 @@
 package mx.dev.franco.automusictagfixer.di;
 
 import android.app.Application;
+import android.content.Context;
+
+import javax.inject.Singleton;
+
 import dagger.Module;
 import dagger.Provides;
-import javax.inject.Singleton;
 import mx.dev.franco.automusictagfixer.identifier.GnApiService;
+import mx.dev.franco.automusictagfixer.identifier.IdentificationManager;
 import mx.dev.franco.automusictagfixer.identifier.IdentifierFactory;
-import mx.dev.franco.automusictagfixer.utilities.shared_preferences.AbstractSharedPreferences;
+import mx.dev.franco.automusictagfixer.persistence.cache.CoverResultsCache;
+import mx.dev.franco.automusictagfixer.persistence.cache.TrackResultsCache;
+import mx.dev.franco.automusictagfixer.utilities.resource_manager.ResourceManager;
 
 @Module
 public class IdentifierModule {
@@ -19,8 +25,17 @@ public class IdentifierModule {
 
     @Singleton
     @Provides
-    IdentifierFactory provideIdentifierFactory(GnApiService gnApiService, AbstractSharedPreferences sharedPreferences) {
-        return new IdentifierFactory(gnApiService, sharedPreferences);
+    IdentifierFactory provideIdentifierFactory(GnApiService gnApiService, ResourceManager resourceManager) {
+        return new IdentifierFactory(gnApiService, resourceManager);
+    }
+    
+    @Provides
+    IdentificationManager provideIdentificationManager(CoverResultsCache coverResultsCache,
+                                                       TrackResultsCache trackResultsCache,
+                                                       IdentifierFactory identifierFactory,
+                                                       GnApiService gnApiService,
+                                                       Context context) {
+        return new IdentificationManager(coverResultsCache, trackResultsCache, identifierFactory, gnApiService, context);
     }
 
 }

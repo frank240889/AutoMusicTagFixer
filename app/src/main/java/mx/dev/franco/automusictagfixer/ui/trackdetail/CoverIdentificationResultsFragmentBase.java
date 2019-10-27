@@ -48,8 +48,8 @@ public class CoverIdentificationResultsFragmentBase extends ResultsFragmentBase<
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mViewModel.observeProgress().observe(this, this::onLoading);
-        mViewModel.observeResults().observe(this, adapter);
-        mViewModel.fetchResults(mTrackId);
+        mViewModel.observeCoverResults().observe(this, adapter);
+        mViewModel.fetchCoverResults(mTrackId);
     }
 
     @Override
@@ -99,14 +99,12 @@ public class CoverIdentificationResultsFragmentBase extends ResultsFragmentBase<
 
         saveAsCoverButton.setOnClickListener(v ->{
                 dismiss();
-                mCoverCorrectionParams.setPosition(mCenteredItem+"");
-            mCoverCorrectionParams.setGnImageSize(mViewModel.getImageUrl(mCenteredItem));
+                mCoverCorrectionParams.setCoverId(mViewModel.getCoverResult(mCenteredItem).getId());
                 mOnCoverCorrectionListener.saveAsCover(mCoverCorrectionParams);});
 
         saveAsImageFileButton.setOnClickListener(v -> {
                 dismiss();
-                mCoverCorrectionParams.setPosition(mCenteredItem+"");
-                mCoverCorrectionParams.setGnImageSize(mViewModel.getImageUrl(mCenteredItem));
+                mCoverCorrectionParams.setCoverId(mViewModel.getCoverResult(mCenteredItem).getId());
                 mOnCoverCorrectionListener.saveAsImageButton(mCoverCorrectionParams);});
     }
 

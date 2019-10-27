@@ -32,6 +32,16 @@
             android:textSize="20sp" />
 
         <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/cover_results_list"
+            android:layout_marginTop="16dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            tools:itemCount="5"
+            tools:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            tools:listitem="@layout/cover_result_item_list" />
+
+        <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/results_list"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

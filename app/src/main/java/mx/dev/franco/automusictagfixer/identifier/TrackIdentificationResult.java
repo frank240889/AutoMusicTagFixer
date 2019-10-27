@@ -1,31 +1,23 @@
 package mx.dev.franco.automusictagfixer.identifier;
 
-import com.gracenote.gnsdk.GnImageSize;
-
-import java.util.LinkedHashMap;
-import java.util.Map;
-
-public class Result extends Identifier.IdentificationResults {
+public class TrackIdentificationResult extends Identifier.IdentificationResults {
     private String title = "";
     private String artist = "";
     private String album = "";
     private String trackNumber = "";
     private String trackYear = "";
     private String genre = "";
-    private Map<GnImageSize, String> covers = new LinkedHashMap<>();
 
-    public Result() {}
+    public TrackIdentificationResult() {}
 
-    public Result(String id, String title, String artist, String album, String trackNumber, String trackYear, String genre, Map<GnImageSize, String> covers) {
+    public TrackIdentificationResult(String title, String artist, String album, String trackNumber, String trackYear, String genre) {
         this();
-        setId(id);
         this.title = title;
         this.artist = artist;
         this.album = album;
         this.trackNumber = trackNumber;
         this.trackYear = trackYear;
         this.genre = genre;
-        this.covers.putAll(covers);
     }
 
     public String getTitle() {
@@ -74,13 +66,5 @@ public class Result extends Identifier.IdentificationResults {
 
     public void setGenre(String genre) {
         this.genre = genre;
-    }
-
-    public Map<GnImageSize, String> getCovers() {
-        return covers;
-    }
-
-    public void addCover(GnImageSize size, String url) {
-        this.covers.put(size, url);
     }
 }

@@ -13,7 +13,6 @@ public class Constants {
     public static final String ALL_ITEMS_CHECKED = "all_items_checked";
     public static final String ACTION_OPEN_MAIN_ACTIVITY = "action_open_main_activity";
     public static final String URI_TREE = "uri_tree";
-    public static final String MESSAGE = "message";
     public static final String SELECTED_ITEM = "selected_item";
     public static final String LAST_SELECTED_ITEM = "last_selected_item";
     public static final int CACHED = 0;
@@ -39,35 +38,9 @@ public class Constants {
         public static final String ACTION_START_TASK = BuildConfig.APPLICATION_ID + "." +"action_start_task";
         public static final String ACTION_SD_CARD_ERROR = BuildConfig.APPLICATION_ID + "." +"action_sd_card_error";
 
-        public static final String ACTION_CONNECTION_LOST = BuildConfig.APPLICATION_ID + "." + "action_connection_lost" ;
-        public static final String ACTION_CONNECTION_RECOVERED = BuildConfig.APPLICATION_ID + "." + "action_connection_recovered" ;
-
         public static final String START_PROCESSING_FOR = BuildConfig.APPLICATION_ID + ".start_identification_for";
-        public static final String FINISH_TRACK_PROCESSING = BuildConfig.APPLICATION_ID + ".action_finish_track_processing";
         public static final String ACTION_RESCAN = BuildConfig.APPLICATION_ID + ".action_rescan";
         public static final String ACTION_STOP_TASK = BuildConfig.APPLICATION_ID + ".action_stop_task";
         public static final String ACTION_BROADCAST_MESSAGE = BuildConfig.APPLICATION_ID + ".action_broadcast_message";
-    }
-
-    public static class GnServiceActions{
-        public static final String ACTION_API_INITIALIZATION_RESULT = BuildConfig.APPLICATION_ID + "." +"action_api_initialization_result";
-        public static final String INITIALIZATION_RESULT = BuildConfig.APPLICATION_ID + "." +"initialization_result";
-
-    }
-
-    public static class State{
-        public static final String BEGIN_PROCESSING = "kMusicIdFileCallbackStatusProcessingBegin";
-        public static final String QUERYING_INFO = "kMusicIdFileCallbackStatusFileInfoQuery";
-        public static final String COMPLETE_IDENTIFICATION = "kMusicIdFileCallbackStatusProcessingComplete";
-        public static final String STATUS_ERROR = "kMusicIdFileCallbackStatusError";
-        public static final String STATUS_PROCESSING_ERROR = "kMusicIdFileCallbackStatusProcessingError";
-
-        public static final String BEGIN_PROCESSING_MSG = "Iniciando identificación...";
-        public static final String QUERYING_INFO_MSG = "Identificando, espere por favor...";
-        public static final String COMPLETE_IDENTIFICATION_MSG = "Identificación completa";
-        public static final String STATUS_ERROR_MSG = "Error";
-        public static final String STATUS_PROCESSING_ERROR_MSG = "Error al procesar ";
-        public static final String CANCELLED = "Cancelado";
-
     }
 }

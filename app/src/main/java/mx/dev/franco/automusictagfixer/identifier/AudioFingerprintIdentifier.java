@@ -26,17 +26,18 @@ import com.gracenote.gnsdk.IGnMusicIdFileEvents;
 import java.util.ArrayList;
 import java.util.List;
 
+import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.identifier.Identifier.IdentificationResults;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
-import mx.dev.franco.automusictagfixer.utilities.shared_preferences.AbstractSharedPreferences;
+import mx.dev.franco.automusictagfixer.utilities.resource_manager.ResourceManager;
 
 /**
  * A concrete identifier that implements {@link Identifier} interface.
  */
-public class GnIdentifier implements Identifier<Track, List<IdentificationResults>> {
+public class AudioFingerprintIdentifier implements Identifier<Track, List<IdentificationResults>> {
 
     private GnApiService gnApiService;
-    private AbstractSharedPreferences sharedPreferences;
+    private ResourceManager resourceManager;
     private IdentificationListener<List<IdentificationResults>, Track> identificationListener;
     private GnMusicIdFile mGnMusicIdFile;
     private GnMusicIdFileInfo gnMusicIdFileInfo;
@@ -44,9 +45,9 @@ public class GnIdentifier implements Identifier<Track, List<IdentificationResult
     private Track track;
     private Handler mHandler;
 
-    public GnIdentifier(GnApiService gnApiService, AbstractSharedPreferences sharedPreferences){
+    public AudioFingerprintIdentifier(GnApiService gnApiService, ResourceManager androidResourceManager){
         this.gnApiService = gnApiService;
-        this.sharedPreferences = sharedPreferences;
+        this.resourceManager = androidResourceManager;
         mHandler = new Handler(Looper.getMainLooper());
     }
 
@@ -100,8 +101,10 @@ public class GnIdentifier implements Identifier<Track, List<IdentificationResult
                     mHandler.post(new Runnable() {
                         @Override
                         public void run() {
+                            String error = gnError != null && gnError.errorDescription() != null ?
+                                    gnError.errorDescription() : resourceManager.getString(R.string.error);
                             if(identificationListener != null)
-                                identificationListener.onIdentificationError(track, "Error");
+                                identificationListener.onIdentificationError(track, error);
                             identificationListener = null;
                         }
                     });
@@ -113,7 +116,7 @@ public class GnIdentifier implements Identifier<Track, List<IdentificationResult
             mGnMusicIdFile.options().lookupData(GnLookupData.kLookupDataContent, true);
             mGnMusicIdFile.options().preferResultLanguage(gnApiService.getLanguage());
             //queue will be processed one by one
-            //mGnMusicIdFile.options().batchSize(1);
+            mGnMusicIdFile.options().batchSize(1);
             //get the fileInfoManager
             gnMusicIdFileInfoManager = mGnMusicIdFile.fileInfos();
             //add all info available for more accurate results.
@@ -129,7 +132,7 @@ public class GnIdentifier implements Identifier<Track, List<IdentificationResult
             if(identificationListener != null)
                 identificationListener.onIdentificationError(track, e.toString());
 
-            //identificationListener = null;
+            identificationListener = null;
         }
 
     }
@@ -145,6 +148,7 @@ public class GnIdentifier implements Identifier<Track, List<IdentificationResult
         if(identificationListener != null)
             identificationListener.onIdentificationCancelled(track);
 
+        mGnMusicIdFile = null;
         identificationListener = null;
     }
 
@@ -196,6 +200,7 @@ public class GnIdentifier implements Identifier<Track, List<IdentificationResult
         String year = "";
         String genre = "";
 
+        identificationResults.setId(gnAlbum.trackMatched().gnId());
         //retrieve title results identificationFound
         title = gnAlbum.trackMatched().title().display();
         identificationResults.setTitle(title);
@@ -219,7 +224,6 @@ public class GnIdentifier implements Identifier<Track, List<IdentificationResult
             String url = gnContent.asset(values[sizes]).url();
             if (!gnContent.asset(values[sizes]).url().equals("")) {
                 identificationResults.addCover(GnImageSize.valueOf(values[sizes]+""),url);
-                break;
             }
         }
 

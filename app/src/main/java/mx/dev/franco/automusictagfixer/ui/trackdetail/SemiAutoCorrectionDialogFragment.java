@@ -38,8 +38,10 @@ public class SemiAutoCorrectionDialogFragment extends ResultsFragmentBase<Result
 
   private OnSemiAutoCorrectionListener mOnSemiAutoCorrectionListener;
   private SemiAutoCorrectionParams mSemiAutoCorrectionParams;
-  private int mCenteredItem = 0;
-  private IdentificationResultsAdapter adapter;
+  private int mTrackCenteredItem = 0;
+  private int mCoverCenteredItem = 0;
+  private IdentificationResultsAdapter mTrackAdapter;
+  private CoverIdentificationResultsAdapter mCoverAdapter;
 
   public SemiAutoCorrectionDialogFragment(){}
 
@@ -70,9 +72,12 @@ public class SemiAutoCorrectionDialogFragment extends ResultsFragmentBase<Result
   @Override
   public void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    adapter = new IdentificationResultsAdapter();
+    mTrackAdapter = new IdentificationResultsAdapter();
+    mCoverAdapter = new CoverIdentificationResultsAdapter();
     mViewModel.observeProgress().observe(this, this::onLoading);
-    mViewModel.observeResults().observe(this, adapter);
+    mViewModel.observeTrackResults().observe(this, mTrackAdapter);
+    mViewModel.observeCoverResults().observe(this, mCoverAdapter);
+    mViewModel.fetchCoverResults(mTrackId);
     mViewModel.fetchResults(mTrackId);
   }
 
@@ -89,9 +94,32 @@ public class SemiAutoCorrectionDialogFragment extends ResultsFragmentBase<Result
     layoutManager.setOrientation(LinearLayoutManager.HORIZONTAL);
     listResults.setLayoutManager(layoutManager);
     listResults.setItemViewCacheSize(5);
-    listResults.setAdapter(adapter);
+    listResults.setAdapter(mTrackAdapter);
     SnapHelper snapHelper = new LinearSnapHelper();
     snapHelper.attachToRecyclerView(listResults);
+
+    RecyclerView coverListResults = view.findViewById(R.id.cover_results_list);
+
+    LinearLayoutManager layoutManager2 = new LinearLayoutManager(coverListResults.getContext());
+    layoutManager2.setOrientation(LinearLayoutManager.HORIZONTAL);
+    coverListResults.setLayoutManager(layoutManager2);
+    coverListResults.setItemViewCacheSize(5);
+    coverListResults.setAdapter(mCoverAdapter);
+    SnapHelper snapHelper2 = new LinearSnapHelper();
+    snapHelper2.attachToRecyclerView(coverListResults);
+
+    coverListResults.addOnScrollListener(new RecyclerView.OnScrollListener() {
+      @Override
+      public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
+        if(newState == RecyclerView.SCROLL_STATE_IDLE) {
+          View snapView = snapHelper2.findSnapView(layoutManager2);
+          if(snapView != null) {
+            mCoverCenteredItem = layoutManager2.getPosition(snapView);
+            coverListResults.smoothScrollToPosition(mCoverCenteredItem);
+          }
+        }
+      }
+    });
 
     listResults.addOnScrollListener(new RecyclerView.OnScrollListener() {
       @Override
@@ -99,8 +127,8 @@ public class SemiAutoCorrectionDialogFragment extends ResultsFragmentBase<Result
         if(newState == RecyclerView.SCROLL_STATE_IDLE) {
           View snapView = snapHelper.findSnapView(layoutManager);
           if(snapView != null) {
-            mCenteredItem = layoutManager.getPosition(snapView);
-            listResults.smoothScrollToPosition(mCenteredItem);
+            mTrackCenteredItem = layoutManager.getPosition(snapView);
+            listResults.smoothScrollToPosition(mTrackCenteredItem);
           }
         }
       }
@@ -129,16 +157,18 @@ public class SemiAutoCorrectionDialogFragment extends ResultsFragmentBase<Result
 
     missingTagsButton.setOnClickListener(view1 -> {
       mSemiAutoCorrectionParams.setCodeRequest(AudioTagger.MODE_WRITE_ONLY_MISSING);
-      mSemiAutoCorrectionParams.setPosition(mCenteredItem+"");
-      dismiss();
+      mSemiAutoCorrectionParams.setTrackId(mViewModel.getTrackResult(mTrackCenteredItem).getId());
+      mSemiAutoCorrectionParams.setCoverId(mViewModel.getCoverResult(mCoverCenteredItem).getId());
       mOnSemiAutoCorrectionListener.onMissingTagsButton(mSemiAutoCorrectionParams);
+      dismiss();
     });
 
     allTagsButton.setOnClickListener(view12 -> {
       mSemiAutoCorrectionParams.setCodeRequest(AudioTagger.MODE_OVERWRITE_ALL_TAGS);
-      mSemiAutoCorrectionParams.setPosition(mCenteredItem+"");
-      dismiss();
+      mSemiAutoCorrectionParams.setTrackId(mViewModel.getTrackResult(mTrackCenteredItem).getId());
+      mSemiAutoCorrectionParams.setCoverId(mViewModel.getCoverResult(mCoverCenteredItem).getId());
       mOnSemiAutoCorrectionListener.onOverwriteTagsButton(mSemiAutoCorrectionParams);
+      dismiss();
     });
   }
 
