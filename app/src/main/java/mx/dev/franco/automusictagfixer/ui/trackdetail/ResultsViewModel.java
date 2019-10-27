@@ -23,6 +23,7 @@ public class ResultsViewModel extends AndroidViewModel {
     protected MutableLiveData<Boolean> mProgressObservable;
     protected SingleLiveEvent<List<? extends Identifier.IdentificationResults>> mObservableTrackResults;
     protected SingleLiveEvent<List<? extends Identifier.IdentificationResults>> mObservableCoverResults;
+    protected SingleLiveEvent<Void> mObservableZeroResults;
     //The cache where are stored temporally the identification results.
     private Cache<String, List<TrackIdentificationResult>> mResultsCache;
     private Cache<String, List<CoverIdentificationResult>> mCoverResultsCache;
@@ -39,6 +40,7 @@ public class ResultsViewModel extends AndroidViewModel {
         mProgressObservable = new MutableLiveData<>();
         mObservableTrackResults = new SingleLiveEvent<>();
         mObservableCoverResults = new SingleLiveEvent<>();
+        mObservableZeroResults = new SingleLiveEvent<>();
     }
 
     public LiveData<Boolean> observeProgress() {
@@ -47,6 +49,10 @@ public class ResultsViewModel extends AndroidViewModel {
 
     public LiveData<List<? extends Identifier.IdentificationResults>> observeTrackResults() {
         return mObservableTrackResults;
+    }
+
+    public LiveData<Void> observeZeroResults() {
+        return mObservableZeroResults;
     }
 
     public LiveData<List<? extends Identifier.IdentificationResults>> observeCoverResults() {
@@ -63,8 +69,13 @@ public class ResultsViewModel extends AndroidViewModel {
     public void fetchCoverResults(String id){
         mProgressObservable.setValue(true);
         mCoverResults = mCoverResultsCache.load(id);
-        mObservableCoverResults.setValue(mCoverResults);
         mProgressObservable.setValue(false);
+        if(mCoverResults == null || mCoverResults.size() == 0) {
+            mObservableZeroResults.setValue(null);
+        }
+        else {
+            mObservableCoverResults.setValue(mCoverResults);
+        }
     }
 
     public Identifier.IdentificationResults getCoverResult(int position) {

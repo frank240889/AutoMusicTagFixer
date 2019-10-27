@@ -21,6 +21,7 @@ import com.google.android.material.bottomsheet.BottomSheetDialog;
 
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.ui.ResultsFragmentBase;
+import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
 
 
@@ -49,7 +50,13 @@ public class CoverIdentificationResultsFragmentBase extends ResultsFragmentBase<
         super.onCreate(savedInstanceState);
         mViewModel.observeProgress().observe(this, this::onLoading);
         mViewModel.observeCoverResults().observe(this, adapter);
+        mViewModel.observeZeroResults().observe(this, this::onZeroResults);
         mViewModel.fetchCoverResults(mTrackId);
+    }
+
+    private void onZeroResults(Void aVoid) {
+        AndroidUtils.showToast(R.string.no_results, getActivity());
+        dismiss();
     }
 
     @Override
