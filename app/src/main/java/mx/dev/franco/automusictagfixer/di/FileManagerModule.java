@@ -8,6 +8,7 @@ import mx.dev.franco.automusictagfixer.filemanager.FileManager;
 import mx.dev.franco.automusictagfixer.fixer.AudioMetadataTagger;
 import mx.dev.franco.automusictagfixer.fixer.AudioTagger;
 import mx.dev.franco.automusictagfixer.interfaces.AudioMetadataManager;
+import mx.dev.franco.automusictagfixer.persistence.cache.CoverResultsCache;
 
 @Module
 public class FileManagerModule {
@@ -18,7 +19,7 @@ public class FileManagerModule {
     }
 
     @Provides
-    FileManager provideCoverSaverManager() {
-        return new FileManager();
+    FileManager provideCoverSaverManager(CoverResultsCache coverCache) {
+        return new FileManager(coverCache);
     }
 }

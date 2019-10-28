@@ -11,7 +11,6 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.FrameLayout;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -63,12 +62,20 @@ public class ManualCorrectionDialogFragment extends BaseRoundedBottomSheetDialog
     final CheckBox checkBox = view.findViewById(R.id.manual_checkbox_rename);
     Button acceptButton = view.findViewById(R.id.accept_changes);
     Button cancelButton = view.findViewById(R.id.cancel_changes);
+    TextInputLayout textInputLayout = view.findViewById(R.id.manual_label_rename_to);
+    EditText editText = view.findViewById(R.id.manual_rename_to);
 
     acceptButton.setOnClickListener(v -> {
-              manualCorrectionParams.setCorrectionMode(Constants.MANUAL);
-              manualCorrectionParams.setCodeRequest(AudioTagger.MODE_OVERWRITE_ALL_TAGS);
-              mOnManualCorrectionListener.onManualCorrection(manualCorrectionParams);
-      dismiss();
+      if(checkBox.isChecked() && (manualCorrectionParams.getNewName() == null ||
+        manualCorrectionParams.getNewName().equals(""))) {
+          editText.setError(getString(R.string.new_name_empty));
+      }
+      else {
+        manualCorrectionParams.setCorrectionMode(Constants.MANUAL);
+        manualCorrectionParams.setCodeRequest(AudioTagger.MODE_OVERWRITE_ALL_TAGS);
+        mOnManualCorrectionListener.onManualCorrection(manualCorrectionParams);
+        dismiss();
+      }
     });
 
     cancelButton.setOnClickListener(v -> {
@@ -76,30 +83,28 @@ public class ManualCorrectionDialogFragment extends BaseRoundedBottomSheetDialog
       dismiss();
     });
 
-    TextInputLayout textInputLayout = view.findViewById(R.id.manual_label_rename_to);
-    EditText editText = view.findViewById(R.id.manual_rename_to);
     editText.addTextChangedListener(new TextWatcher() {
       @Override
       public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
       @Override
       public void onTextChanged(CharSequence s, int start, int before, int count) {
-        manualCorrectionParams.setTargetFile(editText.getText().toString());
+        manualCorrectionParams.setNewName(editText.getText().toString());
       }
       @Override
       public void afterTextChanged(Editable s) {}
     });
-    TextView textView = view.findViewById(R.id.manual_message_rename_hint);
+    //TextView textView = view.findViewById(R.id.manual_message_rename_hint);
     checkBox.setOnCheckedChangeListener((buttonView, isChecked) -> {
       if(!isChecked){
         textInputLayout.setVisibility(View.GONE);
-        textView.setVisibility(View.GONE);
+        //textView.setVisibility(View.GONE);
         editText.setText("");
         manualCorrectionParams.setNewName(null);
         manualCorrectionParams.setRenameFile(false);
       }
       else{
         textInputLayout.setVisibility(View.VISIBLE);
-        textView.setVisibility(View.VISIBLE);
+        //textView.setVisibility(View.VISIBLE);
         manualCorrectionParams.setNewName(editText.getText().toString());
         manualCorrectionParams.setRenameFile(true);
       }

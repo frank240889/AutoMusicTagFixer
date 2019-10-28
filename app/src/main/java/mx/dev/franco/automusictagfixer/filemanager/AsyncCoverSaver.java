@@ -3,22 +3,37 @@ package mx.dev.franco.automusictagfixer.filemanager;
 import android.os.AsyncTask;
 
 import java.io.IOException;
+import java.util.List;
 
+import mx.dev.franco.automusictagfixer.identifier.CoverIdentificationResult;
 import mx.dev.franco.automusictagfixer.interfaces.AsyncOperation;
+import mx.dev.franco.automusictagfixer.interfaces.Cache;
+import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 
-public class AsyncFileSaver extends AsyncTask<Void, Void, String> {
+public class AsyncCoverSaver extends AsyncTask<Void, Void, String> {
     private AsyncOperation<Void, String, Void, String> mCallback;
     private String mFilename;
+    private Cache<String, List<CoverIdentificationResult>> mCoverCache;
+    private String mId;
+    private String mTrackId;
     private byte[] mData;
 
 
-    public AsyncFileSaver(){}
+    public AsyncCoverSaver(){}
 
-    public AsyncFileSaver(AsyncOperation<Void, String, Void, String> callback, byte[] data, String filename) {
+    public AsyncCoverSaver(AsyncOperation<Void, String, Void, String> callback,
+                           String filename,
+                           String id,
+                           String trackId,
+                           Cache<String, List<CoverIdentificationResult>> coverCache,
+                           byte[] data) {
         this();
+        mId = id;
+        mTrackId = trackId;
         mCallback = callback;
-        mData = data;
         mFilename = filename;
+        mCoverCache = coverCache;
+        mData = data;
     }
 
     @Override
@@ -29,11 +44,19 @@ public class AsyncFileSaver extends AsyncTask<Void, Void, String> {
 
     @Override
     protected String doInBackground(Void... voids) {
+
+        if(mData == null)
+            mData = findId(mId);
+
         try {
             return ImageFileSaver.saveImageFile(mData, mFilename);
         } catch (IOException e) {
             return null;
         }
+    }
+
+    private byte[] findId(String mId) {
+        return ((CoverIdentificationResult)AndroidUtils.findId(mCoverCache.load(mTrackId), mId)).getCover();
     }
 
     @Override

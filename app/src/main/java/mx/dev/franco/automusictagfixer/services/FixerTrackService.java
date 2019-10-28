@@ -29,6 +29,7 @@ import javax.inject.Inject;
 
 import dagger.android.AndroidInjection;
 import dagger.android.DispatchingAndroidInjector;
+import mx.dev.franco.automusictagfixer.AutoMusicTagFixer;
 import mx.dev.franco.automusictagfixer.BuildConfig;
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.fixer.AudioMetadataTagger;
@@ -166,7 +167,7 @@ public class FixerTrackService extends Service {
                 mTrackIdLoader = null;
             }
         }, mTrackRoomDatabase);
-        mTrackIdLoader.executeOnExecutor(Executors.newCachedThreadPool(), order);
+        mTrackIdLoader.executeOnExecutor(AutoMusicTagFixer.getExecutorService(), order);
     }
 
     private void actionStopTask() {
@@ -224,7 +225,7 @@ public class FixerTrackService extends Service {
                     processTrack(result);
                 }
             }, mTrackRoomDatabase);
-            mTrackInformationLoader.executeOnExecutor(Executors.newCachedThreadPool(), mTrackIds.get(0));
+            mTrackInformationLoader.executeOnExecutor(AutoMusicTagFixer.getExecutorService(), mTrackIds.get(0));
         }
     }
 

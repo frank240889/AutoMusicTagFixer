@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
@@ -26,6 +27,7 @@ import com.google.android.material.textfield.TextInputLayout;
 
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.fixer.AudioTagger;
+import mx.dev.franco.automusictagfixer.identifier.TrackIdentificationResult;
 import mx.dev.franco.automusictagfixer.ui.ResultsFragmentBase;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
 
@@ -147,28 +149,47 @@ public class SemiAutoCorrectionDialogFragment extends ResultsFragmentBase<Result
 
     checkBoxRename.setOnCheckedChangeListener((compoundButton, checked) -> {
       if(!checked) {
+        newNameEditText.clearFocus();
         newNameEditText.setText("");
         label.setVisibility(View.GONE);
+        mSemiAutoCorrectionParams.setRenameFile(false);
       }
       else {
+        newNameEditText.requestFocus();
+        String suggestedName = ((TrackIdentificationResult)mViewModel.
+                getTrackResult(mTrackCenteredItem)).getTitle();
+        newNameEditText.setText(suggestedName != null && !suggestedName.equals("") ? suggestedName : "");
+        mSemiAutoCorrectionParams.setRenameFile(true);
         label.setVisibility(View.VISIBLE);
       }
     });
 
     missingTagsButton.setOnClickListener(view1 -> {
-      mSemiAutoCorrectionParams.setCodeRequest(AudioTagger.MODE_WRITE_ONLY_MISSING);
-      mSemiAutoCorrectionParams.setTrackId(mViewModel.getTrackResult(mTrackCenteredItem).getId());
-      mSemiAutoCorrectionParams.setCoverId(mViewModel.getCoverResult(mCoverCenteredItem).getId());
-      mOnSemiAutoCorrectionListener.onMissingTagsButton(mSemiAutoCorrectionParams);
-      dismiss();
+      if(checkBoxRename.isChecked() && newNameEditText.getText().toString().isEmpty()) {
+        newNameEditText.setError(getString(R.string.new_name_empty));
+      }
+      else {
+        mSemiAutoCorrectionParams.setCodeRequest(AudioTagger.MODE_WRITE_ONLY_MISSING);
+        mSemiAutoCorrectionParams.setTrackId(mViewModel.getTrackResult(mTrackCenteredItem).getId());
+        mSemiAutoCorrectionParams.setCoverId(mViewModel.getCoverResult(mCoverCenteredItem).getId());
+        mOnSemiAutoCorrectionListener.onMissingTagsButton(mSemiAutoCorrectionParams);
+        dismiss();
+      }
     });
 
     allTagsButton.setOnClickListener(view12 -> {
-      mSemiAutoCorrectionParams.setCodeRequest(AudioTagger.MODE_OVERWRITE_ALL_TAGS);
-      mSemiAutoCorrectionParams.setTrackId(mViewModel.getTrackResult(mTrackCenteredItem).getId());
-      mSemiAutoCorrectionParams.setCoverId(mViewModel.getCoverResult(mCoverCenteredItem).getId());
-      mOnSemiAutoCorrectionListener.onOverwriteTagsButton(mSemiAutoCorrectionParams);
-      dismiss();
+      if(checkBoxRename.isChecked() && newNameEditText.getText().toString().isEmpty()) {
+        newNameEditText.setError(getString(R.string.new_name_empty));
+      }
+      else {
+        mSemiAutoCorrectionParams.setCodeRequest(AudioTagger.MODE_OVERWRITE_ALL_TAGS);
+        mSemiAutoCorrectionParams.setTrackId(mViewModel.getTrackResult(mTrackCenteredItem).getId());
+        String id = mViewModel.getCoverResult(mCoverCenteredItem) != null ?
+                mViewModel.getCoverResult(mCoverCenteredItem).getId() : "-1";
+        mSemiAutoCorrectionParams.setCoverId(id);
+        mOnSemiAutoCorrectionListener.onOverwriteTagsButton(mSemiAutoCorrectionParams);
+        dismiss();
+      }
     });
   }
 
@@ -186,7 +207,7 @@ public class SemiAutoCorrectionDialogFragment extends ResultsFragmentBase<Result
   public Dialog onCreateDialog(Bundle savedInstanceState) {
 
     BottomSheetDialog dialog = (BottomSheetDialog) super.onCreateDialog(savedInstanceState);
-
+    dialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_MASK_ADJUST);
     dialog.setOnShowListener(new DialogInterface.OnShowListener() {
       @Override
       public void onShow(DialogInterface dialog) {

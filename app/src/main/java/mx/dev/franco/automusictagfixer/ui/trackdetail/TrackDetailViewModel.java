@@ -13,9 +13,6 @@ import androidx.lifecycle.MediatorLiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Transformations;
 
-import com.gracenote.gnsdk.GnAssetFetch;
-import com.gracenote.gnsdk.GnException;
-
 import org.jaudiotagger.tag.FieldKey;
 
 import java.text.DateFormat;
@@ -35,7 +32,6 @@ import mx.dev.franco.automusictagfixer.fixer.AudioTagger;
 import mx.dev.franco.automusictagfixer.fixer.MetadataReaderResult;
 import mx.dev.franco.automusictagfixer.fixer.MetadataWriterResult;
 import mx.dev.franco.automusictagfixer.identifier.CoverIdentificationResult;
-import mx.dev.franco.automusictagfixer.identifier.GnApiService;
 import mx.dev.franco.automusictagfixer.identifier.IdentificationManager;
 import mx.dev.franco.automusictagfixer.identifier.IdentificationParams;
 import mx.dev.franco.automusictagfixer.identifier.Identifier;
@@ -103,6 +99,7 @@ public class TrackDetailViewModel extends AndroidViewModel {
     private LiveData<ActionableMessage> mResultFileSaving;
     private LiveData<Track> mLiveDataTrack;
     private Track mTrack;
+    private boolean mTriggered = false;
 
     @Inject
     public TrackDetailViewModel(@NonNull Application application,
@@ -182,6 +179,10 @@ public class TrackDetailViewModel extends AndroidViewModel {
             }
             else {
                 mTrack = input.data.getTrack();
+                if(mCorrectionMode == Constants.CorrectionActions.SEMI_AUTOMATIC && !mTriggered) {
+                    mTriggered = true;
+                    startIdentification(new IdentificationParams(IdentificationParams.ALL_TAGS));
+                }
                 mAudioFields = input.data.getFields();
                 setEditableInfo(mAudioFields);
                 setNoEditableInfo(mAudioFields);
@@ -203,17 +204,22 @@ public class TrackDetailViewModel extends AndroidViewModel {
                 }
                 else {
                     if(input.data.getResultCorrection().getTagsUpdated() != null) {
+                        mTrack.setProcessing(0);
                         mDataTrackManager.updateTrack(input.data.getResultCorrection().getTagsUpdated());
                         mMediaStoreManager.updateMediaStore(input.data.getResultCorrection().getTagsUpdated(),
                                 MediaStoreResult.UPDATE_TAGS, mTrack.getMediaStoreId());
                     }
                     else {
+                        mTrack.setProcessing(0);
+                        mDataTrackManager.updateTrack(mTrack);
                         mDataTrackManager.readAudioFile(mTrack);
                         message = new Message(getApplication().getString(R.string.changes_applied));
                     }
                 }
             }
             else {
+                mTrack.setProcessing(0);
+                mDataTrackManager.updateTrack(mTrack);
                 //Could not apply tags, send a message indicating that.
                 String err = "";
                 if(input.data.getResultCorrection().getError() != null &&
@@ -235,6 +241,7 @@ public class TrackDetailViewModel extends AndroidViewModel {
             if(input.status == Resource.Status.SUCCESS) {
                 Map<FieldKey, Object> map = new ArrayMap<>();
                 map.put(FieldKey.CUSTOM1, input.data.getNewAbsolutePath());
+                mTrack.setProcessing(0);
                 mDataTrackManager.updateTrack(map);
                 mMediaStoreManager.updateMediaStore(map,
                         MediaStoreResult.UPDATE_RENAMED_FILE, mTrack.getMediaStoreId());
@@ -415,9 +422,12 @@ public class TrackDetailViewModel extends AndroidViewModel {
                 case AudioTagger.MODE_OVERWRITE_ALL_TAGS:
                 case AudioTagger.MODE_WRITE_ONLY_MISSING:
                     processApplyTags(mCorrectionParams);
-                    processAddCover(mCorrectionParams);
+                    if(!"-1".equals(mCorrectionParams.getCoverId()))
+                        processAddCover(mCorrectionParams);
                     break;
             }
+            mTrack.setProcessing(1);
+            mDataTrackManager.updateTrack(mTrack);
             mDataTrackManager.performCorrection(mCorrectionParams);
         }
     }
@@ -471,22 +481,10 @@ public class TrackDetailViewModel extends AndroidViewModel {
     }
 
     public void saveAsImageFileFrom(CoverCorrectionParams correctionParams) {
-        Thread thread = new Thread(() -> {
-            try {
-                byte[] cover = new GnAssetFetch(GnApiService.getInstance(getApplication()).getGnUser(),
-                        correctionParams.getGnImageSize()).data();
-                Handler handler = new Handler(Looper.getMainLooper());
-                handler.post(() -> {
-                    Date date = new Date();
-                    DateFormat now = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault());
-                    String newFilename = mAudioFields.getFileName() + "_" +now.format(date);
-                    mFileManager.saveFile(cover,  newFilename);
-                });
-            } catch (GnException e) {
-                e.printStackTrace();
-            }
-        });
-        thread.start();
+        Date date = new Date();
+        DateFormat now = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault());
+        String newFilename = mAudioFields.getFileName() + "_" +now.format(date);
+        mFileManager.saveFile(correctionParams.getCoverId(), mTrack.getMediaStoreId()+"",  newFilename);
     }
 
     public void restorePreviousValues() {
@@ -499,7 +497,6 @@ public class TrackDetailViewModel extends AndroidViewModel {
      */
     public void startIdentification(IdentificationParams identificationParams) {
         mIdentificationParams = identificationParams;
-
         if(mIdentificationParams.getIdentificationType() == IdentificationParams.ONLY_COVER) {
             if(mIdentificationManager.getCoverListResult(mTrack.getMediaStoreId()+"") != null &&
                     mIdentificationManager.getCoverListResult(mTrack.getMediaStoreId()+"").size() > 0) {
@@ -635,10 +632,7 @@ public class TrackDetailViewModel extends AndroidViewModel {
     protected void onCleared() {
         mIdentificationManager.cancelIdentification();
         mDataTrackManager.onCleared();
-    }
-
-    public void saveChanges() {
-
+        mIdentificationManager.clearResults();
     }
 
     public void extractCover() {

@@ -8,6 +8,7 @@ import android.os.Looper;
 
 import androidx.annotation.Nullable;
 
+import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 
 /**
@@ -22,12 +23,14 @@ public class ApiInitializerService extends Service {
         mThread = new Thread(() -> {
             GnApiService.getInstance(this).initializeAPI(null);
             Handler handler = new Handler(Looper.getMainLooper());
-            handler.post(new Runnable() {
-                @Override
-                public void run() {
-                    AndroidUtils.showToast("inicializada", ApiInitializerService.this);
-                }
-            });
+            if(GnApiService.getInstance(this).isApiInitialized()) {
+                handler.post(() ->
+                        AndroidUtils.showToast(R.string.api_connected, ApiInitializerService.this));
+            }
+            else {
+                handler.post(() ->
+                        AndroidUtils.showToast(R.string.could_not_init_api, ApiInitializerService.this));
+            }
             stopSelf();
         });
         mThread.start();

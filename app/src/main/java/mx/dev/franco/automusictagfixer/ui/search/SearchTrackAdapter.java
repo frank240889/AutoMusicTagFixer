@@ -1,6 +1,5 @@
 package mx.dev.franco.automusictagfixer.ui.search;
 
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -20,6 +19,7 @@ import java.util.List;
 
 import javax.inject.Inject;
 
+import mx.dev.franco.automusictagfixer.AutoMusicTagFixer;
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.covermanager.CoverManager;
 import mx.dev.franco.automusictagfixer.interfaces.AsyncOperation;
@@ -90,7 +90,7 @@ public class SearchTrackAdapter extends RecyclerView.Adapter<FoundItemHolder> im
     }
 
     private void enqueue(AudioHolder holder, Track track) {
-        CoverManager.startFetchingCover(holder, track.getPath());
+        CoverManager.startFetchingCover(holder, track.getPath(), track.getMediaStoreId()+"");
     }
 
     @Override
@@ -159,7 +159,7 @@ public class SearchTrackAdapter extends RecyclerView.Adapter<FoundItemHolder> im
                 processResult(result);
             }
         });
-        sDiffExecutor.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, mTrackList, newItems);
+        sDiffExecutor.executeOnExecutor(AutoMusicTagFixer.getExecutorService(), mTrackList, newItems);
 
     }
 

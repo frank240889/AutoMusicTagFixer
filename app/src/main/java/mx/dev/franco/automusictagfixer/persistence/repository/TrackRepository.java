@@ -1,7 +1,6 @@
 package mx.dev.franco.automusictagfixer.persistence.repository;
 
 import android.content.Context;
-import android.os.AsyncTask;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MediatorLiveData;
@@ -11,10 +10,10 @@ import androidx.sqlite.db.SupportSQLiteQuery;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Executors;
 
 import javax.inject.Inject;
 
+import mx.dev.franco.automusictagfixer.AutoMusicTagFixer;
 import mx.dev.franco.automusictagfixer.interfaces.AsyncOperation;
 import mx.dev.franco.automusictagfixer.persistence.mediastore.MediaStoreReader;
 import mx.dev.franco.automusictagfixer.persistence.repository.AsyncOperation.TrackChecker;
@@ -114,7 +113,7 @@ public class TrackRepository {
                     }
                 }
             });
-            mediaStoreReader.executeOnExecutor(Executors.newCachedThreadPool(), mContext);
+            mediaStoreReader.executeOnExecutor(AutoMusicTagFixer.getExecutorService(), mContext);
         }
         else {
             mProgressObservable.setValue(false);
@@ -139,7 +138,7 @@ public class TrackRepository {
                 }
             }
         }, mTrackDao);
-        mediaStoreReader.executeOnExecutor(Executors.newCachedThreadPool(), mContext);
+        mediaStoreReader.executeOnExecutor(AutoMusicTagFixer.getExecutorService(), mContext);
     }
 
     public void setChecked(Track track){
@@ -151,23 +150,23 @@ public class TrackRepository {
         }
 
         mAbstractSharedPreferences.putBoolean("sorting", false);
-        new TrackUpdater(mTrackDao).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,track);
+        new TrackUpdater(mTrackDao).executeOnExecutor(AutoMusicTagFixer.getExecutorService(),track);
     }
 
     public void update(Track track){
-        new TrackUpdater(mTrackDao).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,track);
+        new TrackUpdater(mTrackDao).executeOnExecutor(AutoMusicTagFixer.getExecutorService(),track);
     }
 
     public void checkAll(){
-        new TrackChecker(mTrackDao).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+        new TrackChecker(mTrackDao).executeOnExecutor(AutoMusicTagFixer.getExecutorService());
     }
 
     public void uncheckAll(){
-        new TrackUnchecker(mTrackDao).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+        new TrackUnchecker(mTrackDao).executeOnExecutor(AutoMusicTagFixer.getExecutorService());
     }
 
     public void delete(Track track){
-        new TrackRemover(mTrackDao).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, track);
+        new TrackRemover(mTrackDao).executeOnExecutor(AutoMusicTagFixer.getExecutorService(), track);
     }
 
     public boolean sortTracks(String order, int orderType) {
@@ -230,6 +229,6 @@ public class TrackRepository {
     @SuppressWarnings("unchecked")
     public void insert(List<Track> tracks) {
         new TrackInserter(mTrackDao).
-                executeOnExecutor(Executors.newCachedThreadPool(), tracks);
+                executeOnExecutor(AutoMusicTagFixer.getExecutorService(), tracks);
     }
 }

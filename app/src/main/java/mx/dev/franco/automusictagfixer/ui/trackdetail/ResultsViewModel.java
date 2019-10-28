@@ -62,8 +62,13 @@ public class ResultsViewModel extends AndroidViewModel {
     public void fetchResults(String id){
         mProgressObservable.setValue(true);
         mTrackResults = mResultsCache.load(id);
-        mObservableTrackResults.setValue(mTrackResults);
         mProgressObservable.setValue(false);
+        if(mTrackResults == null || mTrackResults.size() == 0) {
+            mObservableZeroResults.setValue(null);
+        }
+        else {
+            mObservableTrackResults.setValue(mTrackResults);
+        }
     }
 
     public void fetchCoverResults(String id){
@@ -79,7 +84,9 @@ public class ResultsViewModel extends AndroidViewModel {
     }
 
     public Identifier.IdentificationResults getCoverResult(int position) {
-        return mCoverResults.get(position);
+        if(mCoverResults.size() > 0)
+            return mCoverResults.get(position);
+        return null;
     }
 
     public Identifier.IdentificationResults getTrackResult(int position) {

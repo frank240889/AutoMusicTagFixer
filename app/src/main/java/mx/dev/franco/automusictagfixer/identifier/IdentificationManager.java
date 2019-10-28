@@ -2,20 +2,20 @@ package mx.dev.franco.automusictagfixer.identifier;
 
 import android.content.Context;
 import android.content.Intent;
-import android.os.Handler;
-import android.os.Looper;
+import android.os.AsyncTask;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.inject.Inject;
 
+import mx.dev.franco.automusictagfixer.AutoMusicTagFixer;
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.identifier.Identifier.IdentificationListener;
 import mx.dev.franco.automusictagfixer.identifier.Identifier.IdentificationStatus;
+import mx.dev.franco.automusictagfixer.interfaces.AsyncOperation;
 import mx.dev.franco.automusictagfixer.interfaces.Cache;
 import mx.dev.franco.automusictagfixer.persistence.cache.CoverResultsCache;
 import mx.dev.franco.automusictagfixer.persistence.cache.TrackResultsCache;
@@ -35,6 +35,7 @@ public class IdentificationManager {
     private GnApiService mApiService;
     private Context mContext;
     private String mTrackId;
+    private ResultCreator mResultCreator;
 
     @Inject
     public IdentificationManager(CoverResultsCache coverResultsCache,
@@ -94,18 +95,6 @@ public class IdentificationManager {
                 @Override
                 public void onIdentificationFinished(List<Identifier.IdentificationResults> result, Track file) {
                     processResults(result);
-                    Thread thread = new Thread(() -> {
-                        processResults(result);
-                        Handler handler = new Handler(Looper.getMainLooper());
-                        handler.post(() -> {
-                            String msg = mContext.getString(R.string.complete_identification);
-                            mOnSuccessIdentificationLiveData.
-                                    setValue(new IdentificationStatus(Identifier.IdentificationState.IDENTIFICATION_FINISHED, msg));
-                            mIdentifying = false;
-                            mLoadingStateLiveData.setValue(false);
-                        });
-                    });
-                    thread.start();
                 }
 
                 @Override
@@ -135,9 +124,44 @@ public class IdentificationManager {
         }
     }
 
+    private void processResults(List<? extends Identifier.IdentificationResults> result) {
+        mResultCreator = new ResultCreator(new AsyncOperation<Void, Void, Void, Void>() {
+            @Override
+            public void onAsyncOperationStarted(Void params) {
+                mLoadingStateLiveData.setValue(true);
+            }
+
+            @Override
+            public void onAsyncOperationFinished(Void result) {
+                String msg = mContext.getString(R.string.complete_identification);
+                mOnSuccessIdentificationLiveData.
+                        setValue(new IdentificationStatus(Identifier.IdentificationState.IDENTIFICATION_FINISHED, msg));
+                mLoadingStateLiveData.setValue(false);
+                mIdentifying = false;
+            }
+
+            @Override
+            public void onAsyncOperationCancelled(Void cancellation) {
+                mLoadingStateLiveData.setValue(false);
+                String msg = mContext.getString(R.string.identification_cancelled);
+                mOnFailIdentificationLiveData.setValue(new IdentificationStatus(Identifier.IdentificationState.IDENTIFICATION_CANCELLED, msg));
+                mTrackCache.deleteAll();
+                mCoverCache.deleteAll();
+                mIdentifying = false;
+            }
+        },mContext, mTrackId, mCoverCache, mTrackCache);
+
+        mResultCreator.executeOnExecutor(AutoMusicTagFixer.getExecutorService(), result);
+    }
+
     public void cancelIdentification() {
         if(mIdentifier != null && mIdentifying)
             mIdentifier.cancel();
+        if(mResultCreator != null && (mResultCreator.getStatus() == AsyncTask.Status.PENDING ||
+                mResultCreator.getStatus() == AsyncTask.Status.RUNNING)) {
+            mResultCreator.cancel(true);
+            mResultCreator = null;
+        }
     }
 
     public TrackIdentificationResult getTrackResult(String trackId, String resultId) {
@@ -158,32 +182,12 @@ public class IdentificationManager {
         return mCoverCache.load(trackId);
     }
 
-    private void processResults(List<Identifier.IdentificationResults> results) {
-        List<TrackIdentificationResult> trackIdentificationResults = new ArrayList<>();
-        for(Identifier.IdentificationResults result : results) {
-            Result r = (Result) result;
-            TrackIdentificationResult trackIdentificationResult = AndroidUtils.createTrackResult(r);
-            trackIdentificationResult.setId(r.getId());
-            trackIdentificationResults.add(trackIdentificationResult);
-            processCovers(r);
-        }
-        mTrackCache.add(mTrackId, trackIdentificationResults);
-    }
-
-    private void processCovers(Result r) {
-        List<CoverIdentificationResult> coverIdentificationResultList =
-                AndroidUtils.createListCoverResult(r, mContext);
-
-        mCoverCache.add(mTrackId , coverIdentificationResultList);
-
+    public void clearResults() {
+        mTrackCache.deleteAll();
+        mCoverCache.deleteAll();
     }
 
     private Identifier.IdentificationResults findResult(List<? extends Identifier.IdentificationResults> resultList, String idToSearch) {
-        for(Identifier.IdentificationResults r : resultList) {
-            if(idToSearch.equals(r.getId()))
-                return r;
-        }
-
-        return null;
+        return AndroidUtils.findId(resultList, idToSearch);
     }
 }

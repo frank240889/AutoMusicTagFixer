@@ -213,7 +213,7 @@
     <string name="stop">Stop</string>
 
     <string name="title_extract_cover">Extract cover art</string>
-    <string name="could_not_init_api">Could not initialize API:</string>
+    <string name="could_not_init_api">Could not initialize API, try again.</string>
     <string name="media_mounted">A removable memory has been mounted, try to update the list in some moments.</string>
     <string name="media_unmounted">A removable memory has been unmounted, try to update the list in some moments.</string>
 
@@ -266,7 +266,7 @@
     <string name="file_size">Size</string>
     <string name="size_cover">Cover art size</string>
     <string name="identification_interrupted">Identification interrupted.</string>
-    <string name="message_results">¿Overwrite all tags or only missing?</string>
+    <string name="message_results">¿Do you want to overwrite all tags or only missing?</string>
     <string name="message_results_cover">Save cover art as:</string>
     <string name="file_name">File name</string>
     <string name="saving_cover">Saving cover art…</string>
@@ -321,4 +321,7 @@
     <string name="title_identify_track">Identify</string>
     <string name="save_changes">Save</string>
     <string name="apply_next_tags">Apply changes?</string>
+    <string name="new_name_empty">New name required.</string>
+    <string name="api_connected">You have connected to recognition service.</string>
+    <string name="identification_error">Identification error, try again.</string>
 </resources>

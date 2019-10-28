@@ -1,21 +1,19 @@
 package mx.dev.franco.automusictagfixer.persistence.repository;
 
 import android.content.Context;
-import android.os.AsyncTask;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MediatorLiveData;
-import androidx.lifecycle.MutableLiveData;
 
 import org.jaudiotagger.tag.FieldKey;
 
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Executors;
 
 import javax.inject.Inject;
 
+import mx.dev.franco.automusictagfixer.AutoMusicTagFixer;
 import mx.dev.franco.automusictagfixer.fixer.AbstractMetadataFixer;
 import mx.dev.franco.automusictagfixer.fixer.AudioMetadataTagger;
 import mx.dev.franco.automusictagfixer.fixer.AudioTagger;
@@ -24,7 +22,6 @@ import mx.dev.franco.automusictagfixer.fixer.MetadataReader;
 import mx.dev.franco.automusictagfixer.fixer.MetadataReaderResult;
 import mx.dev.franco.automusictagfixer.fixer.MetadataWriter;
 import mx.dev.franco.automusictagfixer.fixer.MetadataWriterResult;
-import mx.dev.franco.automusictagfixer.fixer.TrackInformationLoader;
 import mx.dev.franco.automusictagfixer.identifier.Identifier;
 import mx.dev.franco.automusictagfixer.interfaces.AsyncOperation;
 import mx.dev.franco.automusictagfixer.interfaces.Cache;
@@ -33,9 +30,7 @@ import mx.dev.franco.automusictagfixer.persistence.repository.AsyncOperation.Tra
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.persistence.room.TrackRoomDatabase;
 import mx.dev.franco.automusictagfixer.ui.SingleLiveEvent;
-import mx.dev.franco.automusictagfixer.ui.trackdetail.ImageWrapper;
 import mx.dev.franco.automusictagfixer.ui.trackdetail.InputCorrectionParams;
-import mx.dev.franco.automusictagfixer.ui.trackdetail.SemiAutoCorrectionParams;
 import mx.dev.franco.automusictagfixer.utilities.Resource;
 
 public class DataTrackManager {
@@ -49,8 +44,6 @@ public class DataTrackManager {
     private AbstractMetadataFixer<Void, Void, AudioTagger.ResultRename> mFileRenamer;
     //Interface to rename audio files and read/write their metadata.
     private AudioMetadataTagger mMetadataTagger;
-    //Helper object to read from Room Database asynchronously
-    private TrackInformationLoader mTrackInformationLoader;
     //The database where is temporally stored the information about tracks.
     private TrackRoomDatabase mTrackRoomDatabase;
     //Live data objects that only dispatch a state change when its method "setVlue()" is called explicitly.
@@ -58,11 +51,9 @@ public class DataTrackManager {
     private SingleLiveEvent<Resource<MetadataWriterResult>> mMetadataWriterResultLiveData;
     private SingleLiveEvent<Resource<AudioTagger.ResultRename>> mFileRenamerLiveData;
     //Live data to inform the progress of task.
-    private MutableLiveData<Boolean> mLoadingStateLiveData;
+    private SingleLiveEvent<Boolean> mLoadingStateLiveData;
     //The cache where are stored temporally the identification results.
     private Cache<String, List<Identifier.IdentificationResults>> mResultsCache;
-    private LiveData<Track> mLiveTrack;
-    private SingleLiveEvent<Track> mSingleLiveEventTrack = new SingleLiveEvent<>();
     private MediatorLiveData<Track> mMediatorLiveDataTrack = new MediatorLiveData<>();
     /**
      * The context required by {@link #mMetadataWriter}
@@ -89,7 +80,7 @@ public class DataTrackManager {
         mMetadataReaderResultLiveData = new SingleLiveEvent<>();
         mMetadataWriterResultLiveData = new SingleLiveEvent<>();
         mFileRenamerLiveData = new SingleLiveEvent<>();
-        mLoadingStateLiveData = new MutableLiveData<>();
+        mLoadingStateLiveData = new SingleLiveEvent<>();
     }
 
     public void setId(int id) {
@@ -142,59 +133,14 @@ public class DataTrackManager {
             }
         }, mMetadataTagger, track);
 
-        mMetadataReader.executeOnExecutor(Executors.newCachedThreadPool());
-        /*mTrackInformationLoader = new TrackInformationLoader(new AsyncOperation<Void, List<Track>, Void, Void>() {
-
-            @Override
-            public void onAsyncOperationStarted(Void params) {
-                mLoadingStateLiveData.setValue(true);
-            }
-
-            @Override
-            public void onAsyncOperationFinished(List<Track> result) {
-                mLoadingStateLiveData.setValue(false);
-                Track track = result.get(0);
-                mTrack = track;
-                readTrackInformation();
-            }
-
-        }, mTrackRoomDatabase);
-        mTrackInformationLoader.executeOnExecutor(Executors.newCachedThreadPool(), trackId);*/
+        mMetadataReader.executeOnExecutor(AutoMusicTagFixer.getExecutorService());
     }
-
-    /**
-     * Read the metadata from audio track.
-     */
-    /*private void readTrackInformation() {
-        mMetadataReader = new MetadataReader(new AsyncOperation<Track, MetadataReaderResult, Track, MetadataReaderResult>() {
-            @Override
-            public void onAsyncOperationStarted(Track params) {
-                mLoadingStateLiveData.setValue(true);
-            }
-
-            @Override
-            public void onAsyncOperationFinished(MetadataReaderResult result) {
-                mMetadataReaderResultLiveData.setValue(Resource.success(result));
-                mLoadingStateLiveData.setValue(false);
-            }
-
-            @Override
-            public void onAsyncOperationError(MetadataReaderResult error) {
-                mMetadataReaderResultLiveData.setValue(Resource.error(error));
-                mLoadingStateLiveData.setValue(false);
-            }
-        }, mMetadataTagger, mTrack);
-
-        mMetadataReader.executeOnExecutor(Executors.newCachedThreadPool());
-    }*/
 
     /**
      * Renames the audio file.
      * @param correctionParams The params required by {@link AudioTagger}
      */
     public void renameFile(AudioMetadataTagger.InputParams correctionParams) {
-        SemiAutoCorrectionParams uiInputParams = (SemiAutoCorrectionParams) correctionParams;
-        if(uiInputParams.renameFile() && uiInputParams.getNewName().isEmpty())
 
         mFileRenamer = new FileRenamer(new AsyncOperation<Track, AudioTagger.ResultRename, Track, AudioTagger.ResultRename>() {
             @Override
@@ -206,7 +152,6 @@ public class DataTrackManager {
             public void onAsyncOperationFinished(AudioTagger.ResultRename result) {
                 mLoadingStateLiveData.setValue(false);
                 mFileRenamerLiveData.setValue(Resource.success(result));
-                //readAudioFile(mTrack.getMediaStoreId());
             }
 
             @Override
@@ -219,9 +164,9 @@ public class DataTrackManager {
                 mLoadingStateLiveData.setValue(false);
                 mFileRenamerLiveData.setValue(Resource.error(error));
             }
-        }, mMetadataTagger, mTrack, uiInputParams.getNewName());
+        }, mMetadataTagger, mTrack, correctionParams.getNewName());
 
-        mFileRenamer.executeOnExecutor(Executors.newCachedThreadPool());
+        mFileRenamer.executeOnExecutor(AutoMusicTagFixer.getExecutorService());
     }
 
     /**
@@ -247,7 +192,6 @@ public class DataTrackManager {
             public void onAsyncOperationFinished(MetadataWriterResult result) {
                 mLoadingStateLiveData.setValue(false);
                 mMetadataWriterResultLiveData.setValue(Resource.success(result));
-                //readAudioFile(mTrack.getMediaStoreId());
             }
 
             @Override
@@ -261,7 +205,7 @@ public class DataTrackManager {
                 mMetadataWriterResultLiveData.setValue(Resource.error(error));
             }
         }, mMetadataTagger, correctionParams, mTrack);
-        mMetadataWriter.executeOnExecutor(Executors.newCachedThreadPool(), mContext);
+        mMetadataWriter.executeOnExecutor(AutoMusicTagFixer.getExecutorService(), mContext);
     }
 
 
@@ -270,14 +214,11 @@ public class DataTrackManager {
         performCorrection(inputParams);
     }
 
-    public void changeCover(ImageWrapper imageWrapper) {
-
-    }
-
     public void updateTrack(Map<FieldKey, Object> tags) {
         String title = (String) tags.get(FieldKey.TITLE);
         String artist = (String) tags.get(FieldKey.ARTIST);
         String album = (String) tags.get(FieldKey.ALBUM);
+        String path = (String) tags.get(FieldKey.CUSTOM1);
 
         if (title != null && !title.isEmpty()) {
             mTrack.setTitle(title);
@@ -288,11 +229,14 @@ public class DataTrackManager {
         if (album != null && !album.isEmpty()) {
             mTrack.setAlbum(album);
         }
-        new TrackUpdater(mTrackRoomDatabase.trackDao()).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,mTrack);
+
+        if(path != null && !path.equals(""))
+            mTrack.setPath(path);
+
+        new TrackUpdater(mTrackRoomDatabase.trackDao()).executeOnExecutor(AutoMusicTagFixer.getExecutorService(),mTrack);
     }
 
-    public void updateTrack(String newPath) {
-        mTrack.setPath(newPath);
-        new TrackUpdater(mTrackRoomDatabase.trackDao()).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,mTrack);
+    public void updateTrack(Track track) {
+        new TrackUpdater(mTrackRoomDatabase.trackDao()).executeOnExecutor(AutoMusicTagFixer.getExecutorService(),track);
     }
 }

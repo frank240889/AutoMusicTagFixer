@@ -241,6 +241,47 @@ public class AndroidUtils {
         return bundle;
     }
 
+    public static int calculateInSampleSize(
+            BitmapFactory.Options options, int reqWidth, int reqHeight) {
+        // Raw height and width of image
+        final int height = options.outHeight;
+        final int width = options.outWidth;
+        int inSampleSize = 1;
+
+        if (height > reqHeight || width > reqWidth) {
+
+            final int halfHeight = height / 2;
+            final int halfWidth = width / 2;
+
+            // Calculate the largest inSampleSize value that is a power of 2 and keeps both
+            // height and width larger than the requested height and width.
+            while ((halfHeight / inSampleSize) >= reqHeight
+                    && (halfWidth / inSampleSize) >= reqWidth) {
+                inSampleSize *= 2;
+            }
+        }
+
+        return inSampleSize;
+    }
+
+    public static byte[] decodeSampledBitmapFromResource(byte[] data, int reqWidth, int reqHeight) {
+
+        // First decode with inJustDecodeBounds=true to check dimensions
+        final BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inJustDecodeBounds = true;
+        BitmapFactory.decodeByteArray(data,0, data.length - 1, options);
+
+        // Calculate inSampleSize
+        options.inSampleSize = calculateInSampleSize(options, reqWidth, reqHeight);
+
+        // Decode bitmap with inSampleSize set
+        options.inJustDecodeBounds = false;
+        Bitmap downSampledBitmap = BitmapFactory.decodeByteArray(data,0, data.length - 1, options);
+        if(downSampledBitmap != null)
+            return generateCover(downSampledBitmap);
+        return null;
+    }
+
     /**
      *
      * @param id is the id of element
@@ -278,6 +319,15 @@ public class AndroidUtils {
             return file.getName();
         }
         else return null;
+    }
+
+    public static Identifier.IdentificationResults  findId(List<? extends Identifier.IdentificationResults> resultList, String idToSearch) {
+        for(Identifier.IdentificationResults r : resultList) {
+            if(r.getId().equals(idToSearch))
+                return r;
+        }
+
+        return null;
     }
 
     public static class AudioTaggerErrorDescription {
@@ -380,7 +430,12 @@ public class AndroidUtils {
 
     public static void createCoverInputParams(CoverIdentificationResult r,
                                          InputCorrectionParams correctionParams) {
-        Map<FieldKey, Object> tags = new ArrayMap<>();
+        Map<FieldKey, Object> tags = null;
+        if(correctionParams.getFields() == null)
+            tags = new ArrayMap<>();
+        else
+            tags = correctionParams.getFields();
+
         tags.put(FieldKey.COVER_ART, r.getCover());
         correctionParams.setFields(tags);
     }

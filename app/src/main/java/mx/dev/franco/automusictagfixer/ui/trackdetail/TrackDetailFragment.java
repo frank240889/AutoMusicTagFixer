@@ -131,17 +131,17 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
             }
         });
 
-        mViewModel.observeActionableMessage().observe(getActivity(), this::onActionableMessage);
-        mViewModel.observeMessage().observe(getActivity(), this::onMessage);
-        mViewModel.observeSuccessIdentification().observe(getActivity(), this::onIdentificationResults);
-        mViewModel.observeCachedIdentification().observe(getActivity(), this::onIdentificationResults);
-        mViewModel.observeFailIdentification().observe(getActivity(), this::onMessage);
+        mViewModel.observeActionableMessage().observe(this, this::onActionableMessage);
+        mViewModel.observeMessage().observe(this, this::onMessage);
+        mViewModel.observeSuccessIdentification().observe(this, this::onIdentificationResults);
+        mViewModel.observeCachedIdentification().observe(this, this::onIdentificationResults);
+        mViewModel.observeFailIdentification().observe(this, this::onMessage);
         mViewModel.observeLoadingState().observe(this, this::loading);
-        mViewModel.observeConfirmationRemoveCover().observe(getActivity(), this::onConfirmRemovingCover);
-        mViewModel.observeInvalidInputsValidation().observe(getActivity(), this::onInputDataInvalid);
-        mViewModel.observeWritingResult().observe(getActivity(), this::onWritingResult);
-        mViewModel.observeRenamingResult().observe(getActivity(), this::onMessage);
-        mViewModel.observeCoverSavingResult().observe(getActivity(), this::onActionableMessage);
+        mViewModel.observeConfirmationRemoveCover().observe(this, this::onConfirmRemovingCover);
+        mViewModel.observeInvalidInputsValidation().observe(this, this::onInputDataInvalid);
+        mViewModel.observeWritingResult().observe(this, this::onWritingResult);
+        mViewModel.observeRenamingResult().observe(this, this::onMessage);
+        mViewModel.observeCoverSavingResult().observe(this, this::onActionableMessage);
         mViewModel.observeTrack().observe(this, track -> mPlayer.setPath(track.getPath()));
         setHasOptionsMenu(true);
     }
@@ -150,6 +150,7 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
         enableEditModeElements();
         showFabs();
         disableFields();
+        enableAppBarLayout();
         onMessage(actionableMessage);
     }
 
@@ -352,6 +353,7 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
      */
     @Override
     public void onMissingTagsButton(SemiAutoCorrectionParams semiAutoCorrectionParams) {
+        mPlayer.stopPreview();
         mViewModel.performCorrection(semiAutoCorrectionParams);
     }
 
@@ -361,11 +363,13 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
      */
     @Override
     public void onOverwriteTagsButton(SemiAutoCorrectionParams semiAutoCorrectionParams) {
+        mPlayer.stopPreview();
         mViewModel.performCorrection(semiAutoCorrectionParams);
     }
 
     @Override
     public void onManualCorrection(ManualCorrectionParams inputParams) {
+        mPlayer.stopPreview();
         mViewModel.performCorrection(inputParams);
     }
 
@@ -382,6 +386,7 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
 
     @Override
     public void saveAsCover(CoverCorrectionParams coverCorrectionParams) {
+        mPlayer.stopPreview();
         mViewModel.performCorrection(coverCorrectionParams);
     }
 
@@ -440,35 +445,6 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
     }
 
     /**
-     * Callback when user pressed mSaveButton and input data is valid.
-     */
-    private void onInputDataValid(ValidationWrapper validationWrapper) {
-        ManualCorrectionDialogFragment manualCorrectionDialogFragment =
-                ManualCorrectionDialogFragment.newInstance();
-
-        manualCorrectionDialogFragment.showNow(getChildFragmentManager(),
-                manualCorrectionDialogFragment.getClass().getName());
-    }
-
-
-    public void setCancelTaskEnabled(boolean enableCancelView) {
-        mFragmentTrackDetailBinding.
-                layoutContentDetailsTrack.
-                cancelIdentification.
-                setVisibility(enableCancelView ? View.VISIBLE : View.GONE);
-    }
-
-    /**
-     * Enables and disables fabs
-     * @param enable true for enable, false to disable
-     */
-    private void enableMiniFabs(boolean enable){
-        mUpdateCoverMenuItem.setEnabled(enable);
-        mFragmentTrackDetailBinding.toolbarCoverArt.setEnabled(enable);
-        mFragmentTrackDetailBinding.fabAutofix.setEnabled(enable);
-    }
-
-    /**
      * This method creates the references to visual elements
      * in layout
      */
@@ -488,13 +464,10 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
                 mViewModel.startIdentification(new IdentificationParams(IdentificationParams.ALL_TAGS));
         });
 
-        mFragmentTrackDetailBinding.fabSaveInfo.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                ManualCorrectionDialogFragment manualCorrectionDialogFragment = ManualCorrectionDialogFragment.newInstance();
-                manualCorrectionDialogFragment.show(getChildFragmentManager(),
-                        manualCorrectionDialogFragment.getClass().getCanonicalName());
-            }
+        mFragmentTrackDetailBinding.fabSaveInfo.setOnClickListener(v -> {
+            ManualCorrectionDialogFragment manualCorrectionDialogFragment = ManualCorrectionDialogFragment.newInstance();
+            manualCorrectionDialogFragment.show(getChildFragmentManager(),
+                    manualCorrectionDialogFragment.getClass().getCanonicalName());
         });
     }
 
@@ -550,7 +523,7 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
         mIdentifyCoverMenuItem.setEnabled(false);
         mRemoveMenuItem.setEnabled(false);
         mUpdateCoverMenuItem.setEnabled(false);
-        mFragmentTrackDetailBinding.fabAutofix.setEnabled(false);
+        mFragmentTrackDetailBinding.fabAutofix.hide();
     }
 
     private void enableEditModeElements() {
@@ -558,7 +531,7 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
         mIdentifyCoverMenuItem.setEnabled(true);
         mRemoveMenuItem.setEnabled(true);
         mUpdateCoverMenuItem.setEnabled(true);
-        mFragmentTrackDetailBinding.fabAutofix.setEnabled(true);
+        mFragmentTrackDetailBinding.fabAutofix.show();
     }
 
     /**

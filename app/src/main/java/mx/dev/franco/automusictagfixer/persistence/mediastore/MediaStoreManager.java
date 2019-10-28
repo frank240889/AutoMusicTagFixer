@@ -9,11 +9,11 @@ import org.jaudiotagger.tag.FieldKey;
 
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Executors;
 
 import javax.annotation.Nonnull;
 import javax.inject.Inject;
 
+import mx.dev.franco.automusictagfixer.AutoMusicTagFixer;
 import mx.dev.franco.automusictagfixer.interfaces.AsyncOperation;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.ui.SingleLiveEvent;
@@ -70,7 +70,7 @@ public class MediaStoreManager {
                 mMediaStoreResultSingleLiveEvent.setValue(result);
             }
         }, data, task, mediaStoreId);
-        mMediaStoreUpdater.executeOnExecutor(Executors.newCachedThreadPool(), mContext);
+        mMediaStoreUpdater.executeOnExecutor(AutoMusicTagFixer.getExecutorService(), mContext);
     }
 
     /**
@@ -95,7 +95,7 @@ public class MediaStoreManager {
                 mResult.setValue(Resource.error(null));
             }
         });
-        mediaStoreReader.executeOnExecutor(Executors.newCachedThreadPool(), mContext);
+        mediaStoreReader.executeOnExecutor(AutoMusicTagFixer.getExecutorService(), mContext);
     }
 
 }

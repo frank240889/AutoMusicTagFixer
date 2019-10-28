@@ -48,10 +48,11 @@
             android:label="@string/title_activity_main"
             android:launchMode="singleTop"
             android:screenOrientation="portrait"
-            android:windowSoftInputMode="adjustResize"
-            tools:ignore="InnerclassSeparator"></activity>
+            android:windowSoftInputMode="adjustResize|adjustPan"
+            tools:ignore="InnerclassSeparator" />
         <activity
             android:name=".ui.sdcardinstructions.SdCardInstructionsActivity"
+            android:configChanges="orientation|screenSize"
             android:parentActivityName=".ui.MainActivity"
             android:screenOrientation="portrait"
             tools:ignore="InnerclassSeparator" />

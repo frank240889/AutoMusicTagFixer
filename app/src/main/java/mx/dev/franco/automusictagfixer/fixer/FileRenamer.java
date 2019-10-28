@@ -28,10 +28,13 @@ public class FileRenamer extends AbstractMetadataFixer<Void, Void, AudioTagger.R
 
         String newName = mFileTagger.renameFile(track.getPath(), mNewName);
 
-        if(newName != null)
+        if(newName != null) {
             resultRename.setNewAbsolutePath(newName);
-        else
+            resultRename.setCode(AudioTagger.SUCCESS);
+        }
+        else {
             resultRename.setCode(AudioTagger.COULD_NOT_RENAME_FILE);
+        }
 
         return resultRename;
     }

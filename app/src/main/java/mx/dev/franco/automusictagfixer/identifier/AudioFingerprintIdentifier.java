@@ -101,8 +101,8 @@ public class AudioFingerprintIdentifier implements Identifier<Track, List<Identi
                     mHandler.post(new Runnable() {
                         @Override
                         public void run() {
-                            String error = gnError != null && gnError.errorDescription() != null ?
-                                    gnError.errorDescription() : resourceManager.getString(R.string.error);
+                            String error = gnError != null && gnError.errorDescription() != null && !gnError.errorDescription().isEmpty() ?
+                                    gnError.errorDescription() : resourceManager.getString(R.string.identification_error);
                             if(identificationListener != null)
                                 identificationListener.onIdentificationError(track, error);
                             identificationListener = null;

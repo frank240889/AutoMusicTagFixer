@@ -11,17 +11,19 @@ public class CoverTask implements ICoverRunnable {
     private String mPath;
     private static CoverManager sCoverManager;
     private byte[] mCover;
+    private String id;
 
     CoverTask(){
         mExtractionRunnable = new CoverExtractionRunnable(this);
     }
 
     void startFetching(
-            CoverManager coverManager, AudioHolder audioItemHolder, String path) {
+            CoverManager coverManager, AudioHolder audioItemHolder, String path, String id) {
 
         mAudioItemHolderWeakReference = new WeakReference<>(audioItemHolder);
         mPath = path;
         sCoverManager = coverManager;
+        this.id = id;
     }
 
     @Override
@@ -65,6 +67,10 @@ public class CoverTask implements ICoverRunnable {
             return mAudioItemHolderWeakReference.get();
         }
         return null;
+    }
+
+    public String getId() {
+        return id;
     }
 
     Runnable getExtractionRunnable() {

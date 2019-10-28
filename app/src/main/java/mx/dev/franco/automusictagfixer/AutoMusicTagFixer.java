@@ -10,6 +10,9 @@ import com.crashlytics.android.Crashlytics;
 import com.crashlytics.android.core.CrashlyticsCore;
 import com.facebook.stetho.Stetho;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 import javax.inject.Inject;
 
 import dagger.android.AndroidInjector;
@@ -17,6 +20,7 @@ import dagger.android.DispatchingAndroidInjector;
 import dagger.android.HasActivityInjector;
 import dagger.android.HasServiceInjector;
 import io.fabric.sdk.android.Fabric;
+import mx.dev.franco.automusictagfixer.covermanager.CoverManager;
 import mx.dev.franco.automusictagfixer.di.DaggerApplicationComponent;
 
 
@@ -25,6 +29,7 @@ import mx.dev.franco.automusictagfixer.di.DaggerApplicationComponent;
  */
 
 public final class AutoMusicTagFixer extends Application implements HasActivityInjector, HasServiceInjector {
+    private static ExecutorService executorService;
     @Inject
     DispatchingAndroidInjector<Activity> dispatchingAndroidInjector;
     @Inject
@@ -34,7 +39,7 @@ public final class AutoMusicTagFixer extends Application implements HasActivityI
     @Override
     public void onCreate() {
         super.onCreate();
-
+        CoverManager.getInstance();
         DaggerApplicationComponent.builder()
             .application(this)
             .build()
@@ -61,5 +66,12 @@ public final class AutoMusicTagFixer extends Application implements HasActivityI
     @Override
     public AndroidInjector<Service> serviceInjector() {
         return serviceDispatchingAndroidInjector;
+    }
+
+    public static ExecutorService getExecutorService() {
+        if(executorService == null || executorService.isShutdown()) {
+            executorService = Executors.newCachedThreadPool();
+        }
+        return executorService;
     }
 }

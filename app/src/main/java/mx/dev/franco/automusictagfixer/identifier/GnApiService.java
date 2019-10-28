@@ -18,12 +18,20 @@ import com.gracenote.gnsdk.GnRegion;
 import com.gracenote.gnsdk.GnUser;
 import com.gracenote.gnsdk.GnUserStore;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 /**
  * @author Franco Castillo
  */
 public class GnApiService {
+    public interface OnEventApiListener {
+        void onApiInitialized();
+        void onApiError(String error);
+    }
+
+
     public static final String BEGIN_PROCESSING = "kMusicIdFileCallbackStatusProcessingBegin";
     public static final String QUERYING_INFO = "kMusicIdFileCallbackStatusFileInfoQuery";
     public static final String COMPLETE_IDENTIFICATION = "kMusicIdFileCallbackStatusProcessingComplete";
@@ -61,11 +69,13 @@ public class GnApiService {
     private static final String sAppString = "AutomaticMusicTagFixer";
     /******************************************************************/
 
-    private volatile boolean sApiInitialized = false;
-    private volatile boolean sIsInitializing = false;
-    private volatile int sCounter = 0;
+    private volatile boolean mApiInitialized = false;
+    private volatile boolean mIsInitializing = false;
+    private volatile int mCounter = 0;
     private Map<String,String> mGnStatusToDisplay;
     private GnLanguage mLanguage;
+    private GnException mInitializationError;
+    private List<OnEventApiListener> mListeners;
 
     /**
      * We don't need instances of this class
@@ -73,6 +83,7 @@ public class GnApiService {
     private GnApiService(Context context){
         if(mContext == null) {
             mContext = context.getApplicationContext();
+            mListeners = new ArrayList<>();
             initStates();
         }
     }
@@ -92,6 +103,10 @@ public class GnApiService {
         }
         return sInstance;
     }
+
+    public void addListener(OnEventApiListener listener) {
+        mListeners.add(listener);
+    }
     
     /**
      * Initializes the API making a max of {@link #MAX_RETRIES}.
@@ -100,12 +115,15 @@ public class GnApiService {
         if(!isApiInitialized() && !isApiInitializing()) {
             initApi();
             if(isApiInitialized()) {
-                sCounter = 0;
+                mCounter = 0;
             }
             else {
-                sCounter++;
-                if(sCounter <= MAX_RETRIES) {
+                mCounter++;
+                if(mCounter <= MAX_RETRIES) {
                     initializeAPI();
+                }
+                else {
+
                 }
             }
         }
@@ -156,30 +174,39 @@ public class GnApiService {
             Log.w(getClass().getName(), "Could not initialize API: " + e.toString());
             setApiInitializing(false);
             setApiInitialized(false);
+            setErrorInitialization(e);
         }
     }
 
-    public synchronized boolean isApiInitialized() {
-        return sApiInitialized;
+    private synchronized void setErrorInitialization(GnException e) {
+        mInitializationError = e;
     }
 
-    public synchronized boolean isApiInitializing() {
-        return sIsInitializing;
+    public GnException getInitializationError() {
+        return mInitializationError;
+    }
+
+    public boolean isApiInitialized() {
+        return mApiInitialized;
+    }
+
+    public boolean isApiInitializing() {
+        return mIsInitializing;
     }
 
     private synchronized void setApiInitializing(boolean initializing) {
-        sIsInitializing = initializing;
+        mIsInitializing = initializing;
     }
 
     private synchronized void setApiInitialized(boolean initialized) {
-        sApiInitialized = initialized;
+        mApiInitialized = initialized;
     }
 
     private synchronized void setGnManager(GnManager manager) {
         mGnManager = manager;
     }
 
-    public synchronized GnManager getGnManager() {
+    public GnManager getGnManager() {
         return mGnManager;
     }
 
@@ -187,7 +214,7 @@ public class GnApiService {
         mGnUser = gnUser;
     }
 
-    public synchronized GnUser getGnUser() {
+    public GnUser getGnUser() {
         return mGnUser;
     }
 
@@ -195,7 +222,7 @@ public class GnApiService {
         mGnLocale = gnLocale;
     }
 
-    public synchronized GnLocale getGnLocale() {
+    public GnLocale getGnLocale() {
         return mGnLocale;
     }
 

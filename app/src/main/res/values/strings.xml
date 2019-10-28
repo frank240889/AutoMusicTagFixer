@@ -24,7 +24,7 @@
     <string name="error_load_image">Error al leer la imagen.</string>
     <string name="as_cover_art">Carátula</string>
     <string name="as_file">Imagen</string>
-    <string name="no_cover_art_found">No se encontró carátula</string>
+    <string name="no_cover_art_found">No se encontraron carátulas.</string>
 
     <string name="cover_updated">Carátula actualizada.</string>
     <string name="cover_removed">Carátula removida.</string>
@@ -216,7 +216,7 @@
     <string name="stop">Detener</string>
 
     <string name="title_extract_cover">Extraer carátula</string>
-    <string name="could_not_init_api">No se ha podido iniciar la API:</string>
+    <string name="could_not_init_api">No se ha podido iniciar la API, intentalo de nuevo.</string>
     <string name="media_mounted">Se ha montado una memoria extraíble, intenta actualizar la lista en algunos momentos.</string>
     <string name="media_unmounted">Se ha desmontado una memoria extraíble, intenta actualizar la lista en algunos momentos.</string>
 
@@ -269,7 +269,7 @@
     <string name="file_size">Tamaño</string>
     <string name="size_cover">Tamaño de carátula</string>
     <string name="identification_interrupted">Identificación interrumpida.</string>
-    <string name="message_results">¿Sobreescribir todas o sólo las faltantes?</string>
+    <string name="message_results">¿Deseas sobreescribir todas o sólo las faltantes?</string>
     <string name="message_results_cover">Guardar la carátula como:</string>
     <string name="file_name">Nombre de archivo</string>
     <string name="saving_cover">Guardando carátula…</string>
@@ -325,4 +325,7 @@
     <string name="title_identify_track">Identificar</string>
     <string name="save_changes">Guardar</string>
     <string name="apply_next_tags">¿Aplicar los cambios?</string>
+    <string name="new_name_empty">Se requiere el nuevo nombre.</string>
+    <string name="api_connected">Se ha conectado al servicio de reconocimiento.</string>
+    <string name="identification_error">Error de identificación, intentalo de nuevo.</string>
 </resources>

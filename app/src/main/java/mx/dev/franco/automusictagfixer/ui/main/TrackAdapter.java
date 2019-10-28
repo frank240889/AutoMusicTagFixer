@@ -178,7 +178,7 @@ public class TrackAdapter extends RecyclerView.Adapter<AudioItemHolder> implemen
     }
 
     private void enqueue(AudioItemHolder holder, Track track) {
-        CoverManager.startFetchingCover(holder, track.getPath());
+        CoverManager.startFetchingCover(holder, track.getPath(), track.getMediaStoreId()+"");
     }
 
     /**

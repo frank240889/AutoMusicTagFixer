@@ -20,6 +20,7 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 
 import mx.dev.franco.automusictagfixer.R;
+import mx.dev.franco.automusictagfixer.fixer.AudioTagger;
 import mx.dev.franco.automusictagfixer.ui.ResultsFragmentBase;
 import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
@@ -55,7 +56,7 @@ public class CoverIdentificationResultsFragmentBase extends ResultsFragmentBase<
     }
 
     private void onZeroResults(Void aVoid) {
-        AndroidUtils.showToast(R.string.no_results, getActivity());
+        AndroidUtils.showToast(R.string.no_cover_art_found, getActivity());
         dismiss();
     }
 
@@ -107,6 +108,7 @@ public class CoverIdentificationResultsFragmentBase extends ResultsFragmentBase<
         saveAsCoverButton.setOnClickListener(v ->{
                 dismiss();
                 mCoverCorrectionParams.setCoverId(mViewModel.getCoverResult(mCenteredItem).getId());
+                mCoverCorrectionParams.setCorrectionMode(AudioTagger.MODE_ADD_COVER);
                 mOnCoverCorrectionListener.saveAsCover(mCoverCorrectionParams);});
 
         saveAsImageFileButton.setOnClickListener(v -> {

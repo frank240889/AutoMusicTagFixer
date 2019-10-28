@@ -23,6 +23,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import mx.dev.franco.automusictagfixer.R;
+import mx.dev.franco.automusictagfixer.persistence.cache.CoverDataCache;
 import mx.dev.franco.automusictagfixer.ui.AudioHolder;
 import mx.dev.franco.automusictagfixer.utilities.GlideApp;
 
@@ -45,6 +46,7 @@ public class CoverManager {
     private final BlockingQueue<Runnable> mExtractWorkQueue;
     private final Queue<CoverTask> mCoverTaskQueue;
     private final ThreadPoolExecutor mCoverExtractionThreadPool;
+    private static CoverDataCache mCoverDataCache;
 
     private Handler mUiHandler;
 
@@ -56,6 +58,7 @@ public class CoverManager {
     static {
         KEEP_ALIVE_TIME_UNIT = TimeUnit.MINUTES;
         sInstance = new CoverManager();
+        mCoverDataCache = new CoverDataCache();
     }
 
     /**
@@ -78,14 +81,14 @@ public class CoverManager {
                 KEEP_ALIVE_TIME_UNIT,
                 mExtractWorkQueue);
 
-
         mUiHandler = new Handler(Looper.getMainLooper()){
             @Override
             public void handleMessage(Message msg) {
                 CoverTask coverTask = (CoverTask) msg.obj;
                 AudioHolder audioItemHolder = coverTask.getAudioHolder();
                 byte[] cover = coverTask.getCover();
-
+                String id = coverTask.getId();
+                mCoverDataCache.add(id, cover);
                 if(audioItemHolder != null) {
                     loadCover(audioItemHolder, cover);
                 }
@@ -100,13 +103,12 @@ public class CoverManager {
         mCoverTaskQueue.offer(coverTask);
     }
 
-    private void loadCover(AudioHolder holder, byte[] result) {
-        if(holder.itemView.getContext() != null) {
+    private static void loadCover(AudioHolder holder, byte[] result) {
             GlideApp.with(holder.itemView.getContext().getApplicationContext()).
                     load(result)
                     .thumbnail(0.5f)
                     .error(R.drawable.ic_album_white_48px)
-                    .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.AUTOMATIC))
+                    .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.NONE))
                     .apply(RequestOptions.skipMemoryCacheOf(false))
                     .transition(DrawableTransitionOptions.withCrossFade(150))
                     .fitCenter()
@@ -130,7 +132,6 @@ public class CoverManager {
                     })
                     .placeholder(R.drawable.ic_album_white_48px)
                     .into(holder.cover);
-        }
     }
 
     /**
@@ -157,12 +158,13 @@ public class CoverManager {
     }
 
 
-    public static CoverTask startFetchingCover(
+    /*public static CoverTask startFetchingCover(
             AudioHolder audioItemHolder, String path) {
+
 
         /*
          * Gets a task from the pool of tasks, returning null if the pool is empty
-         */
+
         CoverTask coverTask = sInstance.mCoverTaskQueue.poll();
 
         // If the queue was empty, create a new task instead.
@@ -177,8 +179,41 @@ public class CoverManager {
             /*
              * "Executes" the tasks' download Runnable in order to download the image. If no
              * Threads are available in the thread pool, the Runnable waits in the queue.
+
+            sInstance.mCoverExtractionThreadPool.execute(coverTask.getExtractionRunnable());
+
+        // Returns a task object, either newly-created or one from the task pool
+        return coverTask;
+    }*/
+
+    public static CoverTask startFetchingCover(
+            AudioHolder audioItemHolder, String path, String id) {
+        /*
+         * Gets a task from the pool of tasks, returning null if the pool is empty
+         */
+        CoverTask coverTask = null;
+        byte[] data = mCoverDataCache.load(id);
+        if(data != null) {
+            loadCover(audioItemHolder, data);
+        }
+        else {
+            coverTask = sInstance.mCoverTaskQueue.poll();
+            // If the queue was empty, create a new task instead.
+            if (null == coverTask) {
+                coverTask = new CoverTask();
+            }
+
+            // Initializes the task
+            coverTask.startFetching(CoverManager.sInstance, audioItemHolder, path, id);
+
+
+            /*
+             * "Executes" the tasks' download Runnable in order to download the image. If no
+             * Threads are available in the thread pool, the Runnable waits in the queue.
              */
             sInstance.mCoverExtractionThreadPool.execute(coverTask.getExtractionRunnable());
+        }
+
 
         // Returns a task object, either newly-created or one from the task pool
         return coverTask;

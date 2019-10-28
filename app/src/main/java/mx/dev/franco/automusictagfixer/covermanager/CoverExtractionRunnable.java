@@ -1,6 +1,7 @@
 package mx.dev.franco.automusictagfixer.covermanager;
 
 import mx.dev.franco.automusictagfixer.fixer.AudioTagger;
+import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 
 public class CoverExtractionRunnable implements Runnable {
     // Sets the log tag
@@ -20,13 +21,15 @@ public class CoverExtractionRunnable implements Runnable {
     @Override
     public void run() {
         byte[] cover = AudioTagger.getCover(mCoverRunnable.getPath());
-        mCoverRunnable.setCover(cover);
-        if(cover == null) {
-            mCoverRunnable.handleExtractionState(EXTRACTION_STATE_FAILED);
-        }
-        else {
+        if(cover != null) {
+            byte[] downscaledCover = AndroidUtils.decodeSampledBitmapFromResource(cover, 128, 128);
+            mCoverRunnable.setCover(downscaledCover);
             mCoverRunnable.handleExtractionState(EXTRACTION_STATE_COMPLETED);
         }
+        else {
+            mCoverRunnable.handleExtractionState(EXTRACTION_STATE_FAILED);
+        }
+
         Thread.interrupted();
     }
 }
