@@ -13,6 +13,7 @@ import androidx.lifecycle.MediatorLiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Transformations;
 
+import mx.dev.franco.automusictagfixer.covermanager.CoverManager;
 import org.jaudiotagger.tag.FieldKey;
 
 import java.text.DateFormat;
@@ -203,6 +204,7 @@ public class TrackDetailViewModel extends AndroidViewModel {
                     mDataTrackManager.renameFile(mCorrectionParams);
                 }
                 else {
+                    CoverManager.removeCover(mTrack.getMediaStoreId()+"");
                     if(input.data.getResultCorrection().getTagsUpdated() != null) {
                         mTrack.setProcessing(0);
                         mDataTrackManager.updateTrack(input.data.getResultCorrection().getTagsUpdated());

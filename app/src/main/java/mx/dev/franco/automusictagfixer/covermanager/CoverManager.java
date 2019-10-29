@@ -226,5 +226,7 @@ public class CoverManager {
         }
     }
 
-
+    public static void removeCover(String id) {
+        mCoverDataCache.delete(id);
+    }
 }
