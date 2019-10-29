@@ -69,9 +69,9 @@ public class GnApiService {
     private static final String sAppString = "AutomaticMusicTagFixer";
     /******************************************************************/
 
-    private volatile boolean mApiInitialized = false;
-    private volatile boolean mIsInitializing = false;
-    private volatile int mCounter = 0;
+    private boolean mApiInitialized = false;
+    private boolean mIsInitializing = false;
+    private int mCounter = 0;
     private Map<String,String> mGnStatusToDisplay;
     private GnLanguage mLanguage;
     private GnException mInitializationError;
@@ -111,7 +111,7 @@ public class GnApiService {
     /**
      * Initializes the API making a max of {@link #MAX_RETRIES}.
      */
-    private synchronized void initializeAPI(){
+    private void initializeAPI(){
         if(!isApiInitialized() && !isApiInitializing()) {
             initApi();
             if(isApiInitialized()) {
@@ -178,7 +178,7 @@ public class GnApiService {
         }
     }
 
-    private synchronized void setErrorInitialization(GnException e) {
+    private void setErrorInitialization(GnException e) {
         mInitializationError = e;
     }
 
@@ -194,15 +194,15 @@ public class GnApiService {
         return mIsInitializing;
     }
 
-    private synchronized void setApiInitializing(boolean initializing) {
+    private void setApiInitializing(boolean initializing) {
         mIsInitializing = initializing;
     }
 
-    private synchronized void setApiInitialized(boolean initialized) {
+    private void setApiInitialized(boolean initialized) {
         mApiInitialized = initialized;
     }
 
-    private synchronized void setGnManager(GnManager manager) {
+    private void setGnManager(GnManager manager) {
         mGnManager = manager;
     }
 
@@ -210,7 +210,7 @@ public class GnApiService {
         return mGnManager;
     }
 
-    private synchronized void setGnUser(GnUser gnUser) {
+    private void setGnUser(GnUser gnUser) {
         mGnUser = gnUser;
     }
 
@@ -218,7 +218,7 @@ public class GnApiService {
         return mGnUser;
     }
 
-    private synchronized void setGnLocale(GnLocale gnLocale) {
+    private void setGnLocale(GnLocale gnLocale) {
         mGnLocale = gnLocale;
     }
 

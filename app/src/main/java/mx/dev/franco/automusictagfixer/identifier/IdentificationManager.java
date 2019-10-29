@@ -84,7 +84,6 @@ public class IdentificationManager {
         else {
             if(mIdentifying)
                 return;
-
             mIdentifier.registerCallback(new IdentificationListener<List<Identifier.IdentificationResults>, Track>() {
                 @Override
                 public void onIdentificationStart(Track file) {
