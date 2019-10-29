@@ -2,6 +2,7 @@ package mx.dev.franco.automusictagfixer.persistence.repository;
 
 import android.content.Context;
 
+import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MediatorLiveData;
 import androidx.lifecycle.MutableLiveData;
@@ -33,25 +34,25 @@ public class TrackRepository {
     public static final int DESC = 1;
     private TrackDAO mTrackDao;
     private LiveData<List<Track>> mAllTrack;
-    private MediatorLiveData<List<Track>> mResultSearch = new MediatorLiveData<>();
-    private MediatorLiveData<Resource<List<Track>>> mMediatorTrackData = new MediatorLiveData<>();
-    private LiveData<List<Track>> liveDataTracks;
-    private MutableLiveData<String> mObservableMessage;
+    private MediatorLiveData<List<Track>> mResultSearch;
+    private MediatorLiveData<Resource<List<Track>>> mMediatorTrackData;
+    private LiveData<List<Track>> mLiveDataTracks;
     private MutableLiveData<Boolean> mProgressObservable;
     private AbstractSharedPreferences mAbstractSharedPreferences;
     private String mCurrentOrder;
     private Context mContext;
 
     @Inject
-    public TrackRepository(TrackRoomDatabase db,
-                           AbstractSharedPreferences abstractSharedPreferences,
-                           Context context){
+    public TrackRepository(@NonNull TrackRoomDatabase db,
+                           @NonNull AbstractSharedPreferences abstractSharedPreferences,
+                           @NonNull Context context){
         mTrackDao = db.trackDao();
         mAbstractSharedPreferences = abstractSharedPreferences;
         mContext = context;
 
         mProgressObservable = new MutableLiveData<>();
-        mObservableMessage = new MutableLiveData<>();
+        mResultSearch = new MediatorLiveData<>();
+        mMediatorTrackData = new MediatorLiveData<>();
 
         mCurrentOrder = mAbstractSharedPreferences.getString(Constants.SORT_KEY);
 
@@ -63,10 +64,10 @@ public class TrackRepository {
         SupportSQLiteQuery sqLiteQuery = new SimpleSQLiteQuery(query);
         mAllTrack = mTrackDao.getAllTracks(sqLiteQuery);
 
-        mMediatorTrackData.setValue(Resource.loading(null));
         mMediatorTrackData.addSource(mAllTrack, tracks -> {
+            mProgressObservable.setValue(false);
             if(tracks == null || tracks.size() == 0) {
-                mMediatorTrackData.setValue(Resource.success(new ArrayList<>()));
+                mMediatorTrackData.setValue(Resource.error(new ArrayList<>()));
             }
             else {
                 mMediatorTrackData.setValue(Resource.success(tracks));
@@ -80,10 +81,6 @@ public class TrackRepository {
 
     public LiveData<List<Track>> getSearchResults() {
         return mResultSearch;
-    }
-
-    public MutableLiveData<String> observeMessage() {
-        return mObservableMessage;
     }
 
     public MutableLiveData<Boolean> observeProgress() {
@@ -120,27 +117,6 @@ public class TrackRepository {
         }
     }
 
-    /**
-     * Reescan the media store to retrieve new audio files.
-     */
-    public void rescan() {
-        MediaStoreReader mediaStoreReader = new MediaStoreReader(new AsyncOperation<Void, List<Track>, Void, Void>() {
-            @Override
-            public void onAsyncOperationStarted(Void params) {
-                mProgressObservable.setValue(true);
-            }
-
-            @Override
-            public void onAsyncOperationFinished(List<Track> result) {
-                mProgressObservable.setValue(false);
-                if(result.size() > 0) {
-                    insert(result);
-                }
-            }
-        }, mTrackDao);
-        mediaStoreReader.executeOnExecutor(AutoMusicTagFixer.getExecutorService(), mContext);
-    }
-
     public void setChecked(Track track){
         if(track.checked() == 1){
             track.setChecked(0);
@@ -149,7 +125,6 @@ public class TrackRepository {
             track.setChecked(1);
         }
 
-        mAbstractSharedPreferences.putBoolean("sorting", false);
         new TrackUpdater(mTrackDao).executeOnExecutor(AutoMusicTagFixer.getExecutorService(),track);
     }
 
@@ -182,18 +157,17 @@ public class TrackRepository {
         if(orderBy.equals(mCurrentOrder))
             return true;
 
-        //Save this flag to indicate to adapter that the tracks are sorting
-        mAbstractSharedPreferences.putBoolean("sorting", true);
         mCurrentOrder = orderBy;
         String query = "SELECT * FROM track_table ORDER BY" + mCurrentOrder;
         SupportSQLiteQuery  sqLiteQuery = new SimpleSQLiteQuery(query);
         mAbstractSharedPreferences.putString(Constants.SORT_KEY,mCurrentOrder);
+
         mMediatorTrackData.removeSource(mAllTrack);
         mAllTrack = mTrackDao.getAllTracks(sqLiteQuery);
 
         mMediatorTrackData.addSource(mAllTrack, tracks -> {
             if(tracks == null || tracks.size() == 0) {
-                mMediatorTrackData.setValue(Resource.success(new ArrayList<>()));
+                mMediatorTrackData.setValue(Resource.error(new ArrayList<>()));
             }
             else {
                 mMediatorTrackData.setValue(Resource.success(tracks));
@@ -207,11 +181,11 @@ public class TrackRepository {
      * @param query The query as param to search in DB.
      */
     public void trackSearch(String query) {
-        if(liveDataTracks != null)
-            mResultSearch.removeSource(liveDataTracks);
+        if(mLiveDataTracks != null)
+            mResultSearch.removeSource(mLiveDataTracks);
 
-        liveDataTracks = mTrackDao.search(query);
-        mResultSearch.addSource(liveDataTracks, tracks -> mResultSearch.setValue(tracks));
+        mLiveDataTracks = mTrackDao.search(query);
+        mResultSearch.addSource(mLiveDataTracks, tracks -> mResultSearch.setValue(tracks));
     }
 
     public void checkAllItems() {

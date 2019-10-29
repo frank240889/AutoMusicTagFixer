@@ -7,6 +7,7 @@ import androidx.annotation.NonNull;
 import androidx.arch.core.util.Function;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MediatorLiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Transformations;
 
@@ -41,12 +42,10 @@ public class ListViewModel extends AndroidViewModel {
     private MutableLiveData<Void> mObservableEmptyList = new SingleLiveEvent<>();
     private MutableLiveData<ViewWrapper> mObservableOpenTrackDetails = new SingleLiveEvent<>();
     private MutableLiveData<Integer> mStartAutomaticMode = new SingleLiveEvent<>();
-    private MutableLiveData<Boolean> mObservableProgress;
     private MutableLiveData<Boolean> mObservableCheckAllTracks = new SingleLiveEvent<>();
     private MutableLiveData<Integer> mObservableMessage = new SingleLiveEvent<>();
     private MutableLiveData<Integer> mOnSorted = new SingleLiveEvent<>();
     private MutableLiveData<Boolean> mObservableOnSdPresent = new SingleLiveEvent<>();
-    private MutableLiveData<String> mObservableMessage2;
     //The current list of tracks.
     private List<Track> mCurrentList;
     public TrackRepository trackRepository;
@@ -56,12 +55,14 @@ public class ListViewModel extends AndroidViewModel {
     private MediaStoreManager mMediaStoreManager;
     private AbstractSharedPreferences mAbstractSharedPreferences;
     private LiveData<Message> mResultsAudioFilesMediaStore;
+    private MediatorLiveData<Boolean> mLoadingState;
 
 
     @Inject
-    public ListViewModel(@NonNull Application application, TrackRepository trackRepository,
-            AbstractSharedPreferences abstractSharedPreferences,
-                         ServiceUtils serviceUtils,
+    public ListViewModel(@NonNull Application application,
+                         @NonNull TrackRepository trackRepository,
+                         @NonNull AbstractSharedPreferences abstractSharedPreferences,
+                         @NonNull ServiceUtils serviceUtils,
                          @Nonnull MediaStoreManager mediaStoreManager) {
         super(application);
         this.trackRepository = trackRepository;
@@ -69,8 +70,16 @@ public class ListViewModel extends AndroidViewModel {
         this.serviceUtils = serviceUtils;
         mMediaStoreManager = mediaStoreManager;
         mAbstractSharedPreferences = abstractSharedPreferences;
-        mObservableProgress = trackRepository.observeProgress();
-        mObservableMessage2 = trackRepository.observeMessage();
+
+        mLoadingState = new MediatorLiveData<>();
+
+        LiveData<Boolean> trackRepositoryLoadingState = trackRepository.observeProgress();
+        LiveData<Boolean> mediaStoreLoadingState = mMediaStoreManager.observeLoadingState();
+
+        mLoadingState.addSource(mediaStoreLoadingState, aBoolean ->
+                mLoadingState.setValue(aBoolean));
+        mLoadingState.addSource(trackRepositoryLoadingState, aBoolean ->
+                mLoadingState.setValue(aBoolean));
     }
 
     public LiveData<ViewWrapper> observeAccessibleTrack(){
@@ -86,7 +95,7 @@ public class ListViewModel extends AndroidViewModel {
     }
 
     public LiveData<Boolean> observeLoadingState(){
-        return mObservableProgress;
+        return mLoadingState;
     }
 
     public LiveData<ViewWrapper> observeActionCanOpenDetails(){
@@ -118,9 +127,8 @@ public class ListViewModel extends AndroidViewModel {
      * @return The live data container.
      */
     public LiveData<List<Track>> getTracks(){
-        LiveData<Resource<List<Track>>> tracks = trackRepository.getAllTracks();
-        mTracks = Transformations.map(tracks, input -> {
-            mObservableProgress.setValue(input.status == Resource.Status.LOADING);
+        LiveData<Resource<List<Track>>> result = trackRepository.getAllTracks();
+        mTracks = Transformations.map(result, input -> {
             mCurrentList = input.data;
             return mCurrentList;
         });
@@ -135,8 +143,10 @@ public class ListViewModel extends AndroidViewModel {
                 Message message = null;
                 if(input.status == Resource.Status.SUCCESS) {
                     //Save process of reading identificationCompleted and first time reading complete.
-                    mAbstractSharedPreferences.putBoolean("first_time_read", true);
-                    mAbstractSharedPreferences.putBoolean(Constants.COMPLETE_READ, true);
+                    if(!mAbstractSharedPreferences.getBoolean("first_time_read")) {
+                        mAbstractSharedPreferences.putBoolean("first_time_read", true);
+                        mAbstractSharedPreferences.putBoolean(Constants.COMPLETE_READ, true);
+                    }
                     if(input.data.size() > 0) {
                         trackRepository.insert(input.data);
                     }
@@ -205,10 +215,11 @@ public class ListViewModel extends AndroidViewModel {
      */
     public void fetchTracks(){
         if(sharedPreferences.getBoolean("first_time_read")) {
-            return;
+            mMediaStoreManager.fetchAudioFiles();
         }
-
-        trackRepository.fetchTracks();
+        else {
+            trackRepository.fetchTracks();
+        }
     }
 
     /**
@@ -231,7 +242,7 @@ public class ListViewModel extends AndroidViewModel {
     }
 
     public void setLoading(boolean showProgress){
-        mObservableProgress.setValue(showProgress);
+        mLoadingState.setValue(showProgress);
     }
 
     /**
@@ -277,7 +288,8 @@ public class ListViewModel extends AndroidViewModel {
             mObservableMessage.setValue(R.string.no_available);
         }
         else {
-            trackRepository.rescan();
+            mLoadingState.setValue(true);
+            mMediaStoreManager.rescan();
         }
     }
 

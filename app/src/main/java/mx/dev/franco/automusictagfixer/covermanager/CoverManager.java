@@ -110,7 +110,7 @@ public class CoverManager {
                     .error(R.drawable.ic_album_white_48px)
                     .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.NONE))
                     .apply(RequestOptions.skipMemoryCacheOf(false))
-                    .transition(DrawableTransitionOptions.withCrossFade(150))
+                    .transition(DrawableTransitionOptions.withCrossFade(100))
                     .fitCenter()
                     .listener(new RequestListener<Drawable>() {
                         @Override
@@ -156,35 +156,6 @@ public class CoverManager {
         }
 
     }
-
-
-    /*public static CoverTask startFetchingCover(
-            AudioHolder audioItemHolder, String path) {
-
-
-        /*
-         * Gets a task from the pool of tasks, returning null if the pool is empty
-
-        CoverTask coverTask = sInstance.mCoverTaskQueue.poll();
-
-        // If the queue was empty, create a new task instead.
-        if (null == coverTask) {
-            coverTask = new CoverTask();
-        }
-
-        // Initializes the task
-        coverTask.startFetching(CoverManager.sInstance, audioItemHolder, path);
-
-
-            /*
-             * "Executes" the tasks' download Runnable in order to download the image. If no
-             * Threads are available in the thread pool, the Runnable waits in the queue.
-
-            sInstance.mCoverExtractionThreadPool.execute(coverTask.getExtractionRunnable());
-
-        // Returns a task object, either newly-created or one from the task pool
-        return coverTask;
-    }*/
 
     public static CoverTask startFetchingCover(
             AudioHolder audioItemHolder, String path, String id) {

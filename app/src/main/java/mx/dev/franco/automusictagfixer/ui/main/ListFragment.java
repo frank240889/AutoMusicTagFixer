@@ -29,6 +29,7 @@ import androidx.core.content.ContextCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
@@ -100,6 +101,13 @@ public class ListFragment extends BaseFragment<ListViewModel> implements
         mListViewModel.observeResultFilesFound().observe(this, this::noResultFilesFound);
         mListViewModel.observeLoadingState().observe(this, this::loading);
         mListViewModel.observeActionCheckAll().observe(this, this::onCheckAll);
+        mListViewModel.observeSizeResultsMediaStore().observe(this, message -> {
+            if(message == null)
+                return;
+
+            Snackbar snackbar = AndroidUtils.createSnackbar(mRecyclerView, message);
+            snackbar.show();
+        });
         mListViewModel.getTracks().observe(this, tracks -> {
             if(tracks == null)
                 return;
@@ -159,10 +167,9 @@ public class ListFragment extends BaseFragment<ListViewModel> implements
         mToolbar = view.findViewById(R.id.toolbar);
 
         //attach adapter recyclerview
-        mGridLayoutManager = new GridLayoutManager(getActivity(), 1);
-        mRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(), 1));
+        mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         mRecyclerView.setHasFixedSize(true);
-        mRecyclerView.setItemViewCacheSize(10);
+        //mRecyclerView.setItemViewCacheSize(10);
         mRecyclerView.setHapticFeedbackEnabled(true);
         mRecyclerView.setSoundEffectsEnabled(true);
         mRecyclerView.setAdapter(mAdapter);
@@ -371,6 +378,12 @@ public class ListFragment extends BaseFragment<ListViewModel> implements
 
     @Override
     protected void loading(boolean isLoading) {
+        if(isLoading) {
+            mRecyclerView.animate().alpha(0).setDuration(100);
+        }
+        else {
+            mRecyclerView.animate().alpha(1).setDuration(100);
+        }
         mSwipeRefreshLayout.setRefreshing(isLoading);
     }
 
@@ -378,8 +391,8 @@ public class ListFragment extends BaseFragment<ListViewModel> implements
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
         mRecyclerView.stopScroll();
-        mGridLayoutManager.setSpanCount(newConfig.orientation
-                == Configuration.ORIENTATION_LANDSCAPE ? 2 : 1);
+        //mGridLayoutManager.setSpanCount(newConfig.orientation
+        //        == Configuration.ORIENTATION_LANDSCAPE ? 2 : 1);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)

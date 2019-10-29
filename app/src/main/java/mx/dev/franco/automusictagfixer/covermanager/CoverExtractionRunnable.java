@@ -22,11 +22,12 @@ public class CoverExtractionRunnable implements Runnable {
     public void run() {
         byte[] cover = AudioTagger.getCover(mCoverRunnable.getPath());
         if(cover != null) {
-            byte[] downscaledCover = AndroidUtils.decodeSampledBitmapFromResource(cover, 128, 128);
+            byte[] downscaledCover = AndroidUtils.decodeSampledBitmapFromResource(cover, 50, 50);
             mCoverRunnable.setCover(downscaledCover);
             mCoverRunnable.handleExtractionState(EXTRACTION_STATE_COMPLETED);
         }
         else {
+            mCoverRunnable.setCover(new byte[]{0});
             mCoverRunnable.handleExtractionState(EXTRACTION_STATE_FAILED);
         }
 

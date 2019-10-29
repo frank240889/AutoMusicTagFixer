@@ -27,7 +27,7 @@ public class MediaStoreManager {
     private SingleLiveEvent<MediaStoreResult> mMediaStoreResultSingleLiveEvent;
     //Live data to inform the progress of task.
     private MutableLiveData<Boolean> mLoadingStateLiveData;
-    private MutableLiveData<Resource<List<Track>>> mResult;
+    private SingleLiveEvent<Resource<List<Track>>> mResult;
     private MediaStoreUpdater mMediaStoreUpdater;
     private Context mContext;
 
@@ -37,6 +37,8 @@ public class MediaStoreManager {
         mContext = context;
         mLoadingStateLiveData = new MutableLiveData<>();
         mMediaStoreResultSingleLiveEvent = new SingleLiveEvent<>();
+        mResult = new SingleLiveEvent<>();
+
     }
 
     public LiveData<Boolean> observeLoadingState() {
@@ -89,6 +91,30 @@ public class MediaStoreManager {
                 mResult.setValue(Resource.success(result));
             }
 
+            @Override
+            public void onAsyncOperationError(Void error) {
+                mLoadingStateLiveData.setValue(false);
+                mResult.setValue(Resource.error(null));
+            }
+        });
+        mediaStoreReader.executeOnExecutor(AutoMusicTagFixer.getExecutorService(), mContext);
+    }
+
+    /**
+     * Reescan the media store to retrieve new audio files.
+     */
+    public void rescan() {
+        MediaStoreReader mediaStoreReader = new MediaStoreReader(new AsyncOperation<Void, List<Track>, Void, Void>() {
+            @Override
+            public void onAsyncOperationStarted(Void params) {
+                mLoadingStateLiveData.setValue(true);
+            }
+
+            @Override
+            public void onAsyncOperationFinished(List<Track> result) {
+                mLoadingStateLiveData.setValue(false);
+                mResult.setValue(Resource.success(result));
+            }
             @Override
             public void onAsyncOperationError(Void error) {
                 mLoadingStateLiveData.setValue(false);
