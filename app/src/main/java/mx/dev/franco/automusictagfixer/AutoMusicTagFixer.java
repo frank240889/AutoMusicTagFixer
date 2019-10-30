@@ -39,6 +39,7 @@ public final class AutoMusicTagFixer extends Application implements HasActivityI
     @Override
     public void onCreate() {
         super.onCreate();
+        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.getDefaultNightMode());
         CoverManager.getInstance();
         DaggerApplicationComponent.builder()
             .application(this)

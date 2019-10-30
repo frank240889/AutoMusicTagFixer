@@ -22,12 +22,12 @@
         android:supportsRtl="true"
         android:usesCleartextTraffic="true"
         android:theme="@style/AppTheme"
-        tools:targetApi="n">
+        tools:targetApi="m">
         <uses-library android:name="android.test.runner"
             android:required="false" />
         <activity
             android:name=".ui.SplashActivity"
-            android:configChanges="orientation|screenSize"
+            android:configChanges="orientation|screenSize|uiMode"
             android:screenOrientation="portrait"
             tools:ignore="InnerclassSeparator">
             <intent-filter>
@@ -39,7 +39,7 @@
         </activity>
         <activity
             android:name=".ui.intro.IntroActivity"
-            android:configChanges="orientation|screenSize"
+            android:configChanges="orientation|screenSize|uiMode"
             android:theme="@style/Theme.Intro"
             tools:ignore="InnerclassSeparator" />
         <activity
@@ -51,14 +51,22 @@
             android:windowSoftInputMode="adjustResize|adjustPan"
             tools:ignore="InnerclassSeparator" />
         <activity
-            android:name=".ui.sdcardinstructions.SdCardInstructionsActivity"
+            android:name=".ui.settings.SettingsActivity"
             android:configChanges="orientation|screenSize"
+            android:label="@string/title_activity_settings"
+            android:parentActivityName=".ui.MainActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/SettingsStyle"
+            tools:ignore="InnerclassSeparator" />
+        <activity
+            android:name=".ui.sdcardinstructions.SdCardInstructionsActivity"
+            android:configChanges="orientation|screenSize|uiMode"
             android:parentActivityName=".ui.MainActivity"
             android:screenOrientation="portrait"
             tools:ignore="InnerclassSeparator" />
         <activity
             android:name=".ui.faq.QuestionsActivity"
-            android:configChanges="orientation|screenSize"
+            android:configChanges="orientation|screenSize|uiMode"
             android:label="@string/faq"
             android:parentActivityName=".ui.MainActivity"
             android:screenOrientation="portrait"
@@ -69,7 +77,7 @@
         </activity>
         <activity
             android:name=".ui.about.ScrollingAboutActivity"
-            android:configChanges="orientation|screenSize"
+            android:configChanges="orientation|screenSize|uiMode"
             android:label="@string/title_activity_scrolling_about"
             android:parentActivityName=".ui.MainActivity"
             android:screenOrientation="portrait"
@@ -78,14 +86,7 @@
                 android:name="androidx.PARENT_ACTIVITY"
                 android:value="mx.dev.franco.automusictagfixer.ui.MainActivity" />
         </activity>
-        <activity
-            android:name=".ui.settings.SettingsActivity"
-            android:configChanges="orientation|screenSize"
-            android:label="@string/title_activity_settings"
-            android:parentActivityName=".ui.MainActivity"
-            android:screenOrientation="portrait"
-            android:theme="@style/SettingsStyle"
-            tools:ignore="InnerclassSeparator" /> <!-- "mx.dev.franco.automusictagfixer.fileProvider" -->
+         <!-- "mx.dev.franco.automusictagfixer.fileProvider" -->
         <!-- This provider is necessary because in android >= 7 doesn't allow to access directly to files -->
         <provider
             android:name="androidx.core.content.FileProvider"

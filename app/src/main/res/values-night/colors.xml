@@ -3,11 +3,10 @@
     <color name="colorPrimary">#fdd835</color>
     <color name="colorPrimaryDark">#c6a700</color>
     <color name="colorAccent">#c6a700</color>
-    <color name="textPrimary">#12121212</color>
-    <color name="textSecondary">#555555</color>
-    <color name="primaryBackground">#FFFFFF</color>
+    <color name="textPrimary">#FFFFFF</color>
+    <color name="textSecondary">#CCCCCC</color>
+    <color name="primaryBackground">#121212</color>
     <color name="white">#FFFFFFFF</color>
     <color name="black">#000000</color>
     <color name="dark_gray">#121212</color>
 </resources>
-    

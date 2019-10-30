@@ -79,6 +79,7 @@
         android:layout_gravity="bottom|end"
         android:layout_margin="@dimen/fab_margin"
         app:useCompatPadding="true"
-        android:src="@drawable/ic_stop_white_24dp"/>
+        android:src="@drawable/ic_stop_white_24dp"
+        style="@style/Widget.MaterialComponents.FloatingActionButton"/>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

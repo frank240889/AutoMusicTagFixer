@@ -328,4 +328,5 @@
     <string name="new_name_empty">Se requiere el nuevo nombre.</string>
     <string name="api_connected">Se ha conectado al servicio de reconocimiento.</string>
     <string name="identification_error">Error de identificación, intentalo de nuevo.</string>
+    <string name="enable_dark_mode">Modo oscuro</string>
 </resources>

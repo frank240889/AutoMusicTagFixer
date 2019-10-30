@@ -24,11 +24,11 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.lifecycle.ViewModelProviders;
-import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
@@ -56,13 +56,13 @@ import mx.dev.franco.automusictagfixer.utilities.Constants;
 import mx.dev.franco.automusictagfixer.utilities.Constants.CorrectionActions;
 import mx.dev.franco.automusictagfixer.utilities.RequiredPermissions;
 import mx.dev.franco.automusictagfixer.utilities.ServiceUtils;
+import mx.dev.franco.automusictagfixer.utilities.shared_preferences.AbstractSharedPreferences;
 
 public class ListFragment extends BaseFragment<ListViewModel> implements
         AudioItemHolder.ClickListener,
         LongRunningTaskListener, ProcessingListener {
     private static final String TAG = ListFragment.class.getName();
 
-    private GridLayoutManager mGridLayoutManager;
     //A simple text view to show a message when no songs were identificationFound
     private TextView mMessage;
     //swipe refresh mLayout for give to user the
@@ -81,6 +81,8 @@ public class ListFragment extends BaseFragment<ListViewModel> implements
 
     @Inject
     ServiceUtils serviceUtils;
+    @Inject
+    AbstractSharedPreferences mAbstractSharedPreferences;
 
     public static ListFragment newInstance() {
         return new ListFragment();
@@ -286,6 +288,16 @@ public class ListFragment extends BaseFragment<ListViewModel> implements
                 break;
             case R.id.album_desc:
                     mListViewModel.sortTracks(TrackContract.TrackData.ALBUM, TrackRepository.DESC, id);
+                break;
+            case R.id.toggle_theme:
+                    if(mAbstractSharedPreferences.getBoolean("dark_mode")) {
+                        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+                        mAbstractSharedPreferences.putBoolean("dark_mode", false);
+                    }
+                    else {
+                        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+                        mAbstractSharedPreferences.putBoolean("dark_mode", true);
+                    }
                 break;
         }
         return true;

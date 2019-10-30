@@ -88,4 +88,8 @@
             </item>
         </menu>
     </item>
+    <item
+        android:id="@+id/toggle_theme"
+        app:showAsAction="never"
+        android:title="@string/enable_dark_mode"/>
 </menu>

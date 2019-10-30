@@ -324,4 +324,5 @@
     <string name="new_name_empty">New name required.</string>
     <string name="api_connected">You have connected to recognition service.</string>
     <string name="identification_error">Identification error, try again.</string>
+    <string name="enable_dark_mode">Dark mode</string>
 </resources>
