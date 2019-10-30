@@ -310,6 +310,7 @@ public class TrackDetailViewModel extends AndroidViewModel {
                 actionableMessage.setAction(Action.SEE_COVER_SAVED);
                 String pathToFile = getApplication().getString(R.string.cover_saved);
                 actionableMessage.setMessage(String.format(pathToFile, input.data));
+                mMediaStoreManager.addToMediaStore(input.data);
             }
             else {
                 actionableMessage.setAction(Action.SEE_DETAILS_COVER_NOT_SAVED);

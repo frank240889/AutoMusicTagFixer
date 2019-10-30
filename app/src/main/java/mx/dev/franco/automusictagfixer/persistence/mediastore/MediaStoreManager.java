@@ -2,6 +2,8 @@ package mx.dev.franco.automusictagfixer.persistence.mediastore;
 
 import android.content.Context;
 
+import android.media.MediaScannerConnection;
+import android.webkit.MimeTypeMap;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
@@ -73,6 +75,20 @@ public class MediaStoreManager {
             }
         }, data, task, mediaStoreId);
         mMediaStoreUpdater.executeOnExecutor(AutoMusicTagFixer.getExecutorService(), mContext);
+    }
+
+    /**
+     * Updates the data of media store file.
+     * @param data The data to set.
+     * @param task The task to execute.
+     * @param mediaStoreId The id of media store file.
+     */
+    public void addToMediaStore(String path) {
+        MediaScannerConnection.scanFile(
+            mContext,
+            new String[]{path},
+            new String[]{MimeTypeMap.getFileExtensionFromUrl(path)},
+            null);
     }
 
     /**
