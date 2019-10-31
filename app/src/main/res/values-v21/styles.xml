@@ -32,13 +32,13 @@
 
     <!--Theming all fabs-->
     <style name="Widget.AutomusicTagFixer.FloatingActionButton" parent="@style/Widget.MaterialComponents.FloatingActionButton">
-        <item name="backgroundTint">@color/primaryColor</item>
+        <item name="backgroundTint">@color/fabColor</item>
         <item name="tint">@color/gray</item>
     </style>
 
     <!--Theming all extended fabs-->
     <style name="Widget.AutomusicTagFixer.ExtendedFloatingActionButton" parent="@style/Widget.MaterialComponents.ExtendedFloatingActionButton.Icon">
-        <item name="backgroundTint">@color/primaryColor</item>
+        <item name="backgroundTint">@color/fabColor</item>
         <item name="tint">@color/gray</item>
     </style>
 

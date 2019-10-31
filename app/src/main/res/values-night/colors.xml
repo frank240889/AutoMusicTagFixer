@@ -9,6 +9,9 @@
     <color name="primaryTextColor">#ffffff</color>
     <color name="secondaryTextColor">#000000</color>
 
+    <color name="toolbarColor">@color/primaryColor</color>
+    <color name="fabColor">#ffd600</color>
+
     <color name="textPrimary">#FFFFFF</color>
     <color name="textSecondary">#CCCCCC</color>
     <color name="primaryBackground">#121212</color>
