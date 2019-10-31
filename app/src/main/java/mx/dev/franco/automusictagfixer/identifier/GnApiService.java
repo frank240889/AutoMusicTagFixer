@@ -45,9 +45,9 @@ public class GnApiService {
     private static final int MAX_RETRIES = 5;
 
     private Context mContext;
-    private GnManager mGnManager;
-    private GnUser mGnUser;
-    private GnLocale mGnLocale;
+    private volatile GnManager mGnManager;
+    private volatile GnUser mGnUser;
+    private volatile GnLocale mGnLocale;
     private static GnApiService sInstance;
 
     /******************Data required by API*****************************/
@@ -69,12 +69,12 @@ public class GnApiService {
     private static final String sAppString = "AutomaticMusicTagFixer";
     /******************************************************************/
 
-    private boolean mApiInitialized = false;
-    private boolean mIsInitializing = false;
+    private volatile boolean mApiInitialized = false;
+    private volatile boolean mIsInitializing = false;
     private int mCounter = 0;
     private Map<String,String> mGnStatusToDisplay;
-    private GnLanguage mLanguage;
-    private GnException mInitializationError;
+    private volatile GnLanguage mLanguage;
+    private volatile GnException mInitializationError;
     private List<OnEventApiListener> mListeners;
 
     /**

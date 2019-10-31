@@ -59,7 +59,7 @@ public class AudioFingerprintIdentifier implements Identifier<Track, List<Identi
         track = input;
         if(identificationListener != null)
             identificationListener.onIdentificationStart(track);
-        try {
+        /*try {
             mGnMusicIdFile = new GnMusicIdFile(gnApiService.getGnUser(), new IGnMusicIdFileEvents() {
                 @Override
                 public void musicIdFileStatusEvent(GnMusicIdFileInfo gnMusicIdFileInfo, GnMusicIdFileCallbackStatus gnMusicIdFileCallbackStatus, long l, long l1, IGnCancellable iGnCancellable) { }
@@ -133,7 +133,7 @@ public class AudioFingerprintIdentifier implements Identifier<Track, List<Identi
                 identificationListener.onIdentificationError(track, e.toString());
 
             identificationListener = null;
-        }
+        }*/
 
     }
 

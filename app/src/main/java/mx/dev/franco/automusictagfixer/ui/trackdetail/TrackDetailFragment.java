@@ -96,7 +96,7 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
         mPlayer.addListener(new OnMediaPlayerEventListener() {
             @Override
             public void onStartPlaying() {
-                mPlayPreviewMenuItem.setIcon(R.drawable.ic_stop_white_24px);
+                mPlayPreviewMenuItem.setIcon(R.drawable.ic_stop_white_24dp);
                 addStopAction();
             }
             @Override
