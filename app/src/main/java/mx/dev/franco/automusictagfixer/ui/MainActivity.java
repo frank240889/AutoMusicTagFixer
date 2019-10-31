@@ -8,8 +8,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.MenuItem;
-import android.view.Window;
-import android.view.WindowManager;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
@@ -67,13 +65,13 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
         //windows is the top level in the view hierarchy,
         //it has a single Surface in which the contents of the window is rendered
         //A Surface is an object holding pixels that are being composited to the screen.
-        Window window = getWindow();
+        /*Window window = getWindow();
         window.setFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS,
                 WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
         window.setAllowEnterTransitionOverlap(true);
         window.setAllowReturnTransitionOverlap(true);
         window.requestFeature(Window.FEATURE_ACTION_MODE_OVERLAY);
-        window.requestFeature(Window.FEATURE_CONTENT_TRANSITIONS);
+        window.requestFeature(Window.FEATURE_CONTENT_TRANSITIONS);*/
         setContentView(R.layout.activity_main);
 
         setupReceivers();

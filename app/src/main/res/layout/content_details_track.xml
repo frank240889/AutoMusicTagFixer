@@ -95,12 +95,11 @@
                             app:layout_constraintStart_toEndOf="@+id/cancel_identification"
                             app:layout_constraintTop_toBottomOf="@+id/status_message" />
 
-                        <Button
+                        <com.google.android.material.button.MaterialButton
                             android:id="@+id/cancel_identification"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_gravity="center_vertical"
-                            android:layout_weight="0.1"
                             android:text="@string/cancel_button"
                             app:layout_constraintBottom_toBottomOf="parent"
                             app:layout_constraintStart_toStartOf="parent"

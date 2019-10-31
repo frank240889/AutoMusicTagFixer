@@ -1,11 +1,13 @@
 <resources>
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <item name="colorPrimary">@color/colorPrimary</item>
-        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-        <item name="colorAccent">@color/colorAccent</item>
-        <item name="colorSecondary">@color/colorPrimary</item>
-        <item name="colorOnSecondary">@color/gray</item>
+        <item name="colorPrimary">@color/primaryColor</item>
+        <item name="colorPrimaryDark">@color/primaryDarkColor</item>
+        <item name="floatingActionButtonStyle">@style/Widget.AutomusicTagFixer.FloatingActionButton</item>
+        <item name="extendedFloatingActionButtonStyle">@style/Widget.AutomusicTagFixer.ExtendedFloatingActionButton</item>
+        <item name="materialButtonStyle">@style/Widget.AutomusicTagFixer.MaterialButton</item>
+        <item name="toolbarStyle">@style/Widget.AutomusicTagFixer.Toolbar</item>
+        <item name="appBarLayoutStyle">@style/Widget.AutomusicTagFixer.AppBarLayout</item>
 
         <!--item name="colorPrimaryVariant">@color/primaryVariant</item>
         <item name="colorOnPrimary">@color/onPrimary</item>
@@ -23,27 +25,55 @@
     </style>
 
     <style name="SettingsStyle" parent="Theme.MaterialComponents.DayNight">
-        <item name="colorPrimary">@color/colorPrimary</item>
-        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-        <item name="colorAccent">@color/colorAccent</item>
-        <item name="colorSecondary">@color/colorPrimary</item>
-        <item name="colorOnSecondary">@color/gray</item>
+        <item name="colorPrimary">@color/primaryColor</item>
+        <item name="colorPrimaryDark">@color/primaryDarkColor</item>
     </style>
 
-    <style name="PrimaryText" parent="TextAppearance.AppCompat.Body1">
+
+    <!--Theming all fabs-->
+    <style name="Widget.AutomusicTagFixer.FloatingActionButton" parent="@style/Widget.MaterialComponents.FloatingActionButton">
+        <item name="backgroundTint">@color/primaryColor</item>
+        <item name="tint">@color/gray</item>
+    </style>
+
+    <!--Theming all extended fabs-->
+    <style name="Widget.AutomusicTagFixer.ExtendedFloatingActionButton" parent="@style/Widget.MaterialComponents.ExtendedFloatingActionButton.Icon">
+        <item name="backgroundTint">@color/primaryColor</item>
+        <item name="tint">@color/gray</item>
+    </style>
+
+    <!--Theming all material filled buttons-->
+    <style name="Widget.AutomusicTagFixer.MaterialButton" parent="@style/Widget.MaterialComponents.Button">
+        <item name="backgroundTint">@color/primaryColor</item>
+        <item name="android:textColor">@color/gray</item>
+    </style>
+
+    <style name="Widget.AutomusicTagFixer.Toolbar" parent="@style/Widget.MaterialComponents.Toolbar">
+        <item name="android:background">@drawable/bg_toolbar</item>
+    </style>
+
+    <style name="Widget.AutomusicTagFixer.AppBarLayout" parent="@style/Widget.MaterialComponents.AppBarLayout.Primary">
+        <item name="android:background">@drawable/bg_toolbar</item>
+        <item name="android:elevation">4dp</item>
+        <item name="android:layout_marginTop">16dp</item>
+        <item name="android:layout_marginStart">16dp</item>
+        <item name="android:layout_marginEnd">16dp</item>
+    </style>
+
+    <!--style name="PrimaryText" parent="TextAppearance.AppCompat.Body1">
         <item name="android:textColor">@color/textPrimary</item>
     </style>
 
     <style name="SecondaryText" parent="TextAppearance.AppCompat.Body2">
         <item name="android:textColor">@color/textSecondary</item>
-    </style>
+    </style-->
 
-    <style name="AppTheme.NoActionBar">
+    <!--style name="AppTheme.NoActionBar">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
     </style>
 
     <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.MaterialComponents.Dark.ActionBar" />
 
-    <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.MaterialComponents" />
+    <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.MaterialComponents" /-->
 </resources>

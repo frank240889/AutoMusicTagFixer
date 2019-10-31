@@ -102,8 +102,8 @@
             android:layout_margin="@dimen/fab_margin"
             android:visibility="gone"
             android:text="@string/title_identify_track"
+            android:theme="@style/Widget.AutomusicTagFixer.ExtendedFloatingActionButton"
             app:icon="@drawable/ic_photo_filter_white_24px"
-            app:useCompatPadding="true"
             tools:visibility="visible"/>
 
         <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
@@ -114,7 +114,6 @@
             android:layout_margin="@dimen/fab_margin"
             android:visibility="gone"
             android:text="@string/save_changes"
-            app:useCompatPadding="true"
             app:icon="@drawable/ic_save_white_24px" />
 
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
