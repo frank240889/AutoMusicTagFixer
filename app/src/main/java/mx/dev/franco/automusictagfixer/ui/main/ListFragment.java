@@ -116,7 +116,7 @@ public class ListFragment extends BaseFragment<ListViewModel> implements
 
             mAdapter.onChanged(tracks);
             if(tracks.isEmpty()) {
-                mStopTaskFab.hide();
+                //mStopTaskFab.hide();
                 mStartTaskFab.hide();
                 mMessage.setVisibility(View.VISIBLE);
                 mMessage.setText(R.string.no_items_found);
@@ -125,11 +125,11 @@ public class ListFragment extends BaseFragment<ListViewModel> implements
                 boolean isServiceRunning = serviceUtils.checkIfServiceIsRunning(FixerTrackService.CLASS_NAME);
                 if(!isServiceRunning){
                     mStartTaskFab.show();
-                    mStopTaskFab.hide();
+                    //mStopTaskFab.hide();
                 }
                 else {
                     mStartTaskFab.hide();
-                    mStopTaskFab.show();
+                    //mStopTaskFab.show();
                 }
                 mActionBar.setTitle(tracks.size() + " " +getString(R.string.tracks));
                 mMessage.setVisibility(View.GONE);
@@ -160,12 +160,12 @@ public class ListFragment extends BaseFragment<ListViewModel> implements
         mSwipeRefreshLayout = view.findViewById(R.id.refresh_layout);
         mMessage = view.findViewById(R.id.message);
 
-        mStartTaskFab = view.findViewById(R.id.fab_start);
-        mStopTaskFab = view.findViewById(R.id.fab_stop);
+        mStartTaskFab = view.findViewById(R.id.fab_start_stop);
+        //mStopTaskFab = view.findViewById(R.id.fab_stop);
         mStartTaskFab.setOnClickListener(v -> startCorrection(-1));
-        mStopTaskFab.setOnClickListener(v -> stopCorrection());
+        //mStopTaskFab.setOnClickListener(v -> stopCorrection());
         mStartTaskFab.hide();
-        mStopTaskFab.hide();
+        //mStopTaskFab.hide();
         mToolbar = view.findViewById(R.id.toolbar);
 
         //attach adapter recyclerview
@@ -378,7 +378,7 @@ public class ListFragment extends BaseFragment<ListViewModel> implements
      * @param voids void param, not usable.
      */
     private void noResultFilesFound(Void voids) {
-        mStopTaskFab.hide();
+        //mStopTaskFab.hide();
         mStartTaskFab.hide();
         mMessage.setVisibility(View.VISIBLE);
     }
@@ -418,7 +418,7 @@ public class ListFragment extends BaseFragment<ListViewModel> implements
         }
         else {
             mSwipeRefreshLayout.setEnabled(true);
-            mStopTaskFab.hide();
+            //mStopTaskFab.hide();
             mStartTaskFab.hide();
             mMessage.setVisibility(View.VISIBLE);
             mMessage.setText(R.string.permission_denied);
@@ -540,7 +540,7 @@ public class ListFragment extends BaseFragment<ListViewModel> implements
                     t.setDuration(Toast.LENGTH_SHORT);
                     t.setText(R.string.cancelling);
                     t.show();
-                    mStopTaskFab.setEnabled(false);
+                    //mStopTaskFab.setEnabled(false);
                 });
         final AlertDialog dialog = builder.create();
         dialog.show();
@@ -585,7 +585,7 @@ public class ListFragment extends BaseFragment<ListViewModel> implements
     @Override
     public void onLongRunningTaskStarted() {
         mStartTaskFab.hide();
-        mStopTaskFab.show();
+        //mStopTaskFab.show();
     }
 
     @Override
@@ -603,8 +603,8 @@ public class ListFragment extends BaseFragment<ListViewModel> implements
     @Override
     public void onLongRunningTaskFinish() {
         mStartTaskFab.show();
-        mStopTaskFab.setEnabled(true);
-        mStopTaskFab.hide();
+        //mStopTaskFab.setEnabled(true);
+        //mStopTaskFab.hide();
     }
 
     private void onMessage(Integer integer) {

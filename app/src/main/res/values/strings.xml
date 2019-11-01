@@ -17,7 +17,7 @@
     <string name="options">Configuración</string>
     <string name="rate">Calificar</string>
     <string name="share">Compartir</string>
-    <string name="search_song">Buscar canción</string>
+    <string name="search_song">Título, artista o álbum</string>
     <string name="select_all_items">Seleccionar todas</string>
 
     <string name="image_too_big">Imagen muy grande, reduce su tamaño.</string>

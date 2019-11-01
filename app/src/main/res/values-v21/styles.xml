@@ -5,10 +5,11 @@
         <item name="colorPrimaryDark">@color/primaryDarkColor</item>
         <item name="floatingActionButtonStyle">@style/Widget.AutomusicTagFixer.FloatingActionButton</item>
         <item name="extendedFloatingActionButtonStyle">@style/Widget.AutomusicTagFixer.ExtendedFloatingActionButton</item>
-        <item name="materialButtonStyle">@style/Widget.AutomusicTagFixer.MaterialButton</item>
-        <item name="toolbarStyle">@style/Widget.AutomusicTagFixer.Toolbar</item>
-        <item name="appBarLayoutStyle">@style/Widget.AutomusicTagFixer.AppBarLayout</item>
-
+        <item name="bottomAppBarStyle">@style/Widget.AutomusicTagFixer.BottomAppBar</item>
+        <item name="colorControlActivated">@color/colorControlActivated</item>
+        <item name="toolbarStyle">@style/Widget.AutomusicTagFixer.MaterialToolbar</item>
+        <item name="actionBarStyle">@style/MyApp.ActionBarTheme</item>
+        <item name="actionBarTheme">@style/MyApp.ActionBarTheme</item>
         <!--item name="colorPrimaryVariant">@color/primaryVariant</item>
         <item name="colorOnPrimary">@color/onPrimary</item>
         <item name="colorSecondaryVariant">@color/secondaryVariant</item>
@@ -48,18 +49,30 @@
         <item name="android:textColor">@color/gray</item>
     </style>
 
-    <style name="Widget.AutomusicTagFixer.Toolbar" parent="@style/Widget.MaterialComponents.Toolbar">
-        <item name="android:background">@drawable/bg_toolbar</item>
+    <style name="Widget.AutomusicTagFixer.BottomAppBar" parent="@style/Widget.MaterialComponents.BottomAppBar.Colored">
+        <item name="backgroundTint">@color/bottomToolbarTintColor</item>
+        <item name="materialThemeOverlay">@style/AppThemeOverlay.AutomusicTagFixer.BottomAppBar</item>
     </style>
 
-    <style name="Widget.AutomusicTagFixer.AppBarLayout" parent="@style/Widget.MaterialComponents.AppBarLayout.Primary">
-        <item name="android:background">@drawable/bg_toolbar</item>
-        <item name="android:elevation">4dp</item>
-        <item name="android:layout_marginTop">16dp</item>
-        <item name="android:layout_marginStart">16dp</item>
-        <item name="android:layout_marginEnd">16dp</item>
+    <style name="AppThemeOverlay.AutomusicTagFixer.BottomAppBar" parent="ThemeOverlay.MaterialComponents.BottomAppBar.Primary">
+        <item name="colorControlNormal">@color/bottomToolbarColorControlNormal</item>
+        <item name="iconTint">@color/bottomToolbarIconTintColor</item>
     </style>
 
+    <style name="Widget.AutomusicTagFixer.MaterialToolbar" parent="Widget.MaterialComponents.Toolbar">
+        <item name="android:background">@color/toolbarColor</item>
+    </style>
+
+    <style name="Widget.AutomusicTagFixer.DrawerArrowToggle" parent="Widget.AppCompat.DrawerArrowToggle">
+        <item name="color">@color/upperToolbarColorControlNormal</item>
+        <item name="android:color">@color/upperToolbarColorControlNormal</item>
+        <item name="colorControlNormal">@color/bottomToolbarColorControlNormal</item>
+    </style>
+
+    <style name="MyApp.ActionBarTheme" parent="@style/ThemeOverlay.MaterialComponents.ActionBar">
+    <!-- THIS is where you can color the arrow! -->
+    <item name="colorControlNormal">@color/upperToolbarColorControlNormal</item>
+    </style>
     <!--style name="PrimaryText" parent="TextAppearance.AppCompat.Body1">
         <item name="android:textColor">@color/textPrimary</item>
     </style>

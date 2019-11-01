@@ -7,10 +7,18 @@
     <color name="secondaryLightColor">#ffff52</color>
     <color name="secondaryDarkColor">#c7a500</color>
     <color name="primaryTextColor">#ffffff</color>
-    <color name="secondaryTextColor">#000000</color>
+    <color name="secondaryTextColor">@color/dark_gray</color>
 
-    <color name="toolbarColor">@color/primaryColor</color>
+    <color name="colorControlActivated">@color/secondaryColor</color>
+
+    <color name="bottomToolbarTintColor">#212121</color>
+    <color name="bottomToolbarColorControlNormal">#FFFFFF</color>
+    <color name="bottomToolbarIconTintColor">#FFFFFFFF</color>
+    <color name="bottomToolbarOverflowTextColor">#CCCCCC</color>
     <color name="fabColor">#ffd600</color>
+
+    <color name="toolbarColor">#212121</color>
+    <color name="upperToolbarColorControlNormal">#FFFFFF</color>
 
     <color name="textPrimary">#FFFFFF</color>
     <color name="textSecondary">#CCCCCC</color>
