@@ -16,6 +16,7 @@
     <color name="bottomToolbarIconTintColor">#FFFFFFFF</color>
     <color name="bottomToolbarOverflowTextColor">#CCCCCC</color>
     <color name="fabColor">#ffd600</color>
+    <color name="primaryColorButton">#ffd600</color>
 
     <color name="toolbarColor">#212121</color>
     <color name="upperToolbarColorControlNormal">#FFFFFF</color>

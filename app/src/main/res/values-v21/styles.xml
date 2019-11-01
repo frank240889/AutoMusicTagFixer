@@ -3,12 +3,13 @@
     <style name="AppTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <item name="colorPrimary">@color/primaryColor</item>
         <item name="colorPrimaryDark">@color/primaryDarkColor</item>
+        <item name="colorControlActivated">@color/colorControlActivated</item>
+        <item name="colorControlNormal">@color/upperToolbarColorControlNormal</item>
         <item name="floatingActionButtonStyle">@style/Widget.AutomusicTagFixer.FloatingActionButton</item>
         <item name="extendedFloatingActionButtonStyle">@style/Widget.AutomusicTagFixer.ExtendedFloatingActionButton</item>
         <item name="bottomAppBarStyle">@style/Widget.AutomusicTagFixer.BottomAppBar</item>
-        <item name="colorControlActivated">@color/colorControlActivated</item>
-        <item name="colorControlNormal">@color/upperToolbarColorControlNormal</item>
         <item name="toolbarStyle">@style/Widget.AutomusicTagFixer.MaterialToolbar</item>
+        <item name="materialButtonStyle">@style/Widget.AutomusicTagFixer.MaterialButton</item>
         <!--item name="colorPrimaryVariant">@color/primaryVariant</item>
         <item name="colorOnPrimary">@color/onPrimary</item>
         <item name="colorSecondaryVariant">@color/secondaryVariant</item>
@@ -44,8 +45,8 @@
 
     <!--Theming all material filled buttons-->
     <style name="Widget.AutomusicTagFixer.MaterialButton" parent="@style/Widget.MaterialComponents.Button">
-        <item name="backgroundTint">@color/primaryColor</item>
-        <item name="android:textColor">@color/gray</item>
+        <item name="backgroundTint">@color/primaryColorButton</item>
+        <item name="android:textColor">@color/dark_gray</item>
     </style>
 
     <style name="Widget.AutomusicTagFixer.BottomAppBar" parent="@style/Widget.MaterialComponents.BottomAppBar.Colored">

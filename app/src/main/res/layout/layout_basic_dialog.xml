@@ -37,7 +37,7 @@
         app:layout_constraintTop_toBottomOf="@+id/title_basic_dialog"
         tools:text="¿Deseas disparar los misiles?" />
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/cancel_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -49,7 +49,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/content_basic_dialog" />
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/accept_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

@@ -47,6 +47,7 @@ import mx.dev.franco.automusictagfixer.persistence.repository.TrackRepository;
 import mx.dev.franco.automusictagfixer.persistence.room.database.TrackContract;
 import mx.dev.franco.automusictagfixer.services.FixerTrackService;
 import mx.dev.franco.automusictagfixer.ui.BaseFragment;
+import mx.dev.franco.automusictagfixer.ui.InformativeFragmentDialog;
 import mx.dev.franco.automusictagfixer.ui.MainActivity;
 import mx.dev.franco.automusictagfixer.ui.sdcardinstructions.SdCardInstructionsActivity;
 import mx.dev.franco.automusictagfixer.ui.search.ResultSearchListFragment;
@@ -193,8 +194,8 @@ public class ListFragment extends BaseFragment<ListViewModel> implements
                 ContextCompat.getColor(getActivity(), R.color.primaryDarkColor),
                 ContextCompat.getColor(getActivity(), R.color.primaryLightColor)
         );*/
-        /*mSwipeRefreshLayout.setProgressBackgroundColorSchemeColor(getActivity().
-                getResources().getColor(R.color.primaryColor));*/
+        mSwipeRefreshLayout.setProgressBackgroundColorSchemeColor(getActivity().
+                getResources().getColor(R.color.primaryColor));
 
         setHasOptionsMenu(true);
 
@@ -456,15 +457,28 @@ public class ListFragment extends BaseFragment<ListViewModel> implements
     }
 
     public void showViewPermissionMessage() {
-        final AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-        builder.setTitle(R.string.title_dialog_permision).
-                setMessage(R.string.explanation_permission_access_files);
-        builder.setPositiveButton(R.string.ok_button, (dialog, which) -> {
-            requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                    RequiredPermissions.WRITE_EXTERNAL_STORAGE_PERMISSION);
-        });
-        final AlertDialog dialog =  builder.create();
-        dialog.show();
+        InformativeFragmentDialog informativeFragmentDialog = InformativeFragmentDialog.
+            newInstance(R.string.title_dialog_permision,
+                R.string.explanation_permission_access_files,
+                R.string.accept, R.string.cancel_button);
+        informativeFragmentDialog.showNow(getChildFragmentManager(),
+            informativeFragmentDialog.getClass().getCanonicalName());
+
+        informativeFragmentDialog.setOnClickBasicFragmentDialogListener(
+            new InformativeFragmentDialog.OnClickBasicFragmentDialogListener() {
+                @Override
+                public void onPositiveButton() {
+                    informativeFragmentDialog.dismiss();
+                    requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                        RequiredPermissions.WRITE_EXTERNAL_STORAGE_PERMISSION);
+                }
+
+                @Override
+                public void onNegativeButton() {
+                    informativeFragmentDialog.dismiss();
+                }
+            }
+        );
     }
 
     @Override
