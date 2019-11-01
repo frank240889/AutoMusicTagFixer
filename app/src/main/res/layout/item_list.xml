@@ -21,7 +21,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/ic_album_white_48px" />
+        android:foregroundTint="@color/upperToolbarColorControlNormal"/>
 
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -44,6 +44,7 @@
             android:layout_marginStart="4dp"
             android:layout_marginEnd="4dp"
             android:drawableStart="@drawable/ic_music_note_white_24px"
+            app:drawableTint="@color/bottomToolbarIconTintColor"
             android:ellipsize="end"
             android:gravity="center_vertical"
             android:maxLines="1"
@@ -64,6 +65,7 @@
             android:layout_toStartOf="@+id/progress"
             android:layout_toEndOf="@id/cover_art"
             android:drawableStart="@drawable/ic_account_circle_white_24px"
+            app:drawableTint="@color/bottomToolbarIconTintColor"
             android:ellipsize="end"
             android:gravity="center_vertical"
             android:maxLines="1"
@@ -83,6 +85,7 @@
             android:layout_marginStart="4dp"
             android:layout_marginEnd="4dp"
             android:drawableStart="@drawable/ic_album_white_24px"
+            app:drawableTint="@color/bottomToolbarIconTintColor"
             android:ellipsize="end"
             android:gravity="center_vertical"
             android:maxLines="1"
