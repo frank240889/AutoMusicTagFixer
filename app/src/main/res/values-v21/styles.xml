@@ -45,6 +45,7 @@
 
     <!--Theming all material filled buttons-->
     <style name="Widget.AutomusicTagFixer.MaterialButton" parent="@style/Widget.MaterialComponents.Button">
+        <item name="android:colorPrimary">@color/primaryColorButton</item>
         <item name="backgroundTint">@color/primaryColorButton</item>
         <item name="android:textColor">@color/dark_gray</item>
     </style>
