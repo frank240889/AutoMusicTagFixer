@@ -88,12 +88,14 @@ public class InformativeFragmentDialog extends BaseRoundedBottomSheetDialogFragm
             dismiss();
                 if(mOnClickBasicFragmentDialogListener != null)
                     mOnClickBasicFragmentDialogListener.onPositiveButton();
+            getChildFragmentManager().popBackStack();
         });
 
         negative.setOnClickListener(view12 -> {
             dismiss();
                 if(mOnClickBasicFragmentDialogListener != null)
                     mOnClickBasicFragmentDialogListener.onNegativeButton();
+            getChildFragmentManager().popBackStack();
         });
     }
 

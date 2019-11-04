@@ -37,8 +37,8 @@ public abstract class BaseRoundedBottomSheetDialogFragment extends BottomSheetDi
         return inflater.inflate(mLayout,container, false);
     }
 
-    @Override
+    /*@Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         return new BottomSheetDialog(getContext(), getTheme());
-    }
+    }*/
 }

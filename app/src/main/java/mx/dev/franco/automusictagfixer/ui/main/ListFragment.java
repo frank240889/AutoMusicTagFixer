@@ -9,6 +9,7 @@ import android.content.res.Configuration;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -156,7 +157,7 @@ public class ListFragment extends BaseFragment<ListViewModel> implements
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-
+        Log.w("Event:", "onViewCreated");
         mRecyclerView = view.findViewById(R.id.tracks_recycler_view);
         mSwipeRefreshLayout = view.findViewById(R.id.refresh_layout);
         mMessage = view.findViewById(R.id.message);
@@ -188,14 +189,12 @@ public class ListFragment extends BaseFragment<ListViewModel> implements
             }
         });
 
-        //Color of progress bar of refresh layout
-        /*mSwipeRefreshLayout.setColorSchemeColors(
-                ContextCompat.getColor(getActivity(), R.color.primaryColor),
-                ContextCompat.getColor(getActivity(), R.color.primaryDarkColor),
-                ContextCompat.getColor(getActivity(), R.color.primaryLightColor)
-        );*/
+        //Color of background and progress tint of progress bar of refresh layout
+        mSwipeRefreshLayout.setColorSchemeColors(
+                ContextCompat.getColor(getActivity(), R.color.progressTintSwipeRefreshLayout)
+        );
         mSwipeRefreshLayout.setProgressBackgroundColorSchemeColor(getActivity().
-                getResources().getColor(R.color.primaryColor));
+                getResources().getColor(R.color.progressSwipeRefreshLayoutBackgroundTint));
 
         setHasOptionsMenu(true);
 

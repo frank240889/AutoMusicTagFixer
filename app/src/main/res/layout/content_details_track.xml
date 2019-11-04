@@ -103,7 +103,8 @@
                             android:text="@string/cancel_button"
                             app:layout_constraintBottom_toBottomOf="parent"
                             app:layout_constraintStart_toStartOf="parent"
-                            app:layout_constraintTop_toTopOf="parent" />
+                            app:layout_constraintTop_toTopOf="parent"
+                            style="@style/Widget.AutomusicTagFixer.ColoredButton"/>
                     </androidx.constraintlayout.widget.ConstraintLayout>
 
 

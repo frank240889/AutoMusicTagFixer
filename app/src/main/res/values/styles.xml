@@ -1,17 +1,112 @@
 <resources>
+    <!-- Base application theme. -->
+    <style name="AppTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+
+        <item name="colorPrimary">@color/primaryColor</item>
+        <item name="colorPrimaryDark">@color/primaryDarkColor</item>
+        <item name="colorControlActivated">@color/colorControlActivated</item>
+        <item name="colorControlNormal">@color/upperToolbarColorControlNormal</item>
+        <item name="floatingActionButtonStyle">@style/Widget.AutomusicTagFixer.FloatingActionButton</item>
+        <item name="extendedFloatingActionButtonStyle">@style/Widget.AutomusicTagFixer.ExtendedFloatingActionButton</item>
+        <item name="bottomAppBarStyle">@style/Widget.AutomusicTagFixer.BottomAppBar</item>
+        <item name="toolbarStyle">@style/Widget.AutomusicTagFixer.MaterialToolbar</item>
+        <!--item name="materialButtonStyle">@style/Widget.AutomusicTagFixer.ColoredButton</item-->
+        <!--item name="colorPrimaryVariant">@color/primaryVariant</item>
+        <item name="colorOnPrimary">@color/onPrimary</item>
+        <item name="colorSecondaryVariant">@color/secondaryVariant</item>
+        <item name="colorOnSecondary">@color/onSecondary</item>
+        <item name="colorSurface">@color/surface</item>
+        <item name="colorOnSurface">@color/onSurface</item>
+        <item name="colorError">@color/error</item>
+        <item name="colorOnError">@color/onError</item>
+        <item name="colorButtonNormal">@color/buttonNormal</item>
+        <item name="colorControlNormal">@color/controlNormal</item>
+        <item name="colorControlActivated">@color/controlActivated</item>
+        <item name="colorControlHighlight">@color/controlHighlight</item>
+        <item name="colorBackgroundFloating">@color/backgroundFloating</item-->
+    </style>
+
+    <style name="SettingsTheme" parent="Theme.MaterialComponents.DayNight">
+        <item name="colorPrimary">@color/primaryColor</item>
+        <item name="colorPrimaryDark">@color/primaryDarkColor</item>
+        <item name="colorControlActivated">@color/colorControlActivated</item>
+        <item name="colorControlNormal">@color/upperToolbarColorControlNormal</item>
+        <item name="actionBarStyle">@style/Widget.AutomusicTagFixer.MaterialToolbar</item>
+    </style>
+
+
+    <!--Theming all fabs-->
+    <style name="Widget.AutomusicTagFixer.FloatingActionButton" parent="@style/Widget.MaterialComponents.FloatingActionButton">
+        <item name="backgroundTint">@color/fabColor</item>
+        <item name="tint">@color/gray</item>
+    </style>
+
+    <!--Theming all extended fabs-->
+    <style name="Widget.AutomusicTagFixer.ExtendedFloatingActionButton" parent="@style/Widget.MaterialComponents.ExtendedFloatingActionButton.Icon">
+        <item name="backgroundTint">@color/fabColor</item>
+        <item name="tint">@color/gray</item>
+    </style>
+
+    <!--Theming material filled buttons-->
+    <style name="Widget.AutomusicTagFixer.ColoredButton" parent="@style/Widget.MaterialComponents.Button">
+        <item name="backgroundTint">@color/primaryColorButton</item>
+        <item name="android:textColor">@color/dark_gray</item>
+    </style>
+
+    <!--style name="Widget.AutomusicTagFixer.TextAppearanceButton" parent="@style/TextAppearance.MaterialComponents.Button">
+        <item name="android:textColor">@color/dark_gray</item>
+    </style-->
+
+    <style name="Widget.AutomusicTagFixer.BottomAppBar" parent="@style/Widget.MaterialComponents.BottomAppBar">
+        <item name="backgroundTint">@color/bottomToolbarTintColor</item>
+        <item name="materialThemeOverlay">@style/AppThemeOverlay.AutomusicTagFixer.BottomAppBar</item>
+    </style>
+
+    <style name="AppThemeOverlay.AutomusicTagFixer.BottomAppBar" parent="ThemeOverlay.MaterialComponents.BottomAppBar.Primary">
+        <item name="colorControlNormal">@color/bottomToolbarColorControlNormal</item>
+        <item name="iconTint">@color/bottomToolbarIconTintColor</item>
+        <item name="background">@drawable/bg_toolbar</item>
+    </style>
+
+    <style name="Widget.AutomusicTagFixer.MaterialToolbar" parent="@style/Widget.MaterialComponents.Toolbar">
+        <item name="android:background">@color/toolbarColor</item>
+    </style>
 
     <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.MaterialComponents.Dark.ActionBar" />
 
-    <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.MaterialComponents.Light" />
+    <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.MaterialComponents" />
 
-    <style name="FullscreenTheme" parent="AppTheme">
-        <item name="android:actionBarStyle">@style/FullscreenActionBarStyle</item>
-        <item name="android:windowActionBarOverlay">true</item>
-        <item name="android:windowBackground">@null</item>
-        <item name="metaButtonBarStyle">?android:attr/buttonBarStyle</item>
-        <item name="metaButtonBarButtonStyle">?android:attr/buttonBarButtonStyle</item>
+    <!--style name="PrimaryText" parent="TextAppearance.AppCompat.Body1">
+        <item name="android:textColor">@color/textPrimary</item>
     </style>
 
-    <style name="FullscreenActionBarStyle" parent="Widget.MaterialComponents.ActionBar.Primary">
-    </style>
+    <style name="SecondaryText" parent="TextAppearance.AppCompat.Body2">
+        <item name="android:textColor">@color/textSecondary</item>
+    </style-->
+
+    <!--style name="AppTheme.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style-->
+
+
 </resources>
+
+
+    <!--resources>
+
+        <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.MaterialComponents.Dark.ActionBar" />
+
+        <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.MaterialComponents.Light" />
+
+        <style name="FullscreenTheme" parent="AppTheme">
+            <item name="android:actionBarStyle">@style/FullscreenActionBarStyle</item>
+            <item name="android:windowActionBarOverlay">true</item>
+            <item name="android:windowBackground">@null</item>
+            <item name="metaButtonBarStyle">?android:attr/buttonBarStyle</item>
+            <item name="metaButtonBarButtonStyle">?android:attr/buttonBarButtonStyle</item>
+        </style>
+
+        <style name="FullscreenActionBarStyle" parent="Widget.MaterialComponents.ActionBar.Primary">
+        </style>
+    </resources-->

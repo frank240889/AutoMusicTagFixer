@@ -3,6 +3,7 @@ package mx.dev.franco.automusictagfixer;
 import android.app.Activity;
 import android.app.Application;
 import android.app.Service;
+import android.content.Intent;
 
 import androidx.appcompat.app.AppCompatDelegate;
 
@@ -22,6 +23,8 @@ import dagger.android.HasServiceInjector;
 import io.fabric.sdk.android.Fabric;
 import mx.dev.franco.automusictagfixer.covermanager.CoverManager;
 import mx.dev.franco.automusictagfixer.di.DaggerApplicationComponent;
+import mx.dev.franco.automusictagfixer.identifier.ApiInitializerService;
+import mx.dev.franco.automusictagfixer.utilities.shared_preferences.AbstractSharedPreferences;
 
 
 /**
@@ -34,13 +37,15 @@ public final class AutoMusicTagFixer extends Application implements HasActivityI
     DispatchingAndroidInjector<Activity> dispatchingAndroidInjector;
     @Inject
     DispatchingAndroidInjector<Service> serviceDispatchingAndroidInjector;
+    @Inject
+    AbstractSharedPreferences mAbstractSharedPreferences;
     // Called when the application is starting, before any other application objects have been created.
-    // Overriding this method is totally optional!
     @Override
     public void onCreate() {
         super.onCreate();
-        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.getDefaultNightMode());
         CoverManager.getInstance();
+        Intent intent = new Intent(getApplicationContext(), ApiInitializerService.class);
+        startService(intent);
         DaggerApplicationComponent.builder()
             .application(this)
             .build()
@@ -57,6 +62,14 @@ public final class AutoMusicTagFixer extends Application implements HasActivityI
         //LeakCanary.install(this);
         Stetho.initializeWithDefaults(this);
         AppCompatDelegate.setCompatVectorFromResourcesEnabled(true);
+        if(mAbstractSharedPreferences.getBoolean("dark_mode")) {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+            mAbstractSharedPreferences.putBoolean("dark_mode", false);
+        }
+        else {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+            mAbstractSharedPreferences.putBoolean("dark_mode", true);
+        }
     }
 
     @Override

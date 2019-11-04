@@ -7,6 +7,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.Log;
 import android.view.MenuItem;
 
 import androidx.annotation.NonNull;
@@ -60,8 +61,6 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
     protected void onCreate(final Bundle savedInstanceState) {
         AndroidInjection.inject(this);
         super.onCreate(savedInstanceState);
-        Intent intent = new Intent(getApplicationContext(), ApiInitializerService.class);
-        startService(intent);
         //windows is the top level in the view hierarchy,
         //it has a single Surface in which the contents of the window is rendered
         //A Surface is an object holding pixels that are being composited to the screen.
@@ -82,14 +81,21 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
-        ListFragment listFragment = ListFragment.newInstance();
-        getSupportFragmentManager().beginTransaction().replace(R.id.container_fragments,
+        ListFragment listFragment = (ListFragment) getSupportFragmentManager().
+                findFragmentByTag(ListFragment.class.getName());
+
+        if(listFragment == null)
+            listFragment = ListFragment.newInstance();
+
+        if(!listFragment.isAdded())
+        getSupportFragmentManager().beginTransaction().add(R.id.container_fragments,
                 listFragment, ListFragment.class.getName())
                 .commit();
     }
 
     @Override
     public void onDestroy() {
+        Log.w(getClass().getName(), "ON DESTROY");
         super.onDestroy();
         LocalBroadcastManager.getInstance(getApplicationContext()).unregisterReceiver(mReceiver);
         mReceiver.clearReceiver();

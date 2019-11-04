@@ -17,6 +17,9 @@
     <color name="bottomToolbarOverflowTextColor">#CCCCCC</color>
     <color name="fabColor">#ffd600</color>
     <color name="primaryColorButton">#ffd600</color>
+    <color name="progressSwipeRefreshLayoutBackgroundTint">#ffd600</color>
+    <color name="progressTintSwipeRefreshLayout">@color/dark_gray</color>
+    <color name="previewItemListDrawableColor">#FFFFFF</color>
 
     <color name="toolbarColor">#212121</color>
     <color name="upperToolbarColorControlNormal">#FFFFFF</color>
