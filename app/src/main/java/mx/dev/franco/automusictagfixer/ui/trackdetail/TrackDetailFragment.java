@@ -186,7 +186,7 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        getActivity().invalidateOptionsMenu();
+        //getActivity().invalidateOptionsMenu();
     }
 
     @Override
@@ -304,10 +304,6 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
         );
     }
 
-    public void setCover(byte[] value) {
-        onCoverChanged(value);
-    }
-
     public void loading(boolean showProgress) {
         if(showProgress) {
             mFragmentTrackDetailBinding.
@@ -413,22 +409,6 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
 
         snackbar.setText(message);
         snackbar.show();
-    }
-
-    /**
-     * Callback when saving cover as jpg image process has successfully finished.
-     */
-    public void onSuccessfullyFileSaved(final String message) {
-        Snackbar snackbar = AndroidUtils.getSnackbar(
-                mFragmentTrackDetailBinding.rootContainerDetails, getActivity().getApplicationContext());
-        snackbar.setDuration(Snackbar.LENGTH_LONG);
-        snackbar.setText(String.format(getString(R.string.cover_saved), message));
-        snackbar.setAction(R.string.watch, v -> AndroidUtils.openInExternalApp(message, getActivity().getApplicationContext()));
-        snackbar.show();
-    }
-
-    public void onDisableEditMode() {
-        disableFields();
     }
 
 
@@ -570,10 +550,6 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
         else {
             callSuperOnBackPressed();
         }
-    }
-
-    private void onCoverChanged(byte[] bytes) {
-        mFragmentTrackDetailBinding.appBarLayout.setExpanded(true);
     }
 
     /**

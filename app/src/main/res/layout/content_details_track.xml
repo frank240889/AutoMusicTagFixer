@@ -276,6 +276,7 @@
                         android:layout_marginTop="8dp"
                         android:layout_marginBottom="8dp"
                         android:drawableStart="@drawable/ic_photo_library_black_24dp"
+                        app:drawableTint="@color/bottomToolbarIconTintColor"
                         android:gravity="center_vertical"
                         android:singleLine="true"
                         android:text="@string/edit_cover"

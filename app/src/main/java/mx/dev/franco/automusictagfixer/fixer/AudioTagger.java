@@ -223,6 +223,7 @@ public class AudioTagger {
         audioFields.channels = audioHeader.getChannels();
         audioFields.fileType = audioHeader.getFormat();
         audioFields.fileSize = getFileSize(file.length());
+        audioFields.mimeType = mimeType;
 
         audioFields.title = tag.getFirst(FieldKey.TITLE);
         audioFields.artist = tag.getFirst(FieldKey.ARTIST);

@@ -104,7 +104,8 @@
         android:text="@string/cancel_button"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/manual_message_rename_hint" />
+        app:layout_constraintTop_toBottomOf="@+id/manual_message_rename_hint"
+        style="@style/Widget.AutomusicTagFixer.ColoredButton"/>
 
     <Button
         android:id="@+id/accept_changes"
@@ -116,5 +117,6 @@
         android:text="@string/accept"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/cancel_changes"
-        app:layout_constraintTop_toBottomOf="@+id/manual_message_rename_hint" />
+        app:layout_constraintTop_toBottomOf="@+id/manual_message_rename_hint"
+        style="@style/Widget.AutomusicTagFixer.ColoredButton"/>
 </androidx.constraintlayout.widget.ConstraintLayout>
