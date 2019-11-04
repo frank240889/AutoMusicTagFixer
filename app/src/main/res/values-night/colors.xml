@@ -20,6 +20,8 @@
     <color name="progressSwipeRefreshLayoutBackgroundTint">#ffd600</color>
     <color name="progressTintSwipeRefreshLayout">@color/dark_gray</color>
     <color name="previewItemListDrawableColor">#FFFFFF</color>
+    <color name="snackbarBackgroundColor">#ffd600</color>
+    <color name="snackbarTextColor">@color/gray</color>
 
     <color name="toolbarColor">#212121</color>
     <color name="upperToolbarColorControlNormal">#FFFFFF</color>

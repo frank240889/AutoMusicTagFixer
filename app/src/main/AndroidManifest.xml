@@ -20,11 +20,14 @@
         android:label="@string/app_name"
         android:screenOrientation="portrait"
         android:supportsRtl="true"
-        android:usesCleartextTraffic="true"
         android:theme="@style/AppTheme"
+        android:usesCleartextTraffic="true"
         tools:targetApi="m">
-        <uses-library android:name="android.test.runner"
+
+        <uses-library
+            android:name="android.test.runner"
             android:required="false" />
+
         <activity
             android:name=".ui.SplashActivity"
             android:configChanges="orientation|screenSize|uiMode"
@@ -85,8 +88,7 @@
             <meta-data
                 android:name="androidx.PARENT_ACTIVITY"
                 android:value="mx.dev.franco.automusictagfixer.ui.MainActivity" />
-        </activity>
-         <!-- "mx.dev.franco.automusictagfixer.fileProvider" -->
+        </activity> <!-- "mx.dev.franco.automusictagfixer.fileProvider" -->
         <!-- This provider is necessary because in android >= 7 doesn't allow to access directly to files -->
         <provider
             android:name="androidx.core.content.FileProvider"
@@ -104,6 +106,7 @@
         <service
             android:name=".identifier.ApiInitializerService"
             android:exported="false" />
+
         <meta-data
             android:name="io.fabric.ApiKey"
             android:value="3d4995f2cd3e5757faec4a2dadce6e00f2d0814e" />

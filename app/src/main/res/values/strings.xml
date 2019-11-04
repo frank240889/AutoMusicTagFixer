@@ -329,4 +329,21 @@
     <string name="api_connected">Se ha conectado al servicio de reconocimiento.</string>
     <string name="identification_error">Error de identificación, intentalo de nuevo.</string>
     <string name="enable_dark_mode">Modo oscuro</string>
+    <string name="title_activity_settings2">Settings</string>
+
+    <!-- Preference Titles -->
+    <string name="messages_header">Messages</string>
+    <string name="sync_header">Sync</string>
+
+    <!-- Messages Preferences -->
+    <string name="signature_title">Your signature</string>
+    <string name="reply_title">Default reply action</string>
+
+    <!-- Sync Preferences -->
+    <string name="sync_title">Sync email periodically</string>
+    <string name="attachment_title">Download incoming attachments</string>
+    <string name="attachment_summary_on">Automatically download attachments for incoming emails
+    </string>
+    <string name="attachment_summary_off">Only download attachments when manually requested</string>
+    <string name="title_activity_preferences">Configuración</string>
 </resources>

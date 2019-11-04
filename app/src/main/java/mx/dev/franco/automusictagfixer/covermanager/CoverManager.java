@@ -109,9 +109,9 @@ public class CoverManager {
         Log.w(CoverManager.class.getName(), "loading cover");
             GlideApp.with(holder.itemView)
                     .load(result)
-                    .theme(holder.itemView.getContext().getTheme())
+                    .theme(holder.cover.getContext().getTheme())
                     .thumbnail(0.5f)
-                    .error(R.drawable.ic_album_white_48px)
+                    .error(holder.cover.getContext().getDrawable(R.drawable.ic_album_white_48px))
                     .diskCacheStrategy(DiskCacheStrategy.NONE)
                     .skipMemoryCache(true)
                     .transition(DrawableTransitionOptions.withCrossFade(100))
@@ -134,7 +134,7 @@ public class CoverManager {
                             return false;
                         }
                     })
-                    .placeholder(R.drawable.ic_album_white_48px)
+                    .placeholder(holder.cover.getContext().getDrawable(R.drawable.ic_album_white_48px))
                     .into(holder.cover);
     }
 

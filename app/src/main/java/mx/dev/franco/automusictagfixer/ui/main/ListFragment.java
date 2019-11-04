@@ -609,7 +609,8 @@ public class ListFragment extends BaseFragment<ListViewModel> implements
 
     @Override
     public void onLongRunningTaskMessage(String error) {
-        Snackbar snackbar = AndroidUtils.createSnackbar(mSwipeRefreshLayout, error);
+        Snackbar snackbar = AndroidUtils.createSnackbar(getView().findViewById(R.id.root_container), error);
+        snackbar.setAnchorView(mStartTaskFab);
         snackbar.show();
     }
 
@@ -621,8 +622,10 @@ public class ListFragment extends BaseFragment<ListViewModel> implements
     }
 
     private void onMessage(Integer integer) {
-        Snackbar snackbar = AndroidUtils.getSnackbar(mRecyclerView, getActivity().getApplicationContext());
+        Snackbar snackbar = AndroidUtils.getSnackbar(getView().findViewById(R.id.root_container),
+                getActivity().getApplicationContext());
         snackbar.setText(integer);
+        snackbar.setAnchorView(mStartTaskFab);
         snackbar.show();
     }
 

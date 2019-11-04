@@ -132,7 +132,7 @@
                             android:inputType="text|textNoSuggestions"
                             android:maxLength="100"
                             android:maxLines="1"
-                            android:text="@={viewmodel.title}" />
+                            android:text="@={viewmodel.title}"/>
                     </com.google.android.material.textfield.TextInputLayout>
 
                     <com.google.android.material.textfield.TextInputLayout
@@ -267,25 +267,6 @@
                     </com.google.android.material.textfield.TextInputLayout>
 
                     <TextView
-                        android:id="@+id/imageSize"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_below="@+id/track_year_layout"
-                        android:layout_alignParentStart="true"
-                        android:layout_marginStart="8dp"
-                        android:layout_marginTop="8dp"
-                        android:layout_marginBottom="8dp"
-                        android:drawableStart="@drawable/ic_photo_size_select_large_white_24px"
-                        android:gravity="center_vertical"
-                        android:singleLine="true"
-                        android:text="@{viewmodel.imageSize}"
-                        android:textSize="16sp"
-                        android:visibility="visible"
-                        app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@+id/track_year_layout" />
-
-                    <TextView
                         android:id="@+id/change_image_button"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -311,7 +292,7 @@
             <androidx.cardview.widget.CardView
                 android:id="@+id/cardview_extra_info_content"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="0dp"
                 android:layout_marginTop="8dp"
                 android:layout_marginBottom="80dp"
                 android:elevation="@dimen/cardview_default_elevation"
@@ -341,10 +322,11 @@
                         android:drawableStart="@drawable/ic_sd_storage_white_24px"
                         android:gravity="center_vertical"
                         android:singleLine="true"
+                        android:text="@{viewmodel.filesize}"
                         android:visibility="visible"
+                        app:drawableTint="@color/bottomToolbarIconTintColor"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toTopOf="parent"
-                        android:text="@{viewmodel.filesize}"
                         tools:text="13mb" />
 
                     <TextView
@@ -358,10 +340,11 @@
                         android:drawableStart="@drawable/ic_speaker_white_24px"
                         android:gravity="center_vertical"
                         android:singleLine="true"
+                        android:text="@{viewmodel.channels}"
                         android:visibility="visible"
+                        app:drawableTint="@color/bottomToolbarIconTintColor"
                         app:layout_constraintStart_toEndOf="@+id/file_size"
                         app:layout_constraintTop_toTopOf="parent"
-                        android:text="@{viewmodel.channels}"
                         tools:text="Joint Stereo" />
 
                     <TextView
@@ -375,10 +358,11 @@
                         android:drawableStart="@drawable/ic_description_white"
                         android:gravity="center_vertical"
                         android:singleLine="true"
+                        android:text="@{viewmodel.type}"
                         android:visibility="visible"
+                        app:drawableTint="@color/bottomToolbarIconTintColor"
                         app:layout_constraintStart_toEndOf="@+id/channels"
                         app:layout_constraintTop_toTopOf="parent"
-                        android:text="@{viewmodel.type}"
                         tools:text="MPEG-1 Layer 3" />
 
                     <TextView
@@ -392,10 +376,11 @@
                         android:drawableStart="@drawable/ic_high_quality_white_24px"
                         android:gravity="center_vertical"
                         android:singleLine="true"
+                        android:text="@{viewmodel.resolution}"
                         android:visibility="visible"
+                        app:drawableTint="@color/bottomToolbarIconTintColor"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="@+id/file_size"
-                        android:text="@{viewmodel.resolution}"
                         tools:text="16 bits" />
 
                     <TextView
@@ -410,10 +395,11 @@
                         android:drawableStart="@drawable/ic_equalizer_white_24px"
                         android:gravity="center_vertical"
                         android:singleLine="true"
+                        android:text="@{viewmodel.frequency}"
                         android:visibility="visible"
+                        app:drawableTint="@color/bottomToolbarIconTintColor"
                         app:layout_constraintStart_toEndOf="@+id/resolution"
                         app:layout_constraintTop_toBottomOf="@+id/channels"
-                        android:text="@{viewmodel.frequency}"
                         tools:text="44.1 Khz" />
 
                     <TextView
@@ -426,9 +412,10 @@
                         android:layout_toEndOf="@+id/frequency"
                         android:drawableStart="@drawable/ic_hearing_white_24px"
                         android:gravity="center_vertical"
+                        android:text="@{viewmodel.bitrate}"
+                        app:drawableTint="@color/bottomToolbarIconTintColor"
                         app:layout_constraintStart_toEndOf="@+id/frequency"
                         app:layout_constraintTop_toBottomOf="@+id/track_type"
-                        android:text="@{viewmodel.bitrate}"
                         tools:text="128 Kbps" />
 
                     <TextView
@@ -442,10 +429,11 @@
                         android:drawableStart="@drawable/ic_access_time_white_24px"
                         android:gravity="center_vertical"
                         android:singleLine="true"
+                        android:text="@{viewmodel.length}"
                         android:visibility="visible"
+                        app:drawableTint="@color/bottomToolbarIconTintColor"
                         app:layout_constraintStart_toEndOf="@+id/bitrate"
                         app:layout_constraintTop_toBottomOf="@+id/track_type"
-                        android:text="@{viewmodel.length}"
                         tools:text="5'06''" />
 
                     <TextView
@@ -456,18 +444,35 @@
                         android:layout_marginStart="8dp"
                         android:layout_marginTop="8dp"
                         android:layout_marginEnd="8dp"
-                        android:layout_marginBottom="8dp"
                         android:drawableStart="@drawable/ic_folder_white_24px"
                         android:gravity="center_vertical"
                         android:maxLines="2"
-                        app:layout_constraintBottom_toBottomOf="parent"
+                        android:text="@{viewmodel.absolutePath}"
+                        app:drawableTint="@color/bottomToolbarIconTintColor"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="@+id/resolution"
-                        android:text="@{viewmodel.absolutePath}"
                         tools:text="/storage/emulated/0/Music" />
 
+                    <TextView
+                        android:id="@+id/imageSize"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentStart="true"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginTop="8dp"
+                        android:drawableStart="@drawable/ic_photo_size_select_large_white_24px"
+                        android:gravity="center_vertical"
+                        android:singleLine="true"
+                        android:text="@{viewmodel.imageSize}"
+                        app:drawableTint="@color/bottomToolbarIconTintColor"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/track_path"
+                        tools:text="1080 * 1080" />
+
                 </androidx.constraintlayout.widget.ConstraintLayout>
+
             </androidx.cardview.widget.CardView>
         </androidx.constraintlayout.widget.ConstraintLayout>
 

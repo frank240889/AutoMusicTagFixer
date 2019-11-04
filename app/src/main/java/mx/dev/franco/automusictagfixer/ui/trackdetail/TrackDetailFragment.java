@@ -478,12 +478,12 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
     private void addAppBarOffsetListener(){
         mFragmentTrackDetailBinding.appBarLayout.addOnOffsetChangedListener((appBarLayout, verticalOffset) -> {
             //set alpha of cover depending on offset of expanded toolbar cover height,
-            mFragmentTrackDetailBinding.toolbarCoverArt.setAlpha(1.0f - Math.abs(verticalOffset/(float)appBarLayout.getTotalScrollRange()));
+            //mFragmentTrackDetailBinding.toolbarCoverArt.setAlpha(1.0f - Math.abs(verticalOffset/(float)appBarLayout.getTotalScrollRange()));
+            mFragmentTrackDetailBinding.cardContainerCover.setAlpha(1.0f - Math.abs(verticalOffset/(float)appBarLayout.getTotalScrollRange()));
             //when toolbar is fully collapsed show name of audio file in toolbar and back button
             if(Math.abs(verticalOffset) - appBarLayout.getTotalScrollRange() == 0) {
                 mFragmentTrackDetailBinding.collapsingToolbarLayout.setTitleEnabled(true);
-                mFragmentTrackDetailBinding.collapsingToolbarLayout.setTitle(
-                        mFragmentTrackDetailBinding.titleBottomTransparentLayer.getText().toString());
+                mFragmentTrackDetailBinding.collapsingToolbarLayout.setTitle(mViewModel.filename.getValue());
                 mActionBar.setDisplayShowTitleEnabled(true);
                 mActionBar.setDisplayHomeAsUpEnabled(true);
                 mActionBar.setDisplayShowHomeEnabled(true);
@@ -608,7 +608,6 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
         mFragmentTrackDetailBinding.layoutContentDetailsTrack.trackYear.setEnabled(true);
         mFragmentTrackDetailBinding.layoutContentDetailsTrack.trackGenre.setEnabled(true);
 
-        mFragmentTrackDetailBinding.layoutContentDetailsTrack.imageSize.setVisibility(View.GONE);
         mFragmentTrackDetailBinding.layoutContentDetailsTrack.changeImageButton.setVisibility(View.VISIBLE);
 
         mFragmentTrackDetailBinding.layoutContentDetailsTrack.trackNameDetails.requestFocus();
@@ -651,7 +650,6 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
         mFragmentTrackDetailBinding.layoutContentDetailsTrack.trackGenre.clearFocus();
         mFragmentTrackDetailBinding.layoutContentDetailsTrack.trackGenre.setEnabled(false);
 
-        mFragmentTrackDetailBinding.layoutContentDetailsTrack.imageSize.setVisibility(View.VISIBLE);
         mFragmentTrackDetailBinding.layoutContentDetailsTrack.changeImageButton.setVisibility(View.GONE);
         mFragmentTrackDetailBinding.toolbarCoverArt.setEnabled(true);
         //to hide it, call the method again
