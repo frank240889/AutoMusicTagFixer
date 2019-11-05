@@ -23,6 +23,7 @@ import android.widget.EditText;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
+import androidx.core.content.ContextCompat;
 import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.ViewModelProviders;
 
@@ -96,17 +97,17 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
         mPlayer.addListener(new OnMediaPlayerEventListener() {
             @Override
             public void onStartPlaying() {
-                mPlayPreviewMenuItem.setIcon(R.drawable.ic_stop_white_24dp);
+                mPlayPreviewMenuItem.setIcon(ContextCompat.getDrawable(getActivity(), R.drawable.ic_stop_white_24dp));
                 addStopAction();
             }
             @Override
             public void onStopPlaying() {
-                mPlayPreviewMenuItem.setIcon(R.drawable.ic_play_arrow_white_24px);
+                mPlayPreviewMenuItem.setIcon(ContextCompat.getDrawable(getActivity(),R.drawable.ic_play_arrow_white_24px));
                 addPlayAction();
             }
             @Override
             public void onCompletedPlaying() {
-                mPlayPreviewMenuItem.setIcon(R.drawable.ic_play_arrow_white_24px);
+                mPlayPreviewMenuItem.setIcon(ContextCompat.getDrawable(getActivity(),R.drawable.ic_play_arrow_white_24px));
             }
             @Override
             public void onErrorPlaying(int what, int extra) {

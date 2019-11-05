@@ -519,12 +519,10 @@ public class ListFragment extends BaseFragment<ListViewModel> implements
         trackDetailFragment = (TrackDetailFragment) getActivity().
                 getSupportFragmentManager().findFragmentByTag(TrackDetailFragment.class.getName());
         if(trackDetailFragment != null){
-
             trackDetailFragment.load(AndroidUtils.getBundle(viewWrapper.track.getMediaStoreId(),
                     viewWrapper.mode));
         }
         else {
-
             trackDetailFragment = TrackDetailFragment.newInstance(
                     viewWrapper.track.getMediaStoreId(),
                     viewWrapper.mode);
@@ -532,9 +530,9 @@ public class ListFragment extends BaseFragment<ListViewModel> implements
                     setCustomAnimations(R.anim.slide_in_right,
                             R.anim.slide_out_left, R.anim.slide_in_left,
                             R.anim.slide_out_right).
-                    addToBackStack(trackDetailFragment.getClass().getName()).
+                    addToBackStack(TrackDetailFragment.class.getName()).
                     add(R.id.container_fragments,
-                            trackDetailFragment, trackDetailFragment.getClass().getName()).
+                            trackDetailFragment, TrackDetailFragment.class.getName()).
                     commit();
         }
 

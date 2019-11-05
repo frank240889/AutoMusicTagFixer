@@ -62,13 +62,15 @@ public final class AutoMusicTagFixer extends Application implements HasActivityI
         //LeakCanary.install(this);
         Stetho.initializeWithDefaults(this);
         AppCompatDelegate.setCompatVectorFromResourcesEnabled(true);
-        if(mAbstractSharedPreferences.getBoolean("dark_mode")) {
-            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
-            mAbstractSharedPreferences.putBoolean("dark_mode", false);
-        }
-        else {
-            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
-            mAbstractSharedPreferences.putBoolean("dark_mode", true);
+        if(AppCompatDelegate.getDefaultNightMode() != AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM) {
+            if(mAbstractSharedPreferences.getBoolean("dark_mode")) {
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+                mAbstractSharedPreferences.putBoolean("dark_mode", true);
+            }
+            else {
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+                mAbstractSharedPreferences.putBoolean("dark_mode", false);
+            }
         }
     }
 

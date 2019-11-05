@@ -10,7 +10,7 @@
     <color name="secondaryTextColor">@color/gray</color>
 
     <color name="colorControlActivated">@color/dark_gray</color>
-    <color name="colorControlHighlight">#ffd600</color>
+    <color name="colorControlHighlight">@color/dark_gray</color>
 
     <color name="bottomToolbarTintColor">#FFFFFFFF</color>
     <color name="bottomToolbarColorControlNormal">#000000</color>

@@ -11,7 +11,7 @@
         <item name="bottomAppBarStyle">@style/Widget.AutomusicTagFixer.BottomAppBar</item>
         <item name="toolbarStyle">@style/Widget.AutomusicTagFixer.MaterialToolbar</item>
         <item name="snackbarStyle">@style/Widget.AutomusicTagFixer.Snackbar</item>
-        <item name="colorControlHighlight">@color/colorControlHighlight</item>
+        <item name="textInputStyle"> @style/Widget.AutomusicTagFixer.TextInputLayout</item>
         <!--item name="materialButtonStyle">@style/Widget.AutomusicTagFixer.ColoredButton</item-->
         <!--item name="colorPrimaryVariant">@color/primaryVariant</item>
         <item name="colorOnPrimary">@color/onPrimary</item>
@@ -73,6 +73,24 @@
     <style name="Widget.AutomusicTagFixer.Snackbar" parent="@style/Widget.MaterialComponents.Snackbar">
         <item name="android:background">@drawable/bg_snackbar</item>
         <item name="android:textColor">@color/snackbarTextColor</item>
+    </style>
+
+
+    <style name="Widget.AutomusicTagFixer.TextInputLayout" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense">
+        <item name="materialThemeOverlay">@style/ThemeOverlay.AutomusicTagFixer.TextInputEditText.OutlinedBox</item>
+    </style>
+
+    <style name="ThemeOverlay.AutomusicTagFixer.TextInputEditText.OutlinedBox" parent="ThemeOverlay.MaterialComponents.TextInputEditText.OutlinedBox.Dense">
+        <item name="colorPrimary">@color/colorControlHighlight</item>
+        <item name="colorControlNormal">@color/colorControlHighlight</item>
+    </style>
+
+    <style name="TextAppearance.AutomusicTagFixer" parent="@style/TextAppearance.AppCompat">
+        <item name="android:textColor">@color/colorControlHighlight</item>
+    </style>
+
+    <style name="Widget.AutomusicTagFixer.InputEditText" parent="@style/ThemeOverlay.MaterialComponents.TextInputEditText.OutlinedBox.Dense">
+        <item name="android:colorControlActivated">@color/colorControlHighlight</item>
     </style>
 
     <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.MaterialComponents.Dark.ActionBar" />
