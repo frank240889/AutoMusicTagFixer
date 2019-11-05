@@ -28,8 +28,9 @@ public class BindingUtils {
         GlideApp.with(view)
                 .asBitmap()
                 .load(cover.getValue())
-                .error(R.drawable.ic_album_white_48px)
+                .error(view.getContext().getDrawable(R.drawable.ic_album_white_48px))
                 .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.NONE))
+                .theme(view.getContext().getTheme())
                 .apply(RequestOptions.skipMemoryCacheOf(true))
                 .listener(new RequestListener<Bitmap>() {
                     @Override
@@ -49,6 +50,7 @@ public class BindingUtils {
                     }
                 })
                 .fitCenter()
+                .placeholder(view.getContext().getDrawable(R.drawable.ic_album_white_48px))
                 .into(view);
     }
 }
