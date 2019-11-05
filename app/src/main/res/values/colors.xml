@@ -23,6 +23,9 @@
     <color name="previewItemListDrawableColor">#000000</color>
     <color name="snackbarBackgroundColor">@color/gray</color>
     <color name="snackbarTextColor">@color/primaryColor</color>
+    
+    <color name="introBackgroundColor">@color/gray</color>
+    <color name="introFabBackgroundColor">#ffd600</color>
 
     <color name="toolbarColor">#FFFFFFFF</color>
     <color name="upperToolbarColorControlNormal">#000000</color>

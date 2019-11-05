@@ -24,6 +24,9 @@
     <color name="snackbarBackgroundColor">#ffd600</color>
     <color name="snackbarTextColor">@color/gray</color>
 
+    <color name="introBackgroundColor">#ffd600</color>
+    <color name="introFabBackgroundColor">@color/gray</color>
+
     <color name="toolbarColor">#212121</color>
     <color name="upperToolbarColorControlNormal">#FFFFFF</color>
 
