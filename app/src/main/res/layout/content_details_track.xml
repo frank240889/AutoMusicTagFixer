@@ -45,80 +45,16 @@
                     android:elevation="@dimen/dialog_elevation"
                     android:splitMotionEvents="false">
 
-                    <androidx.constraintlayout.widget.ConstraintLayout
-                        android:id="@+id/progress_container"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_centerHorizontal="true"
-                        android:layout_marginStart="8dp"
-                        android:layout_marginTop="8dp"
-                        android:layout_marginEnd="8dp"
-                        android:orientation="horizontal"
-                        android:visibility="invisible"
-                        android:weightSum="1"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintHorizontal_bias="0.0"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="parent"
-                        tools:visibility="visible">
-
-                        <TextView
-                            android:id="@+id/status_message"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_centerHorizontal="false"
-                            android:layout_marginStart="4dp"
-                            android:layout_marginTop="8dp"
-                            android:layout_marginEnd="4dp"
-                            android:gravity="center_vertical|center_horizontal"
-                            android:visibility="invisible"
-                            app:layout_constraintEnd_toEndOf="parent"
-                            app:layout_constraintStart_toEndOf="@+id/cancel_identification"
-                            app:layout_constraintTop_toTopOf="parent"
-                            android:text=""
-                            tools:text="Identificando, espere por favor..."
-                            tools:visibility="visible" />
-
-                        <ProgressBar
-                            android:id="@+id/progress_bar"
-                            style="@android:style/Widget.DeviceDefault.Light.ProgressBar.Horizontal"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_gravity="center_vertical"
-                            android:layout_marginStart="4dp"
-                            android:layout_marginEnd="4dp"
-                            android:layout_weight="0.9"
-                            android:indeterminate="true"
-                            android:visibility="visible"
-                            app:layout_constraintBottom_toBottomOf="parent"
-                            app:layout_constraintEnd_toEndOf="parent"
-                            app:layout_constraintStart_toEndOf="@+id/cancel_identification"
-                            app:layout_constraintTop_toBottomOf="@+id/status_message" />
-
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/cancel_identification"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_gravity="center_vertical"
-                            android:text="@string/cancel_button"
-                            app:layout_constraintBottom_toBottomOf="parent"
-                            app:layout_constraintStart_toStartOf="parent"
-                            app:layout_constraintTop_toTopOf="parent"
-                            style="@style/Widget.AutomusicTagFixer.ColoredButton"/>
-                    </androidx.constraintlayout.widget.ConstraintLayout>
-
-
                     <com.google.android.material.textfield.TextInputLayout
                         android:id="@+id/track_name_details_layout"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_below="@+id/progress_container"
                         android:layout_marginStart="8dp"
                         android:layout_marginTop="8dp"
                         android:layout_marginEnd="8dp"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@+id/progress_container">
+                        app:layout_constraintTop_toTopOf="parent">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/track_name_details"
@@ -268,14 +204,14 @@
                         android:layout_alignParentStart="true"
                         android:layout_marginStart="8dp"
                         android:layout_marginTop="8dp"
-                        android:layout_marginBottom="16dp"
+                        android:layout_marginBottom="8dp"
                         android:drawableStart="@drawable/ic_photo_library_black_24dp"
-                        app:drawableTint="@color/bottomToolbarIconTintColor"
                         android:gravity="center_vertical"
                         android:singleLine="true"
                         android:text="@string/edit_cover"
                         android:textSize="16sp"
-                        android:visibility="gone"
+                        android:visibility="invisible"
+                        app:drawableTint="@color/bottomToolbarIconTintColor"
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="@+id/track_year_layout"
@@ -287,7 +223,7 @@
             <androidx.cardview.widget.CardView
                 android:id="@+id/cardview_extra_info_content"
                 android:layout_width="match_parent"
-                android:layout_height="0dp"
+                android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
                 android:layout_marginBottom="80dp"
                 android:elevation="@dimen/cardview_default_elevation"
@@ -309,6 +245,20 @@
                     android:layout_alignParentStart="true">
 
                     <TextView
+                        android:id="@+id/textView"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginTop="8dp"
+                        android:gravity="center_vertical"
+                        android:drawableStart="@drawable/ic_description_white"
+                        app:drawableTint="@color/bottomToolbarIconTintColor"
+                        android:text="@{viewmodel.filename}"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        tools:text="Amar a 2.mp3"/>
+
+                    <TextView
                         android:id="@+id/file_size"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -321,7 +271,7 @@
                         android:visibility="visible"
                         app:drawableTint="@color/bottomToolbarIconTintColor"
                         app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/textView"
                         tools:text="13mb" />
 
                     <TextView
@@ -330,7 +280,6 @@
                         android:layout_height="wrap_content"
                         android:layout_alignParentTop="true"
                         android:layout_marginStart="8dp"
-                        android:layout_marginTop="8dp"
                         android:layout_toEndOf="@+id/file_size"
                         android:drawableStart="@drawable/ic_speaker_white_24px"
                         android:gravity="center_vertical"
@@ -339,7 +288,7 @@
                         android:visibility="visible"
                         app:drawableTint="@color/bottomToolbarIconTintColor"
                         app:layout_constraintStart_toEndOf="@+id/file_size"
-                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintTop_toTopOf="@+id/file_size"
                         tools:text="Joint Stereo" />
 
                     <TextView
@@ -348,7 +297,6 @@
                         android:layout_height="wrap_content"
                         android:layout_alignParentTop="true"
                         android:layout_marginStart="8dp"
-                        android:layout_marginTop="8dp"
                         android:layout_toEndOf="@+id/channels"
                         android:drawableStart="@drawable/ic_description_white"
                         android:gravity="center_vertical"
@@ -357,7 +305,7 @@
                         android:visibility="visible"
                         app:drawableTint="@color/bottomToolbarIconTintColor"
                         app:layout_constraintStart_toEndOf="@+id/channels"
-                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintTop_toTopOf="@+id/channels"
                         tools:text="MPEG-1 Layer 3" />
 
                     <TextView

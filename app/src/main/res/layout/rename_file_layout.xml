@@ -61,7 +61,6 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/manual_checkbox_rename"
-        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
         tools:visibility="visible">
 
         <com.google.android.material.textfield.TextInputEditText

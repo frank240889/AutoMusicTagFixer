@@ -133,6 +133,7 @@ public class ListFragment extends BaseFragment<ListViewModel> implements
                     mStartTaskFab.hide();
                     //mStopTaskFab.show();
                 }
+                mToolbar.setTitle(tracks.size() + " " +getString(R.string.tracks));
                 mActionBar.setTitle(tracks.size() + " " +getString(R.string.tracks));
                 mMessage.setVisibility(View.GONE);
             }

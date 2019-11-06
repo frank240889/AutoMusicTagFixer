@@ -13,14 +13,11 @@ import androidx.palette.graphics.Palette;
 import com.bumptech.glide.load.DataSource;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.load.engine.GlideException;
-import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
 import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.request.target.Target;
-import com.google.android.material.appbar.AppBarLayout;
 
 import mx.dev.franco.automusictagfixer.R;
-import mx.dev.franco.automusictagfixer.ui.BaseFragment;
 
 public class BindingUtils {
     @BindingAdapter({"imageCover"})
@@ -35,6 +32,8 @@ public class BindingUtils {
                 .listener(new RequestListener<Bitmap>() {
                     @Override
                     public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Bitmap> target, boolean isFirstResource) {
+                        ((View)view.getParent().getParent()).setBackgroundColor(ContextCompat.getColor(view.getContext(),
+                                R.color.primaryColor));
                         return false;
                     }
                     @Override

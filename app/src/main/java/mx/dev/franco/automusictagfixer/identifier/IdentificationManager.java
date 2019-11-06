@@ -89,7 +89,6 @@ public class IdentificationManager {
                 public void onIdentificationStart(Track file) {
                     mLoadingStateLiveData.setValue(true);
                     mIdentifying = true;
-                    AndroidUtils.showToast("IDENTIFICANDO", mContext);
                 }
 
                 @Override

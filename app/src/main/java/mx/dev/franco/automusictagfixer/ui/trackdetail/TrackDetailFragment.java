@@ -275,6 +275,7 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
     public void onDetach() {
         super.onDetach();
         mPlayer.removeListeners();
+        mViewModel.cancelIdentification();
         mPlayer = null;
     }
 
@@ -307,13 +308,11 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
 
     public void loading(boolean showProgress) {
         if(showProgress) {
-            mFragmentTrackDetailBinding.
-                    layoutContentDetailsTrack.progressContainer.setVisibility(View.VISIBLE);
+            mFragmentTrackDetailBinding.progressBar.setVisibility(View.VISIBLE);
             disableEditModeElements();
         }
         else {
-            mFragmentTrackDetailBinding.
-                    layoutContentDetailsTrack.progressContainer.setVisibility(View.GONE);
+            mFragmentTrackDetailBinding.progressBar.setVisibility(View.GONE);
             enableEditModeElements();
         }
     }
@@ -338,10 +337,10 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
 
 
         //Set action for "X" button
-        mFragmentTrackDetailBinding.
+        /*mFragmentTrackDetailBinding.
                 layoutContentDetailsTrack.
                 cancelIdentification.
-                setOnClickListener(v -> mViewModel.cancelIdentification());
+                setOnClickListener(v -> mViewModel.cancelIdentification());*/
     }
 
     /**
@@ -627,7 +626,7 @@ public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> impl
         mFragmentTrackDetailBinding.layoutContentDetailsTrack.trackGenre.clearFocus();
         mFragmentTrackDetailBinding.layoutContentDetailsTrack.trackGenre.setEnabled(false);
 
-        mFragmentTrackDetailBinding.layoutContentDetailsTrack.changeImageButton.setVisibility(View.GONE);
+        mFragmentTrackDetailBinding.layoutContentDetailsTrack.changeImageButton.setVisibility(View.INVISIBLE);
         mFragmentTrackDetailBinding.toolbarCoverArt.setEnabled(true);
         //to hide it, call the method again
         InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);

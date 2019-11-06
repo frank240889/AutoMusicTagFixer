@@ -42,7 +42,6 @@
         app:useCompatPadding="true"
         app:layout_anchor="@id/app_bar"
         app:layout_anchorGravity="bottom|end"
-        android:src="@drawable/ic_email_white_24px"
-        style="@style/Widget.MaterialComponents.FloatingActionButton"/>
+        android:src="@drawable/ic_email_white_24px"/>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

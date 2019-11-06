@@ -72,6 +72,9 @@ public final class AutoMusicTagFixer extends Application implements HasActivityI
                 mAbstractSharedPreferences.putBoolean("dark_mode", false);
             }
         }
+        else {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
+        }
     }
 
     @Override
