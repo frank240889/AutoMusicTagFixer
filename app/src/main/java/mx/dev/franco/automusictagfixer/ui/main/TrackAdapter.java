@@ -111,9 +111,9 @@ public class TrackAdapter extends RecyclerView.Adapter<AudioItemHolder> implemen
                     }
                 }
 
-                if (key.equals("should_reload_cover")){
+                //if (key.equals("should_reload_cover")){
                     enqueue(holder, track);
-                }
+                //}
 
                 if (key.equals("state")) {
                     switch (track.getState()) {
