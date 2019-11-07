@@ -88,8 +88,8 @@ public class DataTrackManager {
         LiveData<Track> liveTrack = mTrackRoomDatabase.trackDao().search(id);
         mMediatorLiveDataTrack.addSource(liveTrack, track -> {
             mTrack = track;
-            mLoadingStateLiveData.setValue(false);
             mMediatorLiveDataTrack.setValue(track);
+            mLoadingStateLiveData.setValue(false);
         });
     }
 
