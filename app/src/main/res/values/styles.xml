@@ -8,10 +8,10 @@
         <item name="colorControlNormal">@color/upperToolbarColorControlNormal</item>
         <item name="floatingActionButtonStyle">@style/Widget.AutomusicTagFixer.FloatingActionButton</item>
         <item name="extendedFloatingActionButtonStyle">@style/Widget.AutomusicTagFixer.ExtendedFloatingActionButton</item>
-        <item name="bottomAppBarStyle">@style/Widget.AutomusicTagFixer.BottomAppBar</item>
-        <item name="toolbarStyle">@style/Widget.AutomusicTagFixer.MaterialToolbar</item>
+        <!--item name="toolbarStyle">@style/Widget.AutomusicTagFixer.MaterialToolbar</item-->
         <item name="snackbarStyle">@style/Widget.AutomusicTagFixer.Snackbar</item>
         <item name="textInputStyle"> @style/Widget.AutomusicTagFixer.TextInputLayout</item>
+        <item name="appBarLayoutStyle">@style/Widget.AutomusicTagFixer.AppBarLayoutToolbar</item>
         <!--item name="materialButtonStyle">@style/Widget.AutomusicTagFixer.ColoredButton</item-->
         <!--item name="colorPrimaryVariant">@color/primaryVariant</item>
         <item name="colorOnPrimary">@color/onPrimary</item>
@@ -33,7 +33,7 @@
         <item name="colorPrimaryDark">@color/primaryDarkColor</item>
         <item name="colorControlActivated">@color/colorControlActivated</item>
         <item name="colorControlNormal">@color/upperToolbarColorControlNormal</item>
-        <item name="actionBarStyle">@style/Widget.AutomusicTagFixer.MaterialToolbar</item>
+        <item name="actionBarStyle">@style/Widget.AutomusicTagFixer.AppBarLayoutToolbar</item>
     </style>
 
 
@@ -66,8 +66,8 @@
         <item name="background">@drawable/bg_toolbar</item>
     </style>
 
-    <style name="Widget.AutomusicTagFixer.MaterialToolbar" parent="@style/Widget.MaterialComponents.Toolbar">
-        <item name="android:background">@color/toolbarColor</item>
+    <style name="Widget.AutomusicTagFixer.AppBarLayoutToolbar" parent="@style/Widget.MaterialComponents.AppBarLayout.Primary">
+        <item name="android:background">@drawable/bg_toolbar</item>
     </style>
 
     <style name="Widget.AutomusicTagFixer.Snackbar" parent="@style/Widget.MaterialComponents.Snackbar">

@@ -34,6 +34,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 
@@ -78,7 +79,7 @@ public class ListFragment extends BaseFragment<ListViewModel> implements
     private ActionBar mActionBar;
     private Menu mMenu;
     private Toolbar mToolbar;
-    private FloatingActionButton mStartTaskFab;
+    private ExtendedFloatingActionButton mStartTaskFab;
     private FloatingActionButton mStopTaskFab;
 
     @Inject
