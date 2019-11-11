@@ -11,7 +11,7 @@
     <color name="colorControlHighlight">#212121</color>
     <color name="primaryBackground">#ffffff</color>
 
-    <color name="primaryColorButton">#ffff6b</color>
+    <color name="primaryColorButton">#fdd835</color>
     <color name="dark_gray">#212121</color>
 
     <color name="navigationDrawerBackgroundTint">#ffffff</color>
@@ -22,7 +22,7 @@
 
     <color name="progressSwipeRefreshLayoutBackgroundTint">#212121</color>
     <color name="progressTintSwipeRefreshLayout">@color/primaryDarkColor</color>
-    <color name="extendedColorFabButton">#ffff6b</color>
+    <color name="extendedColorFabButton">#fdd835</color>
     <color name="primaryFabTextColor">#212121</color>
 
     <color name="snackbarBackgroundColor">#212121</color>

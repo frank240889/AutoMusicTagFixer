@@ -4,7 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/root_container_results"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:theme="@style/AppTheme">
     <androidx.core.widget.NestedScrollView
         android:id="@+id/scrollable_container"
         android:layout_width="match_parent"
