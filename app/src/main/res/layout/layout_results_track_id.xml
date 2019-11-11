@@ -130,7 +130,7 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/message_rename_hint" />
 
-                <Button
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/all_tags_button"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -140,10 +140,9 @@
                     android:text="@string/all_tags"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/text_view_title"
-                    style="@style/Widget.AutomusicTagFixer.ColoredButton"/>
+                    app:layout_constraintTop_toBottomOf="@+id/text_view_title" />
 
-                <Button
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/missing_tags_button"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -153,8 +152,7 @@
                     app:layout_constraintBottom_toBottomOf="@+id/all_tags_button"
                     app:layout_constraintEnd_toStartOf="@+id/all_tags_button"
                     app:layout_constraintTop_toTopOf="@+id/all_tags_button"
-                    app:layout_constraintVertical_bias="0.0"
-                    style="@style/Widget.AutomusicTagFixer.ColoredButton"/>
+                    app:layout_constraintVertical_bias="0.0" />
             </androidx.constraintlayout.widget.ConstraintLayout>
 
         </LinearLayout>

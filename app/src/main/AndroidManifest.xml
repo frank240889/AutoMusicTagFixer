@@ -59,7 +59,6 @@
             android:label="@string/title_activity_settings"
             android:parentActivityName=".ui.MainActivity"
             android:screenOrientation="portrait"
-            android:theme="@style/SettingsTheme"
             tools:ignore="InnerclassSeparator" />
         <activity
             android:name=".ui.sdcardinstructions.SdCardInstructionsActivity"
@@ -79,7 +78,7 @@
                 android:value="mx.dev.franco.automusictagfixer.ui.MainActivity" />
         </activity>
         <activity
-            android:name=".ui.about.ScrollingAboutActivity"
+            android:name=".ui.about.AboutFragment"
             android:configChanges="orientation|screenSize|uiMode"
             android:label="@string/title_activity_scrolling_about"
             android:parentActivityName=".ui.MainActivity"

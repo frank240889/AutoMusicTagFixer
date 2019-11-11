@@ -3,18 +3,9 @@ package mx.dev.franco.automusictagfixer.ui;
 import android.content.Context;
 import android.os.Bundle;
 
-import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
-import javax.inject.Inject;
-
-import dagger.android.AndroidInjector;
-import dagger.android.DispatchingAndroidInjector;
-import dagger.android.support.AndroidSupportInjection;
-import dagger.android.support.HasSupportFragmentInjector;
 import mx.dev.franco.automusictagfixer.interfaces.OnBackPressedListener;
-import mx.dev.franco.automusictagfixer.utilities.ActionableMessage;
-import mx.dev.franco.automusictagfixer.utilities.Message;
 
 /**
  * Base fragment that abstract the common functionality for fragments
@@ -22,12 +13,8 @@ import mx.dev.franco.automusictagfixer.utilities.Message;
  *
  * @author Franco Castillo
  */
-public abstract class BaseFragment<ViewModel> extends Fragment implements
-        OnBackPressedListener, HasSupportFragmentInjector {
-    @Inject
-    protected DispatchingAndroidInjector<Fragment> fragmentDispatchingAndroidInjector;
-    @Inject
-    protected AndroidViewModelFactory androidViewModelFactory;
+public abstract class BaseFragment extends Fragment implements
+        OnBackPressedListener {
 
     public static final String BASE_FRAGMENT_TAG = BaseFragment.class.getName();
     public static final int CROSS_FADE_DURATION = 200;
@@ -36,7 +23,6 @@ public abstract class BaseFragment<ViewModel> extends Fragment implements
     public static final int INTENT_GET_AND_UPDATE_FROM_GALLERY = 2;
     public static String TAG;
     protected OnConfirmBackPressedListener mOnConfirmBackPressedListener;
-    protected ViewModel mViewModel;
 
     /**
      * Called when a fragment is first attached to its context.
@@ -44,19 +30,10 @@ public abstract class BaseFragment<ViewModel> extends Fragment implements
      */
     @Override
     public void onAttach(Context context) {
-        AndroidSupportInjection.inject(this);
         super.onAttach(context);
         if(context instanceof OnConfirmBackPressedListener)
             mOnConfirmBackPressedListener = (OnConfirmBackPressedListener) context;
     }
-
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        mViewModel = getViewModel();
-    }
-
-    protected abstract ViewModel getViewModel();
 
     @Override
     public void onDetach() {
@@ -80,15 +57,7 @@ public abstract class BaseFragment<ViewModel> extends Fragment implements
         void callSuperOnBackPressed();
     }
 
-    protected void loading(boolean isLoading){ }
-
-    @Override
-    public AndroidInjector<Fragment> supportFragmentInjector() {
-        return fragmentDispatchingAndroidInjector;
+    public String getTagName() {
+        return getClass().getName();
     }
-
-    protected void onMessage(Message message){}
-
-    protected void onActionableMessage(ActionableMessage actionableMessage) { }
-
 }

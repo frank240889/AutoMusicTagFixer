@@ -9,7 +9,6 @@ import android.content.res.Configuration;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -25,7 +24,6 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
@@ -38,6 +36,7 @@ import com.google.android.material.floatingactionbutton.ExtendedFloatingActionBu
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 
+import java.util.List;
 import java.util.Objects;
 
 import javax.inject.Inject;
@@ -46,13 +45,14 @@ import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.interfaces.LongRunningTaskListener;
 import mx.dev.franco.automusictagfixer.interfaces.ProcessingListener;
 import mx.dev.franco.automusictagfixer.persistence.repository.TrackRepository;
+import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.persistence.room.database.TrackContract;
 import mx.dev.franco.automusictagfixer.services.FixerTrackService;
-import mx.dev.franco.automusictagfixer.ui.BaseFragment;
+import mx.dev.franco.automusictagfixer.ui.BaseViewModelFragment;
 import mx.dev.franco.automusictagfixer.ui.InformativeFragmentDialog;
 import mx.dev.franco.automusictagfixer.ui.MainActivity;
 import mx.dev.franco.automusictagfixer.ui.sdcardinstructions.SdCardInstructionsActivity;
-import mx.dev.franco.automusictagfixer.ui.search.ResultSearchListFragment;
+import mx.dev.franco.automusictagfixer.ui.search.ResultSearchFragment;
 import mx.dev.franco.automusictagfixer.ui.trackdetail.TrackDetailFragment;
 import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
@@ -61,10 +61,10 @@ import mx.dev.franco.automusictagfixer.utilities.RequiredPermissions;
 import mx.dev.franco.automusictagfixer.utilities.ServiceUtils;
 import mx.dev.franco.automusictagfixer.utilities.shared_preferences.AbstractSharedPreferences;
 
-public class ListFragment extends BaseFragment<ListViewModel> implements
+public class MainFragment extends BaseViewModelFragment<ListViewModel> implements
         AudioItemHolder.ClickListener,
         LongRunningTaskListener, ProcessingListener {
-    private static final String TAG = ListFragment.class.getName();
+    private static final String TAG = MainFragment.class.getName();
 
     //A simple text view to show a message when no songs were identificationFound
     private TextView mMessage;
@@ -81,17 +81,18 @@ public class ListFragment extends BaseFragment<ListViewModel> implements
     private Toolbar mToolbar;
     private ExtendedFloatingActionButton mStartTaskFab;
     private FloatingActionButton mStopTaskFab;
+    private List<Track> mCurrentTracks;
 
     @Inject
     ServiceUtils serviceUtils;
     @Inject
     AbstractSharedPreferences mAbstractSharedPreferences;
 
-    public static ListFragment newInstance() {
-        return new ListFragment();
+    public static MainFragment newInstance() {
+        return new MainFragment();
     }
 
-    public ListFragment() {}
+    public MainFragment() {}
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -118,26 +119,8 @@ public class ListFragment extends BaseFragment<ListViewModel> implements
                 return;
 
             mAdapter.onChanged(tracks);
-            if(tracks.isEmpty()) {
-                //mStopTaskFab.hide();
-                mStartTaskFab.hide();
-                mMessage.setVisibility(View.VISIBLE);
-                mMessage.setText(R.string.no_items_found);
-            }
-            else {
-                boolean isServiceRunning = serviceUtils.checkIfServiceIsRunning(FixerTrackService.CLASS_NAME);
-                if(!isServiceRunning){
-                    mStartTaskFab.show();
-                    //mStopTaskFab.hide();
-                }
-                else {
-                    mStartTaskFab.hide();
-                    //mStopTaskFab.show();
-                }
-                mToolbar.setTitle(tracks.size() + " " +getString(R.string.tracks));
-                mActionBar.setTitle(tracks.size() + " " +getString(R.string.tracks));
-                mMessage.setVisibility(View.GONE);
-            }
+            mCurrentTracks = tracks;
+            updateToolbar(mCurrentTracks);
         });
 
         mListViewModel.observeInformativeMessage().observe(this, this::onMessage);
@@ -150,6 +133,32 @@ public class ListFragment extends BaseFragment<ListViewModel> implements
             mListViewModel.fetchTracks();
     }
 
+    private void updateToolbar(List<Track> tracks) {
+        if(tracks == null)
+            return;
+
+        if(tracks.isEmpty()) {
+            //mStopTaskFab.hide();
+            mStartTaskFab.hide();
+            mMessage.setVisibility(View.VISIBLE);
+            mMessage.setText(R.string.no_items_found);
+        }
+        else {
+            boolean isServiceRunning = serviceUtils.checkIfServiceIsRunning(FixerTrackService.CLASS_NAME);
+            if(!isServiceRunning){
+                mStartTaskFab.show();
+                //mStopTaskFab.hide();
+            }
+            else {
+                mStartTaskFab.hide();
+                //mStopTaskFab.show();
+            }
+            mToolbar.setTitle(tracks.size() + " " +getString(R.string.tracks));
+            mActionBar.setTitle(tracks.size() + " " +getString(R.string.tracks));
+            mMessage.setVisibility(View.GONE);
+        }
+    }
+
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -159,7 +168,6 @@ public class ListFragment extends BaseFragment<ListViewModel> implements
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        Log.w("Event:", "onViewCreated");
         mRecyclerView = view.findViewById(R.id.tracks_recycler_view);
         mSwipeRefreshLayout = view.findViewById(R.id.refresh_layout);
         mMessage = view.findViewById(R.id.message);
@@ -233,6 +241,7 @@ public class ListFragment extends BaseFragment<ListViewModel> implements
                 mToolbar,R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         ((MainActivity)getActivity()).mDrawer.addDrawerListener(toggle);
         toggle.syncState();
+        updateToolbar(mCurrentTracks);
     }
 
     @Override
@@ -253,15 +262,22 @@ public class ListFragment extends BaseFragment<ListViewModel> implements
                     mListViewModel.checkAllTracks();
                 break;
             case R.id.action_search:
-                    ResultSearchListFragment resultSearchListFragment = ResultSearchListFragment.newInstance();
+                    ResultSearchFragment resultSearchListFragment = (ResultSearchFragment)
+                            getActivity().getSupportFragmentManager().findFragmentByTag(ResultSearchFragment.class.getName());
+
+                    if(resultSearchListFragment == null) {
+                        resultSearchListFragment = ResultSearchFragment.newInstance();
+                    }
+
                     getActivity().getSupportFragmentManager().beginTransaction().
                             setCustomAnimations(R.anim.slide_in_right,
                                     R.anim.slide_out_left, R.anim.slide_in_left,
                                     R.anim.slide_out_right).
-                            addToBackStack(resultSearchListFragment.getClass().getName()).
+                            addToBackStack(ResultSearchFragment.class.getName()).
                             add(R.id.container_fragments, resultSearchListFragment,
-                                    resultSearchListFragment.getClass().getName()).
+                                    ResultSearchFragment.class.getName()).
                             commit();
+
 
                 break;
             case R.id.action_refresh:
@@ -290,16 +306,6 @@ public class ListFragment extends BaseFragment<ListViewModel> implements
                 break;
             case R.id.album_desc:
                     mListViewModel.sortTracks(TrackContract.TrackData.ALBUM, TrackRepository.DESC, id);
-                break;
-            case R.id.toggle_theme:
-                    if(mAbstractSharedPreferences.getBoolean("dark_mode")) {
-                        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
-                        mAbstractSharedPreferences.putBoolean("dark_mode", false);
-                    }
-                    else {
-                        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
-                        mAbstractSharedPreferences.putBoolean("dark_mode", true);
-                    }
                 break;
         }
         return true;
@@ -393,10 +399,12 @@ public class ListFragment extends BaseFragment<ListViewModel> implements
     @Override
     protected void loading(boolean isLoading) {
         if(isLoading) {
+            mRecyclerView.setEnabled(false);
             mRecyclerView.animate().alpha(0).setDuration(100);
         }
         else {
             mRecyclerView.animate().alpha(1).setDuration(100);
+            mRecyclerView.setEnabled(false);
         }
         mSwipeRefreshLayout.setRefreshing(isLoading);
     }
@@ -610,7 +618,7 @@ public class ListFragment extends BaseFragment<ListViewModel> implements
     @Override
     public void onLongRunningTaskMessage(String error) {
         Snackbar snackbar = AndroidUtils.createSnackbar(getView().findViewById(R.id.root_container), error);
-        snackbar.setAnchorView(mStartTaskFab);
+        //snackbar.setAnchorView(mStartTaskFab);
         snackbar.show();
     }
 

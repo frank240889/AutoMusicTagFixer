@@ -38,7 +38,7 @@ import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.common.Action;
 import mx.dev.franco.automusictagfixer.databinding.FragmentTrackDetailBinding;
 import mx.dev.franco.automusictagfixer.identifier.IdentificationParams;
-import mx.dev.franco.automusictagfixer.ui.BaseFragment;
+import mx.dev.franco.automusictagfixer.ui.BaseViewModelFragment;
 import mx.dev.franco.automusictagfixer.ui.InformativeFragmentDialog;
 import mx.dev.franco.automusictagfixer.ui.MainActivity;
 import mx.dev.franco.automusictagfixer.ui.sdcardinstructions.SdCardInstructionsActivity;
@@ -58,7 +58,7 @@ import static mx.dev.franco.automusictagfixer.utilities.Constants.GOOGLE_SEARCH;
  * Use the {@link TrackDetailFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class TrackDetailFragment extends BaseFragment<TrackDetailViewModel> implements
+public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewModel> implements
     ManualCorrectionDialogFragment.OnManualCorrectionListener,
         CoverIdentificationResultsFragmentBase.OnCoverCorrectionListener,
         SemiAutoCorrectionDialogFragment.OnSemiAutoCorrectionListener {

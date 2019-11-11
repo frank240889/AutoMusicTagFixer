@@ -1,6 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="primaryColor">#ffd600</color>
+    <color name="primaryColor">#fdd835</color>
+    <color name="primaryLightColor">#ffff6b</color>
+    <color name="primaryDarkColor">#c6a700</color>
+    <color name="primaryTextColor">#212121</color>
+    <color name="secondaryTextColor">#424242</color>
+
+    <color name="colorControlNormal">#212121</color>
+    <color name="colorControlActivated">#212121</color>
+    <color name="colorControlHighlight">#212121</color>
+    <color name="primaryBackground">#ffffff</color>
+
+    <color name="primaryColorButton">#ffff6b</color>
+    <color name="dark_gray">#212121</color>
+
+    <color name="navigationDrawerBackgroundTint">#ffffff</color>
+    <color name="navigationDrawerTopBackgroundColor">@color/primaryDarkColor</color>
+    <color name="iconColor">#212121</color>
+    <color name="toolbarTextColor">#212121</color>
+
+
+    <color name="progressSwipeRefreshLayoutBackgroundTint">#212121</color>
+    <color name="progressTintSwipeRefreshLayout">@color/primaryDarkColor</color>
+    <color name="extendedColorFabButton">#ffff6b</color>
+    <color name="primaryFabTextColor">#212121</color>
+
+    <color name="snackbarBackgroundColor">#212121</color>
+    <color name="snackbarTextBackgroundColor">#c6a700</color>
+
+    <color name="testColor">#ff56dd</color>
+    <!--color name="primaryColor">#ffd600</color>
     <color name="primaryLightColor">#ffff52</color>
     <color name="primaryDarkColor">#c7a500</color>
     <color name="secondaryColor">#ffd600</color>
@@ -11,8 +40,9 @@
 
     <color name="colorControlActivated">@color/dark_gray</color>
     <color name="colorControlHighlight">@color/dark_gray</color>
+    <color name="iconColor">@color/dark_gray</color>
 
-    <color name="bottomToolbarTintColor">#FFFFFFFF</color>
+    <color name="appBarLayoutTintColor">#FFFFFFFF</color>
     <color name="bottomToolbarColorControlNormal">#000000</color>
     <color name="bottomToolbarIconTintColor">#000000</color>
     <color name="bottomToolbarOverflowTextColor">#CCCCCC</color>
@@ -37,6 +67,6 @@
     <color name="black">#000000</color>
     <color name="dark_gray">#121212</color>
     <color name="gray">#212121</color>
-    <color name="light_gray">#424242</color>
+    <color name="light_gray">#424242</color-->
 </resources>
     

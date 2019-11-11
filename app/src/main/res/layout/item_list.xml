@@ -8,7 +8,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
-    <androidx.appcompat.widget.AppCompatImageView
+    <ImageView
         android:id="@+id/cover_art"
         android:layout_width="@dimen/image_view_cover_item"
         android:layout_height="@dimen/image_view_cover_item"
@@ -43,7 +43,6 @@
             android:layout_marginStart="4dp"
             android:layout_marginEnd="4dp"
             android:drawableStart="@drawable/ic_music_note_white_24px"
-            app:drawableTint="@color/bottomToolbarIconTintColor"
             android:ellipsize="end"
             android:gravity="center_vertical"
             android:maxLines="1"
@@ -64,7 +63,6 @@
             android:layout_toStartOf="@+id/progress"
             android:layout_toEndOf="@id/cover_art"
             android:drawableStart="@drawable/ic_account_circle_white_24px"
-            app:drawableTint="@color/bottomToolbarIconTintColor"
             android:ellipsize="end"
             android:gravity="center_vertical"
             android:maxLines="1"
@@ -84,7 +82,6 @@
             android:layout_marginStart="4dp"
             android:layout_marginEnd="4dp"
             android:drawableStart="@drawable/ic_album_white_24px"
-            app:drawableTint="@color/bottomToolbarIconTintColor"
             android:ellipsize="end"
             android:gravity="center_vertical"
             android:maxLines="1"

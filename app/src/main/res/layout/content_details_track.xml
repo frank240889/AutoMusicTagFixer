@@ -211,7 +211,6 @@
                         android:text="@string/edit_cover"
                         android:textSize="16sp"
                         android:visibility="invisible"
-                        app:drawableTint="@color/bottomToolbarIconTintColor"
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="@+id/track_year_layout"
@@ -252,7 +251,6 @@
                         android:layout_marginTop="8dp"
                         android:gravity="center_vertical"
                         android:drawableStart="@drawable/ic_description_white"
-                        app:drawableTint="@color/bottomToolbarIconTintColor"
                         android:text="@{viewmodel.filename}"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toTopOf="parent"
@@ -269,7 +267,6 @@
                         android:singleLine="true"
                         android:text="@{viewmodel.filesize}"
                         android:visibility="visible"
-                        app:drawableTint="@color/bottomToolbarIconTintColor"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="@+id/textView"
                         tools:text="13mb" />
@@ -286,7 +283,6 @@
                         android:singleLine="true"
                         android:text="@{viewmodel.channels}"
                         android:visibility="visible"
-                        app:drawableTint="@color/bottomToolbarIconTintColor"
                         app:layout_constraintStart_toEndOf="@+id/file_size"
                         app:layout_constraintTop_toTopOf="@+id/file_size"
                         tools:text="Joint Stereo" />
@@ -303,7 +299,6 @@
                         android:singleLine="true"
                         android:text="@{viewmodel.type}"
                         android:visibility="visible"
-                        app:drawableTint="@color/bottomToolbarIconTintColor"
                         app:layout_constraintStart_toEndOf="@+id/channels"
                         app:layout_constraintTop_toTopOf="@+id/channels"
                         tools:text="MPEG-1 Layer 3" />
@@ -321,7 +316,6 @@
                         android:singleLine="true"
                         android:text="@{viewmodel.resolution}"
                         android:visibility="visible"
-                        app:drawableTint="@color/bottomToolbarIconTintColor"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="@+id/file_size"
                         tools:text="16 bits" />
@@ -340,7 +334,6 @@
                         android:singleLine="true"
                         android:text="@{viewmodel.frequency}"
                         android:visibility="visible"
-                        app:drawableTint="@color/bottomToolbarIconTintColor"
                         app:layout_constraintStart_toEndOf="@+id/resolution"
                         app:layout_constraintTop_toBottomOf="@+id/channels"
                         tools:text="44.1 Khz" />
@@ -356,7 +349,6 @@
                         android:drawableStart="@drawable/ic_hearing_white_24px"
                         android:gravity="center_vertical"
                         android:text="@{viewmodel.bitrate}"
-                        app:drawableTint="@color/bottomToolbarIconTintColor"
                         app:layout_constraintStart_toEndOf="@+id/frequency"
                         app:layout_constraintTop_toBottomOf="@+id/track_type"
                         tools:text="128 Kbps" />
@@ -374,7 +366,6 @@
                         android:singleLine="true"
                         android:text="@{viewmodel.length}"
                         android:visibility="visible"
-                        app:drawableTint="@color/bottomToolbarIconTintColor"
                         app:layout_constraintStart_toEndOf="@+id/bitrate"
                         app:layout_constraintTop_toBottomOf="@+id/track_type"
                         tools:text="5'06''" />
@@ -391,7 +382,6 @@
                         android:gravity="center_vertical"
                         android:maxLines="2"
                         android:text="@{viewmodel.absolutePath}"
-                        app:drawableTint="@color/bottomToolbarIconTintColor"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="@+id/resolution"
@@ -408,7 +398,6 @@
                         android:gravity="center_vertical"
                         android:singleLine="true"
                         android:text="@{viewmodel.imageSize}"
-                        app:drawableTint="@color/bottomToolbarIconTintColor"
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="@+id/track_path"

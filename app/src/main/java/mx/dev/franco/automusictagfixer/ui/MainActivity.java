@@ -7,15 +7,18 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.PersistableBundle;
 import android.util.Log;
 import android.view.MenuItem;
+import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.ImageButton;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ShareCompat;
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
@@ -31,17 +34,19 @@ import dagger.android.AndroidInjector;
 import dagger.android.DispatchingAndroidInjector;
 import dagger.android.support.HasSupportFragmentInjector;
 import mx.dev.franco.automusictagfixer.R;
-import mx.dev.franco.automusictagfixer.identifier.ApiInitializerService;
 import mx.dev.franco.automusictagfixer.interfaces.LongRunningTaskListener;
 import mx.dev.franco.automusictagfixer.interfaces.ProcessingListener;
 import mx.dev.franco.automusictagfixer.receivers.ResponseReceiver;
 import mx.dev.franco.automusictagfixer.services.FixerTrackService;
-import mx.dev.franco.automusictagfixer.ui.about.ScrollingAboutActivity;
+import mx.dev.franco.automusictagfixer.ui.about.AboutFragment;
 import mx.dev.franco.automusictagfixer.ui.faq.QuestionsActivity;
-import mx.dev.franco.automusictagfixer.ui.main.ListFragment;
+import mx.dev.franco.automusictagfixer.ui.main.MainFragment;
 import mx.dev.franco.automusictagfixer.ui.settings.SettingsActivity;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
+import mx.dev.franco.automusictagfixer.utilities.shared_preferences.AbstractSharedPreferences;
 
+import static android.view.View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN;
+import static android.view.View.SYSTEM_UI_FLAG_LAYOUT_STABLE;
 import static mx.dev.franco.automusictagfixer.utilities.Constants.Actions.ACTION_BROADCAST_MESSAGE;
 import static mx.dev.franco.automusictagfixer.utilities.Constants.Actions.ACTION_COMPLETE_TASK;
 import static mx.dev.franco.automusictagfixer.utilities.Constants.Actions.ACTION_START_TASK;
@@ -49,7 +54,7 @@ import static mx.dev.franco.automusictagfixer.utilities.Constants.Actions.START_
 
 public class MainActivity extends AppCompatActivity implements ResponseReceiver.OnResponse,
         NavigationView.OnNavigationItemSelectedListener,
-        BaseFragment.OnConfirmBackPressedListener,
+        BaseViewModelFragment.OnConfirmBackPressedListener,
     HasSupportFragmentInjector {
     public static String TAG = MainActivity.class.getName();
 
@@ -58,6 +63,8 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
     // The receiver that handles the broadcasts from FixerTrackService
     private ResponseReceiver mReceiver;
     public DrawerLayout mDrawer;
+    @Inject
+    AbstractSharedPreferences mAbstractSharedPreferences;
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
@@ -69,9 +76,10 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
         Window window = getWindow();
         window.setFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS,
                 WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+        window.requestFeature(SYSTEM_UI_FLAG_LAYOUT_STABLE|SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
         window.setAllowEnterTransitionOverlap(true);
         window.setAllowReturnTransitionOverlap(true);
-        window.requestFeature(Window.FEATURE_ACTION_MODE_OVERLAY);
+        //window.requestFeature(Window.FEATURE_ACTION_MODE_OVERLAY);
         window.requestFeature(Window.FEATURE_CONTENT_TRANSITIONS);
         setContentView(R.layout.activity_main);
 
@@ -79,19 +87,47 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
 
         mDrawer = findViewById(R.id.drawer_layout);
 
-
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
-        ListFragment listFragment = (ListFragment) getSupportFragmentManager().
-                findFragmentByTag(ListFragment.class.getName());
+        View view = navigationView.getHeaderView(0);
+
+        ImageButton toggleNightModeButton = view.findViewById(R.id.toggle_night_mode_button);
+
+        if(mAbstractSharedPreferences.getBoolean("dark_mode")) {
+            toggleNightModeButton.setImageDrawable(getDrawable(R.drawable.ic_wb_sunny_24px));
+        }
+        else {
+            toggleNightModeButton.setImageDrawable(getDrawable(R.drawable.ic_nights_stay_24px));
+        }
+
+        toggleNightModeButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(mAbstractSharedPreferences.getBoolean("dark_mode")) {
+                    toggleNightModeButton.setImageDrawable(getDrawable(R.drawable.ic_wb_sunny_24px));
+                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+                    mAbstractSharedPreferences.putBoolean("dark_mode", false);
+                }
+                else {
+                    toggleNightModeButton.setImageDrawable(getDrawable(R.drawable.ic_nights_stay_24px));
+                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+                    mAbstractSharedPreferences.putBoolean("dark_mode", true);
+                }
+            }
+        });
+
+
+        MainFragment listFragment = (MainFragment) getSupportFragmentManager().
+                findFragmentByTag(MainFragment.class.getName());
 
         if(listFragment == null)
-            listFragment = ListFragment.newInstance();
+            listFragment = MainFragment.newInstance();
 
         if(!listFragment.isAdded())
         getSupportFragmentManager().beginTransaction().add(R.id.container_fragments,
-                listFragment, ListFragment.class.getName())
+                listFragment, listFragment.getTagName())
+                .setCustomAnimations(R.anim.fade_in,R.anim.fade_out)
                 .commit();
     }
 
@@ -115,8 +151,8 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
                     getBackStackEntryAt(topFragmentIndex);
             String backStackEntryName = backStackEntry.getName();
             Fragment fragment = getSupportFragmentManager().findFragmentByTag(backStackEntryName);
-            if(fragment instanceof BaseFragment){
-                ((BaseFragment) fragment).onBackPressed();
+            if(fragment instanceof BaseViewModelFragment){
+                ((BaseViewModelFragment) fragment).onBackPressed();
             }
             else {
                 super.onBackPressed();
@@ -150,6 +186,12 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
         super.onRequestPermissionsResult(requestCode,permissions,grantResults);
     }
 
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState, @NonNull PersistableBundle outPersistentState) {
+        super.onSaveInstanceState(outState, outPersistentState);
+        BaseFragment baseFragment = (BaseFragment) getSupportFragmentManager().getFragments().get(0);
+        outState.putString("current_fragment", baseFragment.getTagName());
+    }
 
     /**
      * Allows to register filters to handle
@@ -178,7 +220,7 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
 
         int id = item.getItemId();
 
-        if (id == R.id.rate) {
+        /*if (id == R.id.rate) {
             rateApp();
         } else if (id == R.id.share) {
             String shareSubText = getString(R.string.app_name) + " " + getString(R.string.share_message);
@@ -191,6 +233,21 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
                     Intent.FLAG_ACTIVITY_NEW_DOCUMENT | Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
             startActivity(shareIntent);
         }
+        else*/
+        if(id == R.id.audio_files_list) {
+            MainFragment listFragment = (MainFragment) getSupportFragmentManager().
+                    findFragmentByTag(MainFragment.class.getName());
+
+            if(listFragment == null)
+                listFragment = MainFragment.newInstance();
+
+            if(!listFragment.isAdded())
+                getSupportFragmentManager().beginTransaction().
+                        replace(R.id.container_fragments,
+                        listFragment, MainFragment.class.getName())
+                        .setCustomAnimations(R.anim.fade_in,R.anim.fade_out)
+                        .commit();
+        }
         else if(id == R.id.settings){
             //configure app settings
             Intent intent = new Intent(this, SettingsActivity.class);
@@ -201,8 +258,19 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
             startActivity(intent);
         }
         else if(id == R.id.about){
-            Intent intent = new Intent(this,ScrollingAboutActivity.class);
-            startActivity(intent);
+            AboutFragment aboutFragment = (AboutFragment) getSupportFragmentManager().
+                    findFragmentByTag(AboutFragment.class.getName());
+
+            if(aboutFragment == null)
+                aboutFragment = AboutFragment.newInstance();
+
+            if(!aboutFragment.isAdded())
+                getSupportFragmentManager().beginTransaction().
+                        setCustomAnimations(R.anim.fade_in,R.anim.fade_out).
+                        addToBackStack(AboutFragment.class.getName()).
+                        replace(R.id.container_fragments,
+                                aboutFragment, AboutFragment.class.getName()).
+                        commit();
         }
 
         mDrawer.closeDrawer(GravityCompat.START);
@@ -241,16 +309,16 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
         //get action and handle it
         String action = intent.getAction();
         int id = intent.getIntExtra(Constants.MEDIA_STORE_ID, -1);
-        BaseFragment baseFragment = (BaseFragment) getSupportFragmentManager().findFragmentByTag(ListFragment.class.getName());
+        BaseViewModelFragment baseViewModelFragment = (BaseViewModelFragment) getSupportFragmentManager().findFragmentByTag(MainFragment.class.getName());
         switch (action) {
             case ACTION_START_TASK:
-                ((LongRunningTaskListener) baseFragment).onLongRunningTaskStarted();
+                ((LongRunningTaskListener) baseViewModelFragment).onLongRunningTaskStarted();
                 break;
             case START_PROCESSING_FOR:
-                ((ProcessingListener) baseFragment).onStartProcessingFor(id);
+                ((ProcessingListener) baseViewModelFragment).onStartProcessingFor(id);
                 break;
             case ACTION_COMPLETE_TASK:
-                ((LongRunningTaskListener)baseFragment).onLongRunningTaskFinish();
+                ((LongRunningTaskListener) baseViewModelFragment).onLongRunningTaskFinish();
                     /*getSharedPreferences(Constants.Application.FULL_QUALIFIED_NAME,
                         Context.MODE_PRIVATE).edit().putBoolean(Constants.ALL_ITEMS_CHECKED, false).
                             apply();*/
@@ -258,7 +326,7 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
             case ACTION_BROADCAST_MESSAGE:
                 String message = intent.getStringExtra("message");
                 if(message != null){
-                    ((LongRunningTaskListener) baseFragment).onLongRunningTaskMessage(message);
+                    ((LongRunningTaskListener) baseViewModelFragment).onLongRunningTaskMessage(message);
                 }
                 break;
         }

@@ -1,19 +1,19 @@
 <resources>
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-
         <item name="colorPrimary">@color/primaryColor</item>
-        <item name="colorPrimaryDark">@color/primaryDarkColor</item>
+        <item name="colorControlNormal">@color/colorControlNormal</item>
         <item name="colorControlActivated">@color/colorControlActivated</item>
-        <item name="colorControlNormal">@color/upperToolbarColorControlNormal</item>
-        <item name="floatingActionButtonStyle">@style/Widget.AutomusicTagFixer.FloatingActionButton</item>
+        <item name="toolbarStyle">@style/Widget.AutomusicTagFixer.MaterialToolbar</item>
+        <item name="navigationViewStyle">@style/Widget.AutomusicTagFixer.NavigationView</item>
         <item name="extendedFloatingActionButtonStyle">@style/Widget.AutomusicTagFixer.ExtendedFloatingActionButton</item>
-        <!--item name="toolbarStyle">@style/Widget.AutomusicTagFixer.MaterialToolbar</item-->
         <item name="snackbarStyle">@style/Widget.AutomusicTagFixer.Snackbar</item>
+        <item name="snackbarTextViewStyle">@style/Widget.AutomusicTagFixer.Snackbar.TextStyle</item>
+        <item name="android:windowAnimationStyle">@style/WindowAnimationTransition</item>
+        <item name="materialButtonStyle">@style/Widget.AutomusicTagFixer.ColoredButton</item>
         <item name="textInputStyle"> @style/Widget.AutomusicTagFixer.TextInputLayout</item>
-        <item name="appBarLayoutStyle">@style/Widget.AutomusicTagFixer.AppBarLayoutToolbar</item>
-        <!--item name="materialButtonStyle">@style/Widget.AutomusicTagFixer.ColoredButton</item-->
-        <!--item name="colorPrimaryVariant">@color/primaryVariant</item>
+        <item name="bottomSheetDialogTheme">@style/CustomBottomSheetDialog</item>
+        <!--item name="colorPrimaryVariant">pr</item>
         <item name="colorOnPrimary">@color/onPrimary</item>
         <item name="colorSecondaryVariant">@color/secondaryVariant</item>
         <item name="colorOnSecondary">@color/onSecondary</item>
@@ -28,51 +28,54 @@
         <item name="colorBackgroundFloating">@color/backgroundFloating</item-->
     </style>
 
-    <style name="SettingsTheme" parent="Theme.MaterialComponents.DayNight">
-        <item name="colorPrimary">@color/primaryColor</item>
-        <item name="colorPrimaryDark">@color/primaryDarkColor</item>
-        <item name="colorControlActivated">@color/colorControlActivated</item>
-        <item name="colorControlNormal">@color/upperToolbarColorControlNormal</item>
-        <item name="actionBarStyle">@style/Widget.AutomusicTagFixer.AppBarLayoutToolbar</item>
+    <style name="Widget.AutomusicTagFixer.MaterialToolbar" parent="Widget.MaterialComponents.Toolbar.Primary">
+        <item name="titleTextColor">@color/toolbarTextColor</item>
+        <item name="materialThemeOverlay">@style/ThemeOverlay.AutomusicTagFixer.Toolbar</item>
     </style>
 
+    <style name="ThemeOverlay.AutomusicTagFixer.Toolbar" parent="ThemeOverlay.MaterialComponents.ActionBar">
+        <item name="colorControlNormal">@color/colorControlNormal</item>
+        <item name="iconTint">@color/iconColor</item>
+        <item name="android:background">@drawable/bg_toolbar</item>
+    </style>
 
-    <!--Theming all fabs-->
-    <style name="Widget.AutomusicTagFixer.FloatingActionButton" parent="@style/Widget.MaterialComponents.FloatingActionButton">
-        <item name="backgroundTint">@color/fabColor</item>
-        <item name="tint">@color/gray</item>
+    <style name="Widget.AutomusicTagFixer.NavigationView" parent="Widget.Design.NavigationView">
+        <item name="android:background">@drawable/bg_rounded_navigation_view</item>
+        <item name="android:backgroundTint">@color/navigationDrawerBackgroundTint</item>
+        <item name="itemIconTint">@color/iconColor</item>
+        <item name="itemTextColor">@color/iconColor</item>
+    </style>
+
+    <style name="NavigationViewTop">
+        <item name="android:background">@drawable/bg_rounded_navigation_top_view</item>
+        <item name="android:backgroundTint">@color/navigationDrawerTopBackgroundColor</item>
     </style>
 
     <!--Theming all extended fabs-->
-    <style name="Widget.AutomusicTagFixer.ExtendedFloatingActionButton" parent="@style/Widget.MaterialComponents.ExtendedFloatingActionButton.Icon">
-        <item name="backgroundTint">@color/fabColor</item>
-        <item name="tint">@color/gray</item>
+    <style name="Widget.AutomusicTagFixer.ExtendedFloatingActionButton" parent="Widget.MaterialComponents.ExtendedFloatingActionButton.Icon">
+        <item name="backgroundTint">@color/extendedColorFabButton</item>
+        <item name="tint">@color/primaryFabTextColor</item>
+    </style>
+
+    <style name="Widget.AutomusicTagFixer.Snackbar" parent="@style/Widget.MaterialComponents.Snackbar">
+        <item name="android:background">@drawable/bg_snackbar</item>
+        <item name="backgroundTint">@color/snackbarBackgroundColor</item>
+    </style>
+
+    <style name="Widget.AutomusicTagFixer.Snackbar.TextStyle" parent="@style/Widget.MaterialComponents.Snackbar.TextView">
+        <item name="android:textColor">@color/snackbarTextBackgroundColor</item>
+    </style>
+
+    <style name="WindowAnimationTransition">
+        <item name="android:windowEnterAnimation">@android:anim/fade_in</item>
+        <item name="android:windowExitAnimation">@android:anim/fade_out</item>
     </style>
 
     <!--Theming material filled buttons-->
     <style name="Widget.AutomusicTagFixer.ColoredButton" parent="@style/Widget.MaterialComponents.Button">
         <item name="backgroundTint">@color/primaryColorButton</item>
         <item name="android:textColor">@color/dark_gray</item>
-    </style>
-
-    <style name="Widget.AutomusicTagFixer.BottomAppBar" parent="@style/Widget.MaterialComponents.BottomAppBar">
-        <item name="backgroundTint">@color/bottomToolbarTintColor</item>
-        <item name="materialThemeOverlay">@style/AppThemeOverlay.AutomusicTagFixer.BottomAppBar</item>
-    </style>
-
-    <style name="AppThemeOverlay.AutomusicTagFixer.BottomAppBar" parent="ThemeOverlay.MaterialComponents.BottomAppBar.Primary">
-        <item name="colorControlNormal">@color/bottomToolbarColorControlNormal</item>
-        <item name="iconTint">@color/bottomToolbarIconTintColor</item>
-        <item name="background">@drawable/bg_toolbar</item>
-    </style>
-
-    <style name="Widget.AutomusicTagFixer.AppBarLayoutToolbar" parent="@style/Widget.MaterialComponents.AppBarLayout.Primary">
-        <item name="android:background">@drawable/bg_toolbar</item>
-    </style>
-
-    <style name="Widget.AutomusicTagFixer.Snackbar" parent="@style/Widget.MaterialComponents.Snackbar">
-        <item name="android:background">@drawable/bg_snackbar</item>
-        <item name="android:textColor">@color/snackbarTextColor</item>
+        <item name="iconTint">@color/dark_gray</item>
     </style>
 
 
@@ -89,26 +92,20 @@
         <item name="android:textColor">@color/colorControlHighlight</item>
     </style>
 
-    <style name="Widget.AutomusicTagFixer.InputEditText" parent="@style/ThemeOverlay.MaterialComponents.TextInputEditText.OutlinedBox.Dense">
-        <item name="android:colorControlActivated">@color/colorControlHighlight</item>
+    <style name="CustomBottomSheetDialog" parent="@style/ThemeOverlay.MaterialComponents.BottomSheetDialog">
+        <item name="bottomSheetStyle">@style/CustomBottomSheet</item>
     </style>
 
-    <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.MaterialComponents.Dark.ActionBar" />
-
-    <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.MaterialComponents" />
-
-    <!--style name="PrimaryText" parent="TextAppearance.AppCompat.Body1">
-        <item name="android:textColor">@color/textPrimary</item>
+    <style name="CustomBottomSheet" parent="Widget.MaterialComponents.BottomSheet">
+        <item name="shapeAppearanceOverlay">@style/CustomShapeAppearanceBottomSheetDialog</item>
     </style>
 
-    <style name="SecondaryText" parent="TextAppearance.AppCompat.Body2">
-        <item name="android:textColor">@color/textSecondary</item>
-    </style-->
-
-    <!--style name="AppTheme.NoActionBar">
-        <item name="windowActionBar">false</item>
-        <item name="windowNoTitle">true</item>
-    </style-->
-
+    <style name="CustomShapeAppearanceBottomSheetDialog" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSizeTopRight">16dp</item>
+        <item name="cornerSizeTopLeft">16dp</item>
+        <item name="cornerSizeBottomRight">0dp</item>
+        <item name="cornerSizeBottomLeft">0dp</item>
+    </style>
 
 </resources>

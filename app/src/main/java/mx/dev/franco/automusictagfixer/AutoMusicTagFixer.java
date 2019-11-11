@@ -39,6 +39,8 @@ public final class AutoMusicTagFixer extends Application implements HasActivityI
     DispatchingAndroidInjector<Service> serviceDispatchingAndroidInjector;
     @Inject
     AbstractSharedPreferences mAbstractSharedPreferences;
+
+    private boolean mNightModeActive = false;
     // Called when the application is starting, before any other application objects have been created.
     @Override
     public void onCreate() {

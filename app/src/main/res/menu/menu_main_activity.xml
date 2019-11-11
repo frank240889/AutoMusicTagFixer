@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:tooltipText="@string/more">
+    app:tooltipText="@string/more">
     <item
         android:id="@+id/action_search"
         android:title="@string/search_song"
@@ -88,8 +88,4 @@
             </item>
         </menu>
     </item>
-    <item
-        android:id="@+id/toggle_theme"
-        app:showAsAction="never"
-        android:title="@string/enable_dark_mode"/>
 </menu>

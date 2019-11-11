@@ -25,4 +25,6 @@
     <dimen name="image_view_cover_item">64dp</dimen>
     <dimen name="top_padding_rounded_bottom_sheet_dialog_fragment">8dp</dimen>
 
+    <dimen name="app_bar_layout_margins">8dp</dimen>
+
 </resources>

@@ -15,13 +15,11 @@ import android.util.ArrayMap;
 import android.view.Gravity;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.StringRes;
-import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 
 import com.crashlytics.android.Crashlytics;
@@ -175,7 +173,7 @@ public class AndroidUtils {
 
     public static Snackbar getSnackbar(@NonNull View viewToAttach, @NonNull Context context){
         Snackbar snackbar = Snackbar.make(viewToAttach,"",Snackbar.LENGTH_SHORT);
-        snackbar.setTextColor(ContextCompat.getColor(context,R.color.snackbarTextColor));
+        //snackbar.setTextColor(ContextCompat.getColor(context,R.color.snackbarTextColor));
         //TextView tv = snackbar.getView().findViewById(com.google.android.material.R.id.snackbar_text);
         //snackbar.getView().setBackground(ContextCompat.getDrawable(context, R.drawable.bg_toolbar));
         //snackbar.getView().setBackgroundColor(ContextCompat.getColor(context.getApplicationContext(),R.color.snackbarBackgroundColor));

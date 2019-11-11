@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <corners
+        android:topLeftRadius="@dimen/dialog_corners"
+        android:topRightRadius="@dimen/dialog_corners" />
+    <padding android:top="@dimen/top_padding_rounded_bottom_sheet_dialog_fragment" />
+</shape>

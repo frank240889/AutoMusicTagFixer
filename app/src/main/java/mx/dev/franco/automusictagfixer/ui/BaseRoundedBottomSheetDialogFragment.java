@@ -1,6 +1,5 @@
 package mx.dev.franco.automusictagfixer.ui;
 
-import android.app.Dialog;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,7 +9,6 @@ import androidx.annotation.LayoutRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 
 
@@ -38,6 +36,11 @@ public abstract class BaseRoundedBottomSheetDialogFragment extends BottomSheetDi
     }
 
     /*@Override
+    public int getTheme() {
+        return R.style.BottomSheetDialogTheme;
+    }
+
+    @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         return new BottomSheetDialog(getContext(), getTheme());
     }*/

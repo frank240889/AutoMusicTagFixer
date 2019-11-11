@@ -33,7 +33,7 @@ import javax.inject.Inject;
 
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
-import mx.dev.franco.automusictagfixer.ui.BaseFragment;
+import mx.dev.franco.automusictagfixer.ui.BaseViewModelFragment;
 import mx.dev.franco.automusictagfixer.ui.MainActivity;
 import mx.dev.franco.automusictagfixer.ui.main.ViewWrapper;
 import mx.dev.franco.automusictagfixer.ui.trackdetail.TrackDetailFragment;
@@ -41,9 +41,9 @@ import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 import mx.dev.franco.automusictagfixer.utilities.Constants.CorrectionActions;
 import mx.dev.franco.automusictagfixer.utilities.ServiceUtils;
 
-public class ResultSearchListFragment extends BaseFragment<SearchListViewModel> implements
+public class ResultSearchFragment extends BaseViewModelFragment<SearchListViewModel> implements
         FoundItemHolder.ClickListener{
-    public static final String TAG = ResultSearchListFragment.class.getName();
+    public static final String TAG = ResultSearchFragment.class.getName();
 
     //A simple texview to show a message when no songs were identificationFound
     private TextView mMessage;
@@ -60,11 +60,11 @@ public class ResultSearchListFragment extends BaseFragment<SearchListViewModel> 
     ServiceUtils serviceUtils;
     private EditText mSearchBox;
 
-    public static ResultSearchListFragment newInstance() {
-        return new ResultSearchListFragment();
+    public static ResultSearchFragment newInstance() {
+        return new ResultSearchFragment();
     }
 
-    public ResultSearchListFragment() {
+    public ResultSearchFragment() {
         // Required empty public constructor
     }
 
@@ -185,15 +185,28 @@ public class ResultSearchListFragment extends BaseFragment<SearchListViewModel> 
             e.printStackTrace();
         }
 
-        TrackDetailFragment trackDetailFragment = TrackDetailFragment.
-                newInstance(viewWrapper.track.getMediaStoreId(), viewWrapper.mode);
-        getActivity().getSupportFragmentManager().beginTransaction().
-                setCustomAnimations(R.anim.slide_in_right,
-                        R.anim.slide_out_left, R.anim.slide_in_left,
-                        R.anim.slide_out_right).
-                addToBackStack(TrackDetailFragment.TAG).
-                add(R.id.container_fragments, trackDetailFragment, TrackDetailFragment.TAG).
-                commit();
+        TrackDetailFragment trackDetailFragment;
+
+        ((MainActivity)getActivity()).mDrawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
+        trackDetailFragment = (TrackDetailFragment) getActivity().
+                getSupportFragmentManager().findFragmentByTag(TrackDetailFragment.class.getName());
+        if(trackDetailFragment != null){
+            trackDetailFragment.load(AndroidUtils.getBundle(viewWrapper.track.getMediaStoreId(),
+                    viewWrapper.mode));
+        }
+        else {
+            trackDetailFragment = TrackDetailFragment.newInstance(
+                    viewWrapper.track.getMediaStoreId(),
+                    viewWrapper.mode);
+            getActivity().getSupportFragmentManager().beginTransaction().
+                    setCustomAnimations(R.anim.slide_in_right,
+                            R.anim.slide_out_left, R.anim.slide_in_left,
+                            R.anim.slide_out_right).
+                    addToBackStack(TrackDetailFragment.class.getName()).
+                    add(R.id.container_fragments,
+                            trackDetailFragment, TrackDetailFragment.class.getName()).
+                    commit();
+        }
     }
 
     private void showMessageError(String s) {

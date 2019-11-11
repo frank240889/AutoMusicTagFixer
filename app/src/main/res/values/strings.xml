@@ -309,7 +309,7 @@
     <string name="identification_results_language">Idioma</string>
     <string name="pixels">Píxeles</string>
     <string name="missing_cover">Sin carátula</string>
-    <string name="app_version" translatable="false">1.1</string>
+    <string name="app_version" translatable="false">v1.1</string>
     <string name="results_found">Coincidencias encontradas</string>
     <string name="cover_found">Carátula(s) encontrada(s)</string>
     <string name="loading_data_track">Cargando información de canción…</string>
@@ -346,4 +346,8 @@
     </string>
     <string name="attachment_summary_off">Only download attachments when manually requested</string>
     <string name="title_activity_preferences">Configuración</string>
+    <string name="contact">Contacto</string>
+    <string name="jaudio_credits">JAudioTagger</string>
+    <string name="drawer">Drawer</string>
+    <string name="music">Música</string>
 </resources>

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+        <group
+            android:id="@+id/menu_bottom"
+            android:checkableBehavior="none">
+            <item
+                android:id="@+id/audio_files_list"
+                android:icon="@drawable/ic_library_music_white_24dp"
+                android:title="@string/music" />
+            <item
+                android:id="@+id/faq"
+                android:title="@string/faq"
+                android:icon="@drawable/ic_help_black_24dp"
+                />
+            <item
+                android:id="@+id/about"
+                android:title="@string/about"
+                android:icon="@drawable/ic_info_black_24dp"
+                />
+            <item
+                android:id="@+id/settings"
+                android:icon="@drawable/ic_settings_black_24dp"
+                android:title="@string/options" />
+        </group>
+
+</menu>
