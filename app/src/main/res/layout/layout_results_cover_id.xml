@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/root_container_track_id_item"
@@ -8,8 +9,7 @@
     android:layout_alignParentStart="false"
     android:layout_margin="8dp"
     android:orientation="vertical"
-    android:splitMotionEvents="false"
-  android:theme="@style/AppTheme">
+    android:splitMotionEvents="false">
 
     <TextView
         android:id="@+id/title_results"
@@ -79,5 +79,4 @@
             app:layout_constraintVertical_bias="0.0" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
-
 </LinearLayout>

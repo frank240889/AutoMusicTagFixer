@@ -23,7 +23,6 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.ActionBarDrawerToggle;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
@@ -413,8 +412,6 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
         mRecyclerView.stopScroll();
-        //mGridLayoutManager.setSpanCount(newConfig.orientation
-        //        == Configuration.ORIENTATION_LANDSCAPE ? 2 : 1);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
@@ -438,10 +435,6 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
 
     }
 
-    public void checkAll(){
-        mListViewModel.checkAllItems();
-    }
-
     @Override
     public void onPause(){
         super.onPause();
@@ -460,17 +453,12 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
         }
     }
 
-    @Override
-    public void onStop() {
-        super.onStop();
-    }
-
-    public void showViewPermissionMessage() {
+    private void showViewPermissionMessage() {
         InformativeFragmentDialog informativeFragmentDialog = InformativeFragmentDialog.
             newInstance(R.string.title_dialog_permision,
                 R.string.explanation_permission_access_files,
-                R.string.accept, R.string.cancel_button);
-        informativeFragmentDialog.showNow(getChildFragmentManager(),
+                R.string.accept, R.string.cancel_button, getActivity());
+        informativeFragmentDialog.show(getChildFragmentManager(),
             informativeFragmentDialog.getClass().getCanonicalName());
 
         informativeFragmentDialog.setOnClickBasicFragmentDialogListener(
@@ -540,44 +528,70 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
                     setCustomAnimations(R.anim.slide_in_right,
                             R.anim.slide_out_left, R.anim.slide_in_left,
                             R.anim.slide_out_right).
-                    addToBackStack(TrackDetailFragment.class.getName()).
+                    addToBackStack(trackDetailFragment.getTagName()).
                     add(R.id.container_fragments,
-                            trackDetailFragment, TrackDetailFragment.class.getName()).
+                            trackDetailFragment, trackDetailFragment.getTagName()).
                     commit();
         }
 
     }
 
     private void stopCorrection() {
-        final AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-        builder.setMessage(R.string.cancel_task)
-                .setPositiveButton(R.string.yes, (dialog, which) -> {
-                    //stops service, and sets starting state to FAB
+        InformativeFragmentDialog informativeFragmentDialog = InformativeFragmentDialog.
+                newInstance(R.string.attention,
+                        R.string.cancel_task,
+                        R.string.yes, R.string.no, getActivity());
+        informativeFragmentDialog.show(getChildFragmentManager(),
+                informativeFragmentDialog.getClass().getCanonicalName());
 
-                    Intent stopIntent = new Intent(getActivity(), FixerTrackService.class);
-                    stopIntent.setAction(Constants.Actions.ACTION_STOP_TASK);
-                    getActivity().getApplicationContext().startService(stopIntent);
-                    Toast t = AndroidUtils.getToast(getContext());
-                    t.setDuration(Toast.LENGTH_SHORT);
-                    t.setText(R.string.cancelling);
-                    t.show();
-                    //mStopTaskFab.setEnabled(false);
-                });
-        final AlertDialog dialog = builder.create();
-        dialog.show();
+        informativeFragmentDialog.setOnClickBasicFragmentDialogListener(
+                new InformativeFragmentDialog.OnClickBasicFragmentDialogListener() {
+                    @Override
+                    public void onPositiveButton() {
+                        //stops service, and sets starting state to FAB
+
+                        Intent stopIntent = new Intent(getActivity(), FixerTrackService.class);
+                        stopIntent.setAction(Constants.Actions.ACTION_STOP_TASK);
+                        getActivity().getApplicationContext().startService(stopIntent);
+                        Toast t = AndroidUtils.getToast(getContext());
+                        t.setDuration(Toast.LENGTH_SHORT);
+                        t.setText(R.string.cancelling);
+                        t.show();
+                        //mStopTaskFab.setEnabled(false);
+                    }
+
+                    @Override
+                    public void onNegativeButton() {
+                        informativeFragmentDialog.dismiss();
+                    }
+                }
+        );
     }
 
     private void showInaccessibleTrack(ViewWrapper viewWrapper) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-        builder.setMessage(String.format(getString(R.string.file_error), viewWrapper.track.getPath())).
-                setPositiveButton(R.string.remove_from_list, (dialog, which) ->
-                        mListViewModel.removeTrack(viewWrapper.track));
+        InformativeFragmentDialog informativeFragmentDialog = InformativeFragmentDialog.
+                newInstance(getString(R.string.attention),
+                        String.format(getString(R.string.file_error), viewWrapper.track.getPath()),
+                        getString(R.string.remove_from_list), null);
+        informativeFragmentDialog.show(getChildFragmentManager(),
+                informativeFragmentDialog.getClass().getCanonicalName());
 
-        AlertDialog alertDialog = builder.create();
-        alertDialog.show();
+        informativeFragmentDialog.setOnClickBasicFragmentDialogListener(
+                new InformativeFragmentDialog.OnClickBasicFragmentDialogListener() {
+                    @Override
+                    public void onPositiveButton() {
+                        mListViewModel.removeTrack(viewWrapper.track);
+                    }
+
+                    @Override
+                    public void onNegativeButton() {
+                        informativeFragmentDialog.dismiss();
+                    }
+                }
+        );
     }
 
-    public void stopScroll() {
+    private void stopScroll() {
         mRecyclerView.stopScroll();
     }
 
@@ -600,7 +614,7 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
 
     private void onCheckAll(Boolean checkAll) {
         if(!checkAll)
-            checkAll();
+            mListViewModel.checkAllItems();
     }
 
     @Override

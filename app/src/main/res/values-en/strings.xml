@@ -329,4 +329,5 @@
     <string name="jaudio_credits">JAudioTagger</string>
     <string name="drawer">Drawer</string>
     <string name="music">Music</string>
+    <string name="no">No</string>
 </resources>

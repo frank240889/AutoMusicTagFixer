@@ -12,20 +12,18 @@ import androidx.annotation.StringRes;
 
 import mx.dev.franco.automusictagfixer.R;
 
+import static android.view.View.GONE;
+
 public class InformativeFragmentDialog extends BaseRoundedBottomSheetDialogFragment {
     private static final String TITLE = "title";
     private static final String CONTENT = "content";
     private static final String POSITIVE_BUTTON_TEXT = "positive_button_text";
     private static final String NEGATIVE_BUTTON_TEXT = "negative_button_text";
 
-    @StringRes
-    private int mTitle;
-    @StringRes
-    private int mContent;
-    @StringRes
-    private int mPositiveText;
-    @StringRes
-    private int mNegativeText;
+    private String mTitle;
+    private String mContent;
+    private String mPositiveText;
+    private String mNegativeText;
 
 
     public interface OnClickBasicFragmentDialogListener {
@@ -38,13 +36,24 @@ public class InformativeFragmentDialog extends BaseRoundedBottomSheetDialogFragm
     public static InformativeFragmentDialog newInstance(@StringRes int title,
                                                         @StringRes int content,
                                                         @StringRes int positiveButtonText,
-                                                        @StringRes int negativeButtonText){
+                                                        @StringRes int negativeButtonText,Context context) {
+        return newInstance(context.getString(title),
+                context.getString(content),
+                context.getString(positiveButtonText),
+                context.getString(negativeButtonText));
+
+    }
+
+    public static InformativeFragmentDialog newInstance(String title,
+                                                        String content,
+                                                        String positiveButtonText,
+                                                        String negativeButtonText){
         Bundle bundle = new Bundle();
         bundle.putInt(LAYOUT_ID, R.layout.layout_basic_dialog);
-        bundle.putInt(TITLE, title);
-        bundle.putInt(CONTENT, content);
-        bundle.putInt(POSITIVE_BUTTON_TEXT, positiveButtonText);
-        bundle.putInt(NEGATIVE_BUTTON_TEXT, negativeButtonText);
+        bundle.putString(TITLE, title);
+        bundle.putString(CONTENT, content);
+        bundle.putString(POSITIVE_BUTTON_TEXT, positiveButtonText);
+        bundle.putString(NEGATIVE_BUTTON_TEXT, negativeButtonText);
 
         InformativeFragmentDialog informativeFragmentDialog = new InformativeFragmentDialog();
         informativeFragmentDialog.setArguments(bundle);
@@ -65,10 +74,10 @@ public class InformativeFragmentDialog extends BaseRoundedBottomSheetDialogFragm
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if(getArguments() != null) {
-            mTitle = getArguments().getInt(TITLE);
-            mContent = getArguments().getInt(CONTENT);
-            mPositiveText = getArguments().getInt(POSITIVE_BUTTON_TEXT);
-            mNegativeText = getArguments().getInt(NEGATIVE_BUTTON_TEXT);
+            mTitle = getArguments().getString(TITLE);
+            mContent = getArguments().getString(CONTENT);
+            mPositiveText = getArguments().getString(POSITIVE_BUTTON_TEXT);
+            mNegativeText = getArguments().getString(NEGATIVE_BUTTON_TEXT);
         }
     }
 
@@ -79,10 +88,21 @@ public class InformativeFragmentDialog extends BaseRoundedBottomSheetDialogFragm
         TextView title = view.findViewById(R.id.title_basic_dialog);
         TextView content = view.findViewById(R.id.content_basic_dialog);
 
-        title.setText(mTitle);
-        content.setText(mContent);
+        if(mTitle == null || mTitle.isEmpty()) {
+            title.setVisibility(GONE);
+        }
+        else {
+            title.setText(mTitle);
+        }
+        if(mContent == null || mContent.isEmpty()) {
+            content.setVisibility(GONE);
+        }
+        else {
+            content.setVisibility(View.VISIBLE);
+            content.setText(mContent);
+        }
+
         positive.setText(mPositiveText);
-        negative.setText(mNegativeText);
 
         positive.setOnClickListener(view1 -> {
             dismiss();
@@ -91,12 +111,19 @@ public class InformativeFragmentDialog extends BaseRoundedBottomSheetDialogFragm
             getChildFragmentManager().popBackStack();
         });
 
-        negative.setOnClickListener(view12 -> {
-            dismiss();
+        if(mNegativeText == null || mNegativeText.isEmpty()) {
+            negative.setVisibility(GONE);
+        }
+        else {
+            negative.setVisibility(View.VISIBLE);
+            negative.setText(mNegativeText);
+            negative.setOnClickListener(view12 -> {
+                dismiss();
                 if(mOnClickBasicFragmentDialogListener != null)
                     mOnClickBasicFragmentDialogListener.onNegativeButton();
-            getChildFragmentManager().popBackStack();
-        });
+                getChildFragmentManager().popBackStack();
+            });
+        }
     }
 
     public void setOnClickBasicFragmentDialogListener(OnClickBasicFragmentDialogListener listener) {

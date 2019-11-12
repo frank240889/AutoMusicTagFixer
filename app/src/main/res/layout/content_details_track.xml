@@ -25,12 +25,11 @@
             android:animateLayoutChanges="true"
             app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-            <androidx.cardview.widget.CardView
+            <com.google.android.material.card.MaterialCardView
                 android:id="@+id/cardview_content"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:elevation="@dimen/cardview_default_elevation"
-                app:cardCornerRadius="8dp"
                 app:cardElevation="@dimen/cardview_default_radius"
                 app:cardUseCompatPadding="true"
                 app:contentPadding="4dp"
@@ -217,9 +216,9 @@
                         tools:visibility="visible" />
 
                 </androidx.constraintlayout.widget.ConstraintLayout>
-            </androidx.cardview.widget.CardView>
+            </com.google.android.material.card.MaterialCardView>
 
-            <androidx.cardview.widget.CardView
+            <com.google.android.material.card.MaterialCardView
                 android:id="@+id/cardview_extra_info_content"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -227,7 +226,6 @@
                 android:layout_marginBottom="80dp"
                 android:elevation="@dimen/cardview_default_elevation"
                 android:padding="8dp"
-                app:cardCornerRadius="8dp"
                 app:cardElevation="@dimen/cardview_default_radius"
                 app:cardUseCompatPadding="true"
                 app:contentPadding="4dp"
@@ -405,7 +403,7 @@
 
                 </androidx.constraintlayout.widget.ConstraintLayout>
 
-            </androidx.cardview.widget.CardView>
+            </com.google.android.material.card.MaterialCardView>
         </androidx.constraintlayout.widget.ConstraintLayout>
 
     </androidx.core.widget.NestedScrollView>

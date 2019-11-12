@@ -1,7 +1,5 @@
 package mx.dev.franco.automusictagfixer.ui.trackdetail;
 
-import static mx.dev.franco.automusictagfixer.utilities.Constants.GOOGLE_SEARCH;
-
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -21,16 +19,21 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.core.content.ContextCompat;
 import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.ViewModelProviders;
+
 import com.google.android.material.snackbar.Snackbar;
+
 import java.io.IOException;
 import java.util.ArrayList;
+
 import javax.inject.Inject;
+
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.common.Action;
 import mx.dev.franco.automusictagfixer.databinding.FragmentTrackDetailBinding;
@@ -48,6 +51,8 @@ import mx.dev.franco.automusictagfixer.utilities.RequiredPermissions;
 import mx.dev.franco.automusictagfixer.utilities.SimpleMediaPlayer;
 import mx.dev.franco.automusictagfixer.utilities.SimpleMediaPlayer.OnMediaPlayerEventListener;
 import mx.dev.franco.automusictagfixer.utilities.SuccessIdentification;
+
+import static mx.dev.franco.automusictagfixer.utilities.Constants.GOOGLE_SEARCH;
 
 /**
  * Use the {@link TrackDetailFragment#newInstance} factory method to
@@ -281,7 +286,7 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
         InformativeFragmentDialog informativeFragmentDialog = InformativeFragmentDialog.
                 newInstance(R.string.attention,
                         R.string.message_remove_cover_art_dialog,
-                        R.string.accept, R.string.cancel_button);
+                        R.string.accept, R.string.cancel_button, getActivity());
         informativeFragmentDialog.showNow(getChildFragmentManager(),
                 informativeFragmentDialog.getClass().getCanonicalName());
 
@@ -366,8 +371,9 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
 
     @Override
     public void onCancelManualCorrection() {
-        disableFields();
         enableEditModeElements();
+        disableFields();
+        enableAppBarLayout();
         mViewModel.restorePreviousValues();
     }
 

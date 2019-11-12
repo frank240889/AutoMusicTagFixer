@@ -34,14 +34,4 @@ public abstract class BaseRoundedBottomSheetDialogFragment extends BottomSheetDi
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         return inflater.inflate(mLayout,container, false);
     }
-
-    /*@Override
-    public int getTheme() {
-        return R.style.BottomSheetDialogTheme;
-    }
-
-    @Override
-    public Dialog onCreateDialog(Bundle savedInstanceState) {
-        return new BottomSheetDialog(getContext(), getTheme());
-    }*/
 }

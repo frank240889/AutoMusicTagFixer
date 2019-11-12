@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
-    <androidx.cardview.widget.CardView
+    <com.google.android.material.card.MaterialCardView
         android:id="@+id/cover_card"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -16,7 +16,6 @@
         android:elevation="@dimen/cardview_default_elevation"
         android:foreground="?android:attr/selectableItemBackgroundBorderless"
         android:stateListAnimator="@animator/default_z_transformation_card_view"
-        app:cardCornerRadius="8dp"
         app:cardElevation="@dimen/cardview_default_elevation"
         app:layout_behavior="@string/appbar_scrolling_view_behavior"
         app:layout_constraintEnd_toEndOf="parent"
@@ -37,7 +36,7 @@
             android:src="@drawable/ic_album_white_48px"
             android:transitionName="transitionFragment"
             app:srcCompat="@drawable/ic_album_white_48px" />
-    </androidx.cardview.widget.CardView>
+    </com.google.android.material.card.MaterialCardView>
 
 
     <TextView
