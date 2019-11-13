@@ -13,9 +13,7 @@ import com.bumptech.glide.load.DataSource;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.load.engine.GlideException;
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
-import com.bumptech.glide.request.Request;
 import com.bumptech.glide.request.RequestListener;
-import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.request.target.Target;
 
 import java.util.Queue;
@@ -112,8 +110,8 @@ public class CoverManager {
                     .theme(holder.cover.getContext().getTheme())
                     .thumbnail(0.5f)
                     .error(holder.cover.getContext().getDrawable(R.drawable.ic_album_white_48px))
-                    .diskCacheStrategy(DiskCacheStrategy.NONE)
-                    .skipMemoryCache(true)
+                    .diskCacheStrategy(DiskCacheStrategy.DATA)
+                    .skipMemoryCache(false)
                     .transition(DrawableTransitionOptions.withCrossFade(100))
                     .fitCenter()
                     .listener(new RequestListener<Drawable>() {

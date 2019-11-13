@@ -351,4 +351,5 @@
     <string name="drawer">Drawer</string>
     <string name="music">Música</string>
     <string name="no">No</string>
+    <string name="please_wait">Espere por favor...</string>
 </resources>

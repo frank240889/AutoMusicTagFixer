@@ -10,6 +10,7 @@
     <color name="colorControlActivated">#fdd835</color>
     <color name="colorControlHighlight">#fdd835</color>
     <color name="primaryBackground">#121212</color>
+    <color name="primaryBackgroundWithAlpha">#dd121212</color>
 
     <color name="primaryColorButton">#fdd835</color>
     <color name="dark_gray">#212121</color>

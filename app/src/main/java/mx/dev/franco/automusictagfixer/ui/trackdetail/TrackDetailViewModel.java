@@ -13,7 +13,6 @@ import androidx.lifecycle.MediatorLiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Transformations;
 
-import mx.dev.franco.automusictagfixer.covermanager.CoverManager;
 import org.jaudiotagger.tag.FieldKey;
 
 import java.text.DateFormat;
@@ -27,6 +26,7 @@ import javax.inject.Inject;
 
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.common.Action;
+import mx.dev.franco.automusictagfixer.covermanager.CoverManager;
 import mx.dev.franco.automusictagfixer.filemanager.FileManager;
 import mx.dev.franco.automusictagfixer.filemanager.ImageFileSaver;
 import mx.dev.franco.automusictagfixer.fixer.AudioTagger;
@@ -143,10 +143,10 @@ public class TrackDetailViewModel extends AndroidViewModel {
         LiveData<Boolean> fileSaverResultState = mFileManager.observeLoadingState();
         LiveData<Boolean> mediaStoreManagerState = mMediaStoreManager.observeLoadingState();
 
-        mStateMerger.addSource(mediaStoreManagerState, aBoolean ->
+        mStateMerger.addSource(stateTrackDataRepository, aBoolean ->
                 mStateMerger.setValue(aBoolean));
 
-        mStateMerger.addSource(stateTrackDataRepository, aBoolean ->
+        mStateMerger.addSource(mediaStoreManagerState, aBoolean ->
                 mStateMerger.setValue(aBoolean));
 
         mStateMerger.addSource(identificationRepositoryState, aBoolean ->
@@ -172,6 +172,7 @@ public class TrackDetailViewModel extends AndroidViewModel {
         LiveData<Resource<MetadataReaderResult>> resultReader = mDataTrackManager.getResultReader();
         mResultReading = Transformations.map(resultReader, input -> {
             Message message = null;
+            mStateMerger.setValue(false);
             if(input.data.getFields().getCode() != AudioTagger.SUCCESS) {
                 if(input.data.getFields().getError().getMessage() != null)
                     message = new Message(input.data.getFields().getError().getMessage());
@@ -654,5 +655,9 @@ public class TrackDetailViewModel extends AndroidViewModel {
         else {
             mLiveMessage.setValue(new Message(R.string.does_not_exist_cover));
         }
+    }
+
+    public void cancelTasks() {
+        mIdentificationManager.cancelIdentification();
     }
 }

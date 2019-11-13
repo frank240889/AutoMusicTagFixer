@@ -45,9 +45,9 @@ public class GnApiService {
     private static final int MAX_RETRIES = 5;
 
     private Context mContext;
-    private volatile GnManager mGnManager;
-    private volatile GnUser mGnUser;
-    private volatile GnLocale mGnLocale;
+    private GnManager mGnManager;
+    private GnUser mGnUser;
+    private GnLocale mGnLocale;
     private static GnApiService sInstance;
 
     /******************Data required by API*****************************/

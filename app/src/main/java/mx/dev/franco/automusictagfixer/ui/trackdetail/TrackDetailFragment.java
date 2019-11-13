@@ -40,6 +40,7 @@ import mx.dev.franco.automusictagfixer.databinding.FragmentTrackDetailBinding;
 import mx.dev.franco.automusictagfixer.identifier.IdentificationParams;
 import mx.dev.franco.automusictagfixer.ui.BaseViewModelFragment;
 import mx.dev.franco.automusictagfixer.ui.InformativeFragmentDialog;
+import mx.dev.franco.automusictagfixer.ui.LoadingFragmentDialog;
 import mx.dev.franco.automusictagfixer.ui.MainActivity;
 import mx.dev.franco.automusictagfixer.ui.sdcardinstructions.SdCardInstructionsActivity;
 import mx.dev.franco.automusictagfixer.utilities.ActionableMessage;
@@ -52,6 +53,7 @@ import mx.dev.franco.automusictagfixer.utilities.SimpleMediaPlayer;
 import mx.dev.franco.automusictagfixer.utilities.SimpleMediaPlayer.OnMediaPlayerEventListener;
 import mx.dev.franco.automusictagfixer.utilities.SuccessIdentification;
 
+import static android.view.View.VISIBLE;
 import static mx.dev.franco.automusictagfixer.utilities.Constants.GOOGLE_SEARCH;
 
 /**
@@ -76,6 +78,7 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
     private ActionBar mActionBar;
     private FragmentTrackDetailBinding mFragmentTrackDetailBinding;
     private boolean mEditMode = false;
+    private LoadingFragmentDialog mLoadingFragmentDialog;
 
     @Inject
     SimpleMediaPlayer mPlayer;
@@ -308,11 +311,19 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
 
     public void loading(boolean showProgress) {
         if(showProgress) {
-            mFragmentTrackDetailBinding.progressBar.setVisibility(View.VISIBLE);
+            mFragmentTrackDetailBinding.progressView.setVisibility(VISIBLE);
+            //mFragmentTrackDetailBinding.progressBar.setVisibility(View.VISIBLE);
+            /*mLoadingFragmentDialog = LoadingFragmentDialog.newInstance(true);
+            mLoadingFragmentDialog.setOnCancelTaskListener(() -> mViewModel.cancelTasks());
+            mLoadingFragmentDialog.show(getChildFragmentManager(),
+                    mLoadingFragmentDialog.getClass().getName());*/
+
             disableEditModeElements();
         }
         else {
-            mFragmentTrackDetailBinding.progressBar.setVisibility(View.GONE);
+            mFragmentTrackDetailBinding.progressView.setVisibility(View.GONE);
+            /*if(mLoadingFragmentDialog != null)
+                mLoadingFragmentDialog.dismiss();*/
             enableEditModeElements();
         }
     }
@@ -334,7 +345,12 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
         addAppBarOffsetListener();
         addToolbarButtonsListeners();
         showFabs();
-
+        mFragmentTrackDetailBinding.progressView.findViewById(R.id.cancel_button).setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mViewModel.cancelTasks();
+            }
+        });
 
         //Set action for "X" button
         /*mFragmentTrackDetailBinding.
@@ -586,7 +602,7 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
         mFragmentTrackDetailBinding.layoutContentDetailsTrack.trackYear.setEnabled(true);
         mFragmentTrackDetailBinding.layoutContentDetailsTrack.trackGenre.setEnabled(true);
 
-        mFragmentTrackDetailBinding.layoutContentDetailsTrack.changeImageButton.setVisibility(View.VISIBLE);
+        mFragmentTrackDetailBinding.layoutContentDetailsTrack.changeImageButton.setVisibility(VISIBLE);
 
         mFragmentTrackDetailBinding.layoutContentDetailsTrack.trackNameDetails.requestFocus();
         InputMethodManager imm =(InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);

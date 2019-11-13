@@ -529,7 +529,7 @@ public class AndroidUtils {
         return null;
     }
 
-    private static byte[] getAsset(String value, Context context) throws GnException {
+    public static byte[] getAsset(String value, Context context) throws GnException {
         return new GnAssetFetch(GnApiService.getInstance(context).getGnUser(), value).data();
     }
 

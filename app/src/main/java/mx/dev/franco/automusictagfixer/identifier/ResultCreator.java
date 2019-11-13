@@ -2,14 +2,23 @@ package mx.dev.franco.automusictagfixer.identifier;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.os.AsyncTask;
+
+import com.gracenote.gnsdk.GnException;
+import com.gracenote.gnsdk.GnImageSize;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import mx.dev.franco.automusictagfixer.interfaces.AsyncOperation;
 import mx.dev.franco.automusictagfixer.interfaces.Cache;
 import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
+
+import static mx.dev.franco.automusictagfixer.utilities.AndroidUtils.generateBitmap;
+import static mx.dev.franco.automusictagfixer.utilities.AndroidUtils.getAsset;
 
 public class ResultCreator extends AsyncTask<List<? extends Identifier.IdentificationResults>, Void, Void> {
     private AsyncOperation<Void, Void, Void, Void> mCallback;
@@ -40,7 +49,38 @@ public class ResultCreator extends AsyncTask<List<? extends Identifier.Identific
     @SafeVarargs
     @Override
     protected final Void doInBackground(List<? extends Identifier.IdentificationResults>... lists) {
-        processResults(lists[0]);
+        List<TrackIdentificationResult> trackIdentificationResults = new ArrayList<>();
+        for(Identifier.IdentificationResults result : lists[0]) {
+            Result r = (Result) result;
+            TrackIdentificationResult trackIdentificationResult = AndroidUtils.createTrackResult(r);
+            trackIdentificationResult.setId(r.getId());
+            trackIdentificationResults.add(trackIdentificationResult);
+            if(isCancelled())
+                return null;
+
+            List<CoverIdentificationResult> c = new ArrayList<>();
+            Map<GnImageSize, String> covers = r.getCovers();
+            Set<Map.Entry<GnImageSize, String>> entries = covers.entrySet();
+            for(Map.Entry<GnImageSize, String> entry : entries){
+                if(isCancelled())
+                    return null;
+                try {
+                    byte[] cover = getAsset(entry.getValue(), mContext);
+                    if(isCancelled())
+                        return null;
+                    Bitmap bitmap = generateBitmap(cover);
+                    String size = bitmap.getWidth() + " * " + bitmap.getHeight();
+                    CoverIdentificationResult coverIdentificationResult = new CoverIdentificationResult(cover, size, entry.getKey());
+                    coverIdentificationResult.setId(result.getId());
+                    c.add(coverIdentificationResult);
+                } catch (IllegalArgumentException | GnException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            mCoverCache.add(mTrackId , c);
+        }
+        mTrackCache.add(mTrackId, trackIdentificationResults);
         return null;
     }
 
@@ -65,25 +105,5 @@ public class ResultCreator extends AsyncTask<List<? extends Identifier.Identific
         mContext = null;
         mTrackCache = null;
         mTrackId = null;
-    }
-
-    private void processResults(List<? extends Identifier.IdentificationResults> results) {
-        List<TrackIdentificationResult> trackIdentificationResults = new ArrayList<>();
-        for(Identifier.IdentificationResults result : results) {
-            Result r = (Result) result;
-            TrackIdentificationResult trackIdentificationResult = AndroidUtils.createTrackResult(r);
-            trackIdentificationResult.setId(r.getId());
-            trackIdentificationResults.add(trackIdentificationResult);
-            processCovers(r);
-        }
-        mTrackCache.add(mTrackId, trackIdentificationResults);
-    }
-
-    private void processCovers(Result r) {
-        List<CoverIdentificationResult> coverIdentificationResultList =
-                AndroidUtils.createListCoverResult(r, mContext);
-
-        mCoverCache.add(mTrackId , coverIdentificationResultList);
-
     }
 }
