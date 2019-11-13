@@ -143,8 +143,8 @@ public class TrackDetailViewModel extends AndroidViewModel {
         LiveData<Boolean> fileSaverResultState = mFileManager.observeLoadingState();
         LiveData<Boolean> mediaStoreManagerState = mMediaStoreManager.observeLoadingState();
 
-        mStateMerger.addSource(stateTrackDataRepository, aBoolean ->
-                mStateMerger.setValue(aBoolean));
+        /*mStateMerger.addSource(stateTrackDataRepository, aBoolean ->
+                mStateMerger.setValue(aBoolean));*/
 
         mStateMerger.addSource(mediaStoreManagerState, aBoolean ->
                 mStateMerger.setValue(aBoolean));
