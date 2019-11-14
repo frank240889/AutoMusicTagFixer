@@ -39,21 +39,21 @@
                         <com.google.android.material.card.MaterialCardView
                             android:id="@+id/card_cover"
                             android:layout_width="300dp"
-                            android:layout_height="300dp"
+                            android:layout_height="340dp"
                             android:layout_marginStart="8dp"
                             android:layout_marginTop="8dp"
                             android:layout_marginEnd="8dp"
                             android:layout_marginBottom="8dp"
+                            app:cardElevation="@dimen/cardview_default_elevation"
                             app:layout_constraintBottom_toBottomOf="parent"
                             app:layout_constraintEnd_toEndOf="parent"
                             app:layout_constraintStart_toStartOf="parent"
-                            app:layout_constraintTop_toTopOf="parent"
-                            app:cardElevation="@dimen/cardview_default_elevation">
+                            app:layout_constraintTop_toTopOf="parent">
 
                             <ImageView
                                 android:id="@+id/toolbar_cover_art"
                                 android:layout_width="match_parent"
-                                android:layout_height="match_parent"
+                                android:layout_height="wrap_content"
                                 android:adjustViewBounds="true"
                                 android:scaleType="fitCenter"
                                 android:src="@drawable/ic_album_white_24px"
@@ -63,6 +63,18 @@
                                 app:layout_constraintEnd_toEndOf="parent"
                                 app:layout_constraintStart_toStartOf="parent"
                                 app:layout_constraintTop_toTopOf="parent" />
+
+                            <TextView
+                                android:id="@+id/imageSize"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="bottom|center_horizontal"
+                                android:layout_marginBottom="8dp"
+                                android:gravity="center_vertical"
+                                android:drawableStart="@drawable/ic_photo_size_select_large_white_24px"
+                                android:singleLine="true"
+                                android:text="@{viewModel.imageSize}"
+                                tools:text="1080 * 1080" />
                         </com.google.android.material.card.MaterialCardView>
                     </androidx.constraintlayout.widget.ConstraintLayout>
                 <com.google.android.material.appbar.MaterialToolbar
@@ -101,10 +113,14 @@
             android:text="@string/save_changes"
             app:icon="@drawable/ic_save_white_24px" />
 
-        <include android:id="@+id/progress_view"
-            layout="@layout/progress_layout"/>
-
-
-
+        <include
+            android:id="@+id/progress_view"
+            layout="@layout/progress_layout"
+            android:layout_gravity="center"
+            android:layout_marginStart="32dp"
+            android:layout_marginEnd="32dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            tools:visibility="gone" />
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 </layout>

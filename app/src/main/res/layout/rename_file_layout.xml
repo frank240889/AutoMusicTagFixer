@@ -8,7 +8,8 @@
     android:layout_height="match_parent"
     android:layout_alignParentStart="true"
     android:layout_gravity="start"
-    android:layout_margin="8dp"
+    android:paddingTop="16dp"
+    android:paddingBottom="16dp"
     android:splitMotionEvents="false"
     app:shapeAppearanceOverlay="@style/RoundedShapeBottomSheetDialog">
 
@@ -17,10 +18,10 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginStart="8dp"
-        android:layout_marginTop="16dp"
         android:layout_marginEnd="8dp"
         android:gravity="center"
         android:text="@string/manual"
+        android:textSize="20sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />

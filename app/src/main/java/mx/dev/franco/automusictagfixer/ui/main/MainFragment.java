@@ -190,6 +190,7 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
         mSwipeRefreshLayout.setOnRefreshListener(()->{
             if(ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.WRITE_EXTERNAL_STORAGE)
                     != PackageManager.PERMISSION_GRANTED) {
+                mViewModel.notifyPermissionNotGranted();
                 requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
                         RequiredPermissions.WRITE_EXTERNAL_STORAGE_PERMISSION);
             }

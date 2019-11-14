@@ -31,8 +31,8 @@
                 android:layout_height="wrap_content"
                 android:elevation="@dimen/cardview_default_elevation"
                 app:cardElevation="@dimen/cardview_default_radius"
+                app:cardPreventCornerOverlap="true"
                 app:cardUseCompatPadding="true"
-                app:contentPadding="4dp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent">
@@ -66,7 +66,7 @@
                             android:inputType="text|textNoSuggestions"
                             android:maxLength="100"
                             android:maxLines="1"
-                            android:text="@={viewmodel.title}"/>
+                            android:text="@={viewmodel.title}" />
                     </com.google.android.material.textfield.TextInputLayout>
 
                     <com.google.android.material.textfield.TextInputLayout
@@ -178,6 +178,8 @@
                         android:layout_alignParentStart="false"
                         android:layout_marginStart="8dp"
                         android:layout_marginEnd="8dp"
+                        android:layout_marginBottom="8dp"
+                        app:layout_constraintBottom_toTopOf="@id/change_image_button"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="@+id/track_number_layout">
@@ -209,11 +211,11 @@
                         android:singleLine="true"
                         android:text="@string/edit_cover"
                         android:textSize="16sp"
-                        android:visibility="invisible"
+                        android:visibility="gone"
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="@+id/track_year_layout"
-                        tools:visibility="visible" />
+                        tools:visibility="gone" />
 
                 </androidx.constraintlayout.widget.ConstraintLayout>
             </com.google.android.material.card.MaterialCardView>
@@ -222,13 +224,10 @@
                 android:id="@+id/cardview_extra_info_content"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
                 android:layout_marginBottom="80dp"
                 android:elevation="@dimen/cardview_default_elevation"
-                android:padding="8dp"
                 app:cardElevation="@dimen/cardview_default_radius"
                 app:cardUseCompatPadding="true"
-                app:contentPadding="4dp"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
@@ -239,7 +238,7 @@
                     android:id="@+id/extra_data_container"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_alignParentStart="true">
+                    android:layout_alignParentStart="false">
 
                     <TextView
                         android:id="@+id/textView"
@@ -247,12 +246,12 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="8dp"
                         android:layout_marginTop="8dp"
+                        android:drawableStart="@drawable/ic_insert_drive_file_white_24dp"
                         android:gravity="center_vertical"
-                        android:drawableStart="@drawable/ic_description_white"
                         android:text="@{viewmodel.filename}"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toTopOf="parent"
-                        tools:text="Amar a 2.mp3"/>
+                        tools:text="Amar a 2.mp3" />
 
                     <TextView
                         android:id="@+id/file_size"
@@ -376,31 +375,16 @@
                         android:layout_marginStart="8dp"
                         android:layout_marginTop="8dp"
                         android:layout_marginEnd="8dp"
+                        android:layout_marginBottom="8dp"
                         android:drawableStart="@drawable/ic_folder_white_24px"
                         android:gravity="center_vertical"
                         android:maxLines="2"
                         android:text="@{viewmodel.absolutePath}"
+                        app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="@+id/resolution"
                         tools:text="/storage/emulated/0/Music" />
-
-                    <TextView
-                        android:id="@+id/imageSize"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentStart="true"
-                        android:layout_marginStart="8dp"
-                        android:layout_marginTop="8dp"
-                        android:drawableStart="@drawable/ic_photo_size_select_large_white_24px"
-                        android:gravity="center_vertical"
-                        android:singleLine="true"
-                        android:text="@{viewmodel.imageSize}"
-                        app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@+id/track_path"
-                        tools:text="1080 * 1080" />
-
                 </androidx.constraintlayout.widget.ConstraintLayout>
 
             </com.google.android.material.card.MaterialCardView>

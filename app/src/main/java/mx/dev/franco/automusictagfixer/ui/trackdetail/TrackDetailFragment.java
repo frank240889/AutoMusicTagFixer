@@ -8,6 +8,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -40,7 +41,6 @@ import mx.dev.franco.automusictagfixer.databinding.FragmentTrackDetailBinding;
 import mx.dev.franco.automusictagfixer.identifier.IdentificationParams;
 import mx.dev.franco.automusictagfixer.ui.BaseViewModelFragment;
 import mx.dev.franco.automusictagfixer.ui.InformativeFragmentDialog;
-import mx.dev.franco.automusictagfixer.ui.LoadingFragmentDialog;
 import mx.dev.franco.automusictagfixer.ui.MainActivity;
 import mx.dev.franco.automusictagfixer.ui.sdcardinstructions.SdCardInstructionsActivity;
 import mx.dev.franco.automusictagfixer.utilities.ActionableMessage;
@@ -78,7 +78,6 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
     private ActionBar mActionBar;
     private FragmentTrackDetailBinding mFragmentTrackDetailBinding;
     private boolean mEditMode = false;
-    private LoadingFragmentDialog mLoadingFragmentDialog;
 
     @Inject
     SimpleMediaPlayer mPlayer;
@@ -344,6 +343,8 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
         addFloatingActionButtonListeners();
         addAppBarOffsetListener();
         addToolbarButtonsListeners();
+        mFragmentTrackDetailBinding.fabAutofix.shrink();
+        mFragmentTrackDetailBinding.fabSaveInfo.shrink();
         showFabs();
         mFragmentTrackDetailBinding.progressView.findViewById(R.id.cancel_button).setOnClickListener(new OnClickListener() {
             @Override
@@ -351,12 +352,6 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
                 mViewModel.cancelTasks();
             }
         });
-
-        //Set action for "X" button
-        /*mFragmentTrackDetailBinding.
-                layoutContentDetailsTrack.
-                cancelIdentification.
-                setOnClickListener(v -> mViewModel.cancelIdentification());*/
     }
 
     /**
@@ -475,8 +470,21 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
      */
     private void addAppBarOffsetListener(){
         mFragmentTrackDetailBinding.appBarLayout.addOnOffsetChangedListener((appBarLayout, verticalOffset) -> {
+            Log.d("Vertical offset: ", verticalOffset+ " appBarLayout.getTotalScrollRange():" + appBarLayout.getTotalScrollRange());
+            if(verticalOffset < 0) {
+                if(!mFragmentTrackDetailBinding.fabAutofix.isExtended()) {
+                    mFragmentTrackDetailBinding.fabAutofix.extend();
+                    mFragmentTrackDetailBinding.fabSaveInfo.extend();
+                }
+            }
+            else {
+                if(mFragmentTrackDetailBinding.fabAutofix.isExtended()) {
+                    mFragmentTrackDetailBinding.fabAutofix.shrink();
+                    mFragmentTrackDetailBinding.fabSaveInfo.shrink();
+                }
+            }
+
             //set alpha of cover depending on offset of expanded toolbar cover height,
-            //mFragmentTrackDetailBinding.toolbarCoverArt.setAlpha(1.0f - Math.abs(verticalOffset/(float)appBarLayout.getTotalScrollRange()));
             mFragmentTrackDetailBinding.cardContainerCover.setAlpha(1.0f - Math.abs(verticalOffset/(float)appBarLayout.getTotalScrollRange()));
             //when toolbar is fully collapsed show name of audio file in toolbar and back button
             if(Math.abs(verticalOffset) - appBarLayout.getTotalScrollRange() == 0) {

@@ -363,4 +363,8 @@ public class ListViewModel extends AndroidViewModel {
 
         return 0;
     }
+
+    public void notifyPermissionNotGranted() {
+        mCurrentList.clear();
+    }
 }
