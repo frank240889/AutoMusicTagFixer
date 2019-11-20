@@ -1,10 +1,11 @@
 package mx.dev.franco.automusictagfixer.ui.trackdetail;
 
 import android.app.Application;
+import android.graphics.Bitmap;
+import android.graphics.ImageDecoder;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.ArrayMap;
-
 import androidx.annotation.NonNull;
 import androidx.arch.core.util.Function;
 import androidx.lifecycle.AndroidViewModel;
@@ -12,24 +13,21 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MediatorLiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Transformations;
-
-import org.jaudiotagger.tag.FieldKey;
-
+import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 import java.util.Map;
-
 import javax.annotation.Nonnull;
 import javax.inject.Inject;
-
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.common.Action;
 import mx.dev.franco.automusictagfixer.covermanager.CoverManager;
 import mx.dev.franco.automusictagfixer.filemanager.FileManager;
 import mx.dev.franco.automusictagfixer.filemanager.ImageFileSaver;
 import mx.dev.franco.automusictagfixer.fixer.AudioTagger;
+import mx.dev.franco.automusictagfixer.fixer.AudioTagger.StringUtilities;
 import mx.dev.franco.automusictagfixer.fixer.MetadataReaderResult;
 import mx.dev.franco.automusictagfixer.fixer.MetadataWriterResult;
 import mx.dev.franco.automusictagfixer.identifier.CoverIdentificationResult;
@@ -48,6 +46,7 @@ import mx.dev.franco.automusictagfixer.utilities.Constants;
 import mx.dev.franco.automusictagfixer.utilities.Message;
 import mx.dev.franco.automusictagfixer.utilities.Resource;
 import mx.dev.franco.automusictagfixer.utilities.SuccessIdentification;
+import org.jaudiotagger.tag.FieldKey;
 
 public class TrackDetailViewModel extends AndroidViewModel {
 
@@ -370,12 +369,17 @@ public class TrackDetailViewModel extends AndroidViewModel {
             Map<FieldKey, Object> tags = new ArrayMap<>();
             Thread thread = new Thread(() -> {
                 mStateMerger.postValue(true);
-                tags.put(FieldKey.COVER_ART, AndroidUtils.generateCover(imageWrapper.bitmap));
-                mStateMerger.postValue(false);
-                mCorrectionParams.setFields(tags);
-                Handler handler = new Handler(Looper.getMainLooper());
-                handler.post(() ->
+                try {
+                    Bitmap bitmap = ImageDecoder.decodeBitmap(imageWrapper.source);
+                    tags.put(FieldKey.COVER_ART, AndroidUtils.generateCover(bitmap));
+                    mStateMerger.postValue(false);
+                    mCorrectionParams.setFields(tags);
+                    Handler handler = new Handler(Looper.getMainLooper());
+                    handler.post(() ->
                         mDataTrackManager.performCorrection(mCorrectionParams));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             });
             thread.start();
 
@@ -651,7 +655,7 @@ public class TrackDetailViewModel extends AndroidViewModel {
         if(cover != null) {
             String imageName = null;
             if(title.getValue() != null && !title.getValue().isEmpty()) {
-                imageName = title.getValue();
+                imageName = StringUtilities.sanitizeString(title.getValue());
             }
             else {
                 imageName = ImageFileSaver.GENERIC_NAME;

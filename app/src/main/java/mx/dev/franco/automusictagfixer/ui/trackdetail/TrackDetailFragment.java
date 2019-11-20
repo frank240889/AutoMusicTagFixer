@@ -1,14 +1,15 @@
 package mx.dev.franco.automusictagfixer.ui.trackdetail;
 
+import static android.view.View.VISIBLE;
+import static mx.dev.franco.automusictagfixer.utilities.Constants.GOOGLE_SEARCH;
+
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.graphics.ImageDecoder;
 import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.provider.MediaStore;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -22,21 +23,16 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.PopupMenu;
 import android.widget.TextView;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.core.content.ContextCompat;
 import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.ViewModelProviders;
-
 import com.google.android.material.snackbar.Snackbar;
-
 import java.io.IOException;
 import java.util.ArrayList;
-
 import javax.inject.Inject;
-
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.common.Action;
 import mx.dev.franco.automusictagfixer.databinding.FragmentTrackDetailBinding;
@@ -54,9 +50,6 @@ import mx.dev.franco.automusictagfixer.utilities.RequiredPermissions;
 import mx.dev.franco.automusictagfixer.utilities.SimpleMediaPlayer;
 import mx.dev.franco.automusictagfixer.utilities.SimpleMediaPlayer.OnMediaPlayerEventListener;
 import mx.dev.franco.automusictagfixer.utilities.SuccessIdentification;
-
-import static android.view.View.VISIBLE;
-import static mx.dev.franco.automusictagfixer.utilities.Constants.GOOGLE_SEARCH;
 
 /**
  * Use the {@link TrackDetailFragment#newInstance} factory method to
@@ -216,23 +209,14 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
             case INTENT_GET_AND_UPDATE_FROM_GALLERY:
             case INTENT_OPEN_GALLERY:
                 if (data != null){
-                    try {
+                    //try {
                         Uri imageData = data.getData();
-                        Bitmap bitmap = null;
-                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
-                            ImageDecoder.Source source = ImageDecoder.createSource(getActivity().getApplicationContext().getContentResolver(), imageData);
-                            bitmap = ImageDecoder.decodeBitmap(source);
-                        }
-                        else {
-                            bitmap = MediaStore.Images.Media.getBitmap(getActivity().getContentResolver(), imageData);
-                        }
+                        ImageDecoder.Source source = ImageDecoder.createSource(getActivity().getApplicationContext().getContentResolver(), imageData);
                         ImageWrapper imageWrapper = new ImageWrapper();
-                        imageWrapper.width = bitmap.getWidth();
-                        imageWrapper.height = bitmap.getHeight();
-                        imageWrapper.bitmap = bitmap;
+                        imageWrapper.source = source;
                         imageWrapper.requestCode = requestCode;
                         mViewModel.fastCoverChange(imageWrapper);
-                    } catch(IOException e){
+                    /*} catch(IOException e){
                         e.printStackTrace();
                         Snackbar snackbar = AndroidUtils.getSnackbar(
                                 mFragmentTrackDetailBinding.rootContainerDetails,
@@ -241,7 +225,7 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
                         snackbar.setText(getString(R.string.error_load_image));
                         snackbar.setDuration(Snackbar.LENGTH_SHORT);
                         snackbar.show();
-                    }
+                    }*/
                 }
                 break;
 
