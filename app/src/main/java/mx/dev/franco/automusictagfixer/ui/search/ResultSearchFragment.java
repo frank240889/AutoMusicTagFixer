@@ -191,7 +191,7 @@ public class ResultSearchFragment extends BaseViewModelFragment<SearchListViewMo
         trackDetailFragment = (TrackDetailFragment) getActivity().
                 getSupportFragmentManager().findFragmentByTag(TrackDetailFragment.class.getName());
         if(trackDetailFragment != null){
-            trackDetailFragment.load(AndroidUtils.getBundle(viewWrapper.track.getMediaStoreId(),
+            trackDetailFragment.loadTrackData(AndroidUtils.getBundle(viewWrapper.track.getMediaStoreId(),
                     viewWrapper.mode));
         }
         else {

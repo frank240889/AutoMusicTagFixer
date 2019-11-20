@@ -2,25 +2,6 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
-        android:id="@+id/action_play"
-        android:icon="@drawable/ic_play_arrow_white_24px"
-        app:showAsAction="always"
-        android:orderInCategory="0"
-        android:title="@string/play_track"/>
-
-    <item
-        android:id="@+id/action_edit_manual"
-        android:icon="@drawable/ic_edit_white_24px"
-        android:title="@string/title_edit_track"
-        android:orderInCategory="1"
-        app:showAsAction="always"/>
-    <item
-        android:id="@+id/action_web_search"
-        android:icon="@drawable/ic_public_white_24px"
-        android:title="@string/web_search"
-        android:orderInCategory="6"
-        app:showAsAction="never"/>
-    <!--item
         android:id="@+id/action_identify_cover"
         android:title="@string/title_identify_cover"
         app:showAsAction="never"
@@ -44,10 +25,4 @@
         android:title="@string/title_remove_cover_art_dialog"
         android:orderInCategory="5"
         app:showAsAction="never"/>
-    <item
-        android:id="@+id/action_web_search"
-        android:icon="@drawable/ic_public_white_24px"
-        android:title="@string/web_search"
-        android:orderInCategory="6"
-        app:showAsAction="never"/-->
 </menu>

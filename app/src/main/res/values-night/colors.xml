@@ -13,6 +13,7 @@
     <color name="primaryBackgroundWithAlpha">#aa121212</color>
 
     <color name="primaryColorButton">#fdd835</color>
+    <color name="primaryOutlinedColorButton">#ffffdd</color>
     <color name="dark_gray">#212121</color>
 
     <color name="navigationDrawerBackgroundTint">@color/primaryDarkColor</color>

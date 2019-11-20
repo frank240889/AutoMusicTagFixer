@@ -4,11 +4,11 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.ImageDecoder;
 import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.provider.MediaStore;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -20,6 +20,8 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
+import android.widget.PopupMenu;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -70,10 +72,6 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
     //Menu items
     private MenuItem mPlayPreviewMenuItem;
     private MenuItem mManualEditMenuItem;
-    private MenuItem mIdentifyCoverMenuItem;
-    private MenuItem mUpdateCoverMenuItem;
-    private MenuItem mExtractCoverMenuItem;
-    private MenuItem mRemoveMenuItem;
     private MenuItem mSearchInWebMenuItem;
     private ActionBar mActionBar;
     private FragmentTrackDetailBinding mFragmentTrackDetailBinding;
@@ -146,6 +144,7 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
         mViewModel.observeRenamingResult().observe(this, this::onMessage);
         mViewModel.observeCoverSavingResult().observe(this, this::onActionableMessage);
         mViewModel.observeTrack().observe(this, track -> mPlayer.setPath(track.getPath()));
+        mViewModel.observeLoadingMessage().observe(this, this::onLoadingMessage);
         setHasOptionsMenu(true);
     }
 
@@ -198,10 +197,6 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
         inflater.inflate(R.menu.menu_details_track_dialog, menu);
         mPlayPreviewMenuItem = menu.findItem(R.id.action_play);
         mManualEditMenuItem = menu.findItem(R.id.action_edit_manual);
-        mIdentifyCoverMenuItem = menu.findItem(R.id.action_identify_cover);
-        mUpdateCoverMenuItem = menu.findItem(R.id.action_update_cover);
-        mExtractCoverMenuItem = menu.findItem(R.id.action_extract_cover);
-        mRemoveMenuItem = menu.findItem(R.id.action_remove_cover);
         mSearchInWebMenuItem = menu.findItem(R.id.action_web_search);
     }
 
@@ -223,7 +218,14 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
                 if (data != null){
                     try {
                         Uri imageData = data.getData();
-                        Bitmap bitmap = MediaStore.Images.Media.getBitmap(getActivity().getContentResolver(), imageData);
+                        Bitmap bitmap = null;
+                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+                            ImageDecoder.Source source = ImageDecoder.createSource(getActivity().getApplicationContext().getContentResolver(), imageData);
+                            bitmap = ImageDecoder.decodeBitmap(source);
+                        }
+                        else {
+                            bitmap = MediaStore.Images.Media.getBitmap(getActivity().getContentResolver(), imageData);
+                        }
                         ImageWrapper imageWrapper = new ImageWrapper();
                         imageWrapper.width = bitmap.getWidth();
                         imageWrapper.height = bitmap.getHeight();
@@ -308,23 +310,19 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
         );
     }
 
-    public void loading(boolean showProgress) {
+    protected void loading(boolean showProgress) {
         if(showProgress) {
             mFragmentTrackDetailBinding.progressView.setVisibility(VISIBLE);
-            //mFragmentTrackDetailBinding.progressBar.setVisibility(View.VISIBLE);
-            /*mLoadingFragmentDialog = LoadingFragmentDialog.newInstance(true);
-            mLoadingFragmentDialog.setOnCancelTaskListener(() -> mViewModel.cancelTasks());
-            mLoadingFragmentDialog.show(getChildFragmentManager(),
-                    mLoadingFragmentDialog.getClass().getName());*/
-
             disableEditModeElements();
         }
         else {
             mFragmentTrackDetailBinding.progressView.setVisibility(View.GONE);
-            /*if(mLoadingFragmentDialog != null)
-                mLoadingFragmentDialog.dismiss();*/
             enableEditModeElements();
         }
+    }
+
+    private void onLoadingMessage(Integer message) {
+        ((TextView)mFragmentTrackDetailBinding.progressView.findViewById(R.id.status_message)).setText(message);
     }
 
     /**
@@ -333,7 +331,6 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
      * @param message The message to show.
      */
     private void onSuccessLoad(Message message) {
-        //pressing back from toolbar, close activity
         mFragmentTrackDetailBinding.toolbar.setNavigationOnClickListener(view ->
                 TrackDetailFragment.super.callSuperOnBackPressed());
         mFragmentTrackDetailBinding.
@@ -458,7 +455,8 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
         });
 
         mFragmentTrackDetailBinding.fabSaveInfo.setOnClickListener(v -> {
-            ManualCorrectionDialogFragment manualCorrectionDialogFragment = ManualCorrectionDialogFragment.newInstance();
+            ManualCorrectionDialogFragment manualCorrectionDialogFragment =
+                    ManualCorrectionDialogFragment.newInstance(mViewModel.title.getValue());
             manualCorrectionDialogFragment.show(getChildFragmentManager(),
                     manualCorrectionDialogFragment.getClass().getCanonicalName());
         });
@@ -470,7 +468,6 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
      */
     private void addAppBarOffsetListener(){
         mFragmentTrackDetailBinding.appBarLayout.addOnOffsetChangedListener((appBarLayout, verticalOffset) -> {
-            Log.d("Vertical offset: ", verticalOffset+ " appBarLayout.getTotalScrollRange():" + appBarLayout.getTotalScrollRange());
             if(verticalOffset < 0) {
                 if(!mFragmentTrackDetailBinding.fabAutofix.isExtended()) {
                     mFragmentTrackDetailBinding.fabAutofix.extend();
@@ -526,17 +523,13 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
 
     private void disableEditModeElements() {
         mManualEditMenuItem.setEnabled(false);
-        mIdentifyCoverMenuItem.setEnabled(false);
-        mRemoveMenuItem.setEnabled(false);
-        mUpdateCoverMenuItem.setEnabled(false);
+        mFragmentTrackDetailBinding.coverArtMenu.setEnabled(false);
         mFragmentTrackDetailBinding.fabAutofix.hide();
     }
 
     private void enableEditModeElements() {
         mManualEditMenuItem.setEnabled(true);
-        mIdentifyCoverMenuItem.setEnabled(true);
-        mRemoveMenuItem.setEnabled(true);
-        mUpdateCoverMenuItem.setEnabled(true);
+        mFragmentTrackDetailBinding.coverArtMenu.setEnabled(true);
         mFragmentTrackDetailBinding.fabAutofix.show();
     }
 
@@ -652,7 +645,7 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
         mFragmentTrackDetailBinding.layoutContentDetailsTrack.trackGenre.clearFocus();
         mFragmentTrackDetailBinding.layoutContentDetailsTrack.trackGenre.setEnabled(false);
 
-        mFragmentTrackDetailBinding.layoutContentDetailsTrack.changeImageButton.setVisibility(View.INVISIBLE);
+        mFragmentTrackDetailBinding.layoutContentDetailsTrack.changeImageButton.setVisibility(View.GONE);
         mFragmentTrackDetailBinding.toolbarCoverArt.setEnabled(true);
         //to hide it, call the method again
         InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
@@ -682,22 +675,7 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
      * Set the listeners to FAB buttons.
      */
     private void addToolbarButtonsListeners(){
-        mExtractCoverMenuItem.setOnMenuItemClickListener(menuItem -> {
-            mViewModel.extractCover();
-            return false;
-        });
-
-        mUpdateCoverMenuItem.setOnMenuItemClickListener(menuItem -> {
-            editCover(TrackDetailFragment.INTENT_GET_AND_UPDATE_FROM_GALLERY);
-            return false;
-        });
-
         addPlayAction();
-
-        mRemoveMenuItem.setOnMenuItemClickListener(item -> {
-            mViewModel.removeCover();
-            return false;
-        });
 
         //performs a web trackSearch in navigator
         //using the title and artist name
@@ -711,9 +689,29 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
             return false;
         });
 
-        mIdentifyCoverMenuItem.setOnMenuItemClickListener(item -> {
-            mViewModel.startIdentification(new IdentificationParams(IdentificationParams.ONLY_COVER));
-            return false;
+        mFragmentTrackDetailBinding.coverArtMenu.setOnClickListener(v -> {
+            PopupMenu popupMenu = new PopupMenu(TrackDetailFragment.this.getActivity(), v);
+            MenuInflater menuInflater = popupMenu.getMenuInflater();
+            menuInflater.inflate(R.menu.menu_cover_art_options, popupMenu.getMenu());
+            popupMenu.show();
+            popupMenu.setOnMenuItemClickListener(item -> {
+                switch (item.getItemId()) {
+                    case R.id.action_identify_cover:
+                            mViewModel.startIdentification(
+                                new IdentificationParams(IdentificationParams.ONLY_COVER));
+                        break;
+                    case R.id.action_update_cover:
+                            editCover(TrackDetailFragment.INTENT_GET_AND_UPDATE_FROM_GALLERY);
+                        break;
+                    case R.id.action_extract_cover:
+                            mViewModel.extractCover();
+                        break;
+                    case R.id.action_remove_cover:
+                            mViewModel.removeCover();
+                        break;
+                }
+                return false;
+            });
         });
     }
     /**
@@ -733,7 +731,7 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
                     }
                 }
                 else {
-                    //mViewModel.openInExternalApp(getActivity().getApplicationContext());
+                    AndroidUtils.openInExternalApp(mViewModel.absolutePath.getValue(), getActivity());
                 }
             return false;
         });
@@ -750,7 +748,7 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
         });
     }
 
-    public void load(Bundle inputBundle){
+    public void loadTrackData(Bundle inputBundle){
         Bundle bundle = inputBundle == null ? getArguments() : inputBundle;
         if(bundle != null)
             mViewModel.loadInfoTrack(bundle.getInt(Constants.MEDIA_STORE_ID,-1));
@@ -815,7 +813,7 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
 
             @Override
             public void onAnimationEnd(Animation animation) {
-                load(null);
+                loadTrackData(null);
             }
 
             @Override

@@ -11,7 +11,7 @@
     <androidx.core.widget.NestedScrollView
         android:id="@+id/content_container"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:fillViewport="true"
         tools:showIn="@layout/fragment_track_detail"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
@@ -197,25 +197,28 @@
                             android:text="@={viewmodel.year}" />
                     </com.google.android.material.textfield.TextInputLayout>
 
-                    <TextView
+                    <com.google.android.material.button.MaterialButton
                         android:id="@+id/change_image_button"
-                        android:layout_width="wrap_content"
+                        style="@style/Widget.AutomusicTagFixer.OutlinedButton"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_below="@+id/track_year_layout"
                         android:layout_alignParentStart="true"
                         android:layout_marginStart="8dp"
-                        android:layout_marginTop="8dp"
+                        android:layout_marginEnd="8dp"
                         android:layout_marginBottom="8dp"
-                        android:drawableStart="@drawable/ic_photo_library_black_24dp"
-                        android:gravity="center_vertical"
+                        android:gravity="center"
                         android:singleLine="true"
                         android:text="@string/edit_cover"
                         android:textSize="16sp"
                         android:visibility="gone"
+                        app:icon="@drawable/ic_photo_library_black_24dp"
+                        app:iconGravity="textStart"
                         app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="@+id/track_year_layout"
-                        tools:visibility="gone" />
+                        tools:visibility="visible" />
 
                 </androidx.constraintlayout.widget.ConstraintLayout>
             </com.google.android.material.card.MaterialCardView>
@@ -224,7 +227,6 @@
                 android:id="@+id/cardview_extra_info_content"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="80dp"
                 android:elevation="@dimen/cardview_default_elevation"
                 app:cardElevation="@dimen/cardview_default_radius"
                 app:cardUseCompatPadding="true"

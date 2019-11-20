@@ -352,4 +352,7 @@
     <string name="music">Música</string>
     <string name="no">No</string>
     <string name="please_wait">Espere por favor...</string>
+    <string name="turn_lights_on">Prender luces</string>
+    <string name="turn_lights_off">Apagar luces</string>
+    <string name="removing_cover">Removiendo carátula...</string>
 </resources>

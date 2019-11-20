@@ -17,6 +17,7 @@
         <item name="shapeAppearanceMediumComponent">@style/ShapeAppearance.MyApp.MediumComponent</item>
         <item name="shapeAppearanceLargeComponent">@style/ShapeAppearance.MyApp.LargeComponent</item>
         <item name="materialButtonStyle">@style/Widget.AutomusicTagFixer.ColoredButton</item>
+        <item name="materialButtonOutlinedStyle">@style/Widget.AutomusicTagFixer.OutlinedButton</item>
         <item name="actionOverflowMenuStyle">@style/Widget.MaterialComponents.PopupMenu.Overflow</item>
         <!--item name="colorPrimaryVariant">pr</item>
         <item name="colorOnPrimary">@color/onPrimary</item>
@@ -97,6 +98,13 @@
         <item name="cornerRadius">8dp</item>
     </style>
 
+    <!--Theming material outlined buttons-->
+    <style name="Widget.AutomusicTagFixer.OutlinedButton" parent="@style/Widget.MaterialComponents.Button.OutlinedButton">
+        <item name="android:colorPressedHighlight">@color/primaryOutlinedColorButton</item>
+        <item name="android:textColor">@color/primaryOutlinedColorButton</item>
+        <item name="iconTint">@color/primaryOutlinedColorButton</item>
+        <item name="cornerRadius">8dp</item>
+    </style>
 
     <style name="Widget.AutomusicTagFixer.TextInputLayout" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense">
         <item name="materialThemeOverlay">@style/ThemeOverlay.AutomusicTagFixer.TextInputEditText.OutlinedBox</item>

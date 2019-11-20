@@ -3,19 +3,25 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="170dp"
+    xmlns:tools="http://schemas.android.com/tools"
     android:theme="@style/NavigationViewTop">
 
-    <ImageButton
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/toggle_night_mode_button"
-        android:layout_width="24dp"
-        android:layout_height="24dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginEnd="16dp"
-        android:background="?android:attr/selectableItemBackgroundBorderless"
-        android:scaleType="fitCenter"
-        android:src="@drawable/ic_wb_sunny_24px"
+        style="@style/Widget.AutomusicTagFixer.OutlinedButton"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="4dp"
+        android:gravity="center"
+        app:icon="@drawable/ic_wb_sunny_24px"
+        app:iconGravity="textStart"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"/>
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:text="@string/turn_lights_off" />
 
     <ImageView
         android:id="@+id/logo_drawer"
@@ -23,14 +29,12 @@
         android:layout_height="48dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
-        android:layout_marginBottom="8dp"
+        android:adjustViewBounds="true"
         android:cropToPadding="false"
-        android:scaleType="fitCenter"
+        android:scaleType="centerInside"
         android:src="@drawable/splash"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.0"
         app:srcCompat="@drawable/splash" />
 
     <TextView
@@ -38,12 +42,12 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_gravity="center_vertical"
-        android:layout_marginStart="16dp"
-        android:layout_marginBottom="16dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
         android:fontFamily="@font/montserrat"
         android:text="@string/app_version"
         android:textSize="18sp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

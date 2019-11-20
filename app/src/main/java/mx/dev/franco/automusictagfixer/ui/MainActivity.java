@@ -13,7 +13,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
-import android.widget.ImageButton;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
@@ -25,6 +24,7 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
+import com.google.android.material.button.MaterialButton;
 import com.google.android.material.navigation.NavigationView;
 
 import javax.inject.Inject;
@@ -92,25 +92,27 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
 
         View view = navigationView.getHeaderView(0);
 
-        ImageButton toggleNightModeButton = view.findViewById(R.id.toggle_night_mode_button);
+        MaterialButton toggleNightModeButton = view.findViewById(R.id.toggle_night_mode_button);
 
         if(mAbstractSharedPreferences.getBoolean("dark_mode")) {
-            toggleNightModeButton.setImageDrawable(getDrawable(R.drawable.ic_wb_sunny_24px));
+            toggleNightModeButton.setIcon(getDrawable(R.drawable.ic_wb_sunny_24px));
+            toggleNightModeButton.setText(R.string.turn_lights_on);
         }
         else {
-            toggleNightModeButton.setImageDrawable(getDrawable(R.drawable.ic_nights_stay_24px));
+            toggleNightModeButton.setIcon(getDrawable(R.drawable.ic_nights_stay_24px));
+            toggleNightModeButton.setText(R.string.turn_lights_off);
         }
 
         toggleNightModeButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if(mAbstractSharedPreferences.getBoolean("dark_mode")) {
-                    toggleNightModeButton.setImageDrawable(getDrawable(R.drawable.ic_wb_sunny_24px));
+                    toggleNightModeButton.setIcon(getDrawable(R.drawable.ic_wb_sunny_24px));
                     AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
                     mAbstractSharedPreferences.putBoolean("dark_mode", false);
                 }
                 else {
-                    toggleNightModeButton.setImageDrawable(getDrawable(R.drawable.ic_nights_stay_24px));
+                    toggleNightModeButton.setIcon(getDrawable(R.drawable.ic_nights_stay_24px));
                     AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
                     mAbstractSharedPreferences.putBoolean("dark_mode", true);
                 }

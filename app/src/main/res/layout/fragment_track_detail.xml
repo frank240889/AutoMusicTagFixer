@@ -75,6 +75,15 @@
                                 android:singleLine="true"
                                 android:text="@{viewModel.imageSize}"
                                 tools:text="1080 * 1080" />
+
+                            <ImageButton
+                                android:id="@+id/cover_art_menu"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_margin="8dp"
+                                app:srcCompat="@drawable/ic_more_vert_white_24dp"
+                                android:layout_gravity="bottom|end"
+                                android:background="?attr/selectableItemBackgroundBorderless"/>
                         </com.google.android.material.card.MaterialCardView>
                     </androidx.constraintlayout.widget.ConstraintLayout>
                 <com.google.android.material.appbar.MaterialToolbar

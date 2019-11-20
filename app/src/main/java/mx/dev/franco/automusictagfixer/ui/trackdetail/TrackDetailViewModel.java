@@ -101,6 +101,7 @@ public class TrackDetailViewModel extends AndroidViewModel {
     private LiveData<Track> mLiveDataTrack;
     private Track mTrack;
     private boolean mTriggered = false;
+    private MutableLiveData<Integer> mLiveLoadingMessage;
 
     @Inject
     public TrackDetailViewModel(@NonNull Application application,
@@ -114,6 +115,7 @@ public class TrackDetailViewModel extends AndroidViewModel {
         mFileManager = fileManager;
         mMediaStoreManager = mediaStoreManager;
 
+        mLiveLoadingMessage = new MutableLiveData<>();
         title = new MutableLiveData<>();
         artist = new MutableLiveData<>();
         album = new MutableLiveData<>();
@@ -350,6 +352,7 @@ public class TrackDetailViewModel extends AndroidViewModel {
      * @param trackId The id of track to load.
      */
     public void loadInfoTrack(int trackId) {
+        mLiveLoadingMessage.setValue(R.string.loading_data_track);
         mDataTrackManager.setId(trackId);
     }
 
@@ -411,6 +414,8 @@ public class TrackDetailViewModel extends AndroidViewModel {
      * @param correctionParams The params required to correct current track.
      */
     public void performCorrection(InputCorrectionParams correctionParams) {
+        mLiveLoadingMessage.setValue(R.string.applying_tags);
+        mLiveLoadingMessage.setValue(R.string.correcting);
         mCorrectionParams = correctionParams;
         mCorrectionParams.setTargetFile(mTrack.getPath());
         if(mCorrectionParams.getCorrectionMode() == Constants.MANUAL) {
@@ -500,6 +505,7 @@ public class TrackDetailViewModel extends AndroidViewModel {
      * @param identificationParams Input parameters that could be useful for this identification.
      */
     public void startIdentification(IdentificationParams identificationParams) {
+        mLiveLoadingMessage.setValue(R.string.identifying);
         mIdentificationParams = identificationParams;
         if(mIdentificationParams.getIdentificationType() == IdentificationParams.ONLY_COVER) {
             if(mIdentificationManager.getCoverListResult(mTrack.getMediaStoreId()+"") != null &&
@@ -524,6 +530,7 @@ public class TrackDetailViewModel extends AndroidViewModel {
 
     public void removeCover() {
         if(mAudioFields.getCover() != null) {
+            mLiveLoadingMessage.setValue(R.string.removing_cover);
             mLiveConfirmationDeleteCover.setValue(null);
         }
         else {
@@ -659,5 +666,9 @@ public class TrackDetailViewModel extends AndroidViewModel {
 
     public void cancelTasks() {
         mIdentificationManager.cancelIdentification();
+    }
+
+    public LiveData<Integer> observeLoadingMessage() {
+        return mLiveLoadingMessage;
     }
 }

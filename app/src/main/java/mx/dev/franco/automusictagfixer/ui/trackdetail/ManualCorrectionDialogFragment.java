@@ -24,7 +24,8 @@ import mx.dev.franco.automusictagfixer.ui.BaseRoundedBottomSheetDialogFragment;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
 
 public class ManualCorrectionDialogFragment extends BaseRoundedBottomSheetDialogFragment {
-
+  private static final String POSSIBLE_TITLE = "possible_title";
+  private String mPossibleTitle;
   public interface OnManualCorrectionListener {
     void onManualCorrection(ManualCorrectionParams inputParams);
     void onCancelManualCorrection();
@@ -34,9 +35,10 @@ public class ManualCorrectionDialogFragment extends BaseRoundedBottomSheetDialog
 
   public ManualCorrectionDialogFragment(){}
 
-  public static ManualCorrectionDialogFragment newInstance() {
+  public static ManualCorrectionDialogFragment newInstance(String title) {
     ManualCorrectionDialogFragment manualCorrectionDialogFragment = new ManualCorrectionDialogFragment();
     Bundle bundle = new Bundle();
+    bundle.putString(POSSIBLE_TITLE, title);
     bundle.putInt(LAYOUT_ID, R.layout.rename_file_layout);
     manualCorrectionDialogFragment.setArguments(bundle);
     return manualCorrectionDialogFragment;
@@ -56,6 +58,12 @@ public class ManualCorrectionDialogFragment extends BaseRoundedBottomSheetDialog
   }
 
   @Override
+  public void onCreate(@Nullable Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    mPossibleTitle = getArguments() != null ? getArguments().getString(POSSIBLE_TITLE):"";
+  }
+
+  @Override
   public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
     ManualCorrectionParams manualCorrectionParams = new ManualCorrectionParams();
     final CheckBox checkBox = view.findViewById(R.id.manual_checkbox_rename);
@@ -63,6 +71,7 @@ public class ManualCorrectionDialogFragment extends BaseRoundedBottomSheetDialog
     Button cancelButton = view.findViewById(R.id.cancel_changes);
     TextInputLayout textInputLayout = view.findViewById(R.id.manual_label_rename_to);
     EditText editText = view.findViewById(R.id.manual_rename_to);
+    editText.setText(mPossibleTitle);
     acceptButton.setOnClickListener(v -> {
       if(checkBox.isChecked() && (manualCorrectionParams.getNewName() == null ||
         manualCorrectionParams.getNewName().equals(""))) {

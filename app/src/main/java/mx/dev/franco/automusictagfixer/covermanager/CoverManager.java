@@ -110,8 +110,8 @@ public class CoverManager {
                     .theme(holder.cover.getContext().getTheme())
                     .thumbnail(0.5f)
                     .error(holder.cover.getContext().getDrawable(R.drawable.ic_album_white_48px))
-                    .diskCacheStrategy(DiskCacheStrategy.DATA)
-                    .skipMemoryCache(false)
+                    .diskCacheStrategy(DiskCacheStrategy.NONE)
+                    .skipMemoryCache(true)
                     .transition(DrawableTransitionOptions.withCrossFade(100))
                     .fitCenter()
                     .listener(new RequestListener<Drawable>() {
