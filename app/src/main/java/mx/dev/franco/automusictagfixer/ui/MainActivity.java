@@ -8,7 +8,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.PersistableBundle;
-import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
@@ -135,7 +134,6 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
 
     @Override
     public void onDestroy() {
-        Log.w(getClass().getName(), "ON DESTROY");
         super.onDestroy();
         LocalBroadcastManager.getInstance(getApplicationContext()).unregisterReceiver(mReceiver);
         mReceiver.clearReceiver();
@@ -218,8 +216,6 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
 
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-        // Handle navigation mSwipeRefreshLayout item_list clicks here.
-
         int id = item.getItemId();
 
         /*if (id == R.id.rate) {

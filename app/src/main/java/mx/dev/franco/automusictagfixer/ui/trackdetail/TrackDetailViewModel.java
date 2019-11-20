@@ -202,12 +202,12 @@ public class TrackDetailViewModel extends AndroidViewModel {
         mResultWriting = Transformations.map(resultWriter, input -> {
             Message message = null;
             if(input.data.getResultCorrection().getCode() == AudioTagger.SUCCESS) {
+                CoverManager.removeCover(mTrack.getMediaStoreId()+"");
                 //After applied tags check if rename file is set.
                 if(mCorrectionParams.renameFile()){
                     mDataTrackManager.renameFile(mCorrectionParams);
                 }
                 else {
-                    CoverManager.removeCover(mTrack.getMediaStoreId()+"");
                     if(input.data.getResultCorrection().getTagsUpdated() != null) {
                         mTrack.setProcessing(0);
                         mDataTrackManager.updateTrack(input.data.getResultCorrection().getTagsUpdated());
