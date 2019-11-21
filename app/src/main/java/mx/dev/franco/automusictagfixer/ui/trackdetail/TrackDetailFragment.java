@@ -1,5 +1,8 @@
 package mx.dev.franco.automusictagfixer.ui.trackdetail;
 
+import static android.view.View.VISIBLE;
+import static mx.dev.franco.automusictagfixer.utilities.Constants.GOOGLE_SEARCH;
+
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -21,21 +24,16 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.PopupMenu;
 import android.widget.TextView;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.core.content.ContextCompat;
 import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.ViewModelProviders;
-
 import com.google.android.material.snackbar.Snackbar;
-
 import java.io.IOException;
 import java.util.ArrayList;
-
 import javax.inject.Inject;
-
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.common.Action;
 import mx.dev.franco.automusictagfixer.databinding.FragmentTrackDetailBinding;
@@ -53,9 +51,6 @@ import mx.dev.franco.automusictagfixer.utilities.RequiredPermissions;
 import mx.dev.franco.automusictagfixer.utilities.SimpleMediaPlayer;
 import mx.dev.franco.automusictagfixer.utilities.SimpleMediaPlayer.OnMediaPlayerEventListener;
 import mx.dev.franco.automusictagfixer.utilities.SuccessIdentification;
-
-import static android.view.View.VISIBLE;
-import static mx.dev.franco.automusictagfixer.utilities.Constants.GOOGLE_SEARCH;
 
 /**
  * Use the {@link TrackDetailFragment#newInstance} factory method to
@@ -107,6 +102,7 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
             @Override
             public void onCompletedPlaying() {
                 mPlayPreviewMenuItem.setIcon(ContextCompat.getDrawable(getActivity(),R.drawable.ic_play_arrow_white_24px));
+                addPlayAction();
             }
             @Override
             public void onErrorPlaying(int what, int extra) {

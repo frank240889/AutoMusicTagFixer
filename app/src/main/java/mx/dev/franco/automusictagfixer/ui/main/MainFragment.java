@@ -20,7 +20,6 @@ import android.view.ViewGroup;
 import android.view.ViewOutlineProvider;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
@@ -33,17 +32,13 @@ import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
-
 import com.google.android.material.appbar.AppBarLayout;
 import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
-
 import java.util.List;
 import java.util.Objects;
-
 import javax.inject.Inject;
-
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.interfaces.LongRunningTaskListener;
 import mx.dev.franco.automusictagfixer.interfaces.ProcessingListener;
@@ -285,7 +280,7 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
                     if(resultSearchListFragment == null) {
                         resultSearchListFragment = ResultSearchFragment.newInstance();
                     }
-
+                    ((MainActivity)getActivity()).mDrawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
                     getActivity().getSupportFragmentManager().beginTransaction().
                             setCustomAnimations(R.anim.slide_in_right,
                                     R.anim.slide_out_left, R.anim.slide_in_left,
