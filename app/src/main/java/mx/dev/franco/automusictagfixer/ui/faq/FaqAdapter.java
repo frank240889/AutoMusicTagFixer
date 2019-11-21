@@ -99,9 +99,6 @@ public class FaqAdapter extends RecyclerView.Adapter<FaqAdapter.QuestionItemHold
             container = root.findViewById(R.id.container_question);
             this.listener = listener;
             root.setOnClickListener(this);
-            //Enable animations on this layout
-            /*container.getLayoutTransition()
-                    .enableTransitionType(LayoutTransition.CHANGING);*/
         }
 
         @Override

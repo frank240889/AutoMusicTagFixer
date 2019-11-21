@@ -26,12 +26,8 @@
     <string name="as_file">Image</string>
     <string name="no_cover_art_found">Cover art not found</string>
 
-    <string name="cover_updated">Cover art updated.</string>
-    <string name="cover_removed">Cover art removed.</string>
-
     <string name="no_available">No available</string>
     <string name="explanation_permission_access_files">To find your songs automatically, you must grant the permission requested by the dialog box that will appear after you click OK.</string>
-    <string name="ok_button">Ok</string>
     <string name="cancel_button">Cancel</string>
 
     <string name="file_error">Cannot read %1$s because it was moved, deleted or renamed, do you wish to remove from list?</string>
@@ -45,9 +41,6 @@
     <string name="permission_granted">Permission granted to correct SD songs.</string>
     <string name="current_file_processing">This song is being corrected.</string>
     <string name="initializing_recognition_api">Connecting to the recognition service, one moment please…</string>
-    <string name="no_internet_connection_download_cover">To download the cover, connect to the internet.</string>
-    <string name="no_internet_connection_automatic_mode">To use the automatic mode, connect to the internet.</string>
-    <string name="no_internet_connection_semi_automatic_mode">To use the semi-automatic mode, connect to the internet.</string>
     <string name="no_items_found">No songs found.</string>
     <string name="no_found_tags">No match was found.</string>
 
@@ -114,8 +107,6 @@
 
     <string name="cancel_task">Do you want to cancel current correction?</string>
     <string name="cancelling">Cancelling correction…</string>
-    <string name="api_initialized">Click on any song to correct it.</string>
-    <string name="api_initialized2">Click + to see more options.</string>
     <string name="remove_from_list">Remove</string>
 
     <string name="title_remove_cover_art_dialog">Remove cover art</string>
@@ -131,19 +122,12 @@
     <string name="title">Title</string>
     <string name="artist">Artist</string>
     <string name="track_year">Publication year</string>
-    <string name="dimensions">Size</string>
-    <string name="successfully_applied_tags">Tags applied successfully.</string>
-
-    <string name="message_apply_new_tags">¿Apply changes?</string>
-    <string name="swipe_up_search">Swipe down to search again.</string>
 
     <string name="tracks">songs</string>
     <string name="fixing_task">Correcting songs.</string>
     <string name="cover_saved">Image saved it in %1$s</string>
-    <string name="cover_extracted">Cover art extracted.</string>
     <string name="cover_not_saved">Could not save cover art.</string>
     <string name="web_search">Search on Internet</string>
-    <string name="view_cover">Watch it</string>
 
     <string name="sort_by">Sort by</string>
     <string name="location">Location</string>
@@ -153,15 +137,12 @@
 
     <string name="error">An error has occurred, try again.</string>
 
-    <string name="share_message">corrected my songs in a easy, fast and automatic way!</string>
-
 
     <string name="manual">Manual correction</string>
 
     <string name="descendent">Descendant</string>
     <string name="ascendent">Ascendant</string>
     <string name="about">About AutoMusicTagFixer</string>
-    <string name="technologies_used">Credits:</string>
 
     <string-array name="questions">
         <item>1. How does it work?</item>
@@ -203,11 +184,8 @@
         <item>Song correction can work in the background for automatic mode (you can disable this option in {gmd-settings} Configuration), and so the correction will continue until it finishes or you stop it. If this option is disabled, the correction process will be cancelled when you close the app. For other modes, the correction will be interrupted if you close the application.</item>
         <item>AutoMusicTagFixer checks the status of the network and the internet connection, so if it does not detect an active connection to the internet, it will not work the automatic, semiautomatic and download-cover mode; if a correction is in progress the correction will simply stop. Manual mode does not require internet.</item>
     </string-array>
-    <string name="title_activity_scrolling_about">About AutoMusicTagFixer</string>
 
 
-    <string name="connection_lost">There is no internet connection.</string>
-    <string name="connection_recovered">Connection restored.</string>
     <string name="task_cancelled">Correction cancelled.</string>
 
     <string name="stop">Stop</string>
@@ -235,7 +213,6 @@
     <string name="removable_media_no_detected">No removable memory detected.</string>
     <string name="all_tags">All</string>
     <string name="missing_tags">Missing</string>
-    <string name="message_same_tags_applied">Applied same tags.</string>
 
 
     <string name="instructions_request_permission">If you have songs in the SD, it is necessary to enable the permission as shown below, otherwise the songs you have in the SD will not be able to correct:</string>
@@ -246,40 +223,20 @@
 
     <string name="permission_revoked">SD writing permission revoked.</string>
 
-    <string name="contact_dev">Questions or comments? Contact the developer by clicking {gmd-email}.</string>
-
     <string name="correction_in_progress">Correcting…</string>
 
     <string name="yes">Yes</string>
-    <string name="gathering_fingerprint">Generating fingerprint for %1$s</string>
-    <string name="generating_fingerprint">Generating fingerprint…</string>
     <string name="loading_tracks">Loading list…</string>
     <string name="more">More</string>
     <string name="saf_denied">SD writing/reading permission denied.</string>
-    <string name="path_to_file">Path to file</string>
-    <string name="duration">Duration</string>
-    <string name="bitrate">Bitrate</string>
-    <string name="frequency">Frequency</string>
-    <string name="resolution">Resolution</string>
-    <string name="file_type">File type</string>
-    <string name="channels">Channels</string>
-    <string name="file_size">Size</string>
-    <string name="size_cover">Cover art size</string>
-    <string name="identification_interrupted">Identification interrupted.</string>
     <string name="message_results">¿Do you want to overwrite all tags or only missing?</string>
     <string name="message_results_cover">Save cover art as:</string>
-    <string name="file_name">File name</string>
     <string name="saving_cover">Saving cover art…</string>
-    <string name="watch">Watch</string>
     <string name="accept">Accept</string>
-    <string name="add_some_tracks">To start, add songs to your smartphone.</string>
     <string name="no_found_items">No results for \"%1$s\"</string>
-    <string name="search_results">%1$s songs for \"%2$s\"</string>
-    <string name="no_results">No results.</string>
     <string name="hint_rename">Name without extension</string>
     <string name="message_checkbox_rename">Rename file</string>
     <string name="message_rename">Leave empty to use the title(if available) as file name.</string>
-    <string name="found">Match found</string>
     <string name="starting_correction">Starting correction…</string>
     <string name="applying_tags">Applying changes, please wait…</string>
     <string name="success">Correction finished.</string>
@@ -292,17 +249,11 @@
     <string name="identifying">Identifying…</string>
     <string name="no_match_found">No match found.</string>
     <string name="match_found">Match found.</string>
-    <string name="could_not_correct_file">Could not correct file.</string>
     <string name="error_in_correction">Error</string>
     <string name="empty_tag">Invalid tag.</string>
     <string name="tag_too_long">Tag to long</string>
-    <string name="updating_list">Updating list…</string>
-    <string name="begin_processing">Starting identification…</string>
-    <string name="querying_info">Identifying, please wait…</string>
     <string name="complete_identification">Complete identification</string>
-    <string name="processing_error">Identification error</string>
     <string name="identification_cancelled">Identification cancelled</string>
-    <string name="image_drawer_credits">Drawer image.</string>
     <string name="identification_results_language">Identification</string>
     <string name="pixels">Pixels</string>
     <string name="missing_cover">Missing cover</string>
@@ -310,10 +261,8 @@
     <string name="cover_found">Covers found</string>
     <string name="loading_data_track">Loading track data…</string>
     <string name="type_your_song_and_press_search">Type the song to search.</string>
-    <string name="internet_connection_restored">Connection restored.</string>
     <string name="cannot_play_track">The embedded player could not play the track, please use another external.</string>
     <string name="attention">Attention</string>
-    <string name="cannot_read_file">Can not read this file.</string>
     <string name="changes_applied">Changes applied.</string>
     <string name="changes_partially_applied">Tags applied but cannot renamed file.</string>
     <string name="title_edit_track">Edit tags</string>
@@ -324,7 +273,6 @@
     <string name="new_name_empty">New name required.</string>
     <string name="api_connected">You have connected to recognition service.</string>
     <string name="identification_error">Identification error, try again.</string>
-    <string name="enable_dark_mode">Dark mode</string>
     <string name="contact">Contact</string>
     <string name="jaudio_credits">JAudioTagger</string>
     <string name="drawer">Drawer</string>

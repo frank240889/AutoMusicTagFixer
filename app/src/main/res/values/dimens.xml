@@ -4,27 +4,9 @@
     <!-- Default screen margins, per the Android Design guidelines. -->
 
 
-    <dimen name="dialog_corners">8dp</dimen>
     <dimen name="dialog_elevation">8dp</dimen>
-    <dimen name="standard_24">24dp</dimen>
-    <dimen name="standard_55">55dp</dimen>
-    <dimen name="standard_105">105dp</dimen>
-    <dimen name="standard_155">155dp</dimen>
-    <dimen name="standard_205">205dp</dimen>
-    <dimen name="margin_bottom_snackbar">48dp</dimen>
-    <dimen name="app_bar_height">180dp</dimen>
-    <dimen name="text_margin">16dp</dimen>
     <!-- Default screen margins, per the Android Design guidelines. -->
-    <dimen name="activity_horizontal_margin">16dp</dimen>
-    <dimen name="activity_vertical_margin">16dp</dimen>
-    <dimen name="nav_header_vertical_spacing">8dp</dimen>
-    <dimen name="nav_header_height">176dp</dimen>
-    <dimen name="image_view_cover_results_size">280dp</dimen>
     <dimen name="image_view_only_cover_results_size">300dp</dimen>
-    <dimen name="image_view_cover_found_item">64dp</dimen>
     <dimen name="image_view_cover_item">64dp</dimen>
-    <dimen name="top_padding_rounded_bottom_sheet_dialog_fragment">8dp</dimen>
-
-    <dimen name="app_bar_layout_margins">8dp</dimen>
 
 </resources>

@@ -126,7 +126,7 @@ public class ManualCorrectionDialogFragment extends BaseRoundedBottomSheetDialog
     dialog.setOnShowListener(dialog1 -> {
       BottomSheetDialog d = (BottomSheetDialog) dialog1;
 
-      FrameLayout bottomSheet = (FrameLayout) d.findViewById(com.google.android.material.R.id.design_bottom_sheet);
+      FrameLayout bottomSheet = d.findViewById(com.google.android.material.R.id.design_bottom_sheet);
       BottomSheetBehavior.from(bottomSheet).setState(BottomSheetBehavior.STATE_COLLAPSED);
     });
     // Do something with your dialog like setContentView() or whatever

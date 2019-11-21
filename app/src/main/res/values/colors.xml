@@ -3,7 +3,6 @@
     <color name="primaryColor">#fdd835</color>
     <color name="primaryLightColor">#ffff6b</color>
     <color name="primaryDarkColor">#c6a700</color>
-    <color name="primaryTextColor">#212121</color>
     <color name="secondaryTextColor">#424242</color>
 
     <color name="colorControlNormal">#212121</color>
@@ -30,7 +29,6 @@
     <color name="snackbarBackgroundColor">#212121</color>
     <color name="snackbarTextBackgroundColor">#c6a700</color>
 
-    <color name="testColor">#ff56dd</color>
     <!--color name="primaryColor">#ffd600</color>
     <color name="primaryLightColor">#ffff52</color>
     <color name="primaryDarkColor">#c7a500</color>

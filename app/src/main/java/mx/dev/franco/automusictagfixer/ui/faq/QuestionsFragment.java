@@ -1,6 +1,5 @@
-package mx.dev.franco.automusictagfixer.ui.about;
+package mx.dev.franco.automusictagfixer.ui.faq;
 
-import android.content.Intent;
 import android.graphics.Outline;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
@@ -15,50 +14,50 @@ import android.view.animation.AnimationUtils;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.ActionBar;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.appbar.AppBarLayout;
 import com.google.android.material.appbar.MaterialToolbar;
-import com.google.android.material.button.MaterialButton;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.ui.BaseFragment;
 import mx.dev.franco.automusictagfixer.ui.MainActivity;
-import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 
-public class AboutFragment extends BaseFragment {
+public class QuestionsFragment extends BaseFragment implements FaqAdapter.OnItemClick{
 
-
-    private MaterialToolbar mToolbar;
-    private ActionBar mActionBar;
+    private List<QuestionItem> mQuestionItems;
+    private FaqAdapter mFaqAdapter;
+    private RecyclerView mRecyclerView;
     private AppBarLayout mAppBarLayout;
+    private MaterialToolbar mToolbar;
 
 
-    public AboutFragment(){}
+    public QuestionsFragment(){}
 
-    public static AboutFragment newInstance() {
-        return new AboutFragment();
+    public static QuestionsFragment newInstance(){
+        return new QuestionsFragment();
     }
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        setHasOptionsMenu(true);
-        return inflater.inflate(R.layout.activity_scrolling_about, container, false);
+        return inflater.inflate(R.layout.activity_questions, container, false);
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         //Set an action bar
         mToolbar = view.findViewById(R.id.toolbar);
-        //Set UI elements
-        MaterialButton shareButton = view.findViewById(R.id.share_button);
-        MaterialButton rateButton = view.findViewById(R.id.rate_button);
-        MaterialButton drawerButton = view.findViewById(R.id.drawer_button);
-        MaterialButton jaudiotaggerButton = view.findViewById(R.id.jaudio_tagger_button);
-        MaterialButton contactButton = view.findViewById(R.id.bug_report_button);
+        mQuestionItems = new ArrayList<>();
+        String[] questions = getResources().getStringArray(R.array.questions);
 
-        mAppBarLayout = view.findViewById(R.id.app_bar);
+        String[] answers = getResources().getStringArray(R.array.answers);
+
+        mAppBarLayout = view.findViewById(R.id.questions_app_bar);
         mAppBarLayout.setOutlineProvider(new ViewOutlineProvider() {
             @Override
             public void getOutline(View view, Outline outline) {
@@ -71,40 +70,58 @@ public class AboutFragment extends BaseFragment {
                 }
             }
         });
-        //Set listener for UI elements
-        contactButton.setOnClickListener(v -> AndroidUtils.openInExternalApp(Intent.ACTION_SENDTO, "mailto: dark.yellow.studios@gmail.com", getActivity()));
 
-        jaudiotaggerButton.setOnClickListener(v -> AndroidUtils.openInExternalApp(Intent.ACTION_VIEW, "http://www.jthink.net/jaudiotagger/", getActivity()));
+        mRecyclerView = view.findViewById(R.id.questions_recyclerview);
+        mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+        mRecyclerView.setHasFixedSize(true);
+        mRecyclerView.setItemViewCacheSize(10);
+        mFaqAdapter = new FaqAdapter(mQuestionItems, this);
+        mRecyclerView.setAdapter(mFaqAdapter);
 
-        drawerButton.setOnClickListener(v -> AndroidUtils.openInExternalApp(Intent.ACTION_VIEW, "https://tgs266.deviantart.com/", getActivity()));
+        for(int y = 0 ; y < questions.length ; y++){
+            QuestionItem questionItem = new QuestionItem();
+            questionItem.setQuestion(questions[y]);
+            questionItem.setAnswer(answers[y]);
+            mQuestionItems.add(questionItem);
+            mFaqAdapter.notifyItemInserted(mQuestionItems.size()-1);
+        }
+
     }
 
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         ((MainActivity)getActivity()).setSupportActionBar(mToolbar);
-        mActionBar = ((MainActivity)getActivity()).getSupportActionBar();
-        //mActionBar.setDisplayHomeAsUpEnabled(true);
-        //mActionBar = ((MainActivity)getActivity()).getSupportActionBar();
         //mToolbar.setNavigationOnClickListener(v -> getActivity().onBackPressed());
-        /*ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(getActivity(),
-                ((MainActivity)getActivity()).mDrawer,
-                mToolbar,R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        ((MainActivity)getActivity()).mDrawer.addDrawerListener(toggle);
-        toggle.syncState();*/
-        mActionBar.setTitle(getString(R.string.about));
+
+        //Get action bar from toolbar
+        //((MainActivity)getActivity()).getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        ((MainActivity)getActivity()).getSupportActionBar().setTitle(getString(R.string.faq));
         getActivity().invalidateOptionsMenu();
     }
 
     @Override
-    public void onBackPressed() {
-        //callSuperOnBackPressed();
+    public void onItemClick(int position, View view) {
+        mFaqAdapter.setActivePosition(position);
     }
+
+    @Override
+    public void onDestroy(){
+        super.onDestroy();
+        mQuestionItems.clear();
+        mQuestionItems = null;
+        mFaqAdapter = null;
+        mRecyclerView = null;
+    }
+
+    @Override
+    public void onBackPressed() {}
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         menu.clear();
     }
+
 
     @Override
     public Animation onCreateAnimation(int transit, boolean enter, int nextAnim) {
@@ -120,3 +137,6 @@ public class AboutFragment extends BaseFragment {
         return animation;
     }
 }
+
+
+

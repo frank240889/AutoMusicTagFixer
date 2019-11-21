@@ -1,12 +1,15 @@
 package mx.dev.franco.automusictagfixer.ui.search;
 
 import android.content.Context;
+import android.graphics.Outline;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewOutlineProvider;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.inputmethod.EditorInfo;
@@ -25,6 +28,7 @@ import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.appbar.AppBarLayout;
 import com.google.android.material.snackbar.Snackbar;
 
 import java.util.List;
@@ -55,6 +59,7 @@ public class ResultSearchFragment extends BaseViewModelFragment<SearchListViewMo
     private ActionBar mActionBar;
     private String mQuery = null;
     private SearchListViewModel mSearchListViewModel;
+    private AppBarLayout mAppBarLayout;
 
     @Inject
     ServiceUtils serviceUtils;
@@ -131,6 +136,20 @@ public class ResultSearchFragment extends BaseViewModelFragment<SearchListViewMo
             }
 
             return false;
+        });
+
+        mAppBarLayout = view.findViewById(R.id.results_app_bar_layout);
+        mAppBarLayout.setOutlineProvider(new ViewOutlineProvider() {
+            @Override
+            public void getOutline(View view, Outline outline) {
+                Drawable background = view.getBackground();
+                if (background != null) {
+                    background.getOutline(outline);
+                } else {
+                    outline.setRect(0, 0, view.getWidth(), view.getHeight());
+                    outline.setAlpha(0.0f);
+                }
+            }
         });
 
         //attach adapter to our recyclerview

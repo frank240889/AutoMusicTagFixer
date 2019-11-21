@@ -16,7 +16,7 @@ public class MediaStoreRetriever {
      * @param context Context to access system resources.
      * @return A cursor containing data of audio files.
      */
-    public static Cursor getAllFromDevice(Context context) {
+    public static Cursor getAllSupportedAudioFiles(Context context) {
         //Select all music
         String selection = MediaStore.Audio.Media.IS_MUSIC + " != 0";
 
@@ -35,6 +35,33 @@ public class MediaStoreRetriever {
                 projection,
                 selection,
                 null,
+                null);
+    }
+
+    /**
+     * Get all music from MediaStore.
+     * @param context Context to access system resources.
+     * @return A cursor containing data of audio files.
+     */
+    public static Cursor getAllUnsupportedAudioFiles(Context context) {
+        //Select all music
+        String selection = MediaStore.Files.FileColumns.DATA+ " like ?";
+
+        //Columns to retrieve
+        String[] projection = {
+                MediaStore.Audio.Media._ID,
+                MediaStore.Audio.Media.TITLE,
+                MediaStore.Audio.Media.ARTIST,
+                MediaStore.Audio.AlbumColumns.ALBUM ,
+                MediaStore.Audio.Media.DATA // absolute path to audio file
+        };
+
+        // Get cursor from content provider
+        // the last parameter sorts the data alphanumerically by the "DATA" column in ascendant mode
+        return context.getContentResolver().query(MediaStore.Files.getContentUri("external"),
+                projection,
+                selection,
+                new String[]{"%SCHILLER%"},
                 null);
     }
 }

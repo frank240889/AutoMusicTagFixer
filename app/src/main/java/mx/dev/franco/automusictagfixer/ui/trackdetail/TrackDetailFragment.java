@@ -1,11 +1,9 @@
 package mx.dev.franco.automusictagfixer.ui.trackdetail;
 
-import static android.view.View.VISIBLE;
-import static mx.dev.franco.automusictagfixer.utilities.Constants.GOOGLE_SEARCH;
-
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.graphics.ImageDecoder;
 import android.net.Uri;
 import android.os.Bundle;
@@ -23,16 +21,21 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.PopupMenu;
 import android.widget.TextView;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.core.content.ContextCompat;
 import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.ViewModelProviders;
+
 import com.google.android.material.snackbar.Snackbar;
+
 import java.io.IOException;
 import java.util.ArrayList;
+
 import javax.inject.Inject;
+
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.common.Action;
 import mx.dev.franco.automusictagfixer.databinding.FragmentTrackDetailBinding;
@@ -50,6 +53,9 @@ import mx.dev.franco.automusictagfixer.utilities.RequiredPermissions;
 import mx.dev.franco.automusictagfixer.utilities.SimpleMediaPlayer;
 import mx.dev.franco.automusictagfixer.utilities.SimpleMediaPlayer.OnMediaPlayerEventListener;
 import mx.dev.franco.automusictagfixer.utilities.SuccessIdentification;
+
+import static android.view.View.VISIBLE;
+import static mx.dev.franco.automusictagfixer.utilities.Constants.GOOGLE_SEARCH;
 
 /**
  * Use the {@link TrackDetailFragment#newInstance} factory method to
@@ -179,12 +185,6 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
     }
 
     @Override
-    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
-        //getActivity().invalidateOptionsMenu();
-    }
-
-    @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         menu.clear();
         inflater.inflate(R.menu.menu_details_track_dialog, menu);
@@ -209,23 +209,16 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
             case INTENT_GET_AND_UPDATE_FROM_GALLERY:
             case INTENT_OPEN_GALLERY:
                 if (data != null){
-                    //try {
                         Uri imageData = data.getData();
-                        ImageDecoder.Source source = ImageDecoder.createSource(getActivity().getApplicationContext().getContentResolver(), imageData);
-                        ImageWrapper imageWrapper = new ImageWrapper();
-                        imageWrapper.source = source;
-                        imageWrapper.requestCode = requestCode;
-                        mViewModel.fastCoverChange(imageWrapper);
-                    /*} catch(IOException e){
-                        e.printStackTrace();
-                        Snackbar snackbar = AndroidUtils.getSnackbar(
-                                mFragmentTrackDetailBinding.rootContainerDetails,
-                                mFragmentTrackDetailBinding.rootContainerDetails.getContext());
-
-                        snackbar.setText(getString(R.string.error_load_image));
-                        snackbar.setDuration(Snackbar.LENGTH_SHORT);
-                        snackbar.show();
-                    }*/
+                        AndroidUtils.AsyncBitmapDecoder asyncBitmapDecoder = new AndroidUtils.AsyncBitmapDecoder();
+                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+                            ImageDecoder.Source source = ImageDecoder.
+                                    createSource(getActivity().getApplicationContext().getContentResolver(), imageData);
+                            asyncBitmapDecoder.decodeBitmap(source, getCallback(requestCode));
+                        }
+                        else {
+                            asyncBitmapDecoder.decodeBitmap(getActivity().getContentResolver(), imageData, getCallback(requestCode) );
+                        }
                 }
                 break;
 
@@ -251,6 +244,31 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
                 break;
         }
 
+    }
+
+    private AndroidUtils.AsyncBitmapDecoder.AsyncBitmapDecoderCallback getCallback(int requestCode){
+        return new AndroidUtils.AsyncBitmapDecoder.AsyncBitmapDecoderCallback() {
+            @Override
+            public void onBitmapDecoded(Bitmap bitmap) {
+                ImageWrapper imageWrapper = new ImageWrapper();
+                imageWrapper.width = bitmap.getWidth();
+                imageWrapper.height = bitmap.getHeight();
+                imageWrapper.bitmap = bitmap;
+                imageWrapper.requestCode = requestCode;
+                mViewModel.fastCoverChange(imageWrapper);
+            }
+
+            @Override
+            public void onDecodingError(Throwable throwable) {
+                Snackbar snackbar = AndroidUtils.getSnackbar(
+                        mFragmentTrackDetailBinding.rootContainerDetails,
+                        mFragmentTrackDetailBinding.rootContainerDetails.getContext());
+
+                snackbar.setText(getString(R.string.error_load_image));
+                snackbar.setDuration(Snackbar.LENGTH_SHORT);
+                snackbar.show();
+            }
+        };
     }
 
     @Override

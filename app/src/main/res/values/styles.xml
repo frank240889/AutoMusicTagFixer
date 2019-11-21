@@ -115,10 +115,6 @@
         <item name="colorControlNormal">@color/colorControlHighlight</item>
     </style>
 
-    <style name="TextAppearance.AutomusicTagFixer" parent="@style/TextAppearance.AppCompat">
-        <item name="android:textColor">@color/colorControlHighlight</item>
-    </style>
-
     <style name="Widget.AutomusicTagFixer.BottomSheetDialogTheme" parent="@style/ThemeOverlay.MaterialComponents.BottomSheetDialog">
         <item name="colorPrimary">@color/primaryColor</item>
         <item name="colorControlNormal">@color/colorControlNormal</item>

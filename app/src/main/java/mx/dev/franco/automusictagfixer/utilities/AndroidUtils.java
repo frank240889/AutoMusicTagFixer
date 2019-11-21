@@ -2,15 +2,20 @@ package mx.dev.franco.automusictagfixer.utilities;
 
 import android.annotation.SuppressLint;
 import android.content.ActivityNotFoundException;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.ImageDecoder;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.preference.PreferenceManager;
+import android.provider.MediaStore;
 import android.util.ArrayMap;
 import android.view.Gravity;
 import android.view.View;
@@ -19,6 +24,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.annotation.StringRes;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
@@ -33,6 +39,7 @@ import org.jaudiotagger.tag.FieldKey;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -559,5 +566,53 @@ public class AndroidUtils {
             }
         }
         return c;
+    }
+    public static final class AsyncBitmapDecoder {
+        public interface AsyncBitmapDecoderCallback {
+            void onBitmapDecoded(Bitmap bitmap);
+            void onDecodingError(Throwable throwable);
+        }
+
+        private Handler mHandler;
+        public AsyncBitmapDecoder(){
+            mHandler = new Handler(Looper.getMainLooper());
+        }
+
+        @RequiresApi(api = Build.VERSION_CODES.P)
+        public void decodeBitmap(ImageDecoder.Source source, AsyncBitmapDecoderCallback asyncBitmapDecoderCallback) {
+            Thread thread = new Thread(() -> {
+                try {
+                    Bitmap bitmap = ImageDecoder.decodeBitmap(source);
+                    mHandler.post(() -> {
+                        if(asyncBitmapDecoderCallback != null)
+                            asyncBitmapDecoderCallback.onBitmapDecoded(bitmap);
+                    });
+                } catch (IOException e) {
+                    mHandler.post(() -> {
+                        if(asyncBitmapDecoderCallback != null)
+                            asyncBitmapDecoderCallback.onDecodingError(e);
+                    });
+                }
+            });
+            thread.start();
+        }
+
+        public void decodeBitmap(ContentResolver cr, Uri uri, AsyncBitmapDecoderCallback asyncBitmapDecoderCallback) {
+            Thread thread = new Thread(() -> {
+                try {
+                    Bitmap bitmap = MediaStore.Images.Media.getBitmap(cr, uri);
+                    mHandler.post(() -> {
+                        if(asyncBitmapDecoderCallback != null)
+                            asyncBitmapDecoderCallback.onBitmapDecoded(bitmap);
+                    });
+                } catch (Exception e) {
+                    mHandler.post(() -> {
+                        if(asyncBitmapDecoderCallback != null)
+                            asyncBitmapDecoderCallback.onDecodingError(e);
+                    });
+                }
+            });
+            thread.start();
+        }
     }
 }

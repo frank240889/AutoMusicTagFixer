@@ -38,7 +38,7 @@ import mx.dev.franco.automusictagfixer.interfaces.ProcessingListener;
 import mx.dev.franco.automusictagfixer.receivers.ResponseReceiver;
 import mx.dev.franco.automusictagfixer.services.FixerTrackService;
 import mx.dev.franco.automusictagfixer.ui.about.AboutFragment;
-import mx.dev.franco.automusictagfixer.ui.faq.QuestionsActivity;
+import mx.dev.franco.automusictagfixer.ui.faq.QuestionsFragment;
 import mx.dev.franco.automusictagfixer.ui.main.MainFragment;
 import mx.dev.franco.automusictagfixer.ui.settings.SettingsActivity;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
@@ -143,7 +143,7 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
     /**
      * Handle the onBackPressed callback for fragments.
      */
-    @Override
+    //@Override
     public void onBackPressed() {
         if (getSupportFragmentManager().getBackStackEntryCount() > 0 ){
             int topFragmentIndex = getSupportFragmentManager().getBackStackEntryCount() - 1;
@@ -181,7 +181,7 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
     public void onRequestPermissionsResult(int requestCode,
-                                           @NonNull String permissions[],
+                                           @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode,permissions,grantResults);
     }
@@ -252,8 +252,21 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
             startActivity(intent);
         }
         else if(id == R.id.faq){
-            Intent intent = new Intent(this,QuestionsActivity.class);
-            startActivity(intent);
+            QuestionsFragment questionsFragment = (QuestionsFragment) getSupportFragmentManager().
+                    findFragmentByTag(QuestionsFragment.class.getName());
+
+            if(questionsFragment == null)
+                questionsFragment = QuestionsFragment.newInstance();
+
+            if(!questionsFragment.isAdded()) {
+                getSupportFragmentManager().beginTransaction().
+                        setCustomAnimations(R.anim.fade_in,R.anim.fade_out).
+                        addToBackStack(QuestionsFragment.class.getName()).
+                        add(R.id.container_fragments,
+                                questionsFragment, QuestionsFragment.class.getName()).
+                        commit();
+
+            }
         }
         else if(id == R.id.about){
             AboutFragment aboutFragment = (AboutFragment) getSupportFragmentManager().
@@ -266,7 +279,7 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
                 getSupportFragmentManager().beginTransaction().
                         setCustomAnimations(R.anim.fade_in,R.anim.fade_out).
                         addToBackStack(AboutFragment.class.getName()).
-                        replace(R.id.container_fragments,
+                        add(R.id.container_fragments,
                                 aboutFragment, AboutFragment.class.getName()).
                         commit();
         }

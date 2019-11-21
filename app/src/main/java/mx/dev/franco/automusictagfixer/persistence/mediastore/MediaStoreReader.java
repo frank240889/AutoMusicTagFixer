@@ -40,7 +40,7 @@ public class MediaStoreReader extends AsyncTask<Context, Void, List<Track>> {
         if(mTrackDao != null)
             removeInexistentTracks();
 
-        Cursor cursor = MediaStoreRetriever.getAllFromDevice(context[0]);
+        Cursor cursor = MediaStoreRetriever.getAllSupportedAudioFiles(context[0]);
         List<Track> tracks = new ArrayList<>();
         if(cursor.getCount() > 0) {
             while (cursor.moveToNext()) {

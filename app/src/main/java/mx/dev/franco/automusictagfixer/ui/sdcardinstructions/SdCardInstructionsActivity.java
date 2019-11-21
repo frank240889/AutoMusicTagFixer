@@ -38,12 +38,7 @@ public class SdCardInstructionsActivity extends AppCompatActivity {
             // Instead, a URI to that document will be contained in the return intent
             // provided to this method as a parameter.  Pull that uri using "resultData.getData()"
             boolean res = AndroidUtils.grantPermissionSD(getApplicationContext(), resultData);
-            if (res) {
-                mSuccess = true;
-            }
-            else {
-                mSuccess = false;
-            }
+            mSuccess = res;
         }
         else {
             mSuccess = false;

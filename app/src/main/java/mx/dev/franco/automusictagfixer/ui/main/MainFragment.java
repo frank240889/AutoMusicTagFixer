@@ -6,6 +6,8 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.graphics.Outline;
+import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -15,6 +17,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewOutlineProvider;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -31,6 +34,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import com.google.android.material.appbar.AppBarLayout;
 import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
@@ -77,6 +81,7 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
     private ListViewModel mListViewModel;
     private ActionBar mActionBar;
     private Menu mMenu;
+    private AppBarLayout mAppBarLayout;
     private Toolbar mToolbar;
     private ExtendedFloatingActionButton mStartTaskFab;
     private FloatingActionButton mStopTaskFab;
@@ -170,7 +175,19 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
         mRecyclerView = view.findViewById(R.id.tracks_recycler_view);
         mSwipeRefreshLayout = view.findViewById(R.id.refresh_layout);
         mMessage = view.findViewById(R.id.message);
-
+        mAppBarLayout = view.findViewById(R.id.app_bar_layout_list);
+        mAppBarLayout.setOutlineProvider(new ViewOutlineProvider() {
+            @Override
+            public void getOutline(View view, Outline outline) {
+                Drawable background = view.getBackground();
+                if (background != null) {
+                    background.getOutline(outline);
+                } else {
+                    outline.setRect(0, 0, view.getWidth(), view.getHeight());
+                    outline.setAlpha(0.0f);
+                }
+            }
+        });
         mStartTaskFab = view.findViewById(R.id.fab_start_stop);
         //mStopTaskFab = view.findViewById(R.id.fab_stop);
         mStartTaskFab.setOnClickListener(v -> startCorrection(-1));
@@ -417,7 +434,7 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[],
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
         //Check permission to access files and execute scan if were granted
         if(grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){

@@ -1,11 +1,10 @@
 package mx.dev.franco.automusictagfixer.ui.trackdetail;
 
 import android.app.Application;
-import android.graphics.Bitmap;
-import android.graphics.ImageDecoder;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.ArrayMap;
+
 import androidx.annotation.NonNull;
 import androidx.arch.core.util.Function;
 import androidx.lifecycle.AndroidViewModel;
@@ -13,14 +12,18 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MediatorLiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Transformations;
-import java.io.IOException;
+
+import org.jaudiotagger.tag.FieldKey;
+
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 import java.util.Map;
+
 import javax.annotation.Nonnull;
 import javax.inject.Inject;
+
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.common.Action;
 import mx.dev.franco.automusictagfixer.covermanager.CoverManager;
@@ -46,7 +49,6 @@ import mx.dev.franco.automusictagfixer.utilities.Constants;
 import mx.dev.franco.automusictagfixer.utilities.Message;
 import mx.dev.franco.automusictagfixer.utilities.Resource;
 import mx.dev.franco.automusictagfixer.utilities.SuccessIdentification;
-import org.jaudiotagger.tag.FieldKey;
 
 public class TrackDetailViewModel extends AndroidViewModel {
 
@@ -360,7 +362,7 @@ public class TrackDetailViewModel extends AndroidViewModel {
      * @param imageWrapper
      */
     public void fastCoverChange(ImageWrapper imageWrapper) {
-        if (imageWrapper.height <= 2000 || imageWrapper.width <= 2000) {
+        if (imageWrapper.height <= 1080 && imageWrapper.width <= 1080) {
             mCorrectionParams = new InputCorrectionParams();
             mCorrectionParams.setCorrectionMode(Constants.MANUAL);
             mCorrectionParams.setCodeRequest(AudioTagger.MODE_ADD_COVER);
@@ -369,16 +371,17 @@ public class TrackDetailViewModel extends AndroidViewModel {
             Map<FieldKey, Object> tags = new ArrayMap<>();
             Thread thread = new Thread(() -> {
                 mStateMerger.postValue(true);
-                try {
-                    Bitmap bitmap = ImageDecoder.decodeBitmap(imageWrapper.source);
-                    tags.put(FieldKey.COVER_ART, AndroidUtils.generateCover(bitmap));
-                    mStateMerger.postValue(false);
-                    mCorrectionParams.setFields(tags);
+                byte[] data = AndroidUtils.generateCover(imageWrapper.bitmap);
+                tags.put(FieldKey.COVER_ART, data);
+                mStateMerger.postValue(false);
+                mCorrectionParams.setFields(tags);
+                if(imageWrapper.requestCode == TrackDetailFragment.INTENT_GET_AND_UPDATE_FROM_GALLERY) {
                     Handler handler = new Handler(Looper.getMainLooper());
                     handler.post(() ->
-                        mDataTrackManager.performCorrection(mCorrectionParams));
-                } catch (IOException e) {
-                    e.printStackTrace();
+                            mDataTrackManager.performCorrection(mCorrectionParams));
+                }
+                else {
+                    cover.postValue(data);
                 }
             });
             thread.start();
@@ -394,6 +397,7 @@ public class TrackDetailViewModel extends AndroidViewModel {
      */
     public void confirmRemoveCover() {
         if(mAudioFields.getCover() != null) {
+            mLiveLoadingMessage.setValue(R.string.removing_cover);
             mCorrectionParams = new CoverCorrectionParams();
             mCorrectionParams.setTargetFile(mTrack.getPath());
             mCorrectionParams.setCodeRequest(AudioTagger.MODE_REMOVE_COVER);
@@ -655,11 +659,12 @@ public class TrackDetailViewModel extends AndroidViewModel {
         if(cover != null) {
             String imageName = null;
             if(title.getValue() != null && !title.getValue().isEmpty()) {
-                imageName = StringUtilities.sanitizeString(title.getValue());
+                imageName = StringUtilities.sanitizeString(title.getValue()).trim().replace(" ","_");
             }
             else {
                 imageName = ImageFileSaver.GENERIC_NAME;
             }
+            mLiveLoadingMessage.setValue(R.string.saving_cover);
             mFileManager.saveFile(cover, imageName);
 
         }

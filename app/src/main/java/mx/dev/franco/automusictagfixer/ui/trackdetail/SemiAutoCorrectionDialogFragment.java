@@ -213,7 +213,7 @@ public class SemiAutoCorrectionDialogFragment extends ResultsFragmentBase<Result
       public void onShow(DialogInterface dialog) {
         BottomSheetDialog d = (BottomSheetDialog) dialog;
 
-        FrameLayout bottomSheet = (FrameLayout) d.findViewById(com.google.android.material.R.id.design_bottom_sheet);
+        FrameLayout bottomSheet = d.findViewById(com.google.android.material.R.id.design_bottom_sheet);
         BottomSheetBehavior.from(bottomSheet).setState(BottomSheetBehavior.STATE_EXPANDED);
       }
     });

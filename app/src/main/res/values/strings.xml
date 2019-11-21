@@ -26,12 +26,8 @@
     <string name="as_file">Imagen</string>
     <string name="no_cover_art_found">No se encontraron carátulas.</string>
 
-    <string name="cover_updated">Carátula actualizada.</string>
-    <string name="cover_removed">Carátula removida.</string>
-
     <string name="no_available">No disponible</string>
     <string name="explanation_permission_access_files">Para encontrar tus canciones automaticamente, es necesario conceder el permiso solicitado por el cuadro de diálogo que aparecerá después que pulses Aceptar.</string>
-    <string name="ok_button">Aceptar</string>
     <string name="cancel_button">Cancelar</string>
 
     <string name="file_error">No se puede leer %1$s por que fue movida, eliminada ó renombrada, ¿Deseas quitarla de la lista?</string>
@@ -45,9 +41,6 @@
     <string name="permission_granted">Permiso otorgado para corregir las canciones de la SD.</string>
     <string name="current_file_processing">Se esta corriengiendo esta canción.</string>
     <string name="initializing_recognition_api">Conectando al servicio de reconocimiento, un momento por favor…</string>
-    <string name="no_internet_connection_download_cover">Para descargar la carátula conectate a internet.</string>
-    <string name="no_internet_connection_automatic_mode">Para usar el modo automático conectate a internet.</string>
-    <string name="no_internet_connection_semi_automatic_mode">Para usar el modo semi automático conectate a internet.</string>
     <string name="no_items_found">No se encontraron canciones.</string>
     <string name="no_found_tags">No se encontró ninguna coincidencia.</string>
 
@@ -113,8 +106,6 @@
 
     <string name="cancel_task">¿Desea cancelar la corrección en curso?</string>
     <string name="cancelling">Cancelando corrección…</string>
-    <string name="api_initialized">Toca cualquier canción para corregirla.</string>
-    <string name="api_initialized2">Toca + para ver más opciones.</string>
     <string name="remove_from_list">Remover</string>
 
     <string name="title_remove_cover_art_dialog">Remover carátula</string>
@@ -130,19 +121,12 @@
     <string name="title">Título</string>
     <string name="artist">Artista</string>
     <string name="track_year">Año de publicación</string>
-    <string name="dimensions">Tamaño</string>
-    <string name="successfully_applied_tags">Etiquetas aplicadas correctamente.</string>
-
-    <string name="message_apply_new_tags">¿Aplicar los cambios?</string>
-    <string name="swipe_up_search">Desliza hacia abajo para volver a buscar.</string>
 
     <string name="tracks">canciones</string>
     <string name="fixing_task">Corrigiendo canciones.</string>
     <string name="cover_saved">Imagen guardada en %1$s</string>
-    <string name="cover_extracted">Carátula extraida.</string>
     <string name="cover_not_saved">No se pudo guardar la carátula.</string>
     <string name="web_search">Buscar en Internet</string>
-    <string name="view_cover">Ver</string>
 
     <string name="sort_by">Ordenar por</string>
     <string name="location">Ubicación</string>
@@ -152,15 +136,12 @@
 
     <string name="error">Ha ocurrido un error, inténtalo de nuevo.</string>
 
-    <string name="share_message">corrigio mis canciones de manera fácil, rápida y automática!</string>
-
 
     <string name="manual">Corrección manual</string>
 
     <string name="descendent">Descendente</string>
     <string name="ascendent">Ascendente</string>
     <string name="about">Sobre AutoMusicTagFixer</string>
-    <string name="technologies_used">Créditos:</string>
 
     <string-array name="questions">
         <item>1. ¿Cómo funciona?</item>
@@ -206,11 +187,8 @@
         <item>AutoMusicTagFixer comprueba el estado de la red y la conexión a internet, por lo que si no detecta una conexión activa a internet no funcionará el modo automático, semiautomático y descarga de carátula; si esta en curso una corrección
         simplemente se detendrá la corrección. El modo manual no requiere internet.</item>
     </string-array>
-    <string name="title_activity_scrolling_about">SobreAutoMusicTagFixer</string>
 
 
-    <string name="connection_lost">No hay conexión a internet.</string>
-    <string name="connection_recovered">Se ha reestablecido la conexión.</string>
     <string name="task_cancelled">Corrección cancelada.</string>
 
     <string name="stop">Detener</string>
@@ -238,7 +216,6 @@
     <string name="removable_media_no_detected">No se detectó memoria extraíble.</string>
     <string name="all_tags">Todas</string>
     <string name="missing_tags">Faltantes</string>
-    <string name="message_same_tags_applied">Se aplicaron las mismas etiquetas.</string>
 
 
     <string name="instructions_request_permission">Si tienes canciones en la SD, es necesario habilitar el permiso como se muestra a continuación, de lo contrario las canciones que tengas en la SD no se podrán corregir:</string>
@@ -249,40 +226,20 @@
 
     <string name="permission_revoked">Permiso de escritura a SD revocado.</string>
 
-    <string name="contact_dev">¿Dudas o comentarios? Contacta al desarrollador tocando {gmd-email}.</string>
-
     <string name="correction_in_progress">Corrigiendo…</string>
 
     <string name="yes">Si</string>
-    <string name="gathering_fingerprint">Generando huella para %1$s</string>
-    <string name="generating_fingerprint">Generando huella…</string>
     <string name="loading_tracks">Cargando lista…</string>
     <string name="more">Más</string>
     <string name="saf_denied">Permiso de lectura/escritura a SD denegado.</string>
-    <string name="path_to_file">Ruta de archivo</string>
-    <string name="duration">Duración</string>
-    <string name="bitrate">Bitrate</string>
-    <string name="frequency">Frecuencia</string>
-    <string name="resolution">Resolución</string>
-    <string name="file_type">Tipo de archivo</string>
-    <string name="channels">Canales</string>
-    <string name="file_size">Tamaño</string>
-    <string name="size_cover">Tamaño de carátula</string>
-    <string name="identification_interrupted">Identificación interrumpida.</string>
     <string name="message_results">¿Deseas sobreescribir todas o sólo las faltantes?</string>
     <string name="message_results_cover">Guardar la carátula como:</string>
-    <string name="file_name">Nombre de archivo</string>
     <string name="saving_cover">Guardando carátula…</string>
-    <string name="watch">Ver</string>
     <string name="accept">Aceptar</string>
-    <string name="add_some_tracks">Añade canciones a tu smartphone para comenzar.</string>
     <string name="no_found_items">Sin resultados para \"%1$s\"</string>
-    <string name="search_results">%1$s canciones para \"%2$s\"</string>
-    <string name="no_results">Sin resultados.</string>
     <string name="hint_rename">Nombre sin extensión</string>
     <string name="message_checkbox_rename">Renombrar archivo</string>
     <string name="message_rename">Dejar vacío para usar el título(si esta disponible) como nombre.</string>
-    <string name="found">Coincidencia encontrada</string>
     <string name="starting_correction">Iniciando corrección…</string>
     <string name="applying_tags">Aplicando cambios, espera por favor…</string>
     <string name="success">Corrección terminada.</string>
@@ -295,17 +252,11 @@
     <string name="identifying">Identificando…</string>
     <string name="no_match_found">No se encontró ninguna coincidencia.</string>
     <string name="match_found">Coincidencia encontrada.</string>
-    <string name="could_not_correct_file">No se pudo corregir el archivo.</string>
     <string name="error_in_correction">Error</string>
     <string name="empty_tag">Etiqueta inválida.</string>
     <string name="tag_too_long">Etiqueta muy larga</string>
-    <string name="updating_list">Actualizando lista…</string>
-    <string name="begin_processing">Iniciando identificación…</string>
-    <string name="querying_info">Identificando, espere por favor…</string>
     <string name="complete_identification">Identificación completa</string>
-    <string name="processing_error">Error de identificación</string>
     <string name="identification_cancelled">Identificación cancelada</string>
-    <string name="image_drawer_credits">Imagen en drawer.</string>
     <string name="identification_results_language">Idioma</string>
     <string name="pixels">Píxeles</string>
     <string name="missing_cover">Sin carátula</string>
@@ -314,10 +265,8 @@
     <string name="cover_found">Carátula(s) encontrada(s)</string>
     <string name="loading_data_track">Cargando información de canción…</string>
     <string name="type_your_song_and_press_search">Escribe la canción a buscar.</string>
-    <string name="internet_connection_restored">Conexión reestablecida.</string>
     <string name="cannot_play_track">El reproductor interno no pudo reproducir la canción, usa uno externo.</string>
     <string name="attention">Atención</string>
-    <string name="cannot_read_file">No se puede leer este archivo.</string>
     <string name="changes_applied">Cambios aplicados.</string>
     <string name="changes_partially_applied">Se aplicaron las etiquetas pero no se pudo renombrar el archivo.</string>
     <string name="title_edit_track">Editar etiquetas</string>
@@ -328,24 +277,12 @@
     <string name="new_name_empty">Se requiere el nuevo nombre.</string>
     <string name="api_connected">Se ha conectado al servicio de reconocimiento.</string>
     <string name="identification_error">Error de identificación, intentalo de nuevo.</string>
-    <string name="enable_dark_mode">Modo oscuro</string>
-    <string name="title_activity_settings2">Settings</string>
 
     <!-- Preference Titles -->
-    <string name="messages_header">Messages</string>
-    <string name="sync_header">Sync</string>
 
     <!-- Messages Preferences -->
-    <string name="signature_title">Your signature</string>
-    <string name="reply_title">Default reply action</string>
 
     <!-- Sync Preferences -->
-    <string name="sync_title">Sync email periodically</string>
-    <string name="attachment_title">Download incoming attachments</string>
-    <string name="attachment_summary_on">Automatically download attachments for incoming emails
-    </string>
-    <string name="attachment_summary_off">Only download attachments when manually requested</string>
-    <string name="title_activity_preferences">Configuración</string>
     <string name="contact">Contacto</string>
     <string name="jaudio_credits">JAudioTagger</string>
     <string name="drawer">Drawer</string>

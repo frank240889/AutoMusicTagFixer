@@ -39,11 +39,22 @@ public class BindingUtils {
                     @Override
                     public boolean onResourceReady(Bitmap resource, Object model, Target<Bitmap> target, DataSource dataSource, boolean isFirstResource) {
                         if (resource != null) {
-                            Palette p = Palette.from(resource).generate();
-                            int colorPalette = p.getDominantColor(ContextCompat.getColor(view.getContext(),
-                                    R.color.primaryColor));
-                            ((View)view.getParent().getParent()).setBackgroundColor(colorPalette);
+                            Palette.from(resource).generate(new Palette.PaletteAsyncListener() {
+                                int colorPalette;
+                                @Override
+                                public void onGenerated(@Nullable Palette palette) {
+                                    if(palette != null) {
+                                        colorPalette = palette.getDominantColor(ContextCompat.getColor(view.getContext(),
+                                                R.color.primaryColor));
+                                    }
+                                    else {
+                                        colorPalette = ContextCompat.getColor(view.getContext(),
+                                                R.color.primaryColor);
+                                    }
 
+                                    ((View)view.getParent().getParent()).setBackgroundColor(colorPalette);
+                                }
+                            });
                         }
                         return false;
                     }

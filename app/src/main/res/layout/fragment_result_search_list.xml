@@ -9,14 +9,17 @@
     android:id="@+id/root_container">
 
     <com.google.android.material.appbar.AppBarLayout
-        android:id="@+id/found_main_AppBarLayout"
+        android:id="@+id/results_app_bar_layout"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:layout_margin="8dp"
+        android:background="@drawable/bg_toolbar">
 
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
-            android:layout_height="?android:attr/actionBarSize">
+            android:layout_height="?android:attr/actionBarSize"
+            android:background="@drawable/bg_toolbar">
             <com.google.android.material.textfield.TextInputEditText
                 android:layout_marginStart="4dp"
                 android:layout_marginEnd="8dp"
@@ -26,7 +29,7 @@
                 android:maxLines="1"
                 android:singleLine="true"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"/>
         </com.google.android.material.appbar.MaterialToolbar>
 
     </com.google.android.material.appbar.AppBarLayout>

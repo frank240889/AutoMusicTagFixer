@@ -1814,7 +1814,7 @@ public class AudioTagger {
          * @return sanitized string
          */
         public static String sanitizeString(String dirtyString) {
-            return dirtyString.replaceAll("[^\\w\\s()&_\\-\\]\\[\'#.:$]", "");
+            return dirtyString.replaceAll("[^\\w\\s]", "");
         }
 
         /**

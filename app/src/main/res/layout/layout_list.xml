@@ -11,12 +11,15 @@
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/app_bar_layout_list"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:layout_margin="8dp"
+        android:background="@drawable/bg_toolbar">
 
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
-            android:layout_height="?android:attr/actionBarSize" />
+            android:layout_height="?android:attr/actionBarSize"
+            android:background="@drawable/bg_toolbar"/>
     </com.google.android.material.appbar.AppBarLayout>
     <TextView
         android:id="@+id/message"

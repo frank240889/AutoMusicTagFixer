@@ -13,6 +13,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:fitsSystemWindows="true"
+        android:clickable="true"
         android:background="@color/primaryBackground"
         tools:showIn="@layout/activity_track_details">
         <com.google.android.material.appbar.AppBarLayout
@@ -26,7 +27,8 @@
                 android:layout_height="match_parent"
                 android:fitsSystemWindows="true"
                 app:layout_collapseMode="parallax"
-                app:layout_scrollFlags="scroll|exitUntilCollapsed">
+                app:layout_scrollFlags="scroll|exitUntilCollapsed"
+                android:background="@drawable/bg_toolbar">
 
                     <androidx.constraintlayout.widget.ConstraintLayout
                         android:id="@+id/card_container_cover"
@@ -90,7 +92,9 @@
                     android:id="@+id/toolbar"
                     android:layout_width="match_parent"
                     android:layout_height="?android:attr/actionBarSize"
-                    app:layout_collapseMode="pin">
+                    app:layout_collapseMode="pin"
+                    android:layout_margin="8dp"
+                    android:background="@drawable/bg_toolbar">
 
                 </com.google.android.material.appbar.MaterialToolbar>
 
