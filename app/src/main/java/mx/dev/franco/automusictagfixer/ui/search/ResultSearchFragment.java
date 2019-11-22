@@ -288,6 +288,7 @@ public class ResultSearchFragment extends BaseViewModelFragment<SearchListViewMo
         ((MainActivity)getActivity()).mActionBar.setDefaultDisplayHomeAsUpEnabled(false);
         ((MainActivity)getActivity()).mActionBar.setHomeButtonEnabled(true);
         ((MainActivity)getActivity()).toggle.setDrawerIndicatorEnabled(true);
+        ((MainActivity)getActivity()).mDrawer.addDrawerListener(((MainActivity)getActivity()).toggle);
         ((MainActivity)getActivity()).toggle.syncState();
         ((MainActivity)getActivity()).mSearchBox.setVisibility(View.GONE);
         ((MainActivity)getActivity()).mSearchBox.setOnEditorActionListener(null);
