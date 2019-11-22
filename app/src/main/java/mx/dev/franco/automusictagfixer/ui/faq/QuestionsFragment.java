@@ -1,24 +1,22 @@
 package mx.dev.franco.automusictagfixer.ui.faq;
 
-import android.graphics.Outline;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewOutlineProvider;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import com.google.android.material.appbar.AppBarLayout;
-import com.google.android.material.appbar.MaterialToolbar;
+
 import java.util.ArrayList;
 import java.util.List;
+
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.ui.BaseFragment;
 import mx.dev.franco.automusictagfixer.ui.MainActivity;
@@ -28,9 +26,6 @@ public class QuestionsFragment extends BaseFragment implements FaqAdapter.OnItem
     private List<QuestionItem> mQuestionItems;
     private FaqAdapter mFaqAdapter;
     private RecyclerView mRecyclerView;
-    private AppBarLayout mAppBarLayout;
-    private MaterialToolbar mToolbar;
-
 
     public QuestionsFragment(){}
 
@@ -42,31 +37,15 @@ public class QuestionsFragment extends BaseFragment implements FaqAdapter.OnItem
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         setHasOptionsMenu(true);
-        return inflater.inflate(R.layout.activity_questions, container, false);
+        return inflater.inflate(R.layout.fragment_questions, container, false);
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        //Set an action bar
-        mToolbar = view.findViewById(R.id.toolbar);
         mQuestionItems = new ArrayList<>();
         String[] questions = getResources().getStringArray(R.array.questions);
 
         String[] answers = getResources().getStringArray(R.array.answers);
-
-        mAppBarLayout = view.findViewById(R.id.questions_app_bar);
-        mAppBarLayout.setOutlineProvider(new ViewOutlineProvider() {
-            @Override
-            public void getOutline(View view, Outline outline) {
-                Drawable background = view.getBackground();
-                if (background != null) {
-                    background.getOutline(outline);
-                } else {
-                    outline.setRect(0, 0, view.getWidth(), view.getHeight());
-                    outline.setAlpha(0.0f);
-                }
-            }
-        });
 
         mRecyclerView = view.findViewById(R.id.questions_recyclerview);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
@@ -88,12 +67,12 @@ public class QuestionsFragment extends BaseFragment implements FaqAdapter.OnItem
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        ((MainActivity)getActivity()).setSupportActionBar(mToolbar);
+        //((MainActivity)getActivity()).setSupportActionBar(mToolbar);
         //mToolbar.setNavigationOnClickListener(v -> getActivity().onBackPressed());
 
         //Get action bar from toolbar
         //((MainActivity)getActivity()).getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        ((MainActivity)getActivity()).getSupportActionBar().setTitle(getString(R.string.faq));
+        ((MainActivity)getActivity()).mActionBar.setTitle(getString(R.string.faq));
         getActivity().invalidateOptionsMenu();
     }
 
@@ -112,7 +91,9 @@ public class QuestionsFragment extends BaseFragment implements FaqAdapter.OnItem
     }
 
     @Override
-    public void onBackPressed() {}
+    public void onBackPressed() {
+        getActivity().getSupportFragmentManager().popBackStack();
+    }
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {

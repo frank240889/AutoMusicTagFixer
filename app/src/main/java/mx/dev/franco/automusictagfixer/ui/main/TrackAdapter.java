@@ -67,7 +67,7 @@ public class TrackAdapter extends RecyclerView.Adapter<AudioItemHolder> implemen
     @Override
     public AudioItemHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View itemView = LayoutInflater.from(parent.getContext()).
-                inflate(R.layout.item_list, parent, false);
+                inflate(R.layout.main_item, parent, false);
         return new AudioItemHolder(itemView, mListener);
     }
 

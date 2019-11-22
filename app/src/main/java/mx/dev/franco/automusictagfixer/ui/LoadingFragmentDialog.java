@@ -22,7 +22,7 @@ public class LoadingFragmentDialog extends BaseRoundedBottomSheetDialogFragment 
 
     public static LoadingFragmentDialog newInstance(boolean cancelable) {
         Bundle bundle = new Bundle();
-        bundle.putInt(LAYOUT_ID, R.layout.progress_layout);
+        bundle.putInt(LAYOUT_ID, R.layout.layout_progress);
         LoadingFragmentDialog loadingFragmentDialog = new LoadingFragmentDialog();
         loadingFragmentDialog.setArguments(bundle);
         return loadingFragmentDialog;

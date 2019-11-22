@@ -39,7 +39,7 @@ public class ManualCorrectionDialogFragment extends BaseRoundedBottomSheetDialog
     ManualCorrectionDialogFragment manualCorrectionDialogFragment = new ManualCorrectionDialogFragment();
     Bundle bundle = new Bundle();
     bundle.putString(POSSIBLE_TITLE, title);
-    bundle.putInt(LAYOUT_ID, R.layout.rename_file_layout);
+    bundle.putInt(LAYOUT_ID, R.layout.layout_manual_track_id);
     manualCorrectionDialogFragment.setArguments(bundle);
     return manualCorrectionDialogFragment;
   }

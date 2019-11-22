@@ -6,8 +6,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
-import android.graphics.Outline;
-import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -17,28 +15,30 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewOutlineProvider;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
-import androidx.appcompat.app.ActionBar;
-import androidx.appcompat.app.ActionBarDrawerToggle;
-import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
-import com.google.android.material.appbar.AppBarLayout;
+
 import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
+
 import java.util.List;
 import java.util.Objects;
+
 import javax.inject.Inject;
+
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.interfaces.LongRunningTaskListener;
 import mx.dev.franco.automusictagfixer.interfaces.ProcessingListener;
@@ -74,10 +74,10 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
     private RecyclerView mRecyclerView;
     private TrackAdapter mAdapter;
     private ListViewModel mListViewModel;
-    private ActionBar mActionBar;
+    //private ActionBar mActionBar;
     private Menu mMenu;
-    private AppBarLayout mAppBarLayout;
-    private Toolbar mToolbar;
+    //private AppBarLayout mAppBarLayout;
+    //private Toolbar mToolbar;
     private ExtendedFloatingActionButton mStartTaskFab;
     private FloatingActionButton mStopTaskFab;
     private List<Track> mCurrentTracks;
@@ -125,11 +125,6 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
         mListViewModel.observeInformativeMessage().observe(this, this::onMessage);
         mListViewModel.observeOnSortTracks().observe(this, this::onSorted);
         mListViewModel.observeOnSdPresent().observe(this, this::onSdPresent);
-
-        //For Android Marshmallow and Lollipop, there is no need to request permissions
-        //at runtime.
-        if(Build.VERSION.SDK_INT < Build.VERSION_CODES.M)
-            mListViewModel.fetchTracks();
     }
 
     private void updateToolbar(List<Track> tracks) {
@@ -152,8 +147,8 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
                 mStartTaskFab.hide();
                 //mStopTaskFab.show();
             }
-            mToolbar.setTitle(tracks.size() + " " +getString(R.string.tracks));
-            mActionBar.setTitle(tracks.size() + " " +getString(R.string.tracks));
+            ((MainActivity)getActivity()).mMainToolbar.setTitle(tracks.size() + " " +getString(R.string.tracks));
+            ((MainActivity)getActivity()).mActionBar.setTitle(tracks.size() + " " +getString(R.string.tracks));
             mMessage.setVisibility(View.GONE);
         }
     }
@@ -161,8 +156,8 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-
-        return inflater.inflate(R.layout.layout_list, container, false);
+        setHasOptionsMenu(true);
+        return inflater.inflate(R.layout.fragment_main, container, false);
     }
 
     @Override
@@ -170,26 +165,12 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
         mRecyclerView = view.findViewById(R.id.tracks_recycler_view);
         mSwipeRefreshLayout = view.findViewById(R.id.refresh_layout);
         mMessage = view.findViewById(R.id.message);
-        mAppBarLayout = view.findViewById(R.id.app_bar_layout_list);
-        mAppBarLayout.setOutlineProvider(new ViewOutlineProvider() {
-            @Override
-            public void getOutline(View view, Outline outline) {
-                Drawable background = view.getBackground();
-                if (background != null) {
-                    background.getOutline(outline);
-                } else {
-                    outline.setRect(0, 0, view.getWidth(), view.getHeight());
-                    outline.setAlpha(0.0f);
-                }
-            }
-        });
         mStartTaskFab = view.findViewById(R.id.fab_start_stop);
         //mStopTaskFab = view.findViewById(R.id.fab_stop);
         mStartTaskFab.setOnClickListener(v -> startCorrection(-1));
         //mStopTaskFab.setOnClickListener(v -> stopCorrection());
         mStartTaskFab.hide();
         //mStopTaskFab.hide();
-        mToolbar = view.findViewById(R.id.toolbar);
 
         //attach adapter recyclerview
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
@@ -218,8 +199,6 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
         mSwipeRefreshLayout.setProgressBackgroundColorSchemeColor(getActivity().
                 getResources().getColor(R.color.progressSwipeRefreshLayoutBackgroundTint));
 
-        setHasOptionsMenu(true);
-
         boolean hasPermission = ContextCompat.
                 checkSelfPermission(getActivity(), Manifest.permission.WRITE_EXTERNAL_STORAGE)
                 == PackageManager.PERMISSION_GRANTED;
@@ -241,18 +220,20 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
         mListViewModel.checkSdIsPresent();
     }
 
+
+
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        ((MainActivity)getActivity()).setSupportActionBar(mToolbar);
-        mActionBar = ((MainActivity)getActivity()).getSupportActionBar();
-        mActionBar.setDisplayHomeAsUpEnabled(true);
-        mActionBar = ((MainActivity)getActivity()).getSupportActionBar();
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(getActivity(),
-                ((MainActivity)getActivity()).mDrawer,
-                mToolbar,R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        ((MainActivity)getActivity()).mDrawer.addDrawerListener(toggle);
-        toggle.syncState();
+        //((MainActivity)getActivity()).mDrawer.addDrawerListener(((MainActivity)getActivity()).toggle);
+        //((MainActivity)getActivity()).mActionBar.setDefaultDisplayHomeAsUpEnabled(false);
+        //((MainActivity)getActivity()).toggle.syncState();
+        //pressing back from toolbar, close activity
+        //((MainActivity)getActivity()).mMainToolbar.setNavigationOnClickListener(null);
+        getActivity().invalidateOptionsMenu();
+        ((MainActivity)getActivity()).toggle.setDrawerIndicatorEnabled(true);
+        ((MainActivity)getActivity()).toggle.syncState();
+        ((MainActivity)getActivity()).mDrawer.addDrawerListener(((MainActivity)getActivity()).toggle);
         updateToolbar(mCurrentTracks);
     }
 
@@ -517,36 +498,80 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
         mListViewModel.onItemClick(viewWrapper);
     }
 
+    @Override
+    public Animation onCreateAnimation(int transit, boolean enter, int nextAnim) {
+        Animation animation = super.onCreateAnimation(transit, enter, nextAnim);
+
+        if (animation == null && nextAnim != 0) {
+            animation = AnimationUtils.loadAnimation(getActivity(), nextAnim);
+        }
+
+        if (animation != null && getView() != null) {
+            getView().setLayerType(View.LAYER_TYPE_HARDWARE, null);
+
+            animation.setAnimationListener(new Animation.AnimationListener() {
+                @Override
+                public void onAnimationStart(Animation animation) {
+
+                }
+
+                @Override
+                public void onAnimationEnd(Animation animation) {
+                    //For Android Marshmallow and Lollipop, there is no need to request permissions
+                    //at runtime.
+                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M)
+                        mListViewModel.fetchTracks();
+                }
+
+                @Override
+                public void onAnimationRepeat(Animation animation) {
+
+                }
+            });
+        }
+        else {
+            //For Android Marshmallow and Lollipop, there is no need to request permissions
+            //at runtime.
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M)
+                mListViewModel.fetchTracks();
+        }
+        return animation;
+    }
+
     /**
      * Opens new activity showing up the details from current audio item list pressed
      * @param viewWrapper a wrapper object containing the track, view , and mode of correction.
      */
     private void openDetails(ViewWrapper viewWrapper){
         mRecyclerView.stopScroll();
-
-        TrackDetailFragment trackDetailFragment;
-
         ((MainActivity)getActivity()).mDrawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
-        trackDetailFragment = (TrackDetailFragment) getActivity().
-                getSupportFragmentManager().findFragmentByTag(TrackDetailFragment.class.getName());
-        if(trackDetailFragment != null){
-            trackDetailFragment.loadTrackData(AndroidUtils.getBundle(viewWrapper.track.getMediaStoreId(),
-                    viewWrapper.mode));
-        }
-        else {
-            trackDetailFragment = TrackDetailFragment.newInstance(
-                    viewWrapper.track.getMediaStoreId(),
-                    viewWrapper.mode);
-            getActivity().getSupportFragmentManager().beginTransaction().
-                    setCustomAnimations(R.anim.slide_in_right,
-                            R.anim.slide_out_left, R.anim.slide_in_left,
-                            R.anim.slide_out_right).
-                    addToBackStack(trackDetailFragment.getTagName()).
-                    add(R.id.container_fragments,
-                            trackDetailFragment, trackDetailFragment.getTagName()).
-                    commit();
-        }
-
+        final TrackDetailFragment[] trackDetailFragment = new TrackDetailFragment[1];
+        ((MainActivity)getActivity()).mActionBar.hide();
+        ((MainActivity)getActivity()).mMainAppbar.addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
+            @Override
+            public void onLayoutChange(View v, int left, int top, int right, int bottom, int oldLeft, int oldTop, int oldRight, int oldBottom) {
+                ((MainActivity)getActivity()).mMainAppbar.removeOnLayoutChangeListener(this);
+                trackDetailFragment[0] = (TrackDetailFragment) getActivity().
+                        getSupportFragmentManager().findFragmentByTag(TrackDetailFragment.class.getName());
+                if(trackDetailFragment[0] != null){
+                    trackDetailFragment[0].loadTrackData(AndroidUtils.getBundle(viewWrapper.track.getMediaStoreId(),
+                            viewWrapper.mode));
+                }
+                else {
+                    trackDetailFragment[0] = TrackDetailFragment.newInstance(
+                            viewWrapper.track.getMediaStoreId(),
+                            viewWrapper.mode);
+                    getActivity().getSupportFragmentManager().beginTransaction().
+                            setCustomAnimations(R.anim.slide_in_right,
+                                    R.anim.slide_out_left, R.anim.slide_in_left,
+                                    R.anim.slide_out_right).
+                            addToBackStack(trackDetailFragment[0].getTagName()).
+                            add(R.id.container_fragments,
+                                    trackDetailFragment[0], trackDetailFragment[0].getTagName()).
+                            commit();
+                }
+            }
+        });
     }
 
     private void stopCorrection() {
@@ -654,6 +679,12 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
         mStartTaskFab.show();
         //mStopTaskFab.setEnabled(true);
         //mStopTaskFab.hide();
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        ((MainActivity)getActivity()).mDrawer.removeDrawerListener(((MainActivity)getActivity()).toggle);
     }
 
     private void onMessage(Integer integer) {

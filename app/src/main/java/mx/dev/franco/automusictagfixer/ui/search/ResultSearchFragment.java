@@ -1,15 +1,12 @@
 package mx.dev.franco.automusictagfixer.ui.search;
 
 import android.content.Context;
-import android.graphics.Outline;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewOutlineProvider;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.inputmethod.EditorInfo;
@@ -21,7 +18,6 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.Toolbar;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.lifecycle.ViewModelProviders;
@@ -38,6 +34,7 @@ import javax.inject.Inject;
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.ui.BaseViewModelFragment;
+import mx.dev.franco.automusictagfixer.ui.InformativeFragmentDialog;
 import mx.dev.franco.automusictagfixer.ui.MainActivity;
 import mx.dev.franco.automusictagfixer.ui.main.ViewWrapper;
 import mx.dev.franco.automusictagfixer.ui.trackdetail.TrackDetailFragment;
@@ -101,6 +98,7 @@ public class ResultSearchFragment extends BaseViewModelFragment<SearchListViewMo
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        setHasOptionsMenu(true);
         return inflater.inflate(R.layout.fragment_result_search_list, container, false);
     }
 
@@ -126,30 +124,16 @@ public class ResultSearchFragment extends BaseViewModelFragment<SearchListViewMo
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
 
-        mToolbar = view.findViewById(R.id.toolbar);
-        mSearchBox = view.findViewById(R.id.search_box);
-        mSearchBox.setOnEditorActionListener((v, actionId, event) -> {
+        //mToolbar = view.findViewById(R.id.toolbar);
+        //mSearchBox = view.findViewById(R.id.search_box);
+        ((MainActivity)getActivity()).mSearchBox.setOnEditorActionListener((v, actionId, event) -> {
             if(actionId == EditorInfo.IME_ACTION_SEARCH || actionId == EditorInfo.IME_ACTION_UNSPECIFIED){
-                mQuery = mSearchBox.getText().toString();
+                mQuery = ((MainActivity)getActivity()).mSearchBox.getText().toString();
                 mSearchListViewModel.search(mQuery);
                 hideKeyboard();
             }
 
             return false;
-        });
-
-        mAppBarLayout = view.findViewById(R.id.results_app_bar_layout);
-        mAppBarLayout.setOutlineProvider(new ViewOutlineProvider() {
-            @Override
-            public void getOutline(View view, Outline outline) {
-                Drawable background = view.getBackground();
-                if (background != null) {
-                    background.getOutline(outline);
-                } else {
-                    outline.setRect(0, 0, view.getWidth(), view.getHeight());
-                    outline.setAlpha(0.0f);
-                }
-            }
         });
 
         //attach adapter to our recyclerview
@@ -163,32 +147,31 @@ public class ResultSearchFragment extends BaseViewModelFragment<SearchListViewMo
         mRecyclerView.setHapticFeedbackEnabled(true);
         mRecyclerView.setSoundEffectsEnabled(true);
         mRecyclerView.setAdapter(mAdapter);
-        mSearchBox.requestFocus();
+        ((MainActivity)getActivity()).mSearchBox.setVisibility(View.VISIBLE);
+        ((MainActivity)getActivity()).mSearchBox.requestFocus();
         InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
         assert imm != null;
-        imm.showSoftInput(mSearchBox, InputMethodManager.SHOW_IMPLICIT);
+        imm.showSoftInput(((MainActivity)getActivity()).mSearchBox, InputMethodManager.SHOW_IMPLICIT);
     }
 
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        ((MainActivity)getActivity()).setSupportActionBar(mToolbar);
-        mActionBar = ((MainActivity)getActivity()).getSupportActionBar();
-        mActionBar.setDisplayHomeAsUpEnabled(true);
-        //pressing back from toolbar, close activity
-        mToolbar.setNavigationOnClickListener(v -> callSuperOnBackPressed());
         getActivity().invalidateOptionsMenu();
+        ((MainActivity)getActivity()).mActionBar.setDisplayHomeAsUpEnabled(true);
+        ((MainActivity)getActivity()).mActionBar.setDefaultDisplayHomeAsUpEnabled(true);
+        ((MainActivity)getActivity()).toggle.setDrawerIndicatorEnabled(false);
+        ((MainActivity)getActivity()).toggle.syncState();
+        //pressing back from toolbar, close activity
+        ((MainActivity)getActivity()).mMainToolbar.setNavigationOnClickListener(v -> callSuperOnBackPressed());
     }
 
     private void showInaccessibleTrack(ViewWrapper viewWrapper) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-        builder.setMessage(String.format(getString(R.string.file_error), viewWrapper.track.getPath())).
-                setPositiveButton(R.string.remove_from_list, (dialog, which) -> {
-                    mSearchListViewModel.removeTrack(viewWrapper.track);
-                });
-
-        AlertDialog alertDialog = builder.create();
-        alertDialog.show();
+        String content = String.format(getString(R.string.file_error), viewWrapper.track.getPath());
+        InformativeFragmentDialog informativeFragmentDialog = InformativeFragmentDialog.
+                newInstance(getString(R.string.attention), content, getString(R.string.remove_from_list), null);
+        informativeFragmentDialog.setOnClickBasicFragmentDialogListener(() -> mSearchListViewModel.removeTrack(viewWrapper.track));
+        informativeFragmentDialog.show(getChildFragmentManager(), informativeFragmentDialog.getTag());
     }
 
     private void openDetailTrack(ViewWrapper viewWrapper) {
@@ -278,9 +261,11 @@ public class ResultSearchFragment extends BaseViewModelFragment<SearchListViewMo
         mAdapter = null;
     }
 
+
+
     @Override
     public void onBackPressed() {
-        callSuperOnBackPressed();
+        getActivity().getSupportFragmentManager().popBackStack();
     }
 
     @Override
@@ -300,6 +285,13 @@ public class ResultSearchFragment extends BaseViewModelFragment<SearchListViewMo
     @Override
     public void onDetach() {
         super.onDetach();
+        ((MainActivity)getActivity()).mActionBar.setDefaultDisplayHomeAsUpEnabled(false);
+        ((MainActivity)getActivity()).mActionBar.setHomeButtonEnabled(true);
+        ((MainActivity)getActivity()).toggle.setDrawerIndicatorEnabled(true);
+        ((MainActivity)getActivity()).toggle.syncState();
+        ((MainActivity)getActivity()).mSearchBox.setVisibility(View.GONE);
+        ((MainActivity)getActivity()).mSearchBox.setOnEditorActionListener(null);
+        hideKeyboard();
         ((MainActivity)getActivity()).mDrawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
     }
 }

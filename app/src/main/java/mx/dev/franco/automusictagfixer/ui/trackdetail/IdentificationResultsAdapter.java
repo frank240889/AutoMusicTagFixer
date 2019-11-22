@@ -25,7 +25,7 @@ public class IdentificationResultsAdapter extends RecyclerView.Adapter<ResultIte
     @Override
     public ResultItemHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext()).
-                inflate(R.layout.result_item_list, parent, false);
+                inflate(R.layout.result_identification_item, parent, false);
 
         return new ResultItemHolder(view);
     }

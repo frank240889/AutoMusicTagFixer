@@ -7,12 +7,43 @@
     android:layout_height="match_parent"
     android:fitsSystemWindows="false"
     tools:openDrawer="start">
-
-    <FrameLayout
-        android:id="@+id/container_fragments"
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        android:fitsSystemWindows="true"
+        android:id="@+id/root_container"
+        android:background="@color/primaryBackground">
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/main_app_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
+        android:animateLayoutChanges="true">
 
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/main_toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?android:attr/actionBarSize">
+            <com.google.android.material.textfield.TextInputEditText
+                android:layout_marginStart="4dp"
+                android:layout_marginEnd="8dp"
+                android:hint="@string/search_song"
+                android:id="@+id/search_box"
+                android:imeOptions="actionSearch"
+                android:maxLines="1"
+                android:singleLine="true"
+                android:visibility="gone"
+                tools:visibility="visible"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"/>
+        </com.google.android.material.appbar.MaterialToolbar>
+    </com.google.android.material.appbar.AppBarLayout>
+        <FrameLayout
+            android:id="@+id/container_fragments"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior"/>
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
     <com.google.android.material.navigation.NavigationView
         android:layout_marginTop="24dp"
         android:id="@+id/nav_view"

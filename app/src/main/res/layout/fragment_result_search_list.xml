@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -7,32 +7,6 @@
     android:fitsSystemWindows="true"
     android:background="@color/primaryBackground"
     android:id="@+id/root_container">
-
-    <com.google.android.material.appbar.AppBarLayout
-        android:id="@+id/results_app_bar_layout"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="8dp"
-        android:background="@drawable/bg_toolbar">
-
-        <com.google.android.material.appbar.MaterialToolbar
-            android:id="@+id/toolbar"
-            android:layout_width="match_parent"
-            android:layout_height="?android:attr/actionBarSize"
-            android:background="@drawable/bg_toolbar">
-            <com.google.android.material.textfield.TextInputEditText
-                android:layout_marginStart="4dp"
-                android:layout_marginEnd="8dp"
-                android:hint="@string/search_song"
-                android:id="@+id/search_box"
-                android:imeOptions="actionSearch"
-                android:maxLines="1"
-                android:singleLine="true"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"/>
-        </com.google.android.material.appbar.MaterialToolbar>
-
-    </com.google.android.material.appbar.AppBarLayout>
 
     <TextView
         android:id="@+id/found_message"
@@ -56,6 +30,6 @@
         android:scrollbarStyle="outsideOverlay"
         android:scrollbarThumbVertical="@drawable/custom_scrollbar_thumb"
         android:scrollbars="vertical"
-        tools:listitem="@layout/found_item_list"/>
+        tools:listitem="@layout/result_search_item"/>
 
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+</FrameLayout>

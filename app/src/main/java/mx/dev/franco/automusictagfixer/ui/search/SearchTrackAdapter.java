@@ -49,7 +49,7 @@ public class SearchTrackAdapter extends RecyclerView.Adapter<FoundItemHolder> im
     @Override
     public FoundItemHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View itemView = LayoutInflater.from(parent.getContext()).
-                inflate(R.layout.found_item_list, parent, false);
+                inflate(R.layout.result_search_item, parent, false);
         return new FoundItemHolder(itemView, mListener);
     }
 

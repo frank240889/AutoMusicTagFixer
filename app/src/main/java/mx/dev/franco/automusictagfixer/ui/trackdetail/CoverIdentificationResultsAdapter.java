@@ -30,7 +30,7 @@ public class CoverIdentificationResultsAdapter extends RecyclerView.Adapter<Cove
     @Override
     public CoverResultItemHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext()).
-                inflate(R.layout.cover_result_item_list, parent, false);
+                inflate(R.layout.cover_result_identification_item, parent, false);
 
         return new CoverResultItemHolder(view);
     }

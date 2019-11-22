@@ -35,7 +35,7 @@
         android:orientation="horizontal"
         tools:itemCount="5"
         tools:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-        tools:listitem="@layout/cover_result_item_list" />
+        tools:listitem="@layout/cover_result_identification_item" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/container_cover_results"
