@@ -19,6 +19,7 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
@@ -28,12 +29,16 @@ import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+
 import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
+
 import java.util.List;
 import java.util.Objects;
+
 import javax.inject.Inject;
+
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.interfaces.LongRunningTaskListener;
 import mx.dev.franco.automusictagfixer.interfaces.ProcessingListener;
@@ -81,6 +86,7 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
     ServiceUtils serviceUtils;
     @Inject
     AbstractSharedPreferences mAbstractSharedPreferences;
+    private int mVerticalOffset = 0;
 
     public static MainFragment newInstance() {
         return new MainFragment();
@@ -91,6 +97,7 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setHasOptionsMenu(true);
         mAdapter = new TrackAdapter(this);
         mListViewModel = getViewModel();
 
@@ -120,6 +127,14 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
         mListViewModel.observeInformativeMessage().observe(this, this::onMessage);
         mListViewModel.observeOnSortTracks().observe(this, this::onSorted);
         mListViewModel.observeOnSdPresent().observe(this, this::onSdPresent);
+
+        getChildFragmentManager().addOnBackStackChangedListener(this::onBackStackChangeListener);
+    }
+
+    private void onBackStackChangeListener() {
+        if(getChildFragmentManager().getBackStackEntryCount() == 0) {
+            updateToolbar(mCurrentTracks);
+        }
     }
 
     private void updateToolbar(List<Track> tracks) {
@@ -151,16 +166,16 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        setHasOptionsMenu(true);
         return inflater.inflate(R.layout.fragment_main, container, false);
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        mVerticalOffset = ((MainActivity)getActivity()).mMainAppbar.getHeight();
         mRecyclerView = view.findViewById(R.id.tracks_recycler_view);
         mSwipeRefreshLayout = view.findViewById(R.id.refresh_layout);
         mMessage = view.findViewById(R.id.message);
-        mStartTaskFab = view.findViewById(R.id.fab_start_stop);
+        mStartTaskFab = ((MainActivity)getActivity()).mStartTaskFab;//view.findViewById(R.id.fab_start_stop);
         //mStopTaskFab = view.findViewById(R.id.fab_stop);
         mStartTaskFab.setOnClickListener(v -> startCorrection(-1));
         //mStopTaskFab.setOnClickListener(v -> stopCorrection());
@@ -251,18 +266,20 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
                 break;
             case R.id.action_search:
                     ResultSearchFragment resultSearchListFragment = (ResultSearchFragment)
-                            getActivity().getSupportFragmentManager().findFragmentByTag(ResultSearchFragment.class.getName());
+                            getChildFragmentManager().findFragmentByTag(ResultSearchFragment.class.getName());
 
                     if(resultSearchListFragment == null) {
                         resultSearchListFragment = ResultSearchFragment.newInstance();
                     }
                     ((MainActivity)getActivity()).mDrawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
-                    getFragmentManager().beginTransaction().
+                    mStartTaskFab.hide();
+
+                    getChildFragmentManager().beginTransaction().
                             setCustomAnimations(R.anim.slide_in_right,
                                     R.anim.slide_out_left, R.anim.slide_in_left,
                                     R.anim.slide_out_right).
                             addToBackStack(ResultSearchFragment.class.getName()).
-                            add(R.id.container_fragments, resultSearchListFragment,
+                            add(R.id.child_fragment_container, resultSearchListFragment,
                                     ResultSearchFragment.class.getName()).
                             commit();
 
@@ -540,33 +557,30 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
     private void openDetails(ViewWrapper viewWrapper){
         mRecyclerView.stopScroll();
         ((MainActivity)getActivity()).mDrawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
+        mStartTaskFab.hide();
+        openFragment(viewWrapper);
+    }
+
+    private void openFragment(ViewWrapper viewWrapper){
         final TrackDetailFragment[] trackDetailFragment = new TrackDetailFragment[1];
-        ((MainActivity)getActivity()).mActionBar.hide();
-        ((MainActivity)getActivity()).mMainAppbar.addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
-            @Override
-            public void onLayoutChange(View v, int left, int top, int right, int bottom, int oldLeft, int oldTop, int oldRight, int oldBottom) {
-                ((MainActivity)getActivity()).mMainAppbar.removeOnLayoutChangeListener(this);
-                trackDetailFragment[0] = (TrackDetailFragment) getActivity().
-                        getSupportFragmentManager().findFragmentByTag(TrackDetailFragment.class.getName());
-                if(trackDetailFragment[0] != null){
-                    trackDetailFragment[0].loadTrackData(AndroidUtils.getBundle(viewWrapper.track.getMediaStoreId(),
-                            viewWrapper.mode));
-                }
-                else {
-                    trackDetailFragment[0] = TrackDetailFragment.newInstance(
-                            viewWrapper.track.getMediaStoreId(),
-                            viewWrapper.mode);
-                    getActivity().getSupportFragmentManager().beginTransaction().
-                            setCustomAnimations(R.anim.slide_in_right,
-                                    R.anim.slide_out_left, R.anim.slide_in_left,
-                                    R.anim.slide_out_right).
-                            addToBackStack(trackDetailFragment[0].getTagName()).
-                            add(R.id.container_fragments,
-                                    trackDetailFragment[0], trackDetailFragment[0].getTagName()).
-                            commit();
-                }
-            }
-        });
+        trackDetailFragment[0] = (TrackDetailFragment) getChildFragmentManager()
+                .findFragmentByTag(TrackDetailFragment.class.getName());
+        if (trackDetailFragment[0] != null) {
+            trackDetailFragment[0].loadTrackData(AndroidUtils.getBundle(viewWrapper.track.getMediaStoreId(),
+                    viewWrapper.mode));
+        } else {
+            trackDetailFragment[0] = TrackDetailFragment.newInstance(
+                    viewWrapper.track.getMediaStoreId(),
+                    viewWrapper.mode);
+            getChildFragmentManager().beginTransaction().
+                    setCustomAnimations(R.anim.slide_in_right,
+                            R.anim.slide_out_left, R.anim.slide_in_left,
+                            R.anim.slide_out_right).
+                    addToBackStack(trackDetailFragment[0].getTagName()).
+                    add(R.id.child_fragment_container,
+                            trackDetailFragment[0], trackDetailFragment[0].getTagName()).
+                    commit();
+        }
     }
 
     private void stopCorrection() {
@@ -640,11 +654,6 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
         //}
     }
 
-    @Override
-    public void onBackPressed() {
-        callSuperOnBackPressed();
-    }
-
     private void onCheckAll(Boolean checkAll) {
         if(!checkAll)
             mListViewModel.checkAllItems();
@@ -679,6 +688,7 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
     @Override
     public void onDetach() {
         super.onDetach();
+        getChildFragmentManager().removeOnBackStackChangedListener(this::onBackStackChangeListener);
         ((MainActivity)getActivity()).mDrawer.removeDrawerListener(((MainActivity)getActivity()).toggle);
     }
 

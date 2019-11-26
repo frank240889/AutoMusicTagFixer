@@ -30,8 +30,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+        app:layout_constraintTop_toTopOf="parent">
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/tracks_recycler_view"
@@ -44,15 +43,12 @@
             android:scrollbarStyle="outsideOverlay"
             android:scrollbarThumbVertical="@drawable/custom_scrollbar_thumb"
             android:scrollbars="vertical"
-            tools:listitem="@layout/main_item"/>
+            tools:listitem="@layout/main_item"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior"/>
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
-    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
-        android:id="@+id/fab_start_stop"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_margin="@dimen/fab_margin"
-        android:text="@string/title_identify_track"
-        app:icon="@drawable/ic_photo_filter_white_24px"/>
+    <FrameLayout
+        android:id="@+id/child_fragment_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
 </FrameLayout>

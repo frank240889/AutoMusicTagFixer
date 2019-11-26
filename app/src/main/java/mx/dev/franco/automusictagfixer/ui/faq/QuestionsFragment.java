@@ -91,11 +91,6 @@ public class QuestionsFragment extends BaseFragment implements FaqAdapter.OnItem
     }
 
     @Override
-    public void onBackPressed() {
-        getActivity().getSupportFragmentManager().popBackStack();
-    }
-
-    @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         menu.clear();
     }

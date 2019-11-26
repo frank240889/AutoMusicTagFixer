@@ -45,20 +45,6 @@ public class AboutFragment extends BaseFragment {
         MaterialButton drawerButton = view.findViewById(R.id.drawer_button);
         MaterialButton jaudiotaggerButton = view.findViewById(R.id.jaudio_tagger_button);
         MaterialButton contactButton = view.findViewById(R.id.bug_report_button);
-
-        /*mAppBarLayout = view.findViewById(R.id.app_bar);
-        mAppBarLayout.setOutlineProvider(new ViewOutlineProvider() {
-            @Override
-            public void getOutline(View view, Outline outline) {
-                Drawable background = view.getBackground();
-                if (background != null) {
-                    background.getOutline(outline);
-                } else {
-                    outline.setRect(0, 0, view.getWidth(), view.getHeight());
-                    outline.setAlpha(0.0f);
-                }
-            }
-        });*/
         //Set listener for UI elements
         contactButton.setOnClickListener(v -> AndroidUtils.openInExternalApp(Intent.ACTION_SENDTO, "mailto: dark.yellow.studios@gmail.com", getActivity()));
 
@@ -82,11 +68,6 @@ public class AboutFragment extends BaseFragment {
         toggle.syncState();*/
         ((MainActivity)getActivity()).mActionBar.setTitle(getString(R.string.about));
         getActivity().invalidateOptionsMenu();
-    }
-
-    @Override
-    public void onBackPressed() {
-        getActivity().getSupportFragmentManager().popBackStack();
     }
 
     @Override

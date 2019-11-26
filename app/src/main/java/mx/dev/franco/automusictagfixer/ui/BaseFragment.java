@@ -1,11 +1,6 @@
 package mx.dev.franco.automusictagfixer.ui;
 
-import android.content.Context;
-import android.os.Bundle;
-
 import androidx.fragment.app.Fragment;
-
-import mx.dev.franco.automusictagfixer.interfaces.OnBackPressedListener;
 
 /**
  * Base fragment that abstract the common functionality for fragments
@@ -13,8 +8,7 @@ import mx.dev.franco.automusictagfixer.interfaces.OnBackPressedListener;
  *
  * @author Franco Castillo
  */
-public abstract class BaseFragment extends Fragment implements
-        OnBackPressedListener {
+public abstract class BaseFragment extends Fragment {
 
     public static final String BASE_FRAGMENT_TAG = BaseFragment.class.getName();
     public static final int CROSS_FADE_DURATION = 200;
@@ -22,40 +16,6 @@ public abstract class BaseFragment extends Fragment implements
     public static final int INTENT_OPEN_GALLERY = 1;
     public static final int INTENT_GET_AND_UPDATE_FROM_GALLERY = 2;
     public static String TAG;
-    protected OnConfirmBackPressedListener mOnConfirmBackPressedListener;
-
-    /**
-     * Called when a fragment is first attached to its context.
-     * {@link #onCreate(Bundle)} will be called after this.
-     */
-    @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        if(context instanceof OnConfirmBackPressedListener)
-            mOnConfirmBackPressedListener = (OnConfirmBackPressedListener) context;
-    }
-
-    @Override
-    public void onDetach() {
-        super.onDetach();
-        mOnConfirmBackPressedListener = null;
-    }
-
-    /**
-     * Call super.onBackPressed of host Activity
-     */
-    protected void callSuperOnBackPressed(){
-        if(mOnConfirmBackPressedListener != null)
-            mOnConfirmBackPressedListener.callSuperOnBackPressed();
-    }
-
-    /**
-     * Interface to implement to communicate back press event from
-     * Fragment to its host Activity.
-     */
-    public interface OnConfirmBackPressedListener {
-        void callSuperOnBackPressed();
-    }
 
     public String getTagName() {
         return getClass().getName();

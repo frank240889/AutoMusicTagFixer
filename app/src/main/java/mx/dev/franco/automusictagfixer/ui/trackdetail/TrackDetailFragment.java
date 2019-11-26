@@ -7,6 +7,7 @@ import android.graphics.Bitmap;
 import android.graphics.ImageDecoder;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -22,6 +23,7 @@ import android.widget.EditText;
 import android.widget.PopupMenu;
 import android.widget.TextView;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
@@ -119,6 +121,7 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setHasOptionsMenu(true);
         Bundle bundle = getArguments();
         if(bundle != null)
             mViewModel.setInitialAction(
@@ -145,7 +148,23 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
         mViewModel.observeCoverSavingResult().observe(this, this::onActionableMessage);
         mViewModel.observeTrack().observe(this, track -> mPlayer.setPath(track.getPath()));
         mViewModel.observeLoadingMessage().observe(this, this::onLoadingMessage);
-        setHasOptionsMenu(true);
+
+        requireActivity().getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                if(mEditMode) {
+                    enableEditModeElements();
+                    showFabs();
+                    disableFields();
+                    enableAppBarLayout();
+                    removeErrorTags();
+                    mViewModel.restorePreviousValues();
+                }
+                else {
+                    getParentFragment().getChildFragmentManager().popBackStack();
+                }
+            }
+        });
     }
 
     private void onWritingResult(Message actionableMessage) {
@@ -212,6 +231,7 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
                 if (data != null){
                         Uri imageData = data.getData();
                         AndroidUtils.AsyncBitmapDecoder asyncBitmapDecoder = new AndroidUtils.AsyncBitmapDecoder();
+                        mFragmentTrackDetailBinding.appBarLayout.setExpanded(true, true);
                         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
                             ImageDecoder.Source source = ImageDecoder.
                                     createSource(getActivity().getApplicationContext().getContentResolver(), imageData);
@@ -256,6 +276,7 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
                 imageWrapper.height = bitmap.getHeight();
                 imageWrapper.bitmap = bitmap;
                 imageWrapper.requestCode = requestCode;
+
                 mViewModel.fastCoverChange(imageWrapper);
             }
 
@@ -280,6 +301,7 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
 
     @Override
     public void onDetach() {
+        ((MainActivity)getActivity()).mMainAppbar.setExpanded(true, true);
         super.onDetach();
         mPlayer.removeListeners();
         mViewModel.cancelIdentification();
@@ -335,8 +357,12 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
      * @param message The message to show.
      */
     private void onSuccessLoad(Message message) {
-        mFragmentTrackDetailBinding.toolbar.setNavigationOnClickListener(view ->
-                TrackDetailFragment.super.callSuperOnBackPressed());
+        mFragmentTrackDetailBinding.toolbar.setNavigationOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                requireActivity().onBackPressed();
+            }
+        });
         mFragmentTrackDetailBinding.
                 layoutContentDetailsTrack.
                 changeImageButton.setOnClickListener(v -> editCover(INTENT_OPEN_GALLERY));
@@ -555,24 +581,6 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
         //shrink toolbar to make it easy to user
         //focus in editing tags
         mFragmentTrackDetailBinding.appBarLayout.setExpanded(true);
-    }
-
-    /**
-     * Callback to handle correctly the onBackPressed callback from host activity.
-     */
-    @Override
-    public void onBackPressed(){
-        if(mEditMode) {
-            enableEditModeElements();
-            showFabs();
-            disableFields();
-            enableAppBarLayout();
-            removeErrorTags();
-            mViewModel.restorePreviousValues();
-        }
-        else {
-            callSuperOnBackPressed();
-        }
     }
 
     /**
@@ -817,7 +825,14 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
 
             @Override
             public void onAnimationEnd(Animation animation) {
-                loadTrackData(null);
+                ((MainActivity)getActivity()).mMainAppbar.setExpanded(false, true);
+                Handler handler = new Handler();
+                handler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        loadTrackData(null);
+                    }
+                },250);
             }
 
             @Override

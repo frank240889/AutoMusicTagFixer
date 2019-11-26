@@ -1,12 +1,5 @@
 package mx.dev.franco.automusictagfixer.ui;
 
-import static android.view.View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN;
-import static android.view.View.SYSTEM_UI_FLAG_LAYOUT_STABLE;
-import static mx.dev.franco.automusictagfixer.utilities.Constants.Actions.ACTION_BROADCAST_MESSAGE;
-import static mx.dev.franco.automusictagfixer.utilities.Constants.Actions.ACTION_COMPLETE_TASK;
-import static mx.dev.franco.automusictagfixer.utilities.Constants.Actions.ACTION_START_TASK;
-import static mx.dev.franco.automusictagfixer.utilities.Constants.Actions.START_PROCESSING_FOR;
-
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -19,8 +12,8 @@ import android.os.PersistableBundle;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
-import android.view.WindowManager;
 import android.widget.EditText;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.ActionBar;
@@ -30,17 +23,20 @@ import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+
 import com.google.android.material.appbar.AppBarLayout;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
+
+import javax.inject.Inject;
+
 import dagger.android.AndroidInjection;
 import dagger.android.AndroidInjector;
 import dagger.android.DispatchingAndroidInjector;
 import dagger.android.support.HasSupportFragmentInjector;
-import javax.inject.Inject;
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.interfaces.LongRunningTaskListener;
 import mx.dev.franco.automusictagfixer.interfaces.ProcessingListener;
@@ -53,9 +49,15 @@ import mx.dev.franco.automusictagfixer.ui.settings.SettingsActivity;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
 import mx.dev.franco.automusictagfixer.utilities.shared_preferences.AbstractSharedPreferences;
 
+import static android.view.View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN;
+import static android.view.View.SYSTEM_UI_FLAG_LAYOUT_STABLE;
+import static mx.dev.franco.automusictagfixer.utilities.Constants.Actions.ACTION_BROADCAST_MESSAGE;
+import static mx.dev.franco.automusictagfixer.utilities.Constants.Actions.ACTION_COMPLETE_TASK;
+import static mx.dev.franco.automusictagfixer.utilities.Constants.Actions.ACTION_START_TASK;
+import static mx.dev.franco.automusictagfixer.utilities.Constants.Actions.START_PROCESSING_FOR;
+
 public class MainActivity extends AppCompatActivity implements ResponseReceiver.OnResponse,
         NavigationView.OnNavigationItemSelectedListener,
-        BaseViewModelFragment.OnConfirmBackPressedListener,
     HasSupportFragmentInjector {
     public static String TAG = MainActivity.class.getName();
 
@@ -71,6 +73,7 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
     public ActionBar mActionBar;
     public EditText mSearchBox;
     public ActionBarDrawerToggle toggle;
+    public ExtendedFloatingActionButton mStartTaskFab;
     MainFragment listFragment;
     AboutFragment aboutFragment;
     QuestionsFragment questionsFragment;
@@ -78,24 +81,25 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
         AndroidInjection.inject(this);
-        super.onCreate(savedInstanceState);
-        //windows is the top level in the view hierarchy,
-        //it has a single Surface in which the contents of the window is rendered
-        //A Surface is an object holding pixels that are being composited to the screen.
         Window window = getWindow();
-        window.setFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS,
-                WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+        /*window.setFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS,
+                WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);*/
         window.requestFeature(SYSTEM_UI_FLAG_LAYOUT_STABLE|SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
         window.setAllowEnterTransitionOverlap(true);
         window.setAllowReturnTransitionOverlap(true);
         //window.requestFeature(Window.FEATURE_ACTION_MODE_OVERLAY);
         window.requestFeature(Window.FEATURE_CONTENT_TRANSITIONS);
+        super.onCreate(savedInstanceState);
+        //windows is the top level in the view hierarchy,
+        //it has a single Surface in which the contents of the window is rendered
+        //A Surface is an object holding pixels that are being composited to the screen.
         setContentView(R.layout.activity_main);
 
         mSearchBox = findViewById(R.id.search_box);
         mDrawer = findViewById(R.id.drawer_layout);
         mMainToolbar = findViewById(R.id.main_toolbar);
         mMainAppbar = findViewById(R.id.main_app_bar);
+        mStartTaskFab = findViewById(R.id.fab_start_stop);
         setSupportActionBar(mMainToolbar);
         mActionBar = getSupportActionBar();
         mActionBar.setShowHideAnimationEnabled(true);
@@ -161,6 +165,7 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
 
     private void addFragment(BaseFragment fragment) {
         getSupportFragmentManager().beginTransaction()
+                .setPrimaryNavigationFragment(fragment)
                 .replace(R.id.container_fragments, fragment, fragment.getTagName())
                 .setCustomAnimations(R.anim.fade_in,R.anim.fade_out)
                 .commit();
@@ -179,31 +184,6 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
      */
     //@Override
     public void onBackPressed() {
-        if (getSupportFragmentManager().getBackStackEntryCount() > 0 ){
-            int topFragmentIndex = getSupportFragmentManager().getBackStackEntryCount() - 1;
-            FragmentManager.BackStackEntry backStackEntry = getSupportFragmentManager().
-                    getBackStackEntryAt(topFragmentIndex);
-            String backStackEntryName = backStackEntry.getName();
-            Fragment fragment = getSupportFragmentManager().findFragmentByTag(backStackEntryName);
-            if(fragment instanceof BaseViewModelFragment){
-                ((BaseViewModelFragment) fragment).onBackPressed();
-            }
-            else {
-                super.onBackPressed();
-            }
-        }
-
-        else {
-            callSuperOnBackPressed();
-        }
-    }
-
-    /**
-     * Handle the onBackPressed for this activity.
-     */
-    @Override
-    public void callSuperOnBackPressed() {
-        mDrawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
         if (mDrawer.isDrawerOpen(GravityCompat.START)) {
             mDrawer.closeDrawer(GravityCompat.START);
         }
@@ -289,7 +269,7 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
         else if(id == R.id.faq){
             questionsFragment = (QuestionsFragment) getSupportFragmentManager().
                     findFragmentByTag(QuestionsFragment.class.getName());
-
+            mStartTaskFab.hide();
             if(questionsFragment == null)
                 questionsFragment = QuestionsFragment.newInstance();
             if(getSupportFragmentManager().getFragments().size() > 1) {
@@ -310,7 +290,7 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
         else if(id == R.id.about){
             aboutFragment = (AboutFragment) getSupportFragmentManager().
                     findFragmentByTag(AboutFragment.class.getName());
-
+            mStartTaskFab.hide();
             if(aboutFragment == null)
                 aboutFragment = AboutFragment.newInstance();
             if(getSupportFragmentManager().getFragments().size() > 1) {

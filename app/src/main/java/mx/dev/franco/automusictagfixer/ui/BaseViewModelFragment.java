@@ -36,8 +36,6 @@ public abstract class BaseViewModelFragment<ViewModel> extends BaseFragment impl
     public void onAttach(Context context) {
         AndroidSupportInjection.inject(this);
         super.onAttach(context);
-        if(context instanceof OnConfirmBackPressedListener)
-            mOnConfirmBackPressedListener = (OnConfirmBackPressedListener) context;
     }
 
     @Override

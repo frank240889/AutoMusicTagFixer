@@ -86,19 +86,18 @@ public class ResultSearchFragment extends BaseViewModelFragment<SearchListViewMo
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setHasOptionsMenu(true);
         mSearchListViewModel = ViewModelProviders.of(this).get(SearchListViewModel.class);
         mSearchListViewModel.getSearchResults().observe(this, this::onSearchResults);
         mSearchListViewModel.getSearchResults().observe(this, mAdapter);
         mSearchListViewModel.isTrackProcessing().observe(this, this::showMessageError);
         mSearchListViewModel.actionTrackEvaluatedSuccessfully().observe(this, this::openDetailTrack);
         mSearchListViewModel.actionIsTrackInaccessible().observe(this, this::showInaccessibleTrack);
-        setHasOptionsMenu(true);
     }
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        setHasOptionsMenu(true);
         return inflater.inflate(R.layout.fragment_result_search_list, container, false);
     }
 
@@ -123,9 +122,7 @@ public class ResultSearchFragment extends BaseViewModelFragment<SearchListViewMo
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-
-        //mToolbar = view.findViewById(R.id.toolbar);
-        //mSearchBox = view.findViewById(R.id.search_box);
+        getActivity().invalidateOptionsMenu();
         ((MainActivity)getActivity()).mSearchBox.setOnEditorActionListener((v, actionId, event) -> {
             if(actionId == EditorInfo.IME_ACTION_SEARCH || actionId == EditorInfo.IME_ACTION_UNSPECIFIED){
                 mQuery = ((MainActivity)getActivity()).mSearchBox.getText().toString();
@@ -150,20 +147,21 @@ public class ResultSearchFragment extends BaseViewModelFragment<SearchListViewMo
         ((MainActivity)getActivity()).mSearchBox.setVisibility(View.VISIBLE);
         ((MainActivity)getActivity()).mSearchBox.requestFocus();
         InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
-        assert imm != null;
-        imm.showSoftInput(((MainActivity)getActivity()).mSearchBox, InputMethodManager.SHOW_IMPLICIT);
+        if(imm != null)
+            imm.showSoftInput(((MainActivity)getActivity()).mSearchBox, InputMethodManager.SHOW_IMPLICIT);
     }
 
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        getActivity().invalidateOptionsMenu();
         ((MainActivity)getActivity()).mActionBar.setDisplayHomeAsUpEnabled(true);
+        ((MainActivity)getActivity()).mActionBar.setDisplayShowHomeEnabled(true);
         ((MainActivity)getActivity()).mActionBar.setDefaultDisplayHomeAsUpEnabled(true);
-        ((MainActivity)getActivity()).toggle.setDrawerIndicatorEnabled(false);
+        ((MainActivity)getActivity()).toggle.setDrawerIndicatorEnabled(true);
         ((MainActivity)getActivity()).toggle.syncState();
         //pressing back from toolbar, close activity
-        ((MainActivity)getActivity()).mMainToolbar.setNavigationOnClickListener(v -> callSuperOnBackPressed());
+        /*((MainActivity)getActivity()).mMainToolbar.setNavigationOnClickListener(v ->
+                getParentFragment().getChildFragmentManager().popBackStack());*/
     }
 
     private void showInaccessibleTrack(ViewWrapper viewWrapper) {
@@ -190,8 +188,8 @@ public class ResultSearchFragment extends BaseViewModelFragment<SearchListViewMo
         TrackDetailFragment trackDetailFragment;
 
         ((MainActivity)getActivity()).mDrawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
-        trackDetailFragment = (TrackDetailFragment) getActivity().
-                getSupportFragmentManager().findFragmentByTag(TrackDetailFragment.class.getName());
+        trackDetailFragment = (TrackDetailFragment) getParentFragment().
+                getChildFragmentManager().findFragmentByTag(TrackDetailFragment.class.getName());
         if(trackDetailFragment != null){
             trackDetailFragment.loadTrackData(AndroidUtils.getBundle(viewWrapper.track.getMediaStoreId(),
                     viewWrapper.mode));
@@ -200,12 +198,13 @@ public class ResultSearchFragment extends BaseViewModelFragment<SearchListViewMo
             trackDetailFragment = TrackDetailFragment.newInstance(
                     viewWrapper.track.getMediaStoreId(),
                     viewWrapper.mode);
-            getActivity().getSupportFragmentManager().beginTransaction().
+            getParentFragment().
+                    getChildFragmentManager().beginTransaction().
                     setCustomAnimations(R.anim.slide_in_right,
                             R.anim.slide_out_left, R.anim.slide_in_left,
                             R.anim.slide_out_right).
                     addToBackStack(TrackDetailFragment.class.getName()).
-                    add(R.id.container_fragments,
+                    add(R.id.child_fragment_container,
                             trackDetailFragment, TrackDetailFragment.class.getName()).
                     commit();
         }
@@ -261,13 +260,6 @@ public class ResultSearchFragment extends BaseViewModelFragment<SearchListViewMo
         mAdapter = null;
     }
 
-
-
-    @Override
-    public void onBackPressed() {
-        getActivity().getSupportFragmentManager().popBackStack();
-    }
-
     @Override
     public Animation onCreateAnimation(int transit, boolean enter, int nextAnim) {
         Animation animation = super.onCreateAnimation(transit, enter, nextAnim);
@@ -285,11 +277,11 @@ public class ResultSearchFragment extends BaseViewModelFragment<SearchListViewMo
     @Override
     public void onDetach() {
         super.onDetach();
-        ((MainActivity)getActivity()).mActionBar.setDefaultDisplayHomeAsUpEnabled(false);
+        /*((MainActivity)getActivity()).mActionBar.setDefaultDisplayHomeAsUpEnabled(false);
         ((MainActivity)getActivity()).mActionBar.setHomeButtonEnabled(true);
         ((MainActivity)getActivity()).toggle.setDrawerIndicatorEnabled(true);
         ((MainActivity)getActivity()).mDrawer.addDrawerListener(((MainActivity)getActivity()).toggle);
-        ((MainActivity)getActivity()).toggle.syncState();
+        ((MainActivity)getActivity()).toggle.syncState();*/
         ((MainActivity)getActivity()).mSearchBox.setVisibility(View.GONE);
         ((MainActivity)getActivity()).mSearchBox.setOnEditorActionListener(null);
         hideKeyboard();
