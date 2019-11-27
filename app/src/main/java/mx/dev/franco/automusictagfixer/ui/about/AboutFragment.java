@@ -9,12 +9,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-
 import com.google.android.material.button.MaterialButton;
-
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.ui.BaseFragment;
 import mx.dev.franco.automusictagfixer.ui.MainActivity;
@@ -51,6 +48,8 @@ public class AboutFragment extends BaseFragment {
         jaudiotaggerButton.setOnClickListener(v -> AndroidUtils.openInExternalApp(Intent.ACTION_VIEW, "http://www.jthink.net/jaudiotagger/", getActivity()));
 
         drawerButton.setOnClickListener(v -> AndroidUtils.openInExternalApp(Intent.ACTION_VIEW, "https://tgs266.deviantart.com/", getActivity()));
+        ((MainActivity)getActivity()).mActionBar.setTitle(getString(R.string.about));
+        getActivity().invalidateOptionsMenu();
     }
 
     @Override
@@ -66,8 +65,7 @@ public class AboutFragment extends BaseFragment {
                 mToolbar,R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         ((MainActivity)getActivity()).mDrawer.addDrawerListener(toggle);
         toggle.syncState();*/
-        ((MainActivity)getActivity()).mActionBar.setTitle(getString(R.string.about));
-        getActivity().invalidateOptionsMenu();
+
     }
 
     @Override
