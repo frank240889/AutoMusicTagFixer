@@ -14,6 +14,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
@@ -22,10 +23,14 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
 import com.google.android.material.appbar.AppBarLayout;
 import com.google.android.material.snackbar.Snackbar;
+
 import java.util.List;
+
 import javax.inject.Inject;
+
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.ui.BaseViewModelFragment;
@@ -81,7 +86,6 @@ public class ResultSearchFragment extends BaseViewModelFragment<SearchListViewMo
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setHasOptionsMenu(true);
         mSearchListViewModel = ViewModelProviders.of(this).get(SearchListViewModel.class);
         mSearchListViewModel.getSearchResults().observe(this, this::onSearchResults);
         mSearchListViewModel.getSearchResults().observe(this, mAdapter);
@@ -93,14 +97,14 @@ public class ResultSearchFragment extends BaseViewModelFragment<SearchListViewMo
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        setHasOptionsMenu(true);
         return inflater.inflate(R.layout.fragment_result_search_list, container, false);
     }
 
 
 
     @Override
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        super.onCreateOptionsMenu(menu, inflater);
+    public void onCreateOptionsMenu(Menu menu, @NonNull MenuInflater inflater) {
         menu.clear();
     }
 
@@ -117,7 +121,6 @@ public class ResultSearchFragment extends BaseViewModelFragment<SearchListViewMo
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        getActivity().invalidateOptionsMenu();
         ((MainActivity)getActivity()).mSearchBox.setOnEditorActionListener((v, actionId, event) -> {
             if(actionId == EditorInfo.IME_ACTION_SEARCH || actionId == EditorInfo.IME_ACTION_UNSPECIFIED){
                 mQuery = ((MainActivity)getActivity()).mSearchBox.getText().toString();
@@ -139,30 +142,17 @@ public class ResultSearchFragment extends BaseViewModelFragment<SearchListViewMo
         mRecyclerView.setHapticFeedbackEnabled(true);
         mRecyclerView.setSoundEffectsEnabled(true);
         mRecyclerView.setAdapter(mAdapter);
-        ((MainActivity)getActivity()).mSearchBox.setVisibility(View.VISIBLE);
-        ((MainActivity)getActivity()).mSearchBox.requestFocus();
-        InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
-        if(imm != null)
-            imm.showSoftInput(((MainActivity)getActivity()).mSearchBox, InputMethodManager.SHOW_IMPLICIT);
-
-        ((MainActivity)getActivity()).mActionBar.setDisplayHomeAsUpEnabled(true);
-        ((MainActivity)getActivity()).mActionBar.setDisplayShowHomeEnabled(true);
-        ((MainActivity)getActivity()).mActionBar.setDefaultDisplayHomeAsUpEnabled(true);
-        ((MainActivity)getActivity()).toggle.setDrawerIndicatorEnabled(true);
-        ((MainActivity)getActivity()).toggle.syncState();
     }
 
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        /*((MainActivity)getActivity()).mActionBar.setDisplayHomeAsUpEnabled(true);
-        ((MainActivity)getActivity()).mActionBar.setDisplayShowHomeEnabled(true);
-        ((MainActivity)getActivity()).mActionBar.setDefaultDisplayHomeAsUpEnabled(true);
-        ((MainActivity)getActivity()).toggle.setDrawerIndicatorEnabled(true);
-        ((MainActivity)getActivity()).toggle.syncState();*/
-        //pressing back from toolbar, close activity
-        /*((MainActivity)getActivity()).mMainToolbar.setNavigationOnClickListener(v ->
-                getParentFragment().getChildFragmentManager().popBackStack());*/
+        getActivity().invalidateOptionsMenu();
+        ((MainActivity)getActivity()).mSearchBox.setVisibility(View.VISIBLE);
+        ((MainActivity)getActivity()).mSearchBox.requestFocus();
+        InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+        if(imm != null)
+            imm.showSoftInput(((MainActivity)getActivity()).mSearchBox, InputMethodManager.SHOW_IMPLICIT);
     }
 
     private void showInaccessibleTrack(ViewWrapper viewWrapper) {
@@ -278,6 +268,7 @@ public class ResultSearchFragment extends BaseViewModelFragment<SearchListViewMo
     @Override
     public void onDetach() {
         super.onDetach();
+        getParentFragment().getChildFragmentManager().popBackStack();
         /*((MainActivity)getActivity()).mActionBar.setDefaultDisplayHomeAsUpEnabled(false);
         ((MainActivity)getActivity()).mActionBar.setHomeButtonEnabled(true);
         ((MainActivity)getActivity()).toggle.setDrawerIndicatorEnabled(true);
