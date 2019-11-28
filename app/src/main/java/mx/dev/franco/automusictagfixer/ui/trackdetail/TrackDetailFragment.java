@@ -587,6 +587,7 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
      * Starts a external app to search info about the current track.
      */
     private void searchInfoForTrack(){
+        //Todo: Add null validation, title or artist may be null.
         String title = mFragmentTrackDetailBinding.layoutContentDetailsTrack.trackNameDetails.
                 getText().toString();
         String artist = mFragmentTrackDetailBinding.layoutContentDetailsTrack.artistNameDetails.
