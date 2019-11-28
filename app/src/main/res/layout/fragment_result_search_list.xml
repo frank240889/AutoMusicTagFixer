@@ -12,7 +12,6 @@
         android:id="@+id/found_message"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
         android:layout_gravity="center"
         android:layout_marginStart="10dp"
         android:layout_marginEnd="10dp"
@@ -27,7 +26,6 @@
         android:choiceMode="singleChoice"
         android:clipToPadding="false"
         android:overScrollMode="always"
-        android:scrollbarStyle="outsideOverlay"
         android:scrollbarThumbVertical="@drawable/custom_scrollbar_thumb"
         android:scrollbars="vertical"
         tools:listitem="@layout/result_search_item"/>

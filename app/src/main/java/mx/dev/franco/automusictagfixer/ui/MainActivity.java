@@ -102,8 +102,6 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
         mStartTaskFab = findViewById(R.id.fab_start_stop);
         setSupportActionBar(mMainToolbar);
         mActionBar = getSupportActionBar();
-        mActionBar.setShowHideAnimationEnabled(true);
-        mActionBar.setDisplayHomeAsUpEnabled(true);
         toggle = new ActionBarDrawerToggle(this, mDrawer,
                 mMainToolbar,R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         mDrawer.addDrawerListener(toggle);
@@ -227,8 +225,6 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
         localBroadcastManager.registerReceiver(mReceiver, broadcastMessageFilter);
 
     }
-
-
 
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {

@@ -169,14 +169,6 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
         });
     }
 
-    private void onWritingResult(Message actionableMessage) {
-        enableEditModeElements();
-        showFabs();
-        disableFields();
-        enableAppBarLayout();
-        onMessage(actionableMessage);
-    }
-
     @Override
     public TrackDetailViewModel getViewModel() {
         return ViewModelProviders.
@@ -269,6 +261,31 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
 
     }
 
+    @Override
+    public void onStop() {
+        super.onStop();
+        mPlayer.stopPreview();
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        ((MainActivity)getActivity()).setSupportActionBar(((MainActivity)getActivity()).mMainToolbar);
+        ((MainActivity)getActivity()).mMainAppbar.setExpanded(true, true);
+        ((MainActivity)getActivity()).mDrawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
+        mPlayer.removeListeners();
+        mViewModel.cancelIdentification();
+        mPlayer = null;
+    }
+
+    private void onWritingResult(Message actionableMessage) {
+        enableEditModeElements();
+        showFabs();
+        disableFields();
+        enableAppBarLayout();
+        onMessage(actionableMessage);
+    }
+
     private AndroidUtils.AsyncBitmapDecoder.AsyncBitmapDecoderCallback getCallback(int requestCode){
         return new AndroidUtils.AsyncBitmapDecoder.AsyncBitmapDecoderCallback() {
             @Override
@@ -293,23 +310,6 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
                 snackbar.show();
             }
         };
-    }
-
-    @Override
-    public void onStop() {
-        super.onStop();
-        mPlayer.stopPreview();
-    }
-
-    @Override
-    public void onDetach() {
-        super.onDetach();
-        getActivity().invalidateOptionsMenu();
-        ((MainActivity)getActivity()).mMainAppbar.setExpanded(true, true);
-        ((MainActivity)getActivity()).mDrawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
-        mPlayer.removeListeners();
-        mViewModel.cancelIdentification();
-        mPlayer = null;
     }
 
     /**

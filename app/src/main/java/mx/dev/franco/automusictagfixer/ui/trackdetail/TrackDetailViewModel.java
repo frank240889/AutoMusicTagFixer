@@ -500,7 +500,7 @@ public class TrackDetailViewModel extends AndroidViewModel {
     public void saveAsImageFileFrom(CoverCorrectionParams correctionParams) {
         Date date = new Date();
         DateFormat now = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault());
-        String newFilename = mAudioFields.getFileName() + "_" +now.format(date);
+        String newFilename = mAudioFields.getFileName().trim().replaceAll(" ","_") + "_" +now.format(date);
         mFileManager.saveFile(correctionParams.getCoverId(), mTrack.getMediaStoreId()+"",  newFilename);
     }
 

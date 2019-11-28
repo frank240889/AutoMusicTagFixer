@@ -86,6 +86,7 @@ public class ResultSearchFragment extends BaseViewModelFragment<SearchListViewMo
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setHasOptionsMenu(true);
         mSearchListViewModel = ViewModelProviders.of(this).get(SearchListViewModel.class);
         mSearchListViewModel.getSearchResults().observe(this, this::onSearchResults);
         mSearchListViewModel.getSearchResults().observe(this, mAdapter);
@@ -97,7 +98,6 @@ public class ResultSearchFragment extends BaseViewModelFragment<SearchListViewMo
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        setHasOptionsMenu(true);
         return inflater.inflate(R.layout.fragment_result_search_list, container, false);
     }
 
@@ -147,7 +147,10 @@ public class ResultSearchFragment extends BaseViewModelFragment<SearchListViewMo
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        getActivity().invalidateOptionsMenu();
+        ((MainActivity)getActivity()).mActionBar.setDisplayHomeAsUpEnabled(true);
+        ((MainActivity)getActivity()).mActionBar.setHomeButtonEnabled(true);
+        ((MainActivity)getActivity()).toggle.setDrawerIndicatorEnabled(false);
+
         ((MainActivity)getActivity()).mSearchBox.setVisibility(View.VISIBLE);
         ((MainActivity)getActivity()).mSearchBox.requestFocus();
         InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
@@ -244,6 +247,7 @@ public class ResultSearchFragment extends BaseViewModelFragment<SearchListViewMo
     @Override
     public void onDestroy(){
         super.onDestroy();
+        ((MainActivity)getActivity()).toggle.setDrawerIndicatorEnabled(true);
         mRecyclerView.stopScroll();
         mAdapter.destroy();
         mMessage = null;
@@ -269,12 +273,8 @@ public class ResultSearchFragment extends BaseViewModelFragment<SearchListViewMo
     public void onDetach() {
         super.onDetach();
         getParentFragment().getChildFragmentManager().popBackStack();
-        /*((MainActivity)getActivity()).mActionBar.setDefaultDisplayHomeAsUpEnabled(false);
-        ((MainActivity)getActivity()).mActionBar.setHomeButtonEnabled(true);
-        ((MainActivity)getActivity()).toggle.setDrawerIndicatorEnabled(true);
-        ((MainActivity)getActivity()).mDrawer.addDrawerListener(((MainActivity)getActivity()).toggle);
-        ((MainActivity)getActivity()).toggle.syncState();*/
         ((MainActivity)getActivity()).mSearchBox.setVisibility(View.GONE);
+        ((MainActivity)getActivity()).mSearchBox.setText("");
         ((MainActivity)getActivity()).mSearchBox.setOnEditorActionListener(null);
         hideKeyboard();
         ((MainActivity)getActivity()).mDrawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);

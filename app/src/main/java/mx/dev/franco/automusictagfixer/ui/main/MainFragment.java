@@ -19,6 +19,7 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
@@ -27,12 +28,16 @@ import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+
 import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
+
 import java.util.List;
 import java.util.Objects;
+
 import javax.inject.Inject;
+
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.interfaces.LongRunningTaskListener;
 import mx.dev.franco.automusictagfixer.interfaces.ProcessingListener;
@@ -229,15 +234,9 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        //((MainActivity)getActivity()).mDrawer.addDrawerListener(((MainActivity)getActivity()).toggle);
-        //((MainActivity)getActivity()).mActionBar.setDefaultDisplayHomeAsUpEnabled(false);
-        //((MainActivity)getActivity()).toggle.syncState();
-        //pressing back from toolbar, close activity
-        //((MainActivity)getActivity()).mMainToolbar.setNavigationOnClickListener(null);
-        getActivity().invalidateOptionsMenu();
+        ((MainActivity)getActivity()).mActionBar.setDisplayHomeAsUpEnabled(true);
+        ((MainActivity)getActivity()).mActionBar.setHomeButtonEnabled(true);
         ((MainActivity)getActivity()).toggle.setDrawerIndicatorEnabled(true);
-        ((MainActivity)getActivity()).toggle.syncState();
-        ((MainActivity)getActivity()).mDrawer.addDrawerListener(((MainActivity)getActivity()).toggle);
         updateToolbar(mCurrentTracks);
     }
 
@@ -665,7 +664,7 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
 
     @Override
     public void onLongRunningTaskMessage(String error) {
-        Snackbar snackbar = AndroidUtils.createSnackbar(getView().findViewById(R.id.root_container), error);
+        Snackbar snackbar = AndroidUtils.createSnackbar(getView(), error);
         //snackbar.setAnchorView(mStartTaskFab);
         snackbar.show();
     }
