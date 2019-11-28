@@ -194,9 +194,9 @@ public class ResultSearchFragment extends BaseViewModelFragment<SearchListViewMo
                     viewWrapper.mode);
             getParentFragment().
                     getChildFragmentManager().beginTransaction().
-                    setCustomAnimations(R.anim.slide_in_right,
+                    setCustomAnimations(R.anim.slide_in_bottom,
                             R.anim.slide_out_left, R.anim.slide_in_left,
-                            R.anim.slide_out_right).
+                            R.anim.slide_out_top).
                     addToBackStack(TrackDetailFragment.class.getName()).
                     add(R.id.child_fragment_container,
                             trackDetailFragment, TrackDetailFragment.class.getName()).
