@@ -182,11 +182,6 @@ public class AndroidUtils {
     public static Snackbar getSnackbar(@NonNull View viewToAttach, @NonNull Context context){
         Snackbar snackbar = Snackbar.make(viewToAttach,"",Snackbar.LENGTH_SHORT);
         snackbar.setTextColor(ContextCompat.getColor(context,R.color.snackbarTextBackgroundColor));
-        //TextView tv = snackbar.getView().findViewById(com.google.android.material.R.id.snackbar_text);
-        //snackbar.getView().setBackground(ContextCompat.getDrawable(context, R.drawable.bg_toolbar));
-        //snackbar.getView().setBackgroundColor(ContextCompat.getColor(context.getApplicationContext(),R.color.snackbarBackgroundColor));
-        //tv.setTextColor(ContextCompat.getColor(context.getApplicationContext(),R.color.snackbarTextColor));
-        //snackbar.setActionTextColor(ContextCompat.getColor(context.getApplicationContext(),R.color.primaryColor));
         return snackbar;
     }
 

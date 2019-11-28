@@ -2,7 +2,6 @@ package mx.dev.franco.automusictagfixer.ui.trackdetail;
 
 import android.app.Dialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -208,16 +207,12 @@ public class SemiAutoCorrectionDialogFragment extends ResultsFragmentBase<Result
 
     BottomSheetDialog dialog = (BottomSheetDialog) super.onCreateDialog(savedInstanceState);
     dialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_MASK_ADJUST);
-    dialog.setOnShowListener(new DialogInterface.OnShowListener() {
-      @Override
-      public void onShow(DialogInterface dialog) {
-        BottomSheetDialog d = (BottomSheetDialog) dialog;
+    dialog.setOnShowListener(dialog1 -> {
+      BottomSheetDialog d = (BottomSheetDialog) dialog1;
 
-        FrameLayout bottomSheet = d.findViewById(com.google.android.material.R.id.design_bottom_sheet);
-        BottomSheetBehavior.from(bottomSheet).setState(BottomSheetBehavior.STATE_EXPANDED);
-      }
+      FrameLayout bottomSheet = d.findViewById(com.google.android.material.R.id.design_bottom_sheet);
+      BottomSheetBehavior.from(bottomSheet).setState(BottomSheetBehavior.STATE_EXPANDED);
     });
-    // Do something with your dialog like setContentView() or whatever
     return dialog;
   }
 }

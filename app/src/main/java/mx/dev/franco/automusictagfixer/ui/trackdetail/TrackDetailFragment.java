@@ -200,7 +200,7 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        //menu.clear();
+        menu.clear();
         inflater.inflate(R.menu.menu_details_track_dialog, menu);
         mPlayPreviewMenuItem = menu.findItem(R.id.action_play);
         mManualEditMenuItem = menu.findItem(R.id.action_edit_manual);
@@ -232,7 +232,8 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
                             asyncBitmapDecoder.decodeBitmap(source, getCallback(requestCode));
                         }
                         else {
-                            asyncBitmapDecoder.decodeBitmap(getActivity().getContentResolver(), imageData, getCallback(requestCode) );
+                            asyncBitmapDecoder.decodeBitmap(getActivity().getApplicationContext().getContentResolver(),
+                                    imageData, getCallback(requestCode) );
                         }
                 }
                 break;
@@ -304,8 +305,8 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
                 Snackbar snackbar = AndroidUtils.getSnackbar(
                         mFragmentTrackDetailBinding.rootContainerDetails,
                         mFragmentTrackDetailBinding.rootContainerDetails.getContext());
-
-                snackbar.setText(getString(R.string.error_load_image));
+                String msg = getString(R.string.error_load_image) + ": " + throwable.getMessage();
+                snackbar.setText(msg);
                 snackbar.setDuration(Snackbar.LENGTH_SHORT);
                 snackbar.show();
             }
@@ -376,12 +377,8 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
         mFragmentTrackDetailBinding.fabAutofix.shrink();
         mFragmentTrackDetailBinding.fabSaveInfo.shrink();
         showFabs();
-        mFragmentTrackDetailBinding.progressView.findViewById(R.id.cancel_button).setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mViewModel.cancelTasks();
-            }
-        });
+        mFragmentTrackDetailBinding.progressView.findViewById(R.id.cancel_button).
+                setOnClickListener(v -> mViewModel.cancelTasks());
     }
 
     /**

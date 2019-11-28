@@ -104,14 +104,11 @@ public class ManualCorrectionDialogFragment extends BaseRoundedBottomSheetDialog
     checkBox.setOnCheckedChangeListener((buttonView, isChecked) -> {
       if(!isChecked){
         textInputLayout.setVisibility(View.GONE);
-        //textView.setVisibility(View.GONE);
-        editText.setText("");
         manualCorrectionParams.setNewName(null);
         manualCorrectionParams.setRenameFile(false);
       }
       else{
         textInputLayout.setVisibility(View.VISIBLE);
-        //textView.setVisibility(View.VISIBLE);
         manualCorrectionParams.setNewName(editText.getText().toString());
         manualCorrectionParams.setRenameFile(true);
       }
@@ -129,7 +126,7 @@ public class ManualCorrectionDialogFragment extends BaseRoundedBottomSheetDialog
       FrameLayout bottomSheet = d.findViewById(com.google.android.material.R.id.design_bottom_sheet);
       BottomSheetBehavior.from(bottomSheet).setState(BottomSheetBehavior.STATE_COLLAPSED);
     });
-    // Do something with your dialog like setContentView() or whatever
+
     return dialog;
   }
 
