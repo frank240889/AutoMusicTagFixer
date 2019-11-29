@@ -261,40 +261,40 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
                     findFragmentByTag(QuestionsFragment.class.getName());
             if(questionsFragment == null)
                 questionsFragment = QuestionsFragment.newInstance();
-            if(getSupportFragmentManager().getFragments().size() > 1) {
+            //if(getSupportFragmentManager().findFragmentByTag(MainFragment.class.getName()) != null) {
                 getSupportFragmentManager().beginTransaction().
                     setCustomAnimations(R.anim.fade_in,R.anim.fade_out,R.anim.fade_in,R.anim.fade_out)
                     .replace(R.id.container_fragments,
                         questionsFragment, QuestionsFragment.class.getName()).
                     commit();
-            }
-            else {
+            //}
+            /*else {
                 getSupportFragmentManager().beginTransaction().
                     setCustomAnimations(R.anim.fade_in,R.anim.fade_out,R.anim.fade_in,R.anim.fade_out)
                     .add(R.id.container_fragments,
                         questionsFragment, QuestionsFragment.class.getName()).
                     commit();
-            }
+            }*/
         }
         else if(id == R.id.about){
             aboutFragment = (AboutFragment) getSupportFragmentManager().
                     findFragmentByTag(AboutFragment.class.getName());
             if(aboutFragment == null)
                 aboutFragment = AboutFragment.newInstance();
-            if(getSupportFragmentManager().getFragments().size() > 1) {
+            //if(getSupportFragmentManager().getFragments().size() > 1) {
                 getSupportFragmentManager().beginTransaction().
                     setCustomAnimations(R.anim.fade_in,R.anim.fade_out,R.anim.fade_in,R.anim.fade_out)
                     .replace(R.id.container_fragments,
                         aboutFragment, AboutFragment.class.getName()).
                     commit();
-            }
-            else {
+            //}
+            /*else {
                 getSupportFragmentManager().beginTransaction().
                     setCustomAnimations(R.anim.fade_in,R.anim.fade_out,R.anim.fade_in,R.anim.fade_out)
                     .add(R.id.container_fragments,
                         aboutFragment, AboutFragment.class.getName()).
                     commit();
-            }
+            }*/
 
         }
 

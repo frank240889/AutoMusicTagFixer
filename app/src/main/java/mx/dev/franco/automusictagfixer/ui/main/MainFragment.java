@@ -127,14 +127,6 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
         mListViewModel.observeInformativeMessage().observe(this, this::onMessage);
         mListViewModel.observeOnSortTracks().observe(this, this::onSorted);
         mListViewModel.observeOnSdPresent().observe(this, this::onSdPresent);
-
-        getChildFragmentManager().addOnBackStackChangedListener(this::onBackStackChangeListener);
-    }
-
-    private void onBackStackChangeListener() {
-        if(getChildFragmentManager().getBackStackEntryCount() == 0) {
-            updateToolbar(mCurrentTracks);
-        }
     }
 
     private void updateToolbar(List<Track> tracks) {
@@ -691,7 +683,6 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
     @Override
     public void onDetach() {
         super.onDetach();
-        getChildFragmentManager().removeOnBackStackChangedListener(this::onBackStackChangeListener);
         ((MainActivity)getActivity()).mDrawer.removeDrawerListener(((MainActivity)getActivity()).toggle);
     }
 
