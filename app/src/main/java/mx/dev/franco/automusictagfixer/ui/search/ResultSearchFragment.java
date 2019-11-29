@@ -11,25 +11,19 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.ActionBar;
-import androidx.appcompat.widget.Toolbar;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.android.material.appbar.AppBarLayout;
 import com.google.android.material.snackbar.Snackbar;
 
 import java.util.List;
-
-import javax.inject.Inject;
 
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
@@ -40,7 +34,6 @@ import mx.dev.franco.automusictagfixer.ui.main.ViewWrapper;
 import mx.dev.franco.automusictagfixer.ui.trackdetail.TrackDetailFragment;
 import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 import mx.dev.franco.automusictagfixer.utilities.Constants.CorrectionActions;
-import mx.dev.franco.automusictagfixer.utilities.ServiceUtils;
 
 public class ResultSearchFragment extends BaseViewModelFragment<SearchListViewModel> implements
         FoundItemHolder.ClickListener{
@@ -52,15 +45,8 @@ public class ResultSearchFragment extends BaseViewModelFragment<SearchListViewMo
     //better performance with huge data sources
     private RecyclerView mRecyclerView;
     private SearchTrackAdapter mAdapter;
-    private Toolbar mToolbar;
-    private ActionBar mActionBar;
     private String mQuery = null;
     private SearchListViewModel mSearchListViewModel;
-    private AppBarLayout mAppBarLayout;
-
-    @Inject
-    ServiceUtils serviceUtils;
-    private EditText mSearchBox;
 
     public static ResultSearchFragment newInstance() {
         return new ResultSearchFragment();
@@ -68,12 +54,6 @@ public class ResultSearchFragment extends BaseViewModelFragment<SearchListViewMo
 
     public ResultSearchFragment() {
         // Required empty public constructor
-    }
-
-    @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        mAdapter = new SearchTrackAdapter(this);
     }
 
     @Override
@@ -86,6 +66,7 @@ public class ResultSearchFragment extends BaseViewModelFragment<SearchListViewMo
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
+        mAdapter = new SearchTrackAdapter(this);
         mSearchListViewModel = ViewModelProviders.of(this).get(SearchListViewModel.class);
         mSearchListViewModel.getSearchResults().observe(this, this::onSearchResults);
         mSearchListViewModel.getSearchResults().observe(this, mAdapter);
@@ -100,22 +81,9 @@ public class ResultSearchFragment extends BaseViewModelFragment<SearchListViewMo
         return inflater.inflate(R.layout.fragment_result_search_list, container, false);
     }
 
-
-
     @Override
     public void onCreateOptionsMenu(Menu menu, @NonNull MenuInflater inflater) {
         menu.clear();
-    }
-
-    private void hideKeyboard() {
-        InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
-        try {
-            assert imm != null;
-            imm.hideSoftInputFromWindow(getActivity().getCurrentFocus().getWindowToken(), 0);
-        }
-        catch (Exception e){
-            e.printStackTrace();
-        }
     }
 
     @Override
@@ -158,6 +126,17 @@ public class ResultSearchFragment extends BaseViewModelFragment<SearchListViewMo
         InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
         if(imm != null)
             imm.showSoftInput(((MainActivity)getActivity()).mSearchBox, InputMethodManager.SHOW_IMPLICIT);
+    }
+
+    private void hideKeyboard() {
+        InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+        try {
+            assert imm != null;
+            imm.hideSoftInputFromWindow(getActivity().getCurrentFocus().getWindowToken(), 0);
+        }
+        catch (Exception e){
+            e.printStackTrace();
+        }
     }
 
     private void showInaccessibleTrack(ViewWrapper viewWrapper) {
