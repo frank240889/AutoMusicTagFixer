@@ -249,6 +249,7 @@ public class ResultSearchFragment extends BaseViewModelFragment<SearchListViewMo
     @Override
     public void onDestroy(){
         super.onDestroy();
+        getParentFragment().getChildFragmentManager().popBackStack();
         mRecyclerView.stopScroll();
         mAdapter.destroy();
         mMessage = null;
@@ -296,6 +297,5 @@ public class ResultSearchFragment extends BaseViewModelFragment<SearchListViewMo
     @Override
     public void onDetach() {
         super.onDetach();
-        getParentFragment().getChildFragmentManager().popBackStack();
     }
 }
