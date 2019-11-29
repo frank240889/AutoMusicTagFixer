@@ -51,4 +51,13 @@
         android:id="@+id/child_fragment_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
+    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+        android:id="@+id/fab_start_stop"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="@dimen/fab_margin"
+        android:text="@string/title_identify_track"
+        app:icon="@drawable/ic_photo_filter_white_24px"
+        app:layout_anchorGravity="bottom|end" />
 </FrameLayout>

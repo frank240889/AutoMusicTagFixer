@@ -1,5 +1,7 @@
 package mx.dev.franco.automusictagfixer.ui.trackdetail;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -32,6 +34,7 @@ import androidx.databinding.DataBindingUtil;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.lifecycle.ViewModelProviders;
 
+import com.google.android.material.appbar.AppBarLayout;
 import com.google.android.material.snackbar.Snackbar;
 
 import java.io.IOException;
@@ -96,7 +99,6 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        ((MainActivity)getActivity()).mDrawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
         mPlayer.addListener(new OnMediaPlayerEventListener() {
             @Override
             public void onStartPlaying() {
@@ -191,10 +193,7 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        ((MainActivity)getActivity()).setSupportActionBar(mFragmentTrackDetailBinding.toolbar);
         mFragmentTrackDetailBinding.collapsingToolbarLayout.setTitleEnabled(false);
-        mActionBar = ((MainActivity)getActivity()).getSupportActionBar();
-        mActionBar.setDisplayShowTitleEnabled(false);
         hideFabs();
     }
 
@@ -205,6 +204,16 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
         mPlayPreviewMenuItem = menu.findItem(R.id.action_play);
         mManualEditMenuItem = menu.findItem(R.id.action_edit_manual);
         mSearchInWebMenuItem = menu.findItem(R.id.action_web_search);
+    }
+
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        ((MainActivity)getActivity()).mDrawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
+        ((MainActivity)getActivity()).mDrawer.removeDrawerListener(((MainActivity)getActivity()).toggle);
+        ((MainActivity)getActivity()).setSupportActionBar(mFragmentTrackDetailBinding.toolbar);
+        mActionBar = ((MainActivity)getActivity()).getSupportActionBar();
+        mActionBar.setDisplayShowTitleEnabled(false);
     }
 
     /**
@@ -271,9 +280,7 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
     @Override
     public void onDetach() {
         super.onDetach();
-        ((MainActivity)getActivity()).setSupportActionBar(((MainActivity)getActivity()).mMainToolbar);
-        ((MainActivity)getActivity()).mMainAppbar.setExpanded(true, true);
-        ((MainActivity)getActivity()).mDrawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
+        getActivity().getWindow().setNavigationBarColor(getResources().getColor(R.color.dark_gray));
         mPlayer.removeListeners();
         mViewModel.cancelIdentification();
         mPlayer = null;
@@ -342,11 +349,21 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
 
     protected void loading(boolean showProgress) {
         if(showProgress) {
-            mFragmentTrackDetailBinding.progressView.setVisibility(VISIBLE);
+            mFragmentTrackDetailBinding.progressView.animate().alpha(1).setDuration(100).setListener(new AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    mFragmentTrackDetailBinding.progressView.setVisibility(VISIBLE);
+                }
+            }).start();
             disableEditModeElements();
         }
         else {
-            mFragmentTrackDetailBinding.progressView.setVisibility(View.GONE);
+            mFragmentTrackDetailBinding.progressView.animate().alpha(0).setDuration(100).setListener(new AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    mFragmentTrackDetailBinding.progressView.setVisibility(View.GONE);
+                }
+            }).start();
             enableEditModeElements();
         }
     }
@@ -554,12 +571,14 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
     private void disableEditModeElements() {
         mManualEditMenuItem.setEnabled(false);
         mFragmentTrackDetailBinding.coverArtMenu.setEnabled(false);
+        mFragmentTrackDetailBinding.coverArtMenu.setVisibility(View.GONE);
         mFragmentTrackDetailBinding.fabAutofix.hide();
     }
 
     private void enableEditModeElements() {
         mManualEditMenuItem.setEnabled(true);
         mFragmentTrackDetailBinding.coverArtMenu.setEnabled(true);
+        mFragmentTrackDetailBinding.coverArtMenu.setVisibility(VISIBLE);
         mFragmentTrackDetailBinding.fabAutofix.show();
     }
 
@@ -818,29 +837,41 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
             getView().setLayerType(View.LAYER_TYPE_HARDWARE, null);
 
         if(animation != null)
-        animation.setAnimationListener(new Animation.AnimationListener() {
-            @Override
-            public void onAnimationStart(Animation animation) {
+            animation.setAnimationListener(new Animation.AnimationListener() {
+                @Override
+                public void onAnimationStart(Animation animation) {
+                    if(isAdded()) {
+                        AppBarLayout.LayoutParams layoutParams =
+                                (AppBarLayout.LayoutParams) ((MainActivity) getActivity()).mMainToolbar.getLayoutParams();
+                        layoutParams.setScrollFlags(AppBarLayout.LayoutParams.SCROLL_FLAG_SCROLL|
+                                AppBarLayout.LayoutParams.SCROLL_FLAG_ENTER_ALWAYS|
+                                AppBarLayout.LayoutParams.SCROLL_FLAG_SNAP);
+                        ((MainActivity) getActivity()).mMainAppbar.setExpanded(false, true);
 
-            }
-
-            @Override
-            public void onAnimationEnd(Animation animation) {
-                ((MainActivity)getActivity()).mMainAppbar.setExpanded(false, true);
-                Handler handler = new Handler();
-                handler.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        loadTrackData(null);
                     }
-                },250);
-            }
+                    else if(isRemoving()) {
+                        ((MainActivity)getActivity()).setupToolbar();
+                        AppBarLayout.LayoutParams layoutParams =
+                                (AppBarLayout.LayoutParams) ((MainActivity) getActivity()).mMainToolbar.getLayoutParams();
+                        layoutParams.setScrollFlags(0);
+                        ((MainActivity)getActivity()).mMainAppbar.setExpanded(true, true);
+                        ((MainActivity)getActivity()).mDrawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
+                    }
+                }
 
-            @Override
-            public void onAnimationRepeat(Animation animation) {
+                @Override
+                public void onAnimationEnd(Animation animation) {
+                    if(TrackDetailFragment.this.isAdded()) {
+                        Handler handler = new Handler();
+                        handler.postDelayed(() -> loadTrackData(null), 250);
+                    }
+                }
 
-            }
-        });
+                @Override
+                public void onAnimationRepeat(Animation animation) {
+
+                }
+            });
 
         return animation;
     }

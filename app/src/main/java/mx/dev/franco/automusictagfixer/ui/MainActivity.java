@@ -28,7 +28,6 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import com.google.android.material.appbar.AppBarLayout;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.button.MaterialButton;
-import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
 
 import javax.inject.Inject;
@@ -73,7 +72,6 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
     public ActionBar mActionBar;
     public EditText mSearchBox;
     public ActionBarDrawerToggle toggle;
-    public ExtendedFloatingActionButton mStartTaskFab;
     MainFragment listFragment;
     AboutFragment aboutFragment;
     QuestionsFragment questionsFragment;
@@ -82,8 +80,6 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
     protected void onCreate(final Bundle savedInstanceState) {
         AndroidInjection.inject(this);
         Window window = getWindow();
-        /*window.setFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS,
-                WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);*/
         window.requestFeature(SYSTEM_UI_FLAG_LAYOUT_STABLE|SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
         window.setAllowEnterTransitionOverlap(true);
         window.setAllowReturnTransitionOverlap(true);
@@ -94,18 +90,11 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
         //it has a single Surface in which the contents of the window is rendered
         //A Surface is an object holding pixels that are being composited to the screen.
         setContentView(R.layout.activity_main);
-
         mSearchBox = findViewById(R.id.search_box);
         mDrawer = findViewById(R.id.drawer_layout);
         mMainToolbar = findViewById(R.id.main_toolbar);
         mMainAppbar = findViewById(R.id.main_app_bar);
-        mStartTaskFab = findViewById(R.id.fab_start_stop);
-        setSupportActionBar(mMainToolbar);
-        mActionBar = getSupportActionBar();
-        toggle = new ActionBarDrawerToggle(this, mDrawer,
-                mMainToolbar,R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        mDrawer.addDrawerListener(toggle);
-        toggle.setDrawerIndicatorEnabled(true);
+        setupToolbar();
 
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
@@ -148,10 +137,15 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
         setupReceivers();
     }
 
-    @Override
-    protected void onPostCreate(Bundle savedInstanceState) {
-        super.onPostCreate(savedInstanceState);
-        toggle.syncState();
+    public void setupToolbar() {
+        setSupportActionBar(mMainToolbar);
+        mActionBar = getSupportActionBar();
+        toggle = new ActionBarDrawerToggle(this, mDrawer,
+                mMainToolbar,R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        mDrawer.addDrawerListener(toggle);
+        //toggle.setDrawerIndicatorEnabled(true);
+        //toggle.setDrawerSlideAnimationEnabled(true);
+        mDrawer.post(() -> toggle.syncState());
     }
 
     @Override
@@ -265,7 +259,6 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
         else if(id == R.id.faq){
             questionsFragment = (QuestionsFragment) getSupportFragmentManager().
                     findFragmentByTag(QuestionsFragment.class.getName());
-            mStartTaskFab.hide();
             if(questionsFragment == null)
                 questionsFragment = QuestionsFragment.newInstance();
             if(getSupportFragmentManager().getFragments().size() > 1) {
@@ -286,7 +279,6 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
         else if(id == R.id.about){
             aboutFragment = (AboutFragment) getSupportFragmentManager().
                     findFragmentByTag(AboutFragment.class.getName());
-            mStartTaskFab.hide();
             if(aboutFragment == null)
                 aboutFragment = AboutFragment.newInstance();
             if(getSupportFragmentManager().getFragments().size() > 1) {

@@ -129,6 +129,7 @@
             android:layout_marginEnd="32dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:alpha="0"
             tools:visibility="gone" />
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 </layout>

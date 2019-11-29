@@ -1,5 +1,6 @@
 package mx.dev.franco.automusictagfixer.utilities;
 
+import android.app.Activity;
 import android.graphics.Bitmap;
 import android.view.View;
 import android.widget.ImageView;
@@ -51,7 +52,8 @@ public class BindingUtils {
                                         colorPalette = ContextCompat.getColor(view.getContext(),
                                                 R.color.primaryColor);
                                     }
-
+                                    if(view.getContext() instanceof Activity)
+                                        ((Activity)view.getContext()).getWindow().setNavigationBarColor(colorPalette);
                                     ((View)view.getParent().getParent()).setBackgroundColor(colorPalette);
                                 }
                             });

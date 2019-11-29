@@ -97,6 +97,7 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
+        setRetainInstance(true);
         mAdapter = new TrackAdapter(this);
         mListViewModel = getViewModel();
 
@@ -149,7 +150,14 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
         else {
             boolean isServiceRunning = serviceUtils.checkIfServiceIsRunning(FixerTrackService.CLASS_NAME);
             if(!isServiceRunning){
-                mStartTaskFab.show();
+                TrackDetailFragment trackDetailFragment =
+                        (TrackDetailFragment) getChildFragmentManager().
+                                findFragmentByTag(TrackDetailFragment.class.getName());
+
+                if(trackDetailFragment != null && trackDetailFragment.isVisible())
+                    mStartTaskFab.hide();
+                else
+                    mStartTaskFab.show();
                 //mStopTaskFab.hide();
             }
             else {
@@ -174,7 +182,8 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
         mRecyclerView = view.findViewById(R.id.tracks_recycler_view);
         mSwipeRefreshLayout = view.findViewById(R.id.refresh_layout);
         mMessage = view.findViewById(R.id.message);
-        mStartTaskFab = ((MainActivity)getActivity()).mStartTaskFab;//view.findViewById(R.id.fab_start_stop);
+        //mStartTaskFab = ((MainActivity)getActivity()).mStartTaskFab;
+        mStartTaskFab = view.findViewById(R.id.fab_start_stop);
         //mStopTaskFab = view.findViewById(R.id.fab_stop);
         mStartTaskFab.setOnClickListener(v -> startCorrection(-1));
         //mStopTaskFab.setOnClickListener(v -> stopCorrection());
@@ -234,9 +243,12 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        ((MainActivity)getActivity()).mActionBar.setDisplayHomeAsUpEnabled(true);
-        ((MainActivity)getActivity()).mActionBar.setHomeButtonEnabled(true);
+        //((MainActivity)getActivity()).setupToolbar();
+        /*((MainActivity)getActivity()).mActionBar.setDisplayHomeAsUpEnabled(false);
+        ((MainActivity)getActivity()).mActionBar.setHomeButtonEnabled(false);
         ((MainActivity)getActivity()).toggle.setDrawerIndicatorEnabled(true);
+        ((MainActivity)getActivity()).toggle.setDrawerSlideAnimationEnabled(true);*/
+        ((MainActivity)getActivity()).mActionBar.setDisplayHomeAsUpEnabled(true);
         updateToolbar(mCurrentTracks);
     }
 

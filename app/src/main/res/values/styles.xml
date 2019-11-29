@@ -19,6 +19,8 @@
         <item name="materialButtonStyle">@style/Widget.AutomusicTagFixer.ColoredButton</item>
         <item name="materialButtonOutlinedStyle">@style/Widget.AutomusicTagFixer.OutlinedButton</item>
         <item name="actionOverflowMenuStyle">@style/Widget.MaterialComponents.PopupMenu.Overflow</item>
+        <item name="android:navigationBarColor">@color/dark_gray</item>
+        <item name="popupMenuStyle">@style/ShapeAppearanceOverlay.AutomusicTagFixer.PopupMenu</item>
         <!--item name="colorPrimaryVariant">pr</item>
         <item name="colorOnPrimary">@color/onPrimary</item>
         <item name="colorSecondaryVariant">@color/secondaryVariant</item>
@@ -138,6 +140,15 @@
     </style>
 
     <style name="ShapeAppearanceOverlay.AutomusicTagFixer.MaterialCardView" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">16dp</item>
+    </style>
+
+    <style name="Widget.AutomusicTagFixer.PopupMenu" parent="@style/Widget.MaterialComponents.PopupMenu">
+        <item name="shapeAppearanceOverlay">@style/ShapeAppearanceOverlay.AutomusicTagFixer.PopupMenu</item>
+    </style>
+
+    <style name="ShapeAppearanceOverlay.AutomusicTagFixer.PopupMenu" parent="">
         <item name="cornerFamily">rounded</item>
         <item name="cornerSize">16dp</item>
     </style>
