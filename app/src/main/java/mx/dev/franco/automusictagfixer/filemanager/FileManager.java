@@ -1,7 +1,6 @@
 package mx.dev.franco.automusictagfixer.filemanager;
 
 import androidx.lifecycle.LiveData;
-import androidx.lifecycle.MutableLiveData;
 
 import java.util.List;
 
@@ -16,7 +15,7 @@ import mx.dev.franco.automusictagfixer.utilities.Resource;
 
 public class FileManager {
 
-    private MutableLiveData<Boolean> mStateLiveData;
+    private SingleLiveEvent<Boolean> mStateLiveData;
     private SingleLiveEvent<Resource<String>> mLiveData;
     private Cache<String, List<CoverIdentificationResult>> mCoverCache;
 
@@ -25,7 +24,7 @@ public class FileManager {
 
     @Inject
     public FileManager(Cache<String, List<CoverIdentificationResult>> coverCache) {
-        mStateLiveData = new MutableLiveData<>();
+        mStateLiveData = new SingleLiveEvent<>();
         mLiveData = new SingleLiveEvent<>();
         mCoverCache = coverCache;
     }
@@ -37,7 +36,6 @@ public class FileManager {
     public LiveData<Resource<String>> observeResultFileSaving() {
         return mLiveData;
     }
-
 
     public void saveFile(String idCover, String trackId, String filename) {
         mAsyncCoverSaver = new AsyncCoverSaver(new AsyncOperation<Void, String, Void, String>() {
@@ -81,5 +79,11 @@ public class FileManager {
             }
         }, filename, null, null, mCoverCache, data);
         mAsyncCoverSaver.executeOnExecutor(AutoMusicTagFixer.getExecutorService());
+    }
+
+    public void onCleared() {
+        mLiveData.call();
+        mStateLiveData.call();
+        mAsyncCoverSaver = null;
     }
 }

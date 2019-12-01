@@ -5,7 +5,6 @@ import android.media.MediaScannerConnection;
 import android.webkit.MimeTypeMap;
 
 import androidx.lifecycle.LiveData;
-import androidx.lifecycle.MutableLiveData;
 
 import org.jaudiotagger.tag.FieldKey;
 
@@ -28,7 +27,7 @@ public class MediaStoreManager {
 
     private SingleLiveEvent<MediaStoreResult> mMediaStoreResultSingleLiveEvent;
     //Live data to inform the progress of task.
-    private MutableLiveData<Boolean> mLoadingStateLiveData;
+    private SingleLiveEvent<Boolean> mLoadingStateLiveData;
     private SingleLiveEvent<Resource<List<Track>>> mResult;
     private MediaStoreUpdater mMediaStoreUpdater;
     private Context mContext;
@@ -37,7 +36,7 @@ public class MediaStoreManager {
     @Inject
     public MediaStoreManager(@Nonnull Context context) {
         mContext = context;
-        mLoadingStateLiveData = new MutableLiveData<>();
+        mLoadingStateLiveData = new SingleLiveEvent<>();
         mMediaStoreResultSingleLiveEvent = new SingleLiveEvent<>();
         mResult = new SingleLiveEvent<>();
 
@@ -136,6 +135,12 @@ public class MediaStoreManager {
             }
         });
         mediaStoreReader.executeOnExecutor(AutoMusicTagFixer.getExecutorService(), mContext);
+    }
+
+    public void onCleared() {
+        mResult.call();
+        mLoadingStateLiveData.call();
+        mMediaStoreResultSingleLiveEvent.call();
     }
 
 }

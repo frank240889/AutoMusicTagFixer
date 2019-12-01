@@ -1,128 +1,126 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.core.widget.NestedScrollView
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/root_container_sd_card_instructions"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:scrollbarAlwaysDrawVerticalTrack="true"
-    android:scrollbars="vertical"
-    android:scrollIndicators="end">
-    <RelativeLayout
+    android:background="@color/primaryBackground">
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/sd_card_instructions_app_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:animateLayoutChanges="true">
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/sd_card_instructions_toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?android:attr/actionBarSize"/>
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/scrollable_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#ee212121"
-        android:nestedScrollingEnabled="true"
-        android:overScrollMode="always"
-        android:scrollbarStyle="outsideOverlay"
-        android:scrollbarThumbVertical="@drawable/custom_scrollbar_thumb"
-        tools:context="mx.dev.franco.automusictagfixer.ui.sdcardinstructions.SdCardInstructionsActivity">
-        <ImageButton
-            android:id="@+id/close_instructions"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentTop="true"
-            android:layout_alignParentEnd="true"
-            android:padding="8dp"
-            android:background="?android:attr/selectableItemBackgroundBorderless"
-            android:src="@drawable/ic_close_white_24px"/>
-        <TextView
-            android:id="@+id/instructions"
+        android:scrollbarAlwaysDrawVerticalTrack="true"
+        android:scrollbars="vertical"
+        app:layout_constraintTop_toBottomOf="@+id/title_manual_correction_dialog_fragment"
+        app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior">
+
+        <LinearLayout
+            android:id="@+id/linear_layout_container"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:padding="16dp"
-            android:text="@string/instructions_request_permission"
-            android:textAlignment="center"
-            android:textSize="18sp"
-            android:layout_marginTop="24dp"/>
+            android:layout_height="match_parent"
+            android:nestedScrollingEnabled="true"
+            android:orientation="vertical"
+            android:overScrollMode="always"
+            android:scrollbarStyle="outsideOverlay"
+            android:scrollbarThumbVertical="@drawable/custom_scrollbar_thumb"
+            tools:context="mx.dev.franco.automusictagfixer.ui.sdcardinstructions.SdCardInstructionsActivity">
 
-        <TextView
-            android:id="@+id/instructions_step1"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/instructions"
-            android:padding="16dp"
-            android:text="@string/step1"
-            android:textAlignment="center"
-            android:textSize="18sp" />
+            <TextView
+                android:id="@+id/instructions"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="4dp"
+                android:text="@string/instructions_request_permission"
+                android:textAlignment="center"
+                android:textSize="18sp" />
 
-        <Button
-            android:id="@+id/request_permission_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/instructions_step1"
-            android:layout_centerHorizontal="true"
-            android:padding="8dp"
-            android:text="@string/enable" />
-
-
-        <TextView
-            android:id="@+id/instructions_step2"
-            android:layout_below="@id/request_permission_button"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:padding="16dp"
-            android:textSize="18sp"
-            android:text="@string/step2"/>
+            <TextView
+                android:id="@+id/instructions_step2"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="16dp"
+                android:text="@string/step1"
+                android:textSize="18sp" />
 
 
-        <ImageView
-            android:id="@+id/image_instructions_step1"
-            android:layout_width="match_parent"
-            android:layout_height="100dp"
-            android:layout_below="@id/instructions_step2"
-            android:layout_centerHorizontal="true"
-            android:adjustViewBounds="true"
-            android:scaleType="fitCenter"
-            android:src="@drawable/step1_1" />
+            <ImageView
+                android:id="@+id/image_instructions_step1"
+                android:layout_width="match_parent"
+                android:layout_height="100dp"
+                android:adjustViewBounds="true"
+                android:scaleType="fitCenter"
+                android:src="@drawable/step1_1" />
 
 
-        <ImageView
-            android:id="@+id/image_instructions_step2"
-            android:layout_width="match_parent"
-            android:layout_height="100dp"
-            android:layout_below="@id/image_instructions_step1"
-            android:layout_centerHorizontal="true"
-            android:adjustViewBounds="true"
-            android:scaleType="fitCenter"
-            android:src="@drawable/step2_2" />
+            <TextView
+                android:id="@+id/instructions_ste12"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="16dp"
+                android:text="@string/step2"
+                android:textSize="18sp" />
 
-        <TextView
-            android:id="@+id/instructions_step3"
-            android:layout_below="@id/image_instructions_step2"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:padding="16dp"
-            android:textSize="18sp"
-            android:text="@string/step3"/>
+            <ImageView
+                android:id="@+id/image_instructions_step2"
+                android:layout_width="match_parent"
+                android:layout_height="100dp"
+                android:adjustViewBounds="true"
+                android:scaleType="fitCenter"
+                android:src="@drawable/step2_2" />
 
-        <ImageView
-            android:id="@+id/image_instructions_step3"
-            android:layout_width="match_parent"
-            android:layout_height="100dp"
-            android:layout_below="@+id/instructions_step3"
-            android:layout_centerHorizontal="false"
-            android:adjustViewBounds="true"
-            android:scaleType="fitCenter"
-            android:src="@drawable/step3_3" />
+            <TextView
+                android:id="@+id/instructions_step3"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="16dp"
+                android:text="@string/step3"
+                android:textSize="18sp" />
 
-        <TextView
-            android:id="@+id/instructions_step4"
-            android:layout_below="@id/image_instructions_step3"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:padding="16dp"
-            android:textSize="18sp"
-            android:text="@string/step4"/>
+            <ImageView
+                android:id="@+id/image_instructions_step3"
+                android:layout_width="match_parent"
+                android:layout_height="100dp"
+                android:adjustViewBounds="true"
+                android:scaleType="fitCenter"
+                android:src="@drawable/step3_3" />
 
-        <ImageView
-            android:id="@+id/image_instructions_step4"
-            android:layout_width="match_parent"
-            android:layout_height="100dp"
-            android:layout_below="@+id/instructions_step4"
-            android:layout_centerHorizontal="false"
-            android:adjustViewBounds="true"
-            android:scaleType="fitCenter"
-            android:src="@drawable/step4_4" />
+            <TextView
+                android:id="@+id/instructions_step4"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="16dp"
+                android:text="@string/step4"
+                android:textSize="18sp" />
 
-    </RelativeLayout>
-</androidx.core.widget.NestedScrollView>
+            <ImageView
+                android:id="@+id/image_instructions_step4"
+                android:layout_width="match_parent"
+                android:layout_height="100dp"
+                android:adjustViewBounds="true"
+                android:scaleType="fitCenter"
+                android:src="@drawable/step4_4" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/request_permission_button"
+                android:layout_gravity="center"
+                android:layout_margin="8dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                style="@style/Widget.AutomusicTagFixer.OutlinedButton"
+                android:text="@string/enable" />
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

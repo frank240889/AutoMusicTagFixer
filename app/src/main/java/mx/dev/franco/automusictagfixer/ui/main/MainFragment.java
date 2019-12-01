@@ -39,6 +39,7 @@ import java.util.Objects;
 import javax.inject.Inject;
 
 import mx.dev.franco.automusictagfixer.R;
+import mx.dev.franco.automusictagfixer.fixer.AudioTagger;
 import mx.dev.franco.automusictagfixer.interfaces.LongRunningTaskListener;
 import mx.dev.franco.automusictagfixer.interfaces.ProcessingListener;
 import mx.dev.franco.automusictagfixer.persistence.repository.TrackRepository;
@@ -85,6 +86,8 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
     ServiceUtils serviceUtils;
     @Inject
     AbstractSharedPreferences mAbstractSharedPreferences;
+    @Inject
+    AudioTagger.StorageHelper storageHelper;
     private int mVerticalOffset = 0;
 
     public static MainFragment newInstance() {
@@ -112,7 +115,8 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
             if(message == null)
                 return;
 
-            Snackbar snackbar = AndroidUtils.createSnackbar(mRecyclerView, message);
+            Snackbar snackbar = AndroidUtils.createSnackbar(mStartTaskFab, message);
+            snackbar.setAnchorView(mRecyclerView);
             snackbar.show();
         });
         mListViewModel.getTracks().observe(this, tracks -> {
@@ -126,7 +130,6 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
 
         mListViewModel.observeInformativeMessage().observe(this, this::onMessage);
         mListViewModel.observeOnSortTracks().observe(this, this::onSorted);
-        mListViewModel.observeOnSdPresent().observe(this, this::onSdPresent);
     }
 
     private void updateToolbar(List<Track> tracks) {
@@ -142,14 +145,7 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
         else {
             boolean isServiceRunning = serviceUtils.checkIfServiceIsRunning(FixerTrackService.CLASS_NAME);
             if(!isServiceRunning){
-                TrackDetailFragment trackDetailFragment =
-                        (TrackDetailFragment) getChildFragmentManager().
-                                findFragmentByTag(TrackDetailFragment.class.getName());
-
-                if(trackDetailFragment != null && trackDetailFragment.isVisible())
-                    mStartTaskFab.hide();
-                else
-                    mStartTaskFab.show();
+                mStartTaskFab.show();
                 //mStopTaskFab.hide();
             }
             else {
@@ -198,7 +194,7 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
                         RequiredPermissions.WRITE_EXTERNAL_STORAGE_PERMISSION);
             }
             else {
-                rescan();
+                mViewModel.scan();
             }
         });
 
@@ -208,7 +204,6 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
         );
         mSwipeRefreshLayout.setProgressBackgroundColorSchemeColor(getActivity().
                 getResources().getColor(R.color.progressSwipeRefreshLayoutBackgroundTint));
-
         boolean hasPermission = ContextCompat.
                 checkSelfPermission(getActivity(), Manifest.permission.WRITE_EXTERNAL_STORAGE)
                 == PackageManager.PERMISSION_GRANTED;
@@ -219,27 +214,30 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
                     RequiredPermissions.WRITE_EXTERNAL_STORAGE_PERMISSION);
         }
         else {
-            mMessage.setText(R.string.loading_tracks);
+            boolean isPresentSD = storageHelper.isPresentRemovableStorage();
+            if(AndroidUtils.getUriSD(getActivity()) == null && isPresentSD) {
+                getActivity().startActivity(new Intent(getActivity(), SdCardInstructionsActivity.class));
+            }
+            /*else {
+                mMessage.setText(R.string.loading_tracks);
+            }*/
         }
-
         //App is opened again, then scroll to the track being processed.
         int id = getActivity().getIntent().getIntExtra(Constants.MEDIA_STORE_ID, -1);
         int pos = mListViewModel.getTrackPosition(id);
         mRecyclerView.scrollToPosition(pos);
-
-        mListViewModel.checkSdIsPresent();
     }
 
-
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        //if (requestCode == RequiredPermissions.REQUEST_PERMISSION_SAF && resultCode == Activity.RESULT_OK) {
+            mListViewModel.fetchTracks();
+        //}
+    }
 
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        //((MainActivity)getActivity()).setupToolbar();
-        /*((MainActivity)getActivity()).mActionBar.setDisplayHomeAsUpEnabled(false);
-        ((MainActivity)getActivity()).mActionBar.setHomeButtonEnabled(false);
-        ((MainActivity)getActivity()).toggle.setDrawerIndicatorEnabled(true);
-        ((MainActivity)getActivity()).toggle.setDrawerSlideAnimationEnabled(true);*/
         ((MainActivity)getActivity()).mActionBar.setDisplayHomeAsUpEnabled(true);
         updateToolbar(mCurrentTracks);
     }
@@ -268,7 +266,6 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
                     if(resultSearchListFragment == null) {
                         resultSearchListFragment = ResultSearchFragment.newInstance();
                     }
-                    mStartTaskFab.hide();
 
                     getChildFragmentManager().beginTransaction().
                             setCustomAnimations(R.anim.slide_in_right,
@@ -422,8 +419,13 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
                                            @NonNull int[] grantResults) {
         //Check permission to access files and execute scan if were granted
         if(grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
-            mListViewModel.fetchTracks();
-
+            boolean isPresentSD = storageHelper.isPresentRemovableStorage();
+            if(AndroidUtils.getUriSD(getActivity()) == null && isPresentSD) {
+                getActivity().startActivity(new Intent(getActivity(), SdCardInstructionsActivity.class));
+            }
+            else {
+                mListViewModel.fetchTracks();
+            }
         }
         else {
             mSwipeRefreshLayout.setEnabled(true);
@@ -552,7 +554,6 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
      */
     private void openDetails(ViewWrapper viewWrapper){
         mRecyclerView.stopScroll();
-        mStartTaskFab.hide();
         openFragment(viewWrapper);
     }
 
@@ -669,7 +670,6 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
     @Override
     public void onLongRunningTaskMessage(String error) {
         Snackbar snackbar = AndroidUtils.createSnackbar(getView(), error);
-        //snackbar.setAnchorView(mStartTaskFab);
         snackbar.show();
     }
 
@@ -687,16 +687,10 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
     }
 
     private void onMessage(Integer integer) {
-        Snackbar snackbar = AndroidUtils.getSnackbar(getView().findViewById(R.id.root_container),
+        Snackbar snackbar = AndroidUtils.getSnackbar(mStartTaskFab,
                 getActivity().getApplicationContext());
         snackbar.setText(integer);
-        snackbar.setAnchorView(mStartTaskFab);
         snackbar.show();
-    }
-
-    private void onSdPresent(Boolean sdPresent) {
-        if(sdPresent)
-            getActivity().startActivity(new Intent(getActivity(), SdCardInstructionsActivity.class));
     }
 
     private void onSorted(Integer idResource) {

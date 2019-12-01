@@ -1,7 +1,5 @@
 package mx.dev.franco.automusictagfixer.ui.trackdetail;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -9,7 +7,6 @@ import android.graphics.Bitmap;
 import android.graphics.ImageDecoder;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -133,26 +130,6 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
         else
             mViewModel.setInitialAction(CorrectionActions.VIEW_INFO);
 
-        mViewModel.observeReadingResult().observe(this, message -> {
-            if(message == null) {
-                onSuccessLoad(null);
-            }
-        });
-
-        mViewModel.observeActionableMessage().observe(this, this::onActionableMessage);
-        mViewModel.observeMessage().observe(this, this::onMessage);
-        mViewModel.observeSuccessIdentification().observe(this, this::onIdentificationResults);
-        mViewModel.observeCachedIdentification().observe(this, this::onIdentificationResults);
-        mViewModel.observeFailIdentification().observe(this, this::onMessage);
-        mViewModel.observeLoadingState().observe(this, this::loading);
-        mViewModel.observeConfirmationRemoveCover().observe(this, this::onConfirmRemovingCover);
-        mViewModel.observeInvalidInputsValidation().observe(this, this::onInputDataInvalid);
-        mViewModel.observeWritingResult().observe(this, this::onWritingResult);
-        mViewModel.observeRenamingResult().observe(this, this::onMessage);
-        mViewModel.observeCoverSavingResult().observe(this, this::onActionableMessage);
-        mViewModel.observeTrack().observe(this, track -> mPlayer.setPath(track.getPath()));
-        mViewModel.observeLoadingMessage().observe(this, this::onLoadingMessage);
-
         requireActivity().getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
@@ -169,6 +146,28 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
                 }
             }
         });
+    }
+
+    private void setupObservables() {
+        mViewModel.observeReadingResult().observe(this, message -> {
+            if(message == null) {
+                onSuccessLoad(null);
+            }
+        });
+
+        mViewModel.observeLoadingState().observe(this, this::loading);
+        mViewModel.observeActionableMessage().observe(this, this::onActionableMessage);
+        mViewModel.observeMessage().observe(this, this::onMessage);
+        mViewModel.observeSuccessIdentification().observe(this, this::onIdentificationResults);
+        mViewModel.observeCachedIdentification().observe(this, this::onIdentificationResults);
+        mViewModel.observeFailIdentification().observe(this, this::onMessage);
+        mViewModel.observeConfirmationRemoveCover().observe(this, this::onConfirmRemovingCover);
+        mViewModel.observeInvalidInputsValidation().observe(this, this::onInputDataInvalid);
+        mViewModel.observeWritingResult().observe(this, this::onWritingResult);
+        mViewModel.observeRenamingResult().observe(this, this::onMessage);
+        mViewModel.observeCoverSavingResult().observe(this, this::onActionableMessage);
+        mViewModel.observeTrack().observe(this, track -> mPlayer.setPath(track.getPath()));
+        mViewModel.observeLoadingMessage().observe(this, this::onLoadingMessage);
     }
 
     @Override
@@ -204,6 +203,8 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
         mPlayPreviewMenuItem = menu.findItem(R.id.action_play);
         mManualEditMenuItem = menu.findItem(R.id.action_edit_manual);
         mSearchInWebMenuItem = menu.findItem(R.id.action_web_search);
+        setupObservables();
+        loadTrackData(null);
     }
 
     @Override
@@ -349,21 +350,11 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
 
     protected void loading(boolean showProgress) {
         if(showProgress) {
-            mFragmentTrackDetailBinding.progressView.animate().alpha(1).setDuration(100).setListener(new AnimatorListenerAdapter() {
-                @Override
-                public void onAnimationEnd(Animator animation) {
-                    mFragmentTrackDetailBinding.progressView.setVisibility(VISIBLE);
-                }
-            }).start();
+            mFragmentTrackDetailBinding.progressView.setVisibility(VISIBLE);
             disableEditModeElements();
         }
         else {
-            mFragmentTrackDetailBinding.progressView.animate().alpha(0).setDuration(100).setListener(new AnimatorListenerAdapter() {
-                @Override
-                public void onAnimationEnd(Animator animation) {
-                    mFragmentTrackDetailBinding.progressView.setVisibility(View.GONE);
-                }
-            }).start();
+            mFragmentTrackDetailBinding.progressView.setVisibility(View.GONE);
             enableEditModeElements();
         }
     }
@@ -849,21 +840,19 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
                         ((MainActivity) getActivity()).mMainAppbar.setExpanded(false, true);
 
                     }
-                    else if(isRemoving()) {
-                        ((MainActivity)getActivity()).setupToolbar();
-                        AppBarLayout.LayoutParams layoutParams =
-                                (AppBarLayout.LayoutParams) ((MainActivity) getActivity()).mMainToolbar.getLayoutParams();
-                        layoutParams.setScrollFlags(0);
+                    else {
                         ((MainActivity)getActivity()).mMainAppbar.setExpanded(true, true);
-                        ((MainActivity)getActivity()).mDrawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
                     }
                 }
 
                 @Override
                 public void onAnimationEnd(Animation animation) {
-                    if(TrackDetailFragment.this.isAdded()) {
-                        Handler handler = new Handler();
-                        handler.postDelayed(() -> loadTrackData(null), 250);
+                    if(!TrackDetailFragment.this.isAdded()) {
+                        ((MainActivity)getActivity()).setupToolbar();
+                        AppBarLayout.LayoutParams layoutParams =
+                                (AppBarLayout.LayoutParams) ((MainActivity) getActivity()).mMainToolbar.getLayoutParams();
+                        layoutParams.setScrollFlags(0);
+                        ((MainActivity)getActivity()).mDrawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
                     }
                 }
 

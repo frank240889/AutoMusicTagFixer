@@ -208,14 +208,14 @@
     <string name="message_could_not_remove_cover">Could not removed current cover art.</string>
 
     <string name="message_uri_tree_not_set">It is required writing permission to the SD.</string>
-    <string name="enable">Enable</string>
+    <string name="enable">Enable permissión</string>
     <string name="toast_apply_tags_again">Permission enabled, try to apply tags again.</string>
     <string name="removable_media_no_detected">No removable memory detected.</string>
     <string name="all_tags">All</string>
     <string name="missing_tags">Missing</string>
 
 
-    <string name="instructions_request_permission">If you have songs in the SD, it is necessary to enable the permission as shown below, otherwise the songs you have in the SD will not be able to correct:</string>
+    <string name="instructions_request_permission">A SD memory card has been detected so is necessary to enable the permission for this as shown below, otherwise the songs you have in the SD will not be able to correct:</string>
     <string name="step1">Click \"Enable\"\ and follow the instructions as in the following images.</string>
     <string name="step2">In the window that will appear select the SD as indicated in the image.</string>
     <string name="step3">Open the upper left side menu and select the SD.</string>
@@ -282,4 +282,6 @@
     <string name="turn_lights_on">Turn lights on</string>
     <string name="turn_lights_off">Turn lights off</string>
     <string name="removing_cover">Removing cover…</string>
+    <string name="close">Close</string>
+    <string name="sd_card_detected">SD card detected</string>
 </resources>

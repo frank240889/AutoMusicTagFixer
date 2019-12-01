@@ -15,6 +15,7 @@ import android.view.Window;
 import android.widget.EditText;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.ActionBarDrawerToggle;
@@ -154,6 +155,10 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
         toggle.onConfigurationChanged(newConfig);
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+    }
 
     private void addFragment(BaseFragment fragment) {
         getSupportFragmentManager().beginTransaction()

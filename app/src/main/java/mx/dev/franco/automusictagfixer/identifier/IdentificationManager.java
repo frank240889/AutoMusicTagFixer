@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.os.AsyncTask;
 
 import androidx.lifecycle.LiveData;
-import androidx.lifecycle.MutableLiveData;
 
 import java.util.List;
 
@@ -25,7 +24,7 @@ import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 
 public class IdentificationManager {
 
-    private MutableLiveData<Boolean> mLoadingStateLiveData;
+    private SingleLiveEvent<Boolean> mLoadingStateLiveData;
     private SingleLiveEvent<IdentificationStatus> mOnSuccessIdentificationLiveData;
     private SingleLiveEvent<IdentificationStatus> mOnFailIdentificationLiveData;
     private Identifier<Track, List<Identifier.IdentificationResults>> mIdentifier;
@@ -50,7 +49,7 @@ public class IdentificationManager {
         mIdentifier = identifierFactory.create(IdentifierFactory.FINGERPRINT_IDENTIFIER);
         mOnSuccessIdentificationLiveData = new SingleLiveEvent<>();
         mOnFailIdentificationLiveData = new SingleLiveEvent<>();
-        mLoadingStateLiveData = new MutableLiveData<>();
+        mLoadingStateLiveData = new SingleLiveEvent<>();
     }
 
     /**
@@ -184,6 +183,9 @@ public class IdentificationManager {
     public void clearResults() {
         mTrackCache.deleteAll();
         mCoverCache.deleteAll();
+        mOnSuccessIdentificationLiveData.call();
+        mOnFailIdentificationLiveData.call();
+        mLoadingStateLiveData.call();
     }
 
     private Identifier.IdentificationResults findResult(List<? extends Identifier.IdentificationResults> resultList, String idToSearch) {

@@ -26,8 +26,6 @@ import mx.dev.franco.automusictagfixer.ui.main.TrackAdapter;
         CacheModule.class,
         DatabaseModule.class,
         IdentifierModule.class,
-        MediaPlayerModule.class,
-        SharedPreferencesModule.class,
         SharedPreferencesModule.class,
         StorageModule.class,
         TaggerModule.class,

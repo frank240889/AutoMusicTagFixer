@@ -24,7 +24,6 @@ import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.persistence.room.TrackState;
 import mx.dev.franco.automusictagfixer.services.FixerTrackService;
 import mx.dev.franco.automusictagfixer.ui.SingleLiveEvent;
-import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
 import mx.dev.franco.automusictagfixer.utilities.Message;
 import mx.dev.franco.automusictagfixer.utilities.Resource;
@@ -45,7 +44,6 @@ public class ListViewModel extends AndroidViewModel {
     private MutableLiveData<Boolean> mObservableCheckAllTracks = new SingleLiveEvent<>();
     private MutableLiveData<Integer> mObservableMessage = new SingleLiveEvent<>();
     private MutableLiveData<Integer> mOnSorted = new SingleLiveEvent<>();
-    private MutableLiveData<Boolean> mObservableOnSdPresent = new SingleLiveEvent<>();
     //The current list of tracks.
     private List<Track> mCurrentList;
     public TrackRepository trackRepository;
@@ -116,10 +114,6 @@ public class ListViewModel extends AndroidViewModel {
 
     public MutableLiveData<Integer> observeOnSortTracks() {
         return mOnSorted;
-    }
-
-    public LiveData<Boolean> observeOnSdPresent() {
-        return mObservableOnSdPresent;
     }
 
     /**
@@ -302,20 +296,6 @@ public class ListViewModel extends AndroidViewModel {
     }
 
     /**
-     * Verifies if an slot of SD card is present and if an SD card is inserted.
-     */
-    public void checkSdIsPresent() {
-        boolean isPresentSD = AudioTagger.StorageHelper.getInstance(getApplication().getApplicationContext()).
-                isPresentRemovableStorage();
-        if(AndroidUtils.getUriSD(getApplication().getApplicationContext()) == null && isPresentSD) {
-            mObservableOnSdPresent.setValue(true);
-        }
-        else {
-            mObservableOnSdPresent.setValue(false);
-        }
-    }
-
-    /**
      * Get the status text.
      * @param status The id of track status.
      * @return The resource string of descriptive status of track.
@@ -366,5 +346,15 @@ public class ListViewModel extends AndroidViewModel {
 
     public void notifyPermissionNotGranted() {
         mCurrentList.clear();
+    }
+
+    public void scan() {
+        if(serviceUtils.checkIfServiceIsRunning(FixerTrackService.class.getName())){
+            mObservableMessage.setValue(R.string.no_available);
+        }
+        else {
+            mLoadingState.setValue(true);
+            mMediaStoreManager.rescan();
+        }
     }
 }

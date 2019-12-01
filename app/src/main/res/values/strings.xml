@@ -27,10 +27,10 @@
     <string name="no_cover_art_found">No se encontraron carátulas.</string>
 
     <string name="no_available">No disponible</string>
-    <string name="explanation_permission_access_files">Para encontrar tus canciones automaticamente, es necesario conceder el permiso solicitado por el cuadro de diálogo que aparecerá después que pulses Aceptar.</string>
+    <string name="explanation_permission_access_files">Para encontrar tus canciones automáticamente, es necesario conceder el permiso solicitado por el cuadro de diálogo que aparecerá después que pulses Aceptar.</string>
     <string name="cancel_button">Cancelar</string>
 
-    <string name="file_error">No se puede leer %1$s por que fue movida, eliminada ó renombrada, ¿Deseas quitarla de la lista?</string>
+    <string name="file_error">No se puede leer %1$s por que fué movida, eliminada ó renombrada, ¿Deseas quitarla de la lista?</string>
 
     <string name="faq">Preguntas frecuentes</string>
 
@@ -211,18 +211,18 @@
     <string name="message_could_not_remove_cover">No se pudo remover la carátula actual.</string>
 
     <string name="message_uri_tree_not_set">Se requiere el permiso de escritura a la SD.</string>
-    <string name="enable">Habilitar</string>
+    <string name="enable">Habilitar permiso</string>
     <string name="toast_apply_tags_again">Permiso hablitado, intenta aplicar nuevamente las etiquetas.</string>
     <string name="removable_media_no_detected">No se detectó memoria extraíble.</string>
     <string name="all_tags">Todas</string>
     <string name="missing_tags">Faltantes</string>
 
 
-    <string name="instructions_request_permission">Si tienes canciones en la SD, es necesario habilitar el permiso como se muestra a continuación, de lo contrario las canciones que tengas en la SD no se podrán corregir:</string>
-    <string name="step1">Toca \"Habilitar\"\ y sigue las indicaciones como en las imagenes siguientes.</string>
-    <string name="step2">En la ventana que aparecerá selecciona la SD como se indica en la imagen.</string>
-    <string name="step3">Abre el menu lateral izquierdo superior y selecciona la SD.</string>
-    <string name="step4">Finalmente toca el botón inferior que aparecerá.</string>
+    <string name="instructions_request_permission">Es necesario habilitar el permiso de escritura a esta tarjeta, de lo contrario las canciones contenidas en la SD no se podrán corregir.</string>
+    <string name="step1">Una vez que pulses el botón \"Habilitar\"\ al final de las indicaciones, aparecerá una pantalla como la siguiente (variará el aspecto de acuerdo a la versión de Android y fabricante):</string>
+    <string name="step2">Pulsa el menú de los 3 puntos y selecciona la SD como se indica en la imagen.</string>
+    <string name="step3">Abre el menu lateral izquierdo superior (el menú de hamburguesa)y selecciona la SD.</string>
+    <string name="step4">Se mostrará el contenido de la SD; finalmente toca el botón inferior que aparecerá.</string>
 
     <string name="permission_revoked">Permiso de escritura a SD revocado.</string>
 
@@ -292,4 +292,6 @@
     <string name="turn_lights_on">Encender luces</string>
     <string name="turn_lights_off">Apagar luces</string>
     <string name="removing_cover">Removiendo carátula…</string>
+    <string name="close">Cerrar</string>
+    <string name="sd_card_detected">Tarjeta SD detectada</string>
 </resources>

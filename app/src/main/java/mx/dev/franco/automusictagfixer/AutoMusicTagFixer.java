@@ -23,6 +23,7 @@ import dagger.android.HasServiceInjector;
 import io.fabric.sdk.android.Fabric;
 import mx.dev.franco.automusictagfixer.covermanager.CoverManager;
 import mx.dev.franco.automusictagfixer.di.DaggerApplicationComponent;
+import mx.dev.franco.automusictagfixer.fixer.AudioTagger;
 import mx.dev.franco.automusictagfixer.identifier.ApiInitializerService;
 import mx.dev.franco.automusictagfixer.utilities.shared_preferences.AbstractSharedPreferences;
 
@@ -39,6 +40,8 @@ public final class AutoMusicTagFixer extends Application implements HasActivityI
     DispatchingAndroidInjector<Service> serviceDispatchingAndroidInjector;
     @Inject
     AbstractSharedPreferences mAbstractSharedPreferences;
+    @Inject
+    AudioTagger.StorageHelper storageHelper;
 
     // Called when the application is starting, before any other application objects have been created.
     @Override
@@ -76,6 +79,7 @@ public final class AutoMusicTagFixer extends Application implements HasActivityI
         else {
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
         }
+        storageHelper.detectStorage();
     }
 
     @Override

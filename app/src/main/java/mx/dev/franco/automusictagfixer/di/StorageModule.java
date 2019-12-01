@@ -12,7 +12,7 @@ import mx.dev.franco.automusictagfixer.fixer.AudioTagger;
 public class StorageModule {
 
 @Singleton
-    @Provides
+@Provides
 AudioTagger.StorageHelper providesStorageHelper(Application application) {
     return AudioTagger.StorageHelper.getInstance(application);
 }

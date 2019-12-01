@@ -63,9 +63,9 @@ public class DataTrackManager {
     /**
      * Inject all dependencies into constructor.
      * @param fileTagger Interface to rename audio files and read/write their metadata.
-     * @param trackRoomDatabase
-     * @param cache
-     * @param context
+     * @param trackRoomDatabase Database where is stored the base info of tracks.
+     * @param cache A cache memory used to retrieve the data to apply to current track.
+     * @param context The context of app.
      */
     @Inject
     public DataTrackManager(@NonNull AudioMetadataTagger fileTagger,
@@ -174,6 +174,10 @@ public class DataTrackManager {
      */
     public void onCleared() {
         mResultsCache.deleteAll();
+        mMetadataReaderResultLiveData.call();
+        mMetadataWriterResultLiveData.call();
+        mFileRenamerLiveData.call();
+        mLoadingStateLiveData.call();
     }
 
     /**

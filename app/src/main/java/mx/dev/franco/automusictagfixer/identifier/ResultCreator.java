@@ -69,10 +69,12 @@ public class ResultCreator extends AsyncTask<List<? extends Identifier.Identific
                     if(isCancelled())
                         return null;
                     Bitmap bitmap = generateBitmap(cover);
-                    String size = bitmap.getWidth() + " * " + bitmap.getHeight();
-                    CoverIdentificationResult coverIdentificationResult = new CoverIdentificationResult(cover, size, entry.getKey());
-                    coverIdentificationResult.setId(result.getId());
-                    c.add(coverIdentificationResult);
+                    if(bitmap != null) {
+                        String size = bitmap.getWidth() + " * " + bitmap.getHeight();
+                        CoverIdentificationResult coverIdentificationResult = new CoverIdentificationResult(cover, size, entry.getKey());
+                        coverIdentificationResult.setId(result.getId());
+                        c.add(coverIdentificationResult);
+                    }
                 } catch (IllegalArgumentException | GnException e) {
                     e.printStackTrace();
                 }

@@ -6,7 +6,6 @@ import android.os.Looper;
 import android.util.ArrayMap;
 
 import androidx.annotation.NonNull;
-import androidx.arch.core.util.Function;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MediatorLiveData;
@@ -278,13 +277,9 @@ public class TrackDetailViewModel extends AndroidViewModel {
      */
     public LiveData<SuccessIdentification> observeSuccessIdentification() {
         LiveData<Identifier.IdentificationStatus> resultIdentification = mIdentificationManager.observeSuccessIdentification();
-        mResultsIdentificationLiveData = Transformations.map(resultIdentification, new Function<Identifier.IdentificationStatus, SuccessIdentification>() {
-            @Override
-            public SuccessIdentification apply(Identifier.IdentificationStatus input) {
-                return new SuccessIdentification(mIdentificationParams.getIdentificationType(),
-                        mTrack.getMediaStoreId() + "");
-            }
-        });
+        mResultsIdentificationLiveData = Transformations.map(resultIdentification, input ->
+                new SuccessIdentification(mIdentificationParams.getIdentificationType(),
+                mTrack.getMediaStoreId() + ""));
         return mResultsIdentificationLiveData;
     }
 
@@ -652,6 +647,8 @@ public class TrackDetailViewModel extends AndroidViewModel {
         mIdentificationManager.cancelIdentification();
         mDataTrackManager.onCleared();
         mIdentificationManager.clearResults();
+        mFileManager.onCleared();
+        mMediaStoreManager.onCleared();
     }
 
     public void extractCover() {
