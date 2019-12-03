@@ -100,7 +100,6 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
-        setRetainInstance(true);
         mAdapter = new TrackAdapter(this);
         mListViewModel = getViewModel();
 
@@ -130,32 +129,6 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
 
         mListViewModel.observeInformativeMessage().observe(this, this::onMessage);
         mListViewModel.observeOnSortTracks().observe(this, this::onSorted);
-    }
-
-    private void updateToolbar(List<Track> tracks) {
-        if(tracks == null)
-            return;
-
-        if(tracks.isEmpty()) {
-            //mStopTaskFab.hide();
-            mStartTaskFab.hide();
-            mMessage.setVisibility(View.VISIBLE);
-            mMessage.setText(R.string.no_items_found);
-        }
-        else {
-            boolean isServiceRunning = serviceUtils.checkIfServiceIsRunning(FixerTrackService.CLASS_NAME);
-            if(!isServiceRunning){
-                mStartTaskFab.show();
-                //mStopTaskFab.hide();
-            }
-            else {
-                mStartTaskFab.hide();
-                //mStopTaskFab.show();
-            }
-            ((MainActivity)getActivity()).mMainToolbar.setTitle(tracks.size() + " " +getString(R.string.tracks));
-            ((MainActivity)getActivity()).mActionBar.setTitle(tracks.size() + " " +getString(R.string.tracks));
-            mMessage.setVisibility(View.GONE);
-        }
     }
 
     @Override
@@ -194,7 +167,14 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
                         RequiredPermissions.WRITE_EXTERNAL_STORAGE_PERMISSION);
             }
             else {
-                mViewModel.scan();
+                boolean isPresentSD = storageHelper.isPresentRemovableStorage();
+                if(AndroidUtils.getUriSD(getActivity()) == null && isPresentSD) {
+                    startActivityForResult(new Intent(getActivity(), SdCardInstructionsActivity.class),
+                            RequiredPermissions.REQUEST_PERMISSION_SAF);
+                }
+                else {
+                    mViewModel.scan();
+                }
             }
         });
 
@@ -216,11 +196,13 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
         else {
             boolean isPresentSD = storageHelper.isPresentRemovableStorage();
             if(AndroidUtils.getUriSD(getActivity()) == null && isPresentSD) {
-                getActivity().startActivity(new Intent(getActivity(), SdCardInstructionsActivity.class));
+                startActivityForResult(new Intent(getActivity(), SdCardInstructionsActivity.class),
+                        RequiredPermissions.REQUEST_PERMISSION_SAF);
             }
-            /*else {
-                mMessage.setText(R.string.loading_tracks);
-            }*/
+            else {
+                mViewModel.scan();
+            }
+            mMessage.setText(R.string.loading_tracks);
         }
         //App is opened again, then scroll to the track being processed.
         int id = getActivity().getIntent().getIntExtra(Constants.MEDIA_STORE_ID, -1);
@@ -230,15 +212,17 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        //if (requestCode == RequiredPermissions.REQUEST_PERMISSION_SAF && resultCode == Activity.RESULT_OK) {
-            mListViewModel.fetchTracks();
-        //}
+        mSwipeRefreshLayout.setRefreshing(false);
+        if (requestCode == RequiredPermissions.REQUEST_PERMISSION_SAF) {
+            mListViewModel.scan();
+        }
     }
 
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         ((MainActivity)getActivity()).mActionBar.setDisplayHomeAsUpEnabled(true);
+        //((MainActivity)getActivity()).toggle.syncState();
         updateToolbar(mCurrentTracks);
     }
 
@@ -318,7 +302,34 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
                     RequiredPermissions.WRITE_EXTERNAL_STORAGE_PERMISSION);
         }
         else {
-            mListViewModel.rescan();
+            mListViewModel.scan();
+        }
+    }
+
+
+    private void updateToolbar(List<Track> tracks) {
+        if(tracks == null)
+            return;
+
+        if(tracks.isEmpty()) {
+            //mStopTaskFab.hide();
+            mStartTaskFab.hide();
+            mMessage.setVisibility(View.VISIBLE);
+            mMessage.setText(R.string.no_items_found);
+        }
+        else {
+            boolean isServiceRunning = serviceUtils.checkIfServiceIsRunning(FixerTrackService.CLASS_NAME);
+            if(!isServiceRunning){
+                mStartTaskFab.show();
+                //mStopTaskFab.hide();
+            }
+            else {
+                mStartTaskFab.hide();
+                //mStopTaskFab.show();
+            }
+            ((MainActivity)getActivity()).mMainToolbar.setTitle(tracks.size() + " " +getString(R.string.tracks));
+            ((MainActivity)getActivity()).mActionBar.setTitle(tracks.size() + " " +getString(R.string.tracks));
+            mMessage.setVisibility(View.GONE);
         }
     }
 
@@ -391,7 +402,7 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
 
     @Override
     protected ListViewModel getViewModel() {
-        return ViewModelProviders.of(this, androidViewModelFactory).get(ListViewModel.class);
+        return ViewModelProviders.of(getActivity(), androidViewModelFactory).get(ListViewModel.class);
     }
 
     @Override
@@ -424,7 +435,7 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
                 getActivity().startActivity(new Intent(getActivity(), SdCardInstructionsActivity.class));
             }
             else {
-                mListViewModel.fetchTracks();
+                mViewModel.scan();
             }
         }
         else {
@@ -530,7 +541,7 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
                     //For Android Marshmallow and Lollipop, there is no need to request permissions
                     //at runtime.
                     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M)
-                        mListViewModel.fetchTracks();
+                        mListViewModel.scan();
                 }
 
                 @Override
@@ -543,7 +554,7 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
             //For Android Marshmallow and Lollipop, there is no need to request permissions
             //at runtime.
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M)
-                mListViewModel.fetchTracks();
+                mListViewModel.scan();
         }
         return animation;
     }

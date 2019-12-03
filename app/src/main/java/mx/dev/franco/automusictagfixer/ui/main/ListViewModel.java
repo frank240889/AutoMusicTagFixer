@@ -54,6 +54,7 @@ public class ListViewModel extends AndroidViewModel {
     private AbstractSharedPreferences mAbstractSharedPreferences;
     private LiveData<Message> mResultsAudioFilesMediaStore;
     private MediatorLiveData<Boolean> mLoadingState;
+    private AudioTagger.StorageHelper mStorageHelper;
 
 
     @Inject
@@ -61,13 +62,15 @@ public class ListViewModel extends AndroidViewModel {
                          @NonNull TrackRepository trackRepository,
                          @NonNull AbstractSharedPreferences abstractSharedPreferences,
                          @NonNull ServiceUtils serviceUtils,
-                         @Nonnull MediaStoreManager mediaStoreManager) {
+                         @Nonnull MediaStoreManager mediaStoreManager,
+                         @NonNull AudioTagger.StorageHelper storageHelper) {
         super(application);
         this.trackRepository = trackRepository;
         this.sharedPreferences = abstractSharedPreferences;
         this.serviceUtils = serviceUtils;
         mMediaStoreManager = mediaStoreManager;
         mAbstractSharedPreferences = abstractSharedPreferences;
+        mStorageHelper = storageHelper;
 
         mLoadingState = new MediatorLiveData<>();
 
@@ -190,7 +193,9 @@ public class ListViewModel extends AndroidViewModel {
      */
     public void onItemClick(ViewWrapper wrapper){
         Track track = mCurrentList.get(wrapper.position);
-        boolean isAccessible = AudioTagger.checkFileIntegrity(track.getPath());
+        boolean isAccessible;
+        isAccessible = AudioTagger.checkFileIntegrity(track.getPath());
+
         if(!isAccessible){
             wrapper.track = track;
             mObservableInaccessibleTrack.setValue(wrapper);
@@ -275,19 +280,6 @@ public class ListViewModel extends AndroidViewModel {
     }
 
     /**
-     * Re scan the media store searching new recently added tracks.
-     */
-    public void rescan() {
-        if(serviceUtils.checkIfServiceIsRunning(FixerTrackService.class.getName())){
-            mObservableMessage.setValue(R.string.no_available);
-        }
-        else {
-            mLoadingState.setValue(true);
-            mMediaStoreManager.rescan();
-        }
-    }
-
-    /**
      * Shows the status message of this song.
      * @param position The position of the clicked item.
      */
@@ -353,8 +345,9 @@ public class ListViewModel extends AndroidViewModel {
             mObservableMessage.setValue(R.string.no_available);
         }
         else {
-            mLoadingState.setValue(true);
-            mMediaStoreManager.rescan();
+            //if(sharedPreferences.getBoolean("first_time_read")) {
+                mMediaStoreManager.fetchAudioFiles();
+            //}
         }
     }
 }

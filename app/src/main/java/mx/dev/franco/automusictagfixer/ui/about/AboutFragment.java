@@ -9,9 +9,13 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
 import com.google.android.material.button.MaterialButton;
+
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.ui.BaseFragment;
 import mx.dev.franco.automusictagfixer.ui.MainActivity;
@@ -48,24 +52,20 @@ public class AboutFragment extends BaseFragment {
         jaudiotaggerButton.setOnClickListener(v -> AndroidUtils.openInExternalApp(Intent.ACTION_VIEW, "http://www.jthink.net/jaudiotagger/", getActivity()));
 
         drawerButton.setOnClickListener(v -> AndroidUtils.openInExternalApp(Intent.ACTION_VIEW, "https://tgs266.deviantart.com/", getActivity()));
-        ((MainActivity)getActivity()).mActionBar.setTitle(getString(R.string.about));
-        getActivity().invalidateOptionsMenu();
+        requireActivity().getOnBackPressedDispatcher().addCallback(new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                getActivity().getSupportFragmentManager().popBackStack();
+            }
+        });
+
     }
 
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        //((MainActivity)getActivity()).setSupportActionBar(mToolbar);
-        //mActionBar = ((MainActivity)getActivity()).getSupportActionBar();
-        //mActionBar.setDisplayHomeAsUpEnabled(true);
-        //mActionBar = ((MainActivity)getActivity()).getSupportActionBar();
-        //mToolbar.setNavigationOnClickListener(v -> getActivity().onBackPressed());
-        /*ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(getActivity(),
-                ((MainActivity)getActivity()).mDrawer,
-                mToolbar,R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        ((MainActivity)getActivity()).mDrawer.addDrawerListener(toggle);
-        toggle.syncState();*/
-
+        //((MainActivity)getActivity()).toggle.syncState();
+        ((MainActivity)getActivity()).mActionBar.setTitle(getString(R.string.about));
     }
 
     @Override

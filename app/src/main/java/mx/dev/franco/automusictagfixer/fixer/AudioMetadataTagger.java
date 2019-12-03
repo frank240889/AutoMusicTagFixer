@@ -1,16 +1,17 @@
 package mx.dev.franco.automusictagfixer.fixer;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Map;
-import javax.annotation.Nullable;
-import javax.inject.Inject;
-import mx.dev.franco.automusictagfixer.interfaces.AudioMetadataManager;
 import org.jaudiotagger.audio.exceptions.CannotReadException;
 import org.jaudiotagger.audio.exceptions.InvalidAudioFrameException;
 import org.jaudiotagger.audio.exceptions.ReadOnlyFileException;
 import org.jaudiotagger.tag.FieldKey;
 import org.jaudiotagger.tag.TagException;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.Map;
+
+import javax.annotation.Nullable;
+import javax.inject.Inject;
 
 /**
  * Created by Franco on 03/09/2019

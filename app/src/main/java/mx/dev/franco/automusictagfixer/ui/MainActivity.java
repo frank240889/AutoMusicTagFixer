@@ -144,8 +144,8 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
         toggle = new ActionBarDrawerToggle(this, mDrawer,
                 mMainToolbar,R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         mDrawer.addDrawerListener(toggle);
-        //toggle.setDrawerIndicatorEnabled(true);
-        //toggle.setDrawerSlideAnimationEnabled(true);
+        toggle.setDrawerIndicatorEnabled(true);
+        toggle.setDrawerSlideAnimationEnabled(true);
         mDrawer.post(() -> toggle.syncState());
     }
 

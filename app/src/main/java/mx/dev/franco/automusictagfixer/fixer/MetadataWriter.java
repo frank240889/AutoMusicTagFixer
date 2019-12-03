@@ -16,6 +16,7 @@ import java.io.IOException;
 import mx.dev.franco.automusictagfixer.identifier.GnApiService;
 import mx.dev.franco.automusictagfixer.interfaces.AsyncOperation;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
+import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 
 public class MetadataWriter extends AbstractMetadataFixer<Context, Void, AudioTagger.ResultCorrection> {
     private AsyncOperation<Track, MetadataWriterResult, Track, MetadataWriterResult> mCallback;
@@ -40,6 +41,8 @@ public class MetadataWriter extends AbstractMetadataFixer<Context, Void, AudioTa
         if(mInputParams.getCodeRequest() == AudioTagger.MODE_REMOVE_COVER) {
             try {
                 resultCorrection = mFileTagger.writeMetadata(mInputParams);
+                String description = AndroidUtils.AudioTaggerErrorDescription.getErrorMessage(contexts[0], resultCorrection.getCode());
+                resultCorrection.setError(new Exception(description));
             } catch (IOException | ReadOnlyFileException | CannotReadException | TagException | InvalidAudioFrameException e) {
                 resultCorrection = new AudioTagger.ResultCorrection(AudioTagger.COULD_NOT_APPLY_TAGS, null);
                 resultCorrection.setError(e);
@@ -63,7 +66,6 @@ public class MetadataWriter extends AbstractMetadataFixer<Context, Void, AudioTa
                             InvalidAudioFrameException |
                             GnException e) {
                         e.printStackTrace();
-                        resultCorrection = new AudioTagger.ResultCorrection(AudioTagger.COULD_NOT_APPLY_TAGS, null);
                         resultCorrection.setError(e);
                     }
                 }
@@ -71,6 +73,8 @@ public class MetadataWriter extends AbstractMetadataFixer<Context, Void, AudioTa
             else {
                 try {
                     resultCorrection = mFileTagger.writeMetadata(mInputParams);
+                    String description = AndroidUtils.AudioTaggerErrorDescription.getErrorMessage(contexts[0], resultCorrection.getCode());
+                    resultCorrection.setError(new Exception(description));
                 } catch (IOException |
                         ReadOnlyFileException |
                         CannotReadException |

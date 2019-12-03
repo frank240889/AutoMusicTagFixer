@@ -2,7 +2,6 @@ package mx.dev.franco.automusictagfixer.fixer;
 
 import android.os.AsyncTask;
 
-import mx.dev.franco.automusictagfixer.interfaces.AudioMetadataManager;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
 
 public abstract class AbstractMetadataFixer<Params, Progress, Result> extends AsyncTask<Params, Progress, Result> {

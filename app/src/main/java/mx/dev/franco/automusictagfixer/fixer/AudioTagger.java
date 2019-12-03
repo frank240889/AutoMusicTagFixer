@@ -58,6 +58,7 @@ import mx.dev.franco.automusictagfixer.BuildConfig;
 /**
  * Helper class that wraps the functionality to
  * read and write metadata for audio files.
+ * @author franco
  */
 public class AudioTagger {
     public static final int COULD_NOT_WRITE_TAGS = 200;
@@ -1156,7 +1157,7 @@ public class AudioTagger {
     }
 
     public static boolean checkFileIntegrity(File file) {
-        return file.exists() && file.isFile() && file.canRead() && file.canWrite();
+        return file.exists() && file.isFile() && file.canRead();
     }
 
     public static boolean checkFileIntegrity(String path) {
@@ -1765,6 +1766,10 @@ public class AudioTagger {
 
         public boolean isStoredInSD(File file){
             return internalIsStoredInSD(file);
+        }
+
+        public boolean isStoredInSD(String path){
+            return isStoredInSD(new File(path));
         }
 
         /**

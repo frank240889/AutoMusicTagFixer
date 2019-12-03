@@ -56,16 +56,16 @@ public class AudioItemHolder extends AudioHolder implements View.OnClickListener
         if (mListener != null) {
             switch (v.getId()){
                 case R.id.check_box:
-                        mListener.onCheckboxClick(getLayoutPosition());
+                        mListener.onCheckboxClick(getAdapterPosition());
                     break;
                 case R.id.cover_art:
-                        mListener.onCoverClick(getLayoutPosition(), v);
+                        mListener.onCoverClick(getAdapterPosition(), v);
                     break;
                 case R.id.status_mark:
-                        mListener.onCheckMarkClick(getLayoutPosition());
+                        mListener.onCheckMarkClick(getAdapterPosition());
                     break;
                 default:
-                        mListener.onItemClick(getLayoutPosition(), v);
+                        mListener.onItemClick(getAdapterPosition(), v);
                     break;
             }
         }

@@ -54,7 +54,7 @@ public class BindingUtils {
                                     }
                                     if(view.getContext() instanceof Activity)
                                         ((Activity)view.getContext()).getWindow().setNavigationBarColor(colorPalette);
-                                    ((View)view.getParent().getParent()).setBackgroundColor(colorPalette);
+                                    //((View)view.getParent().getParent()).setBackgroundColor(colorPalette);
                                 }
                             });
                         }

@@ -1,4 +1,4 @@
-package mx.dev.franco.automusictagfixer.interfaces;
+package mx.dev.franco.automusictagfixer.fixer;
 
 import org.jaudiotagger.audio.exceptions.CannotReadException;
 import org.jaudiotagger.audio.exceptions.InvalidAudioFrameException;

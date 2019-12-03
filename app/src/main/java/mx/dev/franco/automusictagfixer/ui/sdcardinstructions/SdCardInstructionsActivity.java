@@ -44,7 +44,7 @@ public class SdCardInstructionsActivity extends AppCompatActivity {
             // provided to this method as a parameter.  Pull that uri using "resultData.getData()"
             boolean res = AndroidUtils.grantPermissionSD(getApplicationContext(), resultData);
             mSuccess = res;
-            setResult(Activity.RESULT_OK);
+            setResult(Activity.RESULT_OK, resultData);
         } else {
             mSuccess = false;
             setResult(Activity.RESULT_CANCELED);

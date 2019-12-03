@@ -7,6 +7,7 @@ import android.graphics.Bitmap;
 import android.graphics.ImageDecoder;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -203,8 +204,6 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
         mPlayPreviewMenuItem = menu.findItem(R.id.action_play);
         mManualEditMenuItem = menu.findItem(R.id.action_edit_manual);
         mSearchInWebMenuItem = menu.findItem(R.id.action_web_search);
-        setupObservables();
-        loadTrackData(null);
     }
 
     @Override
@@ -790,6 +789,7 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
             mFragmentTrackDetailBinding.rootContainerDetails,
             message
             );
+        snackbar.setDuration(Snackbar.LENGTH_LONG);
         snackbar.show();
     }
 
@@ -806,6 +806,7 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
             mFragmentTrackDetailBinding.rootContainerDetails,
             actionableMessage,
             createOnClickListener(actionableMessage.getAction()));
+        snackbar.setDuration(Snackbar.LENGTH_LONG);
         snackbar.show();
     }
 
@@ -853,6 +854,13 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
                                 (AppBarLayout.LayoutParams) ((MainActivity) getActivity()).mMainToolbar.getLayoutParams();
                         layoutParams.setScrollFlags(0);
                         ((MainActivity)getActivity()).mDrawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
+                    }
+                    else {
+                        Handler handler = new Handler();
+                        handler.postDelayed(() -> {
+                            setupObservables();
+                            loadTrackData(null);
+                        }, 250);
                     }
                 }
 

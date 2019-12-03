@@ -4,6 +4,7 @@ import android.app.Application;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.ArrayMap;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
@@ -145,17 +146,25 @@ public class TrackDetailViewModel extends AndroidViewModel {
         LiveData<Boolean> fileSaverResultState = mFileManager.observeLoadingState();
         LiveData<Boolean> mediaStoreManagerState = mMediaStoreManager.observeLoadingState();
 
-        /*mStateMerger.addSource(stateTrackDataRepository, aBoolean ->
-                mStateMerger.setValue(aBoolean));*/
+        mStateMerger.addSource(stateTrackDataRepository, aBoolean -> {
+            Log.d("stateTrackDataRepository", aBoolean+"");
+            mStateMerger.setValue(aBoolean);
+        });
 
-        mStateMerger.addSource(mediaStoreManagerState, aBoolean ->
-                mStateMerger.setValue(aBoolean));
+        mStateMerger.addSource(mediaStoreManagerState, aBoolean -> {
+            Log.d("mediaStoreManagerState", aBoolean+"");
+            mStateMerger.setValue(aBoolean);
+        });
 
-        mStateMerger.addSource(identificationRepositoryState, aBoolean ->
-                mStateMerger.setValue(aBoolean));
+        mStateMerger.addSource(identificationRepositoryState, aBoolean -> {
+            Log.d("identificationRepositoryState", aBoolean+"");
+            mStateMerger.setValue(aBoolean);
+        });
 
-        mStateMerger.addSource(fileSaverResultState, aBoolean ->
-                mStateMerger.setValue(aBoolean));
+        mStateMerger.addSource(fileSaverResultState, aBoolean -> {
+            Log.d("fileSaverResultState", aBoolean+"");
+            mStateMerger.setValue(aBoolean);
+        });
     }
 
     /**
@@ -231,7 +240,7 @@ public class TrackDetailViewModel extends AndroidViewModel {
                         input.data.getResultCorrection().getError().getMessage() != null)
                     err = input.data.getResultCorrection().getError().getMessage();
 
-                String msg = getApplication().getString(R.string.message_could_not_apply_tags) + ": " + err;
+                String msg = getApplication().getString(R.string.message_could_not_apply_tags) + " " + err;
                 message = new Message(msg);
             }
             return message;

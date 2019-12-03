@@ -84,11 +84,9 @@ public class DataTrackManager {
     }
 
     public void setId(int id) {
-        mLoadingStateLiveData.setValue(true);
         LiveData<Track> liveTrack = mTrackRoomDatabase.trackDao().search(id);
         mMediatorLiveDataTrack.addSource(liveTrack, track -> {
             mTrack = track;
-            mLoadingStateLiveData.setValue(false);
             mMediatorLiveDataTrack.setValue(track);
         });
     }
@@ -122,14 +120,14 @@ public class DataTrackManager {
 
             @Override
             public void onAsyncOperationFinished(MetadataReaderResult result) {
-                mMetadataReaderResultLiveData.setValue(Resource.success(result));
                 mLoadingStateLiveData.setValue(false);
+                mMetadataReaderResultLiveData.setValue(Resource.success(result));
             }
 
             @Override
             public void onAsyncOperationError(MetadataReaderResult error) {
-                mMetadataReaderResultLiveData.setValue(Resource.error(error));
                 mLoadingStateLiveData.setValue(false);
+                mMetadataReaderResultLiveData.setValue(Resource.error(error));
             }
         }, mMetadataTagger, track);
 

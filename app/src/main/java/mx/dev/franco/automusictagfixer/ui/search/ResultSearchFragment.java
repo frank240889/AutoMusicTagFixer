@@ -14,6 +14,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.drawerlayout.widget.DrawerLayout;
@@ -73,6 +74,12 @@ public class ResultSearchFragment extends BaseViewModelFragment<SearchListViewMo
         mSearchListViewModel.isTrackProcessing().observe(this, this::showMessageError);
         mSearchListViewModel.actionTrackEvaluatedSuccessfully().observe(this, this::openDetailTrack);
         mSearchListViewModel.actionIsTrackInaccessible().observe(this, this::showInaccessibleTrack);
+        requireActivity().getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                getParentFragment().getChildFragmentManager().popBackStack();
+            }
+        });
     }
 
     @Override
@@ -116,11 +123,18 @@ public class ResultSearchFragment extends BaseViewModelFragment<SearchListViewMo
         super.onActivityCreated(savedInstanceState);
         ((MainActivity)getActivity()).mDrawer.removeDrawerListener(((MainActivity)getActivity()).toggle);
         ((MainActivity)getActivity()).mDrawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
-        //((MainActivity)getActivity()).mActionBar.setDisplayHomeAsUpEnabled(true);
-        //((MainActivity)getActivity()).mActionBar.setDefaultDisplayHomeAsUpEnabled(true);
+        ((MainActivity)getActivity()).toggle.setDrawerIndicatorEnabled(true);
+        ((MainActivity)getActivity()).toggle.setToolbarNavigationClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                getParentFragment().getChildFragmentManager().popBackStack();
+            }
+        });
+        ((MainActivity)getActivity()).mActionBar.setDisplayHomeAsUpEnabled(true);
+        ((MainActivity)getActivity()).mActionBar.setDefaultDisplayHomeAsUpEnabled(true);
         //((MainActivity)getActivity()).mActionBar.setHomeButtonEnabled(true);
         //((MainActivity)getActivity()).toggle.setDrawerIndicatorEnabled(true);
-
+        //((MainActivity)getActivity()).mActionBar.setDisplayHomeAsUpEnabled(true);
         ((MainActivity)getActivity()).mSearchBox.setVisibility(View.VISIBLE);
         ((MainActivity)getActivity()).mSearchBox.requestFocus();
         InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
