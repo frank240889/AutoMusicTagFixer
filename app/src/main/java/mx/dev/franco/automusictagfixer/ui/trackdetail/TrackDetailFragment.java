@@ -291,7 +291,12 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
         showFabs();
         disableFields();
         enableAppBarLayout();
-        onMessage(actionableMessage);
+        if(actionableMessage instanceof ActionableMessage) {
+            onActionableMessage((ActionableMessage) actionableMessage);
+        }
+        else{
+            onMessage(actionableMessage);
+        }
     }
 
     private AndroidUtils.AsyncBitmapDecoder.AsyncBitmapDecoderCallback getCallback(int requestCode){
@@ -879,7 +884,10 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
      * @return A OnclickListener object.
      */
     private OnClickListener createOnClickListener (Action action) {
-
+        switch (action) {
+            case URI_ERROR:
+                return view -> startActivity(new Intent(getActivity(), SdCardInstructionsActivity.class));
+        }
         return null;
     }
 

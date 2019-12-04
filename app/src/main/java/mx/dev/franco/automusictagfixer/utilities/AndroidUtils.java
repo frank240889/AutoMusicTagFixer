@@ -132,14 +132,16 @@ public class AndroidUtils {
 
         ActionableMessage actionableMessage = (ActionableMessage) message;
         Snackbar snackbar = createSnackbar(view, message);
-        String action = getActionName(actionableMessage.getAction());
+        String action = getActionName(actionableMessage.getAction(), view);
         snackbar.setAction(action, onClickListener);
 
         return snackbar;
     }
 
 
-    public static String getActionName(Action action){
+    public static String getActionName(Action action,View view){
+        if(action == Action.URI_ERROR)
+            return view.getContext().getString(R.string.details);
         return null;
     }
 

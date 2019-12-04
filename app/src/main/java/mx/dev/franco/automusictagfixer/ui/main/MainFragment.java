@@ -432,7 +432,8 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
         if(grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
             boolean isPresentSD = storageHelper.isPresentRemovableStorage();
             if(AndroidUtils.getUriSD(getActivity()) == null && isPresentSD) {
-                getActivity().startActivity(new Intent(getActivity(), SdCardInstructionsActivity.class));
+                startActivityForResult(new Intent(getActivity(), SdCardInstructionsActivity.class),
+                        RequiredPermissions.REQUEST_PERMISSION_SAF);
             }
             else {
                 mViewModel.scan();

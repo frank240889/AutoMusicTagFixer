@@ -53,6 +53,8 @@
         android:layout_gravity="bottom|end"
         android:layout_margin="@dimen/fab_margin"
         android:text="@string/title_identify_track"
+        app:layout_anchor="@id/refresh_layout"
+        app:layout_anchorGravity="bottom|end"
         app:icon="@drawable/ic_photo_filter_white_24px" />
     <FrameLayout
         android:id="@+id/child_fragment_container"

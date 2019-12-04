@@ -108,10 +108,10 @@ public class CoverManager {
             GlideApp.with(holder.itemView)
                     .load(result)
                     .theme(holder.cover.getContext().getTheme())
-                    .thumbnail(0.5f)
+                    .thumbnail(0.3f)
                     .error(holder.cover.getContext().getDrawable(R.drawable.ic_album_white_48px))
                     .diskCacheStrategy(DiskCacheStrategy.NONE)
-                    .skipMemoryCache(true)
+                    .skipMemoryCache(false)
                     .transition(DrawableTransitionOptions.withCrossFade(100))
                     .fitCenter()
                     .listener(new RequestListener<Drawable>() {

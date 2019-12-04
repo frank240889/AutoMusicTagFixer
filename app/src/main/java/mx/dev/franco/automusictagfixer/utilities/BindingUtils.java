@@ -29,7 +29,7 @@ public class BindingUtils {
                 .error(view.getContext().getDrawable(R.drawable.ic_album_white_48px))
                 .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.NONE))
                 .theme(view.getContext().getTheme())
-                .apply(RequestOptions.skipMemoryCacheOf(true))
+                .apply(RequestOptions.skipMemoryCacheOf(false))
                 .listener(new RequestListener<Bitmap>() {
                     @Override
                     public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Bitmap> target, boolean isFirstResource) {

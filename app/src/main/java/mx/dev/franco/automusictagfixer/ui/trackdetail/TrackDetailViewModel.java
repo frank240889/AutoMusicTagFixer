@@ -235,17 +235,28 @@ public class TrackDetailViewModel extends AndroidViewModel {
                 mTrack.setProcessing(0);
                 mDataTrackManager.updateTrack(mTrack);
                 //Could not apply tags, send a message indicating that.
-                String err = "";
-                if(input.data.getResultCorrection().getError() != null &&
-                        input.data.getResultCorrection().getError().getMessage() != null)
-                    err = input.data.getResultCorrection().getError().getMessage();
-
-                String msg = getApplication().getString(R.string.message_could_not_apply_tags) + " " + err;
-                message = new Message(msg);
+                message = getMessage(input.data);
             }
             return message;
         });
         return mResultWriting;
+    }
+
+    private Message getMessage(MetadataWriterResult data) {
+        Message message;
+        String err = "";
+        if(data.getResultCorrection().getError() != null &&
+                data.getResultCorrection().getError().getMessage() != null)
+            err = data.getResultCorrection().getError().getMessage();
+        String msg = getApplication().getString(R.string.message_could_not_apply_tags) + " " + err;
+
+        if(data.getResultCorrection().getCode() == AudioTagger.COULD_NOT_GET_URI_SD_ROOT_TREE) {
+            message = new ActionableMessage(Action.URI_ERROR, msg);
+        }
+        else {
+            message = new Message(msg);
+        }
+        return message;
     }
 
     public LiveData<Message> observeRenamingResult() {
@@ -426,6 +437,7 @@ public class TrackDetailViewModel extends AndroidViewModel {
      * @param correctionParams The params required to correct current track.
      */
     public void performCorrection(InputCorrectionParams correctionParams) {
+        mStateMerger.setValue(true);
         mLiveLoadingMessage.setValue(R.string.applying_tags);
         mLiveLoadingMessage.setValue(R.string.correcting);
         mCorrectionParams = correctionParams;
