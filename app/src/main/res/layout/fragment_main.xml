@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:animateLayoutChanges="true">
     <TextView
         android:id="@+id/message"
         android:layout_width="match_parent"
@@ -46,19 +47,9 @@
             tools:listitem="@layout/main_item"
             app:layout_behavior="@string/appbar_scrolling_view_behavior"/>
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
-    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
-        android:id="@+id/fab_start_stop"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_margin="@dimen/fab_margin"
-        android:text="@string/title_identify_track"
-        app:layout_anchor="@id/refresh_layout"
-        app:layout_anchorGravity="bottom|end"
-        app:icon="@drawable/ic_photo_filter_white_24px" />
-    <FrameLayout
+    <!--FrameLayout
         android:id="@+id/child_fragment_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:elevation="16dp"/>
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+        android:elevation="16dp"/-->
+</FrameLayout>

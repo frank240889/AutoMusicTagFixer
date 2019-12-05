@@ -11,7 +11,7 @@
     <androidx.core.widget.NestedScrollView
         android:id="@+id/content_container"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         app:layout_behavior="@string/appbar_scrolling_view_behavior"
         tools:showIn="@layout/fragment_track_detail">
 
@@ -241,19 +241,6 @@
                     android:layout_alignParentStart="false">
 
                     <TextView
-                        android:id="@+id/textView"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="8dp"
-                        android:layout_marginTop="8dp"
-                        android:drawableStart="@drawable/ic_insert_drive_file_white_24dp"
-                        android:gravity="center_vertical"
-                        android:text="@{viewmodel.filename}"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="parent"
-                        tools:text="Amar a 2.mp3" />
-
-                    <TextView
                         android:id="@+id/file_size"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -265,7 +252,7 @@
                         android:text="@{viewmodel.filesize}"
                         android:visibility="visible"
                         app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@+id/textView"
+                        app:layout_constraintTop_toTopOf="parent"
                         tools:text="13mb" />
 
                     <TextView

@@ -29,6 +29,7 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import com.google.android.material.appbar.AppBarLayout;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
 
 import javax.inject.Inject;
@@ -73,6 +74,7 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
     public ActionBar mActionBar;
     public EditText mSearchBox;
     public ActionBarDrawerToggle toggle;
+    public ExtendedFloatingActionButton mStartTaskFab;
     MainFragment listFragment;
     AboutFragment aboutFragment;
     QuestionsFragment questionsFragment;
@@ -95,6 +97,7 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
         mDrawer = findViewById(R.id.drawer_layout);
         mMainToolbar = findViewById(R.id.main_toolbar);
         mMainAppbar = findViewById(R.id.main_app_bar);
+        mStartTaskFab = findViewById(R.id.fab_start_stop);
         setupToolbar();
 
         NavigationView navigationView = findViewById(R.id.nav_view);
@@ -228,8 +231,7 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         int id = item.getItemId();
-      mDrawer.closeDrawer(GravityCompat.START);
-        Fragment topFragment = null;
+        mDrawer.closeDrawer(GravityCompat.START);
         /*if (id == R.id.rate) {
             rateApp();
         } else if (id == R.id.share) {
@@ -266,40 +268,23 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
                     findFragmentByTag(QuestionsFragment.class.getName());
             if(questionsFragment == null)
                 questionsFragment = QuestionsFragment.newInstance();
-            //if(getSupportFragmentManager().findFragmentByTag(MainFragment.class.getName()) != null) {
-                getSupportFragmentManager().beginTransaction().
-                    setCustomAnimations(R.anim.fade_in,R.anim.fade_out,R.anim.fade_in,R.anim.fade_out)
-                    .replace(R.id.container_fragments,
-                        questionsFragment, QuestionsFragment.class.getName()).
-                    commit();
-            //}
-            /*else {
-                getSupportFragmentManager().beginTransaction().
-                    setCustomAnimations(R.anim.fade_in,R.anim.fade_out,R.anim.fade_in,R.anim.fade_out)
-                    .add(R.id.container_fragments,
-                        questionsFragment, QuestionsFragment.class.getName()).
-                    commit();
-            }*/
+            getSupportFragmentManager().beginTransaction().
+                setCustomAnimations(R.anim.fade_in,R.anim.fade_out,R.anim.fade_in,R.anim.fade_out)
+                .replace(R.id.container_fragments,
+                    questionsFragment, QuestionsFragment.class.getName()).
+                commit();
         }
         else if(id == R.id.about){
             aboutFragment = (AboutFragment) getSupportFragmentManager().
                     findFragmentByTag(AboutFragment.class.getName());
             if(aboutFragment == null)
                 aboutFragment = AboutFragment.newInstance();
-            //if(getSupportFragmentManager().getFragments().size() > 1) {
-                getSupportFragmentManager().beginTransaction().
-                    setCustomAnimations(R.anim.fade_in,R.anim.fade_out,R.anim.fade_in,R.anim.fade_out)
-                    .replace(R.id.container_fragments,
-                        aboutFragment, AboutFragment.class.getName()).
-                    commit();
-            //}
-            /*else {
-                getSupportFragmentManager().beginTransaction().
-                    setCustomAnimations(R.anim.fade_in,R.anim.fade_out,R.anim.fade_in,R.anim.fade_out)
-                    .add(R.id.container_fragments,
-                        aboutFragment, AboutFragment.class.getName()).
-                    commit();
-            }*/
+
+            getSupportFragmentManager().beginTransaction().
+                setCustomAnimations(R.anim.fade_in,R.anim.fade_out,R.anim.fade_in,R.anim.fade_out)
+                .replace(R.id.container_fragments,
+                    aboutFragment, AboutFragment.class.getName()).
+                commit();
 
         }
 
@@ -349,9 +334,6 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
                 break;
             case ACTION_COMPLETE_TASK:
                 ((LongRunningTaskListener) baseViewModelFragment).onLongRunningTaskFinish();
-                    /*getSharedPreferences(Constants.Application.FULL_QUALIFIED_NAME,
-                        Context.MODE_PRIVATE).edit().putBoolean(Constants.ALL_ITEMS_CHECKED, false).
-                            apply();*/
                 break;
             case ACTION_BROADCAST_MESSAGE:
                 String message = intent.getStringExtra("message");

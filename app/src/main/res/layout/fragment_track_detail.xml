@@ -4,133 +4,377 @@
     xmlns:tools="http://schemas.android.com/tools">
     <data>
         <variable
-            name="viewModel"
+            name="viewmodel"
             type="mx.dev.franco.automusictagfixer.ui.trackdetail.TrackDetailViewModel" />
     </data>
 
-    <androidx.coordinatorlayout.widget.CoordinatorLayout
-        android:id="@+id/root_container_details"
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/content_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:clickable="true"
-        android:background="@color/primaryBackground">
-        <com.google.android.material.appbar.AppBarLayout
-            android:id="@+id/app_bar_layout"
-            android:layout_width="match_parent"
-            android:layout_height="450dp"
-            android:background="@color/primaryBackground">
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
+        tools:showIn="@layout/fragment_track_detail">
 
-            <com.google.android.material.appbar.CollapsingToolbarLayout
-                android:id="@+id/collapsing_toolbar_layout"
+        <LinearLayout
+            android:id="@+id/root_container_details"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:animateLayoutChanges="true"
+            android:orientation="vertical"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior"
+            tools:showIn="@layout/content_details_track">
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardview_content"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                app:layout_collapseMode="parallax"
-                app:layout_scrollFlags="scroll|exitUntilCollapsed"
-                android:background="@color/primaryBackground">
+                android:layout_height="wrap_content"
+                android:elevation="@dimen/cardview_default_elevation"
+                app:cardElevation="@dimen/cardview_default_radius"
+                app:cardPreventCornerOverlap="true"
+                app:cardUseCompatPadding="true"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent">
 
-                    <androidx.constraintlayout.widget.ConstraintLayout
-                        android:id="@+id/card_container_cover"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:layout_marginTop="?android:attr/actionBarSize"
-                        app:layout_collapseMode="parallax"
-                        app:layout_collapseParallaxMultiplier="0.7"
-                        android:background="@color/primaryBackground">
-
-                        <com.google.android.material.card.MaterialCardView
-                            android:id="@+id/card_cover"
-                            android:layout_width="300dp"
-                            android:layout_height="340dp"
-                            android:layout_marginStart="8dp"
-                            android:layout_marginTop="8dp"
-                            android:layout_marginEnd="8dp"
-                            android:layout_marginBottom="8dp"
-                            app:cardElevation="@dimen/cardview_default_elevation"
-                            app:layout_constraintBottom_toBottomOf="parent"
-                            app:layout_constraintEnd_toEndOf="parent"
-                            app:layout_constraintStart_toStartOf="parent"
-                            app:layout_constraintTop_toTopOf="parent">
-
-                            <ImageView
-                                android:id="@+id/toolbar_cover_art"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:adjustViewBounds="true"
-                                android:scaleType="fitCenter"
-                                android:src="@drawable/ic_album_white_24px"
-                                android:transitionName="transitionFragment"
-                                app:imageCover="@{viewModel.cover}"
-                                app:layout_constraintBottom_toBottomOf="parent"
-                                app:layout_constraintEnd_toEndOf="parent"
-                                app:layout_constraintStart_toStartOf="parent"
-                                app:layout_constraintTop_toTopOf="parent" />
-
-                            <TextView
-                                android:id="@+id/imageSize"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_gravity="bottom|center_horizontal"
-                                android:layout_marginBottom="8dp"
-                                android:gravity="center_vertical"
-                                android:drawableStart="@drawable/ic_photo_size_select_large_white_24px"
-                                android:singleLine="true"
-                                android:text="@{viewModel.imageSize}"
-                                tools:text="1080 * 1080" />
-
-                            <ImageButton
-                                android:id="@+id/cover_art_menu"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_margin="8dp"
-                                app:srcCompat="@drawable/ic_more_vert_white_24dp"
-                                android:layout_gravity="bottom|end"
-                                android:background="?attr/selectableItemBackgroundBorderless"/>
-                        </com.google.android.material.card.MaterialCardView>
-                    </androidx.constraintlayout.widget.ConstraintLayout>
-                <com.google.android.material.appbar.MaterialToolbar
-                    android:id="@+id/toolbar"
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:id="@+id/editable_data_container"
                     android:layout_width="match_parent"
-                    android:layout_height="?android:attr/actionBarSize"
-                    app:layout_collapseMode="pin">
+                    android:layout_height="wrap_content"
+                    android:elevation="@dimen/dialog_elevation"
+                    android:splitMotionEvents="false">
 
-                </com.google.android.material.appbar.MaterialToolbar>
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/track_name_details_layout"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginTop="8dp"
+                        android:layout_marginEnd="8dp"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent">
 
-            </com.google.android.material.appbar.CollapsingToolbarLayout>
-        </com.google.android.material.appbar.AppBarLayout>
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/track_name_details"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_centerHorizontal="true"
+                            android:enabled="false"
+                            android:hint="@string/title"
+                            android:imeOptions="actionNext"
+                            android:inputType="text|textNoSuggestions"
+                            android:maxLength="100"
+                            android:maxLines="1"
+                            android:text="@={viewmodel.title}" />
+                    </com.google.android.material.textfield.TextInputLayout>
 
-        <include android:id="@+id/layout_content_details_track"
-            layout="@layout/content_details_track"
-            app:viewmodel="@{viewModel}"/>
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/artist_name_details_layout"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@+id/track_name_details_layout"
+                        android:layout_alignParentStart="true"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginEnd="8dp"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/track_name_details_layout">
 
-        <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
-            android:id="@+id/fab_autofix"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom|end"
-            android:layout_margin="@dimen/fab_margin"
-            android:visibility="gone"
-            android:text="@string/title_identify_track"
-            app:icon="@drawable/ic_photo_filter_white_24px"
-            tools:visibility="visible"/>
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/artist_name_details"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:enabled="false"
+                            android:hint="@string/artist"
+                            android:imeOptions="actionNext"
+                            android:inputType="text|textNoSuggestions"
+                            android:maxLength="100"
+                            android:maxLines="1"
+                            android:text="@={viewmodel.artist}" />
+                    </com.google.android.material.textfield.TextInputLayout>
 
-        <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
-            android:id="@+id/fab_save_info"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom|end"
-            android:layout_margin="@dimen/fab_margin"
-            android:visibility="gone"
-            android:text="@string/save_changes"
-            app:icon="@drawable/ic_save_white_24px" />
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/album_name_details_layout"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@+id/artist_name_details_layout"
+                        android:layout_alignParentStart="true"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginEnd="8dp"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/artist_name_details_layout">
 
-        <include
-            android:id="@+id/progress_view"
-            layout="@layout/layout_progress"
-            android:layout_gravity="center"
-            android:layout_marginStart="32dp"
-            android:layout_marginEnd="32dp"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            tools:visibility="gone" />
-    </androidx.coordinatorlayout.widget.CoordinatorLayout>
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/album_name_details"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentEnd="true"
+                            android:enabled="false"
+                            android:hint="@string/album"
+                            android:imeOptions="actionNext"
+                            android:inputType="text|textNoSuggestions"
+                            android:maxLength="150"
+                            android:maxLines="1"
+                            android:text="@={viewmodel.album}" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/track_genre_layout"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@+id/album_name_details_layout"
+                        android:layout_alignParentStart="true"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginEnd="8dp"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/album_name_details_layout">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/track_genre"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:enabled="false"
+                            android:hint="@string/genre"
+                            android:imeOptions="actionNext"
+                            android:inputType="text|textNoSuggestions"
+                            android:maxLength="80"
+                            android:maxLines="1"
+                            android:text="@={viewmodel.genre}" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/track_number_layout"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@+id/track_genre_layout"
+                        android:layout_alignParentEnd="false"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginEnd="8dp"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/track_genre_layout">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/track_number"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:enabled="false"
+                            android:hint="@string/track_number"
+                            android:imeOptions="actionNext"
+                            android:inputType="number"
+                            android:maxLength="4"
+                            android:maxLines="1"
+                            android:text="@={viewmodel.number}" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/track_year_layout"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@+id/track_number_layout"
+                        android:layout_alignParentStart="false"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginEnd="8dp"
+                        android:layout_marginBottom="8dp"
+                        app:layout_constraintBottom_toTopOf="@id/change_image_button"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/track_number_layout">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/track_year"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:enabled="false"
+                            android:hint="@string/track_year"
+                            android:imeOptions="actionDone"
+                            android:inputType="number"
+                            android:maxLength="4"
+                            android:maxLines="1"
+                            android:text="@={viewmodel.year}" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/change_image_button"
+                        style="@style/Widget.AutomusicTagFixer.OutlinedButton"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@+id/track_year_layout"
+                        android:layout_alignParentStart="true"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginEnd="8dp"
+                        android:layout_marginBottom="8dp"
+                        android:gravity="center"
+                        android:singleLine="true"
+                        android:text="@string/edit_cover"
+                        android:textSize="16sp"
+                        android:visibility="gone"
+                        app:icon="@drawable/ic_photo_library_black_24dp"
+                        app:iconGravity="textStart"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/track_year_layout"
+                        tools:visibility="visible" />
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardview_extra_info_content"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:elevation="@dimen/cardview_default_elevation"
+                app:cardElevation="@dimen/cardview_default_radius"
+                app:cardUseCompatPadding="true"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/cardview_content">
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:id="@+id/extra_data_container"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentStart="false">
+
+                    <TextView
+                        android:id="@+id/file_size"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginTop="8dp"
+                        android:drawableStart="@drawable/ic_sd_storage_white_24px"
+                        android:gravity="center_vertical"
+                        android:singleLine="true"
+                        android:text="@{viewmodel.filesize}"
+                        android:visibility="visible"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        tools:text="13mb" />
+
+                    <TextView
+                        android:id="@+id/channels"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentTop="true"
+                        android:layout_marginStart="8dp"
+                        android:layout_toEndOf="@+id/file_size"
+                        android:drawableStart="@drawable/ic_speaker_white_24px"
+                        android:gravity="center_vertical"
+                        android:singleLine="true"
+                        android:text="@{viewmodel.channels}"
+                        android:visibility="visible"
+                        app:layout_constraintStart_toEndOf="@+id/file_size"
+                        app:layout_constraintTop_toTopOf="@+id/file_size"
+                        tools:text="Joint Stereo" />
+
+                    <TextView
+                        android:id="@+id/track_type"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentTop="true"
+                        android:layout_marginStart="8dp"
+                        android:layout_toEndOf="@+id/channels"
+                        android:drawableStart="@drawable/ic_description_white"
+                        android:gravity="center_vertical"
+                        android:singleLine="true"
+                        android:text="@{viewmodel.type}"
+                        android:visibility="visible"
+                        app:layout_constraintStart_toEndOf="@+id/channels"
+                        app:layout_constraintTop_toTopOf="@+id/channels"
+                        tools:text="MPEG-1 Layer 3" />
+
+                    <TextView
+                        android:id="@+id/resolution"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@+id/channels"
+                        android:layout_alignParentStart="true"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginTop="8dp"
+                        android:drawableStart="@drawable/ic_high_quality_white_24px"
+                        android:gravity="center_vertical"
+                        android:singleLine="true"
+                        android:text="@{viewmodel.resolution}"
+                        android:visibility="visible"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/file_size"
+                        tools:text="16 bits" />
+
+                    <TextView
+                        android:id="@+id/frequency"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignBaseline="@+id/resolution"
+                        android:layout_alignBottom="@+id/resolution"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginTop="8dp"
+                        android:layout_toEndOf="@+id/resolution"
+                        android:drawableStart="@drawable/ic_equalizer_white_24px"
+                        android:gravity="center_vertical"
+                        android:singleLine="true"
+                        android:text="@{viewmodel.frequency}"
+                        android:visibility="visible"
+                        app:layout_constraintStart_toEndOf="@+id/resolution"
+                        app:layout_constraintTop_toBottomOf="@+id/channels"
+                        tools:text="44.1 Khz" />
+
+                    <TextView
+                        android:id="@+id/bitrate"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@+id/channels"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginTop="8dp"
+                        android:layout_toEndOf="@+id/frequency"
+                        android:drawableStart="@drawable/ic_hearing_white_24px"
+                        android:gravity="center_vertical"
+                        android:text="@{viewmodel.bitrate}"
+                        app:layout_constraintStart_toEndOf="@+id/frequency"
+                        app:layout_constraintTop_toBottomOf="@+id/track_type"
+                        tools:text="128 Kbps" />
+
+                    <TextView
+                        android:id="@+id/trackLength"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@id/track_type"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginTop="8dp"
+                        android:layout_toEndOf="@id/bitrate"
+                        android:drawableStart="@drawable/ic_access_time_white_24px"
+                        android:gravity="center_vertical"
+                        android:singleLine="true"
+                        android:text="@{viewmodel.length}"
+                        android:visibility="visible"
+                        app:layout_constraintStart_toEndOf="@+id/bitrate"
+                        app:layout_constraintTop_toBottomOf="@+id/track_type"
+                        tools:text="5'06''" />
+
+                    <TextView
+                        android:id="@+id/track_path"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@id/resolution"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginTop="8dp"
+                        android:layout_marginEnd="8dp"
+                        android:layout_marginBottom="8dp"
+                        android:drawableStart="@drawable/ic_folder_white_24px"
+                        android:gravity="center_vertical"
+                        android:maxLines="2"
+                        android:text="@{viewmodel.absolutePath}"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/resolution"
+                        tools:text="/storage/emulated/0/Music" />
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
 </layout>

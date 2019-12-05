@@ -1,6 +1,7 @@
 package mx.dev.franco.automusictagfixer.ui.search;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -32,7 +33,7 @@ import mx.dev.franco.automusictagfixer.ui.BaseViewModelFragment;
 import mx.dev.franco.automusictagfixer.ui.InformativeFragmentDialog;
 import mx.dev.franco.automusictagfixer.ui.MainActivity;
 import mx.dev.franco.automusictagfixer.ui.main.ViewWrapper;
-import mx.dev.franco.automusictagfixer.ui.trackdetail.TrackDetailFragment;
+import mx.dev.franco.automusictagfixer.ui.trackdetail.TrackDetailActivity;
 import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 import mx.dev.franco.automusictagfixer.utilities.Constants.CorrectionActions;
 
@@ -77,7 +78,7 @@ public class ResultSearchFragment extends BaseViewModelFragment<SearchListViewMo
         requireActivity().getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
-                getParentFragment().getChildFragmentManager().popBackStack();
+                getParentFragment().getActivity().getSupportFragmentManager().popBackStack();
             }
         });
     }
@@ -162,7 +163,6 @@ public class ResultSearchFragment extends BaseViewModelFragment<SearchListViewMo
     }
 
     private void openDetailTrack(ViewWrapper viewWrapper) {
-        ((MainActivity)getActivity()).mDrawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
 
         //to hide it, call the method again
         InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
@@ -174,29 +174,11 @@ public class ResultSearchFragment extends BaseViewModelFragment<SearchListViewMo
             e.printStackTrace();
         }
 
-        TrackDetailFragment trackDetailFragment;
-
-        ((MainActivity)getActivity()).mDrawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
-        trackDetailFragment = (TrackDetailFragment) getParentFragment().
-                getChildFragmentManager().findFragmentByTag(TrackDetailFragment.class.getName());
-        if(trackDetailFragment != null){
-            trackDetailFragment.loadTrackData(AndroidUtils.getBundle(viewWrapper.track.getMediaStoreId(),
-                    viewWrapper.mode));
-        }
-        else {
-            trackDetailFragment = TrackDetailFragment.newInstance(
-                    viewWrapper.track.getMediaStoreId(),
-                    viewWrapper.mode);
-            getParentFragment().
-                    getChildFragmentManager().beginTransaction().
-                    setCustomAnimations(R.anim.slide_in_bottom,
-                            R.anim.slide_out_left, R.anim.slide_in_left,
-                            R.anim.slide_out_top).
-                    addToBackStack(TrackDetailFragment.class.getName()).
-                    add(R.id.child_fragment_container,
-                            trackDetailFragment, TrackDetailFragment.class.getName()).
-                    commit();
-        }
+        Intent intent = new Intent(getActivity(), TrackDetailActivity.class);
+        Bundle bundle = AndroidUtils.getBundle(viewWrapper.track.getMediaStoreId(),
+                viewWrapper.mode);
+        intent.putExtra("track_data", bundle);
+        startActivity(intent);
     }
 
     private void showMessageError(String s) {

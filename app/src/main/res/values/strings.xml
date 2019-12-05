@@ -124,7 +124,7 @@
 
     <string name="tracks">canciones</string>
     <string name="fixing_task">Corrigiendo canciones.</string>
-    <string name="cover_saved">Imagen guardada en %1$s</string>
+    <string name="cover_saved">Imagen guardada.</string>
     <string name="cover_not_saved">No se pudo guardar la carátula.</string>
     <string name="web_search">Buscar en Internet</string>
 
@@ -295,4 +295,6 @@
     <string name="close">Cerrar</string>
     <string name="sd_card_detected">Tarjeta SD detectada</string>
     <string name="details">Detalles</string>
+    <string name="edit">Editar</string>
+    <string name="see_image">Verla</string>
 </resources>

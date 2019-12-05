@@ -12,8 +12,6 @@ import dagger.android.AndroidInjector;
 import dagger.android.DispatchingAndroidInjector;
 import dagger.android.support.AndroidSupportInjection;
 import dagger.android.support.HasSupportFragmentInjector;
-import mx.dev.franco.automusictagfixer.utilities.ActionableMessage;
-import mx.dev.franco.automusictagfixer.utilities.Message;
 
 /**
  * Base fragment that abstract the common functionality for fragments
@@ -52,9 +50,4 @@ public abstract class BaseViewModelFragment<ViewModel> extends BaseFragment impl
     public AndroidInjector<Fragment> supportFragmentInjector() {
         return fragmentDispatchingAndroidInjector;
     }
-
-    protected void onMessage(Message message){}
-
-    protected void onActionableMessage(ActionableMessage actionableMessage) { }
-
 }

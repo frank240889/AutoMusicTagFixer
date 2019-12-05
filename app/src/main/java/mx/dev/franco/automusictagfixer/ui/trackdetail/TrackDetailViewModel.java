@@ -124,7 +124,7 @@ public class TrackDetailViewModel extends AndroidViewModel {
         year = new MutableLiveData<>();
         genre = new MutableLiveData<>();
         cover = new MutableLiveData<>();
-        imageSize = new MediatorLiveData<>();
+        imageSize = new MutableLiveData<>();
 
         filename = new MutableLiveData<>();
         filesize = new MutableLiveData<>();
@@ -317,7 +317,8 @@ public class TrackDetailViewModel extends AndroidViewModel {
      */
     public LiveData<Message> observeFailIdentification() {
         LiveData<Identifier.IdentificationStatus> resultIdentification = mIdentificationManager.observeFailIdentification();
-        mFailIdentificationResults = Transformations.map(resultIdentification, input -> new Message(input.getMessage()));
+        mFailIdentificationResults = Transformations.map(resultIdentification,
+                input -> new ActionableMessage(Action.MANUAL_CORRECTION,input.getMessage()));
         return mFailIdentificationResults;
     }
 
@@ -327,8 +328,10 @@ public class TrackDetailViewModel extends AndroidViewModel {
             ActionableMessage actionableMessage = new ActionableMessage();
             if(input.status == Resource.Status.SUCCESS) {
                 actionableMessage.setAction(Action.SEE_COVER_SAVED);
-                String pathToFile = getApplication().getString(R.string.cover_saved);
-                actionableMessage.setMessage(String.format(pathToFile, input.data));
+                String pathToFile = input.data;
+                actionableMessage.setDetails(pathToFile);
+                actionableMessage.setMessage(getApplication().getString(R.string.cover_saved));
+                actionableMessage.setAction(Action.WATCH_IMAGE);
                 mMediaStoreManager.addToMediaStore(input.data);
             }
             else {
@@ -439,7 +442,6 @@ public class TrackDetailViewModel extends AndroidViewModel {
     public void performCorrection(InputCorrectionParams correctionParams) {
         mStateMerger.setValue(true);
         mLiveLoadingMessage.setValue(R.string.applying_tags);
-        mLiveLoadingMessage.setValue(R.string.correcting);
         mCorrectionParams = correctionParams;
         mCorrectionParams.setTargetFile(mTrack.getPath());
         if(mCorrectionParams.getCorrectionMode() == Constants.MANUAL) {

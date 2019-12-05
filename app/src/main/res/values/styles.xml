@@ -9,7 +9,6 @@
         <item name="extendedFloatingActionButtonStyle">@style/Widget.AutomusicTagFixer.ExtendedFloatingActionButton</item>
         <item name="snackbarStyle">@style/Widget.AutomusicTagFixer.Snackbar</item>
         <!--item name="snackbarTextViewStyle">@style/Widget.AutomusicTagFixer.Snackbar.TextStyle</item-->
-        <item name="android:windowAnimationStyle">@style/WindowAnimationTransition</item>
         <item name="textInputStyle"> @style/Widget.AutomusicTagFixer.TextInputLayout</item>
         <item name="bottomSheetDialogTheme">@style/Widget.AutomusicTagFixer.BottomSheetDialogTheme</item>
         <item name="materialCardViewStyle">@style/Widget.AutomusicTagFixer.MaterialCardView</item>

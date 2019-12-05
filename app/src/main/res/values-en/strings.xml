@@ -125,7 +125,7 @@
 
     <string name="tracks">songs</string>
     <string name="fixing_task">Correcting songs.</string>
-    <string name="cover_saved">Image saved it in %1$s</string>
+    <string name="cover_saved">Image saved.</string>
     <string name="cover_not_saved">Could not save cover art.</string>
     <string name="web_search">Search on Internet</string>
 
@@ -285,4 +285,6 @@
     <string name="close">Close</string>
     <string name="sd_card_detected">SD card detected</string>
     <string name="details">Details</string>
+    <string name="edit">Edit</string>
+    <string name="see_image">See it</string>
 </resources>

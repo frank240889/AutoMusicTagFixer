@@ -142,6 +142,10 @@ public class AndroidUtils {
     public static String getActionName(Action action,View view){
         if(action == Action.URI_ERROR)
             return view.getContext().getString(R.string.details);
+        else if(action == Action.MANUAL_CORRECTION)
+            return view.getContext().getString(R.string.edit);
+        else if(action == Action.WATCH_IMAGE)
+            return view.getContext().getString(R.string.see_image);
         return null;
     }
 

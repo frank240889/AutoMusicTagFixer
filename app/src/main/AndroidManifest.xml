@@ -53,6 +53,12 @@
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustResize|adjustPan"
             tools:ignore="InnerclassSeparator" />
+        <activity android:name=".ui.trackdetail.TrackDetailActivity"
+            android:configChanges="orientation|screenSize|keyboard"
+            android:launchMode="singleTop"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustResize|adjustPan"/>
+
         <activity
             android:name=".ui.settings.SettingsActivity"
             android:configChanges="orientation|screenSize"
@@ -66,7 +72,8 @@
             android:parentActivityName=".ui.MainActivity"
             android:screenOrientation="portrait"
             tools:ignore="InnerclassSeparator" />
-        <!--activity
+        <!--
+activity
             android:name=".ui.faq.QuestionsFragment"
             android:configChanges="orientation|screenSize|uiMode"
             android:label="@string/faq"
@@ -76,8 +83,10 @@
             <meta-data
                 android:name="androidx.PARENT_ACTIVITY"
                 android:value="mx.dev.franco.automusictagfixer.ui.MainActivity" />
-        </activity-->
-        <!--activity
+        </activity
+        -->
+        <!--
+activity
             android:name=".ui.about.AboutFragment"
             android:configChanges="orientation|screenSize|uiMode"
             android:label="@string/title_activity_scrolling_about"
@@ -87,7 +96,9 @@
             <meta-data
                 android:name="androidx.PARENT_ACTIVITY"
                 android:value="mx.dev.franco.automusictagfixer.ui.MainActivity" />
-        </activity--> <!-- "mx.dev.franco.automusictagfixer.fileProvider" -->
+        </activity
+        -->
+        <!-- "mx.dev.franco.automusictagfixer.fileProvider" -->
         <!-- This provider is necessary because in android >= 7 doesn't allow to access directly to files -->
         <provider
             android:name="androidx.core.content.FileProvider"

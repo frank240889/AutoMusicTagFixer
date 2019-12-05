@@ -51,7 +51,7 @@ import mx.dev.franco.automusictagfixer.ui.InformativeFragmentDialog;
 import mx.dev.franco.automusictagfixer.ui.MainActivity;
 import mx.dev.franco.automusictagfixer.ui.sdcardinstructions.SdCardInstructionsActivity;
 import mx.dev.franco.automusictagfixer.ui.search.ResultSearchFragment;
-import mx.dev.franco.automusictagfixer.ui.trackdetail.TrackDetailFragment;
+import mx.dev.franco.automusictagfixer.ui.trackdetail.TrackDetailActivity;
 import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
 import mx.dev.franco.automusictagfixer.utilities.Constants.CorrectionActions;
@@ -78,7 +78,7 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
     private Menu mMenu;
     //private AppBarLayout mAppBarLayout;
     //private Toolbar mToolbar;
-    private ExtendedFloatingActionButton mStartTaskFab;
+    public ExtendedFloatingActionButton mStartTaskFab;
     private FloatingActionButton mStopTaskFab;
     private List<Track> mCurrentTracks;
 
@@ -143,8 +143,8 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
         mRecyclerView = view.findViewById(R.id.tracks_recycler_view);
         mSwipeRefreshLayout = view.findViewById(R.id.refresh_layout);
         mMessage = view.findViewById(R.id.message);
-        //mStartTaskFab = ((MainActivity)getActivity()).mStartTaskFab;
-        mStartTaskFab = view.findViewById(R.id.fab_start_stop);
+        mStartTaskFab = ((MainActivity)getActivity()).mStartTaskFab;
+        //mStartTaskFab = view.findViewById(R.id.fab_start_stop);
         //mStopTaskFab = view.findViewById(R.id.fab_stop);
         mStartTaskFab.setOnClickListener(v -> startCorrection(-1));
         //mStopTaskFab.setOnClickListener(v -> stopCorrection());
@@ -245,18 +245,18 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
                 break;
             case R.id.action_search:
                     ResultSearchFragment resultSearchListFragment = (ResultSearchFragment)
-                            getChildFragmentManager().findFragmentByTag(ResultSearchFragment.class.getName());
+                            getActivity().getSupportFragmentManager().findFragmentByTag(ResultSearchFragment.class.getName());
 
                     if(resultSearchListFragment == null) {
                         resultSearchListFragment = ResultSearchFragment.newInstance();
                     }
 
-                    getChildFragmentManager().beginTransaction().
+                getActivity().getSupportFragmentManager().beginTransaction().
                             setCustomAnimations(R.anim.slide_in_right,
                                     R.anim.slide_out_left, R.anim.slide_in_left,
                                     R.anim.slide_out_right).
                             addToBackStack(ResultSearchFragment.class.getName()).
-                            add(R.id.child_fragment_container, resultSearchListFragment,
+                            add(R.id.container_fragments, resultSearchListFragment,
                                     ResultSearchFragment.class.getName()).
                             commit();
 
@@ -409,10 +409,8 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
     protected void loading(boolean isLoading) {
         if(isLoading) {
             mRecyclerView.setEnabled(false);
-            mRecyclerView.animate().alpha(0).setDuration(100);
         }
         else {
-            mRecyclerView.animate().alpha(1).setDuration(100);
             mRecyclerView.setEnabled(false);
         }
         mSwipeRefreshLayout.setRefreshing(isLoading);
@@ -570,25 +568,11 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
     }
 
     private void openFragment(ViewWrapper viewWrapper){
-        final TrackDetailFragment[] trackDetailFragment = new TrackDetailFragment[1];
-        trackDetailFragment[0] = (TrackDetailFragment) getChildFragmentManager()
-                .findFragmentByTag(TrackDetailFragment.class.getName());
-        if (trackDetailFragment[0] != null) {
-            trackDetailFragment[0].loadTrackData(AndroidUtils.getBundle(viewWrapper.track.getMediaStoreId(),
-                    viewWrapper.mode));
-        } else {
-            trackDetailFragment[0] = TrackDetailFragment.newInstance(
-                    viewWrapper.track.getMediaStoreId(),
-                    viewWrapper.mode);
-            getChildFragmentManager().beginTransaction().
-                    setCustomAnimations(R.anim.slide_in_bottom,
-                            R.anim.slide_out_left, R.anim.slide_in_left,
-                            R.anim.slide_out_top).
-                    addToBackStack(trackDetailFragment[0].getTagName()).
-                    add(R.id.child_fragment_container,
-                            trackDetailFragment[0], trackDetailFragment[0].getTagName()).
-                    commit();
-        }
+        Intent intent = new Intent(getActivity(), TrackDetailActivity.class);
+        Bundle bundle = AndroidUtils.getBundle(viewWrapper.track.getMediaStoreId(),
+                viewWrapper.mode);
+        intent.putExtra("track_data", bundle);
+        startActivity(intent);
     }
 
     private void stopCorrection() {
