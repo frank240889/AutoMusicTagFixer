@@ -12,8 +12,7 @@
         android:layout_height="match_parent"
         android:fitsSystemWindows="true"
         android:id="@+id/root_container"
-        android:background="@color/primaryBackground"
-        android:animateLayoutChanges="true">
+        android:background="@color/primaryBackground">
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/main_app_bar"
         android:layout_width="match_parent"

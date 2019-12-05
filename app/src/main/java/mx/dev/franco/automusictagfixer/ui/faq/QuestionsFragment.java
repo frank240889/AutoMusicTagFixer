@@ -8,16 +8,13 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
-
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
 import java.util.ArrayList;
 import java.util.List;
-
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.ui.BaseFragment;
 import mx.dev.franco.automusictagfixer.ui.MainActivity;
@@ -76,6 +73,7 @@ public class QuestionsFragment extends BaseFragment implements FaqAdapter.OnItem
         super.onActivityCreated(savedInstanceState);
         //((MainActivity)getActivity()).toggle.syncState();
         ((MainActivity)getActivity()).mActionBar.setTitle(getString(R.string.faq));
+        ((MainActivity)getActivity()).mStartTaskFab.hide();
         //mToolbar.setNavigationOnClickListener(v -> getActivity().onBackPressed());
 
         //Get action bar from toolbar

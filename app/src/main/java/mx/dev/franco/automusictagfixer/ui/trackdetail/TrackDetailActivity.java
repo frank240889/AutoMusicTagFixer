@@ -1,5 +1,7 @@
 package mx.dev.franco.automusictagfixer.ui.trackdetail;
 
+import static android.view.View.VISIBLE;
+
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -13,24 +15,19 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.PopupMenu;
 import android.widget.TextView;
-
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.databinding.DataBindingUtil;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProviders;
-
 import com.google.android.material.snackbar.Snackbar;
-
-import java.io.IOException;
-
-import javax.inject.Inject;
-
 import dagger.android.AndroidInjection;
 import dagger.android.AndroidInjector;
 import dagger.android.DispatchingAndroidInjector;
 import dagger.android.support.HasSupportFragmentInjector;
+import java.io.IOException;
+import javax.inject.Inject;
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.databinding.ActivityTrackDetailBinding;
 import mx.dev.franco.automusictagfixer.identifier.IdentificationParams;
@@ -44,8 +41,6 @@ import mx.dev.franco.automusictagfixer.utilities.Message;
 import mx.dev.franco.automusictagfixer.utilities.RequiredPermissions;
 import mx.dev.franco.automusictagfixer.utilities.SimpleMediaPlayer;
 import mx.dev.franco.automusictagfixer.utilities.SuccessIdentification;
-
-import static android.view.View.VISIBLE;
 
 public class TrackDetailActivity extends AppCompatActivity implements ManualCorrectionDialogFragment.OnManualCorrectionListener,
         CoverIdentificationResultsFragmentBase.OnCoverCorrectionListener,
@@ -76,8 +71,10 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
         super.onCreate(savedInstanceState);
         mViewDataBinding = DataBindingUtil.
                 setContentView(this, R.layout.activity_track_detail);
+        mViewDataBinding.setLifecycleOwner(this);
         mTrackDetailViewModel = ViewModelProviders.of(this, androidViewModelFactory).get(TrackDetailViewModel.class);
         mViewDataBinding.setViewModel(mTrackDetailViewModel);
+        mViewDataBinding.progressView.setVisibility(VISIBLE);
         setSupportActionBar(mViewDataBinding.toolbar);
         mActionBar = getSupportActionBar();
         mActionBar.setDisplayShowTitleEnabled(true);
@@ -407,8 +404,6 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
      * the information about the song
      */
     private void disableAppBarLayout() {
-        //shrink toolbar to make it easy to user
-        //focus in editing tags
         mViewDataBinding.appBarLayout.setExpanded(false);
     }
 

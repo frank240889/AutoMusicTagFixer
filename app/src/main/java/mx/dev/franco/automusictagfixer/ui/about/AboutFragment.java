@@ -9,13 +9,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
-
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-
 import com.google.android.material.button.MaterialButton;
-
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.ui.BaseFragment;
 import mx.dev.franco.automusictagfixer.ui.MainActivity;
@@ -66,6 +63,7 @@ public class AboutFragment extends BaseFragment {
         super.onActivityCreated(savedInstanceState);
         //((MainActivity)getActivity()).toggle.syncState();
         ((MainActivity)getActivity()).mActionBar.setTitle(getString(R.string.about));
+        ((MainActivity)getActivity()).mStartTaskFab.hide();
     }
 
     @Override

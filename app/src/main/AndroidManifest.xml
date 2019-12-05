@@ -57,6 +57,7 @@
             android:configChanges="orientation|screenSize|keyboard"
             android:launchMode="singleTop"
             android:screenOrientation="portrait"
+            android:parentActivityName=".ui.MainActivity"
             android:windowSoftInputMode="adjustResize|adjustPan"/>
 
         <activity
