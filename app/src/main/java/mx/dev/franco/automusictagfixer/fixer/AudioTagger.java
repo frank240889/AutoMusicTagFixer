@@ -311,15 +311,15 @@ public class AudioTagger {
     }
 
     /**
-     * Check which tags needs to setChecked, comparing current
+     * Check which tags needs to be updated, comparing current
      * tags of file and new tags.
      * @param overrideAllTags Indicates the mode of comparision, if
-     *                         mOverrideAllTags is true, will set all tags as needed to setChecked,
+     *                         mOverrideAllTags is true, will set all tags as needed to be updated,
      *                         only if are not equal current than new; if mOverrideAllTags is false
      *                         will set only those missing in file.
      * @param file The file to apply tags.
      * @param newTags The new tags to apply.
-     * @return A hashmap containing the tags that will be setChecked; it will be empty
+     * @return A map containing the tags that will be updated; it will be empty
      *          if all current tags and news are equals.
      * @throws TagException
      * @throws ReadOnlyFileException
@@ -387,7 +387,7 @@ public class AudioTagger {
         String mimeType = getMimeType(audioFile.getFile());
         String extension = getExtension(audioFile.getFile());
 
-        if((mimeType.equals("audio/mpeg_mp3") || mimeType.equals("audio/mpeg") ) && extension.toLowerCase().equals("mp3")){
+        if(("audio/mpeg_mp3".equals(mimeType) || "audio/mpeg".equals(mimeType)) && extension.toLowerCase().equals("mp3")){
             if(((MP3File)audioFile).hasID3v1Tag() && !((MP3File) audioFile).hasID3v2Tag()){
                 //create new version of ID3v2
                 ID3v24Tag id3v24Tag = new ID3v24Tag( ((MP3File)audioFile).getID3v1Tag() );
@@ -399,8 +399,7 @@ public class AudioTagger {
                 if(((MP3File) audioFile).hasID3v2Tag()) {
                     tag = ((MP3File) audioFile).getID3v2Tag();
                 }
-                //Has no tags? create a new one, but don't save until
-                //user apply changes
+                //Has no tags? create a new one.
                 else {
                     ID3v24Tag id3v24Tag = new ID3v24Tag();
                     ((MP3File) audioFile).setID3v2Tag(id3v24Tag);
@@ -493,19 +492,20 @@ public class AudioTagger {
 
     @Nullable
     private static byte[] getCover(AudioFile audioTaggerFile) {
-        Tag tag = null;
-        if (audioTaggerFile.getTag() == null)
-            return null;
+        Tag tag = audioTaggerFile.getTag();
 
-        tag = audioTaggerFile.getTag();
+        if (tag == null)
+            return null;
 
         if (tag.getFirstArtwork() == null)
             return null;
 
-        if(tag.getFirstArtwork().getBinaryData() == null)
+        Artwork artwork = tag.getFirstArtwork();
+
+        if(artwork.getBinaryData() == null)
             return null;
 
-        return tag.getFirstArtwork().getBinaryData();
+        return artwork.getBinaryData();
     }
 
     /**

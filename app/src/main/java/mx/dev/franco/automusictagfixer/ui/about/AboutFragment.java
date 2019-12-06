@@ -9,10 +9,13 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
 import com.google.android.material.button.MaterialButton;
+
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.ui.BaseFragment;
 import mx.dev.franco.automusictagfixer.ui.MainActivity;
@@ -44,11 +47,17 @@ public class AboutFragment extends BaseFragment {
         MaterialButton jaudiotaggerButton = view.findViewById(R.id.jaudio_tagger_button);
         MaterialButton contactButton = view.findViewById(R.id.bug_report_button);
         //Set listener for UI elements
-        contactButton.setOnClickListener(v -> AndroidUtils.openInExternalApp(Intent.ACTION_SENDTO, "mailto: dark.yellow.studios@gmail.com", getActivity()));
+        contactButton.setOnClickListener(v ->
+                AndroidUtils.openInExternalApp(Intent.ACTION_SENDTO,
+                        "mailto: dark.yellow.studios@gmail.com", getActivity()));
 
-        jaudiotaggerButton.setOnClickListener(v -> AndroidUtils.openInExternalApp(Intent.ACTION_VIEW, "http://www.jthink.net/jaudiotagger/", getActivity()));
+        jaudiotaggerButton.setOnClickListener(v ->
+                AndroidUtils.openInExternalApp(Intent.ACTION_VIEW,
+                        "http://www.jthink.net/jaudiotagger/", getActivity()));
 
-        drawerButton.setOnClickListener(v -> AndroidUtils.openInExternalApp(Intent.ACTION_VIEW, "https://tgs266.deviantart.com/", getActivity()));
+        drawerButton.setOnClickListener(v ->
+                AndroidUtils.openInExternalApp(Intent.ACTION_VIEW,
+                        "https://tgs266.deviantart.com/", getActivity()));
         requireActivity().getOnBackPressedDispatcher().addCallback(new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {

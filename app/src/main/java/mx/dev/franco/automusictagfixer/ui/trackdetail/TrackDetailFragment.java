@@ -104,7 +104,7 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
      * loaded.
      * @param message The message to show.
      */
-    public void onSuccessLoad(Message message) {
+    private void onSuccessLoad(Message message) {
         mFragmentTrackDetailBinding.
                 changeImageButton.setOnClickListener(v ->
                 ((TrackDetailActivity)getActivity()).editCover(INTENT_OPEN_GALLERY));
@@ -126,7 +126,7 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
      * Enters edit mode, for modify manually
      * the information about the song
      */
-    public void enableFieldsToEdit(){
+    void enableFieldsToEdit(){
         //Shrink toolbar to make it easy to user
         //focus in editing tags
 
@@ -147,7 +147,7 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
     /**
      * Remove error tags from editable fields.
      */
-    public void removeErrorTags(){
+    private void removeErrorTags(){
         //get descendants instances of edit text
         ArrayList<View> fields = mFragmentTrackDetailBinding.getRoot().getFocusables(View.FOCUS_DOWN);
         int numElements = fields.size();
@@ -163,7 +163,7 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
      * Disables the fields and
      * leaves out from edit mode
      */
-    public void disableFields(){
+    void disableFields(){
         removeErrorTags();
         mFragmentTrackDetailBinding.trackNameDetails.clearFocus();
         mFragmentTrackDetailBinding.trackNameDetails.setEnabled(false);
