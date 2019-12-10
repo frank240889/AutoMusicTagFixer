@@ -459,6 +459,7 @@ public class AudioTagger {
                     }
                 } catch (CannotWriteException e) {
                     e.printStackTrace();
+                    resultCorrection.setError(e);
                     resultCorrection.setCode(COULD_NOT_APPLY_TAGS);
                 }
                 finally {
@@ -531,6 +532,7 @@ public class AudioTagger {
             }
             catch (CannotWriteException e) {
                 e.printStackTrace();
+                resultCorrection.setError(e);
                 resultCorrection.setCode(COULD_NOT_APPLY_TAGS);
             }
         }
@@ -566,7 +568,7 @@ public class AudioTagger {
         Tag currentTag = getTag(audioFile);
         String mimeType = getMimeType(audioFile.getFile());
         String extension = getExtension(audioFile.getFile());
-        boolean isMp3 = ((mimeType.equals("audio/mpeg_mp3") || mimeType.equals("audio/mpeg") )
+        boolean isMp3 = (("audio/mpeg_mp3".equals(mimeType) || "audio/mpeg".equals(mimeType) )
                 && extension.toLowerCase().equals("mp3"));
         //remove old version of ID3 tags
         if (isMp3 && ((MP3File) audioFile).hasID3v1Tag()) {

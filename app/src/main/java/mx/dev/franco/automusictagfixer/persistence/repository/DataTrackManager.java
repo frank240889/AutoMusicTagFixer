@@ -220,6 +220,7 @@ public class DataTrackManager {
         String title = (String) tags.get(FieldKey.TITLE);
         String artist = (String) tags.get(FieldKey.ARTIST);
         String album = (String) tags.get(FieldKey.ALBUM);
+        //This key will reference to the path of file.
         String path = (String) tags.get(FieldKey.CUSTOM1);
 
         if (title != null && !title.isEmpty()) {

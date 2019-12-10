@@ -103,6 +103,8 @@ public class TrackDetailViewModel extends AndroidViewModel {
     private Track mTrack;
     private boolean mTriggered = false;
     private MutableLiveData<Integer> mLiveLoadingMessage;
+    private LiveData<Resource<MetadataWriterResult>> mResultWriter;
+    private LiveData<Resource<MetadataReaderResult>> mResultReader;
 
     @Inject
     public TrackDetailViewModel(@NonNull Application application,
@@ -165,6 +167,9 @@ public class TrackDetailViewModel extends AndroidViewModel {
             Log.d("fileSaverResultState", aBoolean+"");
             mStateMerger.setValue(aBoolean);
         });
+
+        mResultWriter = mDataTrackManager.getResultWriter();
+        mResultReader = mDataTrackManager.getResultReader();
     }
 
     /**
@@ -175,15 +180,23 @@ public class TrackDetailViewModel extends AndroidViewModel {
         return mStateMerger;
     }
 
+    public LiveData<Track> observeTrack() {
+        LiveData<Track> trackLiveData = mDataTrackManager.observeTrack();
+        mLiveDataTrack = Transformations.map(trackLiveData, input -> {
+            mTrack = input;
+            mDataTrackManager.readAudioFile(input);
+            return input;
+        });
+        return mLiveDataTrack;
+    }
+
     /**
      * Livedata to inform if track could be loaded.
      * @return Livedata holding a {@link Message} object or null.
      */
     public LiveData<Message> observeReadingResult() {
-        LiveData<Resource<MetadataReaderResult>> resultReader = mDataTrackManager.getResultReader();
-        mResultReading = Transformations.map(resultReader, input -> {
+        mResultReading = Transformations.map(mResultReader, input -> {
             Message message = null;
-            mStateMerger.setValue(false);
             if(input.data.getFields().getCode() != AudioTagger.SUCCESS) {
                 if(input.data.getFields().getError().getMessage() != null)
                     message = new Message(input.data.getFields().getError().getMessage());
@@ -192,11 +205,11 @@ public class TrackDetailViewModel extends AndroidViewModel {
             }
             else {
                 mTrack = input.data.getTrack();
+                mAudioFields = input.data.getFields();
                 if(mCorrectionMode == Constants.CorrectionActions.SEMI_AUTOMATIC && !mTriggered) {
                     mTriggered = true;
                     startIdentification(new IdentificationParams(IdentificationParams.ALL_TAGS));
                 }
-                mAudioFields = input.data.getFields();
                 setEditableInfo(mAudioFields);
                 setNoEditableInfo(mAudioFields);
                 setFixedInfo(mAudioFields);
@@ -207,8 +220,8 @@ public class TrackDetailViewModel extends AndroidViewModel {
     }
 
     public LiveData<Message> observeWritingResult() {
-        LiveData<Resource<MetadataWriterResult>> resultWriter = mDataTrackManager.getResultWriter();
-        mResultWriting = Transformations.map(resultWriter, input -> {
+        mResultWriting = Transformations.map(mResultWriter, input -> {
+            Log.e("mResultWriting", "mResultWriting");
             Message message = null;
             if(input.data.getResultCorrection().getCode() == AudioTagger.SUCCESS) {
                 CoverManager.removeCover(mTrack.getMediaStoreId()+"");
@@ -217,23 +230,24 @@ public class TrackDetailViewModel extends AndroidViewModel {
                     mDataTrackManager.renameFile(mCorrectionParams);
                 }
                 else {
+                    //Get updated tags to update the repository track item
                     if(input.data.getResultCorrection().getTagsUpdated() != null) {
-                        mTrack.setProcessing(0);
+                        //mTrack.setProcessing(0);
                         mDataTrackManager.updateTrack(input.data.getResultCorrection().getTagsUpdated());
                         mMediaStoreManager.updateMediaStore(input.data.getResultCorrection().getTagsUpdated(),
                                 MediaStoreResult.UPDATE_TAGS, mTrack.getMediaStoreId());
                     }
                     else {
-                        mTrack.setProcessing(0);
-                        mDataTrackManager.updateTrack(mTrack);
+                        //mTrack.setProcessing(0);
+                        //mDataTrackManager.updateTrack(mTrack);
                         mDataTrackManager.readAudioFile(mTrack);
                         message = new Message(getApplication().getString(R.string.changes_applied));
                     }
                 }
             }
             else {
-                mTrack.setProcessing(0);
-                mDataTrackManager.updateTrack(mTrack);
+                //mTrack.setProcessing(0);
+                //mDataTrackManager.updateTrack(mTrack);
                 //Could not apply tags, send a message indicating that.
                 message = getMessage(input.data);
             }
@@ -266,7 +280,7 @@ public class TrackDetailViewModel extends AndroidViewModel {
             if(input.status == Resource.Status.SUCCESS) {
                 Map<FieldKey, Object> map = new ArrayMap<>();
                 map.put(FieldKey.CUSTOM1, input.data.getNewAbsolutePath());
-                mTrack.setProcessing(0);
+                //mTrack.setProcessing(0);
                 mDataTrackManager.updateTrack(map);
                 mMediaStoreManager.updateMediaStore(map,
                         MediaStoreResult.UPDATE_RENAMED_FILE, mTrack.getMediaStoreId());
@@ -279,16 +293,6 @@ public class TrackDetailViewModel extends AndroidViewModel {
             return message;
         });
         return mResultRenaming;
-    }
-
-    public LiveData<Track> observeTrack() {
-        LiveData<Track> trackLiveData = mDataTrackManager.observeTrack();
-        mLiveDataTrack = Transformations.map(trackLiveData, input -> {
-            mTrack = input;
-            mDataTrackManager.readAudioFile(input);
-            return input;
-        });
-        return mLiveDataTrack;
     }
 
     /**
@@ -461,8 +465,8 @@ public class TrackDetailViewModel extends AndroidViewModel {
                         processAddCover(mCorrectionParams);
                     break;
             }
-            mTrack.setProcessing(1);
-            mDataTrackManager.updateTrack(mTrack);
+            //mTrack.setProcessing(1);
+            //mDataTrackManager.updateTrack(mTrack);
             mDataTrackManager.performCorrection(mCorrectionParams);
         }
     }
