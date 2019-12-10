@@ -170,6 +170,7 @@ public class TrackDetailViewModel extends AndroidViewModel {
 
         mResultWriter = mDataTrackManager.getResultWriter();
         mResultReader = mDataTrackManager.getResultReader();
+        Log.w("TrackDetailViewModel", "TrackDetailViewModel");
     }
 
     /**
@@ -444,7 +445,6 @@ public class TrackDetailViewModel extends AndroidViewModel {
      * @param correctionParams The params required to correct current track.
      */
     public void performCorrection(InputCorrectionParams correctionParams) {
-        mStateMerger.setValue(true);
         mLiveLoadingMessage.setValue(R.string.applying_tags);
         mCorrectionParams = correctionParams;
         mCorrectionParams.setTargetFile(mTrack.getPath());
@@ -535,7 +535,6 @@ public class TrackDetailViewModel extends AndroidViewModel {
      * @param identificationParams Input parameters that could be useful for this identification.
      */
     public void startIdentification(IdentificationParams identificationParams) {
-        mLiveLoadingMessage.setValue(R.string.identifying);
         mIdentificationParams = identificationParams;
         if(mIdentificationParams.getIdentificationType() == IdentificationParams.ONLY_COVER) {
             if(mIdentificationManager.getCoverListResult(mTrack.getMediaStoreId()+"") != null &&

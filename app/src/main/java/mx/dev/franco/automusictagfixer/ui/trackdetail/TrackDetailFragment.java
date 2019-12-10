@@ -65,7 +65,7 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
         });
 
         mViewModel.observeInvalidInputsValidation().observe(this, this::onInputDataInvalid);
-        mViewModel.observeWritingResult().observe(getActivity(), this::onWritingResult);
+        //mViewModel.observeWritingResult().observe(getActivity(), this::onWritingResult);
     }
 
     @Override

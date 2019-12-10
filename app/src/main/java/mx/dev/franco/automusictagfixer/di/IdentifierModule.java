@@ -28,7 +28,7 @@ public class IdentifierModule {
     IdentifierFactory provideIdentifierFactory(GnApiService gnApiService, ResourceManager resourceManager) {
         return new IdentifierFactory(gnApiService, resourceManager);
     }
-
+    
     @Provides
     IdentificationManager provideIdentificationManager(CoverResultsCache coverResultsCache,
                                                        TrackResultsCache trackResultsCache,

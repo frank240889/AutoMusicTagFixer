@@ -92,6 +92,7 @@ public class IdentificationManager {
 
                 @Override
                 public void onIdentificationFinished(List<Identifier.IdentificationResults> result, Track file) {
+                    mLoadingStateLiveData.setValue(false);
                     processResults(result);
                 }
 
