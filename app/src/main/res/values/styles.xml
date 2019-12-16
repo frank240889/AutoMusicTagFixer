@@ -86,12 +86,7 @@
         <item name="android:textColor">@color/snackbarTextBackgroundColor</item>
     </style-->
 
-    <style name="WindowAnimationTransition">
-        <item name="android:windowEnterAnimation">@android:anim/fade_in</item>
-        <item name="android:windowExitAnimation">@android:anim/fade_out</item>
-    </style>
-
-    <!--Theming material filled buttons-->
+  <!--Theming material filled buttons-->
     <style name="Widget.AutomusicTagFixer.ColoredButton" parent="@style/Widget.MaterialComponents.Button">
         <item name="backgroundTint">@color/primaryColorButton</item>
         <item name="android:textColor">@color/dark_gray</item>
@@ -143,11 +138,7 @@
         <item name="cornerSize">16dp</item>
     </style>
 
-    <style name="Widget.AutomusicTagFixer.PopupMenu" parent="@style/Widget.MaterialComponents.PopupMenu">
-        <item name="shapeAppearanceOverlay">@style/ShapeAppearanceOverlay.AutomusicTagFixer.PopupMenu</item>
-    </style>
-
-    <style name="ShapeAppearanceOverlay.AutomusicTagFixer.PopupMenu" parent="">
+  <style name="ShapeAppearanceOverlay.AutomusicTagFixer.PopupMenu" parent="">
         <item name="cornerFamily">rounded</item>
         <item name="cornerSize">16dp</item>
     </style>
