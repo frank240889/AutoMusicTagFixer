@@ -170,6 +170,8 @@ public class TrackDetailViewModel extends AndroidViewModel {
 
         mResultWriter = mDataTrackManager.getResultWriter();
         mResultReader = mDataTrackManager.getResultReader();
+        mResultReading = getResultReading();
+        mResultWriting = getResultWriting();
         Log.w("TrackDetailViewModel", "TrackDetailViewModel");
     }
 
@@ -196,7 +198,15 @@ public class TrackDetailViewModel extends AndroidViewModel {
      * @return Livedata holding a {@link Message} object or null.
      */
     public LiveData<Message> observeReadingResult() {
-        mResultReading = Transformations.map(mResultReader, input -> {
+        return mResultReading;
+    }
+
+    public LiveData<Message> observeWritingResult() {
+        return mResultWriting;
+    }
+
+    private LiveData<Message> getResultReading() {
+        return Transformations.map(mResultReader, input -> {
             Message message = null;
             if(input.data.getFields().getCode() != AudioTagger.SUCCESS) {
                 if(input.data.getFields().getError().getMessage() != null)
@@ -217,12 +227,10 @@ public class TrackDetailViewModel extends AndroidViewModel {
             }
             return message;
         });
-        return mResultReading;
     }
 
-    public LiveData<Message> observeWritingResult() {
-        mResultWriting = Transformations.map(mResultWriter, input -> {
-            Log.e("mResultWriting", "mResultWriting");
+    private LiveData<Message> getResultWriting(){
+        return Transformations.map(mResultWriter, input -> {
             Message message = null;
             if(input.data.getResultCorrection().getCode() == AudioTagger.SUCCESS) {
                 CoverManager.removeCover(mTrack.getMediaStoreId()+"");
@@ -254,7 +262,6 @@ public class TrackDetailViewModel extends AndroidViewModel {
             }
             return message;
         });
-        return mResultWriting;
     }
 
     private Message getMessage(MetadataWriterResult data) {
@@ -536,6 +543,7 @@ public class TrackDetailViewModel extends AndroidViewModel {
      */
     public void startIdentification(IdentificationParams identificationParams) {
         mIdentificationParams = identificationParams;
+        mLiveLoadingMessage.setValue(R.string.identifying);
         if(mIdentificationParams.getIdentificationType() == IdentificationParams.ONLY_COVER) {
             if(mIdentificationManager.getCoverListResult(mTrack.getMediaStoreId()+"") != null &&
                     mIdentificationManager.getCoverListResult(mTrack.getMediaStoreId()+"").size() > 0) {

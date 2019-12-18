@@ -218,7 +218,7 @@
     <string name="missing_tags">Faltantes</string>
 
 
-    <string name="instructions_request_permission">Es necesario habilitar el permiso de escritura a esta tarjeta, de lo contrario las canciones contenidas en la SD no se podrán corregir.</string>
+    <string name="instructions_request_permission">Es necesario habilitar el permiso de escritura para esta tarjeta, de lo contrario las canciones contenidas en la SD no se podrán corregir.</string>
     <string name="step1">Una vez que pulses el botón \"Habilitar\"\ al final de las indicaciones, aparecerá una pantalla como la siguiente (variará el aspecto de acuerdo a la versión de Android y fabricante):</string>
     <string name="step2">Pulsa el menú de los 3 puntos y selecciona la SD como se indica en la imagen.</string>
     <string name="step3">Abre el menu lateral izquierdo superior (el menú de hamburguesa)y selecciona la SD.</string>
