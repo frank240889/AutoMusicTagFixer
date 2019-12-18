@@ -9,9 +9,8 @@
     <color name="colorControlActivated">#212121</color>
     <color name="colorControlHighlight">#212121</color>
     <color name="primaryBackground">#ffffff</color>
-    <color name="primaryBackgroundWithAlpha">#aaffffff</color>
 
-    <color name="primaryColorButton">#fdd835</color>
+  <color name="primaryColorButton">#fdd835</color>
     <color name="primaryOutlinedColorButton">#212121</color>
     <color name="dark_gray">#212121</color>
 

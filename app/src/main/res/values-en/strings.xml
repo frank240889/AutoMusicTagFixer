@@ -240,13 +240,10 @@
     <string name="starting_correction">Starting correction…</string>
     <string name="applying_tags">Applying changes, please wait…</string>
     <string name="success">Correction finished.</string>
-    <string name="get_permission">Permission</string>
-    <string name="could_not_get_permission">Could not get permission.</string>
+  <string name="could_not_get_permission">Could not get permission.</string>
     <string name="complete_task">Correction successfully finished.</string>
     <string name="title_update_cover">Update cover art</string>
-    <string name="add_manual">Manual</string>
-    <string name="correcting">Correcting</string>
-    <string name="identifying">Identifying…</string>
+  <string name="identifying">Identifying…</string>
     <string name="no_match_found">No match found.</string>
     <string name="match_found">Match found.</string>
     <string name="error_in_correction">Error</string>
@@ -282,8 +279,7 @@
     <string name="turn_lights_on">Turn lights on</string>
     <string name="turn_lights_off">Turn lights off</string>
     <string name="removing_cover">Removing cover…</string>
-    <string name="close">Close</string>
-    <string name="sd_card_detected">SD card detected</string>
+  <string name="sd_card_detected">SD card detected</string>
     <string name="details">Details</string>
     <string name="edit">Edit</string>
     <string name="see_image">See it</string>
