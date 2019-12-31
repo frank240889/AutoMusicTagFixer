@@ -52,9 +52,10 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mBundle = getArguments();
+
         if(mBundle != null)
             mViewModel.setInitialAction(
-                mBundle.getInt(CorrectionActions.MODE, CorrectionActions.VIEW_INFO));
+                    mBundle.getInt(CorrectionActions.MODE, CorrectionActions.VIEW_INFO));
         else
             mViewModel.setInitialAction(CorrectionActions.VIEW_INFO);
 
@@ -65,7 +66,7 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
         });
 
         mViewModel.observeInvalidInputsValidation().observe(this, this::onInputDataInvalid);
-        //mViewModel.observeWritingResult().observe(getActivity(), this::onWritingResult);
+        mViewModel.observeWritingResult().observe(getActivity(), this::onWritingResult);
     }
 
     @Override

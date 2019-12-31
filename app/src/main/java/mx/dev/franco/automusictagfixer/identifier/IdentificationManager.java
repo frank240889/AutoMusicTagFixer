@@ -3,6 +3,7 @@ package mx.dev.franco.automusictagfixer.identifier;
 import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
+import android.util.Log;
 
 import androidx.lifecycle.LiveData;
 
@@ -93,6 +94,7 @@ public class IdentificationManager {
                 @Override
                 public void onIdentificationFinished(List<Identifier.IdentificationResults> result, Track file) {
                     mLoadingStateLiveData.setValue(false);
+                    Log.d("onIdentificationFinished", "onIdentificationFinished");
                     processResults(result);
                 }
 
@@ -127,6 +129,7 @@ public class IdentificationManager {
         mResultCreator = new ResultCreator(new AsyncOperation<Void, Void, Void, Void>() {
             @Override
             public void onAsyncOperationStarted(Void params) {
+                Log.d("processResults", "processResults");
                 mLoadingStateLiveData.setValue(true);
             }
 

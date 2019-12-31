@@ -80,6 +80,7 @@ public class TrackDetailViewModel extends AndroidViewModel {
     private SingleLiveEvent<Message> mLiveMessage = new SingleLiveEvent<>();
     private SingleLiveEvent<ActionableMessage> mLiveActionableMessage = new SingleLiveEvent<>();
     private SingleLiveEvent<Void> mLiveConfirmationDeleteCover = new SingleLiveEvent<>();
+    private SingleLiveEvent<Boolean> mCancellableTask = new SingleLiveEvent<>();
 
     private LiveData<Message> mResultReading;
     private LiveData<Message> mResultWriting;
@@ -150,21 +151,25 @@ public class TrackDetailViewModel extends AndroidViewModel {
 
         mStateMerger.addSource(stateTrackDataRepository, aBoolean -> {
             Log.d("stateTrackDataRepository", aBoolean+"");
+            mCancellableTask.setValue(false);
             mStateMerger.setValue(aBoolean);
         });
 
         mStateMerger.addSource(mediaStoreManagerState, aBoolean -> {
             Log.d("mediaStoreManagerState", aBoolean+"");
+            mCancellableTask.setValue(false);
             mStateMerger.setValue(aBoolean);
         });
 
         mStateMerger.addSource(identificationRepositoryState, aBoolean -> {
             Log.d("identificationRepositoryState", aBoolean+"");
+            mCancellableTask.setValue(aBoolean);
             mStateMerger.setValue(aBoolean);
         });
 
         mStateMerger.addSource(fileSaverResultState, aBoolean -> {
             Log.d("fileSaverResultState", aBoolean+"");
+            mCancellableTask.setValue(false);
             mStateMerger.setValue(aBoolean);
         });
 
@@ -172,7 +177,11 @@ public class TrackDetailViewModel extends AndroidViewModel {
         mResultReader = mDataTrackManager.getResultReader();
         mResultReading = getResultReading();
         mResultWriting = getResultWriting();
-        Log.w("TrackDetailViewModel", "TrackDetailViewModel");
+        mLiveDataTrack = getDataTrack();
+        mResultFileSaving = getCoverSavingResult();
+        mResultRenaming = getRenamingResult();
+        mResultsIdentificationLiveData = getSuccessIdentification();
+        mFailIdentificationResults = getFailIdentification();
     }
 
     /**
@@ -184,12 +193,6 @@ public class TrackDetailViewModel extends AndroidViewModel {
     }
 
     public LiveData<Track> observeTrack() {
-        LiveData<Track> trackLiveData = mDataTrackManager.observeTrack();
-        mLiveDataTrack = Transformations.map(trackLiveData, input -> {
-            mTrack = input;
-            mDataTrackManager.readAudioFile(input);
-            return input;
-        });
         return mLiveDataTrack;
     }
 
@@ -205,6 +208,10 @@ public class TrackDetailViewModel extends AndroidViewModel {
         return mResultWriting;
     }
 
+    public LiveData<Boolean> observeCancellableTaskFlag() {
+        return mCancellableTask;
+    }
+
     private LiveData<Message> getResultReading() {
         return Transformations.map(mResultReader, input -> {
             Message message = null;
@@ -217,10 +224,6 @@ public class TrackDetailViewModel extends AndroidViewModel {
             else {
                 mTrack = input.data.getTrack();
                 mAudioFields = input.data.getFields();
-                if(mCorrectionMode == Constants.CorrectionActions.SEMI_AUTOMATIC && !mTriggered) {
-                    mTriggered = true;
-                    startIdentification(new IdentificationParams(IdentificationParams.ALL_TAGS));
-                }
                 setEditableInfo(mAudioFields);
                 setNoEditableInfo(mAudioFields);
                 setFixedInfo(mAudioFields);
@@ -228,6 +231,14 @@ public class TrackDetailViewModel extends AndroidViewModel {
             return message;
         });
     }
+
+    public void shouldTriggerInitialIdentification() {
+        if(mCorrectionMode == Constants.CorrectionActions.SEMI_AUTOMATIC && !mTriggered) {
+            mTriggered = true;
+            startIdentification(new IdentificationParams(IdentificationParams.ALL_TAGS));
+        }
+    }
+
 
     private LiveData<Message> getResultWriting(){
         return Transformations.map(mResultWriter, input -> {
@@ -264,6 +275,15 @@ public class TrackDetailViewModel extends AndroidViewModel {
         });
     }
 
+    private LiveData<Track> getDataTrack() {
+        LiveData<Track> trackLiveData = mDataTrackManager.observeTrack();
+        return Transformations.map(trackLiveData, input -> {
+            mTrack = input;
+            mDataTrackManager.readAudioFile(input);
+            return input;
+        });
+    }
+
     private Message getMessage(MetadataWriterResult data) {
         Message message;
         String err = "";
@@ -282,8 +302,12 @@ public class TrackDetailViewModel extends AndroidViewModel {
     }
 
     public LiveData<Message> observeRenamingResult() {
+        return mResultRenaming;
+    }
+
+    private LiveData<Message> getRenamingResult() {
         LiveData<Resource<AudioTagger.ResultRename>> resultRename = mDataTrackManager.getResultRename();
-        mResultRenaming = Transformations.map(resultRename, input -> {
+        return Transformations.map(resultRename, input -> {
             Message message = null;
             if(input.status == Resource.Status.SUCCESS) {
                 Map<FieldKey, Object> map = new ArrayMap<>();
@@ -300,7 +324,6 @@ public class TrackDetailViewModel extends AndroidViewModel {
 
             return message;
         });
-        return mResultRenaming;
     }
 
     /**
@@ -308,11 +331,14 @@ public class TrackDetailViewModel extends AndroidViewModel {
      * @return a Livedata holding the result.
      */
     public LiveData<SuccessIdentification> observeSuccessIdentification() {
-        LiveData<Identifier.IdentificationStatus> resultIdentification = mIdentificationManager.observeSuccessIdentification();
-        mResultsIdentificationLiveData = Transformations.map(resultIdentification, input ->
-                new SuccessIdentification(mIdentificationParams.getIdentificationType(),
-                mTrack.getMediaStoreId() + ""));
         return mResultsIdentificationLiveData;
+    }
+
+    private LiveData<SuccessIdentification> getSuccessIdentification() {
+        LiveData<Identifier.IdentificationStatus> resultIdentification = mIdentificationManager.observeSuccessIdentification();
+        return Transformations.map(resultIdentification, input ->
+                new SuccessIdentification(mIdentificationParams.getIdentificationType(),
+                        mTrack.getMediaStoreId() + ""));
     }
 
     /**
@@ -328,15 +354,22 @@ public class TrackDetailViewModel extends AndroidViewModel {
      * @return a Livedata holding the result.
      */
     public LiveData<Message> observeFailIdentification() {
-        LiveData<Identifier.IdentificationStatus> resultIdentification = mIdentificationManager.observeFailIdentification();
-        mFailIdentificationResults = Transformations.map(resultIdentification,
-                input -> new ActionableMessage(Action.MANUAL_CORRECTION,input.getMessage()));
         return mFailIdentificationResults;
     }
 
+    private LiveData<Message> getFailIdentification() {
+        LiveData<Identifier.IdentificationStatus> resultIdentification = mIdentificationManager.observeFailIdentification();
+        return Transformations.map(resultIdentification,
+                input -> new ActionableMessage(Action.MANUAL_CORRECTION,input.getMessage()));
+    }
+
     public LiveData<ActionableMessage> observeCoverSavingResult() {
+        return mResultFileSaving;
+    }
+
+    private LiveData<ActionableMessage> getCoverSavingResult() {
         LiveData<Resource<String>> resultSaving = mFileManager.observeResultFileSaving();
-        mResultFileSaving = Transformations.map(resultSaving, input -> {
+        return Transformations.map(resultSaving, input -> {
             ActionableMessage actionableMessage = new ActionableMessage();
             if(input.status == Resource.Status.SUCCESS) {
                 actionableMessage.setAction(Action.SEE_COVER_SAVED);
@@ -353,8 +386,6 @@ public class TrackDetailViewModel extends AndroidViewModel {
 
             return actionableMessage;
         });
-
-        return mResultFileSaving;
     }
 
     public LiveData<Message> observeMessage(){

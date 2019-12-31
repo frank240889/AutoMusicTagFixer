@@ -3,6 +3,7 @@ package mx.dev.franco.automusictagfixer.ui.trackdetail;
 import android.app.Dialog;
 import android.content.Context;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.FrameLayout;
@@ -96,6 +97,7 @@ public class CoverIdentificationResultsFragmentBase extends ResultsFragmentBase<
                     View snapView = snapHelper.findSnapView(layoutManager);
                     if(snapView != null) {
                         mCenteredItem = layoutManager.getPosition(snapView);
+                        Log.d("snaped position", mCenteredItem+"");
                         listResults.smoothScrollToPosition(mCenteredItem);
                     }
                 }

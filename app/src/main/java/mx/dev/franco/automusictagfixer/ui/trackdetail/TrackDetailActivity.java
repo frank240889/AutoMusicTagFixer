@@ -45,6 +45,8 @@ import mx.dev.franco.automusictagfixer.utilities.RequiredPermissions;
 import mx.dev.franco.automusictagfixer.utilities.SimpleMediaPlayer;
 import mx.dev.franco.automusictagfixer.utilities.SuccessIdentification;
 
+import static android.view.View.GONE;
+import static android.view.View.INVISIBLE;
 import static android.view.View.VISIBLE;
 
 public class TrackDetailActivity extends AppCompatActivity implements ManualCorrectionDialogFragment.OnManualCorrectionListener,
@@ -119,6 +121,7 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
         mTrackDetailViewModel.observeTrack().observe(this, track -> mPlayer.setPath(track.getPath()));
         mTrackDetailViewModel.observeLoadingMessage().observe(this, this::onLoadingMessage);
         mTrackDetailViewModel.observeWritingResult().observe(this, this::onWritingResult);
+        mTrackDetailViewModel.observeCancellableTaskFlag().observe(this, this::onCancellableTask);
         mTrackDetailViewModel.observeReadingResult().observe(this, message -> {
             if(message == null) {
                 onSuccessLoad(null);
@@ -393,7 +396,7 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
     private void disableEditModeElements() {
         mManualEditMenuItem.setEnabled(false);
         mViewDataBinding.coverArtMenu.setEnabled(false);
-        mViewDataBinding.coverArtMenu.setVisibility(View.GONE);
+        mViewDataBinding.coverArtMenu.setVisibility(GONE);
         mViewDataBinding.fabAutofix.hide();
     }
 
@@ -444,6 +447,7 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
         showFabs();
         mViewDataBinding.progressView.findViewById(R.id.cancel_button).
                 setOnClickListener(v -> mTrackDetailViewModel.cancelTasks());
+        mTrackDetailViewModel.shouldTriggerInitialIdentification();
     }
 
 
@@ -655,8 +659,13 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
             disableEditModeElements();
         }
         else {
-            mViewDataBinding.progressView.setVisibility(View.GONE);
+            mViewDataBinding.progressView.setVisibility(GONE);
             enableEditModeElements();
         }
+    }
+
+    private void onCancellableTask(Boolean cancellable) {
+        mViewDataBinding.progressView.
+                findViewById(R.id.cancel_button).setVisibility(cancellable ? VISIBLE : INVISIBLE);
     }
 }

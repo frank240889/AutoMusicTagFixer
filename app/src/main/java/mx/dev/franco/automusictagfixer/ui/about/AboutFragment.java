@@ -10,7 +10,6 @@ import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 
-import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -58,13 +57,6 @@ public class AboutFragment extends BaseFragment {
         drawerButton.setOnClickListener(v ->
                 AndroidUtils.openInExternalApp(Intent.ACTION_VIEW,
                         "https://tgs266.deviantart.com/", getActivity()));
-        requireActivity().getOnBackPressedDispatcher().addCallback(new OnBackPressedCallback(true) {
-            @Override
-            public void handleOnBackPressed() {
-                getActivity().getSupportFragmentManager().popBackStack();
-            }
-        });
-
     }
 
     @Override
