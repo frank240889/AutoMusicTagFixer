@@ -3,8 +3,8 @@ package mx.dev.franco.automusictagfixer.identifier;
 import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
-import android.util.Log;
 
+import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
 
 import java.util.List;
@@ -38,11 +38,11 @@ public class IdentificationManager {
     private ResultCreator mResultCreator;
 
     @Inject
-    public IdentificationManager(CoverResultsCache coverResultsCache,
-                                 TrackResultsCache trackResultsCache,
-                                 IdentifierFactory identifierFactory,
-                                 GnApiService gnApiService,
-                                 Context context){
+    public IdentificationManager(@NonNull CoverResultsCache coverResultsCache,
+                                 @NonNull TrackResultsCache trackResultsCache,
+                                 @NonNull IdentifierFactory identifierFactory,
+                                 @NonNull GnApiService gnApiService,
+                                 @NonNull Context context){
         mApiService = gnApiService;
         mContext = context;
         mCoverCache = coverResultsCache;
@@ -94,7 +94,6 @@ public class IdentificationManager {
                 @Override
                 public void onIdentificationFinished(List<Identifier.IdentificationResults> result, Track file) {
                     mLoadingStateLiveData.setValue(false);
-                    Log.d("onIdentificationFinished", "onIdentificationFinished");
                     processResults(result);
                 }
 
@@ -129,7 +128,6 @@ public class IdentificationManager {
         mResultCreator = new ResultCreator(new AsyncOperation<Void, Void, Void, Void>() {
             @Override
             public void onAsyncOperationStarted(Void params) {
-                Log.d("processResults", "processResults");
                 mLoadingStateLiveData.setValue(true);
             }
 
