@@ -14,6 +14,7 @@ import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -21,13 +22,16 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
 import com.google.android.material.snackbar.Snackbar;
+
 import java.util.List;
+
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.ui.BaseViewModelFragment;
 import mx.dev.franco.automusictagfixer.ui.InformativeFragmentDialog;
-import mx.dev.franco.automusictagfixer.ui.MainActivity;
+import mx.dev.franco.automusictagfixer.ui.main.MainActivity;
 import mx.dev.franco.automusictagfixer.ui.main.ViewWrapper;
 import mx.dev.franco.automusictagfixer.ui.trackdetail.TrackDetailActivity;
 import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
@@ -130,14 +134,13 @@ public class ResultSearchFragment extends BaseViewModelFragment<SearchListViewMo
         });
         ((MainActivity)getActivity()).mActionBar.setDisplayHomeAsUpEnabled(true);
         ((MainActivity)getActivity()).mActionBar.setDefaultDisplayHomeAsUpEnabled(true);
-        //((MainActivity)getActivity()).mActionBar.setHomeButtonEnabled(true);
-        //((MainActivity)getActivity()).toggle.setDrawerIndicatorEnabled(true);
-        //((MainActivity)getActivity()).mActionBar.setDisplayHomeAsUpEnabled(true);
         ((MainActivity)getActivity()).mSearchBox.setVisibility(View.VISIBLE);
         ((MainActivity)getActivity()).mSearchBox.requestFocus();
         InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
         if(imm != null)
             imm.showSoftInput(((MainActivity)getActivity()).mSearchBox, InputMethodManager.SHOW_IMPLICIT);
+
+        ((MainActivity)getActivity()).mStartTaskFab.hide();
     }
 
     private void hideKeyboard() {

@@ -19,7 +19,7 @@ import java.util.List;
 
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.ui.BaseFragment;
-import mx.dev.franco.automusictagfixer.ui.MainActivity;
+import mx.dev.franco.automusictagfixer.ui.main.MainActivity;
 
 public class QuestionsFragment extends BaseFragment implements FaqAdapter.OnItemClick{
 

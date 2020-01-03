@@ -19,6 +19,7 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
@@ -27,12 +28,16 @@ import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+
 import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
+
 import java.util.List;
 import java.util.Objects;
+
 import javax.inject.Inject;
+
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.fixer.AudioTagger;
 import mx.dev.franco.automusictagfixer.interfaces.LongRunningTaskListener;
@@ -43,7 +48,6 @@ import mx.dev.franco.automusictagfixer.persistence.room.database.TrackContract;
 import mx.dev.franco.automusictagfixer.services.FixerTrackService;
 import mx.dev.franco.automusictagfixer.ui.BaseViewModelFragment;
 import mx.dev.franco.automusictagfixer.ui.InformativeFragmentDialog;
-import mx.dev.franco.automusictagfixer.ui.MainActivity;
 import mx.dev.franco.automusictagfixer.ui.sdcardinstructions.SdCardInstructionsActivity;
 import mx.dev.franco.automusictagfixer.ui.search.ResultSearchFragment;
 import mx.dev.franco.automusictagfixer.ui.trackdetail.TrackDetailActivity;
@@ -251,7 +255,7 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
                                     R.anim.slide_out_left, R.anim.slide_in_left,
                                     R.anim.slide_out_right).
                             addToBackStack(ResultSearchFragment.class.getName()).
-                            add(R.id.container_fragments, resultSearchListFragment,
+                            replace(R.id.container_fragments, resultSearchListFragment,
                                     ResultSearchFragment.class.getName()).
                             commit();
 

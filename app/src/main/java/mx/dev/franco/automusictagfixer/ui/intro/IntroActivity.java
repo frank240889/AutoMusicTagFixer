@@ -8,7 +8,7 @@ import android.os.Bundle;
 import io.github.dreierf.materialintroscreen.MaterialIntroActivity;
 import io.github.dreierf.materialintroscreen.SlideFragmentBuilder;
 import mx.dev.franco.automusictagfixer.R;
-import mx.dev.franco.automusictagfixer.ui.MainActivity;
+import mx.dev.franco.automusictagfixer.ui.main.MainActivity;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
 
 public class IntroActivity extends MaterialIntroActivity {

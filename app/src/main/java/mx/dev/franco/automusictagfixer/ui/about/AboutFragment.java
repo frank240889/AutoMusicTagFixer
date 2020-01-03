@@ -17,7 +17,7 @@ import com.google.android.material.button.MaterialButton;
 
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.ui.BaseFragment;
-import mx.dev.franco.automusictagfixer.ui.MainActivity;
+import mx.dev.franco.automusictagfixer.ui.main.MainActivity;
 import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 
 public class AboutFragment extends BaseFragment {
