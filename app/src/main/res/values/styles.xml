@@ -41,6 +41,8 @@
         <item name="colorControlActivated">@color/colorControlActivated</item>
         <item name="toolbarStyle">@style/Widget.AutomusicTagFixer.MaterialToolbar</item>
         <item name="android:actionBarStyle">@style/Widget.AutomusicTagFixer.ActionBar</item>
+        <item name="actionBarTheme">@style/Widget.AutomusicTagFixer.ActionBar</item>
+        <item name="windowActionBarOverlay">@style/Widget.AutomusicTagFixer.ActionBar</item>
         <item name="navigationViewStyle">@style/Widget.AutomusicTagFixer.NavigationView</item>
         <item name="extendedFloatingActionButtonStyle">@style/Widget.AutomusicTagFixer.ExtendedFloatingActionButton</item>
         <item name="snackbarStyle">@style/Widget.AutomusicTagFixer.Snackbar</item>
@@ -78,7 +80,7 @@
         <item name="materialThemeOverlay">@style/ThemeOverlay.AutomusicTagFixer.Toolbar</item>
     </style>
 
-    <style name="Widget.AutomusicTagFixer.ActionBar" parent="Widget.MaterialComponents.ActionBar.Primary">
+    <style name="Widget.AutomusicTagFixer.ActionBar" parent="Widget.MaterialComponents.ActionBar.Solid">
         <item name="titleTextColor">@color/toolbarTextColor</item>
         <item name="materialThemeOverlay">@style/ThemeOverlay.AutomusicTagFixer.Toolbar</item>
     </style>

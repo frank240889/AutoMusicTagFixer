@@ -316,8 +316,10 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
             mMessage.setText(R.string.no_items_found);
             ((MainActivity)getActivity()).mMainToolbar.setTitle(R.string.title_activity_main);
             ((MainActivity)getActivity()).mActionBar.setTitle(R.string.title_activity_main);
+            mRecyclerView.setVisibility(View.GONE);
         }
         else {
+            mRecyclerView.setVisibility(View.VISIBLE);
             boolean isServiceRunning = serviceUtils.checkIfServiceIsRunning(FixerTrackService.CLASS_NAME);
             if(!isServiceRunning){
                 mStartTaskFab.show();
