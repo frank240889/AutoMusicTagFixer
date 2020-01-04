@@ -3,6 +3,7 @@ package mx.dev.franco.automusictagfixer.ui.settings;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.Bundle;
+import android.os.Handler;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
 import android.view.MenuInflater;
@@ -24,11 +25,13 @@ import androidx.appcompat.widget.Toolbar;
 public abstract class AppCompatPreferenceActivity extends PreferenceActivity  implements SharedPreferences.OnSharedPreferenceChangeListener {
 
     private AppCompatDelegate mDelegate;
+    private int mCurrentNightMode;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         getDelegate().installViewFactory();
         getDelegate().onCreate(savedInstanceState);
+        mCurrentNightMode = getCurrentNightMode();
         super.onCreate(savedInstanceState);
     }
 
@@ -40,10 +43,6 @@ public abstract class AppCompatPreferenceActivity extends PreferenceActivity  im
 
     public ActionBar getSupportActionBar() {
         return getDelegate().getSupportActionBar();
-    }
-
-    public void setSupportActionBar(@Nullable Toolbar toolbar) {
-        getDelegate().setSupportActionBar(toolbar);
     }
 
     @NonNull
@@ -76,6 +75,10 @@ public abstract class AppCompatPreferenceActivity extends PreferenceActivity  im
     protected void onPostResume() {
         super.onPostResume();
         getDelegate().onPostResume();
+
+        if (hasNightModeChanged()) {
+            delayedRecreate();
+        }
     }
 
     @Override
@@ -138,5 +141,19 @@ public abstract class AppCompatPreferenceActivity extends PreferenceActivity  im
     protected void onPause(){
         super.onPause();
         PreferenceManager.getDefaultSharedPreferences(this).unregisterOnSharedPreferenceChangeListener(this);
+    }
+
+    private void delayedRecreate() {
+        Handler handler = new Handler();
+        handler.postDelayed(this::recreate, 1);
+    }
+
+    private boolean hasNightModeChanged() {
+        getDelegate().applyDayNight();
+        return mCurrentNightMode != getCurrentNightMode();
+    }
+
+    private int getCurrentNightMode() {
+        return getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
     }
 }

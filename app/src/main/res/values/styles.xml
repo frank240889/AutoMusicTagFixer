@@ -35,6 +35,29 @@
         <item name="colorBackgroundFloating">@color/backgroundFloating</item-->
     </style>
 
+    <style name="SettingsTheme" parent="Theme.MaterialComponents.DayNight">
+        <item name="colorPrimary">@color/primaryColor</item>
+        <item name="colorControlNormal">@color/colorControlNormal</item>
+        <item name="colorControlActivated">@color/colorControlActivated</item>
+        <item name="toolbarStyle">@style/Widget.AutomusicTagFixer.MaterialToolbar</item>
+        <item name="android:actionBarStyle">@style/Widget.AutomusicTagFixer.ActionBar</item>
+        <item name="navigationViewStyle">@style/Widget.AutomusicTagFixer.NavigationView</item>
+        <item name="extendedFloatingActionButtonStyle">@style/Widget.AutomusicTagFixer.ExtendedFloatingActionButton</item>
+        <item name="snackbarStyle">@style/Widget.AutomusicTagFixer.Snackbar</item>
+        <!--item name="snackbarTextViewStyle">@style/Widget.AutomusicTagFixer.Snackbar.TextStyle</item-->
+        <item name="textInputStyle"> @style/Widget.AutomusicTagFixer.TextInputLayout</item>
+        <item name="bottomSheetDialogTheme">@style/Widget.AutomusicTagFixer.BottomSheetDialogTheme</item>
+        <item name="materialCardViewStyle">@style/Widget.AutomusicTagFixer.MaterialCardView</item>
+        <item name="shapeAppearanceSmallComponent">@style/ShapeAppearance.MyApp.SmallComponent</item>
+        <item name="shapeAppearanceMediumComponent">@style/ShapeAppearance.MyApp.MediumComponent</item>
+        <item name="shapeAppearanceLargeComponent">@style/ShapeAppearance.MyApp.LargeComponent</item>
+        <item name="materialButtonStyle">@style/Widget.AutomusicTagFixer.ColoredButton</item>
+        <item name="materialButtonOutlinedStyle">@style/Widget.AutomusicTagFixer.OutlinedButton</item>
+        <item name="actionOverflowMenuStyle">@style/Widget.MaterialComponents.PopupMenu.Overflow</item>
+        <item name="android:navigationBarColor">@color/dark_gray</item>
+        <item name="popupMenuStyle">@style/ShapeAppearanceOverlay.AutomusicTagFixer.PopupMenu</item>
+    </style>
+
     <style name="ShapeAppearance.MyApp.SmallComponent" parent="ShapeAppearance.MaterialComponents.SmallComponent">
         <item name="cornerFamily">rounded</item>
         <item name="cornerSize">16dp</item>
@@ -51,6 +74,11 @@
     </style>
 
     <style name="Widget.AutomusicTagFixer.MaterialToolbar" parent="Widget.MaterialComponents.Toolbar.Primary">
+        <item name="titleTextColor">@color/toolbarTextColor</item>
+        <item name="materialThemeOverlay">@style/ThemeOverlay.AutomusicTagFixer.Toolbar</item>
+    </style>
+
+    <style name="Widget.AutomusicTagFixer.ActionBar" parent="Widget.MaterialComponents.ActionBar.Primary">
         <item name="titleTextColor">@color/toolbarTextColor</item>
         <item name="materialThemeOverlay">@style/ThemeOverlay.AutomusicTagFixer.Toolbar</item>
     </style>

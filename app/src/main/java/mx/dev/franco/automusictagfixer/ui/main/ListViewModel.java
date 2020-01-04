@@ -42,7 +42,7 @@ public class ListViewModel extends AndroidViewModel {
     private MutableLiveData<ViewWrapper> mObservableOpenTrackDetails = new SingleLiveEvent<>();
     private MutableLiveData<Integer> mStartAutomaticMode = new SingleLiveEvent<>();
     private MutableLiveData<Boolean> mObservableCheckAllTracks = new SingleLiveEvent<>();
-    private MutableLiveData<Integer> mObservableMessage = new SingleLiveEvent<>();
+    private SingleLiveEvent<Integer> mObservableMessage = new SingleLiveEvent<>();
     private MutableLiveData<Integer> mOnSorted = new SingleLiveEvent<>();
     //The current list of tracks.
     private List<Track> mCurrentList;
@@ -81,6 +81,8 @@ public class ListViewModel extends AndroidViewModel {
                 mLoadingState.setValue(aBoolean));
         mLoadingState.addSource(trackRepositoryLoadingState, aBoolean ->
                 mLoadingState.setValue(aBoolean));
+
+        mResultsAudioFilesMediaStore = getMediaStoreResults();
     }
 
     public LiveData<ViewWrapper> observeAccessibleTrack(){
@@ -133,31 +135,31 @@ public class ListViewModel extends AndroidViewModel {
     }
 
     public LiveData<Message> observeSizeResultsMediaStore() {
+        return mResultsAudioFilesMediaStore;
+    }
+
+    private LiveData<Message> getMediaStoreResults() {
         LiveData<Resource<List<Track>>> resultsMediaStore = mMediaStoreManager.observeResult();
-        mResultsAudioFilesMediaStore = Transformations.map(resultsMediaStore, new Function<Resource<List<Track>>, Message>() {
-            @Override
-            public Message apply(Resource<List<Track>> input) {
-                Message message = null;
-                if(input.status == Resource.Status.SUCCESS) {
-                    //Save process of reading identificationCompleted and first time reading complete.
-                    if(!mAbstractSharedPreferences.getBoolean("first_time_read")) {
-                        mAbstractSharedPreferences.putBoolean("first_time_read", true);
-                        mAbstractSharedPreferences.putBoolean(Constants.COMPLETE_READ, true);
-                    }
-                    if(input.data.size() > 0) {
-                        trackRepository.insert(input.data);
-                    }
-                    else {
-                        message = new Message(R.string.no_items_found);
-                    }
+        return Transformations.map(resultsMediaStore, input -> {
+            Message message = null;
+            if(input.status == Resource.Status.SUCCESS) {
+                //Save process of reading identificationCompleted and first time reading complete.
+                /*if(!mAbstractSharedPreferences.getBoolean("first_time_read")) {
+                    mAbstractSharedPreferences.putBoolean("first_time_read", true);
+                    mAbstractSharedPreferences.putBoolean(Constants.COMPLETE_READ, true);
+                }*/
+                if(input.data.size() > 0) {
+                    trackRepository.insert(input.data);
                 }
                 else {
-                    message = new Message(R.string.error);
+                    message = new Message(R.string.no_items_found);
                 }
-                return message;
             }
+            else {
+                message = new Message(R.string.error);
+            }
+            return message;
         });
-        return mResultsAudioFilesMediaStore;
     }
 
     /**

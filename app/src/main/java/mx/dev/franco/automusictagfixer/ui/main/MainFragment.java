@@ -113,8 +113,8 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
             if(message == null)
                 return;
 
-            Snackbar snackbar = AndroidUtils.createSnackbar(mStartTaskFab, message);
-            snackbar.setAnchorView(mRecyclerView);
+            mMessage.setText(message.getIdResourceMessage());
+            Snackbar snackbar = AndroidUtils.createSnackbar(mSwipeRefreshLayout, message);
             snackbar.show();
         });
         mListViewModel.getTracks().observe(this, tracks -> {
@@ -153,7 +153,6 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
         //attach adapter recyclerview
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         mRecyclerView.setHasFixedSize(true);
-        //mRecyclerView.setItemViewCacheSize(10);
         mRecyclerView.setHapticFeedbackEnabled(true);
         mRecyclerView.setSoundEffectsEnabled(true);
         mRecyclerView.setAdapter(mAdapter);
@@ -315,6 +314,8 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
             mStartTaskFab.hide();
             mMessage.setVisibility(View.VISIBLE);
             mMessage.setText(R.string.no_items_found);
+            ((MainActivity)getActivity()).mMainToolbar.setTitle(R.string.title_activity_main);
+            ((MainActivity)getActivity()).mActionBar.setTitle(R.string.title_activity_main);
         }
         else {
             boolean isServiceRunning = serviceUtils.checkIfServiceIsRunning(FixerTrackService.CLASS_NAME);
@@ -682,7 +683,7 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
     }
 
     private void onMessage(Integer integer) {
-        Snackbar snackbar = AndroidUtils.getSnackbar(mStartTaskFab,
+        Snackbar snackbar = AndroidUtils.getSnackbar(mSwipeRefreshLayout,
                 getActivity().getApplicationContext());
         snackbar.setText(integer);
         snackbar.show();

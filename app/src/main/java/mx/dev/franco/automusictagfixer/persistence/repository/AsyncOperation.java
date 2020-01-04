@@ -2,6 +2,8 @@ package mx.dev.franco.automusictagfixer.persistence.repository;
 
 import android.os.AsyncTask;
 
+import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
@@ -84,9 +86,27 @@ public class AsyncOperation {
         @SafeVarargs
         @Override
         protected final Void doInBackground(List<Track>... lists) {
+            removeInexistentTracks();
             mAsyncTaskDao.insert(lists[0]);
             mAsyncTaskDao = null;
             return null;
+        }
+
+        private void removeInexistentTracks(){
+            List<Track> tracksToRemove = new ArrayList<>();
+            List<Track> currentTracks = mAsyncTaskDao.getTracks();
+            if(currentTracks == null || currentTracks.size() == 0)
+                return;
+
+            for(Track track:currentTracks){
+                File file = new File(track.getPath());
+                if(!file.exists()){
+                    tracksToRemove.add(track);
+                }
+            }
+
+            if(tracksToRemove.size() > 0)
+                mAsyncTaskDao.deleteBatch(tracksToRemove);
         }
     }
 }

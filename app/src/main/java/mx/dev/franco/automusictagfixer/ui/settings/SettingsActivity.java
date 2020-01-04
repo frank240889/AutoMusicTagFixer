@@ -18,19 +18,25 @@ import android.preference.PreferenceManager;
 import android.preference.SwitchPreference;
 import android.util.Log;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.Toast;
 
 import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import java.util.List;
 
+import javax.inject.Inject;
+
+import dagger.android.AndroidInjection;
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.fixer.AudioTagger;
 import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
 import mx.dev.franco.automusictagfixer.utilities.RequiredPermissions;
 import mx.dev.franco.automusictagfixer.utilities.Settings;
+import mx.dev.franco.automusictagfixer.utilities.shared_preferences.AbstractSharedPreferences;
 
 /**
  * A {@link PreferenceActivity} that presents a set of application settings. On
@@ -43,7 +49,7 @@ import mx.dev.franco.automusictagfixer.utilities.Settings;
  * href="http://developer.android.com/guide/topics/ui/settings.html">Settings
  * API Guide</a> for more information on developing a Settings UI.
  */
-public class SettingsActivity extends AppCompatPreferenceActivity{
+public class SettingsActivity extends AppCompatPreferenceActivity {
     private static final String TAG = SettingsActivity.class.getName();
     public SwitchPreference mSDCardAccess = null;
 
@@ -51,9 +57,11 @@ public class SettingsActivity extends AppCompatPreferenceActivity{
      * A preference value change listener that updates the preference's summary
      * to reflect its new value.
      */
-
+    @Inject
+    AbstractSharedPreferences mAbstractSharedPreferences;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        AndroidInjection.inject(this);
         super.onCreate(savedInstanceState);
         setupActionBar();
     }
@@ -214,7 +222,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity{
             case "key_language":
                 String language = sharedPreferences.getString(key, "0");
                 Settings.SETTING_LANGUAGE = Settings.setValueLanguage(language);
-                Log.d("Lenguaje", Settings.SETTING_LANGUAGE.name());
                 break;
         }
     }
@@ -269,6 +276,12 @@ public class SettingsActivity extends AppCompatPreferenceActivity{
         }
 
         @Override
+        public void onViewCreated(View view, Bundle savedInstanceState) {
+            super.onViewCreated(view, savedInstanceState);
+            view.setBackgroundColor(getResources().getColor(R.color.primaryBackground));
+        }
+
+        @Override
         public boolean onOptionsItemSelected(MenuItem item) {
             int id = item.getItemId();
             if (id == android.R.id.home) {
@@ -306,6 +319,12 @@ public class SettingsActivity extends AppCompatPreferenceActivity{
                 return true;
             }
             return super.onOptionsItemSelected(item);
+        }
+
+        @Override
+        public void onViewCreated(View view, Bundle savedInstanceState) {
+            super.onViewCreated(view, savedInstanceState);
+            view.setBackgroundColor(getResources().getColor(R.color.primaryBackground));
         }
     }
 

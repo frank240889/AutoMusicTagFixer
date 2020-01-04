@@ -205,4 +205,9 @@ public class TrackRepository {
         new TrackInserter(mTrackDao).
                 executeOnExecutor(AutoMusicTagFixer.getExecutorService(), tracks);
     }
+
+    public void updateInternalDatabase(List<Track> tracks) {
+        new TrackInserter(mTrackDao).
+                executeOnExecutor(AutoMusicTagFixer.getExecutorService(), tracks);
+    }
 }
