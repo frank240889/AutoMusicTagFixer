@@ -4,6 +4,7 @@ import android.content.Context;
 import android.media.MediaScannerConnection;
 import android.webkit.MimeTypeMap;
 
+import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
 
 import org.jaudiotagger.tag.FieldKey;
@@ -17,6 +18,7 @@ import javax.inject.Inject;
 import mx.dev.franco.automusictagfixer.AutoMusicTagFixer;
 import mx.dev.franco.automusictagfixer.interfaces.AsyncOperation;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
+import mx.dev.franco.automusictagfixer.persistence.room.TrackDAO;
 import mx.dev.franco.automusictagfixer.ui.SingleLiveEvent;
 import mx.dev.franco.automusictagfixer.utilities.Resource;
 
@@ -31,11 +33,13 @@ public class MediaStoreManager {
     private SingleLiveEvent<Resource<List<Track>>> mResult;
     private MediaStoreUpdater mMediaStoreUpdater;
     private Context mContext;
+    private TrackDAO mTrackDAO;
 
 
     @Inject
-    public MediaStoreManager(@Nonnull Context context) {
+    public MediaStoreManager(@Nonnull Context context, @NonNull TrackDAO trackDAO) {
         mContext = context;
+        mTrackDAO = trackDAO;
         mLoadingStateLiveData = new SingleLiveEvent<>();
         mMediaStoreResultSingleLiveEvent = new SingleLiveEvent<>();
         mResult = new SingleLiveEvent<>();
@@ -80,12 +84,14 @@ public class MediaStoreManager {
      * Updates the data of media store file.
      * @param path The path of the file to scan by mediastore.
      */
-    public void addToMediaStore(String path) {
+    public void addToMediaStore(String path, MediaScannerConnection.OnScanCompletedListener onScanCompletedListener) {
         MediaScannerConnection.scanFile(
             mContext,
             new String[]{path},
             new String[]{MimeTypeMap.getFileExtensionFromUrl(path)},
-            null);
+            onScanCompletedListener);
+
+
     }
 
     /**
@@ -133,7 +139,7 @@ public class MediaStoreManager {
                 mLoadingStateLiveData.setValue(false);
                 mResult.setValue(Resource.error(null));
             }
-        });
+        }, mTrackDAO);
         mediaStoreReader.executeOnExecutor(AutoMusicTagFixer.getExecutorService(), mContext);
     }
 

@@ -1,10 +1,11 @@
 package mx.dev.franco.automusictagfixer.ui.trackdetail;
 
 import android.app.Application;
+import android.media.MediaScannerConnection;
+import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.ArrayMap;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
@@ -41,6 +42,7 @@ import mx.dev.franco.automusictagfixer.identifier.TrackIdentificationResult;
 import mx.dev.franco.automusictagfixer.persistence.mediastore.MediaStoreManager;
 import mx.dev.franco.automusictagfixer.persistence.mediastore.MediaStoreResult;
 import mx.dev.franco.automusictagfixer.persistence.repository.DataTrackManager;
+import mx.dev.franco.automusictagfixer.persistence.repository.TrackRepository;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.ui.SingleLiveEvent;
 import mx.dev.franco.automusictagfixer.utilities.ActionableMessage;
@@ -99,6 +101,7 @@ public class TrackDetailViewModel extends AndroidViewModel {
     private IdentificationParams mIdentificationParams;
     private FileManager mFileManager;
     private MediaStoreManager mMediaStoreManager;
+    private TrackRepository mTrackRepository;
     private LiveData<ActionableMessage> mResultFileSaving;
     private LiveData<Track> mLiveDataTrack;
     private Track mTrack;
@@ -112,12 +115,14 @@ public class TrackDetailViewModel extends AndroidViewModel {
                                 @NonNull DataTrackManager dataTrackManager,
                                 @NonNull IdentificationManager identificationManager,
                                 @Nonnull FileManager fileManager,
-                                @Nonnull MediaStoreManager mediaStoreManager) {
+                                @Nonnull MediaStoreManager mediaStoreManager,
+                                @NonNull TrackRepository trackRepository) {
         super(application);
         mDataTrackManager = dataTrackManager;
         mIdentificationManager = identificationManager;
         mFileManager = fileManager;
         mMediaStoreManager = mediaStoreManager;
+        mTrackRepository = trackRepository;
 
         mLiveLoadingMessage = new MutableLiveData<>();
         title = new MutableLiveData<>();
@@ -150,25 +155,21 @@ public class TrackDetailViewModel extends AndroidViewModel {
         LiveData<Boolean> mediaStoreManagerState = mMediaStoreManager.observeLoadingState();
 
         mStateMerger.addSource(stateTrackDataRepository, aBoolean -> {
-            Log.d("stateTrackDataRepository", aBoolean+"");
             mCancellableTask.setValue(false);
             mStateMerger.setValue(aBoolean);
         });
 
         mStateMerger.addSource(mediaStoreManagerState, aBoolean -> {
-            Log.d("mediaStoreManagerState", aBoolean+"");
             mCancellableTask.setValue(false);
             mStateMerger.setValue(aBoolean);
         });
 
         mStateMerger.addSource(identificationRepositoryState, aBoolean -> {
-            Log.d("identificationRepositoryState", aBoolean+"");
             mCancellableTask.setValue(aBoolean);
             mStateMerger.setValue(aBoolean);
         });
 
         mStateMerger.addSource(fileSaverResultState, aBoolean -> {
-            Log.d("fileSaverResultState", aBoolean+"");
             mCancellableTask.setValue(false);
             mStateMerger.setValue(aBoolean);
         });
@@ -241,6 +242,10 @@ public class TrackDetailViewModel extends AndroidViewModel {
 
 
     private LiveData<Message> getResultWriting(){
+        //Todo: Add functionality to update correctly the data track when track is stored in SD.
+        //Todo: Take in mind that updating data track of SD file will create a copy into the internal memory
+        //Todo: and when correction is done, this copy is copied back into the memory SD, replacing
+        //Todo: the original file, and in consequence, the MediaStoreId will not be the same.
         return Transformations.map(mResultWriter, input -> {
             Message message = null;
             if(input.data.getResultCorrection().getCode() == AudioTagger.SUCCESS) {
@@ -377,7 +382,15 @@ public class TrackDetailViewModel extends AndroidViewModel {
                 actionableMessage.setDetails(pathToFile);
                 actionableMessage.setMessage(getApplication().getString(R.string.cover_saved));
                 actionableMessage.setAction(Action.WATCH_IMAGE);
-                mMediaStoreManager.addToMediaStore(input.data);
+                if (AudioTagger.StorageHelper.getInstance(getApplication()).isStoredInSD(input.data) ) {
+                    mMediaStoreManager.addToMediaStore(input.data, new MediaScannerConnection.OnScanCompletedListener() {
+                        @Override
+                        public void onScanCompleted(String path, Uri uri) {
+                            mTrackRepository.delete(mTrack);
+                            mMediaStoreManager.rescan();
+                        }
+                    });
+                }
             }
             else {
                 actionableMessage.setAction(Action.SEE_DETAILS_COVER_NOT_SAVED);

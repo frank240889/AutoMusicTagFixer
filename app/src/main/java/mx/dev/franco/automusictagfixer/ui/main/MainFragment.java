@@ -24,6 +24,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.core.content.ContextCompat;
+import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -73,7 +74,7 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
     private RecyclerView mRecyclerView;
     private TrackAdapter mAdapter;
     private ListViewModel mListViewModel;
-    //private ActionBar mActionBar;
+    //private ActionBar actionBar;
     private Menu mMenu;
     //private AppBarLayout mAppBarLayout;
     //private Toolbar mToolbar;
@@ -128,6 +129,7 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
 
         mListViewModel.observeInformativeMessage().observe(this, this::onMessage);
         mListViewModel.observeOnSortTracks().observe(this, this::onSorted);
+
     }
 
     @Override
@@ -138,12 +140,12 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        mVerticalOffset = ((MainActivity)getActivity()).mMainAppbar.getHeight();
+        mVerticalOffset = ((MainActivity)getActivity()).mainAppbar.getHeight();
         mRecyclerView = view.findViewById(R.id.tracks_recycler_view);
         mSwipeRefreshLayout = view.findViewById(R.id.refresh_layout);
         mMessage = view.findViewById(R.id.message);
-        mStartTaskFab = ((MainActivity)getActivity()).mStartTaskFab;
-        //mStartTaskFab = view.findViewById(R.id.fab_start_stop);
+        mStartTaskFab = ((MainActivity)getActivity()).startTaskFab;
+        //startTaskFab = view.findViewById(R.id.fab_start_stop);
         //mStopTaskFab = view.findViewById(R.id.fab_stop);
         mStartTaskFab.setOnClickListener(v -> startCorrection(-1));
         //mStopTaskFab.setOnClickListener(v -> stopCorrection());
@@ -219,7 +221,18 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        ((MainActivity)getActivity()).mActionBar.setDisplayHomeAsUpEnabled(true);
+        ((MainActivity)getActivity()).actionBar.setDisplayHomeAsUpEnabled(true);
+        getFragmentManager().addOnBackStackChangedListener(new FragmentManager.OnBackStackChangedListener() {
+            @Override
+            public void onBackStackChanged() {
+                ResultSearchFragment resultSearchListFragment = (ResultSearchFragment)
+                        getActivity().getSupportFragmentManager().findFragmentByTag(ResultSearchFragment.class.getName());
+
+                if(resultSearchListFragment == null | (resultSearchListFragment != null && resultSearchListFragment.isRemoving())) {
+                    updateToolbar(mCurrentTracks);
+                }
+            }
+        });
         //((MainActivity)getActivity()).toggle.syncState();
         updateToolbar(mCurrentTracks);
     }
@@ -249,14 +262,22 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
                         resultSearchListFragment = ResultSearchFragment.newInstance();
                     }
 
-                getFragmentManager().beginTransaction().
-                            setCustomAnimations(R.anim.slide_in_right,
-                                    R.anim.slide_out_left, R.anim.slide_in_left,
-                                    R.anim.slide_out_right).
-                            addToBackStack(ResultSearchFragment.class.getName()).
-                            replace(R.id.container_fragments, resultSearchListFragment,
-                                    ResultSearchFragment.class.getName()).
-                            commit();
+                ResultSearchFragment finalResultSearchListFragment = resultSearchListFragment;
+
+                ((MainActivity)getActivity()).startTaskFab.hide(new ExtendedFloatingActionButton.OnChangedCallback() {
+                    @Override
+                    public void onHidden(ExtendedFloatingActionButton extendedFab) {
+                        getFragmentManager().beginTransaction()
+                                .setCustomAnimations(R.anim.slide_in_right,
+                                        R.anim.slide_out_left, R.anim.slide_in_left,
+                                        R.anim.slide_out_right)
+                                .addToBackStack(ResultSearchFragment.class.getName())
+                                .hide(MainFragment.this)
+                                .add(R.id.container_fragments, finalResultSearchListFragment,
+                                        ResultSearchFragment.class.getName())
+                                .commit();
+                    }
+                });
 
 
                 break;
@@ -314,8 +335,8 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
             mStartTaskFab.hide();
             mMessage.setVisibility(View.VISIBLE);
             mMessage.setText(R.string.no_items_found);
-            ((MainActivity)getActivity()).mMainToolbar.setTitle(R.string.title_activity_main);
-            ((MainActivity)getActivity()).mActionBar.setTitle(R.string.title_activity_main);
+            ((MainActivity)getActivity()).mainToolbar.setTitle(R.string.title_activity_main);
+            ((MainActivity)getActivity()).actionBar.setTitle(R.string.title_activity_main);
             mRecyclerView.setVisibility(View.GONE);
         }
         else {
@@ -329,8 +350,8 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
                 mStartTaskFab.hide();
                 //mStopTaskFab.show();
             }
-            ((MainActivity)getActivity()).mMainToolbar.setTitle(tracks.size() + " " +getString(R.string.tracks));
-            ((MainActivity)getActivity()).mActionBar.setTitle(tracks.size() + " " +getString(R.string.tracks));
+            ((MainActivity)getActivity()).mainToolbar.setTitle(tracks.size() + " " +getString(R.string.tracks));
+            ((MainActivity)getActivity()).actionBar.setTitle(tracks.size() + " " +getString(R.string.tracks));
             mMessage.setVisibility(View.GONE);
         }
     }
@@ -681,7 +702,7 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
     @Override
     public void onDetach() {
         super.onDetach();
-        ((MainActivity)getActivity()).mDrawer.removeDrawerListener(((MainActivity)getActivity()).toggle);
+        ((MainActivity)getActivity()).mDrawerLayout.removeDrawerListener(((MainActivity)getActivity()).toggle);
     }
 
     private void onMessage(Integer integer) {

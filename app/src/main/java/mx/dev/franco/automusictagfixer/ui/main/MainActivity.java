@@ -64,21 +64,21 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
     public static String TAG = MainActivity.class.getName();
 
     @Inject
-    DispatchingAndroidInjector<Fragment> fragmentDispatchingAndroidInjector;
+    DispatchingAndroidInjector<Fragment> mFragmentDispatchingAndroidInjector;
     // The receiver that handles the broadcasts from FixerTrackService
     private ResponseReceiver mReceiver;
-    public DrawerLayout mDrawer;
+    public DrawerLayout mDrawerLayout;
     @Inject
     AbstractSharedPreferences mAbstractSharedPreferences;
-    public MaterialToolbar mMainToolbar;
-    public AppBarLayout mMainAppbar;
-    public ActionBar mActionBar;
-    public EditText mSearchBox;
+    public MaterialToolbar mainToolbar;
+    public AppBarLayout mainAppbar;
+    public ActionBar actionBar;
+    public EditText searchBox;
     public ActionBarDrawerToggle toggle;
-    public ExtendedFloatingActionButton mStartTaskFab;
-    MainFragment listFragment;
-    AboutFragment aboutFragment;
-    QuestionsFragment questionsFragment;
+    public ExtendedFloatingActionButton startTaskFab;
+    MainFragment mListFragment;
+    AboutFragment mAboutFragment;
+    QuestionsFragment mQuestionsFragment;
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
@@ -94,12 +94,18 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
         //it has a single Surface in which the contents of the window is rendered
         //A Surface is an object holding pixels that are being composited to the screen.
         setContentView(R.layout.activity_main);
-        mSearchBox = findViewById(R.id.search_box);
-        mDrawer = findViewById(R.id.drawer_layout);
-        mMainToolbar = findViewById(R.id.main_toolbar);
-        mMainAppbar = findViewById(R.id.main_app_bar);
-        mStartTaskFab = findViewById(R.id.fab_start_stop);
-        setupToolbar();
+        searchBox = findViewById(R.id.search_box);
+        mDrawerLayout = findViewById(R.id.drawer_layout);
+        mainToolbar = findViewById(R.id.main_toolbar);
+        mainAppbar = findViewById(R.id.main_app_bar);
+        startTaskFab = findViewById(R.id.fab_start_stop);
+        setSupportActionBar(mainToolbar);
+        actionBar = getSupportActionBar();
+        toggle = new ActionBarDrawerToggle(this, mDrawerLayout,
+                mainToolbar,R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        mDrawerLayout.addDrawerListener(toggle);
+        toggle.setDrawerIndicatorEnabled(true);
+        toggle.setDrawerSlideAnimationEnabled(true);
 
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
@@ -130,27 +136,22 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
             }
         });
 
-        listFragment = (MainFragment) getSupportFragmentManager().
+        mListFragment = (MainFragment) getSupportFragmentManager().
                 findFragmentByTag(MainFragment.class.getName());
 
-        if(listFragment == null)
-            listFragment = MainFragment.newInstance();
+        if(mListFragment == null)
+            mListFragment = MainFragment.newInstance();
 
-        addFragment(listFragment);
+        addFragment(mListFragment);
 
 
         setupReceivers();
     }
 
-    public void setupToolbar() {
-        setSupportActionBar(mMainToolbar);
-        mActionBar = getSupportActionBar();
-        toggle = new ActionBarDrawerToggle(this, mDrawer,
-                mMainToolbar,R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        mDrawer.addDrawerListener(toggle);
-        toggle.setDrawerIndicatorEnabled(true);
-        toggle.setDrawerSlideAnimationEnabled(true);
-        mDrawer.post(() -> toggle.syncState());
+    @Override
+    protected void onPostCreate(@Nullable Bundle savedInstanceState) {
+        super.onPostCreate(savedInstanceState);
+        toggle.syncState();
     }
 
     @Override
@@ -185,8 +186,8 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
      */
     //@Override
     public void onBackPressed() {
-        if (mDrawer.isDrawerOpen(GravityCompat.START)) {
-            mDrawer.closeDrawer(GravityCompat.START);
+        if (mDrawerLayout.isDrawerOpen(GravityCompat.START)) {
+            mDrawerLayout.closeDrawer(GravityCompat.START);
         }
         else {
             super.onBackPressed();
@@ -232,7 +233,7 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         int id = item.getItemId();
-        mDrawer.closeDrawer(GravityCompat.START);
+        mDrawerLayout.closeDrawer(GravityCompat.START);
         /*if (id == R.id.rate) {
             rateApp();
         } else if (id == R.id.share) {
@@ -248,16 +249,37 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
         }
         else*/
         if(id == R.id.audio_files_list) {
-            listFragment = (MainFragment) getSupportFragmentManager().
+            mListFragment = (MainFragment) getSupportFragmentManager().
                     findFragmentByTag(MainFragment.class.getName());
-            if(listFragment == null)
-                listFragment = MainFragment.newInstance();
+            if(mListFragment == null)
+                mListFragment = MainFragment.newInstance();
+            mDrawerLayout.addDrawerListener(new DrawerLayout.DrawerListener() {
+                @Override
+                public void onDrawerSlide(@NonNull View drawerView, float slideOffset) {
 
-            getSupportFragmentManager().beginTransaction().
-                replace(R.id.container_fragments,
-                    listFragment, MainFragment.class.getName())
-                .setCustomAnimations(R.anim.fade_in,R.anim.fade_out,R.anim.fade_in,R.anim.fade_out)
-                .commit();
+                }
+
+                @Override
+                public void onDrawerOpened(@NonNull View drawerView) {
+
+                }
+
+                @Override
+                public void onDrawerClosed(@NonNull View drawerView) {
+                    getSupportFragmentManager().beginTransaction()
+                            .replace(R.id.container_fragments,
+                                    mListFragment, MainFragment.class.getName())
+                            .setCustomAnimations(R.anim.fade_in,R.anim.fade_out,R.anim.fade_in,R.anim.fade_out)
+                            .commit();
+
+                    mDrawerLayout.removeDrawerListener(this);
+                }
+
+                @Override
+                public void onDrawerStateChanged(int newState) {
+
+                }
+            });
         }
         else if(id == R.id.settings){
             //configure app settings
@@ -265,28 +287,70 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
             startActivity(intent);
         }
         else if(id == R.id.faq){
-            questionsFragment = (QuestionsFragment) getSupportFragmentManager().
+            mQuestionsFragment = (QuestionsFragment) getSupportFragmentManager().
                     findFragmentByTag(QuestionsFragment.class.getName());
-            if(questionsFragment == null)
-                questionsFragment = QuestionsFragment.newInstance();
-            getSupportFragmentManager().beginTransaction().
-                setCustomAnimations(R.anim.fade_in,R.anim.fade_out,R.anim.fade_in,R.anim.fade_out)
-                .replace(R.id.container_fragments,
-                    questionsFragment, QuestionsFragment.class.getName()).
-                commit();
+            if(mQuestionsFragment == null)
+                mQuestionsFragment = QuestionsFragment.newInstance();
+            mDrawerLayout.addDrawerListener(new DrawerLayout.DrawerListener() {
+                @Override
+                public void onDrawerSlide(@NonNull View drawerView, float slideOffset) {
+
+                }
+
+                @Override
+                public void onDrawerOpened(@NonNull View drawerView) {
+
+                }
+
+                @Override
+                public void onDrawerClosed(@NonNull View drawerView) {
+                    getSupportFragmentManager().beginTransaction()
+                            .setCustomAnimations(R.anim.fade_in,R.anim.fade_out,R.anim.fade_in,R.anim.fade_out)
+                            .replace(R.id.container_fragments,
+                                    mQuestionsFragment, QuestionsFragment.class.getName()).
+                            commit();
+
+                    mDrawerLayout.removeDrawerListener(this);
+                }
+
+                @Override
+                public void onDrawerStateChanged(int newState) {
+
+                }
+            });
         }
         else if(id == R.id.about){
-            aboutFragment = (AboutFragment) getSupportFragmentManager().
+            mAboutFragment = (AboutFragment) getSupportFragmentManager().
                     findFragmentByTag(AboutFragment.class.getName());
-            if(aboutFragment == null)
-                aboutFragment = AboutFragment.newInstance();
+            if(mAboutFragment == null)
+                mAboutFragment = AboutFragment.newInstance();
 
-            getSupportFragmentManager().beginTransaction().
-                setCustomAnimations(R.anim.fade_in,R.anim.fade_out,R.anim.fade_in,R.anim.fade_out)
-                .replace(R.id.container_fragments,
-                    aboutFragment, AboutFragment.class.getName()).
-                commit();
+            mDrawerLayout.addDrawerListener(new DrawerLayout.DrawerListener() {
+                @Override
+                public void onDrawerSlide(@NonNull View drawerView, float slideOffset) {
 
+                }
+
+                @Override
+                public void onDrawerOpened(@NonNull View drawerView) {
+
+                }
+
+                @Override
+                public void onDrawerClosed(@NonNull View drawerView) {
+                    getSupportFragmentManager().beginTransaction()
+                            .setCustomAnimations(R.anim.fade_in,R.anim.fade_out,R.anim.fade_in,R.anim.fade_out)
+                            .replace(R.id.container_fragments,
+                                    mAboutFragment, AboutFragment.class.getName()).
+                            commit();
+                    mDrawerLayout.removeDrawerListener(this);
+                }
+
+                @Override
+                public void onDrawerStateChanged(int newState) {
+
+                }
+            });
         }
 
 
@@ -348,6 +412,6 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
 
     @Override
     public AndroidInjector<Fragment> supportFragmentInjector() {
-        return fragmentDispatchingAndroidInjector;
+        return mFragmentDispatchingAndroidInjector;
     }
 }

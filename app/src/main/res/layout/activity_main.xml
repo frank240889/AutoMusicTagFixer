@@ -48,6 +48,7 @@
             android:layout_gravity="bottom|end"
             android:layout_margin="@dimen/fab_margin"
             android:text="@string/title_identify_track"
+            android:visibility="gone"
             app:icon="@drawable/ic_photo_filter_white_24px"
             app:layout_anchorGravity="bottom|end" />
     </androidx.coordinatorlayout.widget.CoordinatorLayout>

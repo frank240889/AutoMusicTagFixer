@@ -97,9 +97,9 @@ public class ResultSearchFragment extends BaseViewModelFragment<SearchListViewMo
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        ((MainActivity)getActivity()).mSearchBox.setOnEditorActionListener((v, actionId, event) -> {
+        ((MainActivity)getActivity()).searchBox.setOnEditorActionListener((v, actionId, event) -> {
             if(actionId == EditorInfo.IME_ACTION_SEARCH || actionId == EditorInfo.IME_ACTION_UNSPECIFIED){
-                mQuery = ((MainActivity)getActivity()).mSearchBox.getText().toString();
+                mQuery = ((MainActivity)getActivity()).searchBox.getText().toString();
                 mSearchListViewModel.search(mQuery);
                 hideKeyboard();
             }
@@ -123,24 +123,22 @@ public class ResultSearchFragment extends BaseViewModelFragment<SearchListViewMo
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        ((MainActivity)getActivity()).mDrawer.removeDrawerListener(((MainActivity)getActivity()).toggle);
-        ((MainActivity)getActivity()).mDrawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
-        ((MainActivity)getActivity()).toggle.setDrawerIndicatorEnabled(true);
+        ((MainActivity)getActivity()).mDrawerLayout.removeDrawerListener(((MainActivity)getActivity()).toggle);
+        ((MainActivity)getActivity()).mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
+        ((MainActivity)getActivity()).actionBar.setDefaultDisplayHomeAsUpEnabled(true);
         ((MainActivity)getActivity()).toggle.setToolbarNavigationClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 getParentFragment().getChildFragmentManager().popBackStack();
             }
         });
-        ((MainActivity)getActivity()).mActionBar.setDisplayHomeAsUpEnabled(true);
-        ((MainActivity)getActivity()).mActionBar.setDefaultDisplayHomeAsUpEnabled(true);
-        ((MainActivity)getActivity()).mSearchBox.setVisibility(View.VISIBLE);
-        ((MainActivity)getActivity()).mSearchBox.requestFocus();
+        ((MainActivity)getActivity()).actionBar.setDisplayHomeAsUpEnabled(true);
+        ((MainActivity)getActivity()).actionBar.setDefaultDisplayHomeAsUpEnabled(true);
+        ((MainActivity)getActivity()).searchBox.setVisibility(View.VISIBLE);
+        ((MainActivity)getActivity()).searchBox.requestFocus();
         InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
         if(imm != null)
-            imm.showSoftInput(((MainActivity)getActivity()).mSearchBox, InputMethodManager.SHOW_IMPLICIT);
-
-        ((MainActivity)getActivity()).mStartTaskFab.hide();
+            imm.showSoftInput(((MainActivity)getActivity()).searchBox, InputMethodManager.SHOW_IMPLICIT);
     }
 
     private void hideKeyboard() {
@@ -243,11 +241,11 @@ public class ResultSearchFragment extends BaseViewModelFragment<SearchListViewMo
                 public void onAnimationStart(Animation animation) {
                     if(isRemoving()) {
                         //getActivity().invalidateOptionsMenu();
-                        ((MainActivity)getActivity()).mSearchBox.setVisibility(View.GONE);
-                        ((MainActivity)getActivity()).mSearchBox.setText("");
-                        ((MainActivity)getActivity()).mSearchBox.setOnEditorActionListener(null);
+                        ((MainActivity)getActivity()).searchBox.setVisibility(View.GONE);
+                        ((MainActivity)getActivity()).searchBox.setText("");
+                        ((MainActivity)getActivity()).searchBox.setOnEditorActionListener(null);
                         hideKeyboard();
-                        ((MainActivity)getActivity()).mDrawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
+                        ((MainActivity)getActivity()).mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
                     }
                 }
 
