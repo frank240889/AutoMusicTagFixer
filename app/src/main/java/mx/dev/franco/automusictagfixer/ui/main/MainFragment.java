@@ -222,11 +222,12 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         ((MainActivity)getActivity()).actionBar.setDisplayHomeAsUpEnabled(true);
-        getFragmentManager().addOnBackStackChangedListener(new FragmentManager.OnBackStackChangedListener() {
+        FragmentManager fragmentManager = getFragmentManager();
+        fragmentManager.addOnBackStackChangedListener(new FragmentManager.OnBackStackChangedListener() {
             @Override
             public void onBackStackChanged() {
                 ResultSearchFragment resultSearchListFragment = (ResultSearchFragment)
-                        getActivity().getSupportFragmentManager().findFragmentByTag(ResultSearchFragment.class.getName());
+                        fragmentManager.findFragmentByTag(ResultSearchFragment.class.getName());
 
                 if(resultSearchListFragment == null | (resultSearchListFragment != null && resultSearchListFragment.isRemoving())) {
                     updateToolbar(mCurrentTracks);
