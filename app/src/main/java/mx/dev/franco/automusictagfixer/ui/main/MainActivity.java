@@ -65,8 +65,6 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
 
     @Inject
     DispatchingAndroidInjector<Fragment> mFragmentDispatchingAndroidInjector;
-    // The receiver that handles the broadcasts from FixerTrackService
-    private ResponseReceiver mReceiver;
     public DrawerLayout mDrawerLayout;
     @Inject
     AbstractSharedPreferences mAbstractSharedPreferences;
@@ -79,6 +77,8 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
     MainFragment mListFragment;
     AboutFragment mAboutFragment;
     QuestionsFragment mQuestionsFragment;
+    // The receiver that handles the broadcasts from FixerTrackService
+    private ResponseReceiver mReceiver;
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
@@ -98,14 +98,15 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
         mDrawerLayout = findViewById(R.id.drawer_layout);
         mainToolbar = findViewById(R.id.main_toolbar);
         mainAppbar = findViewById(R.id.main_app_bar);
+
+
         startTaskFab = findViewById(R.id.fab_start_stop);
         setSupportActionBar(mainToolbar);
         actionBar = getSupportActionBar();
         toggle = new ActionBarDrawerToggle(this, mDrawerLayout,
                 mainToolbar,R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         mDrawerLayout.addDrawerListener(toggle);
-        toggle.setDrawerIndicatorEnabled(true);
-        toggle.setDrawerSlideAnimationEnabled(true);
+
 
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
@@ -146,12 +147,6 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
 
 
         setupReceivers();
-    }
-
-    @Override
-    protected void onPostCreate(@Nullable Bundle savedInstanceState) {
-        super.onPostCreate(savedInstanceState);
-        toggle.syncState();
     }
 
     @Override
@@ -248,7 +243,7 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
             startActivity(shareIntent);
         }
         else*/
-        if(id == R.id.audio_files_list) {
+        if(id == R.id.nav_audio_files_list) {
             mListFragment = (MainFragment) getSupportFragmentManager().
                     findFragmentByTag(MainFragment.class.getName());
             if(mListFragment == null)
@@ -281,12 +276,12 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
                 }
             });
         }
-        else if(id == R.id.settings){
+        else if(id == R.id.nav_settings){
             //configure app settings
             Intent intent = new Intent(this, SettingsActivity.class);
             startActivity(intent);
         }
-        else if(id == R.id.faq){
+        else if(id == R.id.nav_faq){
             mQuestionsFragment = (QuestionsFragment) getSupportFragmentManager().
                     findFragmentByTag(QuestionsFragment.class.getName());
             if(mQuestionsFragment == null)
@@ -319,7 +314,7 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
                 }
             });
         }
-        else if(id == R.id.about){
+        else if(id == R.id.nav_about){
             mAboutFragment = (AboutFragment) getSupportFragmentManager().
                     findFragmentByTag(AboutFragment.class.getName());
             if(mAboutFragment == null)

@@ -5,21 +5,21 @@
             android:id="@+id/menu_bottom"
             android:checkableBehavior="none">
             <item
-                android:id="@+id/audio_files_list"
+                android:id="@+id/nav_audio_files_list"
                 android:icon="@drawable/ic_library_music_white_24dp"
                 android:title="@string/music" />
             <item
-                android:id="@+id/faq"
+                android:id="@+id/nav_faq"
                 android:title="@string/faq"
                 android:icon="@drawable/ic_help_black_24dp"
                 />
             <item
-                android:id="@+id/about"
+                android:id="@+id/nav_about"
                 android:title="@string/about"
                 android:icon="@drawable/ic_info_black_24dp"
                 />
             <item
-                android:id="@+id/settings"
+                android:id="@+id/nav_settings"
                 android:icon="@drawable/ic_settings_black_24dp"
                 android:title="@string/options" />
         </group>

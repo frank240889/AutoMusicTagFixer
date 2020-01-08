@@ -125,15 +125,14 @@ public class ResultSearchFragment extends BaseViewModelFragment<SearchListViewMo
         super.onActivityCreated(savedInstanceState);
         ((MainActivity)getActivity()).mDrawerLayout.removeDrawerListener(((MainActivity)getActivity()).toggle);
         ((MainActivity)getActivity()).mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
-        ((MainActivity)getActivity()).actionBar.setDefaultDisplayHomeAsUpEnabled(true);
+        ((MainActivity)getActivity()).toggle.setDrawerIndicatorEnabled(false);
+        ((MainActivity)getActivity()).actionBar.setDisplayHomeAsUpEnabled(true);
         ((MainActivity)getActivity()).toggle.setToolbarNavigationClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                getParentFragment().getChildFragmentManager().popBackStack();
+                getFragmentManager().popBackStack();
             }
         });
-        ((MainActivity)getActivity()).actionBar.setDisplayHomeAsUpEnabled(true);
-        ((MainActivity)getActivity()).actionBar.setDefaultDisplayHomeAsUpEnabled(true);
         ((MainActivity)getActivity()).searchBox.setVisibility(View.VISIBLE);
         ((MainActivity)getActivity()).searchBox.requestFocus();
         InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
@@ -240,12 +239,13 @@ public class ResultSearchFragment extends BaseViewModelFragment<SearchListViewMo
                 @Override
                 public void onAnimationStart(Animation animation) {
                     if(isRemoving()) {
-                        //getActivity().invalidateOptionsMenu();
                         ((MainActivity)getActivity()).searchBox.setVisibility(View.GONE);
                         ((MainActivity)getActivity()).searchBox.setText("");
                         ((MainActivity)getActivity()).searchBox.setOnEditorActionListener(null);
                         hideKeyboard();
                         ((MainActivity)getActivity()).mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
+                        ((MainActivity)getActivity()).toggle.setDrawerIndicatorEnabled(true);
+                        ((MainActivity)getActivity()).actionBar.setDisplayHomeAsUpEnabled(false);
                     }
                 }
 

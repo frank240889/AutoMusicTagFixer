@@ -24,7 +24,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.core.content.ContextCompat;
-import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -88,7 +87,6 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
     AbstractSharedPreferences mAbstractSharedPreferences;
     @Inject
     AudioTagger.StorageHelper storageHelper;
-    private int mVerticalOffset = 0;
 
     public static MainFragment newInstance() {
         return new MainFragment();
@@ -140,7 +138,6 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        mVerticalOffset = ((MainActivity)getActivity()).mainAppbar.getHeight();
         mRecyclerView = view.findViewById(R.id.tracks_recycler_view);
         mSwipeRefreshLayout = view.findViewById(R.id.refresh_layout);
         mMessage = view.findViewById(R.id.message);
@@ -222,20 +219,7 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         ((MainActivity)getActivity()).actionBar.setDisplayHomeAsUpEnabled(true);
-        FragmentManager fragmentManager = getFragmentManager();
-        fragmentManager.addOnBackStackChangedListener(new FragmentManager.OnBackStackChangedListener() {
-            @Override
-            public void onBackStackChanged() {
-                ResultSearchFragment resultSearchListFragment = (ResultSearchFragment)
-                        fragmentManager.findFragmentByTag(ResultSearchFragment.class.getName());
-
-                if(resultSearchListFragment == null | (resultSearchListFragment != null && resultSearchListFragment.isRemoving())) {
-                    updateToolbar(mCurrentTracks);
-                }
-            }
-        });
-        //((MainActivity)getActivity()).toggle.syncState();
-        updateToolbar(mCurrentTracks);
+        ((MainActivity)getActivity()).toggle.syncState();
     }
 
     @Override
@@ -563,8 +547,11 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
                 public void onAnimationEnd(Animation animation) {
                     //For Android Marshmallow and Lollipop, there is no need to request permissions
                     //at runtime.
-                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M)
+                    /*if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
                         mListViewModel.scan();
+                    }*/
+                    if(isVisible())
+                        updateToolbar(mCurrentTracks);
                 }
 
                 @Override
