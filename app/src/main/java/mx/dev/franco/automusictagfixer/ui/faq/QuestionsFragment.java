@@ -66,7 +66,7 @@ public class QuestionsFragment extends BaseFragment implements FaqAdapter.OnItem
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        //((MainActivity)getActivity()).toggle.syncState();
+        //((MainActivity)getActivity()).actionBarDrawerToggle.syncState();
         ((MainActivity)getActivity()).actionBar.setTitle(getString(R.string.faq));
         ((MainActivity)getActivity()).startTaskFab.hide();
         //mToolbar.setNavigationOnClickListener(v -> getActivity().onBackPressed());

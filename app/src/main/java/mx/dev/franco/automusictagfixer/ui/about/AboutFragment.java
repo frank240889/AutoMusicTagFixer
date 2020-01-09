@@ -62,7 +62,7 @@ public class AboutFragment extends BaseFragment {
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        //((MainActivity)getActivity()).toggle.syncState();
+        //((MainActivity)getActivity()).actionBarDrawerToggle.syncState();
         ((MainActivity)getActivity()).actionBar.setTitle(getString(R.string.about));
         ((MainActivity)getActivity()).startTaskFab.hide();
     }

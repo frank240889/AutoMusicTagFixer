@@ -123,11 +123,13 @@ public class ResultSearchFragment extends BaseViewModelFragment<SearchListViewMo
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        ((MainActivity)getActivity()).mDrawerLayout.removeDrawerListener(((MainActivity)getActivity()).toggle);
+        ((MainActivity)getActivity()).mDrawerLayout.removeDrawerListener(((MainActivity)getActivity()).actionBarDrawerToggle);
         ((MainActivity)getActivity()).mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
-        ((MainActivity)getActivity()).toggle.setDrawerIndicatorEnabled(false);
+        ((MainActivity)getActivity()).actionBar.setDisplayHomeAsUpEnabled(false);
+        ((MainActivity)getActivity()).actionBarDrawerToggle.setDrawerIndicatorEnabled(false);
         ((MainActivity)getActivity()).actionBar.setDisplayHomeAsUpEnabled(true);
-        ((MainActivity)getActivity()).toggle.setToolbarNavigationClickListener(new View.OnClickListener() {
+
+        ((MainActivity)getActivity()).actionBarDrawerToggle.setToolbarNavigationClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 getFragmentManager().popBackStack();
@@ -244,8 +246,8 @@ public class ResultSearchFragment extends BaseViewModelFragment<SearchListViewMo
                         ((MainActivity)getActivity()).searchBox.setOnEditorActionListener(null);
                         hideKeyboard();
                         ((MainActivity)getActivity()).mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
-                        ((MainActivity)getActivity()).toggle.setDrawerIndicatorEnabled(true);
-                        ((MainActivity)getActivity()).actionBar.setDisplayHomeAsUpEnabled(false);
+                        ((MainActivity)getActivity()).actionBarDrawerToggle.setDrawerIndicatorEnabled(true);
+                        //((MainActivity)getActivity()).actionBar.setDisplayHomeAsUpEnabled(false);
                     }
                 }
 
@@ -264,10 +266,5 @@ public class ResultSearchFragment extends BaseViewModelFragment<SearchListViewMo
             getView().setLayerType(View.LAYER_TYPE_HARDWARE, null);
 
         return animation;
-    }
-
-    @Override
-    public void onDetach() {
-        super.onDetach();
     }
 }

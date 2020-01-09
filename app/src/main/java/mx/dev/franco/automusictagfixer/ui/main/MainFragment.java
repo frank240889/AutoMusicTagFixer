@@ -75,6 +75,7 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
     private ListViewModel mListViewModel;
     //private ActionBar actionBar;
     private Menu mMenu;
+    private boolean mHasPermission;
     //private AppBarLayout mAppBarLayout;
     //private Toolbar mToolbar;
     public ExtendedFloatingActionButton mStartTaskFab;
@@ -181,14 +182,15 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
         );
         mSwipeRefreshLayout.setProgressBackgroundColorSchemeColor(getActivity().
                 getResources().getColor(R.color.progressSwipeRefreshLayoutBackgroundTint));
-        boolean hasPermission = ContextCompat.
+        mHasPermission = ContextCompat.
                 checkSelfPermission(getActivity(), Manifest.permission.WRITE_EXTERNAL_STORAGE)
                 == PackageManager.PERMISSION_GRANTED;
 
-        if(!hasPermission) {
+        if(!mHasPermission) {
             requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE,
                             Manifest.permission.READ_EXTERNAL_STORAGE},
                     RequiredPermissions.WRITE_EXTERNAL_STORAGE_PERMISSION);
+            mRecyclerView.setVisibility(View.GONE);
         }
         else {
             boolean isPresentSD = storageHelper.isPresentRemovableStorage();
@@ -199,6 +201,7 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
             else {
                 mViewModel.scan();
             }
+            mRecyclerView.setVisibility(View.VISIBLE);
             mMessage.setText(R.string.loading_tracks);
         }
         //App is opened again, then scroll to the track being processed.
@@ -213,13 +216,6 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
         if (requestCode == RequiredPermissions.REQUEST_PERMISSION_SAF) {
             mListViewModel.scan();
         }
-    }
-
-    @Override
-    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
-        ((MainActivity)getActivity()).actionBar.setDisplayHomeAsUpEnabled(true);
-        ((MainActivity)getActivity()).toggle.syncState();
     }
 
     @Override
@@ -294,7 +290,7 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
                     mListViewModel.sortTracks(TrackContract.TrackData.ALBUM, TrackRepository.DESC, id);
                 break;
         }
-        return true;
+        return super.onOptionsItemSelected(menuItem);
     }
 
     public void rescan(){
@@ -315,6 +311,12 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
         if(tracks == null)
             return;
 
+        if(!mHasPermission) {
+            ((MainActivity)getActivity()).mainToolbar.setTitle(R.string.title_activity_main);
+            ((MainActivity)getActivity()).actionBar.setTitle(R.string.title_activity_main);
+            return;
+        }
+
         if(tracks.isEmpty()) {
             //mStopTaskFab.hide();
             mStartTaskFab.hide();
@@ -322,10 +324,8 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
             mMessage.setText(R.string.no_items_found);
             ((MainActivity)getActivity()).mainToolbar.setTitle(R.string.title_activity_main);
             ((MainActivity)getActivity()).actionBar.setTitle(R.string.title_activity_main);
-            mRecyclerView.setVisibility(View.GONE);
         }
         else {
-            mRecyclerView.setVisibility(View.VISIBLE);
             boolean isServiceRunning = serviceUtils.checkIfServiceIsRunning(FixerTrackService.CLASS_NAME);
             if(!isServiceRunning){
                 mStartTaskFab.show();
@@ -435,7 +435,8 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
         //Check permission to access files and execute scan if were granted
-        if(grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
+        mHasPermission = grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED;
+        if(mHasPermission){
             boolean isPresentSD = storageHelper.isPresentRemovableStorage();
             if(AndroidUtils.getUriSD(getActivity()) == null && isPresentSD) {
                 startActivityForResult(new Intent(getActivity(), SdCardInstructionsActivity.class),
@@ -444,6 +445,7 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
             else {
                 mViewModel.scan();
             }
+            mRecyclerView.setVisibility(View.VISIBLE);
         }
         else {
             mSwipeRefreshLayout.setEnabled(true);
@@ -690,7 +692,7 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
     @Override
     public void onDetach() {
         super.onDetach();
-        ((MainActivity)getActivity()).mDrawerLayout.removeDrawerListener(((MainActivity)getActivity()).toggle);
+        ((MainActivity)getActivity()).mDrawerLayout.removeDrawerListener(((MainActivity)getActivity()).actionBarDrawerToggle);
     }
 
     private void onMessage(Integer integer) {

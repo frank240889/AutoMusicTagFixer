@@ -1,6 +1,12 @@
 <resources>
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="android:windowActivityTransitions">true</item>
+        <!-- specify enter and exit transitions -->
+        <!--item name="android:windowContentTransitions">true</item>
+        <item name="android:windowTranslucentStatus">true</item>
+        <item name="android:windowTranslucentNavigation">false</item-->
+        <!--item name="android:windowAnimationStyle">@style/WindowAnimationTransition</item-->
         <item name="colorPrimary">@color/primaryColor</item>
         <item name="colorControlNormal">@color/colorControlNormal</item>
         <item name="colorControlActivated">@color/colorControlActivated</item>
@@ -8,7 +14,6 @@
         <item name="navigationViewStyle">@style/Widget.AutomusicTagFixer.NavigationView</item>
         <item name="extendedFloatingActionButtonStyle">@style/Widget.AutomusicTagFixer.ExtendedFloatingActionButton</item>
         <item name="snackbarStyle">@style/Widget.AutomusicTagFixer.Snackbar</item>
-        <!--item name="snackbarTextViewStyle">@style/Widget.AutomusicTagFixer.Snackbar.TextStyle</item-->
         <item name="textInputStyle"> @style/Widget.AutomusicTagFixer.TextInputLayout</item>
         <item name="bottomSheetDialogTheme">@style/Widget.AutomusicTagFixer.BottomSheetDialogTheme</item>
         <item name="materialCardViewStyle">@style/Widget.AutomusicTagFixer.MaterialCardView</item>
@@ -20,22 +25,15 @@
         <item name="actionOverflowMenuStyle">@style/Widget.MaterialComponents.PopupMenu.Overflow</item>
         <item name="android:navigationBarColor">@color/dark_gray</item>
         <item name="popupMenuStyle">@style/ShapeAppearanceOverlay.AutomusicTagFixer.PopupMenu</item>
-        <!--item name="colorPrimaryVariant">pr</item>
-        <item name="colorOnPrimary">@color/onPrimary</item>
-        <item name="colorSecondaryVariant">@color/secondaryVariant</item>
-        <item name="colorOnSecondary">@color/onSecondary</item>
-        <item name="colorSurface">@color/surface</item>
-        <item name="colorOnSurface">@color/onSurface</item>
-        <item name="colorError">@color/error</item>
-        <item name="colorOnError">@color/onError</item>
-        <item name="colorButtonNormal">@color/buttonNormal</item>
-        <item name="colorControlNormal">@color/controlNormal</item>
-        <item name="colorControlActivated">@color/controlActivated</item>
-        <item name="colorControlHighlight">@color/controlHighlight</item>
-        <item name="colorBackgroundFloating">@color/backgroundFloating</item-->
+    </style>
+
+    <style name="AppTheme.NoActivityTransition.AutomusicTagFixer" parent="AppTheme">
+        <item name="android:windowActivityTransitions">true</item>
+        <item name="android:windowAnimationStyle">@null</item>
     </style>
 
     <style name="SettingsTheme" parent="Theme.MaterialComponents.DayNight">
+        <item name="android:windowActivityTransitions">true</item>
         <item name="colorPrimary">@color/primaryColor</item>
         <item name="colorControlNormal">@color/colorControlNormal</item>
         <item name="colorControlActivated">@color/colorControlActivated</item>
@@ -46,7 +44,6 @@
         <item name="navigationViewStyle">@style/Widget.AutomusicTagFixer.NavigationView</item>
         <item name="extendedFloatingActionButtonStyle">@style/Widget.AutomusicTagFixer.ExtendedFloatingActionButton</item>
         <item name="snackbarStyle">@style/Widget.AutomusicTagFixer.Snackbar</item>
-        <!--item name="snackbarTextViewStyle">@style/Widget.AutomusicTagFixer.Snackbar.TextStyle</item-->
         <item name="textInputStyle"> @style/Widget.AutomusicTagFixer.TextInputLayout</item>
         <item name="bottomSheetDialogTheme">@style/Widget.AutomusicTagFixer.BottomSheetDialogTheme</item>
         <item name="materialCardViewStyle">@style/Widget.AutomusicTagFixer.MaterialCardView</item>
@@ -112,10 +109,6 @@
         <item name="android:background">@drawable/bg_snackbar</item>
     </style>
 
-    <!--style name="Widget.AutomusicTagFixer.Snackbar.TextStyle" parent="@style/Widget.MaterialComponents.Snackbar.TextView">
-        <item name="android:textColor">@color/snackbarTextBackgroundColor</item>
-    </style-->
-
   <!--Theming material filled buttons-->
     <style name="Widget.AutomusicTagFixer.ColoredButton" parent="@style/Widget.MaterialComponents.Button">
         <item name="backgroundTint">@color/primaryColorButton</item>
@@ -171,6 +164,11 @@
   <style name="ShapeAppearanceOverlay.AutomusicTagFixer.PopupMenu" parent="">
         <item name="cornerFamily">rounded</item>
         <item name="cornerSize">16dp</item>
+    </style>
+
+    <style name="WindowAnimationTransition">
+        <item name="android:windowEnterAnimation">@android:anim/fade_in</item>
+        <item name="android:windowExitAnimation">@android:anim/fade_out</item>
     </style>
 
 </resources>

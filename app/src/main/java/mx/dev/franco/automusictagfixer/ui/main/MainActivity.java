@@ -9,9 +9,11 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.PersistableBundle;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
+import android.view.WindowManager;
 import android.widget.EditText;
 
 import androidx.annotation.NonNull;
@@ -72,7 +74,7 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
     public AppBarLayout mainAppbar;
     public ActionBar actionBar;
     public EditText searchBox;
-    public ActionBarDrawerToggle toggle;
+    public ActionBarDrawerToggle actionBarDrawerToggle;
     public ExtendedFloatingActionButton startTaskFab;
     MainFragment mListFragment;
     AboutFragment mAboutFragment;
@@ -89,6 +91,8 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
         window.setAllowReturnTransitionOverlap(true);
         window.requestFeature(Window.FEATURE_ACTION_MODE_OVERLAY);
         window.requestFeature(Window.FEATURE_CONTENT_TRANSITIONS);
+        window.setFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS,
+                WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
         super.onCreate(savedInstanceState);
         //windows is the top level in the view hierarchy,
         //it has a single Surface in which the contents of the window is rendered
@@ -103,11 +107,11 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
         startTaskFab = findViewById(R.id.fab_start_stop);
         setSupportActionBar(mainToolbar);
         actionBar = getSupportActionBar();
-        toggle = new ActionBarDrawerToggle(this, mDrawerLayout,
+        actionBarDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout,
                 mainToolbar,R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        mDrawerLayout.addDrawerListener(toggle);
-
-
+        mDrawerLayout.addDrawerListener(actionBarDrawerToggle);
+        actionBarDrawerToggle.setDrawerSlideAnimationEnabled(true);
+        actionBarDrawerToggle.syncState();
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
@@ -127,13 +131,51 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
         toggleNightModeButton.setOnClickListener(v -> {
             if(mAbstractSharedPreferences.getBoolean("dark_mode")) {
                 toggleNightModeButton.setIcon(getDrawable(R.drawable.ic_wb_sunny_24px));
-                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
                 mAbstractSharedPreferences.putBoolean("dark_mode", false);
+                mDrawerLayout.addDrawerListener(new DrawerLayout.DrawerListener() {
+                    @Override
+                    public void onDrawerSlide(@NonNull View drawerView, float slideOffset) {
+
+                    }
+
+                    @Override
+                    public void onDrawerOpened(@NonNull View drawerView) {
+
+                    }
+
+                    @Override
+                    public void onDrawerClosed(@NonNull View drawerView) {
+                        mDrawerLayout.removeDrawerListener(this);
+                        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+                    }
+
+                    @Override
+                    public void onDrawerStateChanged(int newState) {
+
+                    }
+                });
+                mDrawerLayout.closeDrawers();
             }
             else {
                 toggleNightModeButton.setIcon(getDrawable(R.drawable.ic_nights_stay_24px));
-                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
                 mAbstractSharedPreferences.putBoolean("dark_mode", true);
+                mDrawerLayout.addDrawerListener(new DrawerLayout.DrawerListener() {
+                    @Override
+                    public void onDrawerSlide(@NonNull View drawerView, float slideOffset) {}
+
+                    @Override
+                    public void onDrawerOpened(@NonNull View drawerView) {}
+
+                    @Override
+                    public void onDrawerClosed(@NonNull View drawerView) {
+                        mDrawerLayout.removeDrawerListener(this);
+                        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+                    }
+
+                    @Override
+                    public void onDrawerStateChanged(int newState) {}
+                });
+                mDrawerLayout.closeDrawers();
             }
         });
 
@@ -150,9 +192,14 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
     }
 
     @Override
+    protected void onNightModeChanged(int mode) {
+        Log.d("OnNightChange", "OnNightChange");
+    }
+
+    @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
-        toggle.onConfigurationChanged(newConfig);
+        actionBarDrawerToggle.onConfigurationChanged(newConfig);
     }
 
     @Override
