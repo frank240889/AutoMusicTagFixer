@@ -49,7 +49,7 @@ import mx.dev.franco.automusictagfixer.ui.BaseFragment;
 import mx.dev.franco.automusictagfixer.ui.BaseViewModelFragment;
 import mx.dev.franco.automusictagfixer.ui.about.AboutFragment;
 import mx.dev.franco.automusictagfixer.ui.faq.QuestionsFragment;
-import mx.dev.franco.automusictagfixer.ui.settings.SettingsActivity;
+import mx.dev.franco.automusictagfixer.ui.settings.ConfigurationActivity;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
 import mx.dev.franco.automusictagfixer.utilities.shared_preferences.AbstractSharedPreferences;
 
@@ -325,7 +325,7 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
         }
         else if(id == R.id.nav_settings){
             //configure app settings
-            Intent intent = new Intent(this, SettingsActivity.class);
+            Intent intent = new Intent(this, ConfigurationActivity.class);
             startActivity(intent);
         }
         else if(id == R.id.nav_faq){

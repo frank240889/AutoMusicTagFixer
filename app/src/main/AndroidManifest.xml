@@ -23,6 +23,15 @@
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true"
         tools:targetApi="m">
+        <activity
+            android:name=".ui.settings.ConfigurationActivity"
+            android:label="@string/title_activity_configuration"
+            android:theme="@style/SettingsTheme"
+            android:parentActivityName=".ui.main.MainActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="mx.dev.franco.automusictagfixer.ui.main.MainActivity" />
+        </activity>
 
         <uses-library
             android:name="android.test.runner"
@@ -53,13 +62,13 @@
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustResize|adjustPan"
             tools:ignore="InnerclassSeparator" />
-        <activity android:name=".ui.trackdetail.TrackDetailActivity"
+        <activity
+            android:name=".ui.trackdetail.TrackDetailActivity"
             android:configChanges="orientation|screenSize|keyboard"
             android:launchMode="singleTop"
-            android:screenOrientation="portrait"
             android:parentActivityName=".ui.main.MainActivity"
-            android:windowSoftInputMode="adjustResize|adjustPan"/>
-
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustResize|adjustPan" />
         <activity
             android:name=".ui.settings.SettingsActivity"
             android:configChanges="orientation|screenSize"
@@ -73,9 +82,7 @@
             android:configChanges="orientation|screenSize|uiMode"
             android:parentActivityName=".ui.main.MainActivity"
             android:screenOrientation="portrait"
-            tools:ignore="InnerclassSeparator" />
-
-        <!-- "mx.dev.franco.automusictagfixer.fileProvider" -->
+            tools:ignore="InnerclassSeparator" /> <!-- "mx.dev.franco.automusictagfixer.fileProvider" -->
         <!-- This provider is necessary because in android >= 7 doesn't allow to access directly to files -->
         <provider
             android:name="androidx.core.content.FileProvider"

@@ -243,10 +243,10 @@
     <string name="starting_correction">Iniciando corrección…</string>
     <string name="applying_tags">Aplicando cambios, espera por favor…</string>
     <string name="success">Corrección terminada.</string>
-  <string name="could_not_get_permission">No se pudo obtener el permiso.</string>
+    <string name="could_not_get_permission">No se pudo obtener el permiso.</string>
     <string name="complete_task">Corrección terminada exitosamente.</string>
     <string name="title_update_cover">Actualizar carátula</string>
-  <string name="identifying">Identificando…</string>
+    <string name="identifying">Identificando…</string>
     <string name="no_match_found">No se encontró ninguna coincidencia.</string>
     <string name="match_found">Coincidencia encontrada.</string>
     <string name="error_in_correction">Error</string>
@@ -289,8 +289,24 @@
     <string name="turn_lights_on">Encender luces</string>
     <string name="turn_lights_off">Apagar luces</string>
     <string name="removing_cover">Removiendo carátula…</string>
-  <string name="sd_card_detected">Tarjeta SD detectada</string>
+    <string name="sd_card_detected">Tarjeta SD detectada</string>
     <string name="details">Detalles</string>
     <string name="edit">Editar</string>
     <string name="see_image">Verla</string>
+    <string name="title_activity_configuration">Configuration</string>
+
+    <!-- Preference Titles -->
+    <string name="messages_header">Messages</string>
+    <string name="sync_header">Sync</string>
+
+    <!-- Messages Preferences -->
+    <string name="signature_title">Your signature</string>
+    <string name="reply_title">Default reply action</string>
+
+    <!-- Sync Preferences -->
+    <string name="sync_title">Sync email periodically</string>
+    <string name="attachment_title">Download incoming attachments</string>
+    <string name="attachment_summary_on">Automatically download attachments for incoming emails
+    </string>
+    <string name="attachment_summary_off">Only download attachments when manually requested</string>
 </resources>

@@ -33,14 +33,10 @@
     </style>
 
     <style name="SettingsTheme" parent="Theme.MaterialComponents.DayNight">
-        <item name="android:windowActivityTransitions">true</item>
         <item name="colorPrimary">@color/primaryColor</item>
         <item name="colorControlNormal">@color/colorControlNormal</item>
         <item name="colorControlActivated">@color/colorControlActivated</item>
         <item name="toolbarStyle">@style/Widget.AutomusicTagFixer.MaterialToolbar</item>
-        <item name="android:actionBarStyle">@style/Widget.AutomusicTagFixer.ActionBar</item>
-        <item name="actionBarTheme">@style/Widget.AutomusicTagFixer.ActionBar</item>
-        <item name="windowActionBarOverlay">@style/Widget.AutomusicTagFixer.ActionBar</item>
         <item name="navigationViewStyle">@style/Widget.AutomusicTagFixer.NavigationView</item>
         <item name="extendedFloatingActionButtonStyle">@style/Widget.AutomusicTagFixer.ExtendedFloatingActionButton</item>
         <item name="snackbarStyle">@style/Widget.AutomusicTagFixer.Snackbar</item>
