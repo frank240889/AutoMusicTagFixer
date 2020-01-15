@@ -36,7 +36,7 @@
         <item name="colorPrimary">@color/primaryColor</item>
         <item name="colorControlNormal">@color/colorControlNormal</item>
         <item name="colorControlActivated">@color/colorControlActivated</item>
-        <item name="toolbarStyle">@style/Widget.AutomusicTagFixer.MaterialToolbar</item>
+        <item name="actionBarStyle">@style/Widget.AutomusicTagFixer.ActionBar</item>
         <item name="navigationViewStyle">@style/Widget.AutomusicTagFixer.NavigationView</item>
         <item name="extendedFloatingActionButtonStyle">@style/Widget.AutomusicTagFixer.ExtendedFloatingActionButton</item>
         <item name="snackbarStyle">@style/Widget.AutomusicTagFixer.Snackbar</item>

@@ -283,4 +283,6 @@
     <string name="details">Details</string>
     <string name="edit">Edit</string>
     <string name="see_image">See it</string>
+    <string name="settings_cover_size">Cover size</string>
+    <string name="title_correct_track">Fix</string>
 </resources>

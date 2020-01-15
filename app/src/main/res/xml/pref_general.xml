@@ -17,37 +17,16 @@
             android:key="key_background_service"
             android:summary="@string/pref_title_background_description"
             android:title="@string/pref_title_background" />
+        <ListPreference
+            android:defaultValue="1000"
+            android:entries="@array/pref_size_album_art_titles"
+            android:entryValues="@array/pref_size_album_art_values"
+            android:key="key_size_album_art"
+            android:negativeButtonText="@null"
+            android:positiveButtonText="@null"
+            android:summary="@string/settings_cover_size"
+            android:title="@string/pref_title_size_album_art" />
     </PreferenceCategory>
-    <!--PreferenceCategory
-        android:title="@string/semi_automatic_mode">
-        <SwitchPreference
-            android:defaultValue="true"
-            android:key="key_rename_file_semi_automatic_mode"
-            android:summary="@string/pref_semi_automatic_title_change_description"
-            android:title="@string/pref_semi_automatic_title_change" />
-    </PreferenceCategory-->
-
-    <!--PreferenceCategory
-        android:title="@string/manual_mode">
-        <SwitchPreference
-            android:defaultValue="true"
-            android:key="key_rename_file_manual_mode"
-            android:summary="@string/pref_manual_title_change_description"
-            android:title="@string/pref_manual_title_change" />
-        <SwitchPreference
-            android:defaultValue="true"
-            android:key="key_replace_strange_chars_manual_mode"
-            android:summary="@string/pref_automatically_replace_strange_chars_description"
-            android:title="@string/pref_automatically_replace_strange_chars" />
-    </PreferenceCategory-->
-    <!--PreferenceCategory
-        android:title="@string/removable_storage">
-        <SwitchPreference
-            android:defaultValue="false"
-            android:key="key_auto_update_list"
-            android:summary="@string/pref_enable_auto_update_list"
-            android:title="@string/pref_title_enable_auto_update_list" />
-    </PreferenceCategory-->
     <PreferenceCategory
         android:title="@string/enable_embed_player">
         <SwitchPreference

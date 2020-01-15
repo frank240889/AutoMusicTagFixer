@@ -124,7 +124,7 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
             toggleNightModeButton.setText(R.string.turn_lights_on);
         }
         else {
-            toggleNightModeButton.setIcon(getDrawable(R.drawable.ic_nights_stay_24px));
+            toggleNightModeButton.setIcon(getDrawable(R.drawable.ic_dark_mode_24dp));
             toggleNightModeButton.setText(R.string.turn_lights_off);
         }
 
@@ -324,9 +324,29 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
             });
         }
         else if(id == R.id.nav_settings){
-            //configure app settings
-            Intent intent = new Intent(this, ConfigurationActivity.class);
-            startActivity(intent);
+            mDrawerLayout.addDrawerListener(new DrawerLayout.DrawerListener() {
+                @Override
+                public void onDrawerSlide(@NonNull View drawerView, float slideOffset) {
+
+                }
+
+                @Override
+                public void onDrawerOpened(@NonNull View drawerView) {
+
+                }
+
+                @Override
+                public void onDrawerClosed(@NonNull View drawerView) {
+                    mDrawerLayout.removeDrawerListener(this);
+                    Intent intent = new Intent(MainActivity.this, ConfigurationActivity.class);
+                    startActivity(intent);
+                }
+
+                @Override
+                public void onDrawerStateChanged(int newState) {
+
+                }
+            });
         }
         else if(id == R.id.nav_faq){
             mQuestionsFragment = (QuestionsFragment) getSupportFragmentManager().

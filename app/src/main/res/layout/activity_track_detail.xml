@@ -126,7 +126,7 @@
             android:layout_margin="@dimen/fab_margin"
             android:visibility="gone"
             android:text="@string/title_identify_track"
-            app:icon="@drawable/ic_photo_filter_white_24px"
+            app:icon="@drawable/ic_fingerprint_24dp"
             tools:visibility="visible"/>
 
         <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
