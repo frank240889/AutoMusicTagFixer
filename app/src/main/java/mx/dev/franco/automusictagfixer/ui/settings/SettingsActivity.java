@@ -16,13 +16,11 @@ import android.preference.PreferenceActivity;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 import android.preference.SwitchPreference;
-import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
 import androidx.appcompat.app.ActionBar;
-import androidx.appcompat.app.AppCompatDelegate;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import java.util.List;
@@ -77,56 +75,55 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         }
     }
 
-    private static Preference.OnPreferenceChangeListener sBindPreferenceSummaryToValueListener = (preference, value) -> {
-        String stringValue = "";
+    private static Preference.OnPreferenceChangeListener sBindPreferenceSummaryToValueListener = new Preference.OnPreferenceChangeListener() {
+        @Override
+        public boolean onPreferenceChange(Preference preference, Object value) {
+            String stringValue = "";
 
-        if (preference instanceof ListPreference) {
-            stringValue = value.toString();
-            // For list preferences, look up the correct display value in
-            // the preference's 'entries' list.
-            ListPreference listPreference = (ListPreference) preference;
-            int index = listPreference.findIndexOfValue(stringValue);
-            // Set the summary to reflect the new value.
-            preference.setSummary( index >= 0 ? listPreference.getEntries()[index] : null);
-        }
-        else if(preference instanceof MultiSelectListPreference) {
-            MultiSelectListPreference multiSelectListPreference = (MultiSelectListPreference) preference;
-            String summary = "";
-            String separator = "";
-            //Get the current values selected, convert to string and replace braces
-            String str = value.toString().replace("[", "").replace("]", "");
-            //if no values were selected, then we have empty character so set summary to "Ninguno",
-            //otherwise split this string to string array and get every value
-            if(!str.equals("")){
-            String[] strArr = str.split(",");
-                for (String val : strArr) {
-                    // For each value retrieve index
-                    //trim the string, because after first element, there is a space before the element
-                    //for example "value, value2", before value2 there is one space
-                    int index = multiSelectListPreference.findIndexOfValue(val.trim());
-                    // Retrieve entry from index
-                    CharSequence mEntry = index >= 0 ? multiSelectListPreference.getEntries()[index] : null;
-                    if (mEntry != null) {
-                        summary = summary + separator + mEntry;
-                        separator = ", ";
+            if (preference instanceof ListPreference) {
+                stringValue = value.toString();
+                // For list preferences, look up the correct display value in
+                // the preference's 'entries' list.
+                ListPreference listPreference = (ListPreference) preference;
+                int index = listPreference.findIndexOfValue(stringValue);
+                // Set the summary to reflect the new value.
+                preference.setSummary(index >= 0 ? listPreference.getEntries()[index] : null);
+            } else if (preference instanceof MultiSelectListPreference) {
+                MultiSelectListPreference multiSelectListPreference = (MultiSelectListPreference) preference;
+                String summary = "";
+                String separator = "";
+                //Get the current values selected, convert to string and replace braces
+                String str = value.toString().replace("[", "").replace("]", "");
+                //if no values were selected, then we have empty character so set summary to "Ninguno",
+                //otherwise split this string to string array and get every value
+                if (!str.equals("")) {
+                    String[] strArr = str.split(",");
+                    for (String val : strArr) {
+                        // For each value retrieve index
+                        //trim the string, because after first element, there is a space before the element
+                        //for example "value, value2", before value2 there is one space
+                        int index = multiSelectListPreference.findIndexOfValue(val.trim());
+                        // Retrieve entry from index
+                        CharSequence mEntry = index >= 0 ? multiSelectListPreference.getEntries()[index] : null;
+                        if (mEntry != null) {
+                            summary = summary + separator + mEntry;
+                            separator = ", ";
+                        }
                     }
+                } else {
+                    summary = "";//"Ninguno" ;
                 }
+
+
+                multiSelectListPreference.setSummary(summary);
+            } else {
+                stringValue = value.toString();
+                // For all other preferences, set the summary to the value's
+                // simple string representation.
+                preference.setSummary(stringValue);
             }
-            else{
-                summary = "";//"Ninguno" ;
-            }
-
-
-            multiSelectListPreference.setSummary(summary);
+            return true;
         }
-
-        else {
-            stringValue = value.toString();
-            // For all other preferences, set the summary to the value's
-            // simple string representation.
-            preference.setSummary(stringValue);
-        }
-        return true;
     };
 
     /**
