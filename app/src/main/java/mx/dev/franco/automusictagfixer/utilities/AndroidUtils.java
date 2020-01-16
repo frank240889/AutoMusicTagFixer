@@ -219,12 +219,15 @@ public class AndroidUtils {
         //Revoke permission to write to SD card and remove URI from shared preferences.
         if(uri != null) {
             int takeFlags = Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION;
-            context.getContentResolver().releasePersistableUriPermission(uri, takeFlags);
-            sharedPreferences.edit().remove(Constants.URI_TREE).apply();
-            PreferenceManager.getDefaultSharedPreferences(context).
-                    edit().
-                    putBoolean("key_enable_sd_card_access", false).
-                    apply();
+            try {
+                context.getContentResolver().releasePersistableUriPermission(uri, takeFlags);
+                sharedPreferences.edit().remove(Constants.URI_TREE).apply();
+                PreferenceManager.getDefaultSharedPreferences(context).
+                        edit().
+                        putBoolean("key_enable_sd_card_access", false).
+                        apply();
+            }
+            catch (SecurityException ignored){ }
         }
     }
 
