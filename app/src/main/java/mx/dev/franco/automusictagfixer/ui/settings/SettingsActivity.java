@@ -48,7 +48,6 @@ import mx.dev.franco.automusictagfixer.utilities.shared_preferences.AbstractShar
  * API Guide</a> for more information on developing a Settings UI.
  */
 public class SettingsActivity extends AppCompatPreferenceActivity {
-    private static final String TAG = SettingsActivity.class.getName();
     public SwitchPreference mSDCardAccess = null;
 
     /**
