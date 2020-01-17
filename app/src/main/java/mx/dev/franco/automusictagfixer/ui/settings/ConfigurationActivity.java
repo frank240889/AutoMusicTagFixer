@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.ListPreference;
+import android.preference.MultiSelectListPreference;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -118,6 +119,35 @@ public class ConfigurationActivity extends AppCompatActivity {
                 int index = listPreference.findIndexOfValue(stringValue);
                 // Set the summary to reflect the new value.
                 ((androidx.preference.ListPreference) preference).setSummary(index >= 0 ? listPreference.getEntries()[index] : null);
+            }
+            else if (preference instanceof MultiSelectListPreference) {
+                MultiSelectListPreference multiSelectListPreference = (MultiSelectListPreference) preference;
+                String summary = "";
+                String separator = "";
+                //Get the current values selected, convert to string and replace braces
+                String str = preference.getString(key, "").replace("[", "").replace("]", "");
+                //if no values were selected, then we have empty character so set summary to "Ninguno",
+                //otherwise split this string to string array and get every value
+                if (!str.equals("")) {
+                    String[] strArr = str.split(",");
+                    for (String val : strArr) {
+                        // For each value retrieve index
+                        //trim the string, because after first element, there is a space before the element
+                        //for example "value, value2", before value2 there is one space
+                        int index = multiSelectListPreference.findIndexOfValue(val.trim());
+                        // Retrieve entry from index
+                        CharSequence mEntry = index >= 0 ? multiSelectListPreference.getEntries()[index] : null;
+                        if (mEntry != null) {
+                            summary = summary + separator + mEntry;
+                            separator = ", ";
+                        }
+                    }
+                } else {
+                    summary = "";//"Ninguno" ;
+                }
+
+
+                multiSelectListPreference.setSummary(summary);
             }
             else {
                 switch (key) {

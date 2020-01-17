@@ -132,6 +132,7 @@ public class ResultSearchFragment extends BaseViewModelFragment<SearchListViewMo
         ((MainActivity)getActivity()).actionBarDrawerToggle.setToolbarNavigationClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                hideKeyboard();
                 getFragmentManager().popBackStack();
             }
         });
@@ -244,7 +245,6 @@ public class ResultSearchFragment extends BaseViewModelFragment<SearchListViewMo
                         ((MainActivity)getActivity()).searchBox.setVisibility(View.GONE);
                         ((MainActivity)getActivity()).searchBox.setText("");
                         ((MainActivity)getActivity()).searchBox.setOnEditorActionListener(null);
-                        hideKeyboard();
                         ((MainActivity)getActivity()).mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
                         ((MainActivity)getActivity()).actionBarDrawerToggle.setDrawerIndicatorEnabled(true);
                         //((MainActivity)getActivity()).actionBar.setDisplayHomeAsUpEnabled(false);

@@ -1,10 +1,8 @@
 package mx.dev.franco.automusictagfixer.ui.main;
 
-import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.Configuration;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -276,20 +274,6 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         int id = item.getItemId();
         mDrawerLayout.closeDrawer(GravityCompat.START);
-        /*if (id == R.id.rate) {
-            rateApp();
-        } else if (id == R.id.share) {
-            String shareSubText = getString(R.string.app_name) + " " + getString(R.string.share_message);
-            String shareBodyText = getPlayStoreLink();
-
-            Intent shareIntent = ShareCompat.IntentBuilder.from(this).
-                    setType("text/plain").
-                    setText(shareSubText +"\n"+ shareBodyText).getIntent();
-            shareIntent.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY |
-                    Intent.FLAG_ACTIVITY_NEW_DOCUMENT | Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
-            startActivity(shareIntent);
-        }
-        else*/
         if(id == R.id.nav_audio_files_list) {
             mListFragment = (MainFragment) getSupportFragmentManager().
                     findFragmentByTag(MainFragment.class.getName());
@@ -417,28 +401,6 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
 
 
         return true;
-    }
-
-
-    private String getPlayStoreLink(){
-        return Constants.PLAY_STORE_URL + getApplicationContext().getPackageName();
-    }
-
-    private void rateApp(){
-        String packageName = getApplicationContext().getPackageName();
-        Uri uri = Uri.parse("market://details?id=" + packageName);
-        Intent goToMarket = new Intent(Intent.ACTION_VIEW, uri);
-        // To count with Play market backstack, after pressing back button,
-        // to taken back to our application, we need to add following flags to intent.
-        goToMarket.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY |
-                Intent.FLAG_ACTIVITY_NEW_DOCUMENT |
-                Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
-        try {
-            startActivity(goToMarket);
-        } catch (ActivityNotFoundException e) {
-            startActivity(new Intent(Intent.ACTION_VIEW,
-                    Uri.parse(Constants.PLAY_STORE_URL + packageName)));
-        }
     }
 
     /**

@@ -24,8 +24,8 @@
             android:key="key_size_album_art"
             android:negativeButtonText="@null"
             android:positiveButtonText="@null"
-            android:summary="@string/settings_cover_size"
-            android:title="@string/pref_title_size_album_art" />
+            android:summary="@string/select_cover_size"
+            android:title="@string/settings_cover_size" />
     </PreferenceCategory>
     <PreferenceCategory
         android:title="@string/enable_embed_player">
@@ -53,6 +53,7 @@
             android:key="key_language"
             android:negativeButtonText="@null"
             android:positiveButtonText="@null"
-            android:title="@string/pref_title_language" />
+            android:title="@string/pref_title_language"
+            android:summary="@string/pref_language_description"/>
     </PreferenceCategory>
 </PreferenceScreen>

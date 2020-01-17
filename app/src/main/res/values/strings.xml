@@ -61,16 +61,17 @@
     <string name="pref_title_change_description">El título (si se encuentra) se aplicará como nombre del archivo; se añadirá el nombre del artista más/ó un número aleatorio, en caso que un archivo con nombre igual ya exista.
     </string>
 
-    <string name="pref_title_background">Usar corrección en segundo plano</string>
-    <string name="pref_title_background_description">La corrección de canciones no se cancelará aún cuando cierres la aplicación, sino hasta que termine o la detengas; se mostrará una notificación con el progreso.</string>
+    <string name="pref_title_background">Corrección en segundo plano</string>
+    <string name="pref_title_background_description">La corrección continuará aún cerrada la aplicación hasta que la detengas o termine. Se mostrará una notificación con el progreso.</string>
 
     <string name="enable_embed_player">Multimedia</string>
-    <string name="pref_title_enable_embed_player">Usar reproductor integrado</string>
-    <string name="pref_enable_embed_player_description">Escuchar canción en el reproductor integrado; desactívala para usar uno externo.</string>
+    <string name="pref_title_enable_embed_player">Reproductor integrado</string>
+    <string name="pref_enable_embed_player_description">Escuchar canción dentro de la aplicación.</string>
 
     <string name="pref_title_replace_all_tags">Sobreescribir etiquetas</string>
-    <string name="pref_replace_auto_all_tags_description">Si esta activa esta opción se reemplazarán todas las etiquetas actuales por las encontradas; desactívala para añadir solo las faltantes.</string>
-    <string name="pref_title_language">Idioma de resultados de identificación (requiere reiniciar la app)</string>
+    <string name="pref_replace_auto_all_tags_description">Reemplazar todas las etiquetas actuales por las encontradas.</string>
+    <string name="pref_title_language">Idioma de identificación</string>
+    <string name="pref_language_description">EL idioma en el que se descargarán los resultados de identificación, requiere un reinicio completo de la aplicación.</string>
     <string-array name="pref_language_titles">
         <item>Español</item>
         <item>Ingles</item>
@@ -293,7 +294,7 @@
     <string name="details">Detalles</string>
     <string name="edit">Editar</string>
     <string name="see_image">Verla</string>
-    <string name="title_activity_configuration">Configuration</string>
+    <string name="title_activity_configuration">Configuración</string>
 
     <!-- Preference Titles -->
     <string name="messages_header">Messages</string>
@@ -311,4 +312,5 @@
     <string name="attachment_summary_off">Only download attachments when manually requested</string>
     <string name="settings_cover_size">Tamaño de carátula</string>
     <string name="title_correct_track">Corregir</string>
+    <string name="select_cover_size">No todos los tamaños estan disponibles para cada canción.</string>
 </resources>
