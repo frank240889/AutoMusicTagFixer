@@ -172,10 +172,10 @@ public class DataTrackManager {
      */
     public void onCleared() {
         mResultsCache.deleteAll();
-        mMetadataReaderResultLiveData.call();
-        mMetadataWriterResultLiveData.call();
-        mFileRenamerLiveData.call();
-        mLoadingStateLiveData.call();
+        //mMetadataReaderResultLiveData.call();
+        //mMetadataWriterResultLiveData.call();
+        //mFileRenamerLiveData.call();
+        //mLoadingStateLiveData.call();
     }
 
     /**

@@ -82,8 +82,8 @@ public class FileManager {
     }
 
     public void onCleared() {
-        mLiveData.call();
-        mStateLiveData.call();
+        //mLiveData.call();
+        //mStateLiveData.call();
         mAsyncCoverSaver = null;
     }
 }

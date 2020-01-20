@@ -6,10 +6,13 @@ import android.graphics.BitmapFactory;
 import android.webkit.MimeTypeMap;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.annotation.Nonnegative;
 
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.fixer.AudioTagger;
@@ -204,5 +207,14 @@ public final class TrackUtils {
         }
 
         return tracksToRemove;
+    }
+
+    @Nullable
+    public static Track findTrackById(@Nonnegative int id, @NonNull List<Track> tracks) {
+        for(Track t : tracks) {
+            if(t.getMediaStoreId() == id)
+                return t;
+        }
+        return null;
     }
 }

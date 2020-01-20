@@ -40,9 +40,12 @@ import mx.dev.franco.automusictagfixer.fixer.MetadataWriter;
 import mx.dev.franco.automusictagfixer.fixer.MetadataWriterResult;
 import mx.dev.franco.automusictagfixer.fixer.TrackIdLoader;
 import mx.dev.franco.automusictagfixer.fixer.TrackInformationLoader;
+import mx.dev.franco.automusictagfixer.identifier.ApiInitializerService;
 import mx.dev.franco.automusictagfixer.identifier.AudioFingerprintIdentifier;
 import mx.dev.franco.automusictagfixer.identifier.GnApiService;
+import mx.dev.franco.automusictagfixer.identifier.IdentificationManager;
 import mx.dev.franco.automusictagfixer.identifier.Identifier;
+import mx.dev.franco.automusictagfixer.identifier.TrackIdentificationResult;
 import mx.dev.franco.automusictagfixer.interfaces.AsyncOperation;
 import mx.dev.franco.automusictagfixer.persistence.repository.TrackRepository;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
@@ -81,6 +84,8 @@ public class FixerTrackService extends Service {
     AudioTagger mTagger;
     @Inject
     AbstractSharedPreferences mSharedPreferences;
+    @Inject
+    IdentificationManager mIdentificationManager;
 
     //Notification on status bar
     private Notification mNotification;
@@ -89,7 +94,7 @@ public class FixerTrackService extends Service {
     private TrackInformationLoader mTrackInformationLoader;
     private FileRenamer mFileRenamer;
     private TrackIdLoader mTrackIdLoader;
-    private List<Integer> mTrackIds = new ArrayList<>();
+    private List<Integer> mPendingTrackIds = new ArrayList<>();
     private ServiceState mServiceState = ServiceState.NOT_RUNNING;
     private FixerState mFixerState;
 
@@ -157,7 +162,7 @@ public class FixerTrackService extends Service {
                     stopServiceAndRemoveFromForeground();
                 }
                 else {
-                    mTrackIds.addAll(result);
+                    mPendingTrackIds.addAll(result);
                     shouldContinue();
                 }
             }
@@ -190,7 +195,7 @@ public class FixerTrackService extends Service {
             stopServiceAndRemoveFromForeground();
         }
         else {
-            if(mTrackIds != null && !mTrackIds.isEmpty()){
+            if(mPendingTrackIds != null && !mPendingTrackIds.isEmpty()){
                 startCorrection();
             }
             else {
@@ -225,13 +230,14 @@ public class FixerTrackService extends Service {
                     processTrack(result);
                 }
             }, mTrackRoomDatabase);
-            mTrackInformationLoader.executeOnExecutor(AutoMusicTagFixer.getExecutorService(), mTrackIds.get(0));
+            mTrackInformationLoader.executeOnExecutor(AutoMusicTagFixer.getExecutorService(), mPendingTrackIds.get(0));
         }
     }
 
     private boolean canContinue(){
-        if(mGnApiService.isApiInitializing()|| !mGnApiService.isApiInitialized()){
-            mGnApiService.initializeAPI(null);
+        if(mGnApiService.isApiInitializing() || !mGnApiService.isApiInitialized()){
+            Intent intent = new Intent(getApplicationContext(), ApiInitializerService.class);
+            startService(intent);
             return false;
         }
         return true;
@@ -245,7 +251,8 @@ public class FixerTrackService extends Service {
         }
         else {
             if(AudioTagger.checkFileIntegrity(data.get(0).getPath())) {
-                identificationError(getString(R.string.could_not_read_file), data.get(0));
+                String msg = String.format(getString(R.string.file_error), data.get(0).getTitle());
+                identificationError(msg, data.get(0));
             }
             else {
                 mIdentifier = new AudioFingerprintIdentifier(mGnApiService, mResourceManager);
@@ -352,7 +359,11 @@ public class FixerTrackService extends Service {
 
         InputCorrectionParams inputCorrectionParams = new InputCorrectionParams();
                 AndroidUtils.createInputParams(results.get(0), inputCorrectionParams);
+
+        inputCorrectionParams.setTargetFile(track.getPath());
         inputCorrectionParams.setCodeRequest(task);
+        TrackIdentificationResult result = mIdentificationManager.getTrackResult(track.getMediaStoreId()+"", track.getMediaStoreId()+"");
+        AndroidUtils.createInputParams(result, inputCorrectionParams);
 
         mMetadataWriter = new MetadataWriter(new AsyncOperation<Track, MetadataWriterResult, Track, MetadataWriterResult>() {
             @Override
@@ -509,8 +520,8 @@ public class FixerTrackService extends Service {
     }
 
     private void popFirstFromList() {
-        if(mTrackIds != null && mTrackIds.size() > 0)
-            mTrackIds.remove(0);
+        if(mPendingTrackIds != null && mPendingTrackIds.size() > 0)
+            mPendingTrackIds.remove(0);
     }
 
 
@@ -542,8 +553,8 @@ public class FixerTrackService extends Service {
      */
     @Override
     public void onDestroy(){
-        mTrackIds.clear();
-        mTrackIds = null;
+        mPendingTrackIds.clear();
+        mPendingTrackIds = null;
         mResourceManager = null;
     }
 

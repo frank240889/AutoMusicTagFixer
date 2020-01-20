@@ -187,7 +187,7 @@ public class IdentificationManager {
         mCoverCache.deleteAll();
         mOnSuccessIdentificationLiveData.call();
         mOnFailIdentificationLiveData.call();
-        mLoadingStateLiveData.call();
+        //mLoadingStateLiveData.call();
     }
 
     private Identifier.IdentificationResults findResult(List<? extends Identifier.IdentificationResults> resultList, String idToSearch) {

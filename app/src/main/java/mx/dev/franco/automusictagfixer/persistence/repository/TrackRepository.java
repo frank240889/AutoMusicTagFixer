@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import mx.dev.franco.automusictagfixer.AutoMusicTagFixer;
 import mx.dev.franco.automusictagfixer.interfaces.AsyncOperation;
@@ -29,6 +30,7 @@ import mx.dev.franco.automusictagfixer.utilities.Constants;
 import mx.dev.franco.automusictagfixer.utilities.Resource;
 import mx.dev.franco.automusictagfixer.utilities.shared_preferences.AbstractSharedPreferences;
 
+@Singleton
 public class TrackRepository {
     public static final int ASC = 0;
     public static final int DESC = 1;
@@ -205,7 +207,7 @@ public class TrackRepository {
         new TrackInserter(mTrackDao).
                 executeOnExecutor(AutoMusicTagFixer.getExecutorService(), tracks);
     }
-
+    @SuppressWarnings("unchecked")
     public void updateInternalDatabase(List<Track> tracks) {
         new TrackInserter(mTrackDao).
                 executeOnExecutor(AutoMusicTagFixer.getExecutorService(), tracks);

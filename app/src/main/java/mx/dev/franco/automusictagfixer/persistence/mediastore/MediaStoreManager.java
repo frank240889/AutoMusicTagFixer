@@ -144,9 +144,9 @@ public class MediaStoreManager {
     }
 
     public void onCleared() {
-        mResult.call();
-        mLoadingStateLiveData.call();
-        mMediaStoreResultSingleLiveEvent.call();
+        //mResult.call();
+        //mLoadingStateLiveData.call();
+        //mMediaStoreResultSingleLiveEvent.call();
     }
 
 }

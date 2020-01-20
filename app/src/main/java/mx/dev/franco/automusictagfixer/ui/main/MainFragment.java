@@ -207,6 +207,7 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
         //App is opened again, then scroll to the track being processed.
         int id = getActivity().getIntent().getIntExtra(Constants.MEDIA_STORE_ID, -1);
         int pos = mListViewModel.getTrackPosition(id);
+        if(pos != -1)
         mRecyclerView.scrollToPosition(pos);
     }
 
@@ -651,12 +652,7 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
         Intent intent = new Intent(getActivity(),FixerTrackService.class);
         intent.putExtra(Constants.MEDIA_STORE_ID, id);
         intent.setAction(Constants.Actions.ACTION_START_TASK);
-        //if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
-        //    getContext().startForegroundService(intent);
-        //}
-        //else {
-            Objects.requireNonNull(getActivity()).startService(intent);
-        //}
+        Objects.requireNonNull(getActivity()).startService(intent);
     }
 
     private void onCheckAll(Boolean checkAll) {
@@ -673,7 +669,8 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
     @Override
     public void onStartProcessingFor(int id) {
         int index = mListViewModel.getTrackPosition(id);
-        mRecyclerView.scrollToPosition(index);
+        if(index != -1)
+            mRecyclerView.scrollToPosition(index);
     }
 
     @Override

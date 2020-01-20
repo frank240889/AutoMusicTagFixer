@@ -19,6 +19,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.databinding.DataBindingUtil;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
 
 import com.google.android.material.snackbar.Snackbar;
@@ -109,22 +110,26 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
     }
 
     private void setupObservers() {
-        mTrackDetailViewModel.observeLoadingState().observe(this, this::loading);
-        mTrackDetailViewModel.observeActionableMessage().observe(this, this::onActionableMessage);
-        mTrackDetailViewModel.observeMessage().observe(this, this::onMessage);
-        mTrackDetailViewModel.observeSuccessIdentification().observe(this, this::onIdentificationResults);
         mTrackDetailViewModel.observeCachedIdentification().observe(this, this::onIdentificationResults);
-        mTrackDetailViewModel.observeFailIdentification().observe(this, this::onActionableMessage);
         mTrackDetailViewModel.observeConfirmationRemoveCover().observe(this, this::onConfirmRemovingCover);
         mTrackDetailViewModel.observeRenamingResult().observe(this, this::onMessage);
         mTrackDetailViewModel.observeCoverSavingResult().observe(this, this::onActionableMessage);
-        mTrackDetailViewModel.observeTrack().observe(this, track -> mPlayer.setPath(track.getPath()));
-        mTrackDetailViewModel.observeLoadingMessage().observe(this, this::onLoadingMessage);
         mTrackDetailViewModel.observeWritingResult().observe(this, this::onWritingResult);
-        mTrackDetailViewModel.observeCancellableTaskFlag().observe(this, this::onCancellableTask);
-        mTrackDetailViewModel.observeReadingResult().observe(this, message -> {
-            if(message == null) {
-                onSuccessLoad(null);
+    }
+
+    private void setupIdentificationObserves() {
+        mTrackDetailViewModel.observeSuccessIdentification().observeForever(new Observer<SuccessIdentification>() {
+            @Override
+            public void onChanged(SuccessIdentification successIdentification) {
+                onIdentificationResults(successIdentification);
+                mTrackDetailViewModel.observeSuccessIdentification().removeObserver(this);
+            }
+        });
+        mTrackDetailViewModel.observeFailIdentification().observeForever(new Observer<Message>() {
+            @Override
+            public void onChanged(Message message) {
+                onActionableMessage(message);
+                mTrackDetailViewModel.observeFailIdentification().removeObserver(this);
             }
         });
     }
@@ -136,7 +141,17 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
         mManualEditMenuItem = menu.findItem(R.id.action_edit_manual);
         mSearchInWebMenuItem = menu.findItem(R.id.action_web_search);
         setupMediaPlayer();
-        setupObservers();
+        mTrackDetailViewModel.observeLoadingState().observe(this, this::loading);
+        mTrackDetailViewModel.observeActionableMessage().observe(this, this::onActionableMessage);
+        mTrackDetailViewModel.observeMessage().observe(this, this::onMessage);
+        mTrackDetailViewModel.observeTrack().observe(this, track -> mPlayer.setPath(track.getPath()));
+        mTrackDetailViewModel.observeLoadingMessage().observe(this, this::onLoadingMessage);
+        mTrackDetailViewModel.observeCancellableTaskFlag().observe(this, this::onCancellableTask);
+        mTrackDetailViewModel.observeReadingResult().observe(this, message -> {
+            if(message == null) {
+                onSuccessLoad(null);
+            }
+        });
         return true;
     }
 
@@ -324,7 +339,8 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
 
     private void addFloatingActionButtonListeners(){
         //runs track id
-        mViewDataBinding.fabAutofix.setOnClickListener(v ->{
+        mViewDataBinding.fabAutofix.setOnClickListener(v -> {
+            setupIdentificationObserves();
             mTrackDetailViewModel.startIdentification(new IdentificationParams(IdentificationParams.ALL_TAGS));
         });
 
@@ -438,6 +454,7 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
      * @param message The message to show.
      */
     private void onSuccessLoad(Message message) {
+        setupObservers();
         addFloatingActionButtonListeners();
         addAppBarOffsetListener();
         addToolbarButtonsListeners();
@@ -479,6 +496,7 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
             popupMenu.setOnMenuItemClickListener(item -> {
                 switch (item.getItemId()) {
                     case R.id.action_identify_cover:
+                        setupIdentificationObserves();
                         mTrackDetailViewModel.startIdentification(
                                 new IdentificationParams(IdentificationParams.ONLY_COVER));
                         break;

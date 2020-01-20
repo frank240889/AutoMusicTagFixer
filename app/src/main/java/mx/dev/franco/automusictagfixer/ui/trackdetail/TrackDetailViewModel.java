@@ -1,11 +1,10 @@
 package mx.dev.franco.automusictagfixer.ui.trackdetail;
 
 import android.app.Application;
-import android.media.MediaScannerConnection;
-import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.ArrayMap;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
@@ -98,7 +97,7 @@ public class TrackDetailViewModel extends AndroidViewModel {
 
     private int mCorrectionMode = Constants.CorrectionActions.VIEW_INFO;
     private InputCorrectionParams mCorrectionParams;
-    private IdentificationParams mIdentificationParams;
+    private IdentificationParams mIdentificationParams = new IdentificationParams();
     private FileManager mFileManager;
     private MediaStoreManager mMediaStoreManager;
     private TrackRepository mTrackRepository;
@@ -118,6 +117,7 @@ public class TrackDetailViewModel extends AndroidViewModel {
                                 @Nonnull MediaStoreManager mediaStoreManager,
                                 @NonNull TrackRepository trackRepository) {
         super(application);
+        Log.e(getClass().getName(), "same instance");
         mDataTrackManager = dataTrackManager;
         mIdentificationManager = identificationManager;
         mFileManager = fileManager;
@@ -150,7 +150,7 @@ public class TrackDetailViewModel extends AndroidViewModel {
 
         //Merge state loading into one live data to observe.
         LiveData<Boolean> stateTrackDataRepository = mDataTrackManager.observeLoadingState();
-        LiveData<Boolean> identificationRepositoryState = mIdentificationManager.observeLoadingState();
+        LiveData<Boolean> identificationManagerState = mIdentificationManager.observeLoadingState();
         LiveData<Boolean> fileSaverResultState = mFileManager.observeLoadingState();
         LiveData<Boolean> mediaStoreManagerState = mMediaStoreManager.observeLoadingState();
 
@@ -164,7 +164,7 @@ public class TrackDetailViewModel extends AndroidViewModel {
             mStateMerger.setValue(aBoolean);
         });
 
-        mStateMerger.addSource(identificationRepositoryState, aBoolean -> {
+        mStateMerger.addSource(identificationManagerState, aBoolean -> {
             mCancellableTask.setValue(aBoolean);
             mStateMerger.setValue(aBoolean);
         });
@@ -383,12 +383,9 @@ public class TrackDetailViewModel extends AndroidViewModel {
                 actionableMessage.setMessage(getApplication().getString(R.string.cover_saved));
                 actionableMessage.setAction(Action.WATCH_IMAGE);
                 if (AudioTagger.StorageHelper.getInstance(getApplication()).isStoredInSD(input.data) ) {
-                    mMediaStoreManager.addToMediaStore(input.data, new MediaScannerConnection.OnScanCompletedListener() {
-                        @Override
-                        public void onScanCompleted(String path, Uri uri) {
-                            mTrackRepository.delete(mTrack);
-                            mMediaStoreManager.rescan();
-                        }
+                    mMediaStoreManager.addToMediaStore(input.data, (path, uri) -> {
+                        mTrackRepository.delete(mTrack);
+                        mMediaStoreManager.rescan();
                     });
                 }
             }

@@ -4,7 +4,6 @@ import android.app.Application;
 
 import androidx.annotation.IntegerRes;
 import androidx.annotation.NonNull;
-import androidx.arch.core.util.Function;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MediatorLiveData;
@@ -24,10 +23,10 @@ import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.persistence.room.TrackState;
 import mx.dev.franco.automusictagfixer.services.FixerTrackService;
 import mx.dev.franco.automusictagfixer.ui.SingleLiveEvent;
-import mx.dev.franco.automusictagfixer.utilities.Constants;
 import mx.dev.franco.automusictagfixer.utilities.Message;
 import mx.dev.franco.automusictagfixer.utilities.Resource;
 import mx.dev.franco.automusictagfixer.utilities.ServiceUtils;
+import mx.dev.franco.automusictagfixer.utilities.TrackUtils;
 import mx.dev.franco.automusictagfixer.utilities.shared_preferences.AbstractSharedPreferences;
 
 public class ListViewModel extends AndroidViewModel {
@@ -331,11 +330,8 @@ public class ListViewModel extends AndroidViewModel {
         if(id == -1)
             return 0;
 
-        Track track = getTrackById(id);
-        if(track != null)
-            return mCurrentList.indexOf(track);
-
-        return 0;
+        Track track = TrackUtils.findTrackById(id, mCurrentList);
+        return track != null ? mCurrentList.indexOf(track) : -1;
     }
 
     public void notifyPermissionNotGranted() {

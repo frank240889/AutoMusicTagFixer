@@ -42,5 +42,7 @@ public class Constants {
         public static final String ACTION_RESCAN = BuildConfig.APPLICATION_ID + ".action_rescan";
         public static final String ACTION_STOP_TASK = BuildConfig.APPLICATION_ID + ".action_stop_task";
         public static final String ACTION_BROADCAST_MESSAGE = BuildConfig.APPLICATION_ID + ".action_broadcast_message";
+
+        public static final String ACTION_SET_ITEM_LOADING = BuildConfig.APPLICATION_ID + ".action_set_item_loading";
     }
 }
