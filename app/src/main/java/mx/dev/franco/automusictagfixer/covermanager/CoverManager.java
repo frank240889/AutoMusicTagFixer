@@ -1,6 +1,7 @@
 package mx.dev.franco.automusictagfixer.covermanager;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.os.Handler;
 import android.os.Looper;
@@ -8,6 +9,7 @@ import android.os.Message;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
+import androidx.fragment.app.FragmentActivity;
 
 import com.bumptech.glide.load.DataSource;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
@@ -105,7 +107,9 @@ public class CoverManager {
 
     private static void loadCover(AudioHolder holder, byte[] result) {
         Log.w(CoverManager.class.getName(), "loading cover");
-            GlideApp.with(holder.itemView)
+        Context context = holder.itemView.getContext();
+        if(context instanceof FragmentActivity && !((FragmentActivity)context).isDestroyed())
+            GlideApp.with(holder.itemView.getContext())
                     .load(result)
                     .theme(holder.cover.getContext().getTheme())
                     .thumbnail(0.3f)

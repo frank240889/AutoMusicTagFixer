@@ -23,18 +23,55 @@ import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.ui.SingleLiveEvent;
 import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 
+/**
+ * @author Franco Castillo
+ * @version 1.0
+ * @since 1.0
+ * Instances of this classes have the responsibility to orchestrate the process of identification
+ * and make the results available through a shared storage to other components.
+ */
 public class IdentificationManager {
 
+    /**
+     * Reports the state of this manager.
+     */
     private SingleLiveEvent<Boolean> mLoadingStateLiveData;
+    /**
+     * Triggers a success identification event.
+     */
     private SingleLiveEvent<IdentificationStatus> mOnSuccessIdentificationLiveData;
+    /**
+     * Triggers a error identification event.
+     */
     private SingleLiveEvent<IdentificationStatus> mOnFailIdentificationLiveData;
+    /**
+     * The component that really performs the identification.
+     */
     private Identifier<Track, List<Identifier.IdentificationResults>> mIdentifier;
+    /**
+     * A temporal storage to put the cover results.
+     */
     private Cache<String, List<CoverIdentificationResult>> mCoverCache;
+    /**
+     * A temporal storage to put the results.
+     */
     private Cache<String, List<TrackIdentificationResult>> mTrackCache;
+    /**
+     * Flag to set the state of this manager.
+     */
     private boolean mIdentifying = false;
+    /**
+     * The API that performs the identification process.
+     */
     private GnApiService mApiService;
     private Context mContext;
+    /**
+     * The id of track being identified.
+     */
     private String mTrackId;
+    /**
+     * Process the identification results converting them to a standard list of objects.
+     */
     private ResultCreator mResultCreator;
 
     @Inject
@@ -54,7 +91,7 @@ public class IdentificationManager {
     }
 
     /**
-     * Livedata to inform a task is in progress.
+     * Returns the state of this manager.
      * @return A livedata with boolean value.
      */
     public LiveData<Boolean> observeLoadingState() {
@@ -69,14 +106,20 @@ public class IdentificationManager {
         return mOnFailIdentificationLiveData;
     }
 
+    /**
+     * Starts the identification process.
+     * @param track The track to identify.
+     */
     public void startIdentification(Track track) {
         mTrackId = track.getMediaStoreId() + "";
+        // Check if API is available and tries to initialize it if does not.
         if(!mApiService.isApiInitialized()) {
             Intent intent = new Intent(mContext, ApiInitializerService.class);
             mContext.startService(intent);
             String msg = mContext.getString(R.string.initializing_recognition_api);
             mOnFailIdentificationLiveData.setValue(new IdentificationStatus(Identifier.IdentificationState.IDENTIFICATION_ERROR, msg));
         }
+        // Sends a message to indicate API is initializing.
         else if(mApiService.isApiInitializing()) {
             String msg = mContext.getString(R.string.initializing_recognition_api);
             mOnFailIdentificationLiveData.setValue(new IdentificationStatus(Identifier.IdentificationState.IDENTIFICATION_ERROR, msg));

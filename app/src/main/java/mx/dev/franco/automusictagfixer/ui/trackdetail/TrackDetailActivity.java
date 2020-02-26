@@ -19,8 +19,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.databinding.DataBindingUtil;
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.Observer;
-import androidx.lifecycle.ViewModelProviders;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.google.android.material.snackbar.Snackbar;
 
@@ -66,6 +65,7 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
     private MenuItem mPlayPreviewMenuItem;
     private MenuItem mManualEditMenuItem;
     private MenuItem mSearchInWebMenuItem;
+
     private TrackDetailFragment mTrackDetailFragment;
     private TrackDetailViewModel mTrackDetailViewModel;
     private Intent mIntent;
@@ -80,10 +80,12 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
         mViewDataBinding = DataBindingUtil.
                 setContentView(this, R.layout.activity_track_detail);
         mViewDataBinding.setLifecycleOwner(this);
-        mTrackDetailViewModel = ViewModelProviders.of(this, androidViewModelFactory).get(TrackDetailViewModel.class);
+        mTrackDetailViewModel = new ViewModelProvider(this, androidViewModelFactory).get(TrackDetailViewModel.class);
         mViewDataBinding.setViewModel(mTrackDetailViewModel);
         mViewDataBinding.progressView.setVisibility(VISIBLE);
+
         setSupportActionBar(mViewDataBinding.toolbar);
+
         mActionBar = getSupportActionBar();
         mActionBar.setDisplayShowTitleEnabled(true);
         mActionBar.setTitle(R.string.details);
@@ -109,38 +111,15 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
 
     }
 
-    private void setupObservers() {
-        mTrackDetailViewModel.observeCachedIdentification().observe(this, this::onIdentificationResults);
-        mTrackDetailViewModel.observeConfirmationRemoveCover().observe(this, this::onConfirmRemovingCover);
-        mTrackDetailViewModel.observeRenamingResult().observe(this, this::onMessage);
-        mTrackDetailViewModel.observeCoverSavingResult().observe(this, this::onActionableMessage);
-        mTrackDetailViewModel.observeWritingResult().observe(this, this::onWritingResult);
-    }
-
-    private void setupIdentificationObserves() {
-        mTrackDetailViewModel.observeSuccessIdentification().observeForever(new Observer<SuccessIdentification>() {
-            @Override
-            public void onChanged(SuccessIdentification successIdentification) {
-                onIdentificationResults(successIdentification);
-                mTrackDetailViewModel.observeSuccessIdentification().removeObserver(this);
-            }
-        });
-        mTrackDetailViewModel.observeFailIdentification().observeForever(new Observer<Message>() {
-            @Override
-            public void onChanged(Message message) {
-                onActionableMessage(message);
-                mTrackDetailViewModel.observeFailIdentification().removeObserver(this);
-            }
-        });
-    }
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_details_track_dialog, menu);
         mPlayPreviewMenuItem = menu.findItem(R.id.action_play);
         mManualEditMenuItem = menu.findItem(R.id.action_edit_manual);
         mSearchInWebMenuItem = menu.findItem(R.id.action_web_search);
+
         setupMediaPlayer();
+
         mTrackDetailViewModel.observeLoadingState().observe(this, this::loading);
         mTrackDetailViewModel.observeActionableMessage().observe(this, this::onActionableMessage);
         mTrackDetailViewModel.observeMessage().observe(this, this::onMessage);
@@ -340,7 +319,6 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
     private void addFloatingActionButtonListeners(){
         //runs track id
         mViewDataBinding.fabAutofix.setOnClickListener(v -> {
-            setupIdentificationObserves();
             mTrackDetailViewModel.startIdentification(new IdentificationParams(IdentificationParams.ALL_TAGS));
         });
 
@@ -465,6 +443,19 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
         mViewDataBinding.progressView.findViewById(R.id.cancel_button).
                 setOnClickListener(v -> mTrackDetailViewModel.cancelTasks());
         mTrackDetailViewModel.shouldTriggerInitialIdentification();
+    }
+
+    private void setupObservers() {
+        mTrackDetailViewModel.observeCachedIdentification().observe(this, this::onIdentificationResults);
+        mTrackDetailViewModel.observeConfirmationRemoveCover().observe(this, this::onConfirmRemovingCover);
+        mTrackDetailViewModel.observeRenamingResult().observe(this, this::onMessage);
+        mTrackDetailViewModel.observeCoverSavingResult().observe(this, this::onActionableMessage);
+        mTrackDetailViewModel.observeWritingResult().observe(this, this::onWritingResult);
+    }
+
+    private void setupIdentificationObserves() {
+        mTrackDetailViewModel.observeSuccessIdentification().observe(this,this::onIdentificationResults);
+        mTrackDetailViewModel.observeFailIdentification().observe(this, this::onActionableMessage);
     }
 
 
