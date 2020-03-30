@@ -4,7 +4,6 @@ import android.app.Application;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.ArrayMap;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
@@ -117,7 +116,7 @@ public class TrackDetailViewModel extends AndroidViewModel {
                                 @Nonnull MediaStoreManager mediaStoreManager,
                                 @NonNull TrackRepository trackRepository) {
         super(application);
-        Log.e(getClass().getName(), "same instance");
+
         mDataTrackManager = dataTrackManager;
         mIdentificationManager = identificationManager;
         mFileManager = fileManager;
@@ -425,7 +424,7 @@ public class TrackDetailViewModel extends AndroidViewModel {
      */
     public void loadInfoTrack(int trackId) {
         mLiveLoadingMessage.setValue(R.string.loading_data_track);
-        mDataTrackManager.setId(trackId);
+        mDataTrackManager.getDetails(trackId);
     }
 
     /**
@@ -618,7 +617,7 @@ public class TrackDetailViewModel extends AndroidViewModel {
 
     private void setNoEditableInfo(AudioTagger.AudioFields audioFields) {
         filesize.setValue(audioFields.getFileSize());
-        absolutePath.setValue(audioFields.getPath());
+        absolutePath.setValue(audioFields.getPath().concat("/").concat(audioFields.getFileName()));
         String coverSize = audioFields.getImageSize() != null ?
                 audioFields.getImageSize() + " " + getApplication().getString(R.string.pixels) :
                 getApplication().getString(R.string.missing_cover);

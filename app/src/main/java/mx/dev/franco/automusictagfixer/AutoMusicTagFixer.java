@@ -33,6 +33,9 @@ import mx.dev.franco.automusictagfixer.utilities.shared_preferences.AbstractShar
  */
 
 public final class AutoMusicTagFixer extends Application implements HasActivityInjector, HasServiceInjector {
+    public static final String DARK_MODE = BuildConfig.APPLICATION_ID + ".dark_mode";
+
+
     private static ExecutorService executorService;
     @Inject
     DispatchingAndroidInjector<Activity> dispatchingAndroidInjector;
@@ -67,13 +70,13 @@ public final class AutoMusicTagFixer extends Application implements HasActivityI
         Stetho.initializeWithDefaults(this);
         AppCompatDelegate.setCompatVectorFromResourcesEnabled(true);
         if(AppCompatDelegate.getDefaultNightMode() != AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM) {
-            if(mAbstractSharedPreferences.getBoolean("dark_mode")) {
+            if(mAbstractSharedPreferences.getBoolean(DARK_MODE)) {
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
-                mAbstractSharedPreferences.putBoolean("dark_mode", true);
+                mAbstractSharedPreferences.putBoolean(DARK_MODE, true);
             }
             else {
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
-                mAbstractSharedPreferences.putBoolean("dark_mode", false);
+                mAbstractSharedPreferences.putBoolean(DARK_MODE, false);
             }
         }
         else {

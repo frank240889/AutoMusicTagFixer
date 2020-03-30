@@ -28,6 +28,9 @@
     <color name="snackbarBackgroundColor">#212121</color>
     <color name="snackbarTextBackgroundColor">#c6a700</color>
 
+    <color name="dark_gray_semitransparent">#ff212121</color>
+    <color name="white">#ffffff</color>
+
     <!--color name="primaryColor">#ffd600</color>
     <color name="primaryLightColor">#ffff52</color>
     <color name="primaryDarkColor">#c7a500</color>

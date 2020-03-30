@@ -14,7 +14,7 @@ import android.widget.EditText;
 
 import androidx.annotation.NonNull;
 import androidx.databinding.DataBindingUtil;
-import androidx.lifecycle.ViewModelProviders;
+import androidx.lifecycle.ViewModelProvider;
 
 import java.util.ArrayList;
 
@@ -71,9 +71,8 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
 
     @Override
     public TrackDetailViewModel getViewModel() {
-        return ViewModelProviders.
-            of(getActivity(), androidViewModelFactory).
-            get(TrackDetailViewModel.class);
+        return new ViewModelProvider(requireActivity(), androidViewModelFactory).
+                get(TrackDetailViewModel.class);
     }
 
     @Override

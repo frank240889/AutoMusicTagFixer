@@ -30,7 +30,6 @@ public class IdentifierModule {
     }
 
     @Provides
-    @Singleton
     IdentificationManager provideIdentificationManager(CoverResultsCache coverResultsCache,
                                                        TrackResultsCache trackResultsCache,
                                                        IdentifierFactory identifierFactory,

@@ -250,9 +250,8 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
                     @Override
                     public void onHidden(ExtendedFloatingActionButton extendedFab) {
                         getFragmentManager().beginTransaction()
-                                .setCustomAnimations(R.anim.slide_in_right,
-                                        R.anim.slide_out_left, R.anim.slide_in_left,
-                                        R.anim.slide_out_right)
+                                .setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left,
+                                        R.anim.slide_in_left, R.anim.slide_out_right)
                                 .addToBackStack(ResultSearchFragment.class.getName())
                                 .hide(MainFragment.this)
                                 .add(R.id.container_fragments, finalResultSearchListFragment,
@@ -585,7 +584,7 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
         Intent intent = new Intent(getActivity(), TrackDetailActivity.class);
         Bundle bundle = AndroidUtils.getBundle(viewWrapper.track.getMediaStoreId(),
                 viewWrapper.mode);
-        intent.putExtra("track_data", bundle);
+        intent.putExtra(TrackDetailActivity.TRACK_DATA, bundle);
         startActivity(intent);
     }
 

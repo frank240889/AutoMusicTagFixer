@@ -31,6 +31,7 @@ import dagger.android.AndroidInjection;
 import dagger.android.AndroidInjector;
 import dagger.android.DispatchingAndroidInjector;
 import dagger.android.support.HasSupportFragmentInjector;
+import mx.dev.franco.automusictagfixer.BuildConfig;
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.databinding.ActivityTrackDetailBinding;
 import mx.dev.franco.automusictagfixer.identifier.IdentificationParams;
@@ -53,8 +54,11 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
         CoverIdentificationResultsFragmentBase.OnCoverCorrectionListener,
         SemiAutoCorrectionDialogFragment.OnSemiAutoCorrectionListener,
         HasSupportFragmentInjector {
+
     public static final int INTENT_OPEN_GALLERY = 1;
     public static final int INTENT_GET_AND_UPDATE_FROM_GALLERY = 2;
+    public static final String TRACK_DATA = BuildConfig.APPLICATION_ID + ".track_data";
+
     @Inject
     DispatchingAndroidInjector<Fragment> fragmentDispatchingAndroidInjector;
     @Inject
@@ -68,7 +72,6 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
 
     private TrackDetailFragment mTrackDetailFragment;
     private TrackDetailViewModel mTrackDetailViewModel;
-    private Intent mIntent;
     private ActivityTrackDetailBinding mViewDataBinding;
     ActionBar mActionBar;
     boolean mEditMode = false;
@@ -80,7 +83,8 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
         mViewDataBinding = DataBindingUtil.
                 setContentView(this, R.layout.activity_track_detail);
         mViewDataBinding.setLifecycleOwner(this);
-        mTrackDetailViewModel = new ViewModelProvider(this, androidViewModelFactory).get(TrackDetailViewModel.class);
+        mTrackDetailViewModel = new ViewModelProvider(this, androidViewModelFactory).
+                get(TrackDetailViewModel.class);
         mViewDataBinding.setViewModel(mTrackDetailViewModel);
         mViewDataBinding.progressView.setVisibility(VISIBLE);
 
@@ -94,8 +98,8 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
         mViewDataBinding.collapsingToolbarLayout.setTitleEnabled(false);
         hideFabs();
 
-        mIntent = getIntent();
-        Bundle bundle = mIntent.getBundleExtra("track_data");
+        Intent intent = getIntent();
+        Bundle bundle = intent.getBundleExtra(TrackDetailActivity.TRACK_DATA);
 
         mTrackDetailFragment = (TrackDetailFragment) getSupportFragmentManager().
                 findFragmentByTag(TrackDetailFragment.class.getName());
@@ -182,11 +186,11 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
                     if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
                         ImageDecoder.Source source = ImageDecoder.
                                 createSource(getApplicationContext().getContentResolver(), imageData);
-                        asyncBitmapDecoder.decodeBitmap(source, getCallback(requestCode));
+                        asyncBitmapDecoder.decodeBitmap(source, getBitmapDecoderCallback(requestCode));
                     }
                     else {
                         asyncBitmapDecoder.decodeBitmap(getApplicationContext().getContentResolver(),
-                                imageData, getCallback(requestCode) );
+                                imageData, getBitmapDecoderCallback(requestCode) );
                     }
                 }
                 break;
@@ -215,7 +219,7 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
 
     }
 
-    private AndroidUtils.AsyncBitmapDecoder.AsyncBitmapDecoderCallback getCallback(int requestCode){
+    private AndroidUtils.AsyncBitmapDecoder.AsyncBitmapDecoderCallback getBitmapDecoderCallback(int requestCode){
         return new AndroidUtils.AsyncBitmapDecoder.AsyncBitmapDecoderCallback() {
             @Override
             public void onBitmapDecoded(Bitmap bitmap) {
@@ -433,6 +437,7 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
      */
     private void onSuccessLoad(Message message) {
         setupObservers();
+        setupIdentificationObserves();
         addFloatingActionButtonListeners();
         addAppBarOffsetListener();
         addToolbarButtonsListeners();
@@ -487,7 +492,6 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
             popupMenu.setOnMenuItemClickListener(item -> {
                 switch (item.getItemId()) {
                     case R.id.action_identify_cover:
-                        setupIdentificationObserves();
                         mTrackDetailViewModel.startIdentification(
                                 new IdentificationParams(IdentificationParams.ONLY_COVER));
                         break;

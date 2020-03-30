@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+    <data>
+        <variable
+            name="viewmodel"
+            type="mx.dev.franco.automusictagfixer.ui.trackdetail.TrackDetailViewModel" />
+    </data>
+<androidx.constraintlayout.widget.ConstraintLayout
+    android:id="@+id/extra_data_container"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="8dp"
+    android:background="@drawable/bg_detail_metadata_content">
+
+        <TextView
+            android:id="@+id/file_size"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:drawableStart="@drawable/ic_sd_storage_white_24px"
+            android:gravity="center_vertical"
+            android:singleLine="true"
+            android:text="@{viewmodel.filesize}"
+            android:visibility="visible"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="13mb" />
+
+        <TextView
+            android:id="@+id/channels"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_marginStart="8dp"
+            android:layout_toEndOf="@+id/file_size"
+            android:drawableStart="@drawable/ic_speaker_white_24px"
+            android:gravity="center_vertical"
+            android:singleLine="true"
+            android:text="@{viewmodel.channels}"
+            android:visibility="visible"
+            app:layout_constraintStart_toEndOf="@+id/file_size"
+            app:layout_constraintTop_toTopOf="@+id/file_size"
+            tools:text="Joint Stereo" />
+
+        <TextView
+            android:id="@+id/track_type"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_marginStart="8dp"
+            android:layout_toEndOf="@+id/channels"
+            android:drawableStart="@drawable/ic_description_white"
+            android:gravity="center_vertical"
+            android:singleLine="true"
+            android:text="@{viewmodel.type}"
+            android:visibility="visible"
+            app:layout_constraintStart_toEndOf="@+id/channels"
+            app:layout_constraintTop_toTopOf="@+id/channels"
+            tools:text="MPEG-1 Layer 3" />
+
+        <TextView
+            android:id="@+id/resolution"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/channels"
+            android:layout_alignParentStart="true"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:drawableStart="@drawable/ic_high_quality_white_24px"
+            android:gravity="center_vertical"
+            android:singleLine="true"
+            android:text="@{viewmodel.resolution}"
+            android:visibility="visible"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/file_size"
+            tools:text="16 bits" />
+
+        <TextView
+            android:id="@+id/frequency"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBaseline="@+id/resolution"
+            android:layout_alignBottom="@+id/resolution"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:layout_toEndOf="@+id/resolution"
+            android:drawableStart="@drawable/ic_equalizer_white_24px"
+            android:gravity="center_vertical"
+            android:singleLine="true"
+            android:text="@{viewmodel.frequency}"
+            android:visibility="visible"
+            app:layout_constraintStart_toEndOf="@+id/resolution"
+            app:layout_constraintTop_toBottomOf="@+id/channels"
+            tools:text="44.1 Khz" />
+
+        <TextView
+            android:id="@+id/bitrate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/channels"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:layout_toEndOf="@+id/frequency"
+            android:drawableStart="@drawable/ic_hearing_white_24px"
+            android:gravity="center_vertical"
+            android:text="@{viewmodel.bitrate}"
+            app:layout_constraintStart_toEndOf="@+id/frequency"
+            app:layout_constraintTop_toBottomOf="@+id/track_type"
+            tools:text="128 Kbps" />
+
+        <TextView
+            android:id="@+id/trackLength"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/track_type"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:layout_toEndOf="@id/bitrate"
+            android:drawableStart="@drawable/ic_access_time_white_24px"
+            android:gravity="center_vertical"
+            android:singleLine="true"
+            android:text="@{viewmodel.length}"
+            android:visibility="visible"
+            app:layout_constraintStart_toEndOf="@+id/bitrate"
+            app:layout_constraintTop_toBottomOf="@+id/track_type"
+            tools:text="5'06''" />
+
+        <TextView
+            android:id="@+id/track_path"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/resolution"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginBottom="8dp"
+            android:drawableStart="@drawable/ic_folder_white_24px"
+            android:gravity="center_vertical"
+            android:maxLines="2"
+            android:text="@{viewmodel.absolutePath}"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/resolution"
+            tools:text="/storage/emulated/0/Music" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

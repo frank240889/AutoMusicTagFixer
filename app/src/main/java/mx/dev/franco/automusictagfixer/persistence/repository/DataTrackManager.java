@@ -83,7 +83,7 @@ public class DataTrackManager {
         mLoadingStateLiveData = new SingleLiveEvent<>();
     }
 
-    public void setId(int id) {
+    public void getDetails(int id) {
         LiveData<Track> liveTrack = mTrackRoomDatabase.trackDao().search(id);
         mMediatorLiveDataTrack.addSource(liveTrack, track -> {
             mTrack = track;
