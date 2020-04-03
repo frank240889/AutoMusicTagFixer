@@ -177,7 +177,7 @@ public class ResultSearchFragment extends BaseViewModelFragment<SearchListViewMo
         Intent intent = new Intent(getActivity(), TrackDetailActivity.class);
         Bundle bundle = AndroidUtils.getBundle(viewWrapper.track.getMediaStoreId(),
                 viewWrapper.mode);
-        intent.putExtra("track_data", bundle);
+        intent.putExtra(TrackDetailActivity.TRACK_DATA, bundle);
         startActivity(intent);
     }
 

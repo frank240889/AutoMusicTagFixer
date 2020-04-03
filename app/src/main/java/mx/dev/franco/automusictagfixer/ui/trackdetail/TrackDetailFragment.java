@@ -89,8 +89,8 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
     }
 
     @Override
-    public void onDetach() {
-        super.onDetach();
+    public void onDestroy() {
+        super.onDestroy();
         mViewModel.cancelIdentification();
     }
 

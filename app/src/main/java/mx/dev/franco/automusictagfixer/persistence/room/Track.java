@@ -37,15 +37,19 @@ public class Track {
     @ColumnInfo(name = "processing")
     private int mProcessing = 0;
 
-    public Track(String title, String artist, String album, String path){
+    @ColumnInfo(name = "version")
+    private int mVersion = 0;
+
+    public Track(String title, String artist, String album, String path, int version){
         mTitle = title;
         mArtist = artist;
         mAlbum = album;
         mPath = path;
+        mVersion = version;
     }
 
     public Track(Track track) {
-        this(track.getTitle(), track.getArtist(), track.getAlbum(), track.getPath());
+        this(track.getTitle(), track.getArtist(), track.getAlbum(), track.getPath(), track.getVersion());
     }
 
     public int getMediaStoreId(){
@@ -112,4 +116,11 @@ public class Track {
         mProcessing = isProcessing;
     }
 
+    public int getVersion() {
+        return mVersion;
+    }
+
+    public void setVersion(int version) {
+        mVersion = version;
+    }
 }

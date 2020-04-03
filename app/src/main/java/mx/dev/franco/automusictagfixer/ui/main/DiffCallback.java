@@ -36,45 +36,34 @@ public class DiffCallback extends DiffUtil.Callback{
 
     @Override
     public boolean areContentsTheSame(int oldItemPosition, int newItemPosition) {
-        return oldTracks.get(oldItemPosition).equals(newTracks.get(newItemPosition));
+        Track oldTrack = oldTracks.get(oldItemPosition);
+        Track newTrack = newTracks.get(newItemPosition);
+        if(!oldTrack.getTitle().equals(newTrack.getTitle()))
+            return false;
+        if(!oldTrack.getArtist().equals(newTrack.getArtist()))
+            return false;
+        if(!oldTrack.getAlbum().equals(newTrack.getAlbum()))
+            return false;
+
+        if(oldTrack.getVersion() != newTrack.getVersion())
+            return false;
+        return true;
     }
 
     @Nullable
     @Override
     public Object getChangePayload(int oldItemPosition, int newItemPosition) {
         Track newModel = newTracks.get(newItemPosition);
-        Track oldModel = oldTracks.get(oldItemPosition);
 
         Bundle diff = new Bundle();
-
-        if (!newModel.getTitle().equals(oldModel.getTitle())) {
-            diff.putString("title", newModel.getTitle());
-        }
-
-        if(!newModel.getArtist().equals(oldModel.getArtist())){
-            diff.putString("artist", newModel.getArtist());
-        }
-
-        if(!newModel.getAlbum().equals(oldModel.getAlbum())){
-            diff.putString("album", newModel.getAlbum());
-        }
-
-        if(newModel.getState() != oldModel.getState()){
-            diff.putInt("state", newModel.getState());
-            diff.putBoolean("should_reload_cover", true);
-        }
-
-        if(!newModel.getPath().equals(oldModel.getPath())){
-            diff.putString("path", newModel.getPath());
-        }
-
+        diff.putString("title", newModel.getTitle());
+        diff.putString("artist", newModel.getArtist());
+        diff.putString("album", newModel.getAlbum());
+        diff.putInt("state", newModel.getState());
+        diff.putBoolean("should_reload_cover", true);
+        diff.putString("path", newModel.getPath());
         diff.putInt("checked", newModel.checked());
         diff.putInt("processing", newModel.processing());
-
-
-        if (diff.size() == 0) {
-            return null;
-        }
         return diff;
     }
 }

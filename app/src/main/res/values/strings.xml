@@ -313,4 +313,5 @@
     <string name="settings_cover_size">Tamaño de carátula</string>
     <string name="title_correct_track">Corregir</string>
     <string name="select_cover_size">No todos los tamaños estan disponibles para cada canción.</string>
+    <string name="track_details">Detalles</string>
 </resources>

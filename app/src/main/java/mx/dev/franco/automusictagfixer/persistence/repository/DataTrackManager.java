@@ -5,6 +5,7 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MediatorLiveData;
+import androidx.lifecycle.MutableLiveData;
 
 import org.jaudiotagger.tag.FieldKey;
 
@@ -51,7 +52,7 @@ public class DataTrackManager {
     private SingleLiveEvent<Resource<MetadataWriterResult>> mMetadataWriterResultLiveData;
     private SingleLiveEvent<Resource<AudioTagger.ResultRename>> mFileRenamerLiveData;
     //Live data to inform the progress of task.
-    private SingleLiveEvent<Boolean> mLoadingStateLiveData;
+    private MutableLiveData<Boolean> mLoadingStateLiveData;
     //The cache where are stored temporally the identification results.
     private Cache<String, List<Identifier.IdentificationResults>> mResultsCache;
     private MediatorLiveData<Track> mMediatorLiveDataTrack = new MediatorLiveData<>();
@@ -172,10 +173,6 @@ public class DataTrackManager {
      */
     public void onCleared() {
         mResultsCache.deleteAll();
-        //mMetadataReaderResultLiveData.call();
-        //mMetadataWriterResultLiveData.call();
-        //mFileRenamerLiveData.call();
-        //mLoadingStateLiveData.call();
     }
 
     /**
@@ -236,10 +233,8 @@ public class DataTrackManager {
         if(path != null && !path.equals(""))
             mTrack.setPath(path);
 
-        new TrackUpdater(mTrackRoomDatabase.trackDao()).executeOnExecutor(AutoMusicTagFixer.getExecutorService(),mTrack);
-    }
+        mTrack.setVersion(mTrack.getVersion()+1);
 
-    public void updateTrack(Track track) {
-        new TrackUpdater(mTrackRoomDatabase.trackDao()).executeOnExecutor(AutoMusicTagFixer.getExecutorService(),track);
+        new TrackUpdater(mTrackRoomDatabase.trackDao()).executeOnExecutor(AutoMusicTagFixer.getExecutorService(),mTrack);
     }
 }

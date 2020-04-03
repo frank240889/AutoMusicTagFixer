@@ -4,6 +4,7 @@ import dagger.Module;
 import dagger.android.ContributesAndroidInjector;
 import mx.dev.franco.automusictagfixer.ui.main.MainFragment;
 import mx.dev.franco.automusictagfixer.ui.search.ResultSearchFragment;
+import mx.dev.franco.automusictagfixer.ui.trackdetail.MetadataDetailsFragment;
 import mx.dev.franco.automusictagfixer.ui.trackdetail.TrackDetailFragment;
 
 @Module
@@ -17,4 +18,7 @@ public abstract class FragmentModule {
 
     @ContributesAndroidInjector
     abstract ResultSearchFragment contributeResultSearchListFragment();
+
+    @ContributesAndroidInjector
+    abstract MetadataDetailsFragment contributeMetadataDetailsFragment();
 }

@@ -69,6 +69,7 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
     private MenuItem mPlayPreviewMenuItem;
     private MenuItem mManualEditMenuItem;
     private MenuItem mSearchInWebMenuItem;
+    private MenuItem mTrackDetailsMenuItem;
 
     private TrackDetailFragment mTrackDetailFragment;
     private TrackDetailViewModel mTrackDetailViewModel;
@@ -121,6 +122,7 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
         mPlayPreviewMenuItem = menu.findItem(R.id.action_play);
         mManualEditMenuItem = menu.findItem(R.id.action_edit_manual);
         mSearchInWebMenuItem = menu.findItem(R.id.action_web_search);
+        mTrackDetailsMenuItem = menu.findItem(R.id.action_details);
 
         setupMediaPlayer();
 
@@ -135,6 +137,8 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
                 onSuccessLoad(null);
             }
         });
+        setupObservers();
+        setupIdentificationObserves();
         return true;
     }
 
@@ -436,8 +440,6 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
      * @param message The message to show.
      */
     private void onSuccessLoad(Message message) {
-        setupObservers();
-        setupIdentificationObserves();
         addFloatingActionButtonListeners();
         addAppBarOffsetListener();
         addToolbarButtonsListeners();
@@ -480,6 +482,21 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
         mManualEditMenuItem.setOnMenuItemClickListener(item -> {
             editMode();
             return false;
+        });
+
+        mTrackDetailsMenuItem.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                MetadataDetailsFragment metadataDetailsFragment =
+                        (MetadataDetailsFragment) getSupportFragmentManager().
+                                findFragmentByTag(MetadataDetailsFragment.class.getName());
+
+                if(metadataDetailsFragment == null)
+                    metadataDetailsFragment = MetadataDetailsFragment.newInstance();
+
+                metadataDetailsFragment.show(getSupportFragmentManager(), metadataDetailsFragment.getClass().getName());
+                return false;
+            }
         });
     }
 

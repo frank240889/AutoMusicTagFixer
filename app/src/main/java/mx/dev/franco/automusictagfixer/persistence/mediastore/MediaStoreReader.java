@@ -87,7 +87,7 @@ public class MediaStoreReader extends AsyncTask<Context, Void, List<Track>> {
         album = new String(cursor.getString(3).getBytes(), StandardCharsets.UTF_8);
         //MediaStore.Audio.Media.DATA column is the path of file
         String fullPath = Uri.parse(cursor.getString(4)).toString();
-        Track track = new Track(title,artist,album,fullPath);
+        Track track = new Track(title,artist,album,fullPath,0);
         track.setMediaStoreId(mediaStoreId);
         return track;
     }

@@ -64,7 +64,7 @@ public class MediaStoreManager {
      * @param task The task to execute.
      * @param mediaStoreId The id of media store file.
      */
-    public void updateMediaStore(Map<FieldKey,Object> data, int task, int mediaStoreId) {
+    public void updateDataTrackOnMediaStore(Map<FieldKey,Object> data, int task, int mediaStoreId) {
         mMediaStoreUpdater = new MediaStoreUpdater(new AsyncOperation<Void, MediaStoreResult, Void, Void>() {
             @Override
             public void onAsyncOperationStarted(Void params) {
@@ -84,14 +84,12 @@ public class MediaStoreManager {
      * Updates the data of media store file.
      * @param path The path of the file to scan by mediastore.
      */
-    public void addToMediaStore(String path, MediaScannerConnection.OnScanCompletedListener onScanCompletedListener) {
+    public void addFileToMediaStore(String path, MediaScannerConnection.OnScanCompletedListener onScanCompletedListener) {
         MediaScannerConnection.scanFile(
             mContext,
             new String[]{path},
             new String[]{MimeTypeMap.getFileExtensionFromUrl(path)},
             onScanCompletedListener);
-
-
     }
 
     /**

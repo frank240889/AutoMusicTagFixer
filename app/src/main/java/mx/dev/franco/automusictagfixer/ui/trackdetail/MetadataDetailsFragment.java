@@ -20,6 +20,12 @@ public class MetadataDetailsFragment extends BaseViewModelRoundedBottomSheetDial
 
     private FragmentMetadataDetailsBinding mBinding;
 
+    public static MetadataDetailsFragment newInstance() {
+        return new MetadataDetailsFragment();
+    }
+
+    public MetadataDetailsFragment() {}
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {

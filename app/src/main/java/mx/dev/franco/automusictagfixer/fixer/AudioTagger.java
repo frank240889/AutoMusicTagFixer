@@ -945,7 +945,9 @@ public class AudioTagger {
                             if (resultOfCopyBack != SUCCESS_COPY_BACK) {
                                 resultCorrection.setCode(COULD_NOT_COPY_BACK_TO_ORIGINAL_LOCATION);
                             }
-
+                            Map<FieldKey, Object> tags = new ArrayMap<>();
+                            tags.put(FieldKey.COVER_ART, null);
+                            resultCorrection.setTagsUpdated(tags);
                             resultCorrection.setCode(SUCCESS);
                         } catch (CannotWriteException e) {
                             resultCorrection.setCode(COULD_NOT_APPLY_COVER);
@@ -965,7 +967,9 @@ public class AudioTagger {
                             if (resultOfCopyBack != SUCCESS_COPY_BACK) {
                                 resultCorrection.setCode(COULD_NOT_COPY_BACK_TO_ORIGINAL_LOCATION);
                             }
-
+                            Map<FieldKey, Object> tags = new ArrayMap<>();
+                            tags.put(FieldKey.COVER_ART, null);
+                            resultCorrection.setTagsUpdated(tags);
                             resultCorrection.setCode(SUCCESS);
                         } catch (FieldDataInvalidException | CannotWriteException e) {
                             resultCorrection.setCode(COULD_NOT_REMOVE_COVER);
@@ -996,6 +1000,9 @@ public class AudioTagger {
             try {
                 currentTag.deleteArtworkField();
                 audioFile.commit();
+                Map<FieldKey, Object> tags = new ArrayMap<>();
+                tags.put(FieldKey.COVER_ART, null);
+                resultCorrection.setTagsUpdated(tags);
                 resultCorrection.setCode(SUCCESS);
             } catch (CannotWriteException e) {
                 resultCorrection.setCode(COULD_NOT_APPLY_COVER);
@@ -1008,6 +1015,9 @@ public class AudioTagger {
                 currentTag.deleteArtworkField();
                 currentTag.setField(artwork);
                 audioFile.commit();
+                Map<FieldKey, Object> tags = new ArrayMap<>();
+                tags.put(FieldKey.COVER_ART, null);
+                resultCorrection.setTagsUpdated(tags);
                 resultCorrection.setCode(SUCCESS);
             } catch (CannotWriteException | FieldDataInvalidException e) {
                 resultCorrection.setCode(COULD_NOT_REMOVE_COVER);

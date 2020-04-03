@@ -18,36 +18,12 @@
         android:id="@+id/action_web_search"
         android:icon="@drawable/ic_public_white_24px"
         android:title="@string/web_search"
-        android:orderInCategory="6"
-        app:showAsAction="never"/>
-    <!--item
-        android:id="@+id/action_identify_cover"
-        android:title="@string/title_identify_cover"
-        app:showAsAction="never"
-        android:orderInCategory="2"/>
-    <item
-        android:id="@+id/action_update_cover"
-        android:icon="@drawable/ic_photo_white_24px"
-        android:title="@string/title_update_cover"
-        app:showAsAction="never"
-        android:orderInCategory="3"/>
-
-    <item
-        android:id="@+id/action_extract_cover"
-        android:icon="@drawable/ic_photo_library_black_24dp"
-        android:title="@string/title_extract_cover"
-        android:orderInCategory="4"
+        android:orderInCategory="2"
         app:showAsAction="never"/>
     <item
-        android:id="@+id/action_remove_cover"
-        android:icon="@drawable/ic_delete_white_24px"
-        android:title="@string/title_remove_cover_art_dialog"
-        android:orderInCategory="5"
+        android:id="@+id/action_details"
+        android:icon="@drawable/ic_info_black_24dp"
+        android:title="@string/track_details"
+        android:orderInCategory="2"
         app:showAsAction="never"/>
-    <item
-        android:id="@+id/action_web_search"
-        android:icon="@drawable/ic_public_white_24px"
-        android:title="@string/web_search"
-        android:orderInCategory="6"
-        app:showAsAction="never"/-->
 </menu>

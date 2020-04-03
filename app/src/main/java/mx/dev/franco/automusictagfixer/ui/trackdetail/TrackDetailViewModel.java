@@ -249,29 +249,25 @@ public class TrackDetailViewModel extends AndroidViewModel {
             Message message = null;
             if(input.data.getResultCorrection().getCode() == AudioTagger.SUCCESS) {
                 CoverManager.removeCover(mTrack.getMediaStoreId()+"");
-                //After applied tags check if rename file is set.
+                //After applied tags check if file should be renamed.
                 if(mCorrectionParams.renameFile()){
+                    mDataTrackManager.updateTrack(input.data.getResultCorrection().getTagsUpdated());
                     mDataTrackManager.renameFile(mCorrectionParams);
                 }
                 else {
                     //Get updated tags to update the repository track item
                     if(input.data.getResultCorrection().getTagsUpdated() != null) {
-                        //mTrack.setProcessing(0);
                         mDataTrackManager.updateTrack(input.data.getResultCorrection().getTagsUpdated());
-                        mMediaStoreManager.updateMediaStore(input.data.getResultCorrection().getTagsUpdated(),
+                        mMediaStoreManager.updateDataTrackOnMediaStore(input.data.getResultCorrection().getTagsUpdated(),
                                 MediaStoreResult.UPDATE_TAGS, mTrack.getMediaStoreId());
                     }
                     else {
-                        //mTrack.setProcessing(0);
-                        //mDataTrackManager.updateTrack(mTrack);
                         mDataTrackManager.readAudioFile(mTrack);
                         message = new Message(getApplication().getString(R.string.changes_applied));
                     }
                 }
             }
             else {
-                //mTrack.setProcessing(0);
-                //mDataTrackManager.updateTrack(mTrack);
                 //Could not apply tags, send a message indicating that.
                 message = getMessage(input.data);
             }
@@ -316,11 +312,9 @@ public class TrackDetailViewModel extends AndroidViewModel {
             if(input.status == Resource.Status.SUCCESS) {
                 Map<FieldKey, Object> map = new ArrayMap<>();
                 map.put(FieldKey.CUSTOM1, input.data.getNewAbsolutePath());
-                //mTrack.setProcessing(0);
                 mDataTrackManager.updateTrack(map);
-                mMediaStoreManager.updateMediaStore(map,
+                mMediaStoreManager.updateDataTrackOnMediaStore(map,
                         MediaStoreResult.UPDATE_RENAMED_FILE, mTrack.getMediaStoreId());
-                message = new Message(getApplication().getString(R.string.changes_applied));
             }
             else {
                 message = new Message(R.string.changes_partially_applied);
@@ -382,7 +376,7 @@ public class TrackDetailViewModel extends AndroidViewModel {
                 actionableMessage.setMessage(getApplication().getString(R.string.cover_saved));
                 actionableMessage.setAction(Action.WATCH_IMAGE);
                 if (AudioTagger.StorageHelper.getInstance(getApplication()).isStoredInSD(input.data) ) {
-                    mMediaStoreManager.addToMediaStore(input.data, (path, uri) -> {
+                    mMediaStoreManager.addFileToMediaStore(input.data, (path, uri) -> {
                         mTrackRepository.delete(mTrack);
                         mMediaStoreManager.rescan();
                     });
@@ -512,8 +506,6 @@ public class TrackDetailViewModel extends AndroidViewModel {
                         processAddCover(mCorrectionParams);
                     break;
             }
-            //mTrack.setProcessing(1);
-            //mDataTrackManager.updateTrack(mTrack);
             mDataTrackManager.performCorrection(mCorrectionParams);
         }
     }
