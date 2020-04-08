@@ -10,8 +10,7 @@ import dagger.Provides;
 import mx.dev.franco.automusictagfixer.identifier.GnApiService;
 import mx.dev.franco.automusictagfixer.identifier.IdentificationManager;
 import mx.dev.franco.automusictagfixer.identifier.IdentifierFactory;
-import mx.dev.franco.automusictagfixer.persistence.cache.CoverResultsCache;
-import mx.dev.franco.automusictagfixer.persistence.cache.TrackResultsCache;
+import mx.dev.franco.automusictagfixer.persistence.cache.IdentificationResultsCache;
 import mx.dev.franco.automusictagfixer.utilities.resource_manager.ResourceManager;
 
 @Module
@@ -30,12 +29,11 @@ public class IdentifierModule {
     }
 
     @Provides
-    IdentificationManager provideIdentificationManager(CoverResultsCache coverResultsCache,
-                                                       TrackResultsCache trackResultsCache,
+    IdentificationManager provideIdentificationManager(IdentificationResultsCache trackResultsCache,
                                                        IdentifierFactory identifierFactory,
                                                        GnApiService gnApiService,
                                                        Context context) {
-        return new IdentificationManager(coverResultsCache, trackResultsCache, identifierFactory, gnApiService, context);
+        return new IdentificationManager(trackResultsCache, identifierFactory, gnApiService, context);
     }
 
 }

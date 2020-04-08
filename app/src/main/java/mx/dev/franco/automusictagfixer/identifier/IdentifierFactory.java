@@ -1,11 +1,11 @@
 package mx.dev.franco.automusictagfixer.identifier;
 
 import java.util.List;
+import java.util.Map;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 
-import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.utilities.resource_manager.ResourceManager;
 
 public class IdentifierFactory {
@@ -22,7 +22,7 @@ public class IdentifierFactory {
     }
 
     @Nullable
-    public Identifier<Track, List<Identifier.IdentificationResults>> create(int identifierType) {
+    public Identifier<Map<String, String>, List<Identifier.IdentificationResults>> create(int identifierType) {
         if(identifierType == FINGERPRINT_IDENTIFIER)
             return new AudioFingerprintIdentifier(gnApiService, resourceManager);
         else

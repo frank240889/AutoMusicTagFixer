@@ -461,8 +461,25 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
     }
 
     private void setupIdentificationObserves() {
-        mTrackDetailViewModel.observeSuccessIdentification().observe(this,this::onIdentificationResults);
+        mTrackDetailViewModel.observeIdentificationType().observe(this, this::openIdentificationResults);
+
+        //mTrackDetailViewModel.observeSuccessIdentification().observe(this,this::onIdentificationResults);
         mTrackDetailViewModel.observeFailIdentification().observe(this, this::onActionableMessage);
+    }
+
+    private void openIdentificationResults(Integer identificationType) {
+        if(identificationType == SuccessIdentification.ALL_TAGS){
+            SemiAutoCorrectionDialogFragment semiAutoCorrectionDialogFragment =
+                    SemiAutoCorrectionDialogFragment.newInstance(mTrackDetailViewModel.getCurrentTrack().getMediaStoreId()+"");
+            semiAutoCorrectionDialogFragment.show(getSupportFragmentManager(),
+                    semiAutoCorrectionDialogFragment.getClass().getCanonicalName());
+        }
+        else {
+            CoverIdentificationResultsFragmentBase coverIdentificationResultsFragmentBase =
+                    CoverIdentificationResultsFragmentBase.newInstance(mTrackDetailViewModel.getCurrentTrack().getMediaStoreId()+"");
+            coverIdentificationResultsFragmentBase.show(getSupportFragmentManager(),
+                    coverIdentificationResultsFragmentBase.getClass().getCanonicalName());
+        }
     }
 
 

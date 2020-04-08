@@ -2,26 +2,24 @@ package mx.dev.franco.automusictagfixer.identifier;
 
 import android.content.Context;
 import android.content.Intent;
-import android.os.AsyncTask;
+import android.util.ArrayMap;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
 
 import java.util.List;
+import java.util.Map;
 
 import javax.inject.Inject;
 
-import mx.dev.franco.automusictagfixer.AutoMusicTagFixer;
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.identifier.Identifier.IdentificationListener;
 import mx.dev.franco.automusictagfixer.identifier.Identifier.IdentificationStatus;
-import mx.dev.franco.automusictagfixer.interfaces.AsyncOperation;
 import mx.dev.franco.automusictagfixer.interfaces.Cache;
-import mx.dev.franco.automusictagfixer.persistence.cache.CoverResultsCache;
-import mx.dev.franco.automusictagfixer.persistence.cache.TrackResultsCache;
+import mx.dev.franco.automusictagfixer.persistence.cache.IdentificationResultsCache;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.ui.SingleLiveEvent;
-import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 
 /**
  * @author Franco Castillo
@@ -35,11 +33,7 @@ public class IdentificationManager {
     /**
      * Reports the state of this manager.
      */
-    private SingleLiveEvent<Boolean> mLoadingStateLiveData;
-    /**
-     * Triggers a success identification event.
-     */
-    private SingleLiveEvent<IdentificationStatus> mOnSuccessIdentificationLiveData;
+    private MutableLiveData<Boolean> mLoadingStateLiveData;
     /**
      * Triggers a error identification event.
      */
@@ -47,15 +41,11 @@ public class IdentificationManager {
     /**
      * The component that really performs the identification.
      */
-    private Identifier<Track, List<Identifier.IdentificationResults>> mIdentifier;
-    /**
-     * A temporal storage to put the cover results.
-     */
-    private Cache<String, List<CoverIdentificationResult>> mCoverCache;
+    private Identifier<Map<String, String>, List<Identifier.IdentificationResults>> mIdentifier;
     /**
      * A temporal storage to put the results.
      */
-    private Cache<String, List<TrackIdentificationResult>> mTrackCache;
+    private Cache<String, List<Identifier.IdentificationResults>> mResultsCache;
     /**
      * Flag to set the state of this manager.
      */
@@ -65,29 +55,24 @@ public class IdentificationManager {
      */
     private GnApiService mApiService;
     private Context mContext;
-    /**
-     * The id of track being identified.
-     */
-    private String mTrackId;
-    /**
-     * Process the identification results converting them to a standard list of objects.
-     */
-    private ResultCreator mResultCreator;
+    private SingleLiveEvent<String> mObservableMessage;
+    private SingleLiveEvent<List<Identifier.IdentificationResults>> mObservableResults;
 
     @Inject
-    public IdentificationManager(@NonNull CoverResultsCache coverResultsCache,
-                                 @NonNull TrackResultsCache trackResultsCache,
+    public IdentificationManager(@NonNull IdentificationResultsCache cache,
                                  @NonNull IdentifierFactory identifierFactory,
                                  @NonNull GnApiService gnApiService,
                                  @NonNull Context context){
         mApiService = gnApiService;
         mContext = context;
-        mCoverCache = coverResultsCache;
-        mTrackCache = trackResultsCache;
+        mResultsCache = cache;
         mIdentifier = identifierFactory.create(IdentifierFactory.FINGERPRINT_IDENTIFIER);
-        mOnSuccessIdentificationLiveData = new SingleLiveEvent<>();
+
         mOnFailIdentificationLiveData = new SingleLiveEvent<>();
         mLoadingStateLiveData = new SingleLiveEvent<>();
+
+        mObservableMessage = new SingleLiveEvent<>();
+        mObservableResults = new SingleLiveEvent<>();
     }
 
     /**
@@ -98,12 +83,16 @@ public class IdentificationManager {
         return mLoadingStateLiveData;
     }
 
-    public LiveData<IdentificationStatus> observeSuccessIdentification() {
-        return mOnSuccessIdentificationLiveData;
+    public LiveData<List<Identifier.IdentificationResults>> observeResults() {
+        return mObservableResults;
     }
 
     public LiveData<IdentificationStatus> observeFailIdentification() {
         return mOnFailIdentificationLiveData;
+    }
+
+    public LiveData<String> observeMessage() {
+        return mObservableMessage;
     }
 
     /**
@@ -111,129 +100,72 @@ public class IdentificationManager {
      * @param track The track to identify.
      */
     public void startIdentification(Track track) {
-        mTrackId = track.getMediaStoreId() + "";
+        if(mIdentifying)
+            return;
+
+        Map<String, String> data = new ArrayMap<>();
+        data.put(Identifier.Field.FILENAME.name(), track.getPath());
+        data.put(Identifier.Field.TITLE.name(), track.getTitle());
+        data.put(Identifier.Field.ARTIST.name(), track.getArtist());
+        data.put(Identifier.Field.ALBUM.name(), track.getAlbum());
+
         // Check if API is available and tries to initialize it if does not.
         if(!mApiService.isApiInitialized()) {
             Intent intent = new Intent(mContext, ApiInitializerService.class);
             mContext.startService(intent);
             String msg = mContext.getString(R.string.initializing_recognition_api);
-            mOnFailIdentificationLiveData.setValue(new IdentificationStatus(Identifier.IdentificationState.IDENTIFICATION_ERROR, msg));
+            mObservableMessage.setValue(msg);
         }
         // Sends a message to indicate API is initializing.
         else if(mApiService.isApiInitializing()) {
             String msg = mContext.getString(R.string.initializing_recognition_api);
-            mOnFailIdentificationLiveData.setValue(new IdentificationStatus(Identifier.IdentificationState.IDENTIFICATION_ERROR, msg));
+            mObservableMessage.setValue(msg);
         }
         else {
-            if(mIdentifying)
-                return;
-            mIdentifier.registerCallback(new IdentificationListener<List<Identifier.IdentificationResults>, Track>() {
+            mIdentifier.registerCallback(new IdentificationListener<List<Identifier.IdentificationResults>>() {
                 @Override
-                public void onIdentificationStart(Track file) {
+                public void onIdentificationStart() {
                     mLoadingStateLiveData.setValue(true);
+                    mObservableMessage.setValue(mContext.getString(R.string.identifying));
                     mIdentifying = true;
                 }
 
                 @Override
-                public void onIdentificationFinished(List<Identifier.IdentificationResults> result, Track file) {
+                public void onIdentificationFinished(List<Identifier.IdentificationResults> result) {
+                    mResultsCache.add(track.getMediaStoreId()+"", result);
+                    mObservableResults.setValue(result);
                     mLoadingStateLiveData.setValue(false);
-                    processResults(result);
                 }
 
                 @Override
-                public void onIdentificationError(Track file, String error) {
+                public void onIdentificationError(Throwable e) {
                     mLoadingStateLiveData.setValue(false);
-                    mOnFailIdentificationLiveData.setValue(new IdentificationStatus(Identifier.IdentificationState.IDENTIFICATION_ERROR, error));
+                    mObservableMessage.setValue(e.getMessage());
                     mIdentifying = false;
                 }
 
                 @Override
-                public void onIdentificationCancelled(Track file) {
+                public void onIdentificationCancelled() {
                     mLoadingStateLiveData.setValue(false);
                     String msg = mContext.getString(R.string.identification_cancelled);
-                    mOnFailIdentificationLiveData.setValue(new IdentificationStatus(Identifier.IdentificationState.IDENTIFICATION_CANCELLED, msg));
+                    mObservableMessage.setValue(msg);
                     mIdentifying = false;
                 }
 
                 @Override
-                public void onIdentificationNotFound(Track file) {
+                public void onIdentificationNotFound() {
                     mLoadingStateLiveData.setValue(false);
                     String msg = mContext.getString(R.string.no_found_tags);
-                    mOnFailIdentificationLiveData.setValue(new IdentificationStatus(Identifier.IdentificationState.IDENTIFICATION_NOT_FOUND, msg));
+                    mObservableMessage.setValue(msg);
                     mIdentifying = false;
                 }
             });
-            mIdentifier.identify(track);
+            mIdentifier.identify(data);
         }
-    }
-
-    private void processResults(List<? extends Identifier.IdentificationResults> result) {
-        mResultCreator = new ResultCreator(new AsyncOperation<Void, Void, Void, Void>() {
-            @Override
-            public void onAsyncOperationStarted(Void params) {
-                mLoadingStateLiveData.setValue(true);
-            }
-
-            @Override
-            public void onAsyncOperationFinished(Void result) {
-                String msg = mContext.getString(R.string.complete_identification);
-                mOnSuccessIdentificationLiveData.
-                        setValue(new IdentificationStatus(Identifier.IdentificationState.IDENTIFICATION_FINISHED, msg));
-                mLoadingStateLiveData.setValue(false);
-                mIdentifying = false;
-            }
-
-            @Override
-            public void onAsyncOperationCancelled(Void cancellation) {
-                mLoadingStateLiveData.setValue(false);
-                String msg = mContext.getString(R.string.identification_cancelled);
-                mOnFailIdentificationLiveData.setValue(new IdentificationStatus(Identifier.IdentificationState.IDENTIFICATION_CANCELLED, msg));
-                mTrackCache.deleteAll();
-                mCoverCache.deleteAll();
-                mIdentifying = false;
-            }
-        },mContext, mTrackId, mCoverCache, mTrackCache);
-
-        mResultCreator.executeOnExecutor(AutoMusicTagFixer.getExecutorService(), result);
     }
 
     public void cancelIdentification() {
         if(mIdentifier != null && mIdentifying)
             mIdentifier.cancel();
-        if(mResultCreator != null && (mResultCreator.getStatus() == AsyncTask.Status.PENDING ||
-                mResultCreator.getStatus() == AsyncTask.Status.RUNNING)) {
-            mResultCreator.cancel(true);
-            mResultCreator = null;
-        }
-    }
-
-    public TrackIdentificationResult getTrackResult(String trackId, String resultId) {
-        List<TrackIdentificationResult> resultList = getTrackListResult(trackId);
-        return (TrackIdentificationResult) findResult(resultList, resultId);
-    }
-
-    public CoverIdentificationResult getCoverResult(String trackId, String coverId) {
-        List<CoverIdentificationResult> resultList = getCoverListResult(trackId);
-        return (CoverIdentificationResult) findResult(resultList, coverId);
-    }
-
-    public List<TrackIdentificationResult> getTrackListResult(String trackId) {
-        return mTrackCache.load(trackId);
-    }
-
-    public List<CoverIdentificationResult> getCoverListResult(String trackId) {
-        return mCoverCache.load(trackId);
-    }
-
-    public void clearResults() {
-        mTrackCache.deleteAll();
-        mCoverCache.deleteAll();
-        mOnSuccessIdentificationLiveData.call();
-        mOnFailIdentificationLiveData.call();
-        //mLoadingStateLiveData.call();
-    }
-
-    private Identifier.IdentificationResults findResult(List<? extends Identifier.IdentificationResults> resultList, String idToSearch) {
-        return AndroidUtils.findId(resultList, idToSearch);
     }
 }

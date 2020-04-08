@@ -5,11 +5,8 @@ import android.os.Looper;
 
 import com.gracenote.gnsdk.GnAlbum;
 import com.gracenote.gnsdk.GnAlbumIterator;
-import com.gracenote.gnsdk.GnContent;
-import com.gracenote.gnsdk.GnDataLevel;
 import com.gracenote.gnsdk.GnError;
 import com.gracenote.gnsdk.GnException;
-import com.gracenote.gnsdk.GnImageSize;
 import com.gracenote.gnsdk.GnLookupData;
 import com.gracenote.gnsdk.GnMusicIdFile;
 import com.gracenote.gnsdk.GnMusicIdFileCallbackStatus;
@@ -25,24 +22,23 @@ import com.gracenote.gnsdk.IGnMusicIdFileEvents;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.identifier.Identifier.IdentificationResults;
-import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.utilities.resource_manager.ResourceManager;
 
 /**
  * A concrete identifier that implements {@link Identifier} interface.
  */
-public class AudioFingerprintIdentifier implements Identifier<Track, List<IdentificationResults>> {
+public class AudioFingerprintIdentifier implements Identifier<Map<String, String>, List<IdentificationResults>> {
 
     private GnApiService gnApiService;
     private ResourceManager resourceManager;
-    private IdentificationListener<List<IdentificationResults>, Track> identificationListener;
+    private IdentificationListener<List<IdentificationResults>> identificationListener;
     private GnMusicIdFile mGnMusicIdFile;
     private GnMusicIdFileInfo gnMusicIdFileInfo;
     private GnMusicIdFileInfoManager gnMusicIdFileInfoManager;
-    private Track track;
     private Handler mHandler;
 
     public AudioFingerprintIdentifier(GnApiService gnApiService, ResourceManager androidResourceManager){
@@ -55,26 +51,38 @@ public class AudioFingerprintIdentifier implements Identifier<Track, List<Identi
      * @inheritDoc
      */
     @Override
-    public void identify(Track input) {
-        track = input;
+    public void identify(Map<String, String> input) {
+        String file = input.get(Field.FILENAME.name());
+        String title = input.get(Field.TITLE.name());
+        String artist = input.get(Field.ARTIST.name());
+        String album = input.get(Field.ALBUM.name());
+
         if(identificationListener != null)
-            identificationListener.onIdentificationStart(track);
+            identificationListener.onIdentificationStart();
         try {
             mGnMusicIdFile = new GnMusicIdFile(gnApiService.getGnUser(), new IGnMusicIdFileEvents() {
                 @Override
-                public void musicIdFileStatusEvent(GnMusicIdFileInfo gnMusicIdFileInfo, GnMusicIdFileCallbackStatus gnMusicIdFileCallbackStatus, long l, long l1, IGnCancellable iGnCancellable) { }
+                public void musicIdFileStatusEvent(GnMusicIdFileInfo gnMusicIdFileInfo,
+                                                   GnMusicIdFileCallbackStatus gnMusicIdFileCallbackStatus,
+                                                   long l,
+                                                   long l1,
+                                                   IGnCancellable iGnCancellable) {}
                 @Override
-                public void gatherFingerprint(GnMusicIdFileInfo gnMusicIdFileInfo, long l, long l1, IGnCancellable iGnCancellable) {}
+                public void gatherFingerprint(GnMusicIdFileInfo gnMusicIdFileInfo,
+                                              long l, long l1, IGnCancellable iGnCancellable) {}
                 @Override
-                public void gatherMetadata(GnMusicIdFileInfo gnMusicIdFileInfo, long l, long l1, IGnCancellable iGnCancellable) { }
+                public void gatherMetadata(GnMusicIdFileInfo gnMusicIdFileInfo, long l, long l1,
+                                           IGnCancellable iGnCancellable) {}
                 @Override
-                public void musicIdFileAlbumResult(GnResponseAlbums gnResponseAlbums, long l, long l1, IGnCancellable iGnCancellable) {
+                public void musicIdFileAlbumResult(GnResponseAlbums gnResponseAlbums, long l,
+                                                   long l1, IGnCancellable iGnCancellable) {
+
                     List<IdentificationResults> results = processResponse(gnResponseAlbums);
                     mHandler.post(new Runnable() {
                         @Override
                         public void run() {
                             if(identificationListener != null)
-                                identificationListener.onIdentificationFinished(results, track);
+                                identificationListener.onIdentificationFinished(results);
 
                             identificationListener = null;
                         }
@@ -82,31 +90,32 @@ public class AudioFingerprintIdentifier implements Identifier<Track, List<Identi
                 }
 
                 @Override
-                public void musicIdFileMatchResult(GnResponseDataMatches gnResponseDataMatches, long l, long l1, IGnCancellable iGnCancellable) { }
+                public void musicIdFileMatchResult(GnResponseDataMatches gnResponseDataMatches,
+                                                   long l, long l1, IGnCancellable iGnCancellable) {}
 
                 @Override
-                public void musicIdFileResultNotFound(GnMusicIdFileInfo gnMusicIdFileInfo, long l, long l1, IGnCancellable iGnCancellable) {
-                    mHandler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            if(identificationListener != null)
-                                identificationListener.onIdentificationNotFound(track);
-                            identificationListener = null;
-                        }
+                public void musicIdFileResultNotFound(GnMusicIdFileInfo gnMusicIdFileInfo, long l,
+                                                      long l1, IGnCancellable iGnCancellable) {
+
+                    mHandler.post(() -> {
+                        if(identificationListener != null)
+                            identificationListener.onIdentificationNotFound();
+                        identificationListener = null;
                     });
                 }
 
                 @Override
                 public void musicIdFileComplete(GnError gnError) {
-                    mHandler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            String error = gnError != null && gnError.errorDescription() != null && !gnError.errorDescription().isEmpty() ?
-                                    gnError.errorDescription() : resourceManager.getString(R.string.identification_error);
-                            if(identificationListener != null)
-                                identificationListener.onIdentificationError(track, error);
-                            identificationListener = null;
-                        }
+                    mHandler.post(() -> {
+                        String error = gnError != null &&
+                                gnError.errorDescription() != null &&
+                                !gnError.errorDescription().isEmpty() ?
+                                gnError.errorDescription() :
+                                resourceManager.getString(R.string.identification_error);
+
+                        if(identificationListener != null)
+                            identificationListener.onIdentificationError(new IdentificationException(error));
+                        identificationListener = null;
                     });
                 }
 
@@ -121,16 +130,19 @@ public class AudioFingerprintIdentifier implements Identifier<Track, List<Identi
             gnMusicIdFileInfoManager = mGnMusicIdFile.fileInfos();
             //add all info available for more accurate results.
             //Check if file already was previously added.
-            gnMusicIdFileInfo = gnMusicIdFileInfoManager.add(track.getPath());
-            gnMusicIdFileInfo.fileName(track.getPath());
-            gnMusicIdFileInfo.trackTitle(track.getTitle());
-            gnMusicIdFileInfo.trackArtist(track.getArtist());
-            gnMusicIdFileInfo.albumTitle(track.getAlbum());
+            gnMusicIdFileInfo = gnMusicIdFileInfoManager.add(file);
+            gnMusicIdFileInfo.fileName(file);
+            if(title != null && !title.equals(""))
+                gnMusicIdFileInfo.trackTitle(title);
+            if(artist != null && !artist.equals(""))
+                gnMusicIdFileInfo.trackArtist(artist);
+            if(album != null && !album.equals(""))
+                gnMusicIdFileInfo.albumTitle(album);
             mGnMusicIdFile.doTrackIdAsync(GnMusicIdFileProcessType.kQueryReturnAll, GnMusicIdFileResponseType.kResponseAlbums);
         } catch (GnException e) {
             e.printStackTrace();
             if(identificationListener != null)
-                identificationListener.onIdentificationError(track, e.toString());
+                identificationListener.onIdentificationError(e);
 
             identificationListener = null;
         }
@@ -146,7 +158,7 @@ public class AudioFingerprintIdentifier implements Identifier<Track, List<Identi
             mGnMusicIdFile.cancel();
 
         if(identificationListener != null)
-            identificationListener.onIdentificationCancelled(track);
+            identificationListener.onIdentificationCancelled();
 
         mGnMusicIdFile = null;
         identificationListener = null;
@@ -156,7 +168,7 @@ public class AudioFingerprintIdentifier implements Identifier<Track, List<Identi
      * @inheritDoc
      */
     @Override
-    public void registerCallback(IdentificationListener<List<IdentificationResults>, Track> identificationListener) {
+    public void registerCallback(IdentificationListener<List<IdentificationResults>> identificationListener) {
         this.identificationListener = identificationListener;
     }
 
@@ -167,124 +179,19 @@ public class AudioFingerprintIdentifier implements Identifier<Track, List<Identi
      */
     private List<IdentificationResults> processResponse(GnResponseAlbums gnResponseAlbums) {
         List<IdentificationResults> results = new ArrayList<>();
-
         GnAlbumIterator albumIterator = gnResponseAlbums.albums().getIterator();
 
         while(albumIterator.hasNext()) {
             GnAlbum gnAlbum;
             try {
                 gnAlbum = albumIterator.next();
-                Result result = processAlbum(gnAlbum);
+                Result result = GnUtils.processAlbum(gnAlbum);
                 results.add(result);
             } catch (GnException e) {
                 e.printStackTrace();
             }
         }
-
         return results;
-
     }
 
-    /**
-     * Process every album found in response.
-     * @param gnAlbum The album to response.
-     * @return A result object containing the info for the Input identified.
-     */
-    private Result processAlbum(GnAlbum gnAlbum) {
-        final Result identificationResults = new Result();
-        String title = "";
-        String artist = "";
-        String album = "";
-        String cover = "";
-        String number = "";
-        String year = "";
-        String genre = "";
-
-        identificationResults.setId(gnAlbum.trackMatched().gnId());
-        //retrieve title results identificationFound
-        title = gnAlbum.trackMatched().title().display();
-        identificationResults.setTitle(title);
-
-        //get artist name of song if exist
-        //otherwise get artist album
-        if(!gnAlbum.trackMatched().artist().name().display().isEmpty()) {
-            artist = gnAlbum.trackMatched().artist().name().display();
-        }
-        else {
-            artist = gnAlbum.artist().name().display();
-        }
-        identificationResults.setArtist(artist);
-
-        album = gnAlbum.title().display();
-        identificationResults.setAlbum(album);
-
-        GnContent gnContent = gnAlbum.coverArt();
-        GnImageSize[] values = GnImageSize.values();
-        for (int sizes = values.length - 1; sizes >= 0; --sizes) {
-            String url = gnContent.asset(values[sizes]).url();
-            if (!gnContent.asset(values[sizes]).url().equals("")) {
-                identificationResults.addCover(GnImageSize.valueOf(values[sizes]+""),url);
-            }
-        }
-
-        number = gnAlbum.trackMatchNumber() + "";
-        identificationResults.setTrackNumber(number);
-
-        if(!gnAlbum.trackMatched().year().isEmpty()){
-            year = gnAlbum.trackMatched().year();
-        }
-        else {
-            year = gnAlbum.year();
-        }
-        identificationResults.setTrackYear(year);
-
-
-        //Get the first level identificationFound of genre, first from track matched if exist, if not, then from album identificationFound.
-
-        //The Gracenote Genre System contains more than 2200 genres from around the world.
-        //To make this list easier to manage and give more display options for client applications,
-        //the Gracenote Genre System groups these genres into a relationship hierarchy.
-        //Most hierarchies consists of three levels: level-1. level-2, and level-3. For example:
-        //Level-1
-                /*Rock
-                    //Level-2
-                    Heavy Metal
-                        //Level-3
-                        Grindcore
-                        Black Metal
-                        Death Metal
-                    //Level-2
-                    50's Rock
-                        //Level-3
-                        Doo Wop
-                        Rockabilly
-                        Early Rock & Roll
-                 */
-        if(!gnAlbum.trackMatched().genre(GnDataLevel.kDataLevel_3).isEmpty()){
-            genre = gnAlbum.trackMatched().genre(GnDataLevel.kDataLevel_3);
-            identificationResults.setGenre(genre);
-        }
-        else if(!gnAlbum.trackMatched().genre(GnDataLevel.kDataLevel_2).isEmpty()){
-            genre = gnAlbum.trackMatched().genre(GnDataLevel.kDataLevel_2);
-            identificationResults.setGenre(genre);
-        }
-        else if(!gnAlbum.trackMatched().genre(GnDataLevel.kDataLevel_1).isEmpty()){
-            genre = gnAlbum.trackMatched().genre(GnDataLevel.kDataLevel_1);
-            identificationResults.setGenre(genre);
-        }
-        else if(!gnAlbum.genre(GnDataLevel.kDataLevel_3).isEmpty()){
-            genre = gnAlbum.genre(GnDataLevel.kDataLevel_3);
-            identificationResults.setGenre(genre);
-        }
-        else if(!gnAlbum.genre(GnDataLevel.kDataLevel_2).isEmpty()){
-            genre = gnAlbum.genre(GnDataLevel.kDataLevel_2);
-            identificationResults.setGenre(genre);
-        }
-        else if(!gnAlbum.genre(GnDataLevel.kDataLevel_1).isEmpty()){
-            genre = gnAlbum.genre(GnDataLevel.kDataLevel_1);
-            identificationResults.setGenre(genre);
-        }
-
-        return identificationResults;
-    }
 }

@@ -22,31 +22,29 @@ public interface Identifier<I, R> {
      * Set a callback to listen identification events.
      * @param identificationListener The listener to inform events.
      */
-    void registerCallback(IdentificationListener<R, I> identificationListener);
+    void registerCallback(IdentificationListener<R> identificationListener);
 
     /**
      * Interface to define some events to inform when a identification is in progress.
      * @param <R> The type of result.
      * @param <I> The type of entity being identifying.
      */
-    interface IdentificationListener<R, I> {
-        void onIdentificationStart(I file);
-        void onIdentificationFinished(R result, I file);
-        void onIdentificationError(I file, String error);
-        void onIdentificationCancelled(I file);
-        void onIdentificationNotFound(I file);
+    interface IdentificationListener<R> {
+        void onIdentificationStart();
+        void onIdentificationFinished(R result);
+        default void onIdentificationError(Throwable error) {};
+        void onIdentificationCancelled();
+        void onIdentificationNotFound();
     }
 
     /**
      * Interface that implement the classes to hold the results.
      */
     abstract class IdentificationResults {
-        private String id;
-
+        protected String id;
         public String getId() {
             return id;
         }
-
         public void setId(String id) {
             this.id = id;
         }
@@ -86,6 +84,27 @@ public interface Identifier<I, R> {
 
         public void setMessage(String message) {
             this.message = message;
+        }
+    }
+
+
+    /**
+     * Represent the fields the identifier can return.
+     */
+    enum Field {
+        FILENAME,
+        TITLE,
+        ARTIST,
+        ALBUM,
+        GENRE,
+        TRACK_NUMBER,
+        TRACK_YEAR,
+        COVER_ART
+    }
+
+    static class IdentificationException extends Exception {
+        public IdentificationException(String message) {
+            super(message);
         }
     }
 }
