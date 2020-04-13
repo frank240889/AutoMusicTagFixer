@@ -1,6 +1,7 @@
 package mx.dev.franco.automusictagfixer.ui.trackdetail;
 
 import android.view.View;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import mx.dev.franco.automusictagfixer.R;
@@ -14,6 +15,7 @@ public class ResultItemHolder extends AudioHolder {
     public TextView genre;
     public TextView trackNumber;
     public TextView trackYear;
+    public ProgressBar progressBar;
     public ResultItemHolder(View itemView) {
         super(itemView);
         cover = itemView.findViewById(R.id.trackid_cover);
@@ -24,5 +26,6 @@ public class ResultItemHolder extends AudioHolder {
         album = itemView.findViewById(R.id.trackid_album);
         trackNumber = itemView.findViewById(R.id.track_id_number);
         trackYear = itemView.findViewById(R.id.track_id_year);
+        progressBar = itemView.findViewById(R.id.preview_progress);
     }
 }

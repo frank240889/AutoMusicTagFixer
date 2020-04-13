@@ -63,6 +63,23 @@
                             app:layout_constraintStart_toStartOf="parent"
                             app:layout_constraintTop_toTopOf="parent" />
                         <FrameLayout
+                            android:id="@+id/fl_container_filename"
+                            android:layout_width="match_parent"
+                            android:layout_gravity="top"
+                            android:background="@drawable/bg_reverse_semitransparent"
+                            android:layout_height="48dp">
+                            <TextView
+                                android:id="@+id/filename"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center"
+                                android:gravity="center_vertical"
+                                android:singleLine="true"
+                                android:textColor="@color/white"
+                                android:text="@{viewModel.filename}"
+                                tools:text="Sin Tí.mp3" />
+                        </FrameLayout>
+                        <FrameLayout
                             android:id="@+id/fl_preview_container"
                             android:layout_width="match_parent"
                             android:layout_gravity="bottom"
@@ -104,6 +121,7 @@
             android:id="@+id/track_detail_container_fragments"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:background="@drawable/bg_rounded"
             app:layout_behavior="@string/appbar_scrolling_view_behavior"/>
 
         <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
@@ -131,10 +149,8 @@
             android:id="@+id/progress_view"
             layout="@layout/layout_progress"
             android:layout_gravity="center"
-            android:layout_marginStart="32dp"
-            android:layout_marginEnd="32dp"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            tools:visibility="gone" />
+            tools:visibility="visible" />
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 </layout>

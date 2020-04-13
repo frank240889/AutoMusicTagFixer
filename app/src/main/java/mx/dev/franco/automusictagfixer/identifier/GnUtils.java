@@ -1,13 +1,15 @@
 package mx.dev.franco.automusictagfixer.identifier;
 
+import android.content.Context;
+
 import com.gracenote.gnsdk.GnAlbum;
 import com.gracenote.gnsdk.GnAsset;
+import com.gracenote.gnsdk.GnAssetFetch;
 import com.gracenote.gnsdk.GnAssetIterable;
 import com.gracenote.gnsdk.GnAssetIterator;
 import com.gracenote.gnsdk.GnContent;
 import com.gracenote.gnsdk.GnDataLevel;
 import com.gracenote.gnsdk.GnException;
-import com.gracenote.gnsdk.GnImageSize;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -50,7 +52,6 @@ public class GnUtils {
         identificationResults.addField(Identifier.Field.ALBUM.name(), album);
 
         GnContent gnContent = gnAlbum.coverArt();
-        GnImageSize[] values = GnImageSize.values();
         try {
             int nIterables = (int) gnContent.assets().count();
             if (nIterables > 0) {
@@ -61,17 +62,9 @@ public class GnUtils {
                     GnAssetIterator gnAssetIterator = gnAssetIterable.at(i);
                     while (gnAssetIterator.hasNext()) {
                         GnAsset asset = gnAssetIterator.next();
-                        String url = asset.url();
-                        String size = asset.dimension();//GnImageSize.valueOf(asset.size().name()).toString();
-                        covers.add(new CoverArt(url, size));
-                    }
-                }
-
-
-                for (int sizes = values.length - 1; sizes >= 0; --sizes) {
-                    String url = gnContent.asset(values[sizes]).url();
-                    if (!gnContent.asset(values[sizes]).url().equals("")) {
-                        identificationResults.addCover(GnImageSize.valueOf(values[sizes] + ""), url);
+                        String url = asset.urlHttp();
+                        String size = asset.dimension();
+                        covers.add(new CoverArt(size, url));
                     }
                 }
                 identificationResults.addField(Identifier.Field.COVER_ART.name(), covers);
@@ -146,5 +139,13 @@ public class GnUtils {
         }
 
         return identificationResults;
+    }
+
+    public static byte[] fetchGnCover(String url, GnApiService gnApiService) throws GnException {
+        return new GnAssetFetch(gnApiService.getGnUser(), url).data();
+    }
+
+    public static byte[] fetchGnCover(String url, Context context) throws GnException {
+        return new GnAssetFetch(GnApiService.getInstance(context).getGnUser(), url).data();
     }
 }

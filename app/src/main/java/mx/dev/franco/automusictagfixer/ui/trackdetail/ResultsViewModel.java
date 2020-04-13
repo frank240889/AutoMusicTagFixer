@@ -7,40 +7,28 @@ import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.inject.Inject;
 
-import mx.dev.franco.automusictagfixer.identifier.CoverIdentificationResult;
 import mx.dev.franco.automusictagfixer.identifier.Identifier;
-import mx.dev.franco.automusictagfixer.identifier.TrackIdentificationResult;
-import mx.dev.franco.automusictagfixer.interfaces.Cache;
-import mx.dev.franco.automusictagfixer.persistence.cache.CoverResultsCache;
-import mx.dev.franco.automusictagfixer.persistence.cache.TrackResultsCache;
-import mx.dev.franco.automusictagfixer.ui.SingleLiveEvent;
+import mx.dev.franco.automusictagfixer.identifier.Result;
+import mx.dev.franco.automusictagfixer.persistence.cache.IdentificationResultsCache;
 
 public class ResultsViewModel extends AndroidViewModel {
     protected MutableLiveData<Boolean> mProgressObservable;
-    protected SingleLiveEvent<List<? extends Identifier.IdentificationResults>> mObservableTrackResults;
-    protected SingleLiveEvent<List<? extends Identifier.IdentificationResults>> mObservableCoverResults;
-    protected SingleLiveEvent<Void> mObservableZeroResults;
-    //The cache where are stored temporally the identification results.
-    private Cache<String, List<TrackIdentificationResult>> mResultsCache;
-    private Cache<String, List<CoverIdentificationResult>> mCoverResultsCache;
-    private List<TrackIdentificationResult> mTrackResults;
-    private List<CoverIdentificationResult> mCoverResults;
+    private IdentificationResultsCache mIdentificationResultsCache;
+    private MutableLiveData<List<? extends Identifier.IdentificationResults>> mTrackObservableResults = new MutableLiveData<>();
+    private MutableLiveData<List<? extends Identifier.IdentificationResults>> mCoverObservableResults = new MutableLiveData<>();
+    private List<Identifier.IdentificationResults> mCoverResults;
 
     @Inject
     public ResultsViewModel(@NonNull Application application,
-                            @NonNull TrackResultsCache cache,
-                            @NonNull CoverResultsCache coverResultsCache) {
+                            @NonNull IdentificationResultsCache resultsCache) {
         super(application);
-        mResultsCache = cache;
-        mCoverResultsCache = coverResultsCache;
+        mIdentificationResultsCache = resultsCache;
         mProgressObservable = new MutableLiveData<>();
-        mObservableTrackResults = new SingleLiveEvent<>();
-        mObservableCoverResults = new SingleLiveEvent<>();
-        mObservableZeroResults = new SingleLiveEvent<>();
     }
 
     public LiveData<Boolean> observeProgress() {
@@ -48,48 +36,45 @@ public class ResultsViewModel extends AndroidViewModel {
     }
 
     public LiveData<List<? extends Identifier.IdentificationResults>> observeTrackResults() {
-        return mObservableTrackResults;
-    }
-
-    public LiveData<Void> observeZeroResults() {
-        return mObservableZeroResults;
+        return mTrackObservableResults;
     }
 
     public LiveData<List<? extends Identifier.IdentificationResults>> observeCoverResults() {
-        return mObservableCoverResults;
+        return mCoverObservableResults;
     }
 
     public void fetchResults(String id){
         mProgressObservable.setValue(true);
-        mTrackResults = mResultsCache.load(id);
+        List<? extends Identifier.IdentificationResults> results = mIdentificationResultsCache.load(id);
+        mTrackObservableResults.setValue(results);
         mProgressObservable.setValue(false);
-        if(mTrackResults == null || mTrackResults.size() == 0) {
-            mObservableZeroResults.setValue(null);
-        }
-        else {
-            mObservableTrackResults.setValue(mTrackResults);
-        }
+
     }
 
     public void fetchCoverResults(String id){
         mProgressObservable.setValue(true);
-        mCoverResults = mCoverResultsCache.load(id);
+        List<? extends Identifier.IdentificationResults> results = mIdentificationResultsCache.load(id);
+        List<? extends Identifier.IdentificationResults> filteredResults = getOnlyCovers(results);
         mProgressObservable.setValue(false);
-        if(mCoverResults == null || mCoverResults.size() == 0) {
-            mObservableZeroResults.setValue(null);
+        mCoverObservableResults.setValue(filteredResults);
+    }
+
+    private List<? extends Identifier.IdentificationResults> getOnlyCovers(List<? extends Identifier.IdentificationResults> results) {
+        List<Identifier.IdentificationResults> filteredIdentificationResults = new ArrayList<>();
+        for (Identifier.IdentificationResults identificationResults : results) {
+            Result result = (Result) identificationResults;
+            if (result.getCoverArt() != null) {
+                filteredIdentificationResults.add(result);
+            }
         }
-        else {
-            mObservableCoverResults.setValue(mCoverResults);
-        }
+        return filteredIdentificationResults;
     }
 
     public Identifier.IdentificationResults getCoverResult(int position) {
-        if(mCoverResults.size() > 0)
-            return mCoverResults.get(position);
-        return null;
+        return mCoverObservableResults.getValue().get(position);
     }
 
     public Identifier.IdentificationResults getTrackResult(int position) {
-        return mTrackResults.get(position);
+        return mTrackObservableResults.getValue().get(position);
     }
 }

@@ -2,12 +2,17 @@ package mx.dev.franco.automusictagfixer.identifier;
 
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 
 import com.gracenote.gnsdk.GnAlbum;
 import com.gracenote.gnsdk.GnAlbumIterator;
+import com.gracenote.gnsdk.GnAudioFile;
+import com.gracenote.gnsdk.GnDataMatchIterable;
+import com.gracenote.gnsdk.GnDataMatchIterator;
 import com.gracenote.gnsdk.GnError;
 import com.gracenote.gnsdk.GnException;
 import com.gracenote.gnsdk.GnLookupData;
+import com.gracenote.gnsdk.GnLookupMode;
 import com.gracenote.gnsdk.GnMusicIdFile;
 import com.gracenote.gnsdk.GnMusicIdFileCallbackStatus;
 import com.gracenote.gnsdk.GnMusicIdFileInfo;
@@ -17,25 +22,28 @@ import com.gracenote.gnsdk.GnMusicIdFileResponseType;
 import com.gracenote.gnsdk.GnResponseAlbums;
 import com.gracenote.gnsdk.GnResponseDataMatches;
 import com.gracenote.gnsdk.GnStatus;
+import com.gracenote.gnsdk.GnThreadPriority;
 import com.gracenote.gnsdk.IGnCancellable;
 import com.gracenote.gnsdk.IGnMusicIdFileEvents;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import mx.dev.franco.automusictagfixer.R;
-import mx.dev.franco.automusictagfixer.identifier.Identifier.IdentificationResults;
+import mx.dev.franco.automusictagfixer.common.AutoMusicTagFixerException;
+import mx.dev.franco.automusictagfixer.common.ErrorCode;
 import mx.dev.franco.automusictagfixer.utilities.resource_manager.ResourceManager;
 
 /**
  * A concrete identifier that implements {@link Identifier} interface.
  */
-public class AudioFingerprintIdentifier implements Identifier<Map<String, String>, List<IdentificationResults>> {
+public class AudioFingerprintIdentifier implements Identifier<Map<String, String>, List<? extends Identifier.IdentificationResults>> {
 
     private GnApiService gnApiService;
     private ResourceManager resourceManager;
-    private IdentificationListener<List<IdentificationResults>> identificationListener;
+    private IdentificationListener<List<? extends Identifier.IdentificationResults>> identificationListener;
     private GnMusicIdFile mGnMusicIdFile;
     private GnMusicIdFileInfo gnMusicIdFileInfo;
     private GnMusicIdFileInfoManager gnMusicIdFileInfoManager;
@@ -69,7 +77,14 @@ public class AudioFingerprintIdentifier implements Identifier<Map<String, String
                                                    IGnCancellable iGnCancellable) {}
                 @Override
                 public void gatherFingerprint(GnMusicIdFileInfo gnMusicIdFileInfo,
-                                              long l, long l1, IGnCancellable iGnCancellable) {}
+                                              long l, long l1, IGnCancellable iGnCancellable) {
+                    try {
+                        gnMusicIdFileInfo.fingerprintFromSource( new GnAudioFile( new File(gnMusicIdFileInfo.fileName())) );
+                    } catch (GnException e) {
+                        Log.e(AudioFingerprintIdentifier.class.getName(),
+                                "error in fingerprinting file: " + e.errorAPI() + ", " + e.errorModule() + ", " + e.errorDescription());
+                    }
+                }
                 @Override
                 public void gatherMetadata(GnMusicIdFileInfo gnMusicIdFileInfo, long l, long l1,
                                            IGnCancellable iGnCancellable) {}
@@ -77,28 +92,61 @@ public class AudioFingerprintIdentifier implements Identifier<Map<String, String
                 public void musicIdFileAlbumResult(GnResponseAlbums gnResponseAlbums, long l,
                                                    long l1, IGnCancellable iGnCancellable) {
 
-                    List<IdentificationResults> results = processResponse(gnResponseAlbums);
-                    mHandler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            if(identificationListener != null)
-                                identificationListener.onIdentificationFinished(results);
+                    List<? extends Identifier.IdentificationResults> results = processAlbums(gnResponseAlbums);
+                    try {
+                        gnMusicIdFileInfoManager.remove(gnMusicIdFileInfo);
+                    } catch (GnException e) {
+                        e.printStackTrace();
+                    }
+                    gnMusicIdFileInfoManager = null;
+                    mGnMusicIdFile = null;
+                    gnMusicIdFileInfo = null;
+                    mHandler.post(() -> {
 
-                            identificationListener = null;
-                        }
+                        if (identificationListener != null)
+                            identificationListener.onIdentificationFinished(results);
+
+                        identificationListener = null;
                     });
                 }
 
                 @Override
                 public void musicIdFileMatchResult(GnResponseDataMatches gnResponseDataMatches,
-                                                   long l, long l1, IGnCancellable iGnCancellable) {}
+                                                   long l, long l1, IGnCancellable iGnCancellable) {
+
+                    List<? extends Identifier.IdentificationResults> results = processMatches(gnResponseDataMatches);
+                    try {
+                        gnMusicIdFileInfoManager.remove(gnMusicIdFileInfo);
+                    } catch (GnException e) {
+                        e.printStackTrace();
+                    }
+                    gnMusicIdFileInfoManager = null;
+                    mGnMusicIdFile = null;
+                    gnMusicIdFileInfo = null;
+
+                    mHandler.post(() -> {
+
+                        if (identificationListener != null)
+                            identificationListener.onIdentificationFinished(results);
+
+                        identificationListener = null;
+                    });
+                }
 
                 @Override
                 public void musicIdFileResultNotFound(GnMusicIdFileInfo gnMusicIdFileInfo, long l,
                                                       long l1, IGnCancellable iGnCancellable) {
+                    try {
+                        gnMusicIdFileInfoManager.remove(gnMusicIdFileInfo);
+                    } catch (GnException e) {
+                        e.printStackTrace();
+                    }
+                    gnMusicIdFileInfoManager = null;
+                    mGnMusicIdFile = null;
+                    gnMusicIdFileInfo = null;
 
                     mHandler.post(() -> {
-                        if(identificationListener != null)
+                        if (identificationListener != null)
                             identificationListener.onIdentificationNotFound();
                         identificationListener = null;
                     });
@@ -106,15 +154,20 @@ public class AudioFingerprintIdentifier implements Identifier<Map<String, String
 
                 @Override
                 public void musicIdFileComplete(GnError gnError) {
+                    gnMusicIdFileInfoManager = null;
+                    mGnMusicIdFile = null;
+                    gnMusicIdFileInfo = null;
                     mHandler.post(() -> {
+
                         String error = gnError != null &&
                                 gnError.errorDescription() != null &&
                                 !gnError.errorDescription().isEmpty() ?
                                 gnError.errorDescription() :
                                 resourceManager.getString(R.string.identification_error);
 
-                        if(identificationListener != null)
-                            identificationListener.onIdentificationError(new IdentificationException(error));
+                        if (identificationListener != null)
+                            identificationListener.
+                                    onIdentificationError(new AutoMusicTagFixerException(error, ErrorCode.RECOGNITION_ERROR));
                         identificationListener = null;
                     });
                 }
@@ -122,27 +175,31 @@ public class AudioFingerprintIdentifier implements Identifier<Map<String, String
                 @Override
                 public void statusEvent(GnStatus gnStatus, long l, long l1, long l2, IGnCancellable iGnCancellable) {}
             });
+
             mGnMusicIdFile.options().lookupData(GnLookupData.kLookupDataContent, true);
             mGnMusicIdFile.options().preferResultLanguage(gnApiService.getLanguage());
+            mGnMusicIdFile.options().lookupMode(GnLookupMode.kLookupModeOnline);
+            mGnMusicIdFile.options().threadPriority(GnThreadPriority.kThreadPriorityNormal);
+
             //queue will be processed one by one
             mGnMusicIdFile.options().batchSize(1);
             //get the fileInfoManager
             gnMusicIdFileInfoManager = mGnMusicIdFile.fileInfos();
             //add all info available for more accurate results.
             //Check if file already was previously added.
-            gnMusicIdFileInfo = gnMusicIdFileInfoManager.add(file);
+            gnMusicIdFileInfo = gnMusicIdFileInfoManager.add(file);;
             gnMusicIdFileInfo.fileName(file);
-            if(title != null && !title.equals(""))
+            /*if(title != null && !title.equals(""))
                 gnMusicIdFileInfo.trackTitle(title);
             if(artist != null && !artist.equals(""))
                 gnMusicIdFileInfo.trackArtist(artist);
             if(album != null && !album.equals(""))
-                gnMusicIdFileInfo.albumTitle(album);
-            mGnMusicIdFile.doTrackIdAsync(GnMusicIdFileProcessType.kQueryReturnAll, GnMusicIdFileResponseType.kResponseAlbums);
+                gnMusicIdFileInfo.albumTitle(album);*/
+            mGnMusicIdFile.doTrackIdAsync(GnMusicIdFileProcessType.kQueryReturnSingle, GnMusicIdFileResponseType.kResponseAlbums);
         } catch (GnException e) {
             e.printStackTrace();
             if(identificationListener != null)
-                identificationListener.onIdentificationError(e);
+                identificationListener.onIdentificationError(new AutoMusicTagFixerException(e.getMessage(),e));
 
             identificationListener = null;
         }
@@ -154,30 +211,40 @@ public class AudioFingerprintIdentifier implements Identifier<Map<String, String
      */
     @Override
     public void cancel() {
-        if(mGnMusicIdFile != null)
+        if (identificationListener != null)
+            identificationListener.onIdentificationCancelled();
+        identificationListener = null;
+
+        try {
+            if (gnMusicIdFileInfoManager != null)
+            gnMusicIdFileInfoManager.remove(gnMusicIdFileInfo);
+        } catch (GnException e) {
+            e.printStackTrace();
+        }
+        if (mGnMusicIdFile != null)
             mGnMusicIdFile.cancel();
 
-        if(identificationListener != null)
-            identificationListener.onIdentificationCancelled();
-
+        gnMusicIdFileInfoManager = null;
         mGnMusicIdFile = null;
-        identificationListener = null;
+        gnMusicIdFileInfo = null;
     }
 
     /**
      * @inheritDoc
      */
     @Override
-    public void registerCallback(IdentificationListener<List<IdentificationResults>> identificationListener) {
+    public void registerCallback(IdentificationListener<List<? extends Identifier.IdentificationResults>> identificationListener) {
         this.identificationListener = identificationListener;
     }
+
+
 
     /**
      * Process the response from the API.
      * @param gnResponseAlbums The response from the API.
      * @return A list of results.
      */
-    private List<IdentificationResults> processResponse(GnResponseAlbums gnResponseAlbums) {
+    private List<IdentificationResults> processAlbums(GnResponseAlbums gnResponseAlbums) {
         List<IdentificationResults> results = new ArrayList<>();
         GnAlbumIterator albumIterator = gnResponseAlbums.albums().getIterator();
 
@@ -191,6 +258,36 @@ public class AudioFingerprintIdentifier implements Identifier<Map<String, String
                 e.printStackTrace();
             }
         }
+        return results;
+    }
+
+    /**
+     * Process the response from the API.
+     * @param gnResponseDataMatches The response from the API.
+     * @return A list of results.
+     */
+    private List<IdentificationResults> processMatches(GnResponseDataMatches gnResponseDataMatches) {
+        List<IdentificationResults> results = new ArrayList<>();
+        GnDataMatchIterable iterable = gnResponseDataMatches.dataMatches();
+        try {
+            long count = iterable.count();
+            for (int i = 0 ; i < count ; i++) {
+                GnDataMatchIterator iterator = iterable.at(i);
+                while(iterator.hasNext()) {
+                    GnAlbum gnAlbum;
+
+                        gnAlbum = iterator.next().getAsAlbum();
+                        Result result = GnUtils.processAlbum(gnAlbum);
+                        results.add(result);
+
+                }
+
+            }
+        } catch (GnException e) {
+            e.printStackTrace();
+        }
+
+
         return results;
     }
 

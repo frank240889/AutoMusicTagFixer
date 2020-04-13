@@ -11,10 +11,13 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.FrameLayout;
+import android.widget.ImageButton;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.lifecycle.ViewModelProviders;
+import androidx.core.widget.NestedScrollView;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.LinearSnapHelper;
 import androidx.recyclerview.widget.RecyclerView;
@@ -26,23 +29,23 @@ import com.google.android.material.textfield.TextInputLayout;
 
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.fixer.AudioTagger;
-import mx.dev.franco.automusictagfixer.identifier.TrackIdentificationResult;
+import mx.dev.franco.automusictagfixer.fixer.CorrectionParams;
+import mx.dev.franco.automusictagfixer.identifier.Result;
 import mx.dev.franco.automusictagfixer.ui.ResultsFragmentBase;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
 
 public class SemiAutoCorrectionDialogFragment extends ResultsFragmentBase<ResultsViewModel> {
 
   public interface OnSemiAutoCorrectionListener {
-    void onMissingTagsButton(SemiAutoCorrectionParams semiAutoCorrectionParams);
-    void onOverwriteTagsButton(SemiAutoCorrectionParams semiAutoCorrectionParams);
+    void onMissingTagsButton(CorrectionParams semiAutoCorrectionParams);
+    void onOverwriteTagsButton(CorrectionParams semiAutoCorrectionParams);
   }
 
   private OnSemiAutoCorrectionListener mOnSemiAutoCorrectionListener;
-  private SemiAutoCorrectionParams mSemiAutoCorrectionParams;
+  private CorrectionParams mSemiAutoCorrectionParams;
   private int mTrackCenteredItem = 0;
-  private int mCoverCenteredItem = 0;
+  private int mNumberResults = 0;
   private IdentificationResultsAdapter mTrackAdapter;
-  private CoverIdentificationResultsAdapter mCoverAdapter;
 
   public SemiAutoCorrectionDialogFragment(){}
 
@@ -66,19 +69,16 @@ public class SemiAutoCorrectionDialogFragment extends ResultsFragmentBase<Result
       throw new RuntimeException(context.toString() + " must implement " +
           OnSemiAutoCorrectionListener.class.getCanonicalName());
 
-    mSemiAutoCorrectionParams = new SemiAutoCorrectionParams();
-    mSemiAutoCorrectionParams.setCorrectionMode(Constants.CACHED);
+    mSemiAutoCorrectionParams = new CorrectionParams();
+    mSemiAutoCorrectionParams.setTagsSource(Constants.CACHED);
   }
 
   @Override
   public void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     mTrackAdapter = new IdentificationResultsAdapter();
-    mCoverAdapter = new CoverIdentificationResultsAdapter();
     mViewModel.observeProgress().observe(this, this::onLoading);
     mViewModel.observeTrackResults().observe(this, mTrackAdapter);
-    mViewModel.observeCoverResults().observe(this, mCoverAdapter);
-    mViewModel.fetchCoverResults(mTrackId);
     mViewModel.fetchResults(mTrackId);
   }
 
@@ -86,41 +86,22 @@ public class SemiAutoCorrectionDialogFragment extends ResultsFragmentBase<Result
   public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
     Button missingTagsButton = view.findViewById(R.id.missing_tags_button);
     Button allTagsButton = view.findViewById(R.id.all_tags_button);
+    ImageButton leftChevron = view.findViewById(R.id.iv_left_chevron);
+    ImageButton rightChevron = view.findViewById(R.id.iv_right_chevron);
     CheckBox checkBoxRename = view.findViewById(R.id.checkbox_rename);
     TextInputLayout label = view.findViewById(R.id.label_rename_to);
     EditText newNameEditText = view.findViewById(R.id.new_name_edit_text);
     RecyclerView listResults = view.findViewById(R.id.results_list);
+    TextView title = view.findViewById(R.id.title_results);
+    NestedScrollView scrollablleContainer = view.findViewById(R.id.scrollable_container);
 
     LinearLayoutManager layoutManager = new LinearLayoutManager(listResults.getContext());
     layoutManager.setOrientation(LinearLayoutManager.HORIZONTAL);
     listResults.setLayoutManager(layoutManager);
-    listResults.setItemViewCacheSize(5);
     listResults.setAdapter(mTrackAdapter);
     SnapHelper snapHelper = new LinearSnapHelper();
     snapHelper.attachToRecyclerView(listResults);
 
-    RecyclerView coverListResults = view.findViewById(R.id.cover_results_list);
-
-    LinearLayoutManager layoutManager2 = new LinearLayoutManager(coverListResults.getContext());
-    layoutManager2.setOrientation(LinearLayoutManager.HORIZONTAL);
-    coverListResults.setLayoutManager(layoutManager2);
-    coverListResults.setItemViewCacheSize(5);
-    coverListResults.setAdapter(mCoverAdapter);
-    SnapHelper snapHelper2 = new LinearSnapHelper();
-    snapHelper2.attachToRecyclerView(coverListResults);
-
-    coverListResults.addOnScrollListener(new RecyclerView.OnScrollListener() {
-      @Override
-      public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
-        if(newState == RecyclerView.SCROLL_STATE_IDLE) {
-          View snapView = snapHelper2.findSnapView(layoutManager2);
-          if(snapView != null) {
-            mCoverCenteredItem = layoutManager2.getPosition(snapView);
-            coverListResults.smoothScrollToPosition(mCoverCenteredItem);
-          }
-        }
-      }
-    });
 
     listResults.addOnScrollListener(new RecyclerView.OnScrollListener() {
       @Override
@@ -155,11 +136,17 @@ public class SemiAutoCorrectionDialogFragment extends ResultsFragmentBase<Result
       }
       else {
         newNameEditText.requestFocus();
-        String suggestedName = ((TrackIdentificationResult)mViewModel.
+        String suggestedName = ((Result)mViewModel.
                 getTrackResult(mTrackCenteredItem)).getTitle();
         newNameEditText.setText(suggestedName != null && !suggestedName.equals("") ? suggestedName : "");
         mSemiAutoCorrectionParams.setRenameFile(true);
         label.setVisibility(View.VISIBLE);
+        label.postDelayed(new Runnable() {
+          @Override
+          public void run() {
+            scrollablleContainer.fullScroll(View.FOCUS_DOWN);
+          }
+        },100);
       }
     });
 
@@ -168,9 +155,8 @@ public class SemiAutoCorrectionDialogFragment extends ResultsFragmentBase<Result
         newNameEditText.setError(getString(R.string.new_name_empty));
       }
       else {
-        mSemiAutoCorrectionParams.setCodeRequest(AudioTagger.MODE_WRITE_ONLY_MISSING);
+        mSemiAutoCorrectionParams.setCorrectionMode(AudioTagger.MODE_WRITE_ONLY_MISSING);
         mSemiAutoCorrectionParams.setTrackId(mViewModel.getTrackResult(mTrackCenteredItem).getId());
-        mSemiAutoCorrectionParams.setCoverId(mViewModel.getCoverResult(mCoverCenteredItem).getId());
         mOnSemiAutoCorrectionListener.onMissingTagsButton(mSemiAutoCorrectionParams);
         dismiss();
       }
@@ -181,25 +167,34 @@ public class SemiAutoCorrectionDialogFragment extends ResultsFragmentBase<Result
         newNameEditText.setError(getString(R.string.new_name_empty));
       }
       else {
-        mSemiAutoCorrectionParams.setCodeRequest(AudioTagger.MODE_OVERWRITE_ALL_TAGS);
+        mSemiAutoCorrectionParams.setCorrectionMode(AudioTagger.MODE_OVERWRITE_ALL_TAGS);
         mSemiAutoCorrectionParams.setTrackId(mViewModel.getTrackResult(mTrackCenteredItem).getId());
-        String id = mViewModel.getCoverResult(mCoverCenteredItem) != null ?
-                mViewModel.getCoverResult(mCoverCenteredItem).getId() : "-1";
-        mSemiAutoCorrectionParams.setCoverId(id);
         mOnSemiAutoCorrectionListener.onOverwriteTagsButton(mSemiAutoCorrectionParams);
         dismiss();
       }
     });
-  }
 
-  @Override
-  protected void onLoading(boolean loading) {
-    getView().findViewById(R.id.loading_progress_bar).setVisibility(loading ? View.VISIBLE : View.GONE);
+    leftChevron.setOnClickListener(v -> {
+      if (mTrackCenteredItem < layoutManager.getItemCount()) {
+        listResults.smoothScrollToPosition(++mTrackCenteredItem);
+      }
+    });
+
+    rightChevron.setOnClickListener(v -> {
+      if (mTrackCenteredItem > 0) {
+        listResults.smoothScrollToPosition(--mTrackCenteredItem);
+      }
+    });
+
+    mViewModel.observeTrackResults().observe(getViewLifecycleOwner(), identificationResults -> {
+      mNumberResults = identificationResults.size();
+      title.setText(String.format(getString(R.string.results_found), mNumberResults));
+    });
   }
 
   @Override
   protected ResultsViewModel getViewModel() {
-    return ViewModelProviders.of(this, androidViewModelFactory).get(ResultsViewModel.class);
+    return new ViewModelProvider(this, androidViewModelFactory).get(ResultsViewModel.class);
   }
 
   @NonNull @Override

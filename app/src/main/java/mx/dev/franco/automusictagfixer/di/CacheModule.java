@@ -5,9 +5,7 @@ import javax.inject.Singleton;
 import dagger.Module;
 import dagger.Provides;
 import mx.dev.franco.automusictagfixer.persistence.cache.CoverDataCache;
-import mx.dev.franco.automusictagfixer.persistence.cache.CoverResultsCache;
 import mx.dev.franco.automusictagfixer.persistence.cache.IdentificationResultsCache;
-import mx.dev.franco.automusictagfixer.persistence.cache.TrackResultsCache;
 
 @Module
 public class CacheModule {
@@ -16,18 +14,6 @@ public class CacheModule {
     @Provides
     public IdentificationResultsCache providesCache() {
         return new IdentificationResultsCache();
-    }
-
-    @Singleton
-    @Provides
-    public TrackResultsCache providesTrackResultsCache() {
-        return new TrackResultsCache();
-    }
-
-    @Singleton
-    @Provides
-    public CoverResultsCache providesCoverResultsCache() {
-        return new CoverResultsCache();
     }
 
     @Singleton

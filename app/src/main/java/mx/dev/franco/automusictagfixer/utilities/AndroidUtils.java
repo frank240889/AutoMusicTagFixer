@@ -9,6 +9,8 @@ import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.ImageDecoder;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -30,38 +32,36 @@ import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 
 import com.crashlytics.android.Crashlytics;
+import com.google.android.material.snackbar.BaseTransientBottomBar;
 import com.google.android.material.snackbar.Snackbar;
-import com.gracenote.gnsdk.GnAssetFetch;
-import com.gracenote.gnsdk.GnException;
-import com.gracenote.gnsdk.GnImageSize;
 
 import org.jaudiotagger.tag.FieldKey;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 
 import mx.dev.franco.automusictagfixer.BuildConfig;
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.common.Action;
-import mx.dev.franco.automusictagfixer.fixer.AudioMetadataTagger;
 import mx.dev.franco.automusictagfixer.fixer.AudioTagger;
-import mx.dev.franco.automusictagfixer.identifier.CoverIdentificationResult;
-import mx.dev.franco.automusictagfixer.identifier.GnApiService;
+import mx.dev.franco.automusictagfixer.fixer.CorrectionParams;
 import mx.dev.franco.automusictagfixer.identifier.Identifier;
-import mx.dev.franco.automusictagfixer.identifier.Result;
-import mx.dev.franco.automusictagfixer.identifier.TrackIdentificationResult;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
-import mx.dev.franco.automusictagfixer.ui.trackdetail.InputCorrectionParams;
 import mx.dev.franco.automusictagfixer.utilities.Constants.CorrectionActions;
 import mx.dev.franco.automusictagfixer.utilities.resource_manager.ResourceManager;
 
 import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
+import static mx.dev.franco.automusictagfixer.utilities.Constants.DATE_PATTERN;
 
 public class AndroidUtils {
 
@@ -114,13 +114,40 @@ public class AndroidUtils {
         return snackbar;
     }
 
-    public static Snackbar createSnackbar(@NonNull View view, @NonNull String message) {
+    public static Snackbar createNoDismissibleSnackbar(@NonNull View view, @StringRes int message) {
+        Snackbar snackbar = getSnackbar(view, view.getContext());
+        snackbar.setBehavior(new BaseTransientBottomBar.Behavior() {
+            @Override
+            public boolean canSwipeDismissView(View child) {
+                return false;
+            }
+        });
+        snackbar.setDuration(Snackbar.LENGTH_INDEFINITE);
+        snackbar.setText(message);
+        return snackbar;
+    }
+
+    public static Snackbar createNoDismissibleSnackbar(@NonNull View view, @NonNull String message) {
+        Snackbar snackbar = getSnackbar(view, view.getContext());
+        snackbar.setBehavior(new BaseTransientBottomBar.Behavior() {
+            @Override
+            public boolean canSwipeDismissView(View child) {
+                return false;
+            }
+        });
+        snackbar.setDuration(Snackbar.LENGTH_INDEFINITE);
+        snackbar.setText(message);
+        return snackbar;
+    }
+
+
+    public static Snackbar createSnackbar(@NonNull View view, @StringRes int message) {
         Snackbar snackbar = getSnackbar(view, view.getContext());
         snackbar.setText(message);
         return snackbar;
     }
 
-    public static Snackbar createSnackbar(@NonNull View view, @StringRes int message) {
+    public static Snackbar createSnackbar(@NonNull View view, @NonNull String message) {
         Snackbar snackbar = getSnackbar(view, view.getContext());
         snackbar.setText(message);
         return snackbar;
@@ -416,77 +443,6 @@ public class AndroidUtils {
         }
     }
 
-
-    public static void createInputParams(Identifier.IdentificationResults result,
-                                                          InputCorrectionParams correctionParams) {
-        TrackIdentificationResult r = (TrackIdentificationResult) result;
-        Map<FieldKey, Object> tags = new ArrayMap<>();
-        if(!r.getTitle().isEmpty())
-            tags.put(FieldKey.TITLE, r.getTitle());
-
-        if(!r.getArtist().isEmpty())
-            tags.put(FieldKey.ARTIST, r.getArtist());
-
-        if(!r.getAlbum().isEmpty())
-            tags.put(FieldKey.ALBUM, r.getAlbum());
-
-        if(!r.getGenre().isEmpty())
-            tags.put(FieldKey.GENRE, r.getGenre());
-
-        if(!r.getTrackYear().isEmpty())
-            tags.put(FieldKey.YEAR, r.getTrackYear());
-
-        if(!r.getTrackNumber().isEmpty())
-            tags.put(FieldKey.TRACK, r.getTrackNumber());
-
-        correctionParams.setFields(tags);
-    }
-
-    public static void createCoverInputParams(CoverIdentificationResult r,
-                                         InputCorrectionParams correctionParams) {
-        Map<FieldKey, Object> tags = null;
-        if(correctionParams.getFields() == null)
-            tags = new ArrayMap<>();
-        else
-            tags = correctionParams.getFields();
-
-        tags.put(FieldKey.COVER_ART, r.getCover());
-        correctionParams.setFields(tags);
-    }
-
-    public static InputCorrectionParams createInputParams(@Nullable String title,
-                                                          @Nullable String artist,
-                                                          @Nullable String album,
-                                                          @Nullable String genre,
-                                                          @Nullable String trackNumber,
-                                                          @Nullable String trackYear,
-                                                          @Nullable byte[] cover
-                                                                    ) {
-
-        Map<FieldKey, Object> tags = new ArrayMap<>();
-        if(title != null && !title.isEmpty())
-            tags.put(FieldKey.TITLE, title);
-
-        if(artist != null && !artist.isEmpty())
-            tags.put(FieldKey.ARTIST, artist);
-
-        if(album != null && !album.isEmpty())
-            tags.put(FieldKey.ALBUM, album);
-
-        if(genre != null && !genre.isEmpty())
-            tags.put(FieldKey.GENRE, genre);
-
-        if(trackYear != null && !trackYear.isEmpty())
-            tags.put(FieldKey.YEAR, trackYear);
-
-        if(trackNumber != null && !trackNumber.isEmpty())
-            tags.put(FieldKey.TRACK, trackNumber);
-        if(cover != null)
-            tags.put(FieldKey.COVER_ART, cover);
-
-        return new InputCorrectionParams(tags);
-    }
-
     public static void createInputParams(@Nullable String title,
                                                           @Nullable String artist,
                                                           @Nullable String album,
@@ -494,7 +450,7 @@ public class AndroidUtils {
                                                           @Nullable String trackNumber,
                                                           @Nullable String trackYear,
                                                           @Nullable byte[] cover,
-    AudioMetadataTagger.InputParams inputParams) {
+    CorrectionParams inputParams) {
 
         Map<FieldKey, Object> tags = new ArrayMap<>();
         if(title != null && !title.isEmpty())
@@ -517,60 +473,9 @@ public class AndroidUtils {
         if(cover != null)
             tags.put(FieldKey.COVER_ART, cover);
 
-        inputParams.setFields(tags);
+        inputParams.setTags(tags);
     }
 
-    public static String getBetterQualityCover(Map<GnImageSize, String> covers) {
-        Set<Map.Entry<GnImageSize, String>> entries = covers.entrySet();
-        for(Map.Entry<GnImageSize, String> entry : entries) {
-            if(entry.getValue() != null) {
-                return entry.getValue();
-            }
-        }
-        return null;
-    }
-
-    public static String getLowestQualityCover(Map<GnImageSize, String> covers) {
-        Set<Map.Entry<GnImageSize, String>> entries = covers.entrySet();
-        for(Map.Entry<GnImageSize, String> entry : entries) {
-            if(entry.getValue() != null) {
-                return entry.getValue();
-            }
-        }
-        return null;
-    }
-
-    public static byte[] getAsset(String value, Context context) throws GnException {
-        return new GnAssetFetch(GnApiService.getInstance(context).getGnUser(), value).data();
-    }
-
-    public static final TrackIdentificationResult createTrackResult(Result result) {
-        return new TrackIdentificationResult(result.getTitle(),
-                result.getArtist(),
-                result.getAlbum(),
-                result.getTrackNumber(),
-                result.getTrackYear(),
-                result.getGenre());
-    }
-
-    public static final List<CoverIdentificationResult> createListCoverResult(Result result, Context context) {
-        List<CoverIdentificationResult> c = new ArrayList<>();
-        Map<GnImageSize, String> covers = result.getCovers();
-        Set<Map.Entry<GnImageSize, String>> entries = covers.entrySet();
-        for(Map.Entry<GnImageSize, String> entry : entries){
-            try {
-                byte[] cover = getAsset(entry.getValue(), context);
-                Bitmap bitmap = generateBitmap(cover);
-                String size = bitmap.getWidth() + " * " + bitmap.getHeight();
-                CoverIdentificationResult coverIdentificationResult = new CoverIdentificationResult(cover, size, entry.getKey());
-                coverIdentificationResult.setId(result.getId());
-                c.add(coverIdentificationResult);
-            } catch (IllegalArgumentException | GnException e) {
-                e.printStackTrace();
-            }
-        }
-        return c;
-    }
     public static final class AsyncBitmapDecoder {
         public interface AsyncBitmapDecoderCallback {
             void onBitmapDecoded(Bitmap bitmap);
@@ -619,4 +524,37 @@ public class AndroidUtils {
             thread.start();
         }
     }
+
+    public static boolean isConnected(Context context) {
+        ConnectivityManager connectivityManager = (ConnectivityManager)
+                context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
+
+        boolean connected = networkInfo != null && networkInfo.isConnected() && networkInfo.isAvailable();
+        boolean hasInternetConnection =  false;
+
+        try {
+            URL url = new URL("https://www.google.com");
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("GET");
+            connection.setRequestProperty("User-Agent", "Android");
+            connection.setRequestProperty("Connection", "close");
+            connection.setConnectTimeout(500);
+            connection.setReadTimeout(500);
+            connection.connect();
+            hasInternetConnection = connection.getResponseCode() == 200;
+            connection.disconnect();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return  connected && hasInternetConnection;
+    }
+
+    public static String generateNameWithDate(String filename) {
+        Date date = new Date();
+        DateFormat now = new SimpleDateFormat(DATE_PATTERN, Locale.getDefault());
+        return filename.trim().replaceAll(" ","_") + "_" +now.format(date);
+    }
+
 }

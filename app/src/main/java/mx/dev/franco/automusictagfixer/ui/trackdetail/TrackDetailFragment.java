@@ -23,7 +23,6 @@ import mx.dev.franco.automusictagfixer.databinding.FragmentTrackDetailBinding;
 import mx.dev.franco.automusictagfixer.ui.BaseViewModelFragment;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
 import mx.dev.franco.automusictagfixer.utilities.Constants.CorrectionActions;
-import mx.dev.franco.automusictagfixer.utilities.Message;
 
 import static android.view.View.VISIBLE;
 import static mx.dev.franco.automusictagfixer.utilities.Constants.GOOGLE_SEARCH;
@@ -52,21 +51,16 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mBundle = getArguments();
-
         if(mBundle != null)
-            mViewModel.setInitialAction(
+           mViewModel.setInitialAction(
                     mBundle.getInt(CorrectionActions.MODE, CorrectionActions.VIEW_INFO));
         else
             mViewModel.setInitialAction(CorrectionActions.VIEW_INFO);
 
-        mViewModel.observeReadingResult().observe(this, message -> {
-            if(message == null) {
-                onSuccessLoad(null);
-            }
-        });
-
+        mViewModel.observeReadingResult().observe(this, this::onSuccessLoad);
+        mViewModel.observeAudioData().observe(this, aVoid -> {});
         mViewModel.observeInvalidInputsValidation().observe(this, this::onInputDataInvalid);
-        mViewModel.observeWritingResult().observe(getActivity(), this::onWritingResult);
+        mViewModel.observeWritingFinishedEvent().observe(getActivity(), this::onWritingResult);
     }
 
     @Override
@@ -85,16 +79,11 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
         mFragmentTrackDetailBinding.setLifecycleOwner(this);
         mFragmentTrackDetailBinding.setViewmodel(mViewModel);
         mViewModel.loadInfoTrack(mBundle.getInt(Constants.MEDIA_STORE_ID,-1));
+
         return mFragmentTrackDetailBinding.getRoot();
     }
 
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        mViewModel.cancelIdentification();
-    }
-
-    private void onWritingResult(Message actionableMessage) {
+    private void onWritingResult(Void voids) {
         disableFields();
         removeErrorTags();
     }
@@ -102,9 +91,9 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
     /**
      * Callback when data from track is completely
      * loaded.
-     * @param message The message to show.
+     * @param voids No object.
      */
-    private void onSuccessLoad(Message message) {
+    private void onSuccessLoad(Void voids) {
         mFragmentTrackDetailBinding.
                 changeImageButton.setOnClickListener(v ->
                 ((TrackDetailActivity)getActivity()).editCover(INTENT_OPEN_GALLERY));
@@ -114,7 +103,7 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
         EditText editText = mFragmentTrackDetailBinding.getRoot().findViewById(validationWrapper.getField());
         Animation animation = AnimationUtils.loadAnimation(getActivity().getApplicationContext(), R.anim.blink);
         editText.requestFocus();
-        editText.setError(validationWrapper.getMessage().getMessage());
+        editText.setError(getString(validationWrapper.getMessage()));
         editText.setAnimation(animation);
         editText.startAnimation(animation);
         InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);

@@ -12,6 +12,7 @@
         android:id="@+id/content_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="@drawable/bg_rounded"
         app:layout_behavior="@string/appbar_scrolling_view_behavior"
         tools:showIn="@layout/fragment_track_detail">
 
@@ -21,20 +22,7 @@
             android:layout_height="wrap_content"
             android:animateLayoutChanges="true"
             android:orientation="vertical"
-            app:layout_behavior="@string/appbar_scrolling_view_behavior"
-            tools:showIn="@layout/content_details_track">
-
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/cardview_content"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:elevation="@dimen/cardview_default_elevation"
-                app:cardElevation="@dimen/cardview_default_radius"
-                app:cardPreventCornerOverlap="true"
-                app:cardUseCompatPadding="true"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent">
+            app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
                 <androidx.constraintlayout.widget.ConstraintLayout
                     android:id="@+id/editable_data_container"
@@ -220,7 +208,6 @@
                         tools:visibility="visible" />
 
                 </androidx.constraintlayout.widget.ConstraintLayout>
-            </com.google.android.material.card.MaterialCardView>
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 </layout>

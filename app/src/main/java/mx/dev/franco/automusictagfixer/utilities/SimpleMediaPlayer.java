@@ -23,7 +23,6 @@ public final class SimpleMediaPlayer extends MediaPlayer implements MediaPlayer.
 
     private List<OnMediaPlayerEventListener> mListeners = new ArrayList<>();
     private static SimpleMediaPlayer sMediaPlayer;
-    private OnMediaPlayerEventListener mListener;
     private String mCurrentPath;
 
     /**

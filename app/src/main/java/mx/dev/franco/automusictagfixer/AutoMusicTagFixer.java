@@ -3,7 +3,7 @@ package mx.dev.franco.automusictagfixer;
 import android.app.Activity;
 import android.app.Application;
 import android.app.Service;
-import android.content.Intent;
+import android.content.res.Configuration;
 
 import androidx.appcompat.app.AppCompatDelegate;
 
@@ -24,7 +24,6 @@ import io.fabric.sdk.android.Fabric;
 import mx.dev.franco.automusictagfixer.covermanager.CoverManager;
 import mx.dev.franco.automusictagfixer.di.DaggerApplicationComponent;
 import mx.dev.franco.automusictagfixer.fixer.AudioTagger;
-import mx.dev.franco.automusictagfixer.identifier.ApiInitializerService;
 import mx.dev.franco.automusictagfixer.utilities.shared_preferences.AbstractSharedPreferences;
 
 
@@ -51,8 +50,7 @@ public final class AutoMusicTagFixer extends Application implements HasActivityI
     public void onCreate() {
         super.onCreate();
         CoverManager.getInstance();
-        Intent intent = new Intent(getApplicationContext(), ApiInitializerService.class);
-        startService(intent);
+
         DaggerApplicationComponent.builder()
             .application(this)
             .build()
@@ -69,7 +67,21 @@ public final class AutoMusicTagFixer extends Application implements HasActivityI
         //LeakCanary.install(this);
         Stetho.initializeWithDefaults(this);
         AppCompatDelegate.setCompatVectorFromResourcesEnabled(true);
-        if(AppCompatDelegate.getDefaultNightMode() != AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM) {
+
+        int nightMode = AppCompatDelegate.getDefaultNightMode();
+        if(nightMode == AppCompatDelegate.MODE_NIGHT_AUTO_BATTERY ||
+                nightMode == AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM) {
+
+            int currentNightMode = getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
+
+            if (currentNightMode == Configuration.UI_MODE_NIGHT_NO) {
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+            }
+            else {
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+            }
+        }
+        else {
             if(mAbstractSharedPreferences.getBoolean(DARK_MODE)) {
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
                 mAbstractSharedPreferences.putBoolean(DARK_MODE, true);
@@ -79,9 +91,7 @@ public final class AutoMusicTagFixer extends Application implements HasActivityI
                 mAbstractSharedPreferences.putBoolean(DARK_MODE, false);
             }
         }
-        else {
-            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
-        }
+
         storageHelper.detectStorage();
     }
 

@@ -32,7 +32,8 @@ public interface Identifier<I, R> {
     interface IdentificationListener<R> {
         void onIdentificationStart();
         void onIdentificationFinished(R result);
-        default void onIdentificationError(Throwable error) {};
+        default void onIdentificationError(Throwable error) {}
+
         void onIdentificationCancelled();
         void onIdentificationNotFound();
     }
@@ -102,7 +103,7 @@ public interface Identifier<I, R> {
         COVER_ART
     }
 
-    static class IdentificationException extends Exception {
+    class IdentificationException extends Exception {
         public IdentificationException(String message) {
             super(message);
         }

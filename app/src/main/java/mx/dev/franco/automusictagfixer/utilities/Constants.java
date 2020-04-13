@@ -13,6 +13,7 @@ public class Constants {
     public static final String ALL_ITEMS_CHECKED = "all_items_checked";
     public static final String ACTION_OPEN_MAIN_ACTIVITY = "action_open_main_activity";
     public static final String URI_TREE = "uri_tree";
+    public static final String DATE_PATTERN = "yyyyMMdd_HHmmss";
     public static final String SELECTED_ITEM = "selected_item";
     public static final String LAST_SELECTED_ITEM = "last_selected_item";
     public static final int CACHED = 0;

@@ -27,7 +27,9 @@
             android:name=".ui.settings.ConfigurationActivity"
             android:label="@string/title_activity_configuration"
             android:theme="@style/SettingsTheme"
-            android:parentActivityName=".ui.main.MainActivity">
+            android:screenOrientation="portrait"
+            android:parentActivityName=".ui.main.MainActivity"
+            tools:ignore="LockedOrientationActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="mx.dev.franco.automusictagfixer.ui.main.MainActivity" />

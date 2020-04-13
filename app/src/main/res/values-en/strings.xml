@@ -114,7 +114,7 @@
     <string name="message_remove_cover_art_dialog">Are you sure you want to remove the current cover art?</string>
 
     <string name="automatic_mode">Automatic mode</string>
-    <string name="edit_cover">Update cover art</string>
+    <string name="edit_cover">Pick cover art</string>
     <string name="update_list">Rescan</string>
 
     <string name="album">Album</string>
@@ -243,7 +243,7 @@
     <string name="success">Correction finished.</string>
   <string name="could_not_get_permission">Could not get permission.</string>
     <string name="complete_task">Correction successfully finished.</string>
-    <string name="title_update_cover">Update cover art</string>
+    <string name="title_update_cover">Pick cover art</string>
   <string name="identifying">Identifying…</string>
     <string name="no_match_found">No match found.</string>
     <string name="match_found">Match found.</string>
@@ -255,7 +255,7 @@
     <string name="identification_results_language">Identification</string>
     <string name="pixels">Pixels</string>
     <string name="missing_cover">Missing cover</string>
-    <string name="results_found">Tags found</string>
+    <string name="results_found">%1$d Tags found</string>
     <string name="cover_found">Covers found</string>
     <string name="loading_data_track">Loading track data…</string>
     <string name="type_your_song_and_press_search">Type the song to search.</string>
@@ -289,4 +289,11 @@
     <string name="title_correct_track">Fix</string>
     <string name="select_cover_size">No todos los tamaños estan disponibles para cada canción.</string>
     <string name="track_details">Detalles</string>
+    <string name="cancel">Cancelar</string>
+    <string name="connect_to_internet">Conectate a internet para realizar esta acción.</string>
+    <string name="no_cover">Sin carátula</string>
+    <string name="error_fetching_image">Error al descarga carátula, inténtalo de nuevo.</string>
+    <string name="track_rename">Renombrar archivo</string>
+    <string name="change_file_name">Renombrar archivo</string>
+    <string name="new_name">Nuevo nombre</string>
 </resources>

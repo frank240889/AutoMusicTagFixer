@@ -151,7 +151,16 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
         //mStopTaskFab.hide();
 
         //attach adapter recyclerview
-        mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+        LinearLayoutManager layoutManager = new LinearLayoutManager(getActivity()) {
+            @Override
+            public boolean isAutoMeasureEnabled() {
+                return false;
+            }
+        };
+        layoutManager.setItemPrefetchEnabled(true);
+        layoutManager.setSmoothScrollbarEnabled(true);
+        layoutManager.setInitialPrefetchItemCount(10);
+        mRecyclerView.setLayoutManager(layoutManager);
         mRecyclerView.setHasFixedSize(true);
         mRecyclerView.setHapticFeedbackEnabled(true);
         mRecyclerView.setSoundEffectsEnabled(true);

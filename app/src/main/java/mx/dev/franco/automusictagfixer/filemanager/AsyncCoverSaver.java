@@ -2,38 +2,31 @@ package mx.dev.franco.automusictagfixer.filemanager;
 
 import android.os.AsyncTask;
 
+import com.gracenote.gnsdk.GnAssetFetch;
+import com.gracenote.gnsdk.GnException;
+import com.gracenote.gnsdk.GnUser;
+
 import java.io.IOException;
-import java.util.List;
 
-import mx.dev.franco.automusictagfixer.identifier.CoverIdentificationResult;
+import mx.dev.franco.automusictagfixer.identifier.GnApiService;
+import mx.dev.franco.automusictagfixer.identifier.Result;
 import mx.dev.franco.automusictagfixer.interfaces.AsyncOperation;
-import mx.dev.franco.automusictagfixer.interfaces.Cache;
-import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 
-public class AsyncCoverSaver extends AsyncTask<Void, Void, String> {
+public class AsyncCoverSaver extends AsyncTask<GnApiService, Void, String> {
     private AsyncOperation<Void, String, Void, String> mCallback;
+    private Object mResult;
     private String mFilename;
-    private Cache<String, List<CoverIdentificationResult>> mCoverCache;
-    private String mId;
-    private String mTrackId;
-    private byte[] mData;
 
 
     public AsyncCoverSaver(){}
 
-    public AsyncCoverSaver(AsyncOperation<Void, String, Void, String> callback,
+    public AsyncCoverSaver(Object result,
                            String filename,
-                           String id,
-                           String trackId,
-                           Cache<String, List<CoverIdentificationResult>> coverCache,
-                           byte[] data) {
+                           AsyncOperation<Void, String, Void, String> callback) {
         this();
-        mId = id;
-        mTrackId = trackId;
         mCallback = callback;
+        mResult = result;
         mFilename = filename;
-        mCoverCache = coverCache;
-        mData = data;
     }
 
     @Override
@@ -43,26 +36,33 @@ public class AsyncCoverSaver extends AsyncTask<Void, Void, String> {
     }
 
     @Override
-    protected String doInBackground(Void... voids) {
+    protected String doInBackground(GnApiService... apiServices) {
 
-        if(mData == null)
-            mData = findId(mId);
-
-        try {
-            return ImageFileSaver.saveImageFile(mData, mFilename);
-        } catch (IOException e) {
-            return null;
+        if (mResult instanceof Result) {
+            Result result = (Result) mResult;
+            try {
+                GnUser user = apiServices[0].getGnUser();
+                GnAssetFetch gnAsset = new GnAssetFetch(user, result.getCoverArt().getUrl());
+                byte[] data = gnAsset.data();
+                return ImageFileSaver.saveImageFile(data, mFilename);
+            } catch (IOException | GnException e) {
+                return null;
+            }
         }
-    }
-
-    private byte[] findId(String mId) {
-        return ((CoverIdentificationResult)AndroidUtils.findId(mCoverCache.load(mTrackId), mId)).getCover();
+        else {
+            try {
+                return ImageFileSaver.saveImageFile((byte[]) mResult, mFilename);
+            } catch (IOException e) {
+                e.printStackTrace();
+                return null;
+            }
+        }
     }
 
     @Override
     protected void onPostExecute(String s) {
         if(mCallback != null) {
-            if(ImageFileSaver.INPUT_OUTPUT_ERROR.equals(s) || ImageFileSaver.NULL_DATA.equals(s)
+            if(s == null || ImageFileSaver.INPUT_OUTPUT_ERROR.equals(s) || ImageFileSaver.NULL_DATA.equals(s)
                     || ImageFileSaver.NO_EXTERNAL_STORAGE_WRITABLE.equals(s)) {
                 mCallback.onAsyncOperationError(s);
             }

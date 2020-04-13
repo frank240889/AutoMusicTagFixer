@@ -28,7 +28,7 @@ public class InformativeFragmentDialog extends BaseRoundedBottomSheetDialogFragm
 
     public interface OnClickBasicFragmentDialogListener {
         void onPositiveButton();
-        default void onNegativeButton(){};
+        default void onNegativeButton(){}
     }
 
     private OnClickBasicFragmentDialogListener mOnClickBasicFragmentDialogListener;

@@ -23,7 +23,7 @@ import mx.dev.franco.automusictagfixer.ui.SingleLiveEvent;
 import mx.dev.franco.automusictagfixer.utilities.Resource;
 
 /**
- * This class manages the some operations to MediaStore.
+ * This class manages some operations to MediaStore.
  */
 public class MediaStoreManager {
 

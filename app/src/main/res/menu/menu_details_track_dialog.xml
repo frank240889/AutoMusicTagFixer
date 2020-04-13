@@ -7,7 +7,6 @@
         app:showAsAction="always"
         android:orderInCategory="0"
         android:title="@string/play_track"/>
-
     <item
         android:id="@+id/action_edit_manual"
         android:icon="@drawable/ic_edit_white_24px"
@@ -15,9 +14,9 @@
         android:orderInCategory="1"
         app:showAsAction="always"/>
     <item
-        android:id="@+id/action_web_search"
-        android:icon="@drawable/ic_public_white_24px"
-        android:title="@string/web_search"
+        android:id="@+id/action_rename"
+        android:icon="@drawable/ic_info_black_24dp"
+        android:title="@string/track_rename"
         android:orderInCategory="2"
         app:showAsAction="never"/>
     <item
@@ -25,5 +24,11 @@
         android:icon="@drawable/ic_info_black_24dp"
         android:title="@string/track_details"
         android:orderInCategory="2"
+        app:showAsAction="never"/>
+    <item
+        android:id="@+id/action_web_search"
+        android:icon="@drawable/ic_public_white_24px"
+        android:title="@string/web_search"
+        android:orderInCategory="3"
         app:showAsAction="never"/>
 </menu>

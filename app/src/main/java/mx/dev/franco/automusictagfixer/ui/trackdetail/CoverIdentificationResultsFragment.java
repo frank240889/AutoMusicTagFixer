@@ -3,14 +3,15 @@ package mx.dev.franco.automusictagfixer.ui.trackdetail;
 import android.app.Dialog;
 import android.content.Context;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.FrameLayout;
+import android.widget.ImageButton;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.lifecycle.ViewModelProviders;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.LinearSnapHelper;
 import androidx.recyclerview.widget.RecyclerView;
@@ -21,27 +22,29 @@ import com.google.android.material.bottomsheet.BottomSheetDialog;
 
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.fixer.AudioTagger;
+import mx.dev.franco.automusictagfixer.fixer.CorrectionParams;
 import mx.dev.franco.automusictagfixer.ui.ResultsFragmentBase;
-import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
 
 
-public class CoverIdentificationResultsFragmentBase extends ResultsFragmentBase<ResultsViewModel> {
+public class CoverIdentificationResultsFragment extends ResultsFragmentBase<ResultsViewModel> {
+    private int mNumberResults = 0;
+
     public interface OnCoverCorrectionListener {
-        void saveAsImageButton(CoverCorrectionParams coverCorrectionParams);
-        void saveAsCover(CoverCorrectionParams coverCorrectionParams);
+        void saveAsImageButton(String id);
+        void saveAsCover(CorrectionParams coverCorrectionParams);
     }
     private OnCoverCorrectionListener mOnCoverCorrectionListener;
     private int mCenteredItem = 0;
-    private CoverCorrectionParams mCoverCorrectionParams;
+    private CorrectionParams mCoverCorrectionParams;
     private CoverIdentificationResultsAdapter adapter;
-    public CoverIdentificationResultsFragmentBase(){}
+    public CoverIdentificationResultsFragment(){}
 
-    public static CoverIdentificationResultsFragmentBase newInstance(String id) {
+    public static CoverIdentificationResultsFragment newInstance(String id) {
         Bundle arguments = new Bundle();
         arguments.putInt(LAYOUT_ID, R.layout.layout_results_cover_id);
         arguments.putString(TRACK_ID, id);
-        CoverIdentificationResultsFragmentBase identificationResultsFragment = new CoverIdentificationResultsFragmentBase();
+        CoverIdentificationResultsFragment identificationResultsFragment = new CoverIdentificationResultsFragment();
         identificationResultsFragment.setArguments(arguments);
         return identificationResultsFragment;
     }
@@ -51,13 +54,7 @@ public class CoverIdentificationResultsFragmentBase extends ResultsFragmentBase<
         super.onCreate(savedInstanceState);
         mViewModel.observeProgress().observe(this, this::onLoading);
         mViewModel.observeCoverResults().observe(this, adapter);
-        mViewModel.observeZeroResults().observe(this, this::onZeroResults);
         mViewModel.fetchCoverResults(mTrackId);
-    }
-
-    private void onZeroResults(Void aVoid) {
-        AndroidUtils.showToast(R.string.no_cover_art_found, getActivity());
-        dismiss();
     }
 
     @Override
@@ -71,8 +68,9 @@ public class CoverIdentificationResultsFragmentBase extends ResultsFragmentBase<
             throw new RuntimeException(context.toString() + " must implement " +
                     OnCoverCorrectionListener.class.getCanonicalName());
 
-        mCoverCorrectionParams = new CoverCorrectionParams();
-        mCoverCorrectionParams.setCorrectionMode(Constants.CACHED);
+        mCoverCorrectionParams = new CorrectionParams();
+        mCoverCorrectionParams.setTagsSource(Constants.CACHED);
+        mCoverCorrectionParams.setCorrectionMode(AudioTagger.MODE_ADD_COVER);
         adapter = new CoverIdentificationResultsAdapter();
     }
 
@@ -87,8 +85,10 @@ public class CoverIdentificationResultsFragmentBase extends ResultsFragmentBase<
         LinearLayoutManager layoutManager = new LinearLayoutManager(listResults.getContext());
         layoutManager.setOrientation(LinearLayoutManager.HORIZONTAL);
         listResults.setLayoutManager(layoutManager);
-        listResults.setItemViewCacheSize(5);
         listResults.setAdapter(adapter);
+        ImageButton leftChevron = view.findViewById(R.id.iv_left_chevron);
+        ImageButton rightChevron = view.findViewById(R.id.iv_right_chevron);
+        TextView title = view.findViewById(R.id.title_results);
 
         listResults.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
@@ -97,25 +97,41 @@ public class CoverIdentificationResultsFragmentBase extends ResultsFragmentBase<
                     View snapView = snapHelper.findSnapView(layoutManager);
                     if(snapView != null) {
                         mCenteredItem = layoutManager.getPosition(snapView);
-                        Log.d("snaped position", mCenteredItem+"");
                         listResults.smoothScrollToPosition(mCenteredItem);
                     }
                 }
             }
         });
 
-
-
         saveAsCoverButton.setOnClickListener(v ->{
                 dismiss();
                 mCoverCorrectionParams.setCoverId(mViewModel.getCoverResult(mCenteredItem).getId());
+                mCoverCorrectionParams.setTagsSource(Constants.CACHED);
                 mCoverCorrectionParams.setCorrectionMode(AudioTagger.MODE_ADD_COVER);
                 mOnCoverCorrectionListener.saveAsCover(mCoverCorrectionParams);});
 
         saveAsImageFileButton.setOnClickListener(v -> {
                 dismiss();
                 mCoverCorrectionParams.setCoverId(mViewModel.getCoverResult(mCenteredItem).getId());
-                mOnCoverCorrectionListener.saveAsImageButton(mCoverCorrectionParams);});
+                mOnCoverCorrectionListener.saveAsImageButton(mViewModel.getCoverResult(mCenteredItem).getId());
+        });
+
+        leftChevron.setOnClickListener(v -> {
+            if (mCenteredItem < layoutManager.getItemCount()) {
+                listResults.smoothScrollToPosition(mCenteredItem + 1);
+            }
+        });
+
+        rightChevron.setOnClickListener(v -> {
+            if (mCenteredItem > 0) {
+                listResults.smoothScrollToPosition(mCenteredItem - 1);
+            }
+        });
+
+        mViewModel.observeCoverResults().observe(getViewLifecycleOwner(), identificationResults -> {
+            mNumberResults = identificationResults.size();
+            title.setText(String.format(getString(R.string.results_found), mNumberResults));
+        });
     }
 
 
@@ -127,7 +143,7 @@ public class CoverIdentificationResultsFragmentBase extends ResultsFragmentBase<
 
     @Override
     protected ResultsViewModel getViewModel() {
-        return ViewModelProviders.of(this, androidViewModelFactory).get(ResultsViewModel.class);
+        return new ViewModelProvider(this, androidViewModelFactory).get(ResultsViewModel.class);
     }
 
     @NonNull @Override

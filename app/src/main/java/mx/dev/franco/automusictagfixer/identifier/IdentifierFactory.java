@@ -22,7 +22,7 @@ public class IdentifierFactory {
     }
 
     @Nullable
-    public Identifier<Map<String, String>, List<Identifier.IdentificationResults>> create(int identifierType) {
+    public Identifier<Map<String, String>, List<? extends Identifier.IdentificationResults>> create(int identifierType) {
         if(identifierType == FINGERPRINT_IDENTIFIER)
             return new AudioFingerprintIdentifier(gnApiService, resourceManager);
         else

@@ -4,8 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/root_container_results"
     android:layout_width="match_parent"
-    android:paddingTop="16dp"
-    android:paddingBottom="16dp"
+    android:background="@drawable/bg_rounded"
+    android:paddingTop="@dimen/default_margin"
     android:layout_height="match_parent">
 
     <TextView
@@ -15,6 +15,7 @@
         android:layout_gravity="center"
         android:gravity="center"
         android:text="@string/results_found"
+        android:textColor="@color/secondaryTextColor"
         android:textSize="20sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -24,6 +25,9 @@
         android:id="@+id/scrollable_container"
         android:layout_width="match_parent"
         android:layout_height="0dp"
+        android:layout_marginTop="8dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/title_results">
 
         <LinearLayout
@@ -32,37 +36,72 @@
             android:layout_height="match_parent"
             android:layout_alignParentStart="false"
             android:layout_margin="8dp"
+            android:divider="@color/colorControlNormal"
             android:orientation="vertical"
-            android:splitMotionEvents="false"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
+            android:showDividers="middle"
+            android:splitMotionEvents="false">
 
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/cover_results_list"
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/container_list"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:orientation="horizontal"
-                tools:itemCount="5"
-                tools:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-                tools:listitem="@layout/cover_result_identification_item" />
+                android:paddingTop="@dimen/default_margin"
+                android:paddingBottom="@dimen/default_margin">
 
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/results_list"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                tools:itemCount="5"
-                tools:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-                tools:listitem="@layout/result_identification_item" />
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/results_list"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toStartOf="@+id/iv_right_chevron"
+                    app:layout_constraintStart_toEndOf="@+id/iv_left_chevron"
+                    app:layout_constraintTop_toTopOf="parent"
+                    tools:itemCount="5"
+                    tools:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                    tools:listitem="@layout/result_identification_item"
+                    tools:orientation="horizontal" />
+
+                <ImageButton
+                    android:id="@+id/iv_left_chevron"
+                    android:layout_width="wrap_content"
+                    android:layout_height="0dp"
+                    android:background="?attr/selectableItemBackground"
+                    android:src="@drawable/ic_chevron_left_24dp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <ImageButton
+                    android:id="@+id/iv_right_chevron"
+                    android:layout_width="wrap_content"
+                    android:layout_height="0dp"
+                    android:background="?attr/selectableItemBackground"
+                    android:src="@drawable/ic_chevron_right_24dp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:id="@+id/container_options"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp">
+                android:paddingTop="@dimen/default_margin"
+                android:layout_marginBottom="24dp"
+                android:paddingBottom="@dimen/default_margin">
+
+                <TextView
+                    android:id="@+id/text_view_title"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginEnd="8dp"
+                    android:text="@string/message_results"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintHorizontal_bias="0.0"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
 
                 <CheckBox
                     android:id="@+id/checkbox_rename"
@@ -76,7 +115,7 @@
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintHorizontal_bias="0.0"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
+                    app:layout_constraintTop_toBottomOf="@+id/text_view_title" />
 
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/label_rename_to"
@@ -123,29 +162,17 @@
                     app:layout_constraintTop_toBottomOf="@+id/label_rename_to"
                     tools:visibility="visible" />
 
-                <TextView
-                    android:id="@+id/text_view_title"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:layout_marginTop="8dp"
-                    android:layout_marginEnd="8dp"
-                    android:text="@string/message_results"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/message_rename_hint" />
-
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/all_tags_button"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="32dp"
+                    android:layout_marginTop="16dp"
                     android:layout_marginEnd="24dp"
                     android:layout_marginBottom="16dp"
                     android:text="@string/all_tags"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/text_view_title" />
+                    app:layout_constraintTop_toBottomOf="@+id/message_rename_hint" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/missing_tags_button"
@@ -162,18 +189,4 @@
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
-
-    <ProgressBar
-        android:id="@+id/loading_progress_bar"
-        style="?android:attr/progressBarStyle"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginBottom="8dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
 </androidx.constraintlayout.widget.ConstraintLayout>

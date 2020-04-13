@@ -17,6 +17,7 @@
     <color name="navigationDrawerBackgroundTint">#ffffff</color>
     <color name="navigationDrawerTopBackgroundColor">@color/primaryDarkColor</color>
     <color name="iconColor">#212121</color>
+    <color name="tintProgressColor">#fdd835</color>
     <color name="toolbarTextColor">#212121</color>
 
 
@@ -28,6 +29,9 @@
     <color name="snackbarBackgroundColor">#212121</color>
     <color name="snackbarTextBackgroundColor">#c6a700</color>
 
+    <color name="background_loading_color">#212121</color>
+
+    <!--Fixed colors-->
     <color name="dark_gray_semitransparent">#ff212121</color>
     <color name="white">#ffffff</color>
 

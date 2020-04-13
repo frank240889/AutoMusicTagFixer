@@ -29,6 +29,7 @@ public class IdentifierModule {
     }
 
     @Provides
+    @Singleton
     IdentificationManager provideIdentificationManager(IdentificationResultsCache trackResultsCache,
                                                        IdentifierFactory identifierFactory,
                                                        GnApiService gnApiService,

@@ -33,7 +33,7 @@ public interface TrackDAO {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     void insert(Track track);
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     void insert(List<Track> tracks);
 
     @Update

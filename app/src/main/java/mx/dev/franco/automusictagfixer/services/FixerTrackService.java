@@ -14,7 +14,6 @@ import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.IBinder;
-import android.preference.PreferenceManager;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
@@ -23,7 +22,6 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Executors;
 
 import javax.inject.Inject;
 
@@ -32,29 +30,19 @@ import dagger.android.DispatchingAndroidInjector;
 import mx.dev.franco.automusictagfixer.AutoMusicTagFixer;
 import mx.dev.franco.automusictagfixer.BuildConfig;
 import mx.dev.franco.automusictagfixer.R;
-import mx.dev.franco.automusictagfixer.fixer.AudioMetadataTagger;
 import mx.dev.franco.automusictagfixer.fixer.AudioTagger;
-import mx.dev.franco.automusictagfixer.fixer.AudioTagger.ResultRename;
-import mx.dev.franco.automusictagfixer.fixer.FileRenamer;
-import mx.dev.franco.automusictagfixer.fixer.MetadataWriter;
-import mx.dev.franco.automusictagfixer.fixer.MetadataWriterResult;
 import mx.dev.franco.automusictagfixer.fixer.TrackIdLoader;
 import mx.dev.franco.automusictagfixer.fixer.TrackInformationLoader;
 import mx.dev.franco.automusictagfixer.identifier.ApiInitializerService;
-import mx.dev.franco.automusictagfixer.identifier.AudioFingerprintIdentifier;
 import mx.dev.franco.automusictagfixer.identifier.GnApiService;
 import mx.dev.franco.automusictagfixer.identifier.IdentificationManager;
 import mx.dev.franco.automusictagfixer.identifier.Identifier;
-import mx.dev.franco.automusictagfixer.identifier.TrackIdentificationResult;
 import mx.dev.franco.automusictagfixer.interfaces.AsyncOperation;
 import mx.dev.franco.automusictagfixer.persistence.repository.TrackRepository;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.persistence.room.TrackRoomDatabase;
 import mx.dev.franco.automusictagfixer.ui.main.MainActivity;
-import mx.dev.franco.automusictagfixer.ui.trackdetail.InputCorrectionParams;
-import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
-import mx.dev.franco.automusictagfixer.utilities.TrackResultRename;
 import mx.dev.franco.automusictagfixer.utilities.TrackUtils;
 import mx.dev.franco.automusictagfixer.utilities.resource_manager.ResourceManager;
 import mx.dev.franco.automusictagfixer.utilities.shared_preferences.AbstractSharedPreferences;
@@ -90,9 +78,9 @@ public class FixerTrackService extends Service {
     //Notification on status bar
     private Notification mNotification;
     private Identifier<Track, List<Identifier.IdentificationResults>> mIdentifier;
-    private MetadataWriter mMetadataWriter;
+    //private MetadataWriter mMetadataWriter;
     private TrackInformationLoader mTrackInformationLoader;
-    private FileRenamer mFileRenamer;
+    //private FileRenamer mFileRenamer;
     private TrackIdLoader mTrackIdLoader;
     private List<Integer> mPendingTrackIds = new ArrayList<>();
     private ServiceState mServiceState = ServiceState.NOT_RUNNING;
@@ -244,7 +232,7 @@ public class FixerTrackService extends Service {
     }
 
     public void processTrack(List<Track> data) {
-        if(mFixerState == FixerState.CANCELLED){
+        /*if(mFixerState == FixerState.CANCELLED){
             broadcastMessage(getString(R.string.task_cancelled));
             broadcastCompleteCorrection();
             stopServiceAndRemoveFromForeground();
@@ -258,7 +246,7 @@ public class FixerTrackService extends Service {
                 mIdentifier = new AudioFingerprintIdentifier(mGnApiService, mResourceManager);
                 mIdentifier.registerCallback(new Identifier.IdentificationListener<List<Identifier.IdentificationResults>, Track>() {
                     @Override
-                    public void onIdentificationStart(Track file) {
+                    public void onIdentificationStart() {
                         mFixerState = FixerState.STARTING_IDENTIFYING;
                         onStartIdentification(file);
                     }
@@ -294,7 +282,7 @@ public class FixerTrackService extends Service {
 
                 mIdentifier.identify(data.get(0));
             }
-        }
+        }*/
     }
 
 
@@ -348,7 +336,7 @@ public class FixerTrackService extends Service {
      * @param track
      */
     public void identificationFound(List<Identifier.IdentificationResults> results, Track track) {
-        startNotification(TrackUtils.getPath(track.getPath()), getString(R.string.match_found),
+        /*startNotification(TrackUtils.getPath(track.getPath()), getString(R.string.match_found),
                 getString(R.string.starting_correction), track.getMediaStoreId());
 
         //Recover from preferences if user wants to overwrite or write only missing tags in automatic mode.
@@ -362,8 +350,8 @@ public class FixerTrackService extends Service {
 
         inputCorrectionParams.setTargetFile(track.getPath());
         inputCorrectionParams.setCodeRequest(task);
-        TrackIdentificationResult result = mIdentificationManager.getTrackResult(track.getMediaStoreId()+"", track.getMediaStoreId()+"");
-        AndroidUtils.createInputParams(result, inputCorrectionParams);
+        //TrackIdentificationResult result = mIdentificationManager.getTrackResult(track.getMediaStoreId()+"", track.getMediaStoreId()+"");
+        //AndroidUtils.createInputParams(result, inputCorrectionParams);
 
         mMetadataWriter = new MetadataWriter(new AsyncOperation<Track, MetadataWriterResult, Track, MetadataWriterResult>() {
             @Override
@@ -394,14 +382,14 @@ public class FixerTrackService extends Service {
             }
         }, new AudioMetadataTagger(mTagger), inputCorrectionParams, track);
 
-        mMetadataWriter.executeOnExecutor(Executors.newSingleThreadExecutor(), getApplicationContext());
+        mMetadataWriter.executeOnExecutor(Executors.newSingleThreadExecutor(), getApplicationContext());*/
     }
 
 
 
-    public void onCorrectionCompleted(MetadataWriterResult result) {
+    /*public void onCorrectionCompleted(MetadataWriterResult result) {
 
-        boolean shouldRename = PreferenceManager.
+        /*boolean shouldRename = PreferenceManager.
                 getDefaultSharedPreferences(getApplicationContext()).
                 getBoolean("key_rename_file_automatic_mode", true);
 
@@ -441,7 +429,7 @@ public class FixerTrackService extends Service {
             Track track = result.getTrack();
             finishTrack(track);
         }
-    }
+    }*/
 
     private void finishTrack(Track track) {
         startNotification(TrackUtils.getFilename(track.getPath()),
@@ -474,7 +462,7 @@ public class FixerTrackService extends Service {
         stopServiceAndRemoveFromForeground();
     }
 
-    private void onOperationError(MetadataWriterResult result) {
+    /*private void onOperationError(MetadataWriterResult result) {
         String error = AndroidUtils.AudioTaggerErrorDescription.
                 getErrorMessage(this, result.getResultCorrection().getCode());
 
@@ -491,9 +479,9 @@ public class FixerTrackService extends Service {
         popFirstFromList();
         mServiceState = ServiceState.NOT_RUNNING;
         shouldContinue();
-    }
+    }*/
 
-    private void onOperationError(ResultRename resultRename) {
+    /*private void onOperationError(ResultRename resultRename) {
         String error = AndroidUtils.AudioTaggerErrorDescription.
             getErrorMessage(this, resultRename.getCode());
 
@@ -510,7 +498,7 @@ public class FixerTrackService extends Service {
         popFirstFromList();
         mServiceState = ServiceState.NOT_RUNNING;
         shouldContinue();
-    }
+    }*/
 
 
     private void updateTrack(Track track) {
@@ -609,11 +597,7 @@ public class FixerTrackService extends Service {
     }
 
     private void stopCorrection(){
-        if(mMetadataWriter != null && (mMetadataWriter.getStatus() == AsyncTask.Status.PENDING
-                || mMetadataWriter.getStatus() == AsyncTask.Status.RUNNING)){
-            mMetadataWriter.cancel(true);
-        }
-        mMetadataWriter = null;
+
     }
 
     private void stopRetrievingTrack(){
@@ -626,11 +610,7 @@ public class FixerTrackService extends Service {
 
 
     private void stopRenaming() {
-        if(mFileRenamer != null && (mFileRenamer.getStatus() == AsyncTask.Status.PENDING
-                || mFileRenamer.getStatus() == AsyncTask.Status.RUNNING)) {
-            mFileRenamer.cancel(true);
-        }
-        mFileRenamer = null;
+
     }
 
     /**

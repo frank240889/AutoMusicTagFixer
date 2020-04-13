@@ -14,88 +14,41 @@
     app:shapeAppearanceOverlay="@style/RoundedShapeBottomSheetDialog">
 
     <TextView
-        android:id="@+id/title_manual_correction_dialog_fragment"
+        android:id="@+id/title_change_file_name_dialog_fragment"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginStart="8dp"
         android:layout_marginEnd="8dp"
         android:gravity="center"
-        android:text="@string/manual"
+        android:text="@string/change_file_name"
         android:textColor="@color/secondaryTextColor"
         android:textSize="20sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <TextView
-        android:id="@+id/content_manual_correction_dialog_fragment"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginEnd="8dp"
-        android:gravity="center_vertical"
-        android:text="@string/apply_next_tags"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/title_manual_correction_dialog_fragment" />
-
-    <CheckBox
-        android:id="@+id/manual_checkbox_rename"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="32dp"
-        android:text="@string/message_checkbox_rename"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/content_manual_correction_dialog_fragment" />
-
     <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/manual_label_rename_to"
+        android:id="@+id/manual_label_rename"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/manual_checkbox_rename"
         android:layout_marginStart="8dp"
-        android:layout_marginTop="24dp"
-        android:layout_marginEnd="8dp"
-        android:labelFor="@id/new_name_edit_text"
+        android:layout_marginTop="8dp"
+        android:labelFor="@id/filename_rename"
         android:paddingStart="8dp"
         android:paddingEnd="8dp"
-        android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/manual_checkbox_rename"
+        app:layout_constraintTop_toBottomOf="@+id/title_change_file_name_dialog_fragment"
         tools:visibility="visible">
 
         <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/manual_rename_to"
+            android:id="@+id/filename_rename"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="@string/hint_rename"
+            android:hint="@string/new_name"
             android:maxLines="1"
             android:singleLine="true" />
     </com.google.android.material.textfield.TextInputLayout>
-
-    <TextView
-        android:id="@+id/manual_message_rename_hint"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/manual_label_rename_to"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="4dp"
-        android:layout_marginEnd="8dp"
-        android:gravity="center_horizontal"
-        android:maxLines="1"
-        android:paddingStart="8dp"
-        android:paddingEnd="8dp"
-        android:singleLine="true"
-        android:text="@string/message_rename"
-        android:textSize="12sp"
-        android:visibility="gone"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/manual_label_rename_to"
-        tools:visibility="visible" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/cancel_changes"
@@ -107,7 +60,7 @@
         android:text="@string/cancel_button"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/manual_message_rename_hint" />
+        app:layout_constraintTop_toBottomOf="@+id/manual_label_rename" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/accept_changes"
@@ -119,5 +72,5 @@
         android:text="@string/accept"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/cancel_changes"
-        app:layout_constraintTop_toBottomOf="@+id/manual_message_rename_hint" />
+        app:layout_constraintTop_toBottomOf="@+id/manual_label_rename" />
 </androidx.constraintlayout.widget.ConstraintLayout>

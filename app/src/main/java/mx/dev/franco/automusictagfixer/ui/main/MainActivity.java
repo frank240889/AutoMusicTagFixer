@@ -7,7 +7,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.PersistableBundle;
-import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
@@ -53,6 +52,7 @@ import mx.dev.franco.automusictagfixer.utilities.shared_preferences.AbstractShar
 
 import static android.view.View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN;
 import static android.view.View.SYSTEM_UI_FLAG_LAYOUT_STABLE;
+import static mx.dev.franco.automusictagfixer.AutoMusicTagFixer.DARK_MODE;
 import static mx.dev.franco.automusictagfixer.utilities.Constants.Actions.ACTION_BROADCAST_MESSAGE;
 import static mx.dev.franco.automusictagfixer.utilities.Constants.Actions.ACTION_COMPLETE_TASK;
 import static mx.dev.franco.automusictagfixer.utilities.Constants.Actions.ACTION_START_TASK;
@@ -74,6 +74,7 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
     public EditText searchBox;
     public ActionBarDrawerToggle actionBarDrawerToggle;
     public ExtendedFloatingActionButton startTaskFab;
+    private MaterialButton mToggleNightModeButton;
     MainFragment mListFragment;
     AboutFragment mAboutFragment;
     QuestionsFragment mQuestionsFragment;
@@ -115,21 +116,12 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
 
         View view = navigationView.getHeaderView(0);
 
-        MaterialButton toggleNightModeButton = view.findViewById(R.id.toggle_night_mode_button);
+        mToggleNightModeButton = view.findViewById(R.id.toggle_night_mode_button);
 
-        if(mAbstractSharedPreferences.getBoolean("dark_mode")) {
-            toggleNightModeButton.setIcon(getDrawable(R.drawable.ic_wb_sunny_24px));
-            toggleNightModeButton.setText(R.string.turn_lights_on);
-        }
-        else {
-            toggleNightModeButton.setIcon(getDrawable(R.drawable.ic_dark_mode_24dp));
-            toggleNightModeButton.setText(R.string.turn_lights_off);
-        }
-
-        toggleNightModeButton.setOnClickListener(v -> {
-            if(mAbstractSharedPreferences.getBoolean("dark_mode")) {
-                toggleNightModeButton.setIcon(getDrawable(R.drawable.ic_wb_sunny_24px));
-                mAbstractSharedPreferences.putBoolean("dark_mode", false);
+        mToggleNightModeButton.setOnClickListener(v -> {
+            if(mAbstractSharedPreferences.getBoolean(DARK_MODE)) {
+                mToggleNightModeButton.setIcon(getDrawable(R.drawable.ic_wb_sunny_24px));
+                mAbstractSharedPreferences.putBoolean(DARK_MODE, false);
                 mDrawerLayout.addDrawerListener(new DrawerLayout.DrawerListener() {
                     @Override
                     public void onDrawerSlide(@NonNull View drawerView, float slideOffset) {
@@ -155,8 +147,8 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
                 mDrawerLayout.closeDrawers();
             }
             else {
-                toggleNightModeButton.setIcon(getDrawable(R.drawable.ic_nights_stay_24px));
-                mAbstractSharedPreferences.putBoolean("dark_mode", true);
+                mToggleNightModeButton.setIcon(getDrawable(R.drawable.ic_nights_stay_24px));
+                mAbstractSharedPreferences.putBoolean(DARK_MODE, true);
                 mDrawerLayout.addDrawerListener(new DrawerLayout.DrawerListener() {
                     @Override
                     public void onDrawerSlide(@NonNull View drawerView, float slideOffset) {}
@@ -190,14 +182,37 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
     }
 
     @Override
-    protected void onNightModeChanged(int mode) {
-        Log.d("OnNightChange", "OnNightChange");
-    }
+    protected void onResume() {
+        super.onResume();
+        int nightMode = AppCompatDelegate.getDefaultNightMode();
+        if(nightMode == AppCompatDelegate.MODE_NIGHT_AUTO_BATTERY ||
+                nightMode == AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM) {
 
-    @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-        actionBarDrawerToggle.onConfigurationChanged(newConfig);
+            int currentNightMode = getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
+
+            if (currentNightMode == Configuration.UI_MODE_NIGHT_NO) {
+                mToggleNightModeButton.setIcon(getDrawable(R.drawable.ic_wb_sunny_24px));
+                mToggleNightModeButton.setText(R.string.turn_lights_on);
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+            }
+            else {
+                mToggleNightModeButton.setIcon(getDrawable(R.drawable.ic_dark_mode_24dp));
+                mToggleNightModeButton.setText(R.string.turn_lights_off);
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+            }
+        }
+        else {
+            if(mAbstractSharedPreferences.getBoolean(DARK_MODE)) {
+                mToggleNightModeButton.setIcon(getDrawable(R.drawable.ic_wb_sunny_24px));
+                mToggleNightModeButton.setText(R.string.turn_lights_on);
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+            }
+            else {
+                mToggleNightModeButton.setIcon(getDrawable(R.drawable.ic_dark_mode_24dp));
+                mToggleNightModeButton.setText(R.string.turn_lights_off);
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+            }
+        }
     }
 
     @Override

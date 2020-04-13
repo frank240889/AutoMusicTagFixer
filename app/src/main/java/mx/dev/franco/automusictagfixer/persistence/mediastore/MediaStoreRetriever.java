@@ -1,5 +1,6 @@
 package mx.dev.franco.automusictagfixer.persistence.mediastore;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.provider.MediaStore;
@@ -38,6 +39,29 @@ public class MediaStoreRetriever {
                 null);
     }
 
+    public static String getIdOfURI(Context context, String path) {
+        //Select all music
+        String selection = MediaStore.Audio.Media.DATA + "=?";
+
+        //Columns to retrieve
+        String[] projection = {
+                MediaStore.Audio.Media._ID// absolute path to audio file
+        };
+        Cursor cursor = context.getContentResolver().query(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                projection,
+                selection,
+                new String[]{path},
+                null);
+        if (cursor != null && cursor.moveToFirst()) {
+            int idIndex = cursor.getColumnIndex(MediaStore.Audio.Media._ID);
+            String value =  cursor.getString(idIndex);
+            cursor.close();
+            return value;
+        }
+
+        return null;
+    }
+
     /**
      * Get all music from MediaStore.
      * @param context Context to access system resources.
@@ -63,5 +87,12 @@ public class MediaStoreRetriever {
                 selection,
                 new String[]{"%SCHILLER%"},
                 null);
+    }
+
+    public static int swapMediaStoreId(Context context, String mediaStoreId, String newMediaStoreId) {
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(MediaStore.Audio.Media._ID, mediaStoreId);
+        return context.getContentResolver().update(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                contentValues, "_id=?", new String[]{newMediaStoreId});
     }
 }

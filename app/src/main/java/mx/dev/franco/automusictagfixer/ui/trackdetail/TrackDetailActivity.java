@@ -7,12 +7,12 @@ import android.graphics.ImageDecoder;
 import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.PopupMenu;
-import android.widget.TextView;
 
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
@@ -34,7 +34,8 @@ import dagger.android.support.HasSupportFragmentInjector;
 import mx.dev.franco.automusictagfixer.BuildConfig;
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.databinding.ActivityTrackDetailBinding;
-import mx.dev.franco.automusictagfixer.identifier.IdentificationParams;
+import mx.dev.franco.automusictagfixer.fixer.CorrectionParams;
+import mx.dev.franco.automusictagfixer.identifier.IdentificationManager;
 import mx.dev.franco.automusictagfixer.ui.AndroidViewModelFactory;
 import mx.dev.franco.automusictagfixer.ui.InformativeFragmentDialog;
 import mx.dev.franco.automusictagfixer.ui.sdcardinstructions.SdCardInstructionsActivity;
@@ -44,14 +45,12 @@ import mx.dev.franco.automusictagfixer.utilities.Constants;
 import mx.dev.franco.automusictagfixer.utilities.Message;
 import mx.dev.franco.automusictagfixer.utilities.RequiredPermissions;
 import mx.dev.franco.automusictagfixer.utilities.SimpleMediaPlayer;
-import mx.dev.franco.automusictagfixer.utilities.SuccessIdentification;
 
 import static android.view.View.GONE;
-import static android.view.View.INVISIBLE;
 import static android.view.View.VISIBLE;
 
 public class TrackDetailActivity extends AppCompatActivity implements ManualCorrectionDialogFragment.OnManualCorrectionListener,
-        CoverIdentificationResultsFragmentBase.OnCoverCorrectionListener,
+        CoverIdentificationResultsFragment.OnCoverCorrectionListener,
         SemiAutoCorrectionDialogFragment.OnSemiAutoCorrectionListener,
         HasSupportFragmentInjector {
 
@@ -65,6 +64,8 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
     AndroidViewModelFactory androidViewModelFactory;
     @Inject
     SimpleMediaPlayer mPlayer;
+    @Inject
+    IdentificationManager mIdentificationManager;
 
     private MenuItem mPlayPreviewMenuItem;
     private MenuItem mManualEditMenuItem;
@@ -76,6 +77,8 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
     private ActivityTrackDetailBinding mViewDataBinding;
     ActionBar mActionBar;
     boolean mEditMode = false;
+    private Snackbar mNoDismissibleSnackbar;
+    private MenuItem mRenameTrackItem;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,12 +86,13 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
         super.onCreate(savedInstanceState);
         mViewDataBinding = DataBindingUtil.
                 setContentView(this, R.layout.activity_track_detail);
+
         mViewDataBinding.setLifecycleOwner(this);
+
         mTrackDetailViewModel = new ViewModelProvider(this, androidViewModelFactory).
                 get(TrackDetailViewModel.class);
-        mViewDataBinding.setViewModel(mTrackDetailViewModel);
-        mViewDataBinding.progressView.setVisibility(VISIBLE);
 
+        mViewDataBinding.setViewModel(mTrackDetailViewModel);
         setSupportActionBar(mViewDataBinding.toolbar);
 
         mActionBar = getSupportActionBar();
@@ -114,6 +118,8 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
                 replace(R.id.track_detail_container_fragments, mTrackDetailFragment).
                 commit();
 
+        setupMediaPlayer();
+
     }
 
     @Override
@@ -123,21 +129,20 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
         mManualEditMenuItem = menu.findItem(R.id.action_edit_manual);
         mSearchInWebMenuItem = menu.findItem(R.id.action_web_search);
         mTrackDetailsMenuItem = menu.findItem(R.id.action_details);
-
-        setupMediaPlayer();
+        mRenameTrackItem = menu.findItem(R.id.action_rename);
 
         mTrackDetailViewModel.observeLoadingState().observe(this, this::loading);
-        mTrackDetailViewModel.observeActionableMessage().observe(this, this::onActionableMessage);
-        mTrackDetailViewModel.observeMessage().observe(this, this::onMessage);
-        mTrackDetailViewModel.observeTrack().observe(this, track -> mPlayer.setPath(track.getPath()));
         mTrackDetailViewModel.observeLoadingMessage().observe(this, this::onLoadingMessage);
-        mTrackDetailViewModel.observeCancellableTaskFlag().observe(this, this::onCancellableTask);
-        mTrackDetailViewModel.observeReadingResult().observe(this, message -> {
-            if(message == null) {
-                onSuccessLoad(null);
-            }
-        });
-        setupObservers();
+        mTrackDetailViewModel.observeReadingResult().observe(this, this::onSuccessLoad);
+        mTrackDetailViewModel.observeAudioData().observe(this, aVoid -> {});
+        mTrackDetailViewModel.observeWritingFinishedEvent().observe(this, this::onWritingResult);
+        mTrackDetailViewModel.observeTrackLoaded().observe(this, track ->
+                mIdentificationManager.
+                        setIdentificationType(IdentificationManager.ALL_TAGS).
+                        startIdentification(track));
+
+        mTrackDetailViewModel.observeConfirmationRemoveCover().observe(this, this::onConfirmRemovingCover);
+        mTrackDetailViewModel.observeCoverSavingResult().observe(this, this::onActionableMessage);
         setupIdentificationObserves();
         return true;
     }
@@ -165,6 +170,14 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
         else {
             super.onBackPressed();
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        mIdentificationManager.cancel();
+        if (mNoDismissibleSnackbar != null)
+            mNoDismissibleSnackbar.dismiss();
     }
 
     /**
@@ -220,7 +233,65 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
                 AndroidUtils.createSnackbar(mViewDataBinding.rootContainerDetails, msg).show();
                 break;
         }
+    }
 
+    /**
+     * Opens a dialog to select a image
+     * to apply as new embed cover art.
+     * @param codeIntent The code to distinguish if we pressed the cover toolbar,
+     *                   the action button "Galería" from snackbar or "Añadir carátula de galería"
+     *                   from main container.
+     */
+    public void editCover(int codeIntent){
+        Intent selectorImageIntent = new Intent(Intent.ACTION_PICK);
+        selectorImageIntent.setType("image/*");
+        startActivityForResult(selectorImageIntent,codeIntent);
+    }
+
+    /**
+     * Callback from {@link SemiAutoCorrectionDialogFragment} when
+     * user pressed apply only missing tags button
+     */
+    @Override
+    public void onMissingTagsButton(CorrectionParams correctionParams) {
+        mPlayer.stopPreview();
+        mTrackDetailViewModel.performCorrection(correctionParams);
+    }
+
+    /**
+     * Callback from {@link SemiAutoCorrectionDialogFragment} when
+     * user pressed apply all tags button
+     */
+    @Override
+    public void onOverwriteTagsButton(CorrectionParams correctionParams) {
+        mPlayer.stopPreview();
+        mTrackDetailViewModel.performCorrection(correctionParams);
+    }
+
+    @Override
+    public void onManualCorrection(CorrectionParams correctionParams) {
+        mPlayer.stopPreview();
+        mTrackDetailViewModel.performCorrection(correctionParams);
+    }
+
+    @Override
+    public void onCancelManualCorrection() {
+        enableEditModeElements();
+        mViewDataBinding.toolbarCoverArt.setEnabled(true);
+        mTrackDetailFragment.disableFields();
+        enableAppBarLayout();
+        mTrackDetailViewModel.restorePreviousValues();
+    }
+
+    @Override
+    public void saveAsImageButton(String id) {
+        mTrackDetailViewModel.saveAsImageFileFrom(id);
+    }
+
+    @Override
+    public void saveAsCover(CorrectionParams coverCorrectionParams) {
+        mPlayer.stopPreview();
+        mTrackDetailViewModel.performCorrection(coverCorrectionParams);
     }
 
     private AndroidUtils.AsyncBitmapDecoder.AsyncBitmapDecoderCallback getBitmapDecoderCallback(int requestCode){
@@ -327,10 +398,14 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
     private void addFloatingActionButtonListeners(){
         //runs track id
         mViewDataBinding.fabAutofix.setOnClickListener(v -> {
-            mTrackDetailViewModel.startIdentification(new IdentificationParams(IdentificationParams.ALL_TAGS));
+
+            mIdentificationManager
+                    .setIdentificationType(IdentificationManager.ALL_TAGS)
+                    .startIdentification(mTrackDetailViewModel.getCurrentTrack());
         });
 
         mViewDataBinding.fabSaveInfo.setOnClickListener(v -> {
+
             ManualCorrectionDialogFragment manualCorrectionDialogFragment =
                     ManualCorrectionDialogFragment.newInstance(mTrackDetailViewModel.title.getValue());
             manualCorrectionDialogFragment.show(getSupportFragmentManager(),
@@ -362,16 +437,10 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
         });
     }
 
-    private void onWritingResult(Message actionableMessage) {
+    private void onWritingResult(Void voids) {
         enableEditModeElements();
         showFabs();
         enableAppBarLayout();
-        if(actionableMessage instanceof ActionableMessage) {
-            onActionableMessage((ActionableMessage) actionableMessage);
-        }
-        else{
-            onMessage(actionableMessage);
-        }
     }
 
     /**
@@ -437,54 +506,75 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
     /**
      * Callback when data from track is completely
      * loaded.
-     * @param message The message to show.
+     * @param voids null object.
      */
-    private void onSuccessLoad(Message message) {
+    private void onSuccessLoad(Void voids) {
+        mPlayer.setPath(mTrackDetailViewModel.getCurrentTrack().getPath());
         addFloatingActionButtonListeners();
         addAppBarOffsetListener();
         addToolbarButtonsListeners();
-        addCoverMenu();
+        addListenerCoverMenu();
+        showFabs();
         mViewDataBinding.fabSaveInfo.shrink();
         mViewDataBinding.fabAutofix.shrink();
-        showFabs();
-        mViewDataBinding.progressView.findViewById(R.id.cancel_button).
-                setOnClickListener(v -> mTrackDetailViewModel.cancelTasks());
-        mTrackDetailViewModel.shouldTriggerInitialIdentification();
     }
-
-    private void setupObservers() {
-        mTrackDetailViewModel.observeCachedIdentification().observe(this, this::onIdentificationResults);
-        mTrackDetailViewModel.observeConfirmationRemoveCover().observe(this, this::onConfirmRemovingCover);
-        mTrackDetailViewModel.observeRenamingResult().observe(this, this::onMessage);
-        mTrackDetailViewModel.observeCoverSavingResult().observe(this, this::onActionableMessage);
-        mTrackDetailViewModel.observeWritingResult().observe(this, this::onWritingResult);
-    }
-
-    private void setupIdentificationObserves() {
-        mTrackDetailViewModel.observeIdentificationType().observe(this, this::openIdentificationResults);
-
-        //mTrackDetailViewModel.observeSuccessIdentification().observe(this,this::onIdentificationResults);
-        mTrackDetailViewModel.observeFailIdentification().observe(this, this::onActionableMessage);
-    }
-
-    private void openIdentificationResults(Integer identificationType) {
-        if(identificationType == SuccessIdentification.ALL_TAGS){
-            SemiAutoCorrectionDialogFragment semiAutoCorrectionDialogFragment =
-                    SemiAutoCorrectionDialogFragment.newInstance(mTrackDetailViewModel.getCurrentTrack().getMediaStoreId()+"");
-            semiAutoCorrectionDialogFragment.show(getSupportFragmentManager(),
-                    semiAutoCorrectionDialogFragment.getClass().getCanonicalName());
-        }
-        else {
-            CoverIdentificationResultsFragmentBase coverIdentificationResultsFragmentBase =
-                    CoverIdentificationResultsFragmentBase.newInstance(mTrackDetailViewModel.getCurrentTrack().getMediaStoreId()+"");
-            coverIdentificationResultsFragmentBase.show(getSupportFragmentManager(),
-                    coverIdentificationResultsFragmentBase.getClass().getCanonicalName());
-        }
-    }
-
 
     /**
-     * Set the listeners to FAB buttons.
+     * Add the observers for identification events.
+     */
+    private void setupIdentificationObserves() {
+        mIdentificationManager.observeIdentificationEvent().observe(this, identificationEvent -> {
+            Log.d(identificationEvent.getClass().getName(), identificationEvent.isIdentifying() + "");
+            if (identificationEvent.isIdentifying()) {
+
+                mViewDataBinding.progressView.setVisibility(VISIBLE);
+                disableEditModeElements();
+
+                 mNoDismissibleSnackbar = AndroidUtils.createNoDismissibleSnackbar(
+                        mViewDataBinding.rootContainerDetails,
+                        identificationEvent.getMessage()
+                );
+                 mNoDismissibleSnackbar.setAction(R.string.cancel, v -> mIdentificationManager.cancel());
+                 mNoDismissibleSnackbar.show();
+            }
+            else {
+
+                mViewDataBinding.progressView.setVisibility(GONE);
+                if (mNoDismissibleSnackbar != null) {
+                    mNoDismissibleSnackbar.dismiss();
+                }
+
+                enableEditModeElements();
+            }
+        });
+
+        mIdentificationManager.observeSuccessIdentification().observe(this, identificationType -> {
+            if (identificationType == IdentificationManager.ALL_TAGS) {
+                SemiAutoCorrectionDialogFragment semiAutoCorrectionDialogFragment =
+                        (SemiAutoCorrectionDialogFragment) getSupportFragmentManager().
+                                findFragmentByTag(SemiAutoCorrectionDialogFragment.class.getCanonicalName());
+
+                if (semiAutoCorrectionDialogFragment == null)
+                    semiAutoCorrectionDialogFragment = SemiAutoCorrectionDialogFragment.
+                            newInstance(mTrackDetailViewModel.getCurrentTrack().getMediaStoreId()+"");
+
+                if (!semiAutoCorrectionDialogFragment.isAdded())
+                    semiAutoCorrectionDialogFragment.show(getSupportFragmentManager(),
+                        semiAutoCorrectionDialogFragment.getClass().getCanonicalName());
+            }
+            else {
+                CoverIdentificationResultsFragment coverIdentificationResultsFragment =
+                        CoverIdentificationResultsFragment.newInstance(mTrackDetailViewModel.getCurrentTrack().getMediaStoreId()+"");
+                coverIdentificationResultsFragment.show(getSupportFragmentManager(),
+                        coverIdentificationResultsFragment.getClass().getCanonicalName());
+            }
+        });
+
+        mIdentificationManager.observeMessage().observe(this, this::showInformativeMessage);
+    }
+
+    /**
+     * Set the listeners to toolbar buttons.
      */
     private void addToolbarButtonsListeners(){
         addPlayAction();
@@ -501,42 +591,69 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
             return false;
         });
 
-        mTrackDetailsMenuItem.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+        mTrackDetailsMenuItem.setOnMenuItemClickListener(item -> {
+
+            MetadataDetailsFragment metadataDetailsFragment =
+                    (MetadataDetailsFragment) getSupportFragmentManager().
+                            findFragmentByTag(MetadataDetailsFragment.class.getName());
+
+            if(metadataDetailsFragment == null)
+                metadataDetailsFragment = MetadataDetailsFragment.newInstance();
+
+            metadataDetailsFragment.show(getSupportFragmentManager(),
+                    metadataDetailsFragment.getClass().getName());
+            return false;
+        });
+
+        mRenameTrackItem.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
             @Override
             public boolean onMenuItemClick(MenuItem item) {
-                MetadataDetailsFragment metadataDetailsFragment =
-                        (MetadataDetailsFragment) getSupportFragmentManager().
-                                findFragmentByTag(MetadataDetailsFragment.class.getName());
-
-                if(metadataDetailsFragment == null)
-                    metadataDetailsFragment = MetadataDetailsFragment.newInstance();
-
-                metadataDetailsFragment.show(getSupportFragmentManager(), metadataDetailsFragment.getClass().getName());
+                ChangeFilenameDialogFragment changeFilenameDialogFragment =
+                        ChangeFilenameDialogFragment.newInstance();
+                changeFilenameDialogFragment.
+                        setOnChangeNameListener(new ChangeFilenameDialogFragment.OnChangeNameListener() {
+                    @Override
+                    public void onAcceptNewName(CorrectionParams inputParams) {
+                        mTrackDetailViewModel.renameFile(inputParams);
+                    }
+                    @Override
+                    public void onCancelRename() {
+                        changeFilenameDialogFragment.dismiss();
+                    }
+                });
+                changeFilenameDialogFragment.show(getSupportFragmentManager(),
+                        changeFilenameDialogFragment.getClass().getName());
                 return false;
             }
         });
     }
 
-    private void addCoverMenu() {
+    /**
+     * Set the listener to create the pop up cover art menu, and respond to
+     * these actions.
+     */
+    private void addListenerCoverMenu() {
         mViewDataBinding.coverArtMenu.setOnClickListener(v -> {
             PopupMenu popupMenu = new PopupMenu(TrackDetailActivity.this, v);
             MenuInflater menuInflater = popupMenu.getMenuInflater();
             menuInflater.inflate(R.menu.menu_cover_art_options, popupMenu.getMenu());
             popupMenu.show();
             popupMenu.setOnMenuItemClickListener(item -> {
+
                 switch (item.getItemId()) {
                     case R.id.action_identify_cover:
-                        mTrackDetailViewModel.startIdentification(
-                                new IdentificationParams(IdentificationParams.ONLY_COVER));
+                            mIdentificationManager.
+                                    setIdentificationType(IdentificationManager.ONLY_COVER).
+                                    startIdentification(mTrackDetailViewModel.getCurrentTrack());
                         break;
                     case R.id.action_update_cover:
-                        editCover(TrackDetailFragment.INTENT_GET_AND_UPDATE_FROM_GALLERY);
+                            editCover(TrackDetailFragment.INTENT_GET_AND_UPDATE_FROM_GALLERY);
                         break;
                     case R.id.action_extract_cover:
-                        mTrackDetailViewModel.extractCover();
+                            mTrackDetailViewModel.extractCover();
                         break;
                     case R.id.action_remove_cover:
-                        mTrackDetailViewModel.removeCover();
+                            mTrackDetailViewModel.removeCover();
                         break;
                 }
                 return false;
@@ -562,82 +679,10 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
     }
 
     private void onLoadingMessage(Integer message) {
-        ((TextView)mViewDataBinding.progressView.findViewById(R.id.status_message)).setText(message);
-    }
-
-    private void onIdentificationResults(SuccessIdentification successIdentification) {
-        if(successIdentification.getIdentificationType() == SuccessIdentification.ALL_TAGS){
-            SemiAutoCorrectionDialogFragment semiAutoCorrectionDialogFragment =
-                    SemiAutoCorrectionDialogFragment.newInstance(successIdentification.getMediaStoreId());
-            semiAutoCorrectionDialogFragment.show(getSupportFragmentManager(),
-                    semiAutoCorrectionDialogFragment.getClass().getCanonicalName());
-
-        }
-        else {
-            CoverIdentificationResultsFragmentBase coverIdentificationResultsFragmentBase =
-                    CoverIdentificationResultsFragmentBase.newInstance(successIdentification.getMediaStoreId());
-            coverIdentificationResultsFragmentBase.show(getSupportFragmentManager(),
-                    coverIdentificationResultsFragmentBase.getClass().getCanonicalName());
-        }
-    }
-
-    /**
-     * Opens a dialog to select a image
-     * to apply as new embed cover art.
-     * @param codeIntent The code to distinguish if we pressed the cover toolbar,
-     *                   the action button "Galería" from snackbar or "Añadir carátula de galería"
-     *                   from main container.
-     */
-    public void editCover(int codeIntent){
-        Intent selectorImageIntent = new Intent(Intent.ACTION_PICK);
-        selectorImageIntent.setType("image/*");
-        startActivityForResult(selectorImageIntent,codeIntent);
-    }
-
-    /**
-     * Callback from {@link SemiAutoCorrectionDialogFragment} when
-     * user pressed apply only missing tags button
-     */
-    @Override
-    public void onMissingTagsButton(SemiAutoCorrectionParams semiAutoCorrectionParams) {
-        mPlayer.stopPreview();
-        mTrackDetailViewModel.performCorrection(semiAutoCorrectionParams);
-    }
-
-    /**
-     * Callback from {@link SemiAutoCorrectionDialogFragment} when
-     * user pressed apply all tags button
-     */
-    @Override
-    public void onOverwriteTagsButton(SemiAutoCorrectionParams semiAutoCorrectionParams) {
-        mPlayer.stopPreview();
-        mTrackDetailViewModel.performCorrection(semiAutoCorrectionParams);
-    }
-
-    @Override
-    public void onManualCorrection(ManualCorrectionParams inputParams) {
-        mPlayer.stopPreview();
-        mTrackDetailViewModel.performCorrection(inputParams);
-    }
-
-    @Override
-    public void onCancelManualCorrection() {
-        enableEditModeElements();
-        mViewDataBinding.toolbarCoverArt.setEnabled(true);
-        mTrackDetailFragment.disableFields();
-        enableAppBarLayout();
-        mTrackDetailViewModel.restorePreviousValues();
-    }
-
-    @Override
-    public void saveAsImageButton(CoverCorrectionParams coverCorrectionParams) {
-        mTrackDetailViewModel.saveAsImageFileFrom(coverCorrectionParams);
-    }
-
-    @Override
-    public void saveAsCover(CoverCorrectionParams coverCorrectionParams) {
-        mPlayer.stopPreview();
-        mTrackDetailViewModel.performCorrection(coverCorrectionParams);
+        Snackbar snackbar = AndroidUtils.createSnackbar(mViewDataBinding.rootContainerDetails,
+                message);
+        snackbar.setDuration(Snackbar.LENGTH_SHORT);
+        snackbar.show();
     }
 
     /**
@@ -667,20 +712,12 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
         );
     }
 
-
-    /**
-     * Shows a message into a Snackbar
-     * @param message The message object to show.
-     */
-    protected void onMessage(Message message){
-        if(message == null)
-            return;
-
+    private void showInformativeMessage(String message) {
         Snackbar snackbar = AndroidUtils.createSnackbar(
                 mViewDataBinding.rootContainerDetails,
                 message
         );
-        snackbar.setDuration(Snackbar.LENGTH_LONG);
+        snackbar.setDuration(Snackbar.LENGTH_SHORT);
         snackbar.show();
     }
 
@@ -709,10 +746,5 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
             mViewDataBinding.progressView.setVisibility(GONE);
             enableEditModeElements();
         }
-    }
-
-    private void onCancellableTask(Boolean cancellable) {
-        mViewDataBinding.progressView.
-                findViewById(R.id.cancel_button).setVisibility(cancellable ? VISIBLE : INVISIBLE);
     }
 }

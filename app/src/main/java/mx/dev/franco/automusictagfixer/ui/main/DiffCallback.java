@@ -45,9 +45,7 @@ public class DiffCallback extends DiffUtil.Callback{
         if(!oldTrack.getAlbum().equals(newTrack.getAlbum()))
             return false;
 
-        if(oldTrack.getVersion() != newTrack.getVersion())
-            return false;
-        return true;
+        return oldTrack.getVersion() == newTrack.getVersion();
     }
 
     @Nullable

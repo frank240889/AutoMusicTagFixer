@@ -113,7 +113,7 @@
     <string name="message_remove_cover_art_dialog">¿Estas seguro de querer remover la carátula?</string>
 
     <string name="automatic_mode">Modo automático</string>
-    <string name="edit_cover">Actualizar carátula</string>
+    <string name="edit_cover">Elegir carátula</string>
     <string name="update_list">Reescanear</string>
 
     <string name="album">Álbum</string>
@@ -233,7 +233,7 @@
     <string name="loading_tracks">Cargando lista…</string>
     <string name="more">Más</string>
     <string name="saf_denied">Permiso de lectura/escritura a SD denegado.</string>
-    <string name="message_results">¿Deseas sobreescribir todas o sólo las faltantes?</string>
+    <string name="message_results">¿Deseas sobreescribir todas las etiquetas o sólo aplicar las faltantes?</string>
     <string name="message_results_cover">Guardar la carátula como:</string>
     <string name="saving_cover">Guardando carátula…</string>
     <string name="accept">Aceptar</string>
@@ -246,7 +246,7 @@
     <string name="success">Corrección terminada.</string>
     <string name="could_not_get_permission">No se pudo obtener el permiso.</string>
     <string name="complete_task">Corrección terminada exitosamente.</string>
-    <string name="title_update_cover">Actualizar carátula</string>
+    <string name="title_update_cover">Elegir carátula</string>
     <string name="identifying">Identificando…</string>
     <string name="no_match_found">No se encontró ninguna coincidencia.</string>
     <string name="match_found">Coincidencia encontrada.</string>
@@ -259,7 +259,7 @@
     <string name="pixels">Píxeles</string>
     <string name="missing_cover">Sin carátula</string>
     <string name="app_version" translatable="false">v1.1</string>
-    <string name="results_found">Coincidencias encontradas</string>
+    <string name="results_found">%1$d Coincidencias encontradas</string>
     <string name="cover_found">Carátula(s) encontrada(s)</string>
     <string name="loading_data_track">Cargando información de canción…</string>
     <string name="type_your_song_and_press_search">Escribe la canción a buscar.</string>
@@ -314,4 +314,11 @@
     <string name="title_correct_track">Corregir</string>
     <string name="select_cover_size">No todos los tamaños estan disponibles para cada canción.</string>
     <string name="track_details">Detalles</string>
+    <string name="cancel">Cancelar</string>
+    <string name="connect_to_internet">Conectate a internet para realizar esta acción.</string>
+    <string name="no_cover">Sin carátula</string>
+    <string name="error_fetching_image">Error al descarga carátula, inténtalo de nuevo.</string>
+    <string name="track_rename">Renombrar archivo</string>
+    <string name="change_file_name">Renombrar archivo</string>
+    <string name="new_name">Nuevo nombre</string>
 </resources>

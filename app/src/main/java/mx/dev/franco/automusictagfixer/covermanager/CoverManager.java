@@ -234,5 +234,6 @@ public class CoverManager {
 
     public static void removeCover(String id) {
         mCoverDataCache.delete(id);
+        Log.d(CoverManager.class.getName(), "removedCover with id: " + id);
     }
 }

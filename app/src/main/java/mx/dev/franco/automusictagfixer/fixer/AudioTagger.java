@@ -63,12 +63,14 @@ import mx.dev.franco.automusictagfixer.BuildConfig;
 public class AudioTagger {
     public static final int COULD_NOT_WRITE_TAGS = 200;
     public static final int COULD_NOT_RENAME_FILE = 300;
+    public static final int TAGS_APPLIED_BUT_NOT_RENAMED_FILE = 325;
     private static final String TAG = AudioTagger.class.getName();
     //Constants to overwrite all tags or only apply those missing
     public static final int MODE_OVERWRITE_ALL_TAGS = 0;
     public static final int MODE_WRITE_ONLY_MISSING = 1;
     public static final int MODE_REMOVE_COVER = 2;
     public static final int MODE_ADD_COVER = 3;
+    public static final int MODE_RENAME_FILE = 4;
 
     //Constants that indicates reason why cannot perform the operation
     public static final int COULD_NOT_CREATE_AUDIOFILE = 10;
@@ -139,7 +141,7 @@ public class AudioTagger {
      * @throws InvalidAudioFrameException
      * @throws IOException
      */
-    public ResultCorrection saveTags(String pathToTargetFile, Map<FieldKey, Object> tags, int overWriteTags)
+    public AudioTaggerResult<Map<FieldKey, Object>> saveTags(String pathToTargetFile, Map<FieldKey, Object> tags, int overWriteTags)
             throws ReadOnlyFileException, CannotReadException, TagException, InvalidAudioFrameException, IOException {
 
         if(pathToTargetFile == null || pathToTargetFile.isEmpty())
@@ -160,7 +162,7 @@ public class AudioTagger {
      * @throws InvalidAudioFrameException
      * @throws IOException
      */
-    public ResultCorrection saveTags(File targetFile, Map<FieldKey, Object> tags, int overWriteTags)
+    public AudioTaggerResult<Map<FieldKey, Object>> saveTags(File targetFile, Map<FieldKey, Object> tags, int overWriteTags)
             throws ReadOnlyFileException, CannotReadException, TagException, InvalidAudioFrameException, IOException {
 
         if(targetFile == null)
@@ -179,7 +181,7 @@ public class AudioTagger {
      * @throws CannotReadException
      * @throws InvalidAudioFrameException
      */
-    public AudioFields readFile(File file)
+    public AudioTaggerResult<Map<String, String>> readFile(File file)
             throws IOException, TagException, ReadOnlyFileException, CannotReadException, InvalidAudioFrameException {
         if(file == null)
             throw new NullPointerException("Source file has not been set yet.");
@@ -203,7 +205,7 @@ public class AudioTagger {
      * @throws InvalidAudioFrameException
      * @throws IOException
      */
-    private AudioFields getData(AudioFile audioFile){
+    private AudioTaggerResult<Map<String, String>> getData(AudioFile audioFile){
         AudioFields audioFields = new AudioFields();
 
         File file = audioFile.getFile();
@@ -249,7 +251,7 @@ public class AudioTagger {
      * @throws CannotReadException
      * @throws InvalidAudioFrameException
      */
-    public AudioFields readFile(String path)
+    public AudioTaggerResult<Map<String, String>> readFile(String path)
             throws ReadOnlyFileException, CannotReadException, TagException, InvalidAudioFrameException, IOException {
         if(path == null)
             throw new NullPointerException("Path to file has not been set yet.");
@@ -284,7 +286,7 @@ public class AudioTagger {
             }
             else {
                 //Hold which tags were applied to return in results.
-                Map<FieldKey, Object> tagsToUpdate = isNeededUpdateTags(overWriteTags,file, tags);
+                Map<FieldKey, Object> tagsToUpdate = isNeededUpdateTags(overWriteTags, file, tags);
                 if(tagsToUpdate.isEmpty()){
                     resultCorrection = new ResultCorrection();
                     resultCorrection.setCode(SUCCESS);
@@ -292,7 +294,8 @@ public class AudioTagger {
                 else {
                     resultCorrection = applyTagsForDocumentFileObject(file, tagsToUpdate, overWriteTags);
                 }
-                resultCorrection.setTagsUpdated(tagsToUpdate);
+                resultCorrection.setStoredInSD(true);
+                resultCorrection.setData(tagsToUpdate);
             }
         }
         else {
@@ -304,9 +307,10 @@ public class AudioTagger {
             else {
                 resultCorrection = applyTagsForFileObject(file, tagsToUpdate, overWriteTags);
             }
-            resultCorrection.setTagsUpdated(tagsToUpdate);
+            resultCorrection.setStoredInSD(false);
+            resultCorrection.setData(tagsToUpdate);
         }
-        resultCorrection.setTaskExecuted(AudioTagger.APPLY_TAGS);
+
         return resultCorrection;
     }
 
@@ -449,12 +453,14 @@ public class AudioTagger {
                     audioFile.commit();
 
                     //Try to copy temp file with its news tags to its original location
-                    int resultOfCopy = copyBack(tempFile, file);
+                    Object[] resultOfCopy = copyBack(tempFile, file);
 
-                    if (resultOfCopy != SUCCESS_COPY_BACK) {
-                        resultCorrection.setCode(resultOfCopy);
+                    if ((int)resultOfCopy[0] != SUCCESS_COPY_BACK) {
+                        resultCorrection.setCode((int)resultOfCopy[0]);
                     }
                     else {
+                        resultCorrection.setNewFileUri((Uri) resultOfCopy[1]);
+                        resultCorrection.setOldFileUri((Uri) resultOfCopy[2]);
                         resultCorrection.setCode(SUCCESS);
                     }
                 } catch (CannotWriteException e) {
@@ -580,7 +586,7 @@ public class AudioTagger {
             }
         }
         //WRITE ONLY MISSING TAGS
-        if(overwriteAllTags == MODE_WRITE_ONLY_MISSING){
+        if(overwriteAllTags == MODE_WRITE_ONLY_MISSING) {
             for(Map.Entry entry : tagsToApply.entrySet()){
                 //check the case for cover art
                 if(entry.getKey() == FieldKey.COVER_ART) {
@@ -655,10 +661,13 @@ public class AudioTagger {
      * @param correctedFile The file with new tags applied.
      * @param originalFile Original file that was corrected.
      */
-    private int copyBack(File correctedFile, File originalFile) {
+    private Object[] copyBack(File correctedFile, File originalFile) {
         DocumentFile sourceDocumentFile = getDocumentFile(originalFile);
-        if(sourceDocumentFile == null)
-            return COULD_NOT_COPY_BACK_TO_ORIGINAL_LOCATION;
+        Object[] objs = new Object[3];
+        if(sourceDocumentFile == null) {
+            objs[0] = COULD_NOT_COPY_BACK_TO_ORIGINAL_LOCATION;
+            return objs;
+        }
         //Check if current file already exist and delete it
         //to replace it by the corrected file
         boolean exist = sourceDocumentFile.exists();
@@ -690,15 +699,18 @@ public class AudioTagger {
             out.flush();
             out.close();
             successCopy = SUCCESS_COPY_BACK;
+            objs[0] = SUCCESS_COPY_BACK;
+            objs[1] = newFile.getUri();
+            objs[2] = sourceDocumentFile.getUri();
 
         } catch (Exception e) {
             e.getMessage();
             Crashlytics.logException(e);
-            successCopy = COULD_NOT_COPY_BACK_TO_ORIGINAL_LOCATION;
-
+            objs[0] = COULD_NOT_COPY_BACK_TO_ORIGINAL_LOCATION;
+            return objs;
         }
 
-        return successCopy;
+        return objs;
     }
 
     /**
@@ -857,7 +869,7 @@ public class AudioTagger {
      */
     public ResultCorrection applyCover(@Nullable byte[] cover, File file)
             throws TagException, ReadOnlyFileException, CannotReadException, InvalidAudioFrameException, IOException {
-        return internalApplyCover(file,cover);
+        return (ResultCorrection) internalApplyCover(file,cover);
     }
 
     /**
@@ -866,13 +878,13 @@ public class AudioTagger {
      *              to remove current cover.
      * @return resultCorrection containing the result of operation.
      */
-    private ResultCorrection internalApplyCover(File file, byte[] coverToApply)
+    private AudioTaggerResult<Map<FieldKey, Object>> internalApplyCover(File file, byte[] coverToApply)
             throws ReadOnlyFileException, CannotReadException, TagException, InvalidAudioFrameException, IOException {
 
         boolean isStoredInSd = mStorageHelper.isStoredInSD(file);
 
         ResultCorrection resultCorrection;
-        AudioFields audioFields = readFile(file);
+        AudioFields audioFields = (AudioFields) readFile(file);
 
 
         if(isStoredInSd) {
@@ -884,10 +896,12 @@ public class AudioTagger {
                 if(audioFields.cover != null && coverToApply != null &&
                         (coverToApply.length == audioFields.cover.length)){
                     resultCorrection = new ResultCorrection();
+                    resultCorrection.setStoredInSD(true);
                     resultCorrection.setCode(SUCCESS);
                 }
                 else {
                     resultCorrection = applyCoverForDocumentFileObject(coverToApply, file);
+                    resultCorrection.setStoredInSD(true);
                 }
             }
         }
@@ -895,13 +909,14 @@ public class AudioTagger {
             if(audioFields.cover != null && coverToApply != null &&
                     (coverToApply.length == audioFields.cover.length)){
                 resultCorrection = new ResultCorrection();
+                resultCorrection.setStoredInSD(false);
                 resultCorrection.setCode(SUCCESS);
             }
             else {
                 resultCorrection = applyCoverForFileObject(coverToApply, file);
+                resultCorrection.setStoredInSD(false);
             }
         }
-        resultCorrection.setTaskExecuted(AudioTagger.APPLY_COVER);
         return resultCorrection;
     }
 
@@ -940,15 +955,20 @@ public class AudioTagger {
                             tag.deleteArtworkField();
                             audioFile.commit();
                             //Try to copy file to its original SD location
-                            int resultOfCopyBack = copyBack(tempFile, file);
+                            Object[] resultOfCopyBack = copyBack(tempFile, file);
 
-                            if (resultOfCopyBack != SUCCESS_COPY_BACK) {
+                            if ((int)resultOfCopyBack[0] != SUCCESS_COPY_BACK) {
+                                deleteTempFile(tempFile);
                                 resultCorrection.setCode(COULD_NOT_COPY_BACK_TO_ORIGINAL_LOCATION);
                             }
-                            Map<FieldKey, Object> tags = new ArrayMap<>();
-                            tags.put(FieldKey.COVER_ART, null);
-                            resultCorrection.setTagsUpdated(tags);
-                            resultCorrection.setCode(SUCCESS);
+                            else {
+                                Map<FieldKey, Object> tags = new ArrayMap<>();
+                                tags.put(FieldKey.COVER_ART, null);
+                                resultCorrection.setData(tags);
+                                resultCorrection.setNewFileUri((Uri) resultOfCopyBack[1]);
+                                resultCorrection.setOldFileUri((Uri) resultOfCopyBack[2]);
+                                resultCorrection.setCode(SUCCESS);
+                            }
                         } catch (CannotWriteException e) {
                             resultCorrection.setCode(COULD_NOT_APPLY_COVER);
                         }
@@ -962,15 +982,20 @@ public class AudioTagger {
                             audioFile.commit();
 
                             //Try to copy file to its original SD location
-                            int resultOfCopyBack = copyBack(tempFile, file);
+                            Object[] resultOfCopyBack = copyBack(tempFile, file);
 
-                            if (resultOfCopyBack != SUCCESS_COPY_BACK) {
+                            if ((int)resultOfCopyBack[0] != SUCCESS_COPY_BACK) {
+                                deleteTempFile(tempFile);
                                 resultCorrection.setCode(COULD_NOT_COPY_BACK_TO_ORIGINAL_LOCATION);
                             }
-                            Map<FieldKey, Object> tags = new ArrayMap<>();
-                            tags.put(FieldKey.COVER_ART, null);
-                            resultCorrection.setTagsUpdated(tags);
-                            resultCorrection.setCode(SUCCESS);
+                            else {
+                                Map<FieldKey, Object> tags = new ArrayMap<>();
+                                tags.put(FieldKey.COVER_ART, null);
+                                resultCorrection.setData(tags);
+                                resultCorrection.setCode(SUCCESS);
+                                resultCorrection.setNewFileUri((Uri) resultOfCopyBack[1]);
+                                resultCorrection.setOldFileUri((Uri) resultOfCopyBack[2]);
+                            }
                         } catch (FieldDataInvalidException | CannotWriteException e) {
                             resultCorrection.setCode(COULD_NOT_REMOVE_COVER);
                         }
@@ -1002,7 +1027,7 @@ public class AudioTagger {
                 audioFile.commit();
                 Map<FieldKey, Object> tags = new ArrayMap<>();
                 tags.put(FieldKey.COVER_ART, null);
-                resultCorrection.setTagsUpdated(tags);
+                resultCorrection.setData(tags);
                 resultCorrection.setCode(SUCCESS);
             } catch (CannotWriteException e) {
                 resultCorrection.setCode(COULD_NOT_APPLY_COVER);
@@ -1017,7 +1042,7 @@ public class AudioTagger {
                 audioFile.commit();
                 Map<FieldKey, Object> tags = new ArrayMap<>();
                 tags.put(FieldKey.COVER_ART, null);
-                resultCorrection.setTagsUpdated(tags);
+                resultCorrection.setData(tags);
                 resultCorrection.setCode(SUCCESS);
             } catch (CannotWriteException | FieldDataInvalidException e) {
                 resultCorrection.setCode(COULD_NOT_REMOVE_COVER);
@@ -1046,6 +1071,17 @@ public class AudioTagger {
         }
 
         return newFileName;
+    }
+
+    /**
+     * Public common method to exposes rename file functionality both for files
+     * stored in SD card or files stores in internal memory
+     * @param currentFile The file to rename
+     * @param newName The new name for the file, without extension.
+     * @return string of new absolute path to file or null if could not be renamed;
+     */
+    public String renameFile(String currentFile, String newName){
+        return renameFile(new File(currentFile), newName);
     }
 
     /**
@@ -1296,6 +1332,14 @@ public class AudioTagger {
         return readableDuration;
     }
 
+    public static boolean removeFile(String filepath) {
+        return removeFile(new File(filepath));
+    }
+
+    public static boolean removeFile(File file) {
+        return file.delete();
+    }
+
     /**
      * Get the uri tree from persistence storage.
      * @return An URI object.
@@ -1323,7 +1367,8 @@ public class AudioTagger {
     /**
      * Generic class for operations result of {@link AudioTagger}
      */
-    public static abstract class AudioTaggerResult {
+    public static abstract class AudioTaggerResult<D> {
+        private D data;
         private int taskExecuted;
         private int code;
         private Throwable throwable;
@@ -1371,28 +1416,68 @@ public class AudioTagger {
         public void setTaskExecuted(int taskExecuted) {
             this.taskExecuted = taskExecuted;
         }
+
+        public D getData() {
+            return data;
+        }
+
+        public void setData(D data) {
+            this.data = data;
+        }
     }
 
     /**
      * Container class that holds
      * the result of correction
      */
-    public static class ResultCorrection extends AudioTaggerResult {
-        private Map<FieldKey, Object> tagsUpdated;
-
+    public static class ResultCorrection extends AudioTaggerResult<Map<FieldKey, Object>> {
+        private String newName;
+        private boolean isStoredInSD = false;
+        private Uri newFileUri;
+        private Uri oldFileUri;
         public ResultCorrection(){}
 
         public ResultCorrection(int code, Map<FieldKey, Object> tagsUpdated) {
             super(code);
-            this.tagsUpdated = tagsUpdated;
+            setData(tagsUpdated);
         }
 
-        public Map<FieldKey, Object> getTagsUpdated() {
-            return tagsUpdated;
+        public ResultCorrection(int code, Map<FieldKey, Object> tagsUpdated, boolean isStoredInSD) {
+            super(code);
+            setData(tagsUpdated);
+            this.isStoredInSD = isStoredInSD;
         }
 
-        public void setTagsUpdated(Map<FieldKey, Object> tagsUpdated) {
-            this.tagsUpdated = tagsUpdated;
+        public String getResultRename() {
+            return newName;
+        }
+
+        public void setResultRename(String newName) {
+            this.newName = newName;
+        }
+
+        public boolean isStoredInSD() {
+            return isStoredInSD;
+        }
+
+        public void setStoredInSD(boolean storedInSD) {
+            isStoredInSD = storedInSD;
+        }
+
+        public Uri getNewFileUri() {
+            return newFileUri;
+        }
+
+        public void setNewFileUri(Uri newFileUri) {
+            this.newFileUri = newFileUri;
+        }
+
+        public Uri getOldFileUri() {
+            return oldFileUri;
+        }
+
+        public void setOldFileUri(Uri oldFileUri) {
+            this.oldFileUri = oldFileUri;
         }
     }
 
@@ -1401,27 +1486,18 @@ public class AudioTagger {
      * Container class that holds
      * the result of correction
      */
-    public static class ResultRename extends AudioTaggerResult {
-        private String newAbsolutePath;
+    public static class ResultRename extends AudioTaggerResult<String> {
         public ResultRename(){}
 
         public ResultRename(int code, String newAbsolutePath) {
             super(code);
-            this.newAbsolutePath = newAbsolutePath;
-        }
-
-        public String getNewAbsolutePath() {
-            return newAbsolutePath;
-        }
-
-        public void setNewAbsolutePath(String newAbsolutePath) {
-            this.newAbsolutePath = newAbsolutePath;
+            setData(newAbsolutePath);
         }
     }
 
 
 
-    public static class AudioFields extends AudioTaggerResult {
+    public static class AudioFields extends AudioTaggerResult<Map<String, String>> {
         private String title = "";
         private String artist = "";
         private String album = "";
@@ -1444,11 +1520,18 @@ public class AudioTagger {
         private String imageSize = "";
         private String fileSize = "";
 
+        public Map<String, String> mData = new ArrayMap<>();
+
         public AudioFields(){
             super(SUCCESS);
         }
+
         public AudioFields(int code){
             super(code);
+        }
+        public AudioFields(int code, Throwable throwable){
+            super(code);
+            setError(throwable);
         }
 
         public AudioFields(String title,

@@ -2,17 +2,15 @@ package mx.dev.franco.automusictagfixer.ui.trackdetail;
 
 import androidx.annotation.IntegerRes;
 
-import mx.dev.franco.automusictagfixer.utilities.Message;
-
 public class ValidationWrapper {
 
     @IntegerRes
     private int field;
-    private Message message;
+    private int message;
 
     public ValidationWrapper() {}
 
-    public ValidationWrapper(int field, Message message) {
+    public ValidationWrapper(int field, int message) {
         this();
         this.field = field;
         this.message = message;
@@ -26,11 +24,11 @@ public class ValidationWrapper {
         this.field = field;
     }
 
-    public Message getMessage() {
+    public int getMessage() {
         return message;
     }
 
-    public void setMessage(Message message) {
+    public void setMessage(int message) {
         this.message = message;
     }
 }

@@ -8,6 +8,7 @@ import android.preference.PreferenceManager;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import mx.dev.franco.automusictagfixer.identifier.ApiInitializerService;
 import mx.dev.franco.automusictagfixer.ui.intro.IntroActivity;
 import mx.dev.franco.automusictagfixer.ui.main.MainActivity;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
@@ -21,6 +22,9 @@ public class SplashActivity extends AppCompatActivity{
     @Override
     protected void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
+
+        Intent apiIntent = new Intent(getApplicationContext(), ApiInitializerService.class);
+        startService(apiIntent);
 
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         String imageSizeSaved = preferences.getString("key_size_album_art","1000");

@@ -4,7 +4,6 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.provider.MediaStore;
-import android.util.Log;
 
 import org.jaudiotagger.tag.FieldKey;
 
@@ -37,7 +36,6 @@ public class MediaStoreUpdater extends AsyncTask<Context, Void, MediaStoreResult
     protected MediaStoreResult doInBackground(Context... contexts) {
         MediaStoreResult mediaStoreResult = new MediaStoreResult();
         mediaStoreResult.setTask(mTask);
-        Log.d(this.getClass().getCanonicalName(), "doInBackground");
 
         if(mTask == MediaStoreResult.UPDATE_RENAMED_FILE) {
             String path = (String) mData.get(FieldKey.CUSTOM1);
@@ -57,12 +55,15 @@ public class MediaStoreUpdater extends AsyncTask<Context, Void, MediaStoreResult
             }
         }
         else {
+            String id = (String) mData.get(FieldKey.ACOUSTID_ID);
             String title = (String) mData.get(FieldKey.TITLE);
             String artist = (String) mData.get(FieldKey.ARTIST);
             String album = (String) mData.get(FieldKey.ALBUM);
 
             ContentValues updatedValues = new ContentValues();
             boolean shouldUpdateMediaStore = false;
+            updatedValues.put(MediaStore.Audio.Media._ID, id);
+
             if (title != null && !title.isEmpty()) {
                 updatedValues.put(MediaStore.Audio.Media.TITLE, title);
                 shouldUpdateMediaStore = true;
