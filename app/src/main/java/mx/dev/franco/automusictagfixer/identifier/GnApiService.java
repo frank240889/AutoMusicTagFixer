@@ -15,12 +15,14 @@ import com.gracenote.gnsdk.GnLocale;
 import com.gracenote.gnsdk.GnLocaleGroup;
 import com.gracenote.gnsdk.GnManager;
 import com.gracenote.gnsdk.GnRegion;
+import com.gracenote.gnsdk.GnString;
 import com.gracenote.gnsdk.GnUser;
 import com.gracenote.gnsdk.GnUserStore;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * @author Franco Castillo
@@ -151,11 +153,24 @@ public class GnApiService {
                     sGnsdkLicenseString,
                     GnLicenseInputMode.kLicenseInputModeString);
             setGnManager(gnManager);
-            GnUser gnUser = new GnUser(new GnUserStore(
-                    mContext.getApplicationContext()),
-                    sGnsdkClientId,
-                    sGnsdkClientTag,
-                    GnApiService.sAppString);
+            GnUserStore gnUserStore = new GnUserStore(
+                    mContext.getApplicationContext());
+
+            GnUser gnUser;
+            GnString gnStringId = gnUserStore.loadSerializedUser(sGnsdkClientId);
+
+            if (!"null".equals(gnStringId) || !gnStringId.isEmpty()) {
+                gnUser = new GnUser(gnStringId.toString());
+            }
+            else {
+                String randomId = UUID.randomUUID().toString();
+                gnUserStore.storeSerializedUser(sGnsdkClientId, randomId);
+                gnUser = new GnUser(gnUserStore,
+                        sGnsdkClientId,
+                        sGnsdkClientTag,
+                        GnApiService.sAppString);
+            }
+
             setGnUser(gnUser);
             GnLocale gnLocale = new GnLocale(GnLocaleGroup.kLocaleGroupMusic,
                     mLanguage,
