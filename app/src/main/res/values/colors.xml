@@ -29,7 +29,7 @@
     <color name="snackbarBackgroundColor">#212121</color>
     <color name="snackbarTextBackgroundColor">#c6a700</color>
 
-    <color name="background_loading_color">#212121</color>
+    <color name="background_loading_color">#424242</color>
 
     <!--Fixed colors-->
     <color name="dark_gray_semitransparent">#ff212121</color>

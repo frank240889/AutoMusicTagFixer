@@ -93,14 +93,6 @@ public class AudioFingerprintIdentifier implements Identifier<Map<String, String
                                                    long l1, IGnCancellable iGnCancellable) {
 
                     List<? extends Identifier.IdentificationResults> results = processAlbums(gnResponseAlbums);
-                    try {
-                        gnMusicIdFileInfoManager.remove(gnMusicIdFileInfo);
-                    } catch (GnException e) {
-                        e.printStackTrace();
-                    }
-                    gnMusicIdFileInfoManager = null;
-                    mGnMusicIdFile = null;
-                    gnMusicIdFileInfo = null;
                     mHandler.post(() -> {
 
                         if (identificationListener != null)
@@ -115,15 +107,6 @@ public class AudioFingerprintIdentifier implements Identifier<Map<String, String
                                                    long l, long l1, IGnCancellable iGnCancellable) {
 
                     List<? extends Identifier.IdentificationResults> results = processMatches(gnResponseDataMatches);
-                    try {
-                        gnMusicIdFileInfoManager.remove(gnMusicIdFileInfo);
-                    } catch (GnException e) {
-                        e.printStackTrace();
-                    }
-                    gnMusicIdFileInfoManager = null;
-                    mGnMusicIdFile = null;
-                    gnMusicIdFileInfo = null;
-
                     mHandler.post(() -> {
 
                         if (identificationListener != null)
@@ -136,14 +119,6 @@ public class AudioFingerprintIdentifier implements Identifier<Map<String, String
                 @Override
                 public void musicIdFileResultNotFound(GnMusicIdFileInfo gnMusicIdFileInfo, long l,
                                                       long l1, IGnCancellable iGnCancellable) {
-                    try {
-                        gnMusicIdFileInfoManager.remove(gnMusicIdFileInfo);
-                    } catch (GnException e) {
-                        e.printStackTrace();
-                    }
-                    gnMusicIdFileInfoManager = null;
-                    mGnMusicIdFile = null;
-                    gnMusicIdFileInfo = null;
 
                     mHandler.post(() -> {
                         if (identificationListener != null)
@@ -154,9 +129,6 @@ public class AudioFingerprintIdentifier implements Identifier<Map<String, String
 
                 @Override
                 public void musicIdFileComplete(GnError gnError) {
-                    gnMusicIdFileInfoManager = null;
-                    mGnMusicIdFile = null;
-                    gnMusicIdFileInfo = null;
                     mHandler.post(() -> {
 
                         String error = gnError != null &&
@@ -215,18 +187,8 @@ public class AudioFingerprintIdentifier implements Identifier<Map<String, String
             identificationListener.onIdentificationCancelled();
         identificationListener = null;
 
-        try {
-            if (gnMusicIdFileInfoManager != null)
-            gnMusicIdFileInfoManager.remove(gnMusicIdFileInfo);
-        } catch (GnException e) {
-            e.printStackTrace();
-        }
         if (mGnMusicIdFile != null)
             mGnMusicIdFile.cancel();
-
-        gnMusicIdFileInfoManager = null;
-        mGnMusicIdFile = null;
-        gnMusicIdFileInfo = null;
     }
 
     /**
