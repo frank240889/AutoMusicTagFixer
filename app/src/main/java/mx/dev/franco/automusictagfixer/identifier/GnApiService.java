@@ -2,10 +2,8 @@ package mx.dev.franco.automusictagfixer.identifier;
 
 import android.content.Context;
 import android.util.Log;
-
 import androidx.annotation.Nullable;
 import androidx.collection.ArrayMap;
-
 import com.crashlytics.android.Crashlytics;
 import com.gracenote.gnsdk.GnDescriptor;
 import com.gracenote.gnsdk.GnException;
@@ -18,7 +16,6 @@ import com.gracenote.gnsdk.GnRegion;
 import com.gracenote.gnsdk.GnString;
 import com.gracenote.gnsdk.GnUser;
 import com.gracenote.gnsdk.GnUserStore;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -159,7 +156,7 @@ public class GnApiService {
             GnUser gnUser;
             GnString gnStringId = gnUserStore.loadSerializedUser(sGnsdkClientId);
 
-            if (!"null".equals(gnStringId) || !gnStringId.isEmpty()) {
+            if (!gnStringId.isEmpty() && !"null".equals(gnStringId.toString())) {
                 gnUser = new GnUser(gnStringId.toString());
             }
             else {
