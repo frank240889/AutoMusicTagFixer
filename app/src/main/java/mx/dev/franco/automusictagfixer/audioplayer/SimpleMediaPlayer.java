@@ -1,4 +1,4 @@
-package mx.dev.franco.automusictagfixer.utilities;
+package mx.dev.franco.automusictagfixer.audioplayer;
 
 import android.content.Context;
 import android.media.MediaPlayer;

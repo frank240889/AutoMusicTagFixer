@@ -296,4 +296,5 @@
     <string name="track_rename">Renombrar archivo</string>
     <string name="change_file_name">Renombrar archivo</string>
     <string name="new_name">Nuevo nombre</string>
+    <string name="sd_track_message">Las canciones en la SD tardan unos segundos más en corregirse.</string>
 </resources>

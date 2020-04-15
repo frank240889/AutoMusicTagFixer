@@ -4,7 +4,6 @@ import android.app.Application;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.ArrayMap;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
@@ -56,6 +55,7 @@ public class TrackDetailViewModel extends AndroidViewModel {
     public MutableLiveData<String> genre = new MutableLiveData<>();
     public MutableLiveData<byte[]> cover = new MutableLiveData<>();
     public MutableLiveData<String> imageSize = new MutableLiveData<>();
+    public SingleLiveEvent<Boolean> isStoredInSD = new SingleLiveEvent<>();
 
     //One way bind livedata objects.
     public MutableLiveData<String> filesize = new MutableLiveData<>();
@@ -168,6 +168,10 @@ public class TrackDetailViewModel extends AndroidViewModel {
         return mInputsInvalidLiveData;
     }
 
+    public LiveData<String> onMessage() {
+        return mMessageMerger;
+    }
+
     public LiveData<Track> observeTrackLoaded() {
         return mTrackLoader;
     }
@@ -184,11 +188,15 @@ public class TrackDetailViewModel extends AndroidViewModel {
         return mLiveInformativeMessage;
     }
 
+    public LiveData<Boolean> observeIsStoredInSD() {
+        return isStoredInSD;
+    }
+
     private void onReadingResult(AudioTagger.AudioFields audioFields) {
 
         if(audioFields.getCode() != AudioTagger.SUCCESS) {
             mLiveInformativeMessage.setValue(R.string.could_not_read_file);
-            Log.d(getClass().getName(), "onReadingResult Error");
+            isStoredInSD.setValue(false);
         }
         else {
             mAudioFields = audioFields;
@@ -200,17 +208,20 @@ public class TrackDetailViewModel extends AndroidViewModel {
                 mInitialAction = -1;
                 mTrackLoader.setValue(getCurrentTrack());
             }
-            Log.d(getClass().getName(), "onReadingResult Success");
+            if (audioFields.isStoredInSD()) {
+                isStoredInSD.setValue(true);
+            }
+            else {
+                isStoredInSD.setValue(false);
+            }
         }
     }
 
     private void onWritingResult(AudioTagger.AudioTaggerResult<Map<FieldKey, Object>> writingResult) {
-        //Todo: Add functionality to update correctly the data track when track is stored in SD.
-        //Todo: Take in mind that updating data track of SD file will create a copy into the internal memory
-        //Todo: and when correction is done, this copy is copied back into the memory SD, replacing
-        //Todo: the original file, and in consequence, the MediaStoreId will not be the same.
         mResultWriting.setValue(writingResult.getData());
         mLiveInformativeMessage.setValue(R.string.changes_applied);
+        if (writingResult.getTaskExecuted() != AudioTagger.MODE_RENAME_FILE)
+            mResultsCache.delete(getCurrentTrack().getMediaStoreId()+"");
     }
 
     private LiveData<ActionableMessage> getCoverSavingResult() {

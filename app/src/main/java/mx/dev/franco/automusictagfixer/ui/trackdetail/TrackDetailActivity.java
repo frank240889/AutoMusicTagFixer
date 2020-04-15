@@ -33,6 +33,7 @@ import dagger.android.DispatchingAndroidInjector;
 import dagger.android.support.HasSupportFragmentInjector;
 import mx.dev.franco.automusictagfixer.BuildConfig;
 import mx.dev.franco.automusictagfixer.R;
+import mx.dev.franco.automusictagfixer.audioplayer.SimpleMediaPlayer;
 import mx.dev.franco.automusictagfixer.databinding.ActivityTrackDetailBinding;
 import mx.dev.franco.automusictagfixer.fixer.CorrectionParams;
 import mx.dev.franco.automusictagfixer.identifier.IdentificationManager;
@@ -44,7 +45,6 @@ import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
 import mx.dev.franco.automusictagfixer.utilities.Message;
 import mx.dev.franco.automusictagfixer.utilities.RequiredPermissions;
-import mx.dev.franco.automusictagfixer.utilities.SimpleMediaPlayer;
 
 import static android.view.View.GONE;
 import static android.view.View.VISIBLE;
@@ -143,6 +143,7 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
 
         mTrackDetailViewModel.observeConfirmationRemoveCover().observe(this, this::onConfirmRemovingCover);
         mTrackDetailViewModel.observeCoverSavingResult().observe(this, this::onActionableMessage);
+        mTrackDetailViewModel.onMessage().observe(this, this::onLoadingMessage);
         setupIdentificationObserves();
         return true;
     }
@@ -678,11 +679,15 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
         return null;
     }
 
-    private void onLoadingMessage(Integer message) {
+    private void onLoadingMessage(String s) {
         Snackbar snackbar = AndroidUtils.createSnackbar(mViewDataBinding.rootContainerDetails,
-                message);
+                s);
         snackbar.setDuration(Snackbar.LENGTH_SHORT);
         snackbar.show();
+    }
+
+    private void onLoadingMessage(Integer message) {
+        onLoadingMessage(getString(message));
     }
 
     /**

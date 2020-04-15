@@ -138,7 +138,7 @@
             android:layout_marginBottom="8dp"
             android:drawableStart="@drawable/ic_folder_white_24px"
             android:gravity="center_vertical"
-            android:maxLines="2"
+            android:maxLines="3"
             android:text="@{viewmodel.absolutePath}"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"

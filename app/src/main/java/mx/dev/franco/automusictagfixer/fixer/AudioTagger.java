@@ -238,6 +238,8 @@ public class AudioTagger {
         audioFields.cover = getCover(audioFile);
         audioFields.imageSize = getStringImageSize(audioFields.cover);
 
+        audioFields.setStoredInSD(mStorageHelper.isStoredInSD(file));
+
         return audioFields;
     }
 
@@ -499,20 +501,14 @@ public class AudioTagger {
 
     @Nullable
     private static byte[] getCover(AudioFile audioTaggerFile) {
-        Tag tag = audioTaggerFile.getTag();
+        try {
+            return audioTaggerFile.getTag().getFirstArtwork().getBinaryData();
+        }
+        catch (NullPointerException e) {
+            e.printStackTrace();
+        }
 
-        if (tag == null)
-            return null;
-
-        if (tag.getFirstArtwork() == null)
-            return null;
-
-        Artwork artwork = tag.getFirstArtwork();
-
-        if(artwork.getBinaryData() == null)
-            return null;
-
-        return artwork.getBinaryData();
+        return null;
     }
 
     /**
@@ -1372,6 +1368,7 @@ public class AudioTagger {
         private int taskExecuted;
         private int code;
         private Throwable throwable;
+        private boolean isStoredInSD;
 
         AudioTaggerResult(){}
 
@@ -1423,6 +1420,14 @@ public class AudioTagger {
 
         public void setData(D data) {
             this.data = data;
+        }
+
+        public boolean isStoredInSD() {
+            return isStoredInSD;
+        }
+
+        public void setStoredInSD(boolean storedInSD) {
+            isStoredInSD = storedInSD;
         }
     }
 

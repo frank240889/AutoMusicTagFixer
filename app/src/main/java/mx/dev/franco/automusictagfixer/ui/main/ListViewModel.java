@@ -45,15 +45,14 @@ public class ListViewModel extends AndroidViewModel {
     private MutableLiveData<Integer> mOnSorted = new SingleLiveEvent<>();
     //The current list of tracks.
     private List<Track> mCurrentList;
-    public TrackRepository trackRepository;
+    public TrackRepository mTrackRepository;
 
-    public AbstractSharedPreferences sharedPreferences;
-    public ServiceUtils serviceUtils;
+    private AbstractSharedPreferences mSharedPreferences;
+    private ServiceUtils mServiceUtils;
     private MediaStoreManager mMediaStoreManager;
     private AbstractSharedPreferences mAbstractSharedPreferences;
     private LiveData<Message> mResultsAudioFilesMediaStore;
     private MediatorLiveData<Boolean> mLoadingState;
-    private AudioTagger.StorageHelper mStorageHelper;
 
 
     @Inject
@@ -64,16 +63,16 @@ public class ListViewModel extends AndroidViewModel {
                          @Nonnull MediaStoreManager mediaStoreManager,
                          @NonNull AudioTagger.StorageHelper storageHelper) {
         super(application);
-        this.trackRepository = trackRepository;
-        this.sharedPreferences = abstractSharedPreferences;
-        this.serviceUtils = serviceUtils;
+
+        mTrackRepository = trackRepository;
+        mSharedPreferences = abstractSharedPreferences;
+        mServiceUtils = serviceUtils;
         mMediaStoreManager = mediaStoreManager;
         mAbstractSharedPreferences = abstractSharedPreferences;
-        mStorageHelper = storageHelper;
 
         mLoadingState = new MediatorLiveData<>();
 
-        LiveData<Boolean> trackRepositoryLoadingState = trackRepository.observeProgress();
+        LiveData<Boolean> trackRepositoryLoadingState = mTrackRepository.observeProgress();
         LiveData<Boolean> mediaStoreLoadingState = mMediaStoreManager.observeLoadingState();
 
         mLoadingState.addSource(mediaStoreLoadingState, aBoolean ->
@@ -125,7 +124,7 @@ public class ListViewModel extends AndroidViewModel {
      * @return The live data container.
      */
     public LiveData<List<Track>> getTracks(){
-        LiveData<Resource<List<Track>>> result = trackRepository.getAllTracks();
+        LiveData<Resource<List<Track>>> result = mTrackRepository.getAllTracks();
         mTracks = Transformations.map(result, input -> {
             mCurrentList = input.data;
             return mCurrentList;
@@ -148,7 +147,7 @@ public class ListViewModel extends AndroidViewModel {
                     mAbstractSharedPreferences.putBoolean(Constants.COMPLETE_READ, true);
                 }*/
                 if(input.data.size() > 0) {
-                    trackRepository.insert(input.data);
+                    mTrackRepository.insert(input.data);
                 }
                 else {
                     message = new Message(R.string.no_items_found);
@@ -167,7 +166,7 @@ public class ListViewModel extends AndroidViewModel {
      */
     public void onCheckboxClick(int position){
         Track track = mCurrentList.get(position);
-        trackRepository.setChecked(track);
+        mTrackRepository.setChecked(track);
     }
 
     /**
@@ -175,17 +174,17 @@ public class ListViewModel extends AndroidViewModel {
      * @param track The track to remove from local DB.
      */
     public void removeTrack(Track track){
-        trackRepository.delete(track);
+        mTrackRepository.delete(track);
     }
 
     /**
      * Set the state of all tracks to checked = 1
      */
     public void checkAllItems(){
-        if(serviceUtils.checkIfServiceIsRunning(FixerTrackService.CLASS_NAME))
+        if(mServiceUtils.checkIfServiceIsRunning(FixerTrackService.CLASS_NAME))
             return;
 
-        trackRepository.checkAllItems();
+        mTrackRepository.checkAllItems();
     }
 
     /**
@@ -214,11 +213,11 @@ public class ListViewModel extends AndroidViewModel {
      * Fetches the tracks from MediaStore.
      */
     public void fetchTracks(){
-        if(sharedPreferences.getBoolean("first_time_read")) {
+        if(mSharedPreferences.getBoolean("first_time_read")) {
             mMediaStoreManager.fetchAudioFiles();
         }
         else {
-            trackRepository.fetchTracks();
+            mTrackRepository.fetchTracks();
         }
     }
 
@@ -253,7 +252,7 @@ public class ListViewModel extends AndroidViewModel {
      */
     public void sortTracks(String by, int orderType, @IntegerRes int idResource) {
         //wait for sorting while correction task is running
-        if(serviceUtils.checkIfServiceIsRunning(FixerTrackService.class.getName())){
+        if(mServiceUtils.checkIfServiceIsRunning(FixerTrackService.class.getName())){
             mOnSorted.setValue(-1);
             mObservableMessage.setValue(R.string.no_available);
         }
@@ -263,7 +262,7 @@ public class ListViewModel extends AndroidViewModel {
             mObservableMessage.setValue(R.string.no_available);
         }
 
-        boolean sorted = trackRepository.sortTracks(by, orderType);
+        boolean sorted = mTrackRepository.sortTracks(by, orderType);
 
         mOnSorted.setValue(sorted ? idResource : -1);
     }
@@ -339,7 +338,7 @@ public class ListViewModel extends AndroidViewModel {
     }
 
     public void scan() {
-        if(serviceUtils.checkIfServiceIsRunning(FixerTrackService.class.getName())){
+        if(mServiceUtils.checkIfServiceIsRunning(FixerTrackService.class.getName())){
             mObservableMessage.setValue(R.string.no_available);
         }
         else {

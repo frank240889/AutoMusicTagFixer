@@ -12,11 +12,12 @@
         android:id="@+id/root_container_details"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:animateLayoutChanges="true"
         android:background="@color/primaryBackground">
         <com.google.android.material.appbar.AppBarLayout
             android:id="@+id/app_bar_layout"
             android:layout_width="match_parent"
-            android:layout_height="470dp"
+            android:layout_height="wrap_content"
             android:background="@color/primaryBackground">
 
             <com.google.android.material.appbar.CollapsingToolbarLayout
@@ -38,30 +39,21 @@
 
                     <com.google.android.material.card.MaterialCardView
                         android:id="@+id/card_cover"
-                        android:layout_width="0dp"
-                        android:layout_height="0dp"
-                        android:layout_marginStart="8dp"
-                        android:layout_marginTop="8dp"
-                        android:layout_marginEnd="8dp"
-                        android:layout_marginBottom="8dp"
-                        app:cardElevation="@dimen/cardview_default_elevation"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="@dimen/default_margin"
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toTopOf="parent">
                         <ImageView
                             android:id="@+id/toolbar_cover_art"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
+                            android:layout_width="@dimen/track_detail_cover_size"
+                            android:layout_height="@dimen/track_detail_cover_size"
                             android:adjustViewBounds="true"
                             android:scaleType="fitCenter"
-                            android:src="@drawable/ic_album_white_24px"
-                            android:transitionName="transitionFragment"
-                            app:imageCover="@{viewModel.cover}"
-                            app:layout_constraintBottom_toBottomOf="parent"
-                            app:layout_constraintEnd_toEndOf="parent"
-                            app:layout_constraintStart_toStartOf="parent"
-                            app:layout_constraintTop_toTopOf="parent" />
+                            app:srcCompat="@drawable/ic_album_white_24px"
+                            app:imageCover="@{viewModel.cover}" />
                         <FrameLayout
                             android:id="@+id/fl_container_filename"
                             android:layout_width="match_parent"
@@ -70,11 +62,13 @@
                             android:layout_height="48dp">
                             <TextView
                                 android:id="@+id/filename"
-                                android:layout_width="wrap_content"
+                                android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:layout_gravity="center"
-                                android:gravity="center_vertical"
+                                android:gravity="center"
                                 android:singleLine="true"
+                                android:textAlignment="center"
+                                app:autoSizeTextType="uniform"
                                 android:textColor="@color/white"
                                 android:text="@{viewModel.filename}"
                                 tools:text="Sin Tí.mp3" />

@@ -6,7 +6,7 @@ import javax.inject.Singleton;
 
 import dagger.Module;
 import dagger.Provides;
-import mx.dev.franco.automusictagfixer.utilities.SimpleMediaPlayer;
+import mx.dev.franco.automusictagfixer.audioplayer.SimpleMediaPlayer;
 
 @Module
 public class MediaPlayerModule {

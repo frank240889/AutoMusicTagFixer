@@ -14,6 +14,7 @@ import android.widget.EditText;
 
 import androidx.annotation.NonNull;
 import androidx.databinding.DataBindingUtil;
+import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 
 import java.util.ArrayList;
@@ -21,6 +22,7 @@ import java.util.ArrayList;
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.databinding.FragmentTrackDetailBinding;
 import mx.dev.franco.automusictagfixer.ui.BaseViewModelFragment;
+import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
 import mx.dev.franco.automusictagfixer.utilities.Constants.CorrectionActions;
 
@@ -61,6 +63,12 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
         mViewModel.observeAudioData().observe(this, aVoid -> {});
         mViewModel.observeInvalidInputsValidation().observe(this, this::onInputDataInvalid);
         mViewModel.observeWritingFinishedEvent().observe(getActivity(), this::onWritingResult);
+        mViewModel.observeIsStoredInSD().observe(this, new Observer<Boolean>() {
+            @Override
+            public void onChanged(Boolean aBoolean) {
+                mFragmentTrackDetailBinding.ibInfoTrack.setVisibility(aBoolean ? VISIBLE : View.INVISIBLE);
+            }
+        });
     }
 
     @Override
@@ -97,6 +105,12 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
         mFragmentTrackDetailBinding.
                 changeImageButton.setOnClickListener(v ->
                 ((TrackDetailActivity)getActivity()).editCover(INTENT_OPEN_GALLERY));
+        mFragmentTrackDetailBinding.ibInfoTrack.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                AndroidUtils.showToast(R.string.sd_track_message, TrackDetailFragment.this.getActivity());
+            }
+        });
     }
 
     private void onInputDataInvalid(ValidationWrapper validationWrapper) {

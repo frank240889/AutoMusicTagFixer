@@ -26,8 +26,6 @@ import mx.dev.franco.automusictagfixer.covermanager.CoverManager;
 import mx.dev.franco.automusictagfixer.interfaces.AsyncOperation;
 import mx.dev.franco.automusictagfixer.interfaces.Destructible;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
-import mx.dev.franco.automusictagfixer.persistence.room.TrackState;
-import mx.dev.franco.automusictagfixer.services.FixerTrackService;
 import mx.dev.franco.automusictagfixer.utilities.ServiceUtils;
 
 import static android.view.View.GONE;
@@ -67,7 +65,7 @@ public class TrackAdapter extends RecyclerView.Adapter<AudioItemHolder> implemen
     @Override
     public AudioItemHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View itemView = LayoutInflater.from(parent.getContext()).
-                inflate(R.layout.main_item, parent, false);
+                inflate(R.layout.main_item_card, parent, false);
         return new AudioItemHolder(itemView, mListener);
     }
 
@@ -90,17 +88,15 @@ public class TrackAdapter extends RecyclerView.Adapter<AudioItemHolder> implemen
                 if (key.equals("artist")) {
                     holder.artistName.setText(track.getArtist());
                 }
-                if (key.equals("album")) {
-                    holder.albumName.setText(track.getAlbum());
-                }
-                if(!serviceUtils.checkIfServiceIsRunning(FixerTrackService.CLASS_NAME)) {
+
+                //if(!serviceUtils.checkIfServiceIsRunning(FixerTrackService.CLASS_NAME)) {
                     holder.checkBox.setVisibility(VISIBLE);
                     holder.progressBar.setVisibility(GONE);
                     if (key.equals("checked")) {
                         holder.checkBox.setChecked(track.checked() == 1);
                     }
-                }
-                else {
+                //}
+                /*else {
                     holder.checkBox.setVisibility(View.INVISIBLE);
                     if (key.equals("processing")) {
                         if (track.processing() == 1) {
@@ -109,27 +105,10 @@ public class TrackAdapter extends RecyclerView.Adapter<AudioItemHolder> implemen
                             holder.progressBar.setVisibility(GONE);
                         }
                     }
-                }
+                }*/
 
                 if (key.equals("should_reload_cover")){
                     enqueue(holder, track);
-                }
-
-                if (key.equals("state")) {
-                    switch (track.getState()) {
-                        case TrackState.ALL_TAGS_FOUND:
-                            holder.stateMark.setImageResource(R.drawable.ic_done_all_white);
-                            holder.stateMark.setVisibility(VISIBLE);
-                            break;
-                        case TrackState.ALL_TAGS_NOT_FOUND:
-                            holder.stateMark.setImageResource(R.drawable.ic_done_white);
-                            holder.stateMark.setVisibility(VISIBLE);
-                            break;
-                        default:
-                            holder.stateMark.setImageResource(0);
-                            holder.stateMark.setVisibility(GONE);
-                            break;
-                    }
                 }
             }
         }
@@ -141,39 +120,24 @@ public class TrackAdapter extends RecyclerView.Adapter<AudioItemHolder> implemen
     @Override
     public void onBindViewHolder(@NonNull final AudioItemHolder holder, final int position) {
         Track track = mTrackList.get(position);
-        if(!serviceUtils.checkIfServiceIsRunning(FixerTrackService.CLASS_NAME)) {
+        //if(!serviceUtils.checkIfServiceIsRunning(FixerTrackService.CLASS_NAME)) {
             holder.checkBox.setVisibility(VISIBLE);
             holder.progressBar.setVisibility(GONE);
-        }
-        else {
+        //}
+        /*else {
             holder.checkBox.setVisibility(View.INVISIBLE);
             if (track.processing() == 1) {
                 holder.progressBar.setVisibility(View.VISIBLE);
             } else {
                 holder.progressBar.setVisibility(View.GONE);
             }
-        }
+        }*/
 
         enqueue(holder, track);
 
-        switch (track.getState()) {
-            case TrackState.ALL_TAGS_FOUND:
-                holder.stateMark.setImageResource(R.drawable.ic_done_all_white);
-                holder.stateMark.setVisibility(VISIBLE);
-                break;
-            case TrackState.ALL_TAGS_NOT_FOUND:
-                holder.stateMark.setImageResource(R.drawable.ic_done_white);
-                holder.stateMark.setVisibility(VISIBLE);
-                break;
-            default:
-                holder.stateMark.setImageResource(0);
-                holder.stateMark.setVisibility(GONE);
-                break;
-        }
         holder.checkBox.setChecked(track.checked() == 1);
         holder.trackName.setText(track.getTitle());
         holder.artistName.setText(track.getArtist());
-        holder.albumName.setText(track.getAlbum());
 
     }
 

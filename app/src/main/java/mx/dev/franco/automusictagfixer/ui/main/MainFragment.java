@@ -526,7 +526,7 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
 
     @Override
     public void onCheckMarkClick(int position) {
-        mListViewModel.onCheckMarkClick(position);
+        //mListViewModel.onCheckMarkClick(position);
     }
 
     @Override

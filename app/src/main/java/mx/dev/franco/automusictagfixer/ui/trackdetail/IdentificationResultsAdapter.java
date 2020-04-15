@@ -51,7 +51,7 @@ public class IdentificationResultsAdapter extends RecyclerView.Adapter<ResultIte
                 load(result.getCoverArt() != null ? result.getCoverArt().getUrl() : null)
                 .thumbnail(0.5f)
                 .error(ContextCompat.getDrawable(holder.itemView.getContext(),R.drawable.ic_album_white_48px))
-                .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.AUTOMATIC))
+                .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.NONE))
                 .apply(RequestOptions.skipMemoryCacheOf(false))
                 .transition(DrawableTransitionOptions.withCrossFade(150))
                 .fitCenter()

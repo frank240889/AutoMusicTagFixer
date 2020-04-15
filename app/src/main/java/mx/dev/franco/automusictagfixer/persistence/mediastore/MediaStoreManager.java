@@ -2,7 +2,6 @@ package mx.dev.franco.automusictagfixer.persistence.mediastore;
 
 import android.content.Context;
 import android.media.MediaScannerConnection;
-import android.webkit.MimeTypeMap;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
@@ -85,11 +84,7 @@ public class MediaStoreManager {
      * @param path The path of the file to scan by mediastore.
      */
     public void addFileToMediaStore(String path, MediaScannerConnection.OnScanCompletedListener onScanCompletedListener) {
-        MediaScannerConnection.scanFile(
-            mContext,
-            new String[]{path},
-            new String[]{MimeTypeMap.getFileExtensionFromUrl(path)},
-            onScanCompletedListener);
+        MediaStoreHelper.addFileToMediaStore(path, mContext, onScanCompletedListener);
     }
 
     /**

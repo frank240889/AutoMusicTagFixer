@@ -9,5 +9,6 @@
     <dimen name="image_view_only_cover_results_size">300dp</dimen>
     <dimen name="image_view_cover_item">64dp</dimen>
     <dimen name="default_margin">8dp</dimen>
+    <dimen name="track_detail_cover_size">470dp</dimen>
 
 </resources>

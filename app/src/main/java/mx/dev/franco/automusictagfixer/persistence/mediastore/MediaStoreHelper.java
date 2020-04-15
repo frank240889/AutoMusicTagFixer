@@ -3,14 +3,16 @@ package mx.dev.franco.automusictagfixer.persistence.mediastore;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
+import android.media.MediaScannerConnection;
 import android.provider.MediaStore;
+import android.webkit.MimeTypeMap;
 
 /**
  * @author Franco Castillo
  * Helper class to get audio files information from MediaStore.
  */
-public class MediaStoreRetriever {
-    private MediaStoreRetriever(){}
+public class MediaStoreHelper {
+    private MediaStoreHelper(){}
 
     /**
      * Get all music from MediaStore.
@@ -94,5 +96,13 @@ public class MediaStoreRetriever {
         contentValues.put(MediaStore.Audio.Media._ID, mediaStoreId);
         return context.getContentResolver().update(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
                 contentValues, "_id=?", new String[]{newMediaStoreId});
+    }
+
+    public static void addFileToMediaStore(String path, Context context, MediaScannerConnection.OnScanCompletedListener onScanCompletedListener) {
+        MediaScannerConnection.scanFile(
+                context,
+                new String[]{path},
+                new String[]{MimeTypeMap.getFileExtensionFromUrl(path)},
+                onScanCompletedListener);
     }
 }

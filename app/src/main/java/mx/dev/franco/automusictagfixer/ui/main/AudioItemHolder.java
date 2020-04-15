@@ -42,7 +42,7 @@ public class AudioItemHolder extends AudioHolder implements View.OnClickListener
         mListener = clickListener;
         checkBox.setOnClickListener(this);
         cover.setOnClickListener(this);
-        stateMark.setOnClickListener(this);
+        //stateMark.setOnClickListener(this);
         itemView.setOnClickListener(this);
     }
 
@@ -61,9 +61,9 @@ public class AudioItemHolder extends AudioHolder implements View.OnClickListener
                 case R.id.cover_art:
                         mListener.onCoverClick(getAdapterPosition(), v);
                     break;
-                case R.id.status_mark:
+                /*case R.id.status_mark:
                         mListener.onCheckMarkClick(getAdapterPosition());
-                    break;
+                    break;*/
                 default:
                         mListener.onItemClick(getAdapterPosition(), v);
                     break;
