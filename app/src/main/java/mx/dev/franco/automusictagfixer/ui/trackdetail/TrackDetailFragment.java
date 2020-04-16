@@ -13,6 +13,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
@@ -69,6 +70,26 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
                 mFragmentTrackDetailBinding.ibInfoTrack.setVisibility(aBoolean ? VISIBLE : View.INVISIBLE);
             }
         });
+    }
+
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putBoolean("edit_mode", ((TrackDetailActivity)getActivity()).mEditMode);
+    }
+
+    @Override
+    public void onViewStateRestored(@Nullable Bundle savedInstanceState) {
+        super.onViewStateRestored(savedInstanceState);
+        if (savedInstanceState != null) {
+            ((TrackDetailActivity)getActivity()).mEditMode =
+                    savedInstanceState.getBoolean("edit_mode", false);
+
+            if (((TrackDetailActivity)getActivity()).mEditMode) {
+                enableFieldsToEdit();
+            }
+        }
     }
 
     @Override
@@ -145,6 +166,7 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
         InputMethodManager imm =(InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
         imm.showSoftInput(mFragmentTrackDetailBinding.trackNameDetails,
                 InputMethodManager.SHOW_IMPLICIT);
+        ((TrackDetailActivity)getActivity()).mEditMode = true;
     }
 
     /**

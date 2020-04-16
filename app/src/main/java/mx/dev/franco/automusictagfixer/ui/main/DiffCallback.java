@@ -54,10 +54,10 @@ public class DiffCallback extends DiffUtil.Callback{
         Track newModel = newTracks.get(newItemPosition);
 
         Bundle diff = new Bundle();
+
         diff.putString("title", newModel.getTitle());
         diff.putString("artist", newModel.getArtist());
         diff.putString("album", newModel.getAlbum());
-        diff.putInt("state", newModel.getState());
         diff.putBoolean("should_reload_cover", true);
         diff.putString("path", newModel.getPath());
         diff.putInt("checked", newModel.checked());

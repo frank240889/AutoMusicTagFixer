@@ -46,7 +46,7 @@ public class CoverIdentificationResultsAdapter extends RecyclerView.Adapter<Cove
     public void onBindViewHolder(@NonNull CoverResultItemHolder holder, int position) {
         Result result = (Result) mIdentificationResults.get(position);
         holder.progressBar.setVisibility(View.VISIBLE);
-        GlideApp.with(holder.itemView.getContext()).
+        GlideApp.with(holder.itemView).
                 load(result.getCoverArt() != null ? result.getCoverArt().getUrl() : null)
                 .thumbnail(0.5f)
                 .error(ContextCompat.getDrawable(holder.itemView.getContext(),R.drawable.ic_album_white_48px))

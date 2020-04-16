@@ -1,6 +1,7 @@
 package mx.dev.franco.automusictagfixer.ui.main;
 
 import android.Manifest;
+import android.app.ActivityOptions;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -514,6 +515,7 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
     @Override
     public void onCoverClick(int position, View view) {
         ViewWrapper viewWrapper = new ViewWrapper();
+        viewWrapper.view = view;
         viewWrapper.position = position;
         viewWrapper.mode = CorrectionActions.VIEW_INFO;
         mListViewModel.onClickCover(viewWrapper);
@@ -532,6 +534,7 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
     @Override
     public void onItemClick(int position, View view) {
         ViewWrapper viewWrapper = new ViewWrapper();
+        viewWrapper.view = view;
         viewWrapper.position = position;
         viewWrapper.mode = CorrectionActions.SEMI_AUTOMATIC;
         mListViewModel.onItemClick(viewWrapper);
@@ -594,7 +597,7 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
         Bundle bundle = AndroidUtils.getBundle(viewWrapper.track.getMediaStoreId(),
                 viewWrapper.mode);
         intent.putExtra(TrackDetailActivity.TRACK_DATA, bundle);
-        startActivity(intent);
+        startActivity(intent, ActivityOptions.makeSceneTransitionAnimation(getActivity(), viewWrapper.view, "cover_art_element").toBundle());
     }
 
     private void stopCorrection() {

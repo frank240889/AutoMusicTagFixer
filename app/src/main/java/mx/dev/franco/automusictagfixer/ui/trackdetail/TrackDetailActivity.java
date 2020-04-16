@@ -42,12 +42,13 @@ import mx.dev.franco.automusictagfixer.ui.InformativeFragmentDialog;
 import mx.dev.franco.automusictagfixer.ui.sdcardinstructions.SdCardInstructionsActivity;
 import mx.dev.franco.automusictagfixer.utilities.ActionableMessage;
 import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
-import mx.dev.franco.automusictagfixer.utilities.Constants;
 import mx.dev.franco.automusictagfixer.utilities.Message;
 import mx.dev.franco.automusictagfixer.utilities.RequiredPermissions;
 
 import static android.view.View.GONE;
 import static android.view.View.VISIBLE;
+import static mx.dev.franco.automusictagfixer.utilities.Constants.CorrectionActions.MODE;
+import static mx.dev.franco.automusictagfixer.utilities.Constants.MEDIA_STORE_ID;
 
 public class TrackDetailActivity extends AppCompatActivity implements ManualCorrectionDialogFragment.OnManualCorrectionListener,
         CoverIdentificationResultsFragment.OnCoverCorrectionListener,
@@ -75,7 +76,7 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
     private TrackDetailFragment mTrackDetailFragment;
     private TrackDetailViewModel mTrackDetailViewModel;
     private ActivityTrackDetailBinding mViewDataBinding;
-    ActionBar mActionBar;
+    private ActionBar mActionBar;
     boolean mEditMode = false;
     private Snackbar mNoDismissibleSnackbar;
     private MenuItem mRenameTrackItem;
@@ -111,15 +112,14 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
 
         if(mTrackDetailFragment == null)
             mTrackDetailFragment = TrackDetailFragment.newInstance(
-                    bundle.getInt(Constants.MEDIA_STORE_ID),
-                    bundle.getInt(Constants.CorrectionActions.MODE));
+                    bundle.getInt(MEDIA_STORE_ID),
+                    bundle.getInt(MODE));
 
         getSupportFragmentManager().beginTransaction().
                 replace(R.id.track_detail_container_fragments, mTrackDetailFragment).
                 commit();
 
         setupMediaPlayer();
-
     }
 
     @Override
@@ -462,7 +462,6 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
         mViewDataBinding.fabAutofix.hide();
         mViewDataBinding.fabSaveInfo.show();
         mTrackDetailFragment.enableFieldsToEdit();
-        mEditMode = true;
     }
 
     private void disableEditModeElements() {
@@ -610,7 +609,7 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
             @Override
             public boolean onMenuItemClick(MenuItem item) {
                 ChangeFilenameDialogFragment changeFilenameDialogFragment =
-                        ChangeFilenameDialogFragment.newInstance();
+                        ChangeFilenameDialogFragment.newInstance(mTrackDetailViewModel.getCurrentTrack().getMediaStoreId()+"");
                 changeFilenameDialogFragment.
                         setOnChangeNameListener(new ChangeFilenameDialogFragment.OnChangeNameListener() {
                     @Override

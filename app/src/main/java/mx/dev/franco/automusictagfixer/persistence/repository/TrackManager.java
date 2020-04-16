@@ -42,6 +42,7 @@ public class TrackManager {
     //The cache where are stored temporally the identification results.
     private TrackReader mTrackReader;
     private TrackWriter mTrackWriter;
+    private TrackRepository mTrackRepository;
 
     /**
      * Inject all dependencies into constructor.
@@ -51,11 +52,13 @@ public class TrackManager {
     @Inject
     public TrackManager(@NonNull TrackRoomDatabase trackRoomDatabase,
                         @NonNull AudioTagger audioTagger,
-                        @NonNull Context context) {
+                        @NonNull Context context,
+                        @NonNull TrackRepository trackRepository) {
 
         mTrackRoomDatabase = trackRoomDatabase;
         mAudioTagger = audioTagger;
         mContext = context;
+        mTrackRepository = trackRepository;
     }
 
     public void getDetails(int id) {
@@ -165,6 +168,7 @@ public class TrackManager {
         if(path != null && !path.equals(""))
             track.setPath(path);
 
+        track.setProcessing(0);
         track.setVersion(track.getVersion()+1);
 
         new TrackUpdater(mTrackRoomDatabase.trackDao()).executeOnExecutor(AutoMusicTagFixer.getExecutorService(),track);

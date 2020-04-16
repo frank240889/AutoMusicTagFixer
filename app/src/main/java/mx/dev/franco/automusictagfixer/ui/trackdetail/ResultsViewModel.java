@@ -21,7 +21,6 @@ public class ResultsViewModel extends AndroidViewModel {
     private IdentificationResultsCache mIdentificationResultsCache;
     private MutableLiveData<List<? extends Identifier.IdentificationResults>> mTrackObservableResults = new MutableLiveData<>();
     private MutableLiveData<List<? extends Identifier.IdentificationResults>> mCoverObservableResults = new MutableLiveData<>();
-    private List<Identifier.IdentificationResults> mCoverResults;
 
     @Inject
     public ResultsViewModel(@NonNull Application application,
@@ -59,6 +58,22 @@ public class ResultsViewModel extends AndroidViewModel {
         mCoverObservableResults.setValue(filteredResults);
     }
 
+    public String getTitle(String id) {
+        List<? extends Identifier.IdentificationResults> results = mIdentificationResultsCache.load(id);
+        if (results == null) {
+            return null;
+        }
+        return ((Result)results.get(0)).getTitle();
+    }
+
+    public Identifier.IdentificationResults getCoverResult(int position) {
+        return mCoverObservableResults.getValue().get(position);
+    }
+
+    public Identifier.IdentificationResults getTrackResult(int position) {
+        return mTrackObservableResults.getValue().get(position);
+    }
+
     private List<? extends Identifier.IdentificationResults> getOnlyCovers(List<? extends Identifier.IdentificationResults> results) {
         List<Identifier.IdentificationResults> filteredIdentificationResults = new ArrayList<>();
         for (Identifier.IdentificationResults identificationResults : results) {
@@ -68,13 +83,5 @@ public class ResultsViewModel extends AndroidViewModel {
             }
         }
         return filteredIdentificationResults;
-    }
-
-    public Identifier.IdentificationResults getCoverResult(int position) {
-        return mCoverObservableResults.getValue().get(position);
-    }
-
-    public Identifier.IdentificationResults getTrackResult(int position) {
-        return mTrackObservableResults.getValue().get(position);
     }
 }

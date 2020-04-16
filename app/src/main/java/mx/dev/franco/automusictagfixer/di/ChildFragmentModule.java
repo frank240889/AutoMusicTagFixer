@@ -2,6 +2,7 @@ package mx.dev.franco.automusictagfixer.di;
 
 import dagger.Module;
 import dagger.android.ContributesAndroidInjector;
+import mx.dev.franco.automusictagfixer.ui.trackdetail.ChangeFilenameDialogFragment;
 import mx.dev.franco.automusictagfixer.ui.trackdetail.CoverIdentificationResultsFragment;
 import mx.dev.franco.automusictagfixer.ui.trackdetail.SemiAutoCorrectionDialogFragment;
 
@@ -13,4 +14,7 @@ public abstract class ChildFragmentModule {
 
     @ContributesAndroidInjector(modules = FragmentModule.class)
     abstract CoverIdentificationResultsFragment contributeCoverIdentificationResultsFragmentBase();
+
+    @ContributesAndroidInjector(modules = FragmentModule.class)
+    abstract ChangeFilenameDialogFragment contributeChangeFilenameDialogFragment();
 }

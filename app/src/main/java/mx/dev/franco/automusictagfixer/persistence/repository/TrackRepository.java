@@ -212,4 +212,17 @@ public class TrackRepository {
         new TrackInserter(mTrackDao).
                 executeOnExecutor(AutoMusicTagFixer.getExecutorService(), tracks);
     }
+
+    public Track getTrack(@NonNull int id) {
+        List<Track> tracks = mMediatorTrackData.getValue().data;
+
+        if (tracks != null) {
+            for (Track track : tracks) {
+                if (id == track.getMediaStoreId())
+                    return track;
+            }
+        }
+
+        return null;
+    }
 }

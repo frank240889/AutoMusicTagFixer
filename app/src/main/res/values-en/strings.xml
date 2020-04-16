@@ -297,4 +297,6 @@
     <string name="change_file_name">Renombrar archivo</string>
     <string name="new_name">Nuevo nombre</string>
     <string name="sd_track_message">Las canciones en la SD tardan unos segundos más en corregirse.</string>
+    <string name="from_results">De resultados</string>
+    <string name="identify_track_first">Identifica la canción primero.</string>
 </resources>

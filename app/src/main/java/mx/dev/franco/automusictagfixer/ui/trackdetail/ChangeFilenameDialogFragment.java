@@ -11,30 +11,36 @@ import android.widget.FrameLayout;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 
+import mx.dev.franco.automusictagfixer.BuildConfig;
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.fixer.AudioTagger;
 import mx.dev.franco.automusictagfixer.fixer.CorrectionParams;
-import mx.dev.franco.automusictagfixer.ui.BaseRoundedBottomSheetDialogFragment;
+import mx.dev.franco.automusictagfixer.ui.ResultsFragmentBase;
+import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 
-public class ChangeFilenameDialogFragment extends BaseRoundedBottomSheetDialogFragment {
+public class ChangeFilenameDialogFragment extends ResultsFragmentBase<ResultsViewModel> {
 
   public interface OnChangeNameListener {
     void onAcceptNewName(CorrectionParams inputParams);
     void onCancelRename();
   }
 
+  private static final String MEDIA_STORE_ID = BuildConfig.APPLICATION_ID + ".media_store_id";
+
   private OnChangeNameListener mOnChangeNameListener;
 
   public ChangeFilenameDialogFragment(){}
 
-  public static ChangeFilenameDialogFragment newInstance() {
+  public static ChangeFilenameDialogFragment newInstance(String id) {
     ChangeFilenameDialogFragment manualCorrectionDialogFragment = new ChangeFilenameDialogFragment();
     Bundle bundle = new Bundle();
     bundle.putInt(LAYOUT_ID, R.layout.layout_change_filename);
+    bundle.putString(MEDIA_STORE_ID, id);
     manualCorrectionDialogFragment.setArguments(bundle);
     return manualCorrectionDialogFragment;
   }
@@ -45,6 +51,8 @@ public class ChangeFilenameDialogFragment extends BaseRoundedBottomSheetDialogFr
     manualCorrectionParams.setCorrectionMode(AudioTagger.MODE_RENAME_FILE);
     Button acceptButton = view.findViewById(R.id.accept_changes);
     Button cancelButton = view.findViewById(R.id.cancel_changes);
+    Button fromResultsButton = view.findViewById(R.id.mb_from_results);
+    String id = getArguments().getString(MEDIA_STORE_ID);
 
     EditText editText = view.findViewById(R.id.filename_rename);
     acceptButton.setOnClickListener(v -> {
@@ -76,6 +84,17 @@ public class ChangeFilenameDialogFragment extends BaseRoundedBottomSheetDialogFr
       @Override
       public void afterTextChanged(Editable s) {}
     });
+
+    fromResultsButton.setOnClickListener(v -> {
+      String title = mViewModel.getTitle(id);
+      if (title == null) {
+        AndroidUtils.showToast(R.string.identify_track_first, getActivity());
+      }
+      else {
+        editText.setText(title);
+      }
+
+    });
   }
 
   public void setOnChangeNameListener(OnChangeNameListener listener) {
@@ -96,6 +115,11 @@ public class ChangeFilenameDialogFragment extends BaseRoundedBottomSheetDialogFr
     });
 
     return dialog;
+  }
+
+  @Override
+  protected ResultsViewModel getViewModel() {
+    return new ViewModelProvider(this, androidViewModelFactory).get(ResultsViewModel.class);
   }
 
   @Override

@@ -66,7 +66,7 @@ import static mx.dev.franco.automusictagfixer.utilities.Constants.DATE_PATTERN;
 public class AndroidUtils {
 
     public static Toast getToast(Context context){
-        @SuppressLint("ShowToast") Toast toast = Toast.makeText(context.getApplicationContext(), "", Toast.LENGTH_LONG);
+        @SuppressLint("ShowToast") Toast toast = Toast.makeText(context.getApplicationContext(), "", Toast.LENGTH_SHORT);
         //View view = toast.getView();
         //TextView text = view.findViewById(android.R.id.message);
         //text.setTextColor(ContextCompat.getColor(context.getApplicationContext(), R.color.primaryColor));

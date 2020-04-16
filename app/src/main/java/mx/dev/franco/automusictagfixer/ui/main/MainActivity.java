@@ -12,6 +12,7 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -175,10 +176,26 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
         if(mListFragment == null)
             mListFragment = MainFragment.newInstance();
 
-        addFragment(mListFragment);
+        getSupportFragmentManager().beginTransaction()
+                .setPrimaryNavigationFragment(mListFragment)
+                .replace(R.id.container_fragments, mListFragment, mListFragment.getTagName())
+                .setCustomAnimations(R.anim.fade_in,R.anim.fade_out)
+                .commit();
 
 
         setupReceivers();
+    }
+
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putString("test", "HOlaaaa");
+    }
+
+    @Override
+    protected void onRestoreInstanceState(@NonNull Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        Toast.makeText(this, savedInstanceState.getString("test", "no se guardo"), Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -218,14 +235,6 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-    }
-
-    private void addFragment(BaseFragment fragment) {
-        getSupportFragmentManager().beginTransaction()
-                .setPrimaryNavigationFragment(fragment)
-                .replace(R.id.container_fragments, fragment, fragment.getTagName())
-                .setCustomAnimations(R.anim.fade_in,R.anim.fade_out)
-                .commit();
     }
 
     @Override

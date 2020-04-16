@@ -28,7 +28,7 @@ import mx.dev.franco.automusictagfixer.interfaces.Destructible;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.utilities.ServiceUtils;
 
-import static android.view.View.GONE;
+import static android.view.View.INVISIBLE;
 import static android.view.View.VISIBLE;
 
 public class TrackAdapter extends RecyclerView.Adapter<AudioItemHolder> implements
@@ -79,38 +79,25 @@ public class TrackAdapter extends RecyclerView.Adapter<AudioItemHolder> implemen
             super.onBindViewHolder(holder,position,payloads);
         }
         else {
-            Track track = mTrackList.get(position);
+            //Track track = mTrackList.get(position);
             Bundle o = (Bundle) payloads.get(0);
-            for (String key : o.keySet()) {
-                if (key.equals("title")) {
-                    holder.trackName.setText(track.getTitle());
-                }
-                if (key.equals("artist")) {
-                    holder.artistName.setText(track.getArtist());
-                }
+                holder.trackName.setText(o.getString("title"));
+                holder.artistName.setText(o.getString("artist"));
 
-                //if(!serviceUtils.checkIfServiceIsRunning(FixerTrackService.CLASS_NAME)) {
+                holder.checkBox.setChecked(o.getInt("checked") == 1);
+
+
+                if (o.getInt("processing") == 1) {
+                    holder.progressBar.setVisibility(View.VISIBLE);
+                    holder.checkBox.setVisibility(INVISIBLE);
+                } else {
                     holder.checkBox.setVisibility(VISIBLE);
-                    holder.progressBar.setVisibility(GONE);
-                    if (key.equals("checked")) {
-                        holder.checkBox.setChecked(track.checked() == 1);
-                    }
-                //}
-                /*else {
-                    holder.checkBox.setVisibility(View.INVISIBLE);
-                    if (key.equals("processing")) {
-                        if (track.processing() == 1) {
-                            holder.progressBar.setVisibility(VISIBLE);
-                        } else {
-                            holder.progressBar.setVisibility(GONE);
-                        }
-                    }
-                }*/
-
-                if (key.equals("should_reload_cover")){
-                    enqueue(holder, track);
+                    holder.progressBar.setVisibility(INVISIBLE);
                 }
-            }
+
+                if (o.getBoolean("should_reload_cover")){
+                    enqueue(holder, o.getString("path"), mTrackList.get(position).getMediaStoreId()+"");
+                }
         }
     }
 
@@ -120,29 +107,21 @@ public class TrackAdapter extends RecyclerView.Adapter<AudioItemHolder> implemen
     @Override
     public void onBindViewHolder(@NonNull final AudioItemHolder holder, final int position) {
         Track track = mTrackList.get(position);
-        //if(!serviceUtils.checkIfServiceIsRunning(FixerTrackService.CLASS_NAME)) {
-            holder.checkBox.setVisibility(VISIBLE);
-            holder.progressBar.setVisibility(GONE);
-        //}
-        /*else {
-            holder.checkBox.setVisibility(View.INVISIBLE);
-            if (track.processing() == 1) {
-                holder.progressBar.setVisibility(View.VISIBLE);
-            } else {
-                holder.progressBar.setVisibility(View.GONE);
-            }
-        }*/
-
-        enqueue(holder, track);
-
         holder.checkBox.setChecked(track.checked() == 1);
         holder.trackName.setText(track.getTitle());
         holder.artistName.setText(track.getArtist());
-
+        if (track.processing() == 1) {
+            holder.progressBar.setVisibility(View.VISIBLE);
+            holder.checkBox.setVisibility(INVISIBLE);
+        } else {
+            holder.checkBox.setVisibility(VISIBLE);
+            holder.progressBar.setVisibility(INVISIBLE);
+        }
+        enqueue(holder, track.getPath(), track.getMediaStoreId()+"");
     }
 
-    private void enqueue(AudioItemHolder holder, Track track) {
-        CoverManager.startFetchingCover(holder, track.getPath(), track.getMediaStoreId()+"");
+    private void enqueue(AudioItemHolder holder, String path, String mediaStoreId) {
+        CoverManager.startFetchingCover(holder, path, mediaStoreId);
     }
 
     /**

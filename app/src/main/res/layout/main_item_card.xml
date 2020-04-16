@@ -16,7 +16,7 @@
         android:layout_marginStart="8dp"
         android:clickable="true"
         android:focusable="true"
-        android:transitionName="transitionFragment"
+        android:transitionName="cover_art_element"
         android:visibility="visible"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
