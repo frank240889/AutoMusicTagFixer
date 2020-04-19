@@ -14,30 +14,18 @@ import java.util.List;
 
 @Dao
 public interface TrackDAO {
+    String SELECT_SENTENCE_BY_ORDER = "SELECT * FROM track_table ORDER BY ";
+    String DEFAULT_ORDER = " title COLLATE NOCASE ASC ";
+
 
     @RawQuery(observedEntities = Track.class)
     LiveData<List<Track>> getAllTracks(SupportSQLiteQuery query);
-
-    @RawQuery(observedEntities = Track.class)
-    List<Integer> getCheckedTracks(SupportSQLiteQuery sqLiteQuery);
-
-    @Query("SELECT * FROM track_table WHERE selected = 1 ORDER BY title ASC")
-    List<Track> getSelectedTracks();
-
-    @Query("SELECT * FROM track_table WHERE mediastore_id = :id ORDER BY title ASC")
-    List<Track> getSelectedTrack(int id);
-
-    @Query("SELECT COUNT(*) FROM track_table")
-    int count();
-
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
-    void insert(Track track);
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     void insert(List<Track> tracks);
 
     @Update
-    void update(Track track);
+    int update(Track track);
 
     @Delete
     void delete(Track track);
@@ -51,9 +39,6 @@ public interface TrackDAO {
     @Query("UPDATE track_table SET selected = 0 WHERE selected = 1 ")
     void uncheckAll();
 
-    @Query("SELECT mediastore_id FROM track_table where mediastore_id = :id")
-    boolean findTrackById(int id);
-
     @Query("SELECT _data FROM track_table where mediastore_id = :id")
     String getPath(int id);
 
@@ -65,5 +50,8 @@ public interface TrackDAO {
 
     @Query("SELECT * FROM track_table")
     List<Track> getTracks();
+
+    @RawQuery(observedEntities = Track.class)
+    Track findNextSelected(SupportSQLiteQuery query);
 
 }

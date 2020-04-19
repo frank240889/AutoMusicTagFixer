@@ -9,7 +9,7 @@ public class CoverTask implements ICoverRunnable {
     Thread mThreadThis;
     private Runnable mExtractionRunnable;
     private String mPath;
-    private static CoverManager sCoverManager;
+    private static CoverLoader sCoverLoader;
     private byte[] mCover;
     private String id;
 
@@ -18,11 +18,11 @@ public class CoverTask implements ICoverRunnable {
     }
 
     void startFetching(
-            CoverManager coverManager, AudioHolder audioItemHolder, String path, String id) {
+            CoverLoader coverLoader, AudioHolder audioItemHolder, String path, String id) {
 
         mAudioItemHolderWeakReference = new WeakReference<>(audioItemHolder);
         mPath = path;
-        sCoverManager = coverManager;
+        sCoverLoader = coverLoader;
         this.id = id;
     }
 
@@ -42,13 +42,13 @@ public class CoverTask implements ICoverRunnable {
         // Converts the decode state to the overall state.
         switch(state) {
             case CoverExtractionRunnable.EXTRACTION_STATE_COMPLETED:
-                outState = CoverManager.EXTRACTION_FINISHED;
+                outState = CoverLoader.EXTRACTION_FINISHED;
                 break;
             case CoverExtractionRunnable.EXTRACTION_STATE_FAILED:
-                outState = CoverManager.EXTRACTION_ERROR;
+                outState = CoverLoader.EXTRACTION_ERROR;
                 break;
             default:
-                outState = CoverManager.EXTRACTION_STARTED;
+                outState = CoverLoader.EXTRACTION_STARTED;
                 break;
         }
 
@@ -78,7 +78,7 @@ public class CoverTask implements ICoverRunnable {
     }
 
     void handleState(int state) {
-        sCoverManager.handleState(this, state);
+        sCoverLoader.handleState(this, state);
     }
 
     void recycle() {

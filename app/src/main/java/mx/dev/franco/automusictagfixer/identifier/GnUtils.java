@@ -10,6 +10,7 @@ import com.gracenote.gnsdk.GnAssetIterator;
 import com.gracenote.gnsdk.GnContent;
 import com.gracenote.gnsdk.GnDataLevel;
 import com.gracenote.gnsdk.GnException;
+import com.gracenote.gnsdk.GnImageSize;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -64,7 +65,9 @@ public class GnUtils {
                         GnAsset asset = gnAssetIterator.next();
                         String url = asset.urlHttp();
                         String size = asset.dimension();
-                        covers.add(new CoverArt(size, url));
+                        int width = parseResolution(size);
+                        String gnSize = width > 700 ? getGnSize(width) : asset.size().name();
+                        covers.add(new CoverArt(size, url, gnSize));
                     }
                 }
                 identificationResults.addField(Identifier.Field.COVER_ART.name(), covers);
@@ -147,5 +150,65 @@ public class GnUtils {
 
     public static byte[] fetchGnCover(String url, Context context) throws GnException {
         return new GnAssetFetch(GnApiService.getInstance(context).getGnUser(), url).data();
+    }
+
+    public static int getValue(String gnSize) {
+        if (gnSize.equals(GnImageSize.kImageSize75.name()) ||
+                gnSize.equals(GnImageSize.kImageSizeThumbnail.name()))
+            return 1;
+
+        if (gnSize.equals(GnImageSize.kImageSize110.name()) ||
+                gnSize.equals(GnImageSize.kImageSize170.name()))
+            return 2;
+
+        if (gnSize.equals(GnImageSize.kImageSize220.name()) ||
+                gnSize.equals(GnImageSize.kImageSize300.name()) ||
+                gnSize.equals(GnImageSize.kImageSize450.name()) ||
+                gnSize.equals(GnImageSize.kImageSizeMedium.name())
+        )
+            return 3;
+
+        if (gnSize.equals(GnImageSize.kImageSizeLarge.name()) ||
+                gnSize.equals(GnImageSize.kImageSize720.name()))
+            return 4;
+
+        if (gnSize.equals(GnImageSize.kImageSizeXLarge.name()) ||
+                gnSize.equals(GnImageSize.kImageSize1080.name()))
+            return 5;
+
+        return 0;
+    }
+
+    /**
+     * This method is added as a fixbug because when covers are bigger than medium size, its {@link GnImageSize}
+     * value from service still makes reference to a medium size image,
+     * specifically to a size of {@link GnImageSize#kImageSize450}.
+     * @param resolution The resolution to parse.
+     * @return a integer representing the width of image size.
+     */
+    private static int parseResolution(String resolution) {
+        if (resolution == null || resolution.isEmpty())
+            return -1;
+
+        String[] size = resolution.split("x");
+        String width = size[0];
+        int intSize = -1;
+
+        try {
+            intSize = Integer.parseInt(width);
+        }
+        catch (NumberFormatException ignored) {}
+        return intSize;
+    }
+
+
+    private static String getGnSize(int size) {
+        if (size > 700 && size < 1000) {
+            return GnImageSize.kImageSize720.name();
+        }
+        if (size > 1000) {
+            return GnImageSize.kImageSize1080.name();
+        }
+        return null;
     }
 }

@@ -557,4 +557,12 @@ public class AndroidUtils {
         return filename.trim().replaceAll(" ","_") + "_" +now.format(date);
     }
 
+    public static String replaceChars(String source) {
+        return source.replace("á", "a")
+                .replace("é","e")
+                .replace("í","i")
+                .replace("ó","o")
+                .replace("ú", "u");
+    }
+
 }

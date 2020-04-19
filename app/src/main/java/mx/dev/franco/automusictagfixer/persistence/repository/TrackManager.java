@@ -16,7 +16,7 @@ import javax.inject.Inject;
 
 import mx.dev.franco.automusictagfixer.AutoMusicTagFixer;
 import mx.dev.franco.automusictagfixer.R;
-import mx.dev.franco.automusictagfixer.covermanager.CoverManager;
+import mx.dev.franco.automusictagfixer.covermanager.CoverLoader;
 import mx.dev.franco.automusictagfixer.fixer.AudioTagger;
 import mx.dev.franco.automusictagfixer.fixer.CorrectionParams;
 import mx.dev.franco.automusictagfixer.fixer.TrackReader;
@@ -24,6 +24,7 @@ import mx.dev.franco.automusictagfixer.fixer.TrackWriter;
 import mx.dev.franco.automusictagfixer.interfaces.AsyncOperation;
 import mx.dev.franco.automusictagfixer.persistence.repository.AsyncOperation.TrackUpdater;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
+import mx.dev.franco.automusictagfixer.persistence.room.TrackDAO;
 import mx.dev.franco.automusictagfixer.persistence.room.TrackRoomDatabase;
 import mx.dev.franco.automusictagfixer.ui.SingleLiveEvent;
 
@@ -124,9 +125,9 @@ public class TrackManager {
             @Override
             public void onAsyncOperationFinished(AudioTagger.AudioTaggerResult<Map<FieldKey, Object>> result) {
                 mLoadingStateLiveData.setValue(false);
-                CoverManager.removeCover(getCurrentTrack().getMediaStoreId()+"");
+                CoverLoader.removeCover(getCurrentTrack().getMediaStoreId()+"");
                 mWriterResult.setValue(result);
-                updateTrack(result);
+                updateTrack(result, getCurrentTrack(), mTrackRoomDatabase.trackDao());
             }
 
             @Override
@@ -142,9 +143,8 @@ public class TrackManager {
         return mMediatorLiveDataTrack.getValue();
     }
 
-    public void updateTrack(AudioTagger.AudioTaggerResult<Map<FieldKey, Object>> result) {
+    public void updateTrack(AudioTagger.AudioTaggerResult<Map<FieldKey, Object>> result, Track track, TrackDAO trackDAO) {
         Map<FieldKey, Object> tags = result.getData();
-        Track track = getCurrentTrack();
 
         if (tags != null) {
             String title = (String) tags.get(FieldKey.TITLE);
@@ -168,9 +168,10 @@ public class TrackManager {
         if(path != null && !path.equals(""))
             track.setPath(path);
 
+        track.setChecked(0);
         track.setProcessing(0);
         track.setVersion(track.getVersion()+1);
 
-        new TrackUpdater(mTrackRoomDatabase.trackDao()).executeOnExecutor(AutoMusicTagFixer.getExecutorService(),track);
+        new TrackUpdater(trackDAO).executeOnExecutor(AutoMusicTagFixer.getExecutorService(),track);
     }
 }

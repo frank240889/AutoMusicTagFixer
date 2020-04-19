@@ -220,7 +220,9 @@ public class TrackDetailViewModel extends AndroidViewModel {
     private void onWritingResult(AudioTagger.AudioTaggerResult<Map<FieldKey, Object>> writingResult) {
         mResultWriting.setValue(writingResult.getData());
         mLiveInformativeMessage.setValue(R.string.changes_applied);
-        if (writingResult.getTaskExecuted() != AudioTagger.MODE_RENAME_FILE)
+        boolean deleteCoverFromCache = (writingResult.getTaskExecuted() != AudioTagger.MODE_RENAME_FILE)
+                || writingResult.getData().containsKey(FieldKey.COVER_ART);
+        if (deleteCoverFromCache)
             mResultsCache.delete(getCurrentTrack().getMediaStoreId()+"");
     }
 
@@ -438,8 +440,7 @@ public class TrackDetailViewModel extends AndroidViewModel {
                     data,
                     correctionParams);
 
-            mTrackManager.performCorrection(correctionParams);
-
+            mHandler.post(() -> mTrackManager.performCorrection(correctionParams));
         });
         thread.start();
 
@@ -585,7 +586,6 @@ public class TrackDetailViewModel extends AndroidViewModel {
     @Override
     protected void onCleared() {
         mFileManager.onCleared();
-        mMediaStoreManager.onCleared();
     }
 
     private Result findResult(String id) {

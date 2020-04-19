@@ -21,7 +21,7 @@ import dagger.android.DispatchingAndroidInjector;
 import dagger.android.HasActivityInjector;
 import dagger.android.HasServiceInjector;
 import io.fabric.sdk.android.Fabric;
-import mx.dev.franco.automusictagfixer.covermanager.CoverManager;
+import mx.dev.franco.automusictagfixer.covermanager.CoverLoader;
 import mx.dev.franco.automusictagfixer.di.DaggerApplicationComponent;
 import mx.dev.franco.automusictagfixer.fixer.AudioTagger;
 import mx.dev.franco.automusictagfixer.utilities.shared_preferences.AbstractSharedPreferences;
@@ -49,7 +49,7 @@ public final class AutoMusicTagFixer extends Application implements HasActivityI
     @Override
     public void onCreate() {
         super.onCreate();
-        CoverManager.getInstance();
+        CoverLoader.getInstance();
 
         DaggerApplicationComponent.builder()
             .application(this)

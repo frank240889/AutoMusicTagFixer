@@ -41,7 +41,7 @@ public class FoundItemHolder extends AudioHolder implements View.OnClickListener
     @Override
     public void onClick(View v) {
         if (mListener != null) {
-            mListener.onItemClick(getLayoutPosition(), v);
+            mListener.onItemClick(getAdapterPosition(), cover);
         }
     }
 

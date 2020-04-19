@@ -39,8 +39,7 @@ import dagger.android.AndroidInjector;
 import dagger.android.DispatchingAndroidInjector;
 import dagger.android.support.HasSupportFragmentInjector;
 import mx.dev.franco.automusictagfixer.R;
-import mx.dev.franco.automusictagfixer.interfaces.LongRunningTaskListener;
-import mx.dev.franco.automusictagfixer.interfaces.ProcessingListener;
+import mx.dev.franco.automusictagfixer.interfaces.AutomaticTaskListener;
 import mx.dev.franco.automusictagfixer.receivers.ResponseReceiver;
 import mx.dev.franco.automusictagfixer.services.FixerTrackService;
 import mx.dev.franco.automusictagfixer.ui.BaseFragment;
@@ -291,7 +290,6 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
         localBroadcastManager.registerReceiver(mReceiver, startProcessingForFilter);
         localBroadcastManager.registerReceiver(mReceiver, startTaskFilter);
         localBroadcastManager.registerReceiver(mReceiver, broadcastMessageFilter);
-
     }
 
     @Override
@@ -440,18 +438,18 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
         BaseViewModelFragment baseViewModelFragment = (BaseViewModelFragment) getSupportFragmentManager().findFragmentByTag(MainFragment.class.getName());
         switch (action) {
             case ACTION_START_TASK:
-                ((LongRunningTaskListener) baseViewModelFragment).onLongRunningTaskStarted();
+                ((AutomaticTaskListener) baseViewModelFragment).onStartAutomaticTask();
                 break;
             case START_PROCESSING_FOR:
-                ((ProcessingListener) baseViewModelFragment).onStartProcessingFor(id);
+                ((AutomaticTaskListener) baseViewModelFragment).onStartProcessingFor(id);
                 break;
             case ACTION_COMPLETE_TASK:
-                ((LongRunningTaskListener) baseViewModelFragment).onLongRunningTaskFinish();
+                ((AutomaticTaskListener) baseViewModelFragment).onFinishedAutomaticTask();
                 break;
             case ACTION_BROADCAST_MESSAGE:
                 String message = intent.getStringExtra("message");
                 if(message != null){
-                    ((LongRunningTaskListener) baseViewModelFragment).onLongRunningTaskMessage(message);
+                    ((AutomaticTaskListener.MessageListener) baseViewModelFragment).onIncomingMessageListener(message);
                 }
                 break;
         }

@@ -37,7 +37,7 @@ public class SearchListViewModel extends ViewModel {
         this.resourceManager = resourceManager;
         this.sharedPreferences = sharedPreferences;
 
-        mTracks = trackRepository.getSearchResults();
+        mTracks = trackRepository.observeResultSearch();
     }
 
     public LiveData<List<Track>> getSearchResults(){
@@ -53,21 +53,30 @@ public class SearchListViewModel extends ViewModel {
     }
 
     public void onItemClick(ViewWrapper viewWrapper){
-        boolean isAccessible = AudioTagger.checkFileIntegrity(viewWrapper.track.getPath());
-        if(!isAccessible){
-            mTrackInaccessible.setValue(viewWrapper);
+        List<Track> tracks = trackRepository.resultSearchTracks();
+        Track track = tracks.get(viewWrapper.position);
+        if (track != null) {
+            boolean isAccessible = AudioTagger.checkFileIntegrity(track.getPath());
+            viewWrapper.track = track;
+            if(!isAccessible){
+                mTrackInaccessible.setValue(viewWrapper);
+            }
+            else if(viewWrapper.track.processing() == 1){
+                mTrackIsProcessing.setValue(resourceManager.getString(R.string.current_file_processing));
+            }
+            else {
+                mTrack.setValue(viewWrapper);
+            }
         }
-        else if(viewWrapper.track.processing() == 1){
-            mTrackIsProcessing.setValue(resourceManager.getString(R.string.current_file_processing));
-        }
-        else {
-            mTrack.setValue(viewWrapper);
-        }
-
     }
 
-    public void removeTrack(Track track){
-        trackRepository.delete(track);
+    @Override
+    protected void onCleared() {
+        trackRepository.clearResults();
+    }
+
+    public void removeTrack(int position){
+        trackRepository.delete(position);
     }
 
     public void setProgress(boolean showProgress){

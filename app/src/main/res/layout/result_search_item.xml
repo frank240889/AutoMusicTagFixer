@@ -16,7 +16,7 @@
         android:clickable="true"
         android:focusable="true"
         android:scaleType="centerCrop"
-        android:transitionName="transitionFragment"
+        android:transitionName="cover_art_element"
         android:visibility="visible"
         android:layout_marginStart="8dp"
         app:layout_constraintBottom_toBottomOf="parent"

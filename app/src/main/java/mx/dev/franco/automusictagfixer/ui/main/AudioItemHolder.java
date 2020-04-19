@@ -16,7 +16,6 @@ public class AudioItemHolder extends AudioHolder implements View.OnClickListener
     public interface ClickListener{
         void onCoverClick(int position, View view);
         void onCheckboxClick(int position);
-        void onCheckMarkClick(int position);
         void onItemClick(int position, View view);
     }
 
@@ -35,10 +34,10 @@ public class AudioItemHolder extends AudioHolder implements View.OnClickListener
         checkBox.setChecked(false);
         trackName = itemView.findViewById(R.id.track_name);
         artistName = itemView.findViewById(R.id.artist_name);
-        albumName = itemView.findViewById(R.id.album_name);
+        //albumName = itemView.findViewById(R.id.album_name);
         progressBar =  itemView.findViewById(R.id.progress_processing_file);
         cover = itemView.findViewById(R.id.cover_art);
-        stateMark = itemView.findViewById(R.id.status_mark);
+        //stateMark = itemView.findViewById(R.id.status_mark);
         mListener = clickListener;
         checkBox.setOnClickListener(this);
         cover.setOnClickListener(this);
@@ -60,9 +59,6 @@ public class AudioItemHolder extends AudioHolder implements View.OnClickListener
                 case R.id.cover_art:
                         mListener.onCoverClick(getAdapterPosition(), v);
                     break;
-                /*case R.id.status_mark:
-                        mListener.onCheckMarkClick(getAdapterPosition());
-                    break;*/
                 default:
                         mListener.onItemClick(getAdapterPosition(), cover);
                     break;

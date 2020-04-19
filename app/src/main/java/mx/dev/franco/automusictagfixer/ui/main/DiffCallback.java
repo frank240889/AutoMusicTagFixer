@@ -2,66 +2,55 @@ package mx.dev.franco.automusictagfixer.ui.main;
 
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.DiffUtil;
 
-import java.util.List;
-
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
 
-public class DiffCallback extends DiffUtil.Callback{
+public class DiffCallback extends DiffUtil.ItemCallback<Track>{
 
-    private List<Track> oldTracks;
-    private List<Track> newTracks;
-
-    public DiffCallback(List<Track> oldTracks, List<Track> newTracks) {
-        this.newTracks = newTracks;
-        this.oldTracks = oldTracks;
+    public DiffCallback() {
     }
 
     @Override
-    public int getOldListSize() {
-        return oldTracks.size();
+    public boolean areItemsTheSame(@NonNull Track oldItem, @NonNull Track newItem) {
+        return oldItem.getMediaStoreId() == newItem.getMediaStoreId();
     }
 
     @Override
-    public int getNewListSize() {
-        return newTracks.size();
-    }
-
-    @Override
-    public boolean areItemsTheSame(int oldItemPosition, int newItemPosition) {
-        return oldTracks.get(oldItemPosition).getMediaStoreId() == newTracks.get(newItemPosition).getMediaStoreId();
-    }
-
-    @Override
-    public boolean areContentsTheSame(int oldItemPosition, int newItemPosition) {
-        Track oldTrack = oldTracks.get(oldItemPosition);
-        Track newTrack = newTracks.get(newItemPosition);
-        if(!oldTrack.getTitle().equals(newTrack.getTitle()))
+    public boolean areContentsTheSame(@NonNull Track oldItem, @NonNull Track newItem) {
+        if (!oldItem.getTitle().equals(newItem.getTitle()))
             return false;
-        if(!oldTrack.getArtist().equals(newTrack.getArtist()))
+        if (!oldItem.getArtist().equals(newItem.getArtist()))
             return false;
-        if(!oldTrack.getAlbum().equals(newTrack.getAlbum()))
+        if (!oldItem.getAlbum().equals(newItem.getAlbum()))
+            return false;
+        if (oldItem.checked() != newItem.checked())
             return false;
 
-        return oldTrack.getVersion() == newTrack.getVersion();
+        return oldItem.getVersion() == newItem.getVersion();
     }
 
     @Nullable
     @Override
-    public Object getChangePayload(int oldItemPosition, int newItemPosition) {
-        Track newModel = newTracks.get(newItemPosition);
+    public Object getChangePayload(@NonNull Track oldItem, @NonNull Track newItem) {
 
         Bundle diff = new Bundle();
 
-        diff.putString("title", newModel.getTitle());
-        diff.putString("artist", newModel.getArtist());
-        diff.putString("album", newModel.getAlbum());
+        if (!oldItem.getTitle().equals(newItem.getTitle()))
+            diff.putString("title", newItem.getTitle());
+        if (!oldItem.getArtist().equals(newItem.getArtist()))
+            diff.putString("artist", newItem.getArtist());
+        if (!oldItem.getAlbum().equals(newItem.getAlbum()))
+            diff.putString("album", newItem.getAlbum());
         diff.putBoolean("should_reload_cover", true);
-        diff.putString("path", newModel.getPath());
-        diff.putInt("checked", newModel.checked());
-        diff.putInt("processing", newModel.processing());
+        if (!oldItem.getPath().equals(newItem.getPath()))
+            diff.putString("path", newItem.getPath());
+        if (oldItem.checked() != newItem.checked())
+            diff.putInt("checked", newItem.checked());
+        if (oldItem.processing() != newItem.processing())
+            diff.putInt("processing", newItem.processing());
         return diff;
     }
 }

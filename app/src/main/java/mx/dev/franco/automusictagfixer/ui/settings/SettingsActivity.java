@@ -189,6 +189,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 Settings.SETTING_SIZE_ALBUM_ART = Settings.setValueImageSize(opt);
                 break;
             case "key_rename_file_automatic_mode":
+
                 break;
             case "key_replace_strange_chars_manual_mode":
                 break;

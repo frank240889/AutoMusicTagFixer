@@ -34,7 +34,7 @@ import mx.dev.franco.automusictagfixer.utilities.GlideApp;
  * present them to the user into an {@link AudioHolder} object.
  * @author Franco Castillo
  */
-public class CoverManager {
+public class CoverLoader {
     static final int EXTRACTION_STARTED = 0;
     static final int EXTRACTION_FINISHED = 1;
     static final int EXTRACTION_ERROR = 2;
@@ -52,14 +52,14 @@ public class CoverManager {
 
     private Handler mUiHandler;
 
-    private static CoverManager sInstance;
+    private static CoverLoader sInstance;
 
     /**
      * A static block initialize the necessary static fields.
      */
     static {
         KEEP_ALIVE_TIME_UNIT = TimeUnit.MINUTES;
-        sInstance = new CoverManager();
+        sInstance = new CoverLoader();
         mCoverDataCache = new CoverDataCache();
     }
 
@@ -67,14 +67,14 @@ public class CoverManager {
      * Get the instance of this manager.
      * @return A instance in a singleton pattern.
      */
-    public static CoverManager getInstance() {
+    public static CoverLoader getInstance() {
         return sInstance;
     }
 
     /**
      * Private constructor, we don't need to instantiate directly.
      */
-    private CoverManager(){
+    private CoverLoader(){
         mExtractWorkQueue = new LinkedBlockingQueue<>();
         mCoverTaskQueue = new LinkedBlockingQueue<>();
         mCoverExtractionThreadPool = new ThreadPoolExecutor(CORE_POOL_SIZE,
@@ -106,16 +106,15 @@ public class CoverManager {
     }
 
     private static void loadCover(AudioHolder holder, byte[] result) {
-        Log.w(CoverManager.class.getName(), "loading cover");
+        Log.w(CoverLoader.class.getName(), "loading cover");
         Context context = holder.itemView.getContext();
         if(context instanceof FragmentActivity && !((FragmentActivity)context).isDestroyed())
             GlideApp.with(holder.itemView.getContext())
                     .load(result)
                     .theme(holder.cover.getContext().getTheme())
-                    .thumbnail(0.3f)
+                    .thumbnail(0.5f)
                     .error(holder.cover.getContext().getDrawable(R.drawable.ic_album_white_48px))
                     .diskCacheStrategy(DiskCacheStrategy.NONE)
-                    .skipMemoryCache(true)
                     .transition(DrawableTransitionOptions.withCrossFade(100))
                     .fitCenter()
                     .listener(new RequestListener<Drawable>() {
@@ -181,7 +180,7 @@ public class CoverManager {
             }
 
             // Initializes the task
-            coverTask.startFetching(CoverManager.sInstance, audioItemHolder, path, id);
+            coverTask.startFetching(CoverLoader.sInstance, audioItemHolder, path, id);
 
 
             /*
@@ -234,6 +233,6 @@ public class CoverManager {
 
     public static void removeCover(String id) {
         mCoverDataCache.delete(id);
-        Log.d(CoverManager.class.getName(), "removedCover with id: " + id);
+        Log.d(CoverLoader.class.getName(), "removedCover with id: " + id);
     }
 }

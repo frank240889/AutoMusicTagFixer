@@ -2,11 +2,14 @@ package mx.dev.franco.automusictagfixer.identifier;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.util.ArrayMap;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
+
+import com.gracenote.gnsdk.GnImageSize;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,6 +29,7 @@ import mx.dev.franco.automusictagfixer.interfaces.Cancelable;
 import mx.dev.franco.automusictagfixer.persistence.cache.IdentificationResultsCache;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.ui.SingleLiveEvent;
+import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 
 /**
  * @author Franco Castillo
@@ -37,6 +41,8 @@ import mx.dev.franco.automusictagfixer.ui.SingleLiveEvent;
 public class IdentificationManager implements Cancelable<Void> {
     public static final int ALL_TAGS = 0;
     public static final int ONLY_COVER = 1;
+
+    private boolean mVerifyConnection = true;
 
     /**
      * Dispatcher of loading event.
@@ -98,37 +104,42 @@ public class IdentificationManager implements Cancelable<Void> {
         return mObservableLoadingMessage;
     }
 
-    public IdentificationManager setIdentificationType(int identificationType) {
-        mIdentificationType = identificationType;
-        return this;
-    }
-
     /**
      * Starts the identification process.
      * @param track The track to identify.
      */
     public void startIdentification(Track track) {
-        if (mCheckingConnection)
-            return;
+        if (mVerifyConnection) {
+            if (mCheckingConnection)
+                return;
 
-        ConnectionChecker connectionChecker = new ConnectionChecker(new AsyncOperation<Void, Boolean, Void, Void>() {
-            @Override
-            public void onAsyncOperationStarted(Void params) {
-                mCheckingConnection = true;
-            }
+            ConnectionChecker connectionChecker = new ConnectionChecker(new AsyncOperation<Void, Boolean, Void, Void>() {
+                @Override
+                public void onAsyncOperationStarted(Void params) {
+                    mCheckingConnection = true;
+                }
 
-            @Override
-            public void onAsyncOperationFinished(Boolean connected) {
-                mCheckingConnection = false;
-                if (!connected) {
-                    mObservableMessage.setValue(mContext.getString(R.string.connect_to_internet));
+                @Override
+                public void onAsyncOperationFinished(Boolean connected) {
+                    mCheckingConnection = false;
+                    if (!connected) {
+                        mObservableMessage.setValue(mContext.getString(R.string.connect_to_internet));
+                    }
+                    else {
+                        identify(track);
+                    }
                 }
-                else {
-                    identify(track);
-                }
-            }
-        });
-        connectionChecker.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, mContext);
+            });
+            connectionChecker.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, mContext);
+        }
+        else {
+            identify(track);
+        }
+    }
+
+    public IdentificationManager addCallback(IdentificationListener<List<? extends Identifier.IdentificationResults>> callback) {
+        mIdentifier.registerCallback(callback);
+        return this;
     }
 
     /**
@@ -141,7 +152,7 @@ public class IdentificationManager implements Cancelable<Void> {
 
         List<? extends Identifier.IdentificationResults> identificationResults = mResultsCache.load(track.getMediaStoreId()+"");
         if (identificationResults != null) {
-            processResults(identificationResults);
+            processResults(identificationResults, mIdentificationType);
         }
         else {
             Map<String, String> data = new ArrayMap<>();
@@ -176,7 +187,7 @@ public class IdentificationManager implements Cancelable<Void> {
                         mIdentifying = false;
                         List<Result> newList = prepareResults(result);
                         mResultsCache.add(track.getMediaStoreId()+"", newList);
-                        processResults(result);
+                        processResults(result, mIdentificationType);
                         mObservableLoadingMessage.setValue(new IdentificationEvent(mIdentifying,
                                 null, null));
                     }
@@ -223,7 +234,7 @@ public class IdentificationManager implements Cancelable<Void> {
      * @param results A list of results objects.
      * @return A list of result objects.
      */
-    private List<Result> prepareResults(List<? extends Identifier.IdentificationResults> results) {
+    public static List<Result> prepareResults(List<? extends Identifier.IdentificationResults> results) {
         List<Result> resultList = new ArrayList<>();
         for (Identifier.IdentificationResults identificationResult : results) {
             Result result = (Result) identificationResult;
@@ -234,6 +245,7 @@ public class IdentificationManager implements Cancelable<Void> {
                     r.setId(UUID.randomUUID().toString());
                     r.getCoverArt().setSize(coverArt.getSize());
                     r.getCoverArt().setUrl(coverArt.getUrl());
+                    r.getCoverArt().setDimension(coverArt.getDimension());
                     resultList.add(r);
                 }
             }
@@ -250,7 +262,7 @@ public class IdentificationManager implements Cancelable<Void> {
      * Check what type of identification was performed to return the appropriate response.
      * @param result The result list to process.
      */
-    private void processResults(List<? extends Identifier.IdentificationResults> result) {
+    private void processResults(List<? extends Identifier.IdentificationResults> result, int mIdentificationType) {
         boolean hasCovers = findCovers(result);
 
         if (mIdentificationType == IdentificationManager.ALL_TAGS ||
@@ -270,6 +282,15 @@ public class IdentificationManager implements Cancelable<Void> {
             mIdentifier.cancel();
     }
 
+    public IdentificationManager verifyConnection(boolean verifyConnection) {
+        mVerifyConnection = verifyConnection;
+        return this;
+    }
+
+    public IdentificationManager setIdentificationType(int identificationType) {
+        mIdentificationType = identificationType;
+        return this;
+    }
 
     public static boolean findCovers(List<? extends Identifier.IdentificationResults> results) {
         for (Identifier.IdentificationResults r : results) {
@@ -281,6 +302,170 @@ public class IdentificationManager implements Cancelable<Void> {
         return false;
     }
 
+    public static Result findBestResult(List<? extends Identifier.IdentificationResults> results, Track track, SharedPreferences sharedPreferences) {
+
+        Result bestResult = null;
+        if (results == null || results.isEmpty())
+            return bestResult;
+
+        if (results.size() == 1)
+            return (Result) results.get(0);
+
+        String dimension = sharedPreferences.getString("key_size_album_art", "kImageSize1080");
+
+        CoverArt coverArt = null;
+        if (dimension.equals(GnImageSize.kImageSizeThumbnail.name())) {
+            coverArt = findSmallestSize(results);
+        }
+        else if (dimension.equals(GnImageSize.kImageSizeSmall.name())) {
+            for (int i = results.size() - 1 ; i >= 0 ; i--) {
+                Result result = (Result) results.get(i);
+                if (result.getCoverArt() != null &&
+                        (result.getCoverArt().getDimension().equals(dimension) ||
+                                result.getCoverArt().getDimension().equals(GnImageSize.kImageSize110.name()) ||
+                                result.getCoverArt().getDimension().equals(GnImageSize.kImageSize170.name()))) {
+                    coverArt = result.getCoverArt();
+                    break;
+                }
+            }
+        }
+        else if (dimension.equals(GnImageSize.kImageSizeMedium.name())) {
+            for (int i = results.size() - 1 ; i >= 0 ; i--) {
+                Result result = (Result) results.get(i);
+                if (result.getCoverArt() != null &&
+                        (result.getCoverArt().getDimension().equals(dimension) ||
+                                result.getCoverArt().getDimension().equals(GnImageSize.kImageSize220.name()) ||
+                                result.getCoverArt().getDimension().equals(GnImageSize.kImageSize300.name()) ||
+                                result.getCoverArt().getDimension().equals(GnImageSize.kImageSize450.name()))) {
+                    coverArt = result.getCoverArt();
+                    break;
+                }
+            }
+        }
+        else if (dimension.equals(GnImageSize.kImageSize720.name())) {
+            for (int i = results.size() - 1 ; i >= 0 ; i--) {
+                Result result = (Result) results.get(i);
+                if (result.getCoverArt() != null &&
+                        (result.getCoverArt().getDimension().equals(dimension) ||
+                                result.getCoverArt().getDimension().equals(GnImageSize.kImageSizeLarge.name()))) {
+                    coverArt = result.getCoverArt();
+                    break;
+                }
+            }
+        }
+        else if (dimension.equals(GnImageSize.kImageSize1080.name())) {
+            for (int i = results.size() - 1 ; i >= 0 ; i--) {
+                Result result = (Result) results.get(i);
+                if (result.getCoverArt() != null &&
+                        (result.getCoverArt().getDimension().equals(dimension) ||
+                                result.getCoverArt().getDimension().equals(GnImageSize.kImageSizeXLarge.name()))) {
+                    coverArt = result.getCoverArt();
+                    break;
+                }
+            }
+        }
+        else if (dimension.equals(GnImageSize.kImageSizeXLarge.name())) {
+            coverArt = findBiggestSize(results);
+        }
+        else {
+            coverArt = null;
+        }
+
+
+        String title = track.getTitle() != null ? AndroidUtils.replaceChars(track.getTitle().toUpperCase().trim()) : "";
+        String artist = track.getArtist() != null ? AndroidUtils.replaceChars(track.getArtist().toUpperCase().trim()) : "";
+
+        for (Identifier.IdentificationResults r : results) {
+            Result result = (Result) r;
+            if (title.equals(result.getTitle().toUpperCase()) &&
+                    artist.equals(result.getArtist().toUpperCase())) {
+
+                bestResult = result;
+                bestResult.setCoverArt(coverArt);
+                return bestResult;
+            }
+        }
+
+        for (Identifier.IdentificationResults r : results) {
+            Result result = (Result) r;
+            if (title.equals(result.getTitle().toUpperCase()) &&
+                    track.getArtist().equals(result.getArtist().toUpperCase())) {
+                bestResult = result;
+                bestResult.setCoverArt(coverArt);
+                return bestResult;
+            }
+        }
+
+        for (Identifier.IdentificationResults r : results) {
+            Result result = (Result) r;
+            if (track.getTitle().equals(result.getTitle().toUpperCase())) {
+                bestResult = result;
+                bestResult.setCoverArt(coverArt);
+                return bestResult;
+            }
+        }
+
+
+        bestResult = (Result) results.get(0);
+        bestResult.setCoverArt(coverArt);
+
+        return bestResult;
+    }
+
+    @NonNull
+    public static CoverArt findSmallestSize(List<? extends Identifier.IdentificationResults> results) {
+        List<CoverArt> coverArts = getCovers(results);
+        CoverArt pivot = coverArts.get(0);
+        for (int c = 1 ; c < coverArts.size() ; c++) {
+            pivot = compareAndSelectSmallest(pivot, coverArts.get(c));
+        }
+        return pivot;
+    }
+
+    private static CoverArt compareAndSelectSmallest(CoverArt currentSmallestSize, CoverArt nextCover) {
+        int currentSmallestValueSize = GnUtils.getValue(currentSmallestSize.getDimension());
+        int nextValue = GnUtils.getValue(nextCover.getDimension());
+        CoverArt smallestCoverArt;
+        if (currentSmallestValueSize <= nextValue) {
+            smallestCoverArt = currentSmallestSize;
+        }
+        else {
+            smallestCoverArt = nextCover;
+        }
+        return smallestCoverArt;
+    }
+
+    @NonNull
+    public static CoverArt findBiggestSize(List<? extends Identifier.IdentificationResults> results) {
+        List<CoverArt> coverArts = getCovers(results);
+        CoverArt pivot = coverArts.get(0);
+        for (int c = coverArts.size() - 1 ; c >= 0 ; c--) {
+            pivot = compareAndSelectBiggest(pivot, coverArts.get(c));
+        }
+        return pivot;
+    }
+
+    private static CoverArt compareAndSelectBiggest(CoverArt currentBiggestSize, CoverArt nextCover) {
+        int currentBiggestValueSize = GnUtils.getValue(currentBiggestSize.getDimension());
+        int nextValue = GnUtils.getValue(nextCover.getDimension());
+        CoverArt bigeestCoverArt;
+        if (currentBiggestValueSize >= nextValue) {
+            bigeestCoverArt = currentBiggestSize;
+        }
+        else {
+            bigeestCoverArt = nextCover;
+        }
+        return bigeestCoverArt;
+    }
+
+    private static List<CoverArt> getCovers(List<? extends Identifier.IdentificationResults> results) {
+        List<CoverArt> covers = new ArrayList<>();
+        for (Identifier.IdentificationResults r : results) {
+            Result result = (Result) r;
+            covers.add(result.getCoverArt());
+        }
+        return covers;
+    }
 
     public static class IdentificationEvent {
         private boolean identifying;

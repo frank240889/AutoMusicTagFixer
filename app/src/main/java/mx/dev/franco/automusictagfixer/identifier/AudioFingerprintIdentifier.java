@@ -61,9 +61,9 @@ public class AudioFingerprintIdentifier implements Identifier<Map<String, String
     @Override
     public void identify(Map<String, String> input) {
         String file = input.get(Field.FILENAME.name());
-        String title = input.get(Field.TITLE.name());
+        /*String title = input.get(Field.TITLE.name());
         String artist = input.get(Field.ARTIST.name());
-        String album = input.get(Field.ALBUM.name());
+        String album = input.get(Field.ALBUM.name());*/
 
         if(identificationListener != null)
             identificationListener.onIdentificationStart();

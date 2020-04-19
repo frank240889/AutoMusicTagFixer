@@ -35,6 +35,12 @@ public class TrackWriter extends AsyncTask<Context, Void, AudioTagger.AudioTagge
     }
 
     @Override
+    protected void onPreExecute() {
+        if (mCallback != null)
+            mCallback.onAsyncOperationStarted(null);
+    }
+
+    @Override
     protected AudioTagger.AudioTaggerResult<Map<FieldKey, Object>> doInBackground(Context... contexts) {
         AudioTagger.ResultCorrection resultCorrection = null;
 

@@ -10,7 +10,6 @@ import dagger.Component;
 import dagger.android.AndroidInjector;
 import dagger.android.support.AndroidSupportInjectionModule;
 import mx.dev.franco.automusictagfixer.AutoMusicTagFixer;
-import mx.dev.franco.automusictagfixer.ui.main.TrackAdapter;
 
 @Component(modules = {
         AndroidSupportInjectionModule.class,
@@ -46,6 +45,4 @@ public interface ApplicationComponent extends AndroidInjector<AutoMusicTagFixer>
     }
 
     void inject(AutoMusicTagFixer autoMusicTagFixer);
-
-    void inject(TrackAdapter trackAdapter);
 }

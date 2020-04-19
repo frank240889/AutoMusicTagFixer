@@ -96,13 +96,13 @@
         <item>De la mejor calidad disponible</item>
     </string-array>
     <string-array name="pref_size_album_art_values">
-        <item>-1</item>
-        <item>0</item>
-        <item>1</item>
-        <item>5</item>
-        <item>7</item>
-        <item>10</item>
-        <item>1000</item>
+        <item>null</item>
+        <item>kImageSizeThumbnail</item>
+        <item>kImageSizeSmall</item>
+        <item>kImageSizeMedium</item>
+        <item>kImageSize720</item>
+        <item>kImageSize1080</item>
+        <item>kImageSizeXLarge</item>
     </string-array>
 
     <string name="cancel_task">¿Desea cancelar la corrección en curso?</string>

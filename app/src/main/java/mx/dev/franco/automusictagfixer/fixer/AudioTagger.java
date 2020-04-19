@@ -481,6 +481,8 @@ public class AudioTagger {
 
     @Nullable
     public static byte[] getCover(@NonNull String pathToFile) {
+        if (pathToFile == null)
+            return null;
         return getCover(new File(pathToFile));
     }
 

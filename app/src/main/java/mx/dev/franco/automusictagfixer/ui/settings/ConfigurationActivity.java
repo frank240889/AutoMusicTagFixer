@@ -152,8 +152,14 @@ public class ConfigurationActivity extends AppCompatActivity {
             else {
                 switch (key) {
                     case "key_size_album_art":
-                        String opt = mSharedPreferences.getString(key, "-1");
-                        Settings.SETTING_SIZE_ALBUM_ART = Settings.setValueImageSize(opt);
+                            mSharedPreferences.edit().
+                                    putString(key, preference.getString(key,"kImageSizeXLarge")).apply();
+                        break;
+                    case "key_rename_file_automatic_mode":
+                    case "key_overwrite_all_tags_automatic_mode":
+                    case "key_use_embed_player":
+                        mSharedPreferences.edit().
+                                putBoolean(key, preference.getBoolean(key,true)).apply();
                         break;
                     case "key_background_service":
                         Intent intent = new Intent(Constants.Actions.ACTION_SHOW_NOTIFICATION);

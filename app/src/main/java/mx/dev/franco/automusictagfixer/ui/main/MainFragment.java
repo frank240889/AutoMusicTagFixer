@@ -6,7 +6,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.content.res.Configuration;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -23,9 +22,9 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
 import androidx.core.content.ContextCompat;
-import androidx.lifecycle.ViewModelProviders;
+import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.AsyncListDiffer;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
@@ -41,8 +40,7 @@ import javax.inject.Inject;
 
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.fixer.AudioTagger;
-import mx.dev.franco.automusictagfixer.interfaces.LongRunningTaskListener;
-import mx.dev.franco.automusictagfixer.interfaces.ProcessingListener;
+import mx.dev.franco.automusictagfixer.interfaces.AutomaticTaskListener;
 import mx.dev.franco.automusictagfixer.persistence.repository.TrackRepository;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.persistence.room.database.TrackContract;
@@ -61,7 +59,7 @@ import mx.dev.franco.automusictagfixer.utilities.shared_preferences.AbstractShar
 
 public class MainFragment extends BaseViewModelFragment<ListViewModel> implements
         AudioItemHolder.ClickListener,
-        LongRunningTaskListener, ProcessingListener {
+        AutomaticTaskListener, AutomaticTaskListener.MessageListener, AsyncListDiffer.ListListener<List<Track>> {
     private static final String TAG = MainFragment.class.getName();
 
     //A simple text view to show a message when no songs were identificationFound
@@ -73,7 +71,6 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
     //better performance with huge data sources
     private RecyclerView mRecyclerView;
     private TrackAdapter mAdapter;
-    private ListViewModel mListViewModel;
     //private ActionBar actionBar;
     private Menu mMenu;
     private boolean mHasPermission;
@@ -81,6 +78,7 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
     //private Toolbar mToolbar;
     public ExtendedFloatingActionButton mStartTaskFab;
     private FloatingActionButton mStopTaskFab;
+    private Snackbar mStopCorrectionSnackbar;
     private List<Track> mCurrentTracks;
 
     @Inject
@@ -101,16 +99,14 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
         mAdapter = new TrackAdapter(this);
-        mListViewModel = getViewModel();
-
-        mListViewModel.observeAccessibleTrack().observe(this, this::openDetails);
-        mListViewModel.observeActionCanOpenDetails().observe(this, this::openDetails);
-        mListViewModel.observeActionCanStartAutomaticMode().observe(this, this::startCorrection);
-        mListViewModel.observeIsTrackInaccessible().observe(this, this::showInaccessibleTrack);
-        mListViewModel.observeResultFilesFound().observe(this, this::noResultFilesFound);
-        mListViewModel.observeLoadingState().observe(this, this::loading);
-        mListViewModel.observeActionCheckAll().observe(this, this::onCheckAll);
-        mListViewModel.observeSizeResultsMediaStore().observe(this, message -> {
+        mViewModel.observeAccessibleTrack().observe(this, this::openDetails);
+        mViewModel.observeActionCanOpenDetails().observe(this, this::openDetails);
+        mViewModel.observeActionCanStartAutomaticMode().observe(this, this::startCorrection);
+        mViewModel.observeIsTrackInaccessible().observe(this, this::showInaccessibleTrack);
+        mViewModel.observeResultFilesFound().observe(this, this::noResultFilesFound);
+        mViewModel.observeLoadingState().observe(this, this::loading);
+        mViewModel.observeActionCheckAll().observe(this, this::onCheckAll);
+        mViewModel.observeSizeResultsMediaStore().observe(this, message -> {
             if(message == null)
                 return;
 
@@ -118,17 +114,17 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
             Snackbar snackbar = AndroidUtils.createSnackbar(mSwipeRefreshLayout, message);
             snackbar.show();
         });
-        mListViewModel.getTracks().observe(this, tracks -> {
-            if(tracks == null)
-                return;
-
+        mViewModel.getTracks().observe(this, tracks -> {
             mAdapter.onChanged(tracks);
             mCurrentTracks = tracks;
-            updateToolbar(mCurrentTracks);
+            updateToolbar(mViewModel.getTrackList());
         });
 
-        mListViewModel.observeInformativeMessage().observe(this, this::onMessage);
-        mListViewModel.observeOnSortTracks().observe(this, this::onSorted);
+        mViewModel.observeInformativeMessage().observe(this, this::onMessage);
+        mViewModel.observeSorting().observe(this, sort -> {
+            if (sort != null && sort.idResource != -1)
+                checkItem(sort.idResource);
+        });
 
     }
 
@@ -144,12 +140,8 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
         mSwipeRefreshLayout = view.findViewById(R.id.refresh_layout);
         mMessage = view.findViewById(R.id.message);
         mStartTaskFab = ((MainActivity)getActivity()).startTaskFab;
-        //startTaskFab = view.findViewById(R.id.fab_start_stop);
-        //mStopTaskFab = view.findViewById(R.id.fab_stop);
         mStartTaskFab.setOnClickListener(v -> startCorrection(-1));
-        //mStopTaskFab.setOnClickListener(v -> stopCorrection());
         mStartTaskFab.hide();
-        //mStopTaskFab.hide();
 
         //attach adapter recyclerview
         LinearLayoutManager layoutManager = new LinearLayoutManager(getActivity()) {
@@ -181,7 +173,7 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
                             RequiredPermissions.REQUEST_PERMISSION_SAF);
                 }
                 else {
-                    mViewModel.scan();
+                    mViewModel.fetchTracks(null);
                 }
             }
         });
@@ -209,14 +201,14 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
                         RequiredPermissions.REQUEST_PERMISSION_SAF);
             }
             else {
-                mViewModel.scan();
+                mViewModel.fetchTracks(null);
             }
             mRecyclerView.setVisibility(View.VISIBLE);
             mMessage.setText(R.string.loading_tracks);
         }
         //App is opened again, then scroll to the track being processed.
         int id = getActivity().getIntent().getIntExtra(Constants.MEDIA_STORE_ID, -1);
-        int pos = mListViewModel.getTrackPosition(id);
+        int pos = mViewModel.getTrackPosition(id);
         if(pos != -1)
         mRecyclerView.scrollToPosition(pos);
     }
@@ -225,7 +217,7 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
     public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         mSwipeRefreshLayout.setRefreshing(false);
         if (requestCode == RequiredPermissions.REQUEST_PERMISSION_SAF) {
-            mListViewModel.scan();
+            mViewModel.fetchTracks(null);
         }
     }
 
@@ -244,11 +236,11 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
         stopScroll();
         switch (id){
             case R.id.action_select_all:
-                    mListViewModel.checkAllTracks();
+                    mViewModel.checkAllTracks();
                 break;
             case R.id.action_search:
                     ResultSearchFragment resultSearchListFragment = (ResultSearchFragment)
-                            getActivity().getSupportFragmentManager().findFragmentByTag(ResultSearchFragment.class.getName());
+                            getParentFragmentManager().findFragmentByTag(ResultSearchFragment.class.getName());
 
                     if(resultSearchListFragment == null) {
                         resultSearchListFragment = ResultSearchFragment.newInstance();
@@ -259,7 +251,7 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
                 ((MainActivity)getActivity()).startTaskFab.hide(new ExtendedFloatingActionButton.OnChangedCallback() {
                     @Override
                     public void onHidden(ExtendedFloatingActionButton extendedFab) {
-                        getFragmentManager().beginTransaction()
+                        getParentFragmentManager().beginTransaction()
                                 .setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left,
                                         R.anim.slide_in_left, R.anim.slide_out_right)
                                 .addToBackStack(ResultSearchFragment.class.getName())
@@ -276,28 +268,57 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
                     rescan();
                 break;
             case R.id.path_asc:
-                    mListViewModel.sortTracks(TrackContract.TrackData.DATA, TrackRepository.ASC, id);
+                    mViewModel.fetchTracks(new TrackRepository.Sort(TrackContract.TrackData.DATA,
+                                    TrackRepository.ASC, id));
                 break;
             case R.id.path_desc:
-                    mListViewModel.sortTracks(TrackContract.TrackData.DATA, TrackRepository.DESC, id);
+                    mViewModel.fetchTracks(new TrackRepository.Sort(
+                                    TrackContract.TrackData.DATA,
+                                    TrackRepository.DESC,
+                                    id)
+                            );
                 break;
             case R.id.title_asc:
-                    mListViewModel.sortTracks(TrackContract.TrackData.TITLE, TrackRepository.ASC, id);
+                    mViewModel.fetchTracks(new TrackRepository.Sort(
+                                    TrackContract.TrackData.TITLE,
+                                    TrackRepository.ASC,
+                                    id)
+                            );
                 break;
             case R.id.title_desc:
-                    mListViewModel.sortTracks(TrackContract.TrackData.TITLE, TrackRepository.DESC, id);
+                    mViewModel.fetchTracks(new TrackRepository.Sort(
+                                    TrackContract.TrackData.TITLE,
+                                    TrackRepository.DESC,
+                                    id)
+                            );
                 break;
             case R.id.artist_asc:
-                    mListViewModel.sortTracks(TrackContract.TrackData.ARTIST, TrackRepository.ASC, id);
+                    mViewModel.fetchTracks(new TrackRepository.Sort(
+                                    TrackContract.TrackData.ARTIST,
+                                    TrackRepository.ASC,
+                                    id)
+                            );
                 break;
             case R.id.artist_desc:
-                    mListViewModel.sortTracks(TrackContract.TrackData.ARTIST, TrackRepository.DESC, id);
+                    mViewModel.fetchTracks(new TrackRepository.Sort(
+                                    TrackContract.TrackData.ARTIST,
+                                    TrackRepository.DESC,
+                                    id)
+                            );
                 break;
             case R.id.album_asc:
-                    mListViewModel.sortTracks(TrackContract.TrackData.ALBUM, TrackRepository.ASC, id);
+                    mViewModel.fetchTracks(new TrackRepository.Sort(
+                                    TrackContract.TrackData.ALBUM,
+                                    TrackRepository.ASC,
+                                    id)
+                            );
                 break;
             case R.id.album_desc:
-                    mListViewModel.sortTracks(TrackContract.TrackData.ALBUM, TrackRepository.DESC, id);
+                    mViewModel.fetchTracks(new TrackRepository.Sort(
+                                    TrackContract.TrackData.ALBUM,
+                                    TrackRepository.DESC,
+                                    id)
+                            );
                 break;
         }
         return super.onOptionsItemSelected(menuItem);
@@ -312,10 +333,291 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
                     RequiredPermissions.WRITE_EXTERNAL_STORAGE_PERMISSION);
         }
         else {
-            mListViewModel.scan();
+            mViewModel.fetchTracks(null);
         }
     }
 
+    @Override
+    protected ListViewModel getViewModel() {
+        return new ViewModelProvider(this, androidViewModelFactory).get(ListViewModel.class);
+    }
+
+    @Override
+    protected void loading(boolean isLoading) {
+        if(isLoading) {
+            mRecyclerView.setEnabled(false);
+        }
+        else {
+            mRecyclerView.setEnabled(false);
+        }
+        mSwipeRefreshLayout.setRefreshing(isLoading);
+    }
+    
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        //Check permission to access files and execute scan if were granted
+        mHasPermission = grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED;
+        if(mHasPermission){
+            boolean isPresentSD = storageHelper.isPresentRemovableStorage();
+            if(AndroidUtils.getUriSD(getActivity()) == null && isPresentSD) {
+                startActivityForResult(new Intent(getActivity(), SdCardInstructionsActivity.class),
+                        RequiredPermissions.REQUEST_PERMISSION_SAF);
+            }
+            else {
+                mViewModel.fetchTracks(null);
+            }
+            mRecyclerView.setVisibility(View.VISIBLE);
+        }
+        else {
+            mSwipeRefreshLayout.setEnabled(true);
+            mStartTaskFab.hide();
+            mMessage.setVisibility(View.VISIBLE);
+            mMessage.setText(R.string.permission_denied);
+            mViewModel.setLoading(false);
+            showViewPermissionMessage();
+        }
+
+    }
+
+    @Override
+    public void onPause(){
+        super.onPause();
+        mRecyclerView.stopScroll();
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+
+        //Stop correction task if "Usar corrección en segundo plano" from Settings is off.
+        if(!PreferenceManager.getDefaultSharedPreferences(getActivity().
+                getApplicationContext()).getBoolean("key_background_service", true)){
+            Intent intent = new Intent(getActivity(),FixerTrackService.class);
+            getActivity().stopService(intent);
+        }
+    }
+
+    @Override
+    public Animation onCreateAnimation(int transit, boolean enter, int nextAnim) {
+        Animation animation = super.onCreateAnimation(transit, enter, nextAnim);
+
+        if (animation == null && nextAnim != 0) {
+            animation = AnimationUtils.loadAnimation(getActivity(), nextAnim);
+        }
+
+        if (animation != null && getView() != null) {
+            getView().setLayerType(View.LAYER_TYPE_HARDWARE, null);
+
+            animation.setAnimationListener(new Animation.AnimationListener() {
+                @Override
+                public void onAnimationStart(Animation animation) {
+
+                }
+
+                @Override
+                public void onAnimationEnd(Animation animation) {
+                    //For Android Marshmallow and Lollipop, there is no need to request permissions
+                    //at runtime.
+                    /*if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+                        mListViewModel.scan();
+                    }*/
+                    if(isVisible())
+                        updateToolbar(mCurrentTracks);
+                }
+
+                @Override
+                public void onAnimationRepeat(Animation animation) {
+
+                }
+            });
+        }
+        else {
+            //For Android Marshmallow and Lollipop, there is no need to request permissions
+            //at runtime.
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M)
+                mViewModel.fetchTracks(null);
+        }
+        return animation;
+    }
+
+    private void showViewPermissionMessage() {
+        InformativeFragmentDialog informativeFragmentDialog = InformativeFragmentDialog.
+            newInstance(R.string.title_dialog_permision,
+                R.string.explanation_permission_access_files,
+                R.string.accept, R.string.cancel_button, getActivity());
+        informativeFragmentDialog.show(getChildFragmentManager(),
+            informativeFragmentDialog.getClass().getCanonicalName());
+
+        informativeFragmentDialog.setOnClickBasicFragmentDialogListener(
+            new InformativeFragmentDialog.OnClickBasicFragmentDialogListener() {
+                @Override
+                public void onPositiveButton() {
+                    informativeFragmentDialog.dismiss();
+                    requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                        RequiredPermissions.WRITE_EXTERNAL_STORAGE_PERMISSION);
+                }
+
+                @Override
+                public void onNegativeButton() {
+                    informativeFragmentDialog.dismiss();
+                }
+            }
+        );
+    }
+
+    @Override
+    public void onCoverClick(int position, View view) {
+        ViewWrapper viewWrapper = new ViewWrapper();
+        viewWrapper.view = view;
+        viewWrapper.position = position;
+        viewWrapper.mode = CorrectionActions.VIEW_INFO;
+        mViewModel.onClickCover(viewWrapper);
+    }
+
+    @Override
+    public void onCheckboxClick(int position) {
+        mViewModel.onCheckboxClick(position);
+    }
+
+    @Override
+    public void onItemClick(int position, View view) {
+        ViewWrapper viewWrapper = new ViewWrapper();
+        viewWrapper.view = view;
+        viewWrapper.position = position;
+        viewWrapper.mode = CorrectionActions.SEMI_AUTOMATIC;
+        mViewModel.onItemClick(viewWrapper);
+    }
+
+    /**
+     * Opens new activity showing up the details from current audio item list pressed
+     * @param viewWrapper a wrapper object containing the track, view , and mode of correction.
+     */
+    private void openDetails(ViewWrapper viewWrapper){
+        mRecyclerView.stopScroll();
+        openFragment(viewWrapper);
+    }
+
+    private void openFragment(ViewWrapper viewWrapper){
+        Intent intent = new Intent(getActivity(), TrackDetailActivity.class);
+        Bundle bundle = AndroidUtils.getBundle(viewWrapper.track.getMediaStoreId(),
+                viewWrapper.mode);
+        intent.putExtra(TrackDetailActivity.TRACK_DATA, bundle);
+        startActivity(intent, ActivityOptions.makeSceneTransitionAnimation(getActivity(), viewWrapper.view, "cover_art_element").toBundle());
+    }
+
+    private void stopCorrection() {
+        InformativeFragmentDialog informativeFragmentDialog = InformativeFragmentDialog.
+                newInstance(R.string.attention,
+                        R.string.cancel_task,
+                        R.string.yes, R.string.no, getActivity());
+        informativeFragmentDialog.show(getChildFragmentManager(),
+                informativeFragmentDialog.getClass().getCanonicalName());
+
+        informativeFragmentDialog.setOnClickBasicFragmentDialogListener(
+                new InformativeFragmentDialog.OnClickBasicFragmentDialogListener() {
+                    @Override
+                    public void onPositiveButton() {
+                        //stops service, and sets starting state to FAB
+
+                        Intent stopIntent = new Intent(getActivity(), FixerTrackService.class);
+                        stopIntent.setAction(Constants.Actions.ACTION_STOP_TASK);
+                        getActivity().getApplicationContext().startService(stopIntent);
+                        Toast t = AndroidUtils.getToast(getContext());
+                        t.setDuration(Toast.LENGTH_SHORT);
+                        t.setText(R.string.cancelling);
+                        t.show();
+                    }
+
+                    @Override
+                    public void onNegativeButton() {
+                        informativeFragmentDialog.dismiss();
+                    }
+                }
+        );
+    }
+
+    private void showInaccessibleTrack(ViewWrapper viewWrapper) {
+        InformativeFragmentDialog informativeFragmentDialog = InformativeFragmentDialog.
+                newInstance(getString(R.string.attention),
+                        String.format(getString(R.string.file_error), viewWrapper.track.getPath()),
+                        getString(R.string.remove_from_list), null);
+        informativeFragmentDialog.show(getChildFragmentManager(),
+                informativeFragmentDialog.getClass().getCanonicalName());
+
+        informativeFragmentDialog.setOnClickBasicFragmentDialogListener(
+                new InformativeFragmentDialog.OnClickBasicFragmentDialogListener() {
+                    @Override
+                    public void onPositiveButton() {
+                        mViewModel.removeTrack(viewWrapper.position);
+                    }
+
+                    @Override
+                    public void onNegativeButton() {
+                        informativeFragmentDialog.dismiss();
+                    }
+                }
+        );
+    }
+
+    private void stopScroll() {
+        mRecyclerView.stopScroll();
+    }
+
+    private void startCorrection(int id) {
+        Intent intent = new Intent(getActivity(),FixerTrackService.class);
+        intent.putExtra(Constants.MEDIA_STORE_ID, id);
+        intent.setAction(Constants.Actions.ACTION_START_TASK);
+        Objects.requireNonNull(getActivity()).startService(intent);
+    }
+
+    private void onCheckAll(Boolean checkAll) {
+        if(!checkAll)
+            mViewModel.checkAllItems();
+    }
+
+    @Override
+    public void onStartAutomaticTask() {
+        mStartTaskFab.hide();
+        mStopCorrectionSnackbar = AndroidUtils.createNoDismissibleSnackbar(getView(), R.string.correction_in_progress);
+        mStopCorrectionSnackbar.setAction(R.string.cancel, v -> {
+            Intent stopIntent = new Intent(getActivity(), FixerTrackService.class);
+            stopIntent.setAction(Constants.Actions.ACTION_STOP_TASK);
+            requireActivity().startService(stopIntent);
+            Toast t = AndroidUtils.getToast(requireActivity());
+            t.setDuration(Toast.LENGTH_SHORT);
+            t.setText(R.string.cancelling);
+            t.show();
+        });
+        mStopCorrectionSnackbar.show();
+    }
+
+    @Override
+    public void onStartProcessingFor(int id) {
+        int index = mViewModel.getTrackPosition(id);
+        if(index != -1)
+            mRecyclerView.scrollToPosition(index);
+    }
+
+    @Override
+    public void onFinishedAutomaticTask() {
+        mStartTaskFab.show();
+        if (mStopCorrectionSnackbar != null)
+            mStopCorrectionSnackbar.dismiss();
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        ((MainActivity)getActivity()).mDrawerLayout.removeDrawerListener(((MainActivity)getActivity()).actionBarDrawerToggle);
+    }
+
+    private void onMessage(Integer integer) {
+        Snackbar snackbar = AndroidUtils.getSnackbar(mSwipeRefreshLayout,
+                getActivity().getApplicationContext());
+        snackbar.setText(integer);
+        snackbar.show();
+    }
 
     private void updateToolbar(List<Track> tracks) {
         if(tracks == null)
@@ -328,7 +630,6 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
         }
 
         if(tracks.isEmpty()) {
-            //mStopTaskFab.hide();
             mStartTaskFab.hide();
             mMessage.setVisibility(View.VISIBLE);
             mMessage.setText(R.string.no_items_found);
@@ -339,11 +640,10 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
             boolean isServiceRunning = serviceUtils.checkIfServiceIsRunning(FixerTrackService.CLASS_NAME);
             if(!isServiceRunning){
                 mStartTaskFab.show();
-                //mStopTaskFab.hide();
             }
             else {
                 mStartTaskFab.hide();
-                //mStopTaskFab.show();
+                onStartAutomaticTask();
             }
             ((MainActivity)getActivity()).mainToolbar.setTitle(tracks.size() + " " +getString(R.string.tracks));
             ((MainActivity)getActivity()).actionBar.setTitle(tracks.size() + " " +getString(R.string.tracks));
@@ -413,306 +713,19 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
      * @param voids void param, not usable.
      */
     private void noResultFilesFound(Void voids) {
-        //mStopTaskFab.hide();
         mStartTaskFab.hide();
         mMessage.setVisibility(View.VISIBLE);
     }
 
     @Override
-    protected ListViewModel getViewModel() {
-        return ViewModelProviders.of(getActivity(), androidViewModelFactory).get(ListViewModel.class);
+    public void onCurrentListChanged(@NonNull List<List<Track>> previousList, @NonNull List<List<Track>> currentList) {
+        mSwipeRefreshLayout.setRefreshing(false);
+        if (mViewModel.isSortingOperation())
+            mRecyclerView.scrollToPosition(0);
     }
 
     @Override
-    protected void loading(boolean isLoading) {
-        if(isLoading) {
-            mRecyclerView.setEnabled(false);
-        }
-        else {
-            mRecyclerView.setEnabled(false);
-        }
-        mSwipeRefreshLayout.setRefreshing(isLoading);
-    }
-
-    @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-        mRecyclerView.stopScroll();
-    }
-
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
-                                           @NonNull int[] grantResults) {
-        //Check permission to access files and execute scan if were granted
-        mHasPermission = grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED;
-        if(mHasPermission){
-            boolean isPresentSD = storageHelper.isPresentRemovableStorage();
-            if(AndroidUtils.getUriSD(getActivity()) == null && isPresentSD) {
-                startActivityForResult(new Intent(getActivity(), SdCardInstructionsActivity.class),
-                        RequiredPermissions.REQUEST_PERMISSION_SAF);
-            }
-            else {
-                mViewModel.scan();
-            }
-            mRecyclerView.setVisibility(View.VISIBLE);
-        }
-        else {
-            mSwipeRefreshLayout.setEnabled(true);
-            //mStopTaskFab.hide();
-            mStartTaskFab.hide();
-            mMessage.setVisibility(View.VISIBLE);
-            mMessage.setText(R.string.permission_denied);
-            mListViewModel.setLoading(false);
-            showViewPermissionMessage();
-        }
-
-    }
-
-    @Override
-    public void onPause(){
-        super.onPause();
-        mRecyclerView.stopScroll();
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-
-        //Stop correction task if "Usar corrección en segundo plano" from Settings is off.
-        if(!PreferenceManager.getDefaultSharedPreferences(getActivity().
-                getApplicationContext()).getBoolean("key_background_service", true)){
-            Intent intent = new Intent(getActivity(),FixerTrackService.class);
-            getActivity().stopService(intent);
-        }
-    }
-
-    private void showViewPermissionMessage() {
-        InformativeFragmentDialog informativeFragmentDialog = InformativeFragmentDialog.
-            newInstance(R.string.title_dialog_permision,
-                R.string.explanation_permission_access_files,
-                R.string.accept, R.string.cancel_button, getActivity());
-        informativeFragmentDialog.show(getChildFragmentManager(),
-            informativeFragmentDialog.getClass().getCanonicalName());
-
-        informativeFragmentDialog.setOnClickBasicFragmentDialogListener(
-            new InformativeFragmentDialog.OnClickBasicFragmentDialogListener() {
-                @Override
-                public void onPositiveButton() {
-                    informativeFragmentDialog.dismiss();
-                    requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                        RequiredPermissions.WRITE_EXTERNAL_STORAGE_PERMISSION);
-                }
-
-                @Override
-                public void onNegativeButton() {
-                    informativeFragmentDialog.dismiss();
-                }
-            }
-        );
-    }
-
-    @Override
-    public void onCoverClick(int position, View view) {
-        ViewWrapper viewWrapper = new ViewWrapper();
-        viewWrapper.view = view;
-        viewWrapper.position = position;
-        viewWrapper.mode = CorrectionActions.VIEW_INFO;
-        mListViewModel.onClickCover(viewWrapper);
-    }
-
-    @Override
-    public void onCheckboxClick(int position) {
-        mListViewModel.onCheckboxClick(position);
-    }
-
-    @Override
-    public void onCheckMarkClick(int position) {
-        //mListViewModel.onCheckMarkClick(position);
-    }
-
-    @Override
-    public void onItemClick(int position, View view) {
-        ViewWrapper viewWrapper = new ViewWrapper();
-        viewWrapper.view = view;
-        viewWrapper.position = position;
-        viewWrapper.mode = CorrectionActions.SEMI_AUTOMATIC;
-        mListViewModel.onItemClick(viewWrapper);
-    }
-
-    @Override
-    public Animation onCreateAnimation(int transit, boolean enter, int nextAnim) {
-        Animation animation = super.onCreateAnimation(transit, enter, nextAnim);
-
-        if (animation == null && nextAnim != 0) {
-            animation = AnimationUtils.loadAnimation(getActivity(), nextAnim);
-        }
-
-        if (animation != null && getView() != null) {
-            getView().setLayerType(View.LAYER_TYPE_HARDWARE, null);
-
-            animation.setAnimationListener(new Animation.AnimationListener() {
-                @Override
-                public void onAnimationStart(Animation animation) {
-
-                }
-
-                @Override
-                public void onAnimationEnd(Animation animation) {
-                    //For Android Marshmallow and Lollipop, there is no need to request permissions
-                    //at runtime.
-                    /*if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-                        mListViewModel.scan();
-                    }*/
-                    if(isVisible())
-                        updateToolbar(mCurrentTracks);
-                }
-
-                @Override
-                public void onAnimationRepeat(Animation animation) {
-
-                }
-            });
-        }
-        else {
-            //For Android Marshmallow and Lollipop, there is no need to request permissions
-            //at runtime.
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M)
-                mListViewModel.scan();
-        }
-        return animation;
-    }
-
-    /**
-     * Opens new activity showing up the details from current audio item list pressed
-     * @param viewWrapper a wrapper object containing the track, view , and mode of correction.
-     */
-    private void openDetails(ViewWrapper viewWrapper){
-        mRecyclerView.stopScroll();
-        openFragment(viewWrapper);
-    }
-
-    private void openFragment(ViewWrapper viewWrapper){
-        Intent intent = new Intent(getActivity(), TrackDetailActivity.class);
-        Bundle bundle = AndroidUtils.getBundle(viewWrapper.track.getMediaStoreId(),
-                viewWrapper.mode);
-        intent.putExtra(TrackDetailActivity.TRACK_DATA, bundle);
-        startActivity(intent, ActivityOptions.makeSceneTransitionAnimation(getActivity(), viewWrapper.view, "cover_art_element").toBundle());
-    }
-
-    private void stopCorrection() {
-        InformativeFragmentDialog informativeFragmentDialog = InformativeFragmentDialog.
-                newInstance(R.string.attention,
-                        R.string.cancel_task,
-                        R.string.yes, R.string.no, getActivity());
-        informativeFragmentDialog.show(getChildFragmentManager(),
-                informativeFragmentDialog.getClass().getCanonicalName());
-
-        informativeFragmentDialog.setOnClickBasicFragmentDialogListener(
-                new InformativeFragmentDialog.OnClickBasicFragmentDialogListener() {
-                    @Override
-                    public void onPositiveButton() {
-                        //stops service, and sets starting state to FAB
-
-                        Intent stopIntent = new Intent(getActivity(), FixerTrackService.class);
-                        stopIntent.setAction(Constants.Actions.ACTION_STOP_TASK);
-                        getActivity().getApplicationContext().startService(stopIntent);
-                        Toast t = AndroidUtils.getToast(getContext());
-                        t.setDuration(Toast.LENGTH_SHORT);
-                        t.setText(R.string.cancelling);
-                        t.show();
-                        //mStopTaskFab.setEnabled(false);
-                    }
-
-                    @Override
-                    public void onNegativeButton() {
-                        informativeFragmentDialog.dismiss();
-                    }
-                }
-        );
-    }
-
-    private void showInaccessibleTrack(ViewWrapper viewWrapper) {
-        InformativeFragmentDialog informativeFragmentDialog = InformativeFragmentDialog.
-                newInstance(getString(R.string.attention),
-                        String.format(getString(R.string.file_error), viewWrapper.track.getPath()),
-                        getString(R.string.remove_from_list), null);
-        informativeFragmentDialog.show(getChildFragmentManager(),
-                informativeFragmentDialog.getClass().getCanonicalName());
-
-        informativeFragmentDialog.setOnClickBasicFragmentDialogListener(
-                new InformativeFragmentDialog.OnClickBasicFragmentDialogListener() {
-                    @Override
-                    public void onPositiveButton() {
-                        mListViewModel.removeTrack(viewWrapper.track);
-                    }
-
-                    @Override
-                    public void onNegativeButton() {
-                        informativeFragmentDialog.dismiss();
-                    }
-                }
-        );
-    }
-
-    private void stopScroll() {
-        mRecyclerView.stopScroll();
-    }
-
-    private void startCorrection(int id) {
-        Intent intent = new Intent(getActivity(),FixerTrackService.class);
-        intent.putExtra(Constants.MEDIA_STORE_ID, id);
-        intent.setAction(Constants.Actions.ACTION_START_TASK);
-        Objects.requireNonNull(getActivity()).startService(intent);
-    }
-
-    private void onCheckAll(Boolean checkAll) {
-        if(!checkAll)
-            mListViewModel.checkAllItems();
-    }
-
-    @Override
-    public void onLongRunningTaskStarted() {
-        mStartTaskFab.hide();
-        //mStopTaskFab.show();
-    }
-
-    @Override
-    public void onStartProcessingFor(int id) {
-        int index = mListViewModel.getTrackPosition(id);
-        if(index != -1)
-            mRecyclerView.scrollToPosition(index);
-    }
-
-    @Override
-    public void onLongRunningTaskMessage(String error) {
-        Snackbar snackbar = AndroidUtils.createSnackbar(getView(), error);
-        snackbar.show();
-    }
-
-    @Override
-    public void onLongRunningTaskFinish() {
-        mStartTaskFab.show();
-        //mStopTaskFab.setEnabled(true);
-        //mStopTaskFab.hide();
-    }
-
-    @Override
-    public void onDetach() {
-        super.onDetach();
-        ((MainActivity)getActivity()).mDrawerLayout.removeDrawerListener(((MainActivity)getActivity()).actionBarDrawerToggle);
-    }
-
-    private void onMessage(Integer integer) {
-        Snackbar snackbar = AndroidUtils.getSnackbar(mSwipeRefreshLayout,
-                getActivity().getApplicationContext());
-        snackbar.setText(integer);
-        snackbar.show();
-    }
-
-    private void onSorted(Integer idResource) {
-        if(idResource != -1) {
-            checkItem(idResource);
-        }
+    public void onIncomingMessageListener(String message) {
+        AndroidUtils.showToast(message, requireActivity());
     }
 }

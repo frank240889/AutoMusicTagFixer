@@ -59,6 +59,29 @@ public class AsyncOperation {
         }
     }
 
+    public static class TrackUpdaterSync extends AsyncTask<Track, Void, Integer> {
+        private mx.dev.franco.automusictagfixer.interfaces.AsyncOperation<Void, Integer, Void, Void> mCallback;
+        private TrackDAO mAsyncTaskDao;
+
+        public TrackUpdaterSync(mx.dev.franco.automusictagfixer.interfaces.AsyncOperation<Void, Integer, Void, Void> callback, TrackDAO dao) {
+            mAsyncTaskDao = dao;
+            mCallback = callback;
+        }
+
+        @Override
+        protected Integer doInBackground(final Track... track) {
+            mAsyncTaskDao.update(track[0]);
+            mAsyncTaskDao = null;
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Integer integer) {
+            if (mCallback != null)
+                mCallback.onAsyncOperationFinished(integer);
+        }
+    }
+
 
     public static class TrackRemover extends AsyncTask<Track, Void, Void> {
 

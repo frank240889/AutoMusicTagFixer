@@ -8,43 +8,47 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.lifecycle.Observer;
+import androidx.recyclerview.widget.AsyncListDiffer;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Deque;
 import java.util.List;
 
-import javax.inject.Inject;
-
-import mx.dev.franco.automusictagfixer.AutoMusicTagFixer;
 import mx.dev.franco.automusictagfixer.R;
-import mx.dev.franco.automusictagfixer.covermanager.CoverManager;
-import mx.dev.franco.automusictagfixer.interfaces.AsyncOperation;
-import mx.dev.franco.automusictagfixer.interfaces.Destructible;
+import mx.dev.franco.automusictagfixer.covermanager.CoverLoader;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.ui.AudioHolder;
-import mx.dev.franco.automusictagfixer.ui.main.DiffExecutor;
-import mx.dev.franco.automusictagfixer.ui.main.DiffResults;
+import mx.dev.franco.automusictagfixer.ui.main.DiffCallback;
 import mx.dev.franco.automusictagfixer.utilities.ServiceUtils;
 
 public class SearchTrackAdapter extends RecyclerView.Adapter<FoundItemHolder> implements
-        Destructible, Observer<List<Track>> {
+        Observer<List<Track>> {
     private static final String TAG = SearchTrackAdapter.class.getName();
-    @Inject
-    ServiceUtils serviceUtils;
-    private List<Track> mTrackList = new ArrayList<>();
+    private ServiceUtils serviceUtils;
     private FoundItemHolder.ClickListener mListener;
-    private Deque<List<Track>> mPendingUpdates = new ArrayDeque<>();
-    private static DiffExecutor sDiffExecutor;
+    private AsyncListDiffer<Track> asyncListDiffer = new AsyncListDiffer<>(this, new DiffCallback());
+
 
 
     public SearchTrackAdapter(FoundItemHolder.ClickListener listener){
         mListener = listener;
     }
 
+    @Override
+    public void onAttachedToRecyclerView(@NonNull RecyclerView recyclerView) {
+        serviceUtils = ServiceUtils.getInstance(recyclerView.getContext());
+    }
+
+    @Override
+    public void onDetachedFromRecyclerView(@NonNull RecyclerView recyclerView) {
+        if (mListener instanceof AsyncListDiffer.ListListener)
+            asyncListDiffer.removeListListener((AsyncListDiffer.ListListener<Track>) mListener);
+
+        serviceUtils = null;
+        mListener = null;
+        CoverLoader.cancelAll();
+    }
 
     @Override
     public FoundItemHolder onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -55,7 +59,7 @@ public class SearchTrackAdapter extends RecyclerView.Adapter<FoundItemHolder> im
 
     @Override
     public void onBindViewHolder(final FoundItemHolder holder, final int position) {
-        Track track = mTrackList.get(position);
+        Track track = asyncListDiffer.getCurrentList().get(position);
         enqueue(holder, track);
         holder.trackName.setText(track.getTitle());
         holder.artistName.setText(track.getArtist());
@@ -69,7 +73,7 @@ public class SearchTrackAdapter extends RecyclerView.Adapter<FoundItemHolder> im
             super.onBindViewHolder(holder,position,payloads);
         }
         else {
-            Track track = mTrackList.get(position);
+            Track track = asyncListDiffer.getCurrentList().get(position);
             Bundle o = (Bundle) payloads.get(0);
             for (String key : o.keySet()) {
                 if (key.equals("title")) {
@@ -90,7 +94,7 @@ public class SearchTrackAdapter extends RecyclerView.Adapter<FoundItemHolder> im
     }
 
     private void enqueue(AudioHolder holder, Track track) {
-        CoverManager.startFetchingCover(holder, track.getPath(), track.getMediaStoreId()+"");
+        CoverLoader.startFetchingCover(holder, track.getPath(), track.getMediaStoreId()+"");
     }
 
     @Override
@@ -105,19 +109,15 @@ public class SearchTrackAdapter extends RecyclerView.Adapter<FoundItemHolder> im
      */
     @Override
     public int getItemCount() {
-        if(mTrackList != null)
-            return mTrackList.size();
+        if(asyncListDiffer != null)
+            return asyncListDiffer.getCurrentList().size();
         return 0;
-    }
-
-    public List<Track> getDatasource(){
-        return mTrackList;
     }
 
     /**
      * Indicates whether each item in the data set
      * can be represented with a unique identifier of type Long.
-     * @param hasStableIds
+     * @param hasStableIds true
      */
     @Override
     public void setHasStableIds(boolean hasStableIds) {
@@ -125,59 +125,8 @@ public class SearchTrackAdapter extends RecyclerView.Adapter<FoundItemHolder> im
     }
 
     @Override
-    public void destroy() {
-        serviceUtils = null;
-        mTrackList.clear();
-        mTrackList = null;
-        mListener = null;
-        CoverManager.cancelAll();
-    }
-
-    @Override
     public void onChanged(@Nullable List<Track> tracks) {
-        if(tracks != null) {
-            //Update only if exist items
-            if (getItemCount() > 0) {
-                if(mPendingUpdates != null) {
-                    mPendingUpdates.push(tracks);
-                }
-                updateInBackground(tracks);
-            } else {
-                mTrackList = tracks;
-                notifyDataSetChanged();
-            }
-        }
-    }
-
-    private void updateInBackground(List<Track> newItems){
-        if (mPendingUpdates != null && mPendingUpdates.size() > 1) {
-            return;
-        }
-        sDiffExecutor = new DiffExecutor(new AsyncOperation<Void, DiffResults<Track>, Void, Void>() {
-            @Override
-            public void onAsyncOperationFinished(DiffResults<Track> result) {
-                processResult(result);
-            }
-        });
-        sDiffExecutor.executeOnExecutor(AutoMusicTagFixer.getExecutorService(), mTrackList, newItems);
-
-    }
-
-    private void processResult(DiffResults<Track> result) {
-        if (mPendingUpdates != null)
-            mPendingUpdates.remove();
-
-        if (result.diffResult != null) {
-            result.diffResult.dispatchUpdatesTo(this);
-            mTrackList.clear();
-            mTrackList.addAll(result.list);
-
-            sDiffExecutor = null;
-            //Try to perform next latest setChecked.
-            if (mPendingUpdates != null && mPendingUpdates.size() > 0) {
-                updateInBackground(mPendingUpdates.peek());
-            }
-        }
+        asyncListDiffer.submitList(tracks);
     }
 }
 

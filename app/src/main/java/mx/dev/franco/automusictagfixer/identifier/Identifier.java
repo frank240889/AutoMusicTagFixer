@@ -30,7 +30,7 @@ public interface Identifier<I, R> {
      * @param <I> The type of entity being identifying.
      */
     interface IdentificationListener<R> {
-        void onIdentificationStart();
+        default void onIdentificationStart() {};
         void onIdentificationFinished(R result);
         default void onIdentificationError(Throwable error) {}
 

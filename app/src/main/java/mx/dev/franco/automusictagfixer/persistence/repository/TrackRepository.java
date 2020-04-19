@@ -1,11 +1,17 @@
 package mx.dev.franco.automusictagfixer.persistence.repository;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 
+import androidx.annotation.IntegerRes;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MediatorLiveData;
 import androidx.lifecycle.MutableLiveData;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.sqlite.db.SimpleSQLiteQuery;
 import androidx.sqlite.db.SupportSQLiteQuery;
 
@@ -16,8 +22,6 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import mx.dev.franco.automusictagfixer.AutoMusicTagFixer;
-import mx.dev.franco.automusictagfixer.interfaces.AsyncOperation;
-import mx.dev.franco.automusictagfixer.persistence.mediastore.MediaStoreReader;
 import mx.dev.franco.automusictagfixer.persistence.repository.AsyncOperation.TrackChecker;
 import mx.dev.franco.automusictagfixer.persistence.repository.AsyncOperation.TrackInserter;
 import mx.dev.franco.automusictagfixer.persistence.repository.AsyncOperation.TrackRemover;
@@ -26,23 +30,29 @@ import mx.dev.franco.automusictagfixer.persistence.repository.AsyncOperation.Tra
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.persistence.room.TrackDAO;
 import mx.dev.franco.automusictagfixer.persistence.room.TrackRoomDatabase;
+import mx.dev.franco.automusictagfixer.ui.SingleLiveEvent;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
 import mx.dev.franco.automusictagfixer.utilities.Resource;
 import mx.dev.franco.automusictagfixer.utilities.shared_preferences.AbstractSharedPreferences;
+
+import static mx.dev.franco.automusictagfixer.utilities.Constants.Actions.ACTION_SET_ITEM_LOADING;
 
 @Singleton
 public class TrackRepository {
     public static final int ASC = 0;
     public static final int DESC = 1;
+
     private TrackDAO mTrackDao;
-    private LiveData<List<Track>> mAllTrack;
-    private MediatorLiveData<List<Track>> mResultSearch;
+    private LiveData<List<Track>> mTracks;
+    private MediatorLiveData<List<Track>> mResultSearchLiveData;
     private MediatorLiveData<Resource<List<Track>>> mMediatorTrackData;
-    private LiveData<List<Track>> mLiveDataTracks;
-    private MutableLiveData<Boolean> mProgressObservable;
+    private LiveData<List<Track>> mResultsSearchTracks;
+    private MutableLiveData<Boolean> mLoadingObservable;
     private AbstractSharedPreferences mAbstractSharedPreferences;
     private String mCurrentOrder;
     private Context mContext;
+    private SingleLiveEvent<Sort> mSortingEvent;
+    private BroadcastReceiver mBroadcastReceiver;
 
     @Inject
     public TrackRepository(@NonNull TrackRoomDatabase db,
@@ -52,22 +62,24 @@ public class TrackRepository {
         mAbstractSharedPreferences = abstractSharedPreferences;
         mContext = context;
 
-        mProgressObservable = new MutableLiveData<>();
-        mResultSearch = new MediatorLiveData<>();
+        mLoadingObservable = new MutableLiveData<>();
+        mSortingEvent = new SingleLiveEvent<>();
+        mResultSearchLiveData = new MediatorLiveData<>();
         mMediatorTrackData = new MediatorLiveData<>();
 
         mCurrentOrder = mAbstractSharedPreferences.getString(Constants.SORT_KEY);
 
+        // Check the last sort order saved.
         if(mCurrentOrder == null)
-            mCurrentOrder = " title COLLATE NOCASE ASC ";
+            mCurrentOrder = TrackDAO.DEFAULT_ORDER;
 
-        String query = "SELECT * FROM track_table ORDER BY" + mCurrentOrder;
+        String query = TrackDAO.SELECT_SENTENCE_BY_ORDER + mCurrentOrder;
 
         SupportSQLiteQuery sqLiteQuery = new SimpleSQLiteQuery(query);
-        mAllTrack = mTrackDao.getAllTracks(sqLiteQuery);
+        
+        mTracks = mTrackDao.getAllTracks(sqLiteQuery);
 
-        mMediatorTrackData.addSource(mAllTrack, tracks -> {
-            mProgressObservable.setValue(false);
+        mMediatorTrackData.addSource(mTracks, tracks -> {
             if(tracks == null || tracks.size() == 0) {
                 mMediatorTrackData.setValue(Resource.error(new ArrayList<>()));
             }
@@ -77,105 +89,74 @@ public class TrackRepository {
         });
     }
 
-    public LiveData<Resource<List<Track>>> getAllTracks(){
+    public LiveData<Resource<List<Track>>> getObserveTracks(){
         return mMediatorTrackData;
     }
 
-    public LiveData<List<Track>> getSearchResults() {
-        return mResultSearch;
+    public LiveData<List<Track>> observeResultSearch() {
+        return mResultSearchLiveData;
     }
 
-    public MutableLiveData<Boolean> observeProgress() {
-        return mProgressObservable;
+    public LiveData<Sort> observeSorting() {
+        return mSortingEvent;
     }
 
-    /**
-     * Recover tracks from MediaStore the first time the app is opened.
-     */
-    public void fetchTracks(){
-        boolean databaseCreationCompleted = mAbstractSharedPreferences.getBoolean(Constants.COMPLETE_READ);
-        if(!databaseCreationCompleted) {
-            MediaStoreReader mediaStoreReader = new MediaStoreReader(new AsyncOperation<Void, List<Track>, Void, Void>() {
-                @Override
-                public void onAsyncOperationStarted(Void params) {
-                    mProgressObservable.setValue(true);
+    public MutableLiveData<Boolean> observeLoading() {
+        return mLoadingObservable;
+    }
+
+    public void setChecked(int position) {
+        mSortingEvent.setValue(null);
+        List<Track> tracks = tracks();
+        if (tracks != null && !tracks.isEmpty()) {
+            Track track = tracks.get(position);
+            if (track != null) {
+                if(track.checked() == 1){
+                    track.setChecked(0);
+                }
+                else {
+                    track.setChecked(1);
                 }
 
-                @Override
-                public void onAsyncOperationFinished(List<Track> result) {
-                    mProgressObservable.setValue(false);
-                    //Save process of reading identificationCompleted and first time reading complete.
-                    mAbstractSharedPreferences.putBoolean("first_time_read", true);
-                    mAbstractSharedPreferences.putBoolean(Constants.COMPLETE_READ, true);
-                    if(result.size() > 0) {
-                        insert(result);
-                    }
-                }
-            });
-            mediaStoreReader.executeOnExecutor(AutoMusicTagFixer.getExecutorService(), mContext);
-        }
-        else {
-            mProgressObservable.setValue(false);
+                new TrackUpdater(mTrackDao).executeOnExecutor(AutoMusicTagFixer.getExecutorService(),track);
+            }
         }
     }
 
-    public void setChecked(Track track){
-        if(track.checked() == 1){
-            track.setChecked(0);
-        }
-        else {
-            track.setChecked(1);
-        }
-
-        new TrackUpdater(mTrackDao).executeOnExecutor(AutoMusicTagFixer.getExecutorService(),track);
-    }
-
-    public void update(Track track){
-        new TrackUpdater(mTrackDao).executeOnExecutor(AutoMusicTagFixer.getExecutorService(),track);
-    }
-
-    public void checkAll(){
-        new TrackChecker(mTrackDao).executeOnExecutor(AutoMusicTagFixer.getExecutorService());
-    }
-
-    public void uncheckAll(){
-        new TrackUnchecker(mTrackDao).executeOnExecutor(AutoMusicTagFixer.getExecutorService());
-    }
-
-    public void delete(Track track){
-        new TrackRemover(mTrackDao).executeOnExecutor(AutoMusicTagFixer.getExecutorService(), track);
-    }
-
-    public boolean sortTracks(String order, int orderType) {
-        String orderBy;
-        if(orderType == ASC){
-            orderBy = " " + order + " COLLATE NOCASE ASC ";
-        }
-        else {
-            orderBy = " " + order + " COLLATE NOCASE DESC ";
-        }
-
-        //No need to re sort if is the same order
-        if(orderBy.equals(mCurrentOrder))
-            return true;
-
-        mCurrentOrder = orderBy;
-        String query = "SELECT * FROM track_table ORDER BY" + mCurrentOrder;
-        SupportSQLiteQuery  sqLiteQuery = new SimpleSQLiteQuery(query);
-        mAbstractSharedPreferences.putString(Constants.SORT_KEY,mCurrentOrder);
-
-        mMediatorTrackData.removeSource(mAllTrack);
-        mAllTrack = mTrackDao.getAllTracks(sqLiteQuery);
-
-        mMediatorTrackData.addSource(mAllTrack, tracks -> {
-            if(tracks == null || tracks.size() == 0) {
-                mMediatorTrackData.setValue(Resource.error(new ArrayList<>()));
+    public void sortTracks(Sort sort) {
+        if (mMediatorTrackData.getValue() != null && !mMediatorTrackData.getValue().data.isEmpty()) {
+            String orderBy;
+            if (sort.sortType == ASC){
+                orderBy = " " + sort.by + " COLLATE NOCASE ASC ";
             }
             else {
-                mMediatorTrackData.setValue(Resource.success(tracks));
+                orderBy = " " + sort.by + " COLLATE NOCASE DESC ";
             }
-        });
-        return true;
+
+            mCurrentOrder = orderBy;
+            String query = "SELECT * FROM track_table ORDER BY" + mCurrentOrder;
+            SupportSQLiteQuery  sqLiteQuery = new SimpleSQLiteQuery(query);
+
+            mMediatorTrackData.removeSource(mTracks);
+
+            mTracks = mTrackDao.getAllTracks(sqLiteQuery);
+
+            mMediatorTrackData.addSource(mTracks, tracks -> {
+                mLoadingObservable.setValue(false);
+                if(tracks == null || tracks.size() == 0) {
+                    mSortingEvent.setValue(null);
+                    mMediatorTrackData.setValue(Resource.error(new ArrayList<>()));
+                }
+                else {
+                    mSortingEvent.setValue(sort);
+                    mMediatorTrackData.setValue(Resource.success(tracks));
+                    mAbstractSharedPreferences.putString(Constants.SORT_KEY,mCurrentOrder);
+                }
+            });
+        }
+        else {
+            mSortingEvent.setValue(null);
+        }
     }
 
     /**
@@ -183,15 +164,17 @@ public class TrackRepository {
      * @param query The query as param to search in DB.
      */
     public void trackSearch(String query) {
-        if(mLiveDataTracks != null)
-            mResultSearch.removeSource(mLiveDataTracks);
+        if(mResultsSearchTracks != null)
+            mResultSearchLiveData.removeSource(mResultsSearchTracks);
 
-        mLiveDataTracks = mTrackDao.search(query);
-        mResultSearch.addSource(mLiveDataTracks, tracks -> mResultSearch.setValue(tracks));
+        mResultsSearchTracks = mTrackDao.search(query);
+        mResultSearchLiveData.addSource(mResultsSearchTracks, tracks ->
+                mResultSearchLiveData.setValue(tracks));
     }
 
     public void checkAllItems() {
         boolean allChecked = mAbstractSharedPreferences.getBoolean(Constants.ALL_ITEMS_CHECKED);
+        mSortingEvent.setValue(null);
         if(allChecked){
             mAbstractSharedPreferences.putBoolean(Constants.ALL_ITEMS_CHECKED, false);
             uncheckAll();
@@ -207,16 +190,38 @@ public class TrackRepository {
         new TrackInserter(mTrackDao).
                 executeOnExecutor(AutoMusicTagFixer.getExecutorService(), tracks);
     }
-    @SuppressWarnings("unchecked")
-    public void updateInternalDatabase(List<Track> tracks) {
-        new TrackInserter(mTrackDao).
-                executeOnExecutor(AutoMusicTagFixer.getExecutorService(), tracks);
+    
+    public void update(Track track){
+        new TrackUpdater(mTrackDao).executeOnExecutor(AutoMusicTagFixer.getExecutorService(),track);
     }
 
-    public Track getTrack(@NonNull int id) {
-        List<Track> tracks = mMediatorTrackData.getValue().data;
+    public void checkAll(){
+        new TrackChecker(mTrackDao).executeOnExecutor(AutoMusicTagFixer.getExecutorService());
+    }
 
-        if (tracks != null) {
+    void uncheckAll(){
+        new TrackUnchecker(mTrackDao).executeOnExecutor(AutoMusicTagFixer.getExecutorService());
+    }
+
+    public void delete(int position){
+        Track track = getTrackByPosition(position);
+        if (track != null)
+            new TrackRemover(mTrackDao).executeOnExecutor(AutoMusicTagFixer.getExecutorService(), track);
+    }
+
+
+    public Track getTrackByPosition(int position) {
+        List<Track> tracks = tracks();
+        if (tracks != null && !tracks.isEmpty()) {
+            return tracks.get(position);
+        }
+        return null;
+    }
+
+    public Track getTrackById(@NonNull int id) {
+        List<Track> tracks = tracks();
+
+        if (tracks != null && !tracks.isEmpty()) {
             for (Track track : tracks) {
                 if (id == track.getMediaStoreId())
                     return track;
@@ -224,5 +229,70 @@ public class TrackRepository {
         }
 
         return null;
+    }
+
+    @Nullable
+    public List<Track> tracks() {
+        if (mMediatorTrackData.getValue() != null)
+            return mMediatorTrackData.getValue().data;
+
+        return null;
+    }
+
+    public List<Track> resultSearchTracks() {
+        return mResultSearchLiveData.getValue();
+    }
+
+    public void clearResults() {
+        mResultSearchLiveData.setValue(null);
+    }
+
+    public static final class Sort {
+        public String by;
+        public int sortType;
+        @IntegerRes
+        public int idResource;
+
+        public Sort(String by, int sortType, int idResource) {
+            this.by = by;
+            this.sortType = sortType;
+            this.idResource = idResource;
+        }
+    }
+
+    /**
+     * Allows to register filters to handle
+     * only certain actions sent by FixerTrackService
+     */
+    public void registerReceiver() {
+        IntentFilter startTaskFilter = new IntentFilter(ACTION_SET_ITEM_LOADING);
+
+        mBroadcastReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                setTrackLoading(intent);
+            }
+        };
+
+        LocalBroadcastManager localBroadcastManager = LocalBroadcastManager.getInstance(mContext.getApplicationContext());
+        localBroadcastManager.registerReceiver(mBroadcastReceiver, startTaskFilter);
+    }
+
+    public void unregisterReceiver() {
+        LocalBroadcastManager.
+                getInstance(mContext.getApplicationContext()).
+                unregisterReceiver(mBroadcastReceiver);
+    }
+
+    private void setTrackLoading(Intent intent) {
+        int id = intent.getIntExtra(Constants.MEDIA_STORE_ID, -1);
+        int loading = intent.getIntExtra(Constants.LOADING, 0);
+        Track track = getTrackById(id);
+        if (track != null) {
+            track.setChecked(loading);
+            track.setProcessing(loading);
+            mSortingEvent.setValue(null);
+            mMediatorTrackData.setValue(Resource.success(mMediatorTrackData.getValue().data));
+        }
     }
 }

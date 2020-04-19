@@ -1,5 +1,6 @@
 package mx.dev.franco.automusictagfixer.ui.search;
 
+import android.app.ActivityOptions;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -19,7 +20,7 @@ import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.drawerlayout.widget.DrawerLayout;
-import androidx.lifecycle.ViewModelProviders;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -48,7 +49,6 @@ public class ResultSearchFragment extends BaseViewModelFragment<SearchListViewMo
     private RecyclerView mRecyclerView;
     private SearchTrackAdapter mAdapter;
     private String mQuery = null;
-    private SearchListViewModel mSearchListViewModel;
 
     public static ResultSearchFragment newInstance() {
         return new ResultSearchFragment();
@@ -60,8 +60,7 @@ public class ResultSearchFragment extends BaseViewModelFragment<SearchListViewMo
 
     @Override
     protected SearchListViewModel getViewModel() {
-        return ViewModelProviders.
-            of(this, androidViewModelFactory).get(SearchListViewModel.class);
+        return new ViewModelProvider(this, androidViewModelFactory).get(SearchListViewModel.class);
     }
 
     @Override
@@ -69,17 +68,16 @@ public class ResultSearchFragment extends BaseViewModelFragment<SearchListViewMo
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
         mAdapter = new SearchTrackAdapter(this);
-        mSearchListViewModel = ViewModelProviders.of(this).get(SearchListViewModel.class);
-        mSearchListViewModel.getSearchResults().observe(this, this::onSearchResults);
-        mSearchListViewModel.getSearchResults().observe(this, mAdapter);
-        mSearchListViewModel.isTrackProcessing().observe(this, this::showMessageError);
-        mSearchListViewModel.actionTrackEvaluatedSuccessfully().observe(this, this::openDetailTrack);
-        mSearchListViewModel.actionIsTrackInaccessible().observe(this, this::showInaccessibleTrack);
+        mViewModel.getSearchResults().observe(this, this::onSearchResults);
+        mViewModel.getSearchResults().observe(this, mAdapter);
+        mViewModel.isTrackProcessing().observe(this, this::showMessageError);
+        mViewModel.actionTrackEvaluatedSuccessfully().observe(this, this::openDetailTrack);
+        mViewModel.actionIsTrackInaccessible().observe(this, this::showInaccessibleTrack);
         requireActivity().getOnBackPressedDispatcher().addCallback(this,
             new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
-                requireActivity().getSupportFragmentManager().popBackStack();
+                getParentFragmentManager().popBackStack();
             }
         });
     }
@@ -100,7 +98,7 @@ public class ResultSearchFragment extends BaseViewModelFragment<SearchListViewMo
         ((MainActivity)getActivity()).searchBox.setOnEditorActionListener((v, actionId, event) -> {
             if(actionId == EditorInfo.IME_ACTION_SEARCH || actionId == EditorInfo.IME_ACTION_UNSPECIFIED){
                 mQuery = ((MainActivity)getActivity()).searchBox.getText().toString();
-                mSearchListViewModel.search(mQuery);
+                mViewModel.search(mQuery);
                 hideKeyboard();
             }
 
@@ -158,7 +156,7 @@ public class ResultSearchFragment extends BaseViewModelFragment<SearchListViewMo
         String content = String.format(getString(R.string.file_error), viewWrapper.track.getPath());
         InformativeFragmentDialog informativeFragmentDialog = InformativeFragmentDialog.
                 newInstance(getString(R.string.attention), content, getString(R.string.remove_from_list), null);
-        informativeFragmentDialog.setOnClickBasicFragmentDialogListener(() -> mSearchListViewModel.removeTrack(viewWrapper.track));
+        informativeFragmentDialog.setOnClickBasicFragmentDialogListener(() -> mViewModel.removeTrack(viewWrapper.position));
         informativeFragmentDialog.show(getChildFragmentManager(), informativeFragmentDialog.getTag());
     }
 
@@ -178,7 +176,8 @@ public class ResultSearchFragment extends BaseViewModelFragment<SearchListViewMo
         Bundle bundle = AndroidUtils.getBundle(viewWrapper.track.getMediaStoreId(),
                 viewWrapper.mode);
         intent.putExtra(TrackDetailActivity.TRACK_DATA, bundle);
-        startActivity(intent);
+        startActivity(intent, ActivityOptions.makeSceneTransitionAnimation(getActivity(),
+                viewWrapper.view, "cover_art_element").toBundle());
     }
 
     private void showMessageError(String s) {
@@ -214,18 +213,17 @@ public class ResultSearchFragment extends BaseViewModelFragment<SearchListViewMo
     @Override
     public void onItemClick(int position, View view) {
         mRecyclerView.stopScroll();
-        Track track = mAdapter.getDatasource().get(position);
         ViewWrapper viewWrapper = new ViewWrapper();
-        viewWrapper.track = track;
+        viewWrapper.view = view;
+        viewWrapper.position = position;
         viewWrapper.mode = CorrectionActions.SEMI_AUTOMATIC;
-        mSearchListViewModel.onItemClick(viewWrapper);
+        mViewModel.onItemClick(viewWrapper);
     }
 
     @Override
     public void onDestroy(){
         super.onDestroy();
         mRecyclerView.stopScroll();
-        mAdapter.destroy();
         mMessage = null;
         mRecyclerView = null;
         mAdapter = null;

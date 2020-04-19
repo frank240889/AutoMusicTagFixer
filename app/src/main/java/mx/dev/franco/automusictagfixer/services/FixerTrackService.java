@@ -13,15 +13,24 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Build;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
+import android.util.ArrayMap;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+import androidx.preference.PreferenceManager;
 
-import java.util.ArrayList;
+import com.gracenote.gnsdk.GnException;
+
+import org.jaudiotagger.tag.FieldKey;
+
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Executors;
 
 import javax.inject.Inject;
 
@@ -30,22 +39,32 @@ import dagger.android.DispatchingAndroidInjector;
 import mx.dev.franco.automusictagfixer.AutoMusicTagFixer;
 import mx.dev.franco.automusictagfixer.BuildConfig;
 import mx.dev.franco.automusictagfixer.R;
+import mx.dev.franco.automusictagfixer.covermanager.CoverLoader;
 import mx.dev.franco.automusictagfixer.fixer.AudioTagger;
-import mx.dev.franco.automusictagfixer.fixer.TrackIdLoader;
-import mx.dev.franco.automusictagfixer.fixer.TrackInformationLoader;
+import mx.dev.franco.automusictagfixer.fixer.CorrectionParams;
+import mx.dev.franco.automusictagfixer.fixer.TrackLoader;
+import mx.dev.franco.automusictagfixer.fixer.TrackWriter;
 import mx.dev.franco.automusictagfixer.identifier.ApiInitializerService;
 import mx.dev.franco.automusictagfixer.identifier.GnApiService;
+import mx.dev.franco.automusictagfixer.identifier.GnUtils;
 import mx.dev.franco.automusictagfixer.identifier.IdentificationManager;
 import mx.dev.franco.automusictagfixer.identifier.Identifier;
+import mx.dev.franco.automusictagfixer.identifier.IdentifierFactory;
+import mx.dev.franco.automusictagfixer.identifier.Result;
 import mx.dev.franco.automusictagfixer.interfaces.AsyncOperation;
+import mx.dev.franco.automusictagfixer.persistence.cache.IdentificationResultsCache;
 import mx.dev.franco.automusictagfixer.persistence.repository.TrackRepository;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
+import mx.dev.franco.automusictagfixer.persistence.room.TrackDAO;
 import mx.dev.franco.automusictagfixer.persistence.room.TrackRoomDatabase;
 import mx.dev.franco.automusictagfixer.ui.main.MainActivity;
+import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
 import mx.dev.franco.automusictagfixer.utilities.TrackUtils;
-import mx.dev.franco.automusictagfixer.utilities.resource_manager.ResourceManager;
 import mx.dev.franco.automusictagfixer.utilities.shared_preferences.AbstractSharedPreferences;
+
+import static mx.dev.franco.automusictagfixer.identifier.IdentificationManager.prepareResults;
+import static mx.dev.franco.automusictagfixer.persistence.repository.AsyncOperation.TrackUpdaterSync;
 
 /**
  * @author franco
@@ -61,30 +80,29 @@ public class FixerTrackService extends Service {
     DispatchingAndroidInjector<Service> serviceDispatchingAndroidInjector;
 
     @Inject
-    TrackRepository mTrackRepository;
+    IdentifierFactory mIdentifierFactory;
     @Inject
     TrackRoomDatabase mTrackRoomDatabase;
-    @Inject
-    ResourceManager mResourceManager;
     @Inject
     GnApiService mGnApiService;
     @Inject
     AudioTagger mTagger;
     @Inject
-    AbstractSharedPreferences mSharedPreferences;
+    AudioTagger mAudioTagger;
     @Inject
-    IdentificationManager mIdentificationManager;
-
+    TrackRepository mTrackRepository;
+    @Inject
+    IdentificationResultsCache mIdentificationResultsCache;
+    @Inject
+    AbstractSharedPreferences mAbstractSharedPreferences;
     //Notification on status bar
     private Notification mNotification;
-    private Identifier<Track, List<Identifier.IdentificationResults>> mIdentifier;
-    //private MetadataWriter mMetadataWriter;
-    private TrackInformationLoader mTrackInformationLoader;
-    //private FileRenamer mFileRenamer;
-    private TrackIdLoader mTrackIdLoader;
-    private List<Integer> mPendingTrackIds = new ArrayList<>();
-    private ServiceState mServiceState = ServiceState.NOT_RUNNING;
-    private FixerState mFixerState;
+    private Identifier<Map<String, String>, List<? extends Identifier.IdentificationResults>> mIdentifier;
+    private TrackLoader mTrackLoader;
+    private TrackWriter mTrackWriter;
+    private SharedPreferences mSharedPreferences;
+    private Handler mHandler = new Handler(Looper.getMainLooper());
+
 
     /**
      * Creates a Service.  Invoked by your subclass's constructor.
@@ -97,6 +115,10 @@ public class FixerTrackService extends Service {
     public void onCreate(){
         AndroidInjection.inject(this);
         super.onCreate();
+        mIdentifier =  mIdentifierFactory.create(IdentifierFactory.FINGERPRINT_IDENTIFIER);
+        mTrackRepository.registerReceiver();
+        mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+
         broadcastStartingCorrection();
     }
 
@@ -117,7 +139,6 @@ public class FixerTrackService extends Service {
         if(action != null) {
             // Service will be stopped
             if(action.equals(Constants.Actions.ACTION_STOP_TASK)){
-                mFixerState = FixerState.CANCELLED;
                 actionStopTask();
             }
             //Service is running and correction task is about to begin.
@@ -129,100 +150,145 @@ public class FixerTrackService extends Service {
     }
 
     private void actionStartTask() {
-        SharedPreferences sharedPreferences =
-                getSharedPreferences(Constants.Application.FULL_QUALIFIED_NAME, Context.MODE_PRIVATE);
-        String order = sharedPreferences.getString(Constants.SORT_KEY, null);
-
-        mTrackIdLoader = new TrackIdLoader(new AsyncOperation<Void, List<Integer>, Void, Void>() {
+        mTrackLoader = new TrackLoader(new AsyncOperation<Void, Track, Void, Void>() {
             @Override
-            public void onAsyncOperationStarted(Void params) {
-                mFixerState = FixerState.STARTING_FETCHING_TRACKS;
-                mServiceState = ServiceState.RUNNING;
-            }
-
-            @Override
-            public void onAsyncOperationFinished(List<Integer> result) {
-                mFixerState = FixerState.FINISHED_FETCHING_TRACKS;
-                mTrackIdLoader = null;
-                if(result.isEmpty()) {
+            public void onAsyncOperationFinished(Track result) {
+                if (result != null) {
+                    startIdentification(result);
+                }
+                else {
                     broadcastMessage(getString(R.string.no_songs_to_correct));
                     broadcastCompleteCorrection();
                     stopServiceAndRemoveFromForeground();
                 }
-                else {
-                    mPendingTrackIds.addAll(result);
-                    shouldContinue();
-                }
             }
-
-            @Override
-            public void onAsyncOperationCancelled(Void cancellation) {
-                mTrackIdLoader = null;
-            }
-        }, mTrackRoomDatabase);
-        mTrackIdLoader.executeOnExecutor(AutoMusicTagFixer.getExecutorService(), order);
+        }, mTrackRoomDatabase.trackDao());
+        mTrackLoader.executeOnExecutor(AutoMusicTagFixer.getExecutorService(), mAbstractSharedPreferences);
     }
 
     private void actionStopTask() {
-        if(mServiceState == ServiceState.RUNNING) {
-            stopTasks();
-            broadcastMessage(getString(R.string.task_cancelled));
-            broadcastCompleteCorrection();
-            stopServiceAndRemoveFromForeground();
-        }
-        else {
-            broadcastCompleteCorrection();
-            stopServiceAndRemoveFromForeground();
-        }
+        stopTasks();
+        broadcastMessage(getString(R.string.task_cancelled));
+        broadcastCompleteCorrection();
+        stopServiceAndRemoveFromForeground();
     }
 
-    private void shouldContinue(){
-        if(mFixerState == FixerState.CANCELLED){
-            broadcastCompleteCorrection();
-            broadcastMessage(getString(R.string.identification_cancelled));
-            stopServiceAndRemoveFromForeground();
-        }
-        else {
-            if(mPendingTrackIds != null && !mPendingTrackIds.isEmpty()){
-                startCorrection();
-            }
-            else {
-                broadcastMessage(getString(R.string.complete_task));
-                broadcastCompleteCorrection();
-                stopServiceAndRemoveFromForeground();
-            }
-        }
-    }
+    private void startIdentification(Track track){
+        List<? extends Identifier.IdentificationResults> cacheResults = mIdentificationResultsCache.load(track.getMediaStoreId()+"");
 
-    private void startCorrection(){
         if(!canContinue()){
             broadcastMessage(getString(R.string.initializing_recognition_api));
             broadcastCompleteCorrection();
             stopServiceAndRemoveFromForeground();
         }
-        else if(mFixerState == FixerState.CANCELLED){
-            broadcastMessage(getString(R.string.task_cancelled));
-            broadcastCompleteCorrection();
-            stopServiceAndRemoveFromForeground();
-        }
-        else if (mServiceState != ServiceState.RUNNING) {//(!isRunning){
-            mTrackInformationLoader = new TrackInformationLoader(new AsyncOperation<Void, List<Track>, Void, Void>() {
-                @Override
-                public void onAsyncOperationStarted(Void params) {
-                    mFixerState = FixerState.STARTING_FETCHING_TRACK_INFO;
-                }
+        else {
+            if (cacheResults != null && cacheResults.size() > 0) {
+                onStartIdentification(track);
+                createCorrectionParams(cacheResults, track);
+            }
+            else {
+                mIdentifier.registerCallback(new Identifier.IdentificationListener<List<? extends Identifier.IdentificationResults>>() {
+                    @Override
+                    public void onIdentificationStart() {
+                        onStartIdentification(track);
+                    }
 
-                @Override
-                public void onAsyncOperationFinished(List<Track> result) {
-                    mFixerState = FixerState.FINISHED_FETCHING_TRACK_INFO;
-                    processTrack(result);
-                }
-            }, mTrackRoomDatabase);
-            mTrackInformationLoader.executeOnExecutor(AutoMusicTagFixer.getExecutorService(), mPendingTrackIds.get(0));
+                    @Override
+                    public void onIdentificationFinished(List<? extends Identifier.IdentificationResults> result) {
+                        createCorrectionParams(result, track);
+                    }
+
+                    @Override
+                    public void onIdentificationCancelled() {
+                        identificationCancelled();
+                        updateTrack(null, track, mTrackRoomDatabase.trackDao());
+                    }
+
+                    @Override
+                    public void onIdentificationNotFound() {
+                        identificationNotFound(track);
+                        updateTrack(null, track, mTrackRoomDatabase.trackDao());
+                    }
+
+                    @Override
+                    public void onIdentificationError(Throwable error) {
+                        identificationError(error.getMessage(), track);
+                        updateTrack(null, track, mTrackRoomDatabase.trackDao());
+                    }
+                });
+                Map<String, String> map = new ArrayMap<>();
+                map.put(Identifier.Field.FILENAME.name(), track.getPath());
+                mIdentifier.identify(map);
+            }
         }
+
     }
 
-    private boolean canContinue(){
+    private void createCorrectionParams(List<? extends Identifier.IdentificationResults> results, Track track) {
+        Thread thread = new Thread(() -> {
+            List<Result> newList = prepareResults(results);
+            Result result = IdentificationManager.findBestResult(newList,
+                    track,
+                    mSharedPreferences);
+
+            CorrectionParams correctionParams = new CorrectionParams();
+            int correctionMode = mSharedPreferences.getBoolean("key_overwrite_all_tags_automatic_mode", true) ?
+                    AudioTagger.MODE_OVERWRITE_ALL_TAGS : AudioTagger.MODE_WRITE_ONLY_MISSING;
+            boolean renameFile = mSharedPreferences.getBoolean("key_rename_file_automatic_mode", true);
+            correctionParams.setCorrectionMode(correctionMode);
+            if (renameFile && result.getTitle() != null && !result.getTitle().equals("")) {
+                correctionParams.setNewName(result.getTitle());
+                correctionParams.setRenameFile(true);
+            }
+            correctionParams.setMediaStoreId(track.getMediaStoreId()+"");
+            correctionParams.setTarget(track.getPath());
+            String url = result.getCoverArt() != null ? result.getCoverArt().getUrl() : null;
+            byte[] data = null;
+            if (url != null) {
+                try {
+                    data = GnUtils.fetchGnCover(url, FixerTrackService.this.getApplication());
+                } catch (GnException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            AndroidUtils.createInputParams(result.getTitle(),
+                    result.getArtist(),
+                    result.getAlbum(),
+                    result.getGenre(),
+                    result.getTrackNumber(),
+                    result.getTrackYear(),
+                    data,
+                    correctionParams);
+
+            mHandler.post(() -> applyCorrection(correctionParams, track));
+        });
+        thread.start();
+    }
+
+    private void applyCorrection(CorrectionParams correctionParams, Track track) {
+        mTrackWriter = new TrackWriter(new AsyncOperation<Void, AudioTagger.AudioTaggerResult<Map<FieldKey, Object>>, Void, AudioTagger.AudioTaggerResult<Map<FieldKey, Object>>>() {
+            @Override
+            public void onAsyncOperationStarted(Void params) {
+                onCorrectionStarted(track);
+            }
+
+            @Override
+            public void onAsyncOperationFinished(AudioTagger.AudioTaggerResult<Map<FieldKey, Object>> result) {
+                CoverLoader.removeCover(track.getMediaStoreId()+"");
+                updateTrack(result, track, mTrackRoomDatabase.trackDao());
+            }
+
+            @Override
+            public void onAsyncOperationError(AudioTagger.AudioTaggerResult<Map<FieldKey, Object>> error) {
+                updateTrack(null, track, mTrackRoomDatabase.trackDao());
+                actionStartTask();
+            }
+        }, mAudioTagger, correctionParams);
+        mTrackWriter.executeOnExecutor(Executors.newSingleThreadExecutor(), getApplicationContext());
+    }
+
+    private boolean canContinue() {
         if(mGnApiService.isApiInitializing() || !mGnApiService.isApiInitialized()){
             Intent intent = new Intent(getApplicationContext(), ApiInitializerService.class);
             startService(intent);
@@ -231,218 +297,26 @@ public class FixerTrackService extends Service {
         return true;
     }
 
-    public void processTrack(List<Track> data) {
-        /*if(mFixerState == FixerState.CANCELLED){
-            broadcastMessage(getString(R.string.task_cancelled));
-            broadcastCompleteCorrection();
-            stopServiceAndRemoveFromForeground();
-        }
-        else {
-            if(AudioTagger.checkFileIntegrity(data.get(0).getPath())) {
-                String msg = String.format(getString(R.string.file_error), data.get(0).getTitle());
-                identificationError(msg, data.get(0));
-            }
-            else {
-                mIdentifier = new AudioFingerprintIdentifier(mGnApiService, mResourceManager);
-                mIdentifier.registerCallback(new Identifier.IdentificationListener<List<Identifier.IdentificationResults>, Track>() {
-                    @Override
-                    public void onIdentificationStart() {
-                        mFixerState = FixerState.STARTING_IDENTIFYING;
-                        onStartIdentification(file);
-                    }
-
-                    @Override
-                    public void onIdentificationFinished(List<Identifier.IdentificationResults> result, Track file) {
-                        mTrackInformationLoader = null;
-                        mFixerState = FixerState.FINISHED_IDENTIFYING;
-                        identificationFound(result, file);
-                    }
-
-                    @Override
-                    public void onIdentificationError(Track file, String error) {
-                        mFixerState = FixerState.ERROR_IDENTIFYING;
-                        mTrackInformationLoader = null;
-                        identificationError(error, file);
-                    }
-
-                    @Override
-                    public void onIdentificationCancelled(Track file) {
-                        mFixerState = FixerState.CANCELLED_IDENTIFYING;
-                        mTrackInformationLoader = null;
-                        identificationCancelled(file);
-                    }
-
-                    @Override
-                    public void onIdentificationNotFound(Track file) {
-                        mFixerState = FixerState.FINISHED_IDENTIFYING;
-                        mTrackInformationLoader = null;
-                        identificationNotFound(file);
-                    }
-                });
-
-                mIdentifier.identify(data.get(0));
-            }
-        }*/
-    }
-
-
     private void onStartIdentification(Track track) {
-        //isRunning = true;
-        track.setChecked(1);
-        track.setProcessing(1);
-        updateTrack(track);
         startNotification(TrackUtils.getPath(track.getPath()),
                 getString(R.string.correction_in_progress),
                 getString(R.string.identifying), track.getMediaStoreId());
-        broadcastCorrectionForId(track);
+        broadcastCorrectionForId(track.getMediaStoreId(), true);
     }
 
     private void identificationError(String error, Track track) {
         startNotification(getString(R.string.correction_in_progress), "", error, track.getMediaStoreId() );
-
         broadcastMessage(error);
-
-        track.setChecked(0);
-        track.setProcessing(0);
-        updateTrack(track);
-
-        mServiceState = ServiceState.NOT_RUNNING;
-        //isRunning = false;
-
-        popFirstFromList();
-        shouldContinue();
     }
 
     private void identificationNotFound(Track track) {
-
         startNotification(TrackUtils.getPath(track.getPath()),getString(R.string.correction_in_progress),
                 getString(R.string.no_match_found), track.getMediaStoreId() );
-
-
-        track.setChecked(0);
-        track.setProcessing(0);
-        updateTrack(track);
-
-        mServiceState = ServiceState.NOT_RUNNING;
-        //isRunning = false;
-
-        popFirstFromList();
-        shouldContinue();
     }
-
-    /**
-     * Called if current track is identified.
-     * @param results
-     * @param track
-     */
-    public void identificationFound(List<Identifier.IdentificationResults> results, Track track) {
-        /*startNotification(TrackUtils.getPath(track.getPath()), getString(R.string.match_found),
-                getString(R.string.starting_correction), track.getMediaStoreId());
-
-        //Recover from preferences if user wants to overwrite or write only missing tags in automatic mode.
-        int task = PreferenceManager.
-                getDefaultSharedPreferences(getApplicationContext()).
-                getBoolean("key_overwrite_all_tags_automatic_mode", true) ?
-                AudioTagger.MODE_OVERWRITE_ALL_TAGS : AudioTagger.MODE_WRITE_ONLY_MISSING;
-
-        InputCorrectionParams inputCorrectionParams = new InputCorrectionParams();
-                AndroidUtils.createInputParams(results.get(0), inputCorrectionParams);
-
-        inputCorrectionParams.setTargetFile(track.getPath());
-        inputCorrectionParams.setCodeRequest(task);
-        //TrackIdentificationResult result = mIdentificationManager.getTrackResult(track.getMediaStoreId()+"", track.getMediaStoreId()+"");
-        //AndroidUtils.createInputParams(result, inputCorrectionParams);
-
-        mMetadataWriter = new MetadataWriter(new AsyncOperation<Track, MetadataWriterResult, Track, MetadataWriterResult>() {
-            @Override
-            public void onAsyncOperationStarted(Track params) {
-                mFixerState = FixerState.STARTING_FIXING;
-                onCorrectionStarted(params);
-            }
-
-            @Override
-            public void onAsyncOperationFinished(MetadataWriterResult result) {
-                mFixerState = FixerState.FINISHED_FIXING;
-                mMetadataWriter = null;
-                onCorrectionCompleted(result);
-            }
-
-            @Override
-            public void onAsyncOperationCancelled(Track cancellation) {
-                mFixerState = FixerState.CANCELLED_FIXING;
-                mMetadataWriter = null;
-                onCorrectionCancelled(cancellation);
-            }
-
-            @Override
-            public void onAsyncOperationError(MetadataWriterResult result1) {
-                mFixerState = FixerState.ERROR_FIXING;
-                mMetadataWriter = null;
-                onOperationError(result1);
-            }
-        }, new AudioMetadataTagger(mTagger), inputCorrectionParams, track);
-
-        mMetadataWriter.executeOnExecutor(Executors.newSingleThreadExecutor(), getApplicationContext());*/
-    }
-
-
-
-    /*public void onCorrectionCompleted(MetadataWriterResult result) {
-
-        /*boolean shouldRename = PreferenceManager.
-                getDefaultSharedPreferences(getApplicationContext()).
-                getBoolean("key_rename_file_automatic_mode", true);
-
-        String newName = AndroidUtils.createName(result.getTrack());
-
-        if(shouldRename && newName != null) {
-            mFileRenamer = new FileRenamer(new AsyncOperation<Track, AudioTagger.ResultRename, Track, AudioTagger.ResultRename>() {
-                @Override
-                public void onAsyncOperationStarted(Track params) {
-                    mFixerState = FixerState.STARTING_RENAMING;
-                }
-
-                @Override
-                public void onAsyncOperationCancelled(Track cancellation) {
-                    mFixerState = FixerState.CANCELLED_RENAMING;
-                    mFileRenamer = null;
-                }
-
-                @Override
-                public void onAsyncOperationFinished(ResultRename result) {
-                    mFixerState = FixerState.FINISHED_RENAMING;
-                    mFileRenamer = null;
-                    Track track = ((TrackResultRename)result).getTrack();
-                    finishTrack(track);
-                }
-
-                @Override
-                public void onAsyncOperationError(ResultRename error) {
-                    mFixerState = FixerState.ERROR_RENAMING;
-                    mFileRenamer = null;
-
-                    onOperationError(error);
-                }
-            }, new AudioMetadataTagger(mTagger), result.getTrack(),newName);
-        }
-        else {
-            Track track = result.getTrack();
-            finishTrack(track);
-        }
-    }*/
 
     private void finishTrack(Track track) {
         startNotification(TrackUtils.getFilename(track.getPath()),
                 getString(R.string.success), "", track.getMediaStoreId() );
-
-        track.setChecked(0);
-        track.setProcessing(0);
-        updateTrack(track);
-
-        popFirstFromList();
-        mServiceState = ServiceState.NOT_RUNNING;
-        //isRunning = false;
-        shouldContinue();
     }
 
     private void onCorrectionStarted(Track track) {
@@ -450,77 +324,49 @@ public class FixerTrackService extends Service {
                 getString(R.string.applying_tags), track.getMediaStoreId() );
     }
 
-    public void onCorrectionCancelled(Track track) {
-        broadcastMessage(getString(R.string.task_cancelled));
-        track.setChecked(0);
-        track.setProcessing(0);
-        updateTrack(track);
+    private void updateTrack(AudioTagger.AudioTaggerResult<Map<FieldKey, Object>> result, Track track, TrackDAO trackDAO) {
+        if (result != null) {
+            Map<FieldKey, Object> tags = result.getData();
 
-        mServiceState = ServiceState.NOT_RUNNING;
-        //isRunning = false;
-        broadcastCompleteCorrection();
-        stopServiceAndRemoveFromForeground();
-    }
+            if (tags != null) {
+                String title = (String) tags.get(FieldKey.TITLE);
+                String artist = (String) tags.get(FieldKey.ARTIST);
+                String album = (String) tags.get(FieldKey.ALBUM);
+                if (title != null && !title.isEmpty()) {
+                    track.setTitle(title);
+                }
 
-    /*private void onOperationError(MetadataWriterResult result) {
-        String error = AndroidUtils.AudioTaggerErrorDescription.
-                getErrorMessage(this, result.getResultCorrection().getCode());
+                if (artist != null && !artist.isEmpty()) {
+                    track.setArtist(artist);
+                }
 
-        Track track = result.getTrack();
-
-        startNotification(getString(R.string.error_in_correction), getString(R.string.error_in_correction),
-                error, track.getMediaStoreId());
-        broadcastMessage(error);
-
-        track.setChecked(0);
-        track.setProcessing(0);
-        updateTrack(track);
-
-        popFirstFromList();
-        mServiceState = ServiceState.NOT_RUNNING;
-        shouldContinue();
-    }*/
-
-    /*private void onOperationError(ResultRename resultRename) {
-        String error = AndroidUtils.AudioTaggerErrorDescription.
-            getErrorMessage(this, resultRename.getCode());
-
-        Track track = ((TrackResultRename)resultRename).getTrack();
-
-        startNotification(getString(R.string.error_in_correction), getString(R.string.error_in_correction),
-            error, track.getMediaStoreId());
-        broadcastMessage(error);
-
-        track.setChecked(0);
-        track.setProcessing(0);
-        updateTrack(track);
-
-        popFirstFromList();
-        mServiceState = ServiceState.NOT_RUNNING;
-        shouldContinue();
-    }*/
-
-
-    private void updateTrack(Track track) {
-        if(mTrackRepository != null) {
-            mTrackRepository.update(track);
+                if (album != null && !album.isEmpty()) {
+                    track.setAlbum(album);
+                }
+            }
+            String path = ((AudioTagger.ResultCorrection)result).getResultRename();
+            if(path != null && !path.equals(""))
+                track.setPath(path);
+            track.setVersion(track.getVersion()+1);
         }
-    }
 
-    private void popFirstFromList() {
-        if(mPendingTrackIds != null && mPendingTrackIds.size() > 0)
-            mPendingTrackIds.remove(0);
-    }
-
-
-    public void identificationCancelled(Track track) {
         track.setChecked(0);
         track.setProcessing(0);
-        updateTrack(track);
+        TrackUpdaterSync trackUpdaterSync = new TrackUpdaterSync(new AsyncOperation<Void, Integer, Void, Void>() {
+            @Override
+            public void onAsyncOperationFinished(Integer result) {
+                finishTrack(track);
+                actionStartTask();
+            }
+        }, trackDAO);
+        trackUpdaterSync.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, track);
+
+    }
+
+    public void identificationCancelled() {
         broadcastCompleteCorrection();
         broadcastMessage(getString(R.string.task_cancelled));
         stopServiceAndRemoveFromForeground();
-        mServiceState = ServiceState.NOT_RUNNING;
     }
 
     /**
@@ -541,9 +387,7 @@ public class FixerTrackService extends Service {
      */
     @Override
     public void onDestroy(){
-        mPendingTrackIds.clear();
-        mPendingTrackIds = null;
-        mResourceManager = null;
+        mTrackRepository.unregisterReceiver();
     }
 
     private void stopServiceAndRemoveFromForeground() {
@@ -553,18 +397,7 @@ public class FixerTrackService extends Service {
     }
 
     private void stopTasks(){
-        if(mFixerState == FixerState.STARTING_IDENTIFYING) {
-            stopIdentification();
-        }
-        else if(mFixerState == FixerState.STARTING_FIXING) {
-            stopCorrection();
-        }
-        else if(mFixerState == FixerState.STARTING_RENAMING) {
-            stopRenaming();
-        }
-        else {
-            stopRetrievingTrack();
-        }
+        stopIdentification();
     }
 
     private void broadcastStartingCorrection(){
@@ -577,10 +410,15 @@ public class FixerTrackService extends Service {
         LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
     }
 
-    private void broadcastCorrectionForId(Track track) {
+    private void broadcastCorrectionForId(int mediaStoreId, boolean loading) {
         Intent intent = new Intent(Constants.Actions.START_PROCESSING_FOR);
-        intent.putExtra(Constants.MEDIA_STORE_ID, track.getMediaStoreId());
+        intent.putExtra(Constants.MEDIA_STORE_ID, mediaStoreId);
+        intent.putExtra(Constants.LOADING, loading ? 1 : 0);
         LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcastSync(intent);
+
+        Intent intent2 = new Intent(Constants.Actions.ACTION_SET_ITEM_LOADING);
+        intent2.putExtra(Constants.MEDIA_STORE_ID, mediaStoreId);
+        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcastSync(intent2);
     }
 
     private void broadcastMessage(String message) {
@@ -594,23 +432,6 @@ public class FixerTrackService extends Service {
             mIdentifier.cancel();
         }
         mIdentifier = null;
-    }
-
-    private void stopCorrection(){
-
-    }
-
-    private void stopRetrievingTrack(){
-        if(mTrackInformationLoader != null && (mTrackInformationLoader.getStatus() == AsyncTask.Status.PENDING
-                || mTrackInformationLoader.getStatus() == AsyncTask.Status.RUNNING)){
-            mTrackInformationLoader.cancel(true);
-        }
-        mTrackInformationLoader = null;
-    }
-
-
-    private void stopRenaming() {
-
     }
 
     /**
@@ -685,11 +506,6 @@ public class FixerTrackService extends Service {
             notificationManager.createNotificationChannel(chan);
         }
         return channelId;
-    }
-
-    private enum ServiceState {
-        RUNNING,
-        NOT_RUNNING
     }
 }
 

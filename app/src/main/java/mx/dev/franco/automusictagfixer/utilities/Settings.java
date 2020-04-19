@@ -16,7 +16,7 @@ public class Settings {
     public static volatile GnLanguage SETTING_LANGUAGE = GnLanguage.kLanguageSpanish;
 
     public static GnImageSize setValueImageSize(String preferenceSaved){
-        GnImageSize size = null;
+        GnImageSize size;
         switch (preferenceSaved){
             case "-1":
                 size = null;

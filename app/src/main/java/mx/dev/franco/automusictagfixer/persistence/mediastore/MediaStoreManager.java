@@ -6,10 +6,7 @@ import android.media.MediaScannerConnection;
 import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
 
-import org.jaudiotagger.tag.FieldKey;
-
 import java.util.List;
-import java.util.Map;
 
 import javax.annotation.Nonnull;
 import javax.inject.Inject;
@@ -59,28 +56,6 @@ public class MediaStoreManager {
 
     /**
      * Updates the data of media store file.
-     * @param data The data to set.
-     * @param task The task to execute.
-     * @param mediaStoreId The id of media store file.
-     */
-    public void updateDataTrackOnMediaStore(Map<FieldKey,Object> data, int task, int mediaStoreId) {
-        mMediaStoreUpdater = new MediaStoreUpdater(new AsyncOperation<Void, MediaStoreResult, Void, Void>() {
-            @Override
-            public void onAsyncOperationStarted(Void params) {
-                mLoadingStateLiveData.setValue(true);
-            }
-
-            @Override
-            public void onAsyncOperationFinished(MediaStoreResult result) {
-                mLoadingStateLiveData.setValue(false);
-                mMediaStoreResultSingleLiveEvent.setValue(result);
-            }
-        }, data, task, mediaStoreId);
-        mMediaStoreUpdater.executeOnExecutor(AutoMusicTagFixer.getExecutorService(), mContext);
-    }
-
-    /**
-     * Updates the data of media store file.
      * @param path The path of the file to scan by mediastore.
      */
     public void addFileToMediaStore(String path, MediaScannerConnection.OnScanCompletedListener onScanCompletedListener) {
@@ -110,36 +85,6 @@ public class MediaStoreManager {
             }
         });
         mediaStoreReader.executeOnExecutor(AutoMusicTagFixer.getExecutorService(), mContext);
-    }
-
-    /**
-     * Reescan the media store to retrieve new audio files.
-     */
-    public void rescan() {
-        MediaStoreReader mediaStoreReader = new MediaStoreReader(new AsyncOperation<Void, List<Track>, Void, Void>() {
-            @Override
-            public void onAsyncOperationStarted(Void params) {
-                mLoadingStateLiveData.setValue(true);
-            }
-
-            @Override
-            public void onAsyncOperationFinished(List<Track> result) {
-                mLoadingStateLiveData.setValue(false);
-                mResult.setValue(Resource.success(result));
-            }
-            @Override
-            public void onAsyncOperationError(Void error) {
-                mLoadingStateLiveData.setValue(false);
-                mResult.setValue(Resource.error(null));
-            }
-        }, mTrackDAO);
-        mediaStoreReader.executeOnExecutor(AutoMusicTagFixer.getExecutorService(), mContext);
-    }
-
-    public void onCleared() {
-        //mResult.call();
-        //mLoadingStateLiveData.call();
-        //mMediaStoreResultSingleLiveEvent.call();
     }
 
 }
