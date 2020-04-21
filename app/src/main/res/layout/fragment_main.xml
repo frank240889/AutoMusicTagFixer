@@ -39,6 +39,7 @@
             android:layout_height="match_parent"
             android:splitMotionEvents="false"
             android:clipToPadding="false"
+            android:scrollbarAlwaysDrawVerticalTrack="true"
             android:overScrollMode="always"
             android:paddingBottom="80dp"
             android:scrollbarStyle="outsideOverlay"
@@ -47,9 +48,4 @@
             tools:listitem="@layout/main_item"
             app:layout_behavior="@string/appbar_scrolling_view_behavior"/>
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
-    <!--FrameLayout
-        android:id="@+id/child_fragment_container"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:elevation="16dp"/-->
 </FrameLayout>

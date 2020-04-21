@@ -57,6 +57,8 @@ import mx.dev.franco.automusictagfixer.utilities.RequiredPermissions;
 import mx.dev.franco.automusictagfixer.utilities.ServiceUtils;
 import mx.dev.franco.automusictagfixer.utilities.shared_preferences.AbstractSharedPreferences;
 
+import static android.widget.Toast.LENGTH_SHORT;
+
 public class MainFragment extends BaseViewModelFragment<ListViewModel> implements
         AudioItemHolder.ClickListener,
         AutomaticTaskListener, AutomaticTaskListener.MessageListener, AsyncListDiffer.ListListener<List<Track>> {
@@ -180,12 +182,12 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
 
         //Color of background and progress tint of progress bar of refresh layout
         mSwipeRefreshLayout.setColorSchemeColors(
-                ContextCompat.getColor(getActivity(), R.color.progressTintSwipeRefreshLayout)
+                ContextCompat.getColor(requireActivity(), R.color.progressTintSwipeRefreshLayout)
         );
-        mSwipeRefreshLayout.setProgressBackgroundColorSchemeColor(getActivity().
+        mSwipeRefreshLayout.setProgressBackgroundColorSchemeColor(requireActivity().
                 getResources().getColor(R.color.progressSwipeRefreshLayoutBackgroundTint));
         mHasPermission = ContextCompat.
-                checkSelfPermission(getActivity(), Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                checkSelfPermission(requireActivity(), Manifest.permission.WRITE_EXTERNAL_STORAGE)
                 == PackageManager.PERMISSION_GRANTED;
 
         if(!mHasPermission) {
@@ -196,8 +198,8 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
         }
         else {
             boolean isPresentSD = storageHelper.isPresentRemovableStorage();
-            if(AndroidUtils.getUriSD(getActivity()) == null && isPresentSD) {
-                startActivityForResult(new Intent(getActivity(), SdCardInstructionsActivity.class),
+            if(AndroidUtils.getUriSD(requireActivity()) == null && isPresentSD) {
+                startActivityForResult(new Intent(requireActivity(), SdCardInstructionsActivity.class),
                         RequiredPermissions.REQUEST_PERMISSION_SAF);
             }
             else {
@@ -206,11 +208,7 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
             mRecyclerView.setVisibility(View.VISIBLE);
             mMessage.setText(R.string.loading_tracks);
         }
-        //App is opened again, then scroll to the track being processed.
-        int id = getActivity().getIntent().getIntExtra(Constants.MEDIA_STORE_ID, -1);
-        int pos = mViewModel.getTrackPosition(id);
-        if(pos != -1)
-        mRecyclerView.scrollToPosition(pos);
+
     }
 
     @Override
@@ -472,7 +470,7 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
         viewWrapper.view = view;
         viewWrapper.position = position;
         viewWrapper.mode = CorrectionActions.VIEW_INFO;
-        mViewModel.onClickCover(viewWrapper);
+        mViewModel.onItemClick(viewWrapper);
     }
 
     @Override
@@ -524,7 +522,7 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
                         stopIntent.setAction(Constants.Actions.ACTION_STOP_TASK);
                         getActivity().getApplicationContext().startService(stopIntent);
                         Toast t = AndroidUtils.getToast(getContext());
-                        t.setDuration(Toast.LENGTH_SHORT);
+                        t.setDuration(LENGTH_SHORT);
                         t.setText(R.string.cancelling);
                         t.show();
                     }
@@ -566,7 +564,6 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
 
     private void startCorrection(int id) {
         Intent intent = new Intent(getActivity(),FixerTrackService.class);
-        intent.putExtra(Constants.MEDIA_STORE_ID, id);
         intent.setAction(Constants.Actions.ACTION_START_TASK);
         Objects.requireNonNull(getActivity()).startService(intent);
     }
@@ -585,7 +582,7 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
             stopIntent.setAction(Constants.Actions.ACTION_STOP_TASK);
             requireActivity().startService(stopIntent);
             Toast t = AndroidUtils.getToast(requireActivity());
-            t.setDuration(Toast.LENGTH_SHORT);
+            t.setDuration(LENGTH_SHORT);
             t.setText(R.string.cancelling);
             t.show();
         });

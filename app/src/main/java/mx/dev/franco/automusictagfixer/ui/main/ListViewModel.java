@@ -113,7 +113,7 @@ public class ListViewModel extends AndroidViewModel {
     public LiveData<List<Track>> getTracks(){
         LiveData<Resource<List<Track>>> result = mTrackRepository.getObserveTracks();
         mTracks = Transformations.map(result, input -> {
-            mLoadingState.setValue(input.status != Resource.Status.LOADING);
+            mLoadingState.setValue(input.status == Resource.Status.LOADING);
             return input.data;
         });
         return mTracks;
@@ -175,29 +175,7 @@ public class ListViewModel extends AndroidViewModel {
      * Handles the click for items in list.
      * @param wrapper A {@link ViewWrapper} object containing th info if the item.
      */
-    public void onItemClick(ViewWrapper wrapper){
-        Track track = getTrackList().get(wrapper.position);
-        boolean isAccessible;
-        isAccessible = AudioTagger.checkFileIntegrity(track.getPath());
-
-        if(!isAccessible){
-            wrapper.track = track;
-            mObservableInaccessibleTrack.setValue(wrapper);
-        }
-        else if(track.processing() == 1){
-            mObservableMessage.setValue(R.string.current_file_processing);
-        }
-        else {
-            wrapper.track = track;
-            mObservableAccessibleTrack.setValue(wrapper);
-        }
-    }
-
-    /**
-     * Handles the click when the cover is clicked.
-     * @param viewWrapper A {@link ViewWrapper} object containing th info if the item.
-     */
-    public void onClickCover(ViewWrapper viewWrapper){
+    public void onItemClick(ViewWrapper viewWrapper){
         Track track = getTrackList().get(viewWrapper.position);
         boolean isAccessible = AudioTagger.checkFileIntegrity(track.getPath());
         viewWrapper.track = track;
@@ -220,7 +198,6 @@ public class ListViewModel extends AndroidViewModel {
         List<Track> tracks = mTrackRepository.tracks();
         mIsSorting = false;
         if(tracks != null && tracks.size() > 0) {
-            //mObservableCheckAllTracks.setValue(true);
             checkAllItems();
         }
         else {

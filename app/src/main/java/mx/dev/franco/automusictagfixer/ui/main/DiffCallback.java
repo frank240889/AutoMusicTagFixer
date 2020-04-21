@@ -28,6 +28,8 @@ public class DiffCallback extends DiffUtil.ItemCallback<Track>{
             return false;
         if (oldItem.checked() != newItem.checked())
             return false;
+        if (oldItem.processing() != newItem.processing())
+            return false;
 
         return oldItem.getVersion() == newItem.getVersion();
     }
@@ -45,8 +47,7 @@ public class DiffCallback extends DiffUtil.ItemCallback<Track>{
         if (!oldItem.getAlbum().equals(newItem.getAlbum()))
             diff.putString("album", newItem.getAlbum());
         diff.putBoolean("should_reload_cover", true);
-        if (!oldItem.getPath().equals(newItem.getPath()))
-            diff.putString("path", newItem.getPath());
+
         if (oldItem.checked() != newItem.checked())
             diff.putInt("checked", newItem.checked());
         if (oldItem.processing() != newItem.processing())

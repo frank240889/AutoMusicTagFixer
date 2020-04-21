@@ -21,6 +21,7 @@ public class Constants {
     public static final String PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=";
     public static final String GOOGLE_SEARCH = "https://www.google.com/#q=";
     public static final String LOADING = "loading";
+    public static final String CHECKED = "checked";
 
     public static class Application{
         public static String FULL_QUALIFIED_NAME = BuildConfig.APPLICATION_ID;

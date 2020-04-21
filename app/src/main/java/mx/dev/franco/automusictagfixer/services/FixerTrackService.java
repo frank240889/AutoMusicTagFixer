@@ -118,8 +118,6 @@ public class FixerTrackService extends Service {
         mIdentifier =  mIdentifierFactory.create(IdentifierFactory.FINGERPRINT_IDENTIFIER);
         mTrackRepository.registerReceiver();
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-
-        broadcastStartingCorrection();
     }
 
     /**
@@ -143,13 +141,13 @@ public class FixerTrackService extends Service {
             }
             //Service is running and correction task is about to begin.
             else {
-                actionStartTask();
+                actionStartTask(false);
             }
         }
         return super.onStartCommand(intent,flags,startId);
     }
 
-    private void actionStartTask() {
+    private void actionStartTask(boolean isNextTrack) {
         mTrackLoader = new TrackLoader(new AsyncOperation<Void, Track, Void, Void>() {
             @Override
             public void onAsyncOperationFinished(Track result) {
@@ -157,7 +155,12 @@ public class FixerTrackService extends Service {
                     startIdentification(result);
                 }
                 else {
-                    broadcastMessage(getString(R.string.no_songs_to_correct));
+                    if (isNextTrack) {
+                        broadcastMessage(getString(R.string.complete_task));
+                    }
+                    else {
+                        broadcastMessage(getString(R.string.no_songs_to_correct));
+                    }
                     broadcastCompleteCorrection();
                     stopServiceAndRemoveFromForeground();
                 }
@@ -183,13 +186,24 @@ public class FixerTrackService extends Service {
         }
         else {
             if (cacheResults != null && cacheResults.size() > 0) {
-                onStartIdentification(track);
-                createCorrectionParams(cacheResults, track);
+                track.setProcessing(1);
+                TrackUpdaterSync trackUpdaterSync = new TrackUpdaterSync(new AsyncOperation<Void, Integer, Void, Void>() {
+                    @Override
+                    public void onAsyncOperationFinished(Integer result) {
+                        broadcastStartingCorrection();
+                        //broadcastLoadingStateForId(track.getMediaStoreId(), true, null);
+                        onStartIdentification(track);
+                        createCorrectionParams(cacheResults, track);
+                    }
+                }, mTrackRoomDatabase.trackDao());
+                trackUpdaterSync.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, track);
             }
             else {
                 mIdentifier.registerCallback(new Identifier.IdentificationListener<List<? extends Identifier.IdentificationResults>>() {
                     @Override
                     public void onIdentificationStart() {
+                        broadcastStartingCorrection();
+                        //broadcastLoadingStateForId(track.getMediaStoreId(), true, null);
                         onStartIdentification(track);
                     }
 
@@ -201,24 +215,63 @@ public class FixerTrackService extends Service {
                     @Override
                     public void onIdentificationCancelled() {
                         identificationCancelled();
-                        updateTrack(null, track, mTrackRoomDatabase.trackDao());
+                        track.setChecked(0);
+                        track.setProcessing(0);
+                        TrackUpdaterSync trackUpdaterSync = new TrackUpdaterSync(new AsyncOperation<Void, Integer, Void, Void>() {
+                            @Override
+                            public void onAsyncOperationFinished(Integer result) {
+                                finishTrack(track);
+                                actionStartTask(true);
+                            }
+                        }, mTrackRoomDatabase.trackDao());
+                        trackUpdaterSync.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, track);
+                        //updateTrack(null, track, mTrackRoomDatabase.trackDao());
                     }
 
                     @Override
                     public void onIdentificationNotFound() {
                         identificationNotFound(track);
-                        updateTrack(null, track, mTrackRoomDatabase.trackDao());
+                        track.setChecked(0);
+                        track.setProcessing(0);
+                        TrackUpdaterSync trackUpdaterSync = new TrackUpdaterSync(new AsyncOperation<Void, Integer, Void, Void>() {
+                            @Override
+                            public void onAsyncOperationFinished(Integer result) {
+                                finishTrack(track);
+                                actionStartTask(true);
+                            }
+                        }, mTrackRoomDatabase.trackDao());
+                        trackUpdaterSync.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, track);
+                        //updateTrack(null, track, mTrackRoomDatabase.trackDao());
                     }
 
                     @Override
                     public void onIdentificationError(Throwable error) {
                         identificationError(error.getMessage(), track);
-                        updateTrack(null, track, mTrackRoomDatabase.trackDao());
+                        track.setChecked(0);
+                        track.setProcessing(0);
+                        TrackUpdaterSync trackUpdaterSync = new TrackUpdaterSync(new AsyncOperation<Void, Integer, Void, Void>() {
+                            @Override
+                            public void onAsyncOperationFinished(Integer result) {
+                                finishTrack(track);
+                                actionStartTask(true);
+                            }
+                        }, mTrackRoomDatabase.trackDao());
+                        trackUpdaterSync.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, track);
+                        //updateTrack(null, track, mTrackRoomDatabase.trackDao());
                     }
                 });
+
                 Map<String, String> map = new ArrayMap<>();
                 map.put(Identifier.Field.FILENAME.name(), track.getPath());
-                mIdentifier.identify(map);
+                track.setProcessing(1);
+                TrackUpdaterSync trackUpdaterSync = new TrackUpdaterSync(new AsyncOperation<Void, Integer, Void, Void>() {
+                    @Override
+                    public void onAsyncOperationFinished(Integer result) {
+                        mIdentifier.identify(map);
+                    }
+                }, mTrackRoomDatabase.trackDao());
+                trackUpdaterSync.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, track);
+
             }
         }
 
@@ -267,7 +320,8 @@ public class FixerTrackService extends Service {
     }
 
     private void applyCorrection(CorrectionParams correctionParams, Track track) {
-        mTrackWriter = new TrackWriter(new AsyncOperation<Void, AudioTagger.AudioTaggerResult<Map<FieldKey, Object>>, Void, AudioTagger.AudioTaggerResult<Map<FieldKey, Object>>>() {
+        mTrackWriter = new TrackWriter(new AsyncOperation<Void,
+                AudioTagger.AudioTaggerResult<Map<FieldKey, Object>>, Void, AudioTagger.AudioTaggerResult<Map<FieldKey, Object>>>() {
             @Override
             public void onAsyncOperationStarted(Void params) {
                 onCorrectionStarted(track);
@@ -275,14 +329,27 @@ public class FixerTrackService extends Service {
 
             @Override
             public void onAsyncOperationFinished(AudioTagger.AudioTaggerResult<Map<FieldKey, Object>> result) {
-                CoverLoader.removeCover(track.getMediaStoreId()+"");
+                boolean deleteCoverFromCache = (result.getTaskExecuted() != AudioTagger.MODE_RENAME_FILE)
+                        || result.getData().containsKey(FieldKey.COVER_ART);
+                if (deleteCoverFromCache)
+                    CoverLoader.removeCover(track.getMediaStoreId()+"");
+                track.setChecked(0);
+                track.setProcessing(0);
                 updateTrack(result, track, mTrackRoomDatabase.trackDao());
             }
 
             @Override
             public void onAsyncOperationError(AudioTagger.AudioTaggerResult<Map<FieldKey, Object>> error) {
-                updateTrack(null, track, mTrackRoomDatabase.trackDao());
-                actionStartTask();
+                track.setChecked(0);
+                track.setProcessing(0);
+                TrackUpdaterSync trackUpdaterSync = new TrackUpdaterSync(new AsyncOperation<Void, Integer, Void, Void>() {
+                    @Override
+                    public void onAsyncOperationFinished(Integer result) {
+                        finishTrack(track);
+                        actionStartTask(true);
+                    }
+                }, mTrackRoomDatabase.trackDao());
+                trackUpdaterSync.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, track);
             }
         }, mAudioTagger, correctionParams);
         mTrackWriter.executeOnExecutor(Executors.newSingleThreadExecutor(), getApplicationContext());
@@ -301,7 +368,6 @@ public class FixerTrackService extends Service {
         startNotification(TrackUtils.getPath(track.getPath()),
                 getString(R.string.correction_in_progress),
                 getString(R.string.identifying), track.getMediaStoreId());
-        broadcastCorrectionForId(track.getMediaStoreId(), true);
     }
 
     private void identificationError(String error, Track track) {
@@ -344,6 +410,7 @@ public class FixerTrackService extends Service {
                     track.setAlbum(album);
                 }
             }
+
             String path = ((AudioTagger.ResultCorrection)result).getResultRename();
             if(path != null && !path.equals(""))
                 track.setPath(path);
@@ -356,7 +423,7 @@ public class FixerTrackService extends Service {
             @Override
             public void onAsyncOperationFinished(Integer result) {
                 finishTrack(track);
-                actionStartTask();
+                actionStartTask(true);
             }
         }, trackDAO);
         trackUpdaterSync.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, track);
@@ -410,15 +477,13 @@ public class FixerTrackService extends Service {
         LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
     }
 
-    private void broadcastCorrectionForId(int mediaStoreId, boolean loading) {
+    private void broadcastLoadingStateForId(int mediaStoreId, boolean loading, Boolean checked) {
         Intent intent = new Intent(Constants.Actions.START_PROCESSING_FOR);
         intent.putExtra(Constants.MEDIA_STORE_ID, mediaStoreId);
         intent.putExtra(Constants.LOADING, loading ? 1 : 0);
+        if (checked != null)
+            intent.putExtra(Constants.CHECKED, checked ? 1 : 0);
         LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcastSync(intent);
-
-        Intent intent2 = new Intent(Constants.Actions.ACTION_SET_ITEM_LOADING);
-        intent2.putExtra(Constants.MEDIA_STORE_ID, mediaStoreId);
-        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcastSync(intent2);
     }
 
     private void broadcastMessage(String message) {
@@ -426,6 +491,7 @@ public class FixerTrackService extends Service {
         intent.putExtra("message", message);
         LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
     }
+
 
     private void stopIdentification(){
         if(mIdentifier != null){

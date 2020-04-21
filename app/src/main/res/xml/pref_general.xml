@@ -18,7 +18,7 @@
             android:summary="@string/pref_title_background_description"
             android:title="@string/pref_title_background" />
         <ListPreference
-            android:defaultValue="1000"
+            android:defaultValue="kImageSizeXLarge"
             android:entries="@array/pref_size_album_art_titles"
             android:entryValues="@array/pref_size_album_art_values"
             android:key="key_size_album_art"

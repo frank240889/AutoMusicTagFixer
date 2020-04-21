@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.widget.Toast;
 
 import androidx.annotation.IntegerRes;
 import androidx.annotation.NonNull;
@@ -35,7 +36,7 @@ import mx.dev.franco.automusictagfixer.utilities.Constants;
 import mx.dev.franco.automusictagfixer.utilities.Resource;
 import mx.dev.franco.automusictagfixer.utilities.shared_preferences.AbstractSharedPreferences;
 
-import static mx.dev.franco.automusictagfixer.utilities.Constants.Actions.ACTION_SET_ITEM_LOADING;
+import static mx.dev.franco.automusictagfixer.utilities.Constants.Actions.START_PROCESSING_FOR;
 
 @Singleton
 public class TrackRepository {
@@ -265,7 +266,7 @@ public class TrackRepository {
      * only certain actions sent by FixerTrackService
      */
     public void registerReceiver() {
-        IntentFilter startTaskFilter = new IntentFilter(ACTION_SET_ITEM_LOADING);
+        IntentFilter startTaskFilter = new IntentFilter(START_PROCESSING_FOR);
 
         mBroadcastReceiver = new BroadcastReceiver() {
             @Override
@@ -290,8 +291,9 @@ public class TrackRepository {
         Track track = getTrackById(id);
         if (track != null) {
             track.setChecked(loading);
-            track.setProcessing(loading);
-            mSortingEvent.setValue(null);
+            track.setProcessing(1);
+            Toast.makeText(mContext, "Loading: " + loading, Toast.LENGTH_SHORT).show();
+            //mSortingEvent.setValue(null);
             mMediatorTrackData.setValue(Resource.success(mMediatorTrackData.getValue().data));
         }
     }
