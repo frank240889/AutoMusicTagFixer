@@ -246,7 +246,7 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
 
                 ResultSearchFragment finalResultSearchListFragment = resultSearchListFragment;
 
-                ((MainActivity)getActivity()).startTaskFab.hide(new ExtendedFloatingActionButton.OnChangedCallback() {
+                ((MainActivity)requireActivity()).startTaskFab.hide(new ExtendedFloatingActionButton.OnChangedCallback() {
                     @Override
                     public void onHidden(ExtendedFloatingActionButton extendedFab) {
                         getParentFragmentManager().beginTransaction()

@@ -282,12 +282,12 @@ public class FixerTrackService extends Service {
             List<Result> newList = prepareResults(results);
             Result result = IdentificationManager.findBestResult(newList,
                     track,
-                    mSharedPreferences);
+                    mSharedPreferences.getString("key_size_album_art", "kImageSize1080"));
 
             CorrectionParams correctionParams = new CorrectionParams();
             int correctionMode = mSharedPreferences.getBoolean("key_overwrite_all_tags_automatic_mode", true) ?
                     AudioTagger.MODE_OVERWRITE_ALL_TAGS : AudioTagger.MODE_WRITE_ONLY_MISSING;
-            boolean renameFile = mSharedPreferences.getBoolean("key_rename_file_automatic_mode", true);
+            boolean renameFile = mSharedPreferences.getBoolean("key_rename_file_automatic_mode", false);
             correctionParams.setCorrectionMode(correctionMode);
             if (renameFile && result.getTitle() != null && !result.getTitle().equals("")) {
                 correctionParams.setNewName(result.getTitle());
@@ -329,8 +329,10 @@ public class FixerTrackService extends Service {
 
             @Override
             public void onAsyncOperationFinished(AudioTagger.AudioTaggerResult<Map<FieldKey, Object>> result) {
-                boolean deleteCoverFromCache = (result.getTaskExecuted() != AudioTagger.MODE_RENAME_FILE)
-                        || result.getData().containsKey(FieldKey.COVER_ART);
+                boolean deleteCoverFromCache = result.getTaskExecuted() == AudioTagger.MODE_OVERWRITE_ALL_TAGS ||
+                        result.getTaskExecuted() == AudioTagger.MODE_WRITE_ONLY_MISSING
+                 || result.getData().containsKey(FieldKey.COVER_ART);
+
                 if (deleteCoverFromCache)
                     CoverLoader.removeCover(track.getMediaStoreId()+"");
                 track.setChecked(0);
@@ -391,31 +393,31 @@ public class FixerTrackService extends Service {
     }
 
     private void updateTrack(AudioTagger.AudioTaggerResult<Map<FieldKey, Object>> result, Track track, TrackDAO trackDAO) {
-        if (result != null) {
-            Map<FieldKey, Object> tags = result.getData();
+        Map<FieldKey, Object> tags = result.getData();
 
-            if (tags != null) {
-                String title = (String) tags.get(FieldKey.TITLE);
-                String artist = (String) tags.get(FieldKey.ARTIST);
-                String album = (String) tags.get(FieldKey.ALBUM);
-                if (title != null && !title.isEmpty()) {
-                    track.setTitle(title);
-                }
-
-                if (artist != null && !artist.isEmpty()) {
-                    track.setArtist(artist);
-                }
-
-                if (album != null && !album.isEmpty()) {
-                    track.setAlbum(album);
-                }
+        if (tags != null) {
+            String title = (String) tags.get(FieldKey.TITLE);
+            String artist = (String) tags.get(FieldKey.ARTIST);
+            String album = (String) tags.get(FieldKey.ALBUM);
+            if (title != null && !title.isEmpty()) {
+                track.setTitle(title);
             }
 
-            String path = ((AudioTagger.ResultCorrection)result).getResultRename();
-            if(path != null && !path.equals(""))
-                track.setPath(path);
-            track.setVersion(track.getVersion()+1);
+            if (artist != null && !artist.isEmpty()) {
+                track.setArtist(artist);
+            }
+
+            if (album != null && !album.isEmpty()) {
+                track.setAlbum(album);
+            }
         }
+
+        String path = ((AudioTagger.ResultCorrection)result).getResultRename();
+        if(path != null && !path.equals(""))
+            track.setPath(path);
+
+        track.setVersion(track.getVersion()+1);
+
 
         track.setChecked(0);
         track.setProcessing(0);
