@@ -208,7 +208,10 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
             mRecyclerView.setVisibility(View.VISIBLE);
             mMessage.setText(R.string.loading_tracks);
         }
-
+        //App is opened again, then scroll to the track being processed.
+        /*int id = getActivity().getIntent().getIntExtra(Constants.MEDIA_STORE_ID, -1);
+        int pos = mListViewModel.getTrackPosition(id);
+        mRecyclerView.scrollToPosition(pos);*/
     }
 
     @Override

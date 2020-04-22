@@ -53,6 +53,7 @@ import mx.dev.franco.automusictagfixer.utilities.shared_preferences.AbstractShar
 import static android.view.View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN;
 import static android.view.View.SYSTEM_UI_FLAG_LAYOUT_STABLE;
 import static mx.dev.franco.automusictagfixer.AutoMusicTagFixer.DARK_MODE;
+import static mx.dev.franco.automusictagfixer.utilities.Constants.ACTION_OPEN_MAIN_ACTIVITY;
 import static mx.dev.franco.automusictagfixer.utilities.Constants.Actions.ACTION_BROADCAST_MESSAGE;
 import static mx.dev.franco.automusictagfixer.utilities.Constants.Actions.ACTION_COMPLETE_TASK;
 import static mx.dev.franco.automusictagfixer.utilities.Constants.Actions.ACTION_START_TASK;
@@ -281,6 +282,7 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
         IntentFilter completedTaskFilter = new IntentFilter(ACTION_COMPLETE_TASK);
         IntentFilter startProcessingForFilter = new IntentFilter(START_PROCESSING_FOR);
         IntentFilter broadcastMessageFilter = new IntentFilter(ACTION_BROADCAST_MESSAGE);
+        IntentFilter broadcastOpenMainActivity = new IntentFilter(ACTION_OPEN_MAIN_ACTIVITY);
 
         mReceiver = new ResponseReceiver(this, new Handler());
 
@@ -290,6 +292,7 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
         localBroadcastManager.registerReceiver(mReceiver, startProcessingForFilter);
         localBroadcastManager.registerReceiver(mReceiver, startTaskFilter);
         localBroadcastManager.registerReceiver(mReceiver, broadcastMessageFilter);
+        localBroadcastManager.registerReceiver(mReceiver, broadcastOpenMainActivity);
     }
 
     @Override
@@ -451,6 +454,9 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
                 if(message != null){
                     ((AutomaticTaskListener.MessageListener) baseViewModelFragment).onIncomingMessageListener(message);
                 }
+                break;
+            case ACTION_OPEN_MAIN_ACTIVITY:
+                Toast.makeText(this, action, Toast.LENGTH_SHORT).show();
                 break;
         }
 

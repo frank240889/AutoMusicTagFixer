@@ -116,7 +116,7 @@ public class FixerTrackService extends Service {
         AndroidInjection.inject(this);
         super.onCreate();
         mIdentifier =  mIdentifierFactory.create(IdentifierFactory.FINGERPRINT_IDENTIFIER);
-        mTrackRepository.registerReceiver();
+        //mTrackRepository.registerReceiver();
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
     }
 
@@ -141,7 +141,9 @@ public class FixerTrackService extends Service {
             }
             //Service is running and correction task is about to begin.
             else {
-                actionStartTask(false);
+                broadcastStartingCorrection();
+                startNotification("Content Text", "Title", "Status", 25);
+                //actionStartTask(false);
             }
         }
         return super.onStartCommand(intent,flags,startId);
@@ -521,7 +523,7 @@ public class FixerTrackService extends Service {
                 notificationIntent, 0);
 
         Intent stopTaskIntent = new Intent(this, FixerTrackService.class);
-        stopTaskIntent.setAction(Constants.Actions.ACTION_COMPLETE_TASK);
+        stopTaskIntent.setAction(Constants.Actions.ACTION_STOP_TASK);
         PendingIntent pendingStopIntent = PendingIntent.getService(this, 0,
                 stopTaskIntent, 0);
 
