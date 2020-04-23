@@ -9,6 +9,7 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -81,7 +82,6 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
     public ExtendedFloatingActionButton mStartTaskFab;
     private FloatingActionButton mStopTaskFab;
     private Snackbar mStopCorrectionSnackbar;
-    private List<Track> mCurrentTracks;
 
     @Inject
     ServiceUtils serviceUtils;
@@ -118,7 +118,7 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
         });
         mViewModel.getTracks().observe(this, tracks -> {
             mAdapter.onChanged(tracks);
-            mCurrentTracks = tracks;
+            Log.e(getClass().getName(), "getTracks()");
             updateToolbar(mViewModel.getTrackList());
         });
 
@@ -424,7 +424,7 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
                         mListViewModel.scan();
                     }*/
                     if(isVisible())
-                        updateToolbar(mCurrentTracks);
+                        updateToolbar(mViewModel.getTrackList());
                 }
 
                 @Override

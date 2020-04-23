@@ -1,6 +1,7 @@
 package mx.dev.franco.automusictagfixer.ui.main;
 
 import android.app.Application;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -68,6 +69,7 @@ public class ListViewModel extends AndroidViewModel {
                 mLoadingState.setValue(aBoolean));
 
         mResultsAudioFilesMediaStore = getMediaStoreResults();
+        Log.e(getClass().getName(), "CONSTRUCTOR");
     }
 
     public LiveData<ViewWrapper> observeAccessibleTrack(){

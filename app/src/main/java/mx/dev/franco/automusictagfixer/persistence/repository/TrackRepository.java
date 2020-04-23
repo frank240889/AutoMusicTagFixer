@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.util.Log;
 import android.widget.Toast;
 
 import androidx.annotation.IntegerRes;
@@ -20,9 +21,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.inject.Inject;
-import javax.inject.Singleton;
 
 import mx.dev.franco.automusictagfixer.AutoMusicTagFixer;
+import mx.dev.franco.automusictagfixer.di.ActivityScope;
 import mx.dev.franco.automusictagfixer.persistence.repository.AsyncOperation.TrackChecker;
 import mx.dev.franco.automusictagfixer.persistence.repository.AsyncOperation.TrackInserter;
 import mx.dev.franco.automusictagfixer.persistence.repository.AsyncOperation.TrackRemover;
@@ -38,7 +39,7 @@ import mx.dev.franco.automusictagfixer.utilities.shared_preferences.AbstractShar
 
 import static mx.dev.franco.automusictagfixer.utilities.Constants.Actions.START_PROCESSING_FOR;
 
-@Singleton
+@ActivityScope
 public class TrackRepository {
     public static final int ASC = 0;
     public static final int DESC = 1;
@@ -88,6 +89,8 @@ public class TrackRepository {
                 mMediatorTrackData.setValue(Resource.success(tracks));
             }
         });
+
+        Log.e(getClass().getName(), "CONSTRUCTOR");
     }
 
     public LiveData<Resource<List<Track>>> getObserveTracks(){

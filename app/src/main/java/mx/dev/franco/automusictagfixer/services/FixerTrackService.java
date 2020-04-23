@@ -53,7 +53,6 @@ import mx.dev.franco.automusictagfixer.identifier.IdentifierFactory;
 import mx.dev.franco.automusictagfixer.identifier.Result;
 import mx.dev.franco.automusictagfixer.interfaces.AsyncOperation;
 import mx.dev.franco.automusictagfixer.persistence.cache.IdentificationResultsCache;
-import mx.dev.franco.automusictagfixer.persistence.repository.TrackRepository;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.persistence.room.TrackDAO;
 import mx.dev.franco.automusictagfixer.persistence.room.TrackRoomDatabase;
@@ -89,8 +88,6 @@ public class FixerTrackService extends Service {
     AudioTagger mTagger;
     @Inject
     AudioTagger mAudioTagger;
-    @Inject
-    TrackRepository mTrackRepository;
     @Inject
     IdentificationResultsCache mIdentificationResultsCache;
     @Inject
@@ -458,7 +455,7 @@ public class FixerTrackService extends Service {
      */
     @Override
     public void onDestroy(){
-        mTrackRepository.unregisterReceiver();
+
     }
 
     private void stopServiceAndRemoveFromForeground() {
