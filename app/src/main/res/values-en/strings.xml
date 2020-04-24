@@ -299,4 +299,5 @@
     <string name="sd_track_message">Las canciones en la SD tardan unos segundos más en corregirse.</string>
     <string name="from_results">De resultados</string>
     <string name="identify_track_first">Identifica la canción primero.</string>
+    <string name="please_wait_until_automatic_mode_finished">Corrección en curso, espera por favor...</string>
 </resources>

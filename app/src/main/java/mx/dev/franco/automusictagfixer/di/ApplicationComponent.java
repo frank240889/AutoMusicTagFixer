@@ -23,7 +23,6 @@ import mx.dev.franco.automusictagfixer.AutoMusicTagFixer;
         ChildFragmentModule.class,
         DatabaseModule.class,
         CacheModule.class,
-        DatabaseModule.class,
         IdentifierModule.class,
         SharedPreferencesModule.class,
         StorageModule.class,

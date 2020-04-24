@@ -113,8 +113,7 @@ public class ListViewModel extends AndroidViewModel {
      * @return The live data container.
      */
     public LiveData<List<Track>> getTracks(){
-        LiveData<Resource<List<Track>>> result = mTrackRepository.getObserveTracks();
-        mTracks = Transformations.map(result, input -> {
+        mTracks = Transformations.map(mTrackRepository.getObserveTracks(), input -> {
             mLoadingState.setValue(input.status == Resource.Status.LOADING);
             return input.data;
         });
@@ -197,16 +196,20 @@ public class ListViewModel extends AndroidViewModel {
     }
 
     public void checkAllTracks() {
-        List<Track> tracks = mTrackRepository.tracks();
-        mIsSorting = false;
-        if(tracks != null && tracks.size() > 0) {
-            checkAllItems();
+        if (mServiceUtils.checkIfServiceIsRunning(FixerTrackService.CLASS_NAME)) {
+            mObservableMessage.setValue(R.string.please_wait_until_automatic_mode_finished);
         }
         else {
-            mObservableCheckAllTracks.setValue(false);
-            mObservableMessage.setValue(R.string.no_available);
+            List<Track> tracks = mTrackRepository.tracks();
+            mIsSorting = false;
+            if(tracks != null && tracks.size() > 0) {
+                checkAllItems();
+            }
+            else {
+                mObservableCheckAllTracks.setValue(false);
+                mObservableMessage.setValue(R.string.please_wait_until_automatic_mode_finished);
+            }
         }
-
     }
 
     /**
@@ -230,12 +233,12 @@ public class ListViewModel extends AndroidViewModel {
     }
 
     public void fetchTracks(@Nullable TrackRepository.Sort sort) {
-        if (mServiceUtils.checkIfServiceIsRunning(FixerTrackService.class.getName())){
-            mObservableMessage.setValue(R.string.no_available);
+        if (sort == null) {
+            mMediaStoreManager.fetchAudioFiles();
         }
         else {
-            if (sort == null) {
-                mMediaStoreManager.fetchAudioFiles();
+            if (mServiceUtils.checkIfServiceIsRunning(FixerTrackService.CLASS_NAME)) {
+                mObservableMessage.setValue(R.string.please_wait_until_automatic_mode_finished);
             }
             else {
                 mIsSorting = true;

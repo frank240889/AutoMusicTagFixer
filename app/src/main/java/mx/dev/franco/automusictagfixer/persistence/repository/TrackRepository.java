@@ -2,10 +2,7 @@ package mx.dev.franco.automusictagfixer.persistence.repository;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
 import android.util.Log;
-import android.widget.Toast;
 
 import androidx.annotation.IntegerRes;
 import androidx.annotation.NonNull;
@@ -13,7 +10,6 @@ import androidx.annotation.Nullable;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MediatorLiveData;
 import androidx.lifecycle.MutableLiveData;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.sqlite.db.SimpleSQLiteQuery;
 import androidx.sqlite.db.SupportSQLiteQuery;
 
@@ -23,7 +19,6 @@ import java.util.List;
 import javax.inject.Inject;
 
 import mx.dev.franco.automusictagfixer.AutoMusicTagFixer;
-import mx.dev.franco.automusictagfixer.di.ActivityScope;
 import mx.dev.franco.automusictagfixer.persistence.repository.AsyncOperation.TrackChecker;
 import mx.dev.franco.automusictagfixer.persistence.repository.AsyncOperation.TrackInserter;
 import mx.dev.franco.automusictagfixer.persistence.repository.AsyncOperation.TrackRemover;
@@ -37,9 +32,6 @@ import mx.dev.franco.automusictagfixer.utilities.Constants;
 import mx.dev.franco.automusictagfixer.utilities.Resource;
 import mx.dev.franco.automusictagfixer.utilities.shared_preferences.AbstractSharedPreferences;
 
-import static mx.dev.franco.automusictagfixer.utilities.Constants.Actions.START_PROCESSING_FOR;
-
-@ActivityScope
 public class TrackRepository {
     public static final int ASC = 0;
     public static final int DESC = 1;
@@ -82,6 +74,7 @@ public class TrackRepository {
         mTracks = mTrackDao.getAllTracks(sqLiteQuery);
 
         mMediatorTrackData.addSource(mTracks, tracks -> {
+            //mMediatorTrackData.removeSource(mTracks);
             if(tracks == null || tracks.size() == 0) {
                 mMediatorTrackData.setValue(Resource.error(new ArrayList<>()));
             }
@@ -89,7 +82,6 @@ public class TrackRepository {
                 mMediatorTrackData.setValue(Resource.success(tracks));
             }
         });
-
         Log.e(getClass().getName(), "CONSTRUCTOR");
     }
 
@@ -261,43 +253,6 @@ public class TrackRepository {
             this.by = by;
             this.sortType = sortType;
             this.idResource = idResource;
-        }
-    }
-
-    /**
-     * Allows to register filters to handle
-     * only certain actions sent by FixerTrackService
-     */
-    public void registerReceiver() {
-        IntentFilter startTaskFilter = new IntentFilter(START_PROCESSING_FOR);
-
-        mBroadcastReceiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                setTrackLoading(intent);
-            }
-        };
-
-        LocalBroadcastManager localBroadcastManager = LocalBroadcastManager.getInstance(mContext.getApplicationContext());
-        localBroadcastManager.registerReceiver(mBroadcastReceiver, startTaskFilter);
-    }
-
-    public void unregisterReceiver() {
-        LocalBroadcastManager.
-                getInstance(mContext.getApplicationContext()).
-                unregisterReceiver(mBroadcastReceiver);
-    }
-
-    private void setTrackLoading(Intent intent) {
-        int id = intent.getIntExtra(Constants.MEDIA_STORE_ID, -1);
-        int loading = intent.getIntExtra(Constants.LOADING, 0);
-        Track track = getTrackById(id);
-        if (track != null) {
-            track.setChecked(loading);
-            track.setProcessing(1);
-            Toast.makeText(mContext, "Loading: " + loading, Toast.LENGTH_SHORT).show();
-            //mSortingEvent.setValue(null);
-            mMediatorTrackData.setValue(Resource.success(mMediatorTrackData.getValue().data));
         }
     }
 }

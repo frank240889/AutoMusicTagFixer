@@ -9,7 +9,10 @@ import mx.dev.franco.automusictagfixer.utilities.Constants;
 public class SharedPreferencesImpl extends AbstractSharedPreferences {
     private SharedPreferences mSharedPreferences;
 
+    public SharedPreferencesImpl(){}
+
     public SharedPreferencesImpl(Context context){
+        this();
         mSharedPreferences = context.getSharedPreferences(Constants.Application.FULL_QUALIFIED_NAME, Context.MODE_PRIVATE);
     }
 

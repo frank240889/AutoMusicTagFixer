@@ -439,27 +439,28 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
         String action = intent.getAction();
         int id = intent.getIntExtra(Constants.MEDIA_STORE_ID, -1);
         BaseViewModelFragment baseViewModelFragment = (BaseViewModelFragment) getSupportFragmentManager().findFragmentByTag(MainFragment.class.getName());
-        switch (action) {
-            case ACTION_START_TASK:
-                ((AutomaticTaskListener) baseViewModelFragment).onStartAutomaticTask();
-                break;
-            case START_PROCESSING_FOR:
-                ((AutomaticTaskListener) baseViewModelFragment).onStartProcessingFor(id);
-                break;
-            case ACTION_COMPLETE_TASK:
-                ((AutomaticTaskListener) baseViewModelFragment).onFinishedAutomaticTask();
-                break;
-            case ACTION_BROADCAST_MESSAGE:
-                String message = intent.getStringExtra("message");
-                if(message != null){
-                    ((AutomaticTaskListener.MessageListener) baseViewModelFragment).onIncomingMessageListener(message);
-                }
-                break;
-            case ACTION_OPEN_MAIN_ACTIVITY:
-                Toast.makeText(this, action, Toast.LENGTH_SHORT).show();
-                break;
+        if (baseViewModelFragment instanceof MainFragment) {
+            switch (action) {
+                case ACTION_START_TASK:
+                    ((AutomaticTaskListener) baseViewModelFragment).onStartAutomaticTask();
+                    break;
+                case START_PROCESSING_FOR:
+                    ((AutomaticTaskListener) baseViewModelFragment).onStartProcessingFor(id);
+                    break;
+                case ACTION_COMPLETE_TASK:
+                    ((AutomaticTaskListener) baseViewModelFragment).onFinishedAutomaticTask();
+                    break;
+                case ACTION_BROADCAST_MESSAGE:
+                    String message = intent.getStringExtra("message");
+                    if(message != null){
+                        ((AutomaticTaskListener.MessageListener) baseViewModelFragment).onIncomingMessageListener(message);
+                    }
+                    break;
+                case ACTION_OPEN_MAIN_ACTIVITY:
+                    Toast.makeText(this, action, Toast.LENGTH_SHORT).show();
+                    break;
+            }
         }
-
     }
 
     @Override

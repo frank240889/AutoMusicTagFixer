@@ -23,6 +23,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.ContextCompat;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.AsyncListDiffer;
@@ -82,6 +83,7 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
     public ExtendedFloatingActionButton mStartTaskFab;
     private FloatingActionButton mStopTaskFab;
     private Snackbar mStopCorrectionSnackbar;
+    private ConstraintLayout mBlockingLayer;
 
     @Inject
     ServiceUtils serviceUtils;
@@ -120,12 +122,16 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
             mAdapter.onChanged(tracks);
             Log.e(getClass().getName(), "getTracks()");
             updateToolbar(mViewModel.getTrackList());
+            scrollTo();
+
         });
 
         mViewModel.observeInformativeMessage().observe(this, this::onMessage);
         mViewModel.observeSorting().observe(this, sort -> {
-            if (sort != null && sort.idResource != -1)
+            if (sort != null && sort.idResource != -1) {
+                mSwipeRefreshLayout.setRefreshing(true);
                 checkItem(sort.idResource);
+            }
         });
 
     }
@@ -141,6 +147,7 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
         mRecyclerView = view.findViewById(R.id.tracks_recycler_view);
         mSwipeRefreshLayout = view.findViewById(R.id.refresh_layout);
         mMessage = view.findViewById(R.id.message);
+        mBlockingLayer = view.findViewById(R.id.cl_blocking_layer);
         mStartTaskFab = ((MainActivity)getActivity()).startTaskFab;
         mStartTaskFab.setOnClickListener(v -> startCorrection(-1));
         mStartTaskFab.hide();
@@ -208,10 +215,7 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
             mRecyclerView.setVisibility(View.VISIBLE);
             mMessage.setText(R.string.loading_tracks);
         }
-        //App is opened again, then scroll to the track being processed.
-        /*int id = getActivity().getIntent().getIntExtra(Constants.MEDIA_STORE_ID, -1);
-        int pos = mListViewModel.getTrackPosition(id);
-        mRecyclerView.scrollToPosition(pos);*/
+
     }
 
     @Override
@@ -423,8 +427,12 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
                     /*if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
                         mListViewModel.scan();
                     }*/
-                    if(isVisible())
+                    if(isVisible()) {
                         updateToolbar(mViewModel.getTrackList());
+                    }
+                    else {
+                        mStopCorrectionSnackbar.dismiss();
+                    }
                 }
 
                 @Override
@@ -579,6 +587,7 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
     @Override
     public void onStartAutomaticTask() {
         mStartTaskFab.hide();
+        mBlockingLayer.setVisibility(View.VISIBLE);
         mStopCorrectionSnackbar = AndroidUtils.createNoDismissibleSnackbar(getView(), R.string.correction_in_progress);
         mStopCorrectionSnackbar.setAction(R.string.cancel, v -> {
             Intent stopIntent = new Intent(getActivity(), FixerTrackService.class);
@@ -602,6 +611,7 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
     @Override
     public void onFinishedAutomaticTask() {
         mStartTaskFab.show();
+        mBlockingLayer.setVisibility(View.GONE);
         if (mStopCorrectionSnackbar != null)
             mStopCorrectionSnackbar.dismiss();
     }
@@ -613,10 +623,7 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
     }
 
     private void onMessage(Integer integer) {
-        Snackbar snackbar = AndroidUtils.getSnackbar(mSwipeRefreshLayout,
-                getActivity().getApplicationContext());
-        snackbar.setText(integer);
-        snackbar.show();
+        AndroidUtils.showToast(integer, requireActivity());
     }
 
     private void updateToolbar(List<Track> tracks) {
@@ -727,5 +734,16 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
     @Override
     public void onIncomingMessageListener(String message) {
         AndroidUtils.showToast(message, requireActivity());
+    }
+
+    private void scrollTo() {
+        //App is opened again, then scroll to the track being processed.
+        int id = requireActivity().getIntent().getIntExtra(Constants.MEDIA_STORE_ID, -1);
+        if (id == -1)
+            return;
+
+        requireActivity().getIntent().putExtra(Constants.MEDIA_STORE_ID, -1);
+        int pos = mViewModel.getTrackPosition(id);
+        mRecyclerView.scrollToPosition(pos);
     }
 }

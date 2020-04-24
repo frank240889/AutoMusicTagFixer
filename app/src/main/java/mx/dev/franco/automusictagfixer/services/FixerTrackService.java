@@ -138,20 +138,41 @@ public class FixerTrackService extends Service {
             }
             //Service is running and correction task is about to begin.
             else {
-                broadcastStartingCorrection();
-                startNotification("Content Text", "Title", "Status", 25);
-                //actionStartTask(false);
+                //broadcastStartingCorrection();
+                //startNotification("Content Text1", "Title", "Status", 10314);
+                actionStartTask(false);
             }
         }
-        return super.onStartCommand(intent,flags,startId);
+        return START_REDELIVER_INTENT;
     }
 
     private void actionStartTask(boolean isNextTrack) {
         mTrackLoader = new TrackLoader(new AsyncOperation<Void, Track, Void, Void>() {
             @Override
-            public void onAsyncOperationFinished(Track result) {
-                if (result != null) {
-                    startIdentification(result);
+            public void onAsyncOperationFinished(Track track) {
+                if (track != null) {
+                    //startIdentification(track);
+                    broadcastCorrectionForId(track.getMediaStoreId());
+                    broadcastStartingCorrection();
+                    onStartIdentification(track);
+                    track.setProcessing(1);
+                    TrackUpdaterSync trackUpdaterSync = new TrackUpdaterSync(new AsyncOperation<Void, Integer, Void, Void>() {
+                        @Override
+                        public void onAsyncOperationFinished(Integer result) {
+                            track.setChecked(0);
+                            track.setProcessing(0);
+                            TrackUpdaterSync trackUpdaterSync = new TrackUpdaterSync(new AsyncOperation<Void, Integer, Void, Void>() {
+                                @Override
+                                public void onAsyncOperationFinished(Integer result) {
+                                    finishTrack(track);
+                                    actionStartTask(true);
+                                }
+                            }, mTrackRoomDatabase.trackDao());
+                            trackUpdaterSync.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, track);
+                        }
+                    }, mTrackRoomDatabase.trackDao());
+                    trackUpdaterSync.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, track);
+
                 }
                 else {
                     if (isNextTrack) {
@@ -190,7 +211,6 @@ public class FixerTrackService extends Service {
                     @Override
                     public void onAsyncOperationFinished(Integer result) {
                         broadcastStartingCorrection();
-                        //broadcastLoadingStateForId(track.getMediaStoreId(), true, null);
                         onStartIdentification(track);
                         createCorrectionParams(cacheResults, track);
                     }
@@ -391,6 +411,12 @@ public class FixerTrackService extends Service {
                 getString(R.string.applying_tags), track.getMediaStoreId() );
     }
 
+    private void broadcastCorrectionForId(int mediaStoreId) {
+        Intent intent = new Intent(Constants.Actions.START_PROCESSING_FOR);
+        intent.putExtra(Constants.MEDIA_STORE_ID, mediaStoreId);
+        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcastSync(intent);
+    }
+
     private void updateTrack(AudioTagger.AudioTaggerResult<Map<FieldKey, Object>> result, Track track, TrackDAO trackDAO) {
         Map<FieldKey, Object> tags = result.getData();
 
@@ -450,14 +476,6 @@ public class FixerTrackService extends Service {
         return null;
     }
 
-    /**
-     * Last callback received when this service is destroyed
-     */
-    @Override
-    public void onDestroy(){
-
-    }
-
     private void stopServiceAndRemoveFromForeground() {
         stopSelf();
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O)
@@ -476,15 +494,6 @@ public class FixerTrackService extends Service {
     private void broadcastCompleteCorrection(){
         Intent intent = new Intent(Constants.Actions.ACTION_COMPLETE_TASK);
         LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
-    }
-
-    private void broadcastLoadingStateForId(int mediaStoreId, boolean loading, Boolean checked) {
-        Intent intent = new Intent(Constants.Actions.START_PROCESSING_FOR);
-        intent.putExtra(Constants.MEDIA_STORE_ID, mediaStoreId);
-        intent.putExtra(Constants.LOADING, loading ? 1 : 0);
-        if (checked != null)
-            intent.putExtra(Constants.CHECKED, checked ? 1 : 0);
-        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcastSync(intent);
     }
 
     private void broadcastMessage(String message) {

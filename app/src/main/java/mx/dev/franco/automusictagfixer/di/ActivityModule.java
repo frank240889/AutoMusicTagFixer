@@ -10,8 +10,10 @@ import mx.dev.franco.automusictagfixer.ui.trackdetail.TrackDetailActivity;
  */
 @Module
 public abstract class ActivityModule {
+    @ActivityScope
     @ContributesAndroidInjector(modules = FragmentModule.class)
     public abstract MainActivity contributeMainActivity();
+    @ActivityScope
     @ContributesAndroidInjector(modules = FragmentModule.class)
     public abstract TrackDetailActivity contributeTrackDetailActivity();
 }

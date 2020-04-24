@@ -23,7 +23,7 @@ public class SplashActivity extends AppCompatActivity{
     protected void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
 
-        Intent apiIntent = new Intent(getApplicationContext(), ApiInitializerService.class);
+        Intent apiIntent = new Intent(this, ApiInitializerService.class);
         startService(apiIntent);
 
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());

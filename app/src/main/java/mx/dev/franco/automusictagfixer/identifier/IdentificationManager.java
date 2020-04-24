@@ -427,14 +427,14 @@ public class IdentificationManager implements Cancelable<Void> {
     private static CoverArt compareAndSelectBiggest(CoverArt currentBiggestSize, CoverArt nextCover) {
         int currentBiggestValueSize = GnUtils.getValue(currentBiggestSize.getDimension());
         int nextValue = GnUtils.getValue(nextCover.getDimension());
-        CoverArt bigeestCoverArt;
+        CoverArt biggestCoverArt;
         if (currentBiggestValueSize >= nextValue) {
-            bigeestCoverArt = currentBiggestSize;
+            biggestCoverArt = currentBiggestSize;
         }
         else {
-            bigeestCoverArt = nextCover;
+            biggestCoverArt = nextCover;
         }
-        return bigeestCoverArt;
+        return biggestCoverArt;
     }
 
     private static List<CoverArt> getCovers(List<? extends Identifier.IdentificationResults> results) {

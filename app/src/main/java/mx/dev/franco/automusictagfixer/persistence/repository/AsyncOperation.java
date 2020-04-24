@@ -70,7 +70,12 @@ public class AsyncOperation {
 
         @Override
         protected Integer doInBackground(final Track... track) {
-            mAsyncTaskDao.update(track[0]);
+            try {
+                Thread.sleep(3000);
+                mAsyncTaskDao.update(track[0]);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             mAsyncTaskDao = null;
             return null;
         }
