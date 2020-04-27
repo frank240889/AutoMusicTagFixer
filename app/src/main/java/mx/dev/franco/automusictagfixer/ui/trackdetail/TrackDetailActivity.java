@@ -21,6 +21,7 @@ import androidx.databinding.DataBindingUtil;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
+import com.google.android.material.appbar.AppBarLayout;
 import com.google.android.material.snackbar.Snackbar;
 
 import java.io.IOException;
@@ -80,6 +81,7 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
     boolean mEditMode = false;
     private Snackbar mNoDismissibleSnackbar;
     private MenuItem mRenameTrackItem;
+    private AppBarLayout.OnOffsetChangedListener mOffsetChangeListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -169,7 +171,15 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
             mTrackDetailViewModel.restorePreviousValues();
         }
         else {
-            super.onBackPressed();
+            mViewDataBinding.appBarLayout.removeOnOffsetChangedListener(mOffsetChangeListener);
+            mOffsetChangeListener = (appBarLayout, verticalOffset) -> {
+                if (verticalOffset == 0) {
+                    mViewDataBinding.appBarLayout.removeOnOffsetChangedListener(mOffsetChangeListener);
+                    TrackDetailActivity.super.onBackPressed();
+                }
+            };
+            mViewDataBinding.appBarLayout.addOnOffsetChangedListener(mOffsetChangeListener);
+            mViewDataBinding.appBarLayout.setExpanded(true, true);
         }
     }
 
@@ -419,23 +429,26 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
      * scrolls down.
      */
     private void addAppBarOffsetListener(){
-        mViewDataBinding.appBarLayout.addOnOffsetChangedListener((appBarLayout, verticalOffset) -> {
-            if(verticalOffset < 0) {
-                if(!mViewDataBinding.fabAutofix.isExtended()) {
-                    mViewDataBinding.fabAutofix.extend();
-                    mViewDataBinding.fabSaveInfo.extend();
+        mOffsetChangeListener = new AppBarLayout.OnOffsetChangedListener() {
+            @Override
+            public void onOffsetChanged(AppBarLayout appBarLayout, int verticalOffset) {
+                if (verticalOffset < 0) {
+                    if (!mViewDataBinding.fabAutofix.isExtended()) {
+                        mViewDataBinding.fabAutofix.extend();
+                        mViewDataBinding.fabSaveInfo.extend();
+                    }
+                } else {
+                    if (mViewDataBinding.fabAutofix.isExtended()) {
+                        mViewDataBinding.fabAutofix.shrink();
+                        mViewDataBinding.fabSaveInfo.shrink();
+                    }
                 }
-            }
-            else {
-                if(mViewDataBinding.fabAutofix.isExtended()) {
-                    mViewDataBinding.fabAutofix.shrink();
-                    mViewDataBinding.fabSaveInfo.shrink();
-                }
-            }
 
-            //set alpha of cover depending on offset of expanded toolbar cover height,
-            mViewDataBinding.cardContainerCover.setAlpha(1.0f - Math.abs(verticalOffset/(float)appBarLayout.getTotalScrollRange()));
-        });
+                //set alpha of cover depending on offset of expanded toolbar cover height,
+                mViewDataBinding.cardContainerCover.setAlpha(1.0f - Math.abs(verticalOffset / (float) appBarLayout.getTotalScrollRange()));
+            }
+        };
+        mViewDataBinding.appBarLayout.addOnOffsetChangedListener(mOffsetChangeListener);
     }
 
     private void onWritingResult(Void voids) {

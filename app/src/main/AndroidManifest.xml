@@ -72,14 +72,6 @@
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustResize|adjustPan" />
         <activity
-            android:name=".ui.settings.SettingsActivity"
-            android:configChanges="orientation|screenSize"
-            android:label="@string/title_activity_settings"
-            android:parentActivityName=".ui.main.MainActivity"
-            android:screenOrientation="portrait"
-            android:theme="@style/SettingsTheme"
-            tools:ignore="InnerclassSeparator" />
-        <activity
             android:name=".ui.sdcardinstructions.SdCardInstructionsActivity"
             android:configChanges="orientation|screenSize|uiMode"
             android:parentActivityName=".ui.main.MainActivity"

@@ -431,7 +431,8 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
                         updateToolbar(mViewModel.getTrackList());
                     }
                     else {
-                        mStopCorrectionSnackbar.dismiss();
+                        if (mStopCorrectionSnackbar != null)
+                            mStopCorrectionSnackbar.dismiss();
                     }
                 }
 
