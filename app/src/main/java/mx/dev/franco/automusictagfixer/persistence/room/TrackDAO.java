@@ -54,4 +54,7 @@ public interface TrackDAO {
     @RawQuery(observedEntities = Track.class)
     Track findNextSelected(SupportSQLiteQuery query);
 
+    @Query("UPDATE track_table SET processing = 0 WHERE processing = 1")
+    void unprocessTracks();
+
 }

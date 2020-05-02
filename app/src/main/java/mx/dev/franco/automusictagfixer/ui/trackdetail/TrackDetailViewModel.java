@@ -12,6 +12,7 @@ import androidx.lifecycle.MediatorLiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Transformations;
 
+import com.google.android.material.snackbar.Snackbar;
 import com.gracenote.gnsdk.GnException;
 
 import org.jaudiotagger.tag.FieldKey;
@@ -37,11 +38,10 @@ import mx.dev.franco.automusictagfixer.persistence.mediastore.MediaStoreManager;
 import mx.dev.franco.automusictagfixer.persistence.repository.TrackManager;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.ui.SingleLiveEvent;
-import mx.dev.franco.automusictagfixer.utilities.ActionableMessage;
 import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
-import mx.dev.franco.automusictagfixer.utilities.Message;
 import mx.dev.franco.automusictagfixer.utilities.Resource;
+import mx.dev.franco.automusictagfixer.utilities.SnackbarMessage;
 
 public class TrackDetailViewModel extends AndroidViewModel {
 
@@ -68,6 +68,7 @@ public class TrackDetailViewModel extends AndroidViewModel {
     public MutableLiveData<String> absolutePath = new MutableLiveData<>();
     public MutableLiveData<String> filename = new MutableLiveData<>();
 
+    private MutableLiveData<Integer> mLiveInformativeMessage = new MutableLiveData<>();
     //MediatorLiveData to observe loading state of multiple sources.
     private MediatorLiveData<Boolean> mLoadingStateMerger = new MediatorLiveData<>();
     private MediatorLiveData<String> mMessageMerger = new MediatorLiveData<>();
@@ -79,7 +80,6 @@ public class TrackDetailViewModel extends AndroidViewModel {
     private MutableLiveData<Void> mLiveSuccessReading = new MutableLiveData<>();
     private MediatorLiveData<Map<FieldKey, Object>> mResultWriting = new MediatorLiveData<>();
 
-
     private TrackManager mTrackManager;
     private AudioTagger.AudioFields mAudioFields;
 
@@ -87,8 +87,6 @@ public class TrackDetailViewModel extends AndroidViewModel {
     private MediaStoreManager mMediaStoreManager;
     private IdentificationResultsCache mResultsCache;
 
-    private LiveData<ActionableMessage> mResultFileSaving;
-    private MutableLiveData<Integer> mLiveInformativeMessage = new MutableLiveData<>();
     private int mInitialAction = Constants.CorrectionActions.VIEW_INFO;
     private Handler mHandler;
 
@@ -116,14 +114,8 @@ public class TrackDetailViewModel extends AndroidViewModel {
             mLoadingStateMerger.setValue(aBoolean);
         });
 
-        //Merge messages into one live data to observe.
-        //LiveData<Integer> mediaStoreManagerMessage = mediaStoreManager.observeMediaStoreResult();
-        //LiveData<Integer> fileManagerMessage = fileManager.observeResultFileSaving();
 
         mMessageMerger.addSource(mTrackManager.observeMessage(), integer -> mLiveInformativeMessage.setValue(integer));
-
-        mResultFileSaving = getCoverSavingResult();
-
         mResultReading.addSource(mTrackManager.observeReadingResult(), this::onReadingResult);
         mResultWriting.addSource(mTrackManager.observeWritingResult(), this::onWritingResult);
 
@@ -147,10 +139,7 @@ public class TrackDetailViewModel extends AndroidViewModel {
     public LiveData<Boolean> observeLoadingState() {
         return mLoadingStateMerger;
     }
-    /**
-     * Livedata to inform if track could be loaded.
-     * @return Livedata holding a {@link Message} object or null.
-     */
+
     public LiveData<Void> observeReadingResult() {
         return mLiveSuccessReading;
     }
@@ -162,7 +151,6 @@ public class TrackDetailViewModel extends AndroidViewModel {
     public LiveData<Void> observeWritingFinishedEvent() {
         return Transformations.map(mResultWriting, input -> null);
     }
-
 
     public LiveData<ValidationWrapper> observeInvalidInputsValidation() {
         return mInputsInvalidLiveData;
@@ -180,8 +168,23 @@ public class TrackDetailViewModel extends AndroidViewModel {
         return mLiveConfirmationDeleteCover;
     }
 
-    public LiveData<ActionableMessage> observeCoverSavingResult() {
-        return mResultFileSaving;
+    public LiveData<SnackbarMessage> observeCoverSavingResult() {
+        return Transformations.map(mFileManager.observeResultFileSaving(), input -> {
+            SnackbarMessage.Builder builder = new SnackbarMessage.Builder(TrackDetailViewModel.this.getApplication());
+            if (input.status == Resource.Status.SUCCESS) {
+                builder.action(Action.WATCH_IMAGE).
+                        mainActionText(R.string.see_image).
+                        duration(Snackbar.LENGTH_LONG).
+                        data(input.data).
+                        body(R.string.cover_saved);
+                mMediaStoreManager.addFileToMediaStore(input.data, null);
+
+            } else {
+                builder.body(R.string.cover_not_saved);
+            }
+
+            return builder.build();
+        });
     }
 
     public LiveData<Integer> observeLoadingMessage() {
@@ -217,6 +220,42 @@ public class TrackDetailViewModel extends AndroidViewModel {
         }
     }
 
+    public LiveData<SnackbarMessage> observeErrorWriting() {
+        return Transformations.map(mTrackManager.observeErrorWriting(), this::getMessageErrorWriting);
+    }
+
+    private SnackbarMessage getMessageErrorWriting(AudioTagger.AudioTaggerResult<Map<FieldKey, Object>> input) {
+        SnackbarMessage.Builder builder = new SnackbarMessage.Builder(TrackDetailViewModel.this.getApplication());
+        int errorCode = input.getCode();
+        if (errorCode == AudioTagger.COULD_NOT_GET_URI_SD_ROOT_TREE) {
+            builder.action(Action.URI_ERROR).
+                    body(R.string.message_uri_tree_not_set).
+                    mainActionText(R.string.details).
+                    dismissible(false);
+        } else {
+            int idStringResource;
+            switch (errorCode) {
+                case AudioTagger.COULD_NOT_REMOVE_COVER:
+                case AudioTagger.COULD_NOT_APPLY_COVER:
+                    idStringResource = R.string.message_could_not_apply_cover;
+                    break;
+                case AudioTagger.COULD_NOT_COPY_BACK_TO_ORIGINAL_LOCATION:
+                case AudioTagger.COULD_NOT_CREATE_AUDIOFILE:
+                case AudioTagger.COULD_NOT_CREATE_TEMP_FILE:
+                case AudioTagger.COULD_NOT_REMOVE_OLD_ID3_VERSION:
+                case AudioTagger.COULD_NOT_RENAME_FILE:
+                case AudioTagger.COULD_NOT_WRITE_TAGS:
+                case AudioTagger.COULD_NOT_APPLY_TAGS:
+                default:
+                    idStringResource = R.string.message_could_not_apply_tags;
+
+            }
+            builder.action(Action.NONE);
+            builder.body(idStringResource);
+        }
+        return builder.build();
+    }
+
     private void onWritingResult(AudioTagger.AudioTaggerResult<Map<FieldKey, Object>> writingResult) {
         mResultWriting.setValue(writingResult.getData());
         mLiveInformativeMessage.setValue(R.string.changes_applied);
@@ -224,28 +263,6 @@ public class TrackDetailViewModel extends AndroidViewModel {
                 || writingResult.getData().containsKey(FieldKey.COVER_ART);
         if (deleteCoverFromCache)
             mResultsCache.delete(getCurrentTrack().getMediaStoreId()+"");
-    }
-
-    private LiveData<ActionableMessage> getCoverSavingResult() {
-        LiveData<Resource<String>> resultSaving = mFileManager.observeResultFileSaving();
-        return Transformations.map(resultSaving, input -> {
-            ActionableMessage actionableMessage = new ActionableMessage();
-            if(input.status == Resource.Status.SUCCESS) {
-                actionableMessage.setAction(Action.SEE_COVER_SAVED);
-                String pathToFile = input.data;
-                actionableMessage.setDetails(pathToFile);
-                actionableMessage.setMessage(getApplication().getString(R.string.cover_saved));
-                actionableMessage.setAction(Action.WATCH_IMAGE);
-                mMediaStoreManager.addFileToMediaStore(input.data, null);
-
-            }
-            else {
-                actionableMessage.setAction(Action.SEE_DETAILS_COVER_NOT_SAVED);
-                actionableMessage.setIdResourceMessage(R.string.cover_not_saved);
-            }
-
-            return actionableMessage;
-        });
     }
 
     /**

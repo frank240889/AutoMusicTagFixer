@@ -15,7 +15,6 @@ import android.widget.EditText;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.databinding.DataBindingUtil;
-import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 
 import java.util.ArrayList;
@@ -63,13 +62,9 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
         mViewModel.observeReadingResult().observe(this, this::onSuccessLoad);
         mViewModel.observeAudioData().observe(this, aVoid -> {});
         mViewModel.observeInvalidInputsValidation().observe(this, this::onInputDataInvalid);
-        mViewModel.observeWritingFinishedEvent().observe(getActivity(), this::onWritingResult);
-        mViewModel.observeIsStoredInSD().observe(this, new Observer<Boolean>() {
-            @Override
-            public void onChanged(Boolean aBoolean) {
-                mFragmentTrackDetailBinding.ibInfoTrack.setVisibility(aBoolean ? VISIBLE : View.INVISIBLE);
-            }
-        });
+        mViewModel.observeWritingFinishedEvent().observe(requireActivity(), this::onWritingResult);
+        mViewModel.observeIsStoredInSD().observe(this, aBoolean ->
+                mFragmentTrackDetailBinding.ibInfoTrack.setVisibility(aBoolean ? VISIBLE : View.INVISIBLE));
     }
 
 

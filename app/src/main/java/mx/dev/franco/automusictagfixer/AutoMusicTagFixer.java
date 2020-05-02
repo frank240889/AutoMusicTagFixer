@@ -3,6 +3,8 @@ package mx.dev.franco.automusictagfixer;
 import android.app.Activity;
 import android.app.Application;
 import android.app.Service;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.res.Configuration;
 
 import androidx.appcompat.app.AppCompatDelegate;
@@ -24,6 +26,10 @@ import io.fabric.sdk.android.Fabric;
 import mx.dev.franco.automusictagfixer.covermanager.CoverLoader;
 import mx.dev.franco.automusictagfixer.di.DaggerApplicationComponent;
 import mx.dev.franco.automusictagfixer.fixer.AudioTagger;
+import mx.dev.franco.automusictagfixer.persistence.room.TrackRoomDatabase;
+import mx.dev.franco.automusictagfixer.receivers.DetectorRemovableMediaStorage;
+import mx.dev.franco.automusictagfixer.services.FixerTrackService;
+import mx.dev.franco.automusictagfixer.utilities.ServiceUtils;
 import mx.dev.franco.automusictagfixer.utilities.shared_preferences.AbstractSharedPreferences;
 
 
@@ -44,6 +50,10 @@ public final class AutoMusicTagFixer extends Application implements HasActivityI
     AbstractSharedPreferences mAbstractSharedPreferences;
     @Inject
     AudioTagger.StorageHelper storageHelper;
+    @Inject
+    TrackRoomDatabase mTrackRoomDatabase;
+
+    private DetectorRemovableMediaStorage mDetectorRemovableMediaStorage;
 
     // Called when the application is starting, before any other application objects have been created.
     @Override
@@ -92,7 +102,18 @@ public final class AutoMusicTagFixer extends Application implements HasActivityI
             }
         }
 
+        if (!ServiceUtils.getInstance(this).checkIfServiceIsRunning(FixerTrackService.CLASS_NAME)) {
+            Thread thread = new Thread(() -> mTrackRoomDatabase.trackDao().unprocessTracks());
+            thread.start();
+        }
         storageHelper.detectStorage();
+        mDetectorRemovableMediaStorage = new DetectorRemovableMediaStorage();
+        IntentFilter actionMediaMountedFilter = new IntentFilter(Intent.ACTION_MEDIA_MOUNTED);
+        actionMediaMountedFilter.addDataScheme("file");
+        IntentFilter actionMediaUnmountedFilter = new IntentFilter(Intent.ACTION_MEDIA_UNMOUNTED);
+        actionMediaUnmountedFilter.addDataScheme("file");
+        registerReceiver(mDetectorRemovableMediaStorage, actionMediaMountedFilter);
+        registerReceiver(mDetectorRemovableMediaStorage, actionMediaUnmountedFilter);
     }
 
     @Override

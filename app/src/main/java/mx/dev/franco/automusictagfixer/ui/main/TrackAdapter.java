@@ -92,7 +92,7 @@ public class TrackAdapter extends RecyclerView.Adapter<AudioItemHolder> {
                 }
 
                 if (o.getBoolean("should_reload_cover")){
-                    enqueue(holder, o.getString("path"), asyncListDiffer.getCurrentList().get(position).getMediaStoreId()+"");
+                    loadCover(holder, o.getString("path"), asyncListDiffer.getCurrentList().get(position).getMediaStoreId()+"");
                 }
         }
     }
@@ -113,10 +113,10 @@ public class TrackAdapter extends RecyclerView.Adapter<AudioItemHolder> {
             holder.checkBox.setVisibility(VISIBLE);
             holder.progressBar.setVisibility(INVISIBLE);
         }
-        enqueue(holder, track.getPath(), track.getMediaStoreId()+"");
+        loadCover(holder, track.getPath(), track.getMediaStoreId()+"");
     }
 
-    private void enqueue(AudioItemHolder holder, String path, String mediaStoreId) {
+    private void loadCover(AudioItemHolder holder, String path, String mediaStoreId) {
         CoverLoader.startFetchingCover(holder, path, mediaStoreId);
     }
 

@@ -70,13 +70,7 @@ public class AsyncOperation {
 
         @Override
         protected Integer doInBackground(final Track... track) {
-            try {
-                Thread.sleep(3000);
-                mAsyncTaskDao.update(track[0]);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            mAsyncTaskDao = null;
+            mAsyncTaskDao.update(track[0]);
             return null;
         }
 
@@ -84,6 +78,8 @@ public class AsyncOperation {
         protected void onPostExecute(Integer integer) {
             if (mCallback != null)
                 mCallback.onAsyncOperationFinished(integer);
+
+            mAsyncTaskDao = null;
         }
     }
 

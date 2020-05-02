@@ -21,7 +21,6 @@ import android.provider.MediaStore;
 import android.util.ArrayMap;
 import android.view.Gravity;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -32,7 +31,6 @@ import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 
 import com.crashlytics.android.Crashlytics;
-import com.google.android.material.snackbar.BaseTransientBottomBar;
 import com.google.android.material.snackbar.Snackbar;
 
 import org.jaudiotagger.tag.FieldKey;
@@ -80,15 +78,6 @@ public class AndroidUtils {
         return toast;
     }
 
-    public static void showToast(@NonNull Message message, @NonNull Context context) {
-        if(message.getMessage() != null) {
-            showToast(message.getMessage(), context);
-        }
-        else if(message.getIdResourceMessage() != -1) {
-            showToast(message.getIdResourceMessage(), context);
-        }
-    }
-
     public static void showToast(@NonNull String message, @NonNull Context context) {
         Toast toast = getToast(context);
         toast.setText(message);
@@ -103,65 +92,32 @@ public class AndroidUtils {
         }
     }
 
-    public static Snackbar createSnackbar(@NonNull View view, Message message) {
-        Snackbar snackbar = getSnackbar(view, view.getContext());
-        if(message.getMessage() != null) {
-            snackbar.setText(message.getMessage());
+    public static Snackbar createSnackbar(@NonNull View view, boolean dismissible) {
+        Snackbar snackbar;
+        if (dismissible) {
+            snackbar = getNoDismissibleSnackbar(view, view.getContext());
         }
-        else if(message.getIdResourceMessage() != -1) {
-            snackbar.setText(message.getIdResourceMessage());
+        else {
+            snackbar = getSnackbar(view, view.getContext());
         }
+
         return snackbar;
     }
 
-    public static Snackbar createNoDismissibleSnackbar(@NonNull View view, @StringRes int message) {
-        Snackbar snackbar = getSnackbar(view, view.getContext());
-        snackbar.setBehavior(new BaseTransientBottomBar.Behavior() {
+    private static Snackbar getSnackbar(@NonNull View viewToAttach, @NonNull Context context){
+        Snackbar snackbar = Snackbar.make(viewToAttach,"",Snackbar.LENGTH_SHORT);
+        snackbar.setTextColor(ContextCompat.getColor(context,R.color.snackbarTextBackgroundColor));
+        return snackbar;
+    }
+
+    private static Snackbar getNoDismissibleSnackbar(@NonNull View viewToAttach, @NonNull Context context){
+        Snackbar snackbar = getSnackbar(viewToAttach, context);
+        snackbar.setBehavior(new Snackbar.Behavior(){
             @Override
             public boolean canSwipeDismissView(View child) {
                 return false;
             }
         });
-        snackbar.setDuration(Snackbar.LENGTH_INDEFINITE);
-        snackbar.setText(message);
-        return snackbar;
-    }
-
-    public static Snackbar createNoDismissibleSnackbar(@NonNull View view, @NonNull String message) {
-        Snackbar snackbar = getSnackbar(view, view.getContext());
-        snackbar.setBehavior(new BaseTransientBottomBar.Behavior() {
-            @Override
-            public boolean canSwipeDismissView(View child) {
-                return false;
-            }
-        });
-        snackbar.setDuration(Snackbar.LENGTH_INDEFINITE);
-        snackbar.setText(message);
-        return snackbar;
-    }
-
-
-    public static Snackbar createSnackbar(@NonNull View view, @StringRes int message) {
-        Snackbar snackbar = getSnackbar(view, view.getContext());
-        snackbar.setText(message);
-        return snackbar;
-    }
-
-    public static Snackbar createSnackbar(@NonNull View view, @NonNull String message) {
-        Snackbar snackbar = getSnackbar(view, view.getContext());
-        snackbar.setText(message);
-        return snackbar;
-    }
-
-    public static Snackbar createActionableSnackbar(@NonNull View view,
-                                                        Message message,
-                                                        OnClickListener onClickListener) {
-
-        ActionableMessage actionableMessage = (ActionableMessage) message;
-        Snackbar snackbar = createSnackbar(view, message);
-        String action = getActionName(actionableMessage.getAction(), view);
-        snackbar.setAction(action, onClickListener);
-
         return snackbar;
     }
 
@@ -183,13 +139,13 @@ public class AndroidUtils {
      */
     public static void openInExternalApp(String path, Context context){
         File file = new File(path);
-        String type = TrackUtils.getMimeType(path);
+        String type = AudioTagger.getMimeType(path);
         try {
 
             Intent intent = new Intent();
             //default action is ACTION_VIEW
             intent.setAction(Intent.ACTION_VIEW);
-            //For android >7 we need a file provider to open
+            //For android >= 7 we need a file provider to open
             //files in external app
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
@@ -212,11 +168,6 @@ public class AndroidUtils {
         context.startActivity(intent);
     }
 
-    public static Snackbar getSnackbar(@NonNull View viewToAttach, @NonNull Context context){
-        Snackbar snackbar = Snackbar.make(viewToAttach,"",Snackbar.LENGTH_SHORT);
-        snackbar.setTextColor(ContextCompat.getColor(context,R.color.snackbarTextBackgroundColor));
-        return snackbar;
-    }
 
     public static boolean grantPermissionSD(Context context, Intent resultData){
 

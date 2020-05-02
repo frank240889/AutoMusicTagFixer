@@ -20,26 +20,19 @@ public class DiffCallback extends DiffUtil.ItemCallback<Track>{
 
     @Override
     public boolean areContentsTheSame(@NonNull Track oldItem, @NonNull Track newItem) {
-        if (!oldItem.getTitle().equals(newItem.getTitle()))
-            return false;
-        if (!oldItem.getArtist().equals(newItem.getArtist()))
-            return false;
-        if (!oldItem.getAlbum().equals(newItem.getAlbum()))
+        if (oldItem.getVersion() != newItem.getVersion())
             return false;
         if (oldItem.checked() != newItem.checked())
             return false;
         if (oldItem.processing() != newItem.processing())
             return false;
-        if (oldItem.getPath().equals(newItem.getPath()))
-            return false;
 
-        return oldItem.getVersion() == newItem.getVersion();
+        return true;
     }
 
     @Nullable
     @Override
     public Object getChangePayload(@NonNull Track oldItem, @NonNull Track newItem) {
-
         Bundle diff = new Bundle();
 
         if (!oldItem.getTitle().equals(newItem.getTitle()))
@@ -49,13 +42,16 @@ public class DiffCallback extends DiffUtil.ItemCallback<Track>{
         if (!oldItem.getAlbum().equals(newItem.getAlbum()))
             diff.putString("album", newItem.getAlbum());
 
-        if(oldItem.getVersion() != newItem.getVersion())
+        if(oldItem.getVersion() != newItem.getVersion()) {
+            diff.putString("path", newItem.getPath());
             diff.putBoolean("should_reload_cover", true);
+        }
 
         if (oldItem.checked() != newItem.checked())
             diff.putInt("checked", newItem.checked());
         if (oldItem.processing() != newItem.processing())
             diff.putInt("processing", newItem.processing());
+
         return diff;
     }
 }

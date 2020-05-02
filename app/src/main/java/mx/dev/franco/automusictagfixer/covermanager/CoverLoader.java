@@ -106,7 +106,6 @@ public class CoverLoader {
     }
 
     private static void loadCover(AudioHolder holder, byte[] result) {
-        Log.w(CoverLoader.class.getName(), "loading cover");
         Context context = holder.itemView.getContext();
         if(context instanceof FragmentActivity && !((FragmentActivity)context).isDestroyed())
             GlideApp.with(holder.itemView.getContext())

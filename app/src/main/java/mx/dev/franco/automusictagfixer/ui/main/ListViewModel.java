@@ -23,9 +23,9 @@ import mx.dev.franco.automusictagfixer.persistence.repository.TrackRepository;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.services.FixerTrackService;
 import mx.dev.franco.automusictagfixer.ui.SingleLiveEvent;
-import mx.dev.franco.automusictagfixer.utilities.Message;
 import mx.dev.franco.automusictagfixer.utilities.Resource;
 import mx.dev.franco.automusictagfixer.utilities.ServiceUtils;
+import mx.dev.franco.automusictagfixer.utilities.SnackbarMessage;
 
 public class ListViewModel extends AndroidViewModel {
     private static final String TAG = ListViewModel.class.getName();
@@ -40,13 +40,13 @@ public class ListViewModel extends AndroidViewModel {
     private MutableLiveData<Integer> mStartAutomaticMode = new SingleLiveEvent<>();
     private MutableLiveData<Boolean> mObservableCheckAllTracks = new SingleLiveEvent<>();
     private SingleLiveEvent<Integer> mObservableMessage = new SingleLiveEvent<>();
+    private LiveData<SnackbarMessage> mResultsAudioFilesMediaStore;
     //The current list of tracks.
     private List<Track> mCurrentList;
     public TrackRepository mTrackRepository;
 
     private ServiceUtils mServiceUtils;
     private MediaStoreManager mMediaStoreManager;
-    private LiveData<Message> mResultsAudioFilesMediaStore;
     private MediatorLiveData<Boolean> mLoadingState = new MediatorLiveData<>();
     private boolean mIsSorting = false;
 
@@ -120,26 +120,27 @@ public class ListViewModel extends AndroidViewModel {
         return mTracks;
     }
 
-    public LiveData<Message> observeSizeResultsMediaStore() {
+    public LiveData<SnackbarMessage> observeSizeResultsMediaStore() {
         return mResultsAudioFilesMediaStore;
     }
 
-    private LiveData<Message> getMediaStoreResults() {
-        LiveData<Resource<List<Track>>> resultsMediaStore = mMediaStoreManager.observeResult();
-        return Transformations.map(resultsMediaStore, input -> {
-            Message message = null;
+    private LiveData<SnackbarMessage> getMediaStoreResults() {
+        return Transformations.map(mMediaStoreManager.observeResult(), input -> {
+            SnackbarMessage.Builder builder = null;
             if(input.status == Resource.Status.SUCCESS) {
                 if(input.data.size() > 0) {
                     mTrackRepository.insert(input.data);
                 }
                 else {
-                    message = new Message(R.string.no_items_found);
+                    builder = new SnackbarMessage.Builder(getApplication());
+                    builder.body(R.string.no_items_found);
                 }
             }
             else {
-                message = new Message(R.string.error);
+                builder = new SnackbarMessage.Builder(getApplication());
+                builder.body(R.string.error);
             }
-            return message;
+            return builder != null ? builder.build() : null;
         });
     }
 

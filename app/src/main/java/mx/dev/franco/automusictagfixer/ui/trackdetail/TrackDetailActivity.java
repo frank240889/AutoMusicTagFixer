@@ -7,7 +7,6 @@ import android.graphics.ImageDecoder;
 import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -35,16 +34,16 @@ import dagger.android.support.HasSupportFragmentInjector;
 import mx.dev.franco.automusictagfixer.BuildConfig;
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.audioplayer.SimpleMediaPlayer;
+import mx.dev.franco.automusictagfixer.common.Action;
 import mx.dev.franco.automusictagfixer.databinding.ActivityTrackDetailBinding;
 import mx.dev.franco.automusictagfixer.fixer.CorrectionParams;
 import mx.dev.franco.automusictagfixer.identifier.IdentificationManager;
 import mx.dev.franco.automusictagfixer.ui.AndroidViewModelFactory;
 import mx.dev.franco.automusictagfixer.ui.InformativeFragmentDialog;
 import mx.dev.franco.automusictagfixer.ui.sdcardinstructions.SdCardInstructionsActivity;
-import mx.dev.franco.automusictagfixer.utilities.ActionableMessage;
 import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
-import mx.dev.franco.automusictagfixer.utilities.Message;
 import mx.dev.franco.automusictagfixer.utilities.RequiredPermissions;
+import mx.dev.franco.automusictagfixer.utilities.SnackbarMessage;
 
 import static android.view.View.GONE;
 import static android.view.View.VISIBLE;
@@ -142,9 +141,10 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
                 mIdentificationManager.
                         setIdentificationType(IdentificationManager.ALL_TAGS).
                         startIdentification(track));
+        mTrackDetailViewModel.observeErrorWriting().observe(this, this::showSnackbarMessage);
 
         mTrackDetailViewModel.observeConfirmationRemoveCover().observe(this, this::onConfirmRemovingCover);
-        mTrackDetailViewModel.observeCoverSavingResult().observe(this, this::onActionableMessage);
+        mTrackDetailViewModel.observeCoverSavingResult().observe(this, this::showSnackbarMessage);
         mTrackDetailViewModel.onMessage().observe(this, this::onLoadingMessage);
         setupIdentificationObserves();
         return true;
@@ -172,14 +172,18 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
         }
         else {
             mViewDataBinding.appBarLayout.removeOnOffsetChangedListener(mOffsetChangeListener);
-            mOffsetChangeListener = (appBarLayout, verticalOffset) -> {
-                if (verticalOffset == 0) {
-                    mViewDataBinding.appBarLayout.removeOnOffsetChangedListener(mOffsetChangeListener);
-                    TrackDetailActivity.super.onBackPressed();
-                }
-            };
-            mViewDataBinding.appBarLayout.addOnOffsetChangedListener(mOffsetChangeListener);
-            mViewDataBinding.appBarLayout.setExpanded(true, true);
+            if (mViewDataBinding.appBarLayout.getHeight() - mViewDataBinding.appBarLayout.getBottom() == 0) {
+                mViewDataBinding.appBarLayout.addOnOffsetChangedListener(new AppBarLayout.OnOffsetChangedListener() {
+                    @Override
+                    public void onOffsetChanged(AppBarLayout appBarLayout, int verticalOffset) {
+                        if (verticalOffset == 0) {
+                            mViewDataBinding.appBarLayout.removeOnOffsetChangedListener(this);
+                            TrackDetailActivity.super.onBackPressed();
+                        }
+                    }
+                });
+                mViewDataBinding.appBarLayout.setExpanded(true, true);
+            }
         }
     }
 
@@ -241,7 +245,7 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
                     msg = getString(R.string.saf_denied);
                 }
 
-                AndroidUtils.createSnackbar(mViewDataBinding.rootContainerDetails, msg).show();
+                AndroidUtils.createSnackbar(mViewDataBinding.rootContainerDetails, true).show();
                 break;
         }
     }
@@ -320,9 +324,9 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
 
             @Override
             public void onDecodingError(Throwable throwable) {
-                Snackbar snackbar = AndroidUtils.getSnackbar(
+                Snackbar snackbar = AndroidUtils.createSnackbar(
                         mViewDataBinding.rootContainerDetails,
-                        mViewDataBinding.rootContainerDetails.getContext());
+                        true);
                 String msg = getString(R.string.error_load_image) + ": " + throwable.getMessage();
                 snackbar.setText(msg);
                 snackbar.setDuration(Snackbar.LENGTH_SHORT);
@@ -368,8 +372,8 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
                 try {
                     mPlayer.playPreview();
                 } catch (IOException e) {
-                    Snackbar snackbar = AndroidUtils.createSnackbar(mViewDataBinding.rootContainerDetails,
-                            R.string.cannot_play_track);
+                    Snackbar snackbar = AndroidUtils.createSnackbar(mViewDataBinding.rootContainerDetails, true);
+                    snackbar.setText(R.string.cannot_play_track);
                     snackbar.show();
                 }
             }
@@ -537,16 +541,17 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
      */
     private void setupIdentificationObserves() {
         mIdentificationManager.observeIdentificationEvent().observe(this, identificationEvent -> {
-            Log.d(identificationEvent.getClass().getName(), identificationEvent.isIdentifying() + "");
+
             if (identificationEvent.isIdentifying()) {
 
                 mViewDataBinding.progressView.setVisibility(VISIBLE);
                 disableEditModeElements();
 
-                 mNoDismissibleSnackbar = AndroidUtils.createNoDismissibleSnackbar(
+                 mNoDismissibleSnackbar = AndroidUtils.createSnackbar(
                         mViewDataBinding.rootContainerDetails,
-                        identificationEvent.getMessage()
+                        false
                 );
+                 mNoDismissibleSnackbar.setText(identificationEvent.getMessage());
                  mNoDismissibleSnackbar.setAction(R.string.cancel, v -> mIdentificationManager.cancel());
                  mNoDismissibleSnackbar.show();
             }
@@ -674,26 +679,10 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
         });
     }
 
-    /**
-     * Creates a OnClickListener object to respond according to an Action object.
-     * @param action The action to execute.
-     * @return A OnclickListener object.
-     */
-    private View.OnClickListener createOnClickListener (ActionableMessage action) {
-        switch (action.getAction()) {
-            case URI_ERROR:
-                return view -> startActivity(new Intent(this, SdCardInstructionsActivity.class));
-            case MANUAL_CORRECTION:
-                return view -> editMode();
-            case WATCH_IMAGE:
-                return view -> AndroidUtils.openInExternalApp(action.getDetails(), view.getContext());
-        }
-        return null;
-    }
-
     private void onLoadingMessage(String s) {
         Snackbar snackbar = AndroidUtils.createSnackbar(mViewDataBinding.rootContainerDetails,
-                s);
+                true);
+        snackbar.setText(s);
         snackbar.setDuration(Snackbar.LENGTH_SHORT);
         snackbar.show();
     }
@@ -730,28 +719,40 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
     }
 
     private void showInformativeMessage(String message) {
-        Snackbar snackbar = AndroidUtils.createSnackbar(
-                mViewDataBinding.rootContainerDetails,
-                message
-        );
+        Snackbar snackbar = AndroidUtils.createSnackbar(mViewDataBinding.rootContainerDetails,true);
+        snackbar.setText(message);
         snackbar.setDuration(Snackbar.LENGTH_SHORT);
         snackbar.show();
     }
 
-    /**
-     * Shows a message and an action into a Snackbar.
-     * @param actionableMessage The message object with action to take.
-     */
-    protected void onActionableMessage(Message actionableMessage) {
-        if(actionableMessage == null)
-            return;
+    private void showSnackbarMessage(SnackbarMessage snackbarMessage) {
+        Snackbar snackbar = AndroidUtils.createSnackbar(mViewDataBinding.rootContainerDetails,
+                snackbarMessage.isDismissible());
 
-        Snackbar snackbar = AndroidUtils.createActionableSnackbar(
-                mViewDataBinding.rootContainerDetails,
-                actionableMessage,
-                createOnClickListener((ActionableMessage) actionableMessage));
-        snackbar.setDuration(Snackbar.LENGTH_LONG);
+        snackbar.setText(snackbarMessage.getBody());
+        if (snackbarMessage.getMainAction() != Action.NONE) {
+            snackbar.setAction(snackbarMessage.getMainActionText(),
+                    createOnClickListener(snackbarMessage));
+        }
+        snackbar.setDuration(snackbarMessage.getDuration());
         snackbar.show();
+    }
+
+    /**
+     * Creates a OnClickListener object to respond according to an Action object.
+     * @param snackbarMessage The message suitable to be shown by snackbar.
+     * @return A OnclickListener object.
+     */
+    private View.OnClickListener createOnClickListener (SnackbarMessage snackbarMessage) {
+        switch (snackbarMessage.getMainAction()) {
+            case URI_ERROR:
+                return view -> startActivity(new Intent(this, SdCardInstructionsActivity.class));
+            case MANUAL_CORRECTION:
+                return view -> editMode();
+            case WATCH_IMAGE:
+                return view -> AndroidUtils.openInExternalApp(snackbarMessage.getData().toString(), view.getContext());
+        }
+        return null;
     }
 
     protected void loading(boolean showProgress) {

@@ -1363,6 +1363,32 @@ public class AudioTagger {
     }
 
     /**
+     * Returns only the last part of absolute path,
+     * it means, the file name
+     * @param absolutePath
+     * @return
+     */
+    public static String getFilename(String absolutePath){
+        if(absolutePath == null || absolutePath.isEmpty())
+            return "";
+
+        String[] parts = absolutePath.split("/");
+        return parts[parts.length-1];
+    }
+
+    public static String getPath(String path){
+        if(path == null)
+            return null;
+        return path.substring(path.lastIndexOf("/") + 1);
+    }
+
+    public static String getPath(File file){
+        if(file == null)
+            return null;
+        return getPath(file.getAbsolutePath());
+    }
+
+    /**
      * Generic class for operations result of {@link AudioTagger}
      */
     public static abstract class AudioTaggerResult<D> {
@@ -1873,6 +1899,7 @@ public class AudioTagger {
         public boolean isStoredInSD(String path){
             return isStoredInSD(new File(path));
         }
+
 
         /**
          * Check if file is stored on SD card or Non removable storage.

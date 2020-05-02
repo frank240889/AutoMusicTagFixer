@@ -36,6 +36,7 @@ public class TrackManager {
     //Live data objects that only dispatch a state change when its method "setVlue()" is called explicitly.
     private MutableLiveData<AudioTagger.AudioFields> mReaderResult = new MutableLiveData<>();
     private SingleLiveEvent<AudioTagger.AudioTaggerResult<Map<FieldKey, Object>>> mWriterResult = new SingleLiveEvent<>();
+    private SingleLiveEvent<AudioTagger.AudioTaggerResult<Map<FieldKey, Object>>> mWriterError = new SingleLiveEvent<>();
     private SingleLiveEvent<Integer> mLiveMessage = new SingleLiveEvent<>();
     private MediatorLiveData<Track> mMediatorLiveDataTrack = new MediatorLiveData<>();
     //Live data to inform the progress of task.
@@ -43,8 +44,6 @@ public class TrackManager {
     //The cache where are stored temporally the identification results.
     private TrackReader mTrackReader;
     private TrackWriter mTrackWriter;
-    private TrackRepository mTrackRepository;
-
     /**
      * Inject all dependencies into constructor.
      * @param audioTagger Interface to rename audio files and read/write their metadata.
@@ -53,13 +52,11 @@ public class TrackManager {
     @Inject
     public TrackManager(@NonNull TrackRoomDatabase trackRoomDatabase,
                         @NonNull AudioTagger audioTagger,
-                        @NonNull Context context,
-                        @NonNull TrackRepository trackRepository) {
+                        @NonNull Context context) {
 
         mTrackRoomDatabase = trackRoomDatabase;
         mAudioTagger = audioTagger;
         mContext = context;
-        mTrackRepository = trackRepository;
     }
 
     public void getDetails(int id) {
@@ -84,6 +81,10 @@ public class TrackManager {
         return mWriterResult;
     }
 
+    public LiveData<AudioTagger.AudioTaggerResult<Map<FieldKey, Object>>> observeErrorWriting() {
+        return mWriterError;
+    }
+
     public LiveData<Integer> observeMessage() {
         return mLiveMessage;
     }
@@ -93,6 +94,7 @@ public class TrackManager {
             @Override
             public void onAsyncOperationStarted(Void params) {
                 mLoadingStateLiveData.setValue(true);
+                mLiveMessage.setValue(R.string.loading_data_track);
             }
 
             @Override
@@ -125,15 +127,14 @@ public class TrackManager {
             @Override
             public void onAsyncOperationFinished(AudioTagger.AudioTaggerResult<Map<FieldKey, Object>> result) {
                 mLoadingStateLiveData.setValue(false);
-                CoverLoader.removeCover(getCurrentTrack().getMediaStoreId()+"");
                 mWriterResult.setValue(result);
                 updateTrack(result, getCurrentTrack(), mTrackRoomDatabase.trackDao());
             }
 
             @Override
             public void onAsyncOperationError(AudioTagger.AudioTaggerResult<Map<FieldKey, Object>> error) {
+                mWriterError.setValue(error);
                 mLoadingStateLiveData.setValue(false);
-                mLiveMessage.setValue(R.string.message_could_not_apply_tags);
             }
         }, mAudioTagger, correctionParams);
         mTrackWriter.executeOnExecutor(Executors.newSingleThreadExecutor(), mContext);
@@ -165,8 +166,10 @@ public class TrackManager {
         }
 
         String path = ((AudioTagger.ResultCorrection)result).getResultRename();
-        if(path != null && !path.equals(""))
+        if(path != null && !path.equals("")) {
+            CoverLoader.removeCover(track.getMediaStoreId()+"");
             track.setPath(path);
+        }
 
         track.setChecked(0);
         track.setProcessing(0);

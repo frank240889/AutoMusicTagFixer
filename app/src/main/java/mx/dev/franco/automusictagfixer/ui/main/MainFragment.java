@@ -114,8 +114,8 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
             if(message == null)
                 return;
 
-            mMessage.setText(message.getIdResourceMessage());
-            Snackbar snackbar = AndroidUtils.createSnackbar(mSwipeRefreshLayout, message);
+            mMessage.setText(message.getBody());
+            Snackbar snackbar = AndroidUtils.createSnackbar(mSwipeRefreshLayout, message.isDismissible());
             snackbar.show();
         });
         mViewModel.getTracks().observe(this, tracks -> {
@@ -589,7 +589,8 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
     public void onStartAutomaticTask() {
         mStartTaskFab.hide();
         mBlockingLayer.setVisibility(View.VISIBLE);
-        mStopCorrectionSnackbar = AndroidUtils.createNoDismissibleSnackbar(getView(), R.string.correction_in_progress);
+        mStopCorrectionSnackbar = AndroidUtils.createSnackbar(getView(), false);
+        mStopCorrectionSnackbar.setText(R.string.correction_in_progress);
         mStopCorrectionSnackbar.setAction(R.string.cancel, v -> {
             Intent stopIntent = new Intent(getActivity(), FixerTrackService.class);
             stopIntent.setAction(Constants.Actions.ACTION_STOP_TASK);

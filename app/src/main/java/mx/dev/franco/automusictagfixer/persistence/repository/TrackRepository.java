@@ -140,13 +140,13 @@ public class TrackRepository {
             mMediatorTrackData.addSource(mTracks, tracks -> {
                 mLoadingObservable.setValue(false);
                 if(tracks == null || tracks.size() == 0) {
-                    mSortingEvent.setValue(null);
                     mMediatorTrackData.setValue(Resource.error(new ArrayList<>()));
+                    mSortingEvent.setValue(null);
                 }
                 else {
-                    mSortingEvent.setValue(sort);
                     mMediatorTrackData.setValue(Resource.success(tracks));
                     mAbstractSharedPreferences.putString(Constants.SORT_KEY,mCurrentOrder);
+                    mSortingEvent.setValue(sort);
                 }
             });
         }

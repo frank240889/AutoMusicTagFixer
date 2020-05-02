@@ -17,6 +17,11 @@ import java.util.Map;
 import mx.dev.franco.automusictagfixer.interfaces.AsyncOperation;
 import mx.dev.franco.automusictagfixer.persistence.mediastore.MediaStoreHelper;
 
+/**
+ * @author Franco Castillo
+ * @version 1.0
+ * Instances of this class are in charge of writing the tags to the file, out of the main thread.
+ */
 public class TrackWriter extends AsyncTask<Context, Void, AudioTagger.AudioTaggerResult<Map<FieldKey, Object>>> {
     private AsyncOperation<Void, AudioTagger.AudioTaggerResult<Map<FieldKey, Object>>, Void,
             AudioTagger.AudioTaggerResult<Map<FieldKey, Object>>> mCallback;
@@ -44,30 +49,40 @@ public class TrackWriter extends AsyncTask<Context, Void, AudioTagger.AudioTagge
     protected AudioTagger.AudioTaggerResult<Map<FieldKey, Object>> doInBackground(Context... contexts) {
         AudioTagger.ResultCorrection resultCorrection = null;
 
+        // Get the type of correction
         if (mCorrectionParams.getCorrectionMode() == AudioTagger.MODE_OVERWRITE_ALL_TAGS ||
             mCorrectionParams.getCorrectionMode() == AudioTagger.MODE_WRITE_ONLY_MISSING) {
 
+            // Apply the tags
             try {
                 resultCorrection = (AudioTagger.ResultCorrection) mAudioTagger.saveTags(
                         mCorrectionParams.getTarget(),
                         mCorrectionParams.getTags(),
                         mCorrectionParams.getCorrectionMode());
-
+                // Check if writing is success and then check if file must be renamed.
                 if (resultCorrection.getCode() == AudioTagger.SUCCESS) {
                     resultCorrection.setTaskExecuted(mCorrectionParams.getCorrectionMode());
-                    if (resultCorrection.isStoredInSD()) {
-                        String filePath = mCorrectionParams.getTarget();
-                        if (mCorrectionParams.renameFile()) {
-                            String newName = mAudioTagger.renameFile(mCorrectionParams.getTarget(), mCorrectionParams.getNewName());
-                            if (newName != null) {
-                                resultCorrection.setResultRename(newName);
-                                filePath = newName;
-                            }
-                            else {
-                                resultCorrection.setCode(AudioTagger.TAGS_APPLIED_BUT_NOT_RENAMED_FILE);
-                            }
-                        }
 
+
+                    String filePath = mCorrectionParams.getTarget();
+
+                    if (mCorrectionParams.renameFile()) {
+                        String newName = mAudioTagger.renameFile(mCorrectionParams.getTarget(), mCorrectionParams.getNewName());
+                        if (newName != null) {
+                            resultCorrection.setResultRename(newName);
+                            filePath = newName;
+                        }
+                        else {
+                            resultCorrection.setCode(AudioTagger.TAGS_APPLIED_BUT_NOT_RENAMED_FILE);
+                        }
+                    }
+
+                    // Check if is stored in SD and update the ID of media store wuth the id of the original file, because
+                    // every time a file in SD is corrected, although is the same file, it will have a different ID, and the
+                    // Android system will recognize as another file, meaning that when media store is scanned again,
+                    // it will add the same file to the list, only with different ID; from the perspective of Android OS,
+                    // is a different file because have different ID, but from the perspective of user, is the same file
+                    if (resultCorrection.isStoredInSD()) {
 
                         String mediaStoreId = mCorrectionParams.getMediaStoreId();
                         String finalFilePath = filePath;
@@ -80,12 +95,6 @@ public class TrackWriter extends AsyncTask<Context, Void, AudioTagger.AudioTagge
                                     MediaStoreHelper.swapMediaStoreId(contexts[0], mediaStoreId, newMediaStoreId);
                                 });
                     }
-                    else {
-                        if (mCorrectionParams.renameFile()) {
-                            String newName = mAudioTagger.renameFile(mCorrectionParams.getTarget(), mCorrectionParams.getNewName());
-                            resultCorrection.setResultRename(newName);
-                        }
-                    }
                 }
             }
             catch (IOException | ReadOnlyFileException | CannotReadException | TagException | InvalidAudioFrameException e) {
@@ -95,6 +104,7 @@ public class TrackWriter extends AsyncTask<Context, Void, AudioTagger.AudioTagge
             }
 
         }
+        // Rename file.
         else if (mCorrectionParams.getCorrectionMode() == AudioTagger.MODE_RENAME_FILE) {
             String newName = mAudioTagger.renameFile(mCorrectionParams.getTarget(), mCorrectionParams.getNewName());
             resultCorrection = new AudioTagger.ResultCorrection();
@@ -102,6 +112,7 @@ public class TrackWriter extends AsyncTask<Context, Void, AudioTagger.AudioTagge
             resultCorrection.setResultRename(newName);
             resultCorrection.setTaskExecuted(mCorrectionParams.getCorrectionMode());
         }
+        // Add or remove cover.
         else {
             Map<FieldKey, Object> tags = mCorrectionParams.getTags();
 

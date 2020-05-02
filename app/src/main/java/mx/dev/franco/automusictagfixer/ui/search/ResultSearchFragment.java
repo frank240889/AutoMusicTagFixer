@@ -181,7 +181,7 @@ public class ResultSearchFragment extends BaseViewModelFragment<SearchListViewMo
     }
 
     private void showMessageError(String s) {
-        Snackbar snackbar = AndroidUtils.getSnackbar(mRecyclerView, getActivity().getApplicationContext());
+        Snackbar snackbar = AndroidUtils.createSnackbar(mRecyclerView, true);
         snackbar.setText(s);
         snackbar.show();
     }
