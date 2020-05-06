@@ -4,25 +4,18 @@ import android.app.Application;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.ArrayMap;
-
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MediatorLiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Transformations;
-
 import com.google.android.material.snackbar.Snackbar;
 import com.gracenote.gnsdk.GnException;
-
-import org.jaudiotagger.tag.FieldKey;
-
 import java.util.List;
 import java.util.Map;
-
 import javax.annotation.Nonnull;
 import javax.inject.Inject;
-
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.common.Action;
 import mx.dev.franco.automusictagfixer.filemanager.FileManager;
@@ -42,6 +35,7 @@ import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
 import mx.dev.franco.automusictagfixer.utilities.Resource;
 import mx.dev.franco.automusictagfixer.utilities.SnackbarMessage;
+import org.jaudiotagger.tag.FieldKey;
 
 public class TrackDetailViewModel extends AndroidViewModel {
 
@@ -170,7 +164,9 @@ public class TrackDetailViewModel extends AndroidViewModel {
 
     public LiveData<SnackbarMessage> observeCoverSavingResult() {
         return Transformations.map(mFileManager.observeResultFileSaving(), input -> {
-            SnackbarMessage.Builder builder = new SnackbarMessage.Builder(TrackDetailViewModel.this.getApplication());
+
+            SnackbarMessage.Builder<String> builder = new SnackbarMessage.Builder<>(
+                TrackDetailViewModel.this.getApplication());
             if (input.status == Resource.Status.SUCCESS) {
                 builder.action(Action.WATCH_IMAGE).
                         mainActionText(R.string.see_image).
