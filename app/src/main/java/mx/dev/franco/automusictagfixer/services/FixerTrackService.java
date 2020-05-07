@@ -100,7 +100,7 @@ public class FixerTrackService extends Service {
     private SharedPreferences mSharedPreferences;
     private Handler mHandler = new Handler(Looper.getMainLooper());
     private AtomicBoolean mCancelled = new AtomicBoolean(false);
-    Thread correctionParamsThread;
+    private Thread mCorrectionParamsThread;
 
 
     /**
@@ -115,7 +115,6 @@ public class FixerTrackService extends Service {
         AndroidInjection.inject(this);
         super.onCreate();
         mIdentifier =  mIdentifierFactory.create(IdentifierFactory.FINGERPRINT_IDENTIFIER);
-        //mTrackRepository.registerReceiver();
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
     }
 
@@ -139,10 +138,11 @@ public class FixerTrackService extends Service {
                     Intent.ACTION_MEDIA_MOUNTED.equals(action) ||
                     Intent.ACTION_MEDIA_UNMOUNTED.equals(action)){
                 mCancelled.set(true);
-                stopTasks();
+                actionStopTask();
+                /*stopTasks();
                 broadcastMessage(getString(R.string.task_cancelled));
                 broadcastCompleteCorrection();
-                stopServiceAndRemoveFromForeground();
+                stopServiceAndRemoveFromForeground();*/
             }
             //Service is running and correction task is about to begin.
             else {
@@ -152,7 +152,18 @@ public class FixerTrackService extends Service {
         return START_REDELIVER_INTENT;
     }
 
+    @Override
+    public void onDestroy() {
+        this.mTrackWriter = null;
+        this.mTrackLoader = null;
+        this.mCorrectionParamsThread = null;
+        this.mIdentifier = null;
+    }
+
     private void actionStartTask(boolean isNextTrack) {
+        if (mCancelled.get())
+            return;
+
         mTrackLoader = new TrackLoader(new AsyncOperation<Void, Track, Void, Void>() {
             @Override
             public void onAsyncOperationFinished(Track track) {
@@ -178,8 +189,10 @@ public class FixerTrackService extends Service {
         stopIdentification();
         broadcastMessage(getString(R.string.task_cancelled));
         broadcastCompleteCorrection();
-        stopServiceAndRemoveFromForeground();
-        Thread thread = new Thread(() -> mTrackRoomDatabase.trackDao().unprocessTracks());
+        Thread thread = new Thread(() -> {
+            mTrackRoomDatabase.trackDao().unprocessTracks();
+            stopServiceAndRemoveFromForeground();
+        });
         thread.start();
     }
 
@@ -196,11 +209,6 @@ public class FixerTrackService extends Service {
                 TrackUpdaterSync trackUpdaterSync = new TrackUpdaterSync(new AsyncOperation<Void, Integer, Void, Void>() {
                     @Override
                     public void onAsyncOperationFinished(Integer result) {
-
-                        if (mCancelled.get()) {
-                            actionStopTask();
-                            return;
-                        }
                         broadcastCorrectionForId(track.getMediaStoreId());
                         broadcastStartingCorrection();
                         onStartIdentification(track);
@@ -210,6 +218,9 @@ public class FixerTrackService extends Service {
                 trackUpdaterSync.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, track);
             }
             else {
+                if (mCancelled.get())
+                    return;
+
                 mIdentifier.registerCallback(new Identifier.IdentificationListener<List<? extends Identifier.IdentificationResults>>() {
                     @Override
                     public void onIdentificationStart() {
@@ -269,12 +280,17 @@ public class FixerTrackService extends Service {
                     }
                 });
 
+                if (mCancelled.get())
+                    return;
+
                 Map<String, String> map = new ArrayMap<>();
                 map.put(Identifier.Field.FILENAME.name(), track.getPath());
                 track.setProcessing(1);
                 TrackUpdaterSync trackUpdaterSync = new TrackUpdaterSync(new AsyncOperation<Void, Integer, Void, Void>() {
                     @Override
                     public void onAsyncOperationFinished(Integer result) {
+                        if (mCancelled.get())
+                            return;
                         mIdentifier.identify(map);
                     }
                 }, mTrackRoomDatabase.trackDao());
@@ -285,19 +301,12 @@ public class FixerTrackService extends Service {
     }
 
     private void createCorrectionParams(List<? extends Identifier.IdentificationResults> results, Track track) {
-        correctionParamsThread = new Thread(() -> {
-            if (mCancelled.get())
-                correctionParamsThread.interrupt();
+        mCorrectionParamsThread = new Thread(() -> {
 
             List<Result> newList = prepareResults(results);
             Result result = IdentificationManager.findBestResult(newList,
                     track,
                     mSharedPreferences.getString("key_size_album_art", "kImageSize1080"));
-
-            if (mCancelled.get()) {
-                correctionParamsThread.interrupt();
-                return;
-            }
 
             CorrectionParams correctionParams = new CorrectionParams();
             int correctionMode = mSharedPreferences.getBoolean("key_overwrite_all_tags_automatic_mode", true) ?
@@ -320,11 +329,6 @@ public class FixerTrackService extends Service {
                 }
             }
 
-            if (mCancelled.get()) {
-                correctionParamsThread.interrupt();
-                return;
-            }
-
             AndroidUtils.createInputParams(result.getTitle(),
                     result.getArtist(),
                     result.getAlbum(),
@@ -336,14 +340,10 @@ public class FixerTrackService extends Service {
 
             mHandler.post(() -> applyCorrection(correctionParams, track));
         });
-        correctionParamsThread.start();
+        mCorrectionParamsThread.start();
     }
 
     private void applyCorrection(CorrectionParams correctionParams, Track track) {
-        if (mCancelled.get()) {
-            return;
-        }
-
         mTrackWriter = new TrackWriter(new AsyncOperation<Void,
                 AudioTagger.AudioTaggerResult<Map<FieldKey, Object>>, Void, AudioTagger.AudioTaggerResult<Map<FieldKey, Object>>>() {
             @Override
@@ -518,8 +518,8 @@ public class FixerTrackService extends Service {
 
     private void stopTasks(){
         stopIdentification();
-        if (correctionParamsThread != null && !correctionParamsThread.isInterrupted())
-            correctionParamsThread.interrupt();
+        if (mCorrectionParamsThread != null && !mCorrectionParamsThread.isInterrupted())
+            mCorrectionParamsThread.interrupt();
         if (mTrackLoader != null)
             mTrackLoader.cancel(true);
         if (mTrackWriter != null)
@@ -547,7 +547,6 @@ public class FixerTrackService extends Service {
         if(mIdentifier != null){
             mIdentifier.cancel();
         }
-        mIdentifier = null;
     }
 
     /**

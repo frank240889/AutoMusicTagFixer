@@ -172,7 +172,7 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
         }
         else {
             mViewDataBinding.appBarLayout.removeOnOffsetChangedListener(mOffsetChangeListener);
-            if (mViewDataBinding.appBarLayout.getHeight() - mViewDataBinding.appBarLayout.getBottom() == 0) {
+            if (mViewDataBinding.appBarLayout.getHeight() - mViewDataBinding.appBarLayout.getBottom() > 0) {
                 mViewDataBinding.appBarLayout.addOnOffsetChangedListener(new AppBarLayout.OnOffsetChangedListener() {
                     @Override
                     public void onOffsetChanged(AppBarLayout appBarLayout, int verticalOffset) {
@@ -183,6 +183,9 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
                     }
                 });
                 mViewDataBinding.appBarLayout.setExpanded(true, true);
+            }
+            else {
+                super.onBackPressed();
             }
         }
     }

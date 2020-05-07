@@ -399,7 +399,8 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
         if(!PreferenceManager.getDefaultSharedPreferences(getActivity().
                 getApplicationContext()).getBoolean("key_background_service", true)){
             Intent intent = new Intent(getActivity(),FixerTrackService.class);
-            getActivity().stopService(intent);
+            intent.setAction(Constants.Actions.ACTION_STOP_TASK);
+            requireActivity().startService(intent);
         }
     }
 

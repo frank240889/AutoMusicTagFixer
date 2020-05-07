@@ -187,18 +187,6 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
     }
 
     @Override
-    protected void onSaveInstanceState(@NonNull Bundle outState) {
-        super.onSaveInstanceState(outState);
-        outState.putString("test", "HOlaaaa");
-    }
-
-    @Override
-    protected void onRestoreInstanceState(@NonNull Bundle savedInstanceState) {
-        super.onRestoreInstanceState(savedInstanceState);
-        Toast.makeText(this, savedInstanceState.getString("test", "no se guardo"), Toast.LENGTH_SHORT).show();
-    }
-
-    @Override
     protected void onResume() {
         super.onResume();
         int nightMode = AppCompatDelegate.getDefaultNightMode();

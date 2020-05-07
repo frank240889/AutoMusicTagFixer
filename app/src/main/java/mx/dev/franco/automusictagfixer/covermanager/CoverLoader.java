@@ -169,9 +169,11 @@ public class CoverLoader {
         CoverTask coverTask = null;
         byte[] data = mCoverDataCache.load(id);
         if(data != null) {
+            Log.w(getInstance().getClass().getName(), "Cover extracted from cache");
             loadCover(audioItemHolder, data);
         }
         else {
+            Log.w(getInstance().getClass().getName(), "Cover no cached yet.");
             coverTask = sInstance.mCoverTaskQueue.poll();
             // If the queue was empty, create a new task instead.
             if (null == coverTask) {
