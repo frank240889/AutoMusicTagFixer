@@ -25,6 +25,7 @@
         <item name="actionOverflowMenuStyle">@style/Widget.MaterialComponents.PopupMenu.Overflow</item>
         <item name="android:navigationBarColor">@color/dark_gray</item>
         <item name="popupMenuStyle">@style/ShapeAppearanceOverlay.AutomusicTagFixer.PopupMenu</item>
+        <item name="fontFamily">@font/montserrat_google</item>
     </style>
 
     <style name="AppTheme.NoActivityTransition.AutomusicTagFixer" parent="AppTheme">

@@ -24,10 +24,10 @@ public class FoundItemHolder extends AudioHolder implements View.OnClickListener
 
     public FoundItemHolder(View itemView, ClickListener clickListener) {
         super(itemView);
-        cover =  itemView.findViewById(R.id.found_cover_art);
-        trackName = itemView.findViewById(R.id.found_track_name);
-        artistName = itemView.findViewById(R.id.found_artist_name);
-        albumName = itemView.findViewById(R.id.found_album_name);
+        cover =  itemView.findViewById(R.id.iv_found_cover_art);
+        trackName = itemView.findViewById(R.id.tv_found_track_name);
+        artistName = itemView.findViewById(R.id.tv_found_track_artist_name);
+        albumName = itemView.findViewById(R.id.tv_found_track_album_name);
         mListener = clickListener;
         cover.setOnClickListener(this);
         itemView.setOnClickListener(this);

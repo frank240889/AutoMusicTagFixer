@@ -4,18 +4,25 @@ import android.app.Application;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.ArrayMap;
+
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MediatorLiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Transformations;
+
 import com.google.android.material.snackbar.Snackbar;
 import com.gracenote.gnsdk.GnException;
+
+import org.jaudiotagger.tag.FieldKey;
+
 import java.util.List;
 import java.util.Map;
+
 import javax.annotation.Nonnull;
 import javax.inject.Inject;
+
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.common.Action;
 import mx.dev.franco.automusictagfixer.filemanager.FileManager;
@@ -35,7 +42,6 @@ import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
 import mx.dev.franco.automusictagfixer.utilities.Resource;
 import mx.dev.franco.automusictagfixer.utilities.SnackbarMessage;
-import org.jaudiotagger.tag.FieldKey;
 
 public class TrackDetailViewModel extends AndroidViewModel {
 
@@ -256,7 +262,7 @@ public class TrackDetailViewModel extends AndroidViewModel {
         mResultWriting.setValue(writingResult.getData());
         mLiveInformativeMessage.setValue(R.string.changes_applied);
         boolean deleteCoverFromCache = (writingResult.getTaskExecuted() != AudioTagger.MODE_RENAME_FILE)
-                || writingResult.getData().containsKey(FieldKey.COVER_ART);
+                || (writingResult.getData() != null && writingResult.getData().containsKey(FieldKey.COVER_ART));
         if (deleteCoverFromCache)
             mResultsCache.delete(getCurrentTrack().getMediaStoreId()+"");
     }
@@ -318,7 +324,6 @@ public class TrackDetailViewModel extends AndroidViewModel {
      */
     public void performCorrection(CorrectionParams correctionParams) {
         mLoadingStateMerger.setValue(true);
-        mLiveInformativeMessage.setValue(R.string.applying_tags);
         correctionParams.setTarget(getCurrentTrack().getPath());
 
         if(correctionParams.getTagsSource() == Constants.MANUAL) {
@@ -326,7 +331,7 @@ public class TrackDetailViewModel extends AndroidViewModel {
         }
         else {
             int codeRequest = correctionParams.getCorrectionMode();
-
+            mLiveInformativeMessage.setValue(R.string.applying_tags);
             switch (codeRequest) {
                 case AudioTagger.MODE_ADD_COVER:
                     performAddCoverCorrection(correctionParams);
@@ -487,9 +492,11 @@ public class TrackDetailViewModel extends AndroidViewModel {
             AndroidUtils.createInputParams(title,
                     artist,album, genre, trackNumber, trackYear, cover, correctionParams);
             correctionParams.setCorrectionMode(AudioTagger.MODE_OVERWRITE_ALL_TAGS);
+            mLiveInformativeMessage.setValue(R.string.applying_tags);
             mTrackManager.performCorrection(correctionParams);
         }
         else {
+            mLoadingStateMerger.setValue(false);
             validationWrapper.setMessage(R.string.empty_tag);
             mInputsInvalidLiveData.setValue(validationWrapper);
         }

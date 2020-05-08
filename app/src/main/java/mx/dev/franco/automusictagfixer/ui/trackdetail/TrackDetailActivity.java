@@ -7,6 +7,7 @@ import android.graphics.ImageDecoder;
 import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.transition.Transition;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -116,11 +117,25 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
                     bundle.getInt(MEDIA_STORE_ID),
                     bundle.getInt(MODE));
 
-        getSupportFragmentManager().beginTransaction().
-                replace(R.id.track_detail_container_fragments, mTrackDetailFragment).
-                commit();
-
         setupMediaPlayer();
+
+        getWindow().getSharedElementEnterTransition().addListener(new Transition.TransitionListener() {
+            @Override
+            public void onTransitionStart(Transition transition) {}
+            @Override
+            public void onTransitionCancel(Transition transition) {}
+            @Override
+            public void onTransitionPause(Transition transition) {}
+            @Override
+            public void onTransitionResume(Transition transition) {}
+
+            @Override
+            public void onTransitionEnd(Transition transition) {
+                getSupportFragmentManager().beginTransaction().
+                        replace(R.id.track_detail_container_fragments, mTrackDetailFragment).
+                        commit();
+            }
+        });
     }
 
     @Override

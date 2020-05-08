@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/cl_content_track"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?android:attr/selectableItemBackground">
+
+    <ImageView
+        android:id="@+id/iv_cover_art"
+        android:layout_width="@dimen/image_view_cover_item"
+        android:layout_height="@dimen/image_view_cover_item"
+        android:layout_centerVertical="true"
+        android:layout_marginStart="8dp"
+        android:clickable="true"
+        android:focusable="true"
+        android:transitionName="cover_art_element"
+        android:visibility="visible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/ic_album_white_24px" />
+
+    <TextView
+        android:id="@+id/tv_item_track_name"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="false"
+        android:layout_alignParentEnd="false"
+        android:layout_marginStart="4dp"
+        android:drawableStart="@drawable/ic_music_note_white_24px"
+        android:ellipsize="end"
+        android:gravity="center_vertical"
+        android:maxLines="1"
+        android:singleLine="true"
+        android:textSize="@dimen/default_title_track_item_size"
+        app:layout_constraintBottom_toBottomOf="@+id/iv_cover_art"
+        app:layout_constraintEnd_toStartOf="@+id/gl_checkbox_separator"
+        app:layout_constraintStart_toEndOf="@+id/iv_cover_art"
+        app:layout_constraintTop_toTopOf="@+id/iv_cover_art"
+        tools:text="Mi Historia Entre Tus Dedos" />
+
+
+    <com.google.android.material.checkbox.MaterialCheckBox
+        android:id="@+id/cb_item_checkable_state"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginStart="4dp"
+        android:layout_marginEnd="4dp"
+        android:checked="false"
+        android:clickable="true"
+        android:focusable="true"
+        android:minWidth="0dp"
+        android:minHeight="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="@+id/gl_checkbox_separator"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <androidx.core.widget.ContentLoadingProgressBar
+        android:id="@+id/pb_item_track_progress_correction"
+        style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:indeterminate="true"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/iv_cover_art" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/gl_checkbox_separator"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.9" />
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

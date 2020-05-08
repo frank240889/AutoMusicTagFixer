@@ -116,6 +116,7 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
 
             mMessage.setText(message.getBody());
             Snackbar snackbar = AndroidUtils.createSnackbar(mSwipeRefreshLayout, message.isDismissible());
+            snackbar.setText(message.getBody());
             snackbar.show();
         });
         mViewModel.getTracks().observe(this, tracks -> {

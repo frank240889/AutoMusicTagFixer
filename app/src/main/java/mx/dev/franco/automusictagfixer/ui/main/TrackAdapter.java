@@ -59,7 +59,7 @@ public class TrackAdapter extends RecyclerView.Adapter<AudioItemHolder> {
     @Override
     public AudioItemHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View itemView = LayoutInflater.from(parent.getContext()).
-                inflate(R.layout.main_item_card, parent, false);
+                inflate(R.layout.track_item, parent, false);
         return new AudioItemHolder(itemView, mListener);
     }
 
@@ -77,8 +77,6 @@ public class TrackAdapter extends RecyclerView.Adapter<AudioItemHolder> {
             Bundle o = (Bundle) payloads.get(0);
                 if (o.getString("title") != null)
                     holder.trackName.setText(o.getString("title"));
-                if (o.getString("artist") != null)
-                    holder.artistName.setText(o.getString("artist"));
 
                 holder.checkBox.setChecked(o.getInt("checked") == 1);
 
@@ -105,7 +103,7 @@ public class TrackAdapter extends RecyclerView.Adapter<AudioItemHolder> {
         Track track = asyncListDiffer.getCurrentList().get(position);
         holder.checkBox.setChecked(track.checked() == 1);
         holder.trackName.setText(track.getTitle());
-        holder.artistName.setText(track.getArtist());
+        //holder.artistName.setText(track.getArtist());
         if (track.processing() == 1) {
             holder.progressBar.setVisibility(View.VISIBLE);
             holder.checkBox.setVisibility(INVISIBLE);

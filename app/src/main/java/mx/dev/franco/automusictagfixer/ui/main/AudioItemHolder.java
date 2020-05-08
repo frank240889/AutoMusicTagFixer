@@ -30,13 +30,13 @@ public class AudioItemHolder extends AudioHolder implements View.OnClickListener
 
     public AudioItemHolder(View itemView, ClickListener clickListener) {
         super(itemView);
-        checkBox = itemView.findViewById(R.id.check_box);
+        checkBox = itemView.findViewById(R.id.cb_item_checkable_state);
         checkBox.setChecked(false);
-        trackName = itemView.findViewById(R.id.track_name);
-        artistName = itemView.findViewById(R.id.artist_name);
+        trackName = itemView.findViewById(R.id.tv_item_track_name);
+        //artistName = itemView.findViewById(R.id.artist_name);
         //albumName = itemView.findViewById(R.id.album_name);
-        progressBar =  itemView.findViewById(R.id.progress_processing_file);
-        cover = itemView.findViewById(R.id.cover_art);
+        progressBar =  itemView.findViewById(R.id.pb_item_track_progress_correction);
+        cover = itemView.findViewById(R.id.iv_cover_art);
         //stateMark = itemView.findViewById(R.id.status_mark);
         mListener = clickListener;
         checkBox.setOnClickListener(this);
@@ -53,10 +53,10 @@ public class AudioItemHolder extends AudioHolder implements View.OnClickListener
     public void onClick(View v) {
         if (mListener != null) {
             switch (v.getId()){
-                case R.id.check_box:
+                case R.id.cb_item_checkable_state:
                         mListener.onCheckboxClick(getAdapterPosition());
                     break;
-                case R.id.cover_art:
+                case R.id.iv_cover_art:
                         mListener.onCoverClick(getAdapterPosition(), v);
                     break;
                 default:

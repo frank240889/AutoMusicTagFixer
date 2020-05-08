@@ -45,7 +45,7 @@
             android:scrollbarStyle="outsideOverlay"
             android:scrollbarThumbVertical="@drawable/custom_scrollbar_thumb"
             android:scrollbars="vertical"
-            tools:listitem="@layout/main_item"
+            tools:listitem="@layout/track_item"
             app:layout_behavior="@string/appbar_scrolling_view_behavior">
         </androidx.recyclerview.widget.RecyclerView>
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
