@@ -155,6 +155,7 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
         mTrackDetailViewModel.observeTrackLoaded().observe(this, track ->
                 mIdentificationManager.
                         setIdentificationType(IdentificationManager.ALL_TAGS).
+                        verifyConnection(false).
                         startIdentification(track));
         mTrackDetailViewModel.observeErrorWriting().observe(this, this::showSnackbarMessage);
 
@@ -434,6 +435,7 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
 
             mIdentificationManager
                     .setIdentificationType(IdentificationManager.ALL_TAGS)
+                    .verifyConnection(false)
                     .startIdentification(mTrackDetailViewModel.getCurrentTrack());
         });
 
@@ -680,6 +682,7 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
                     case R.id.action_identify_cover:
                             mIdentificationManager.
                                     setIdentificationType(IdentificationManager.ONLY_COVER).
+                                    verifyConnection(false).
                                     startIdentification(mTrackDetailViewModel.getCurrentTrack());
                         break;
                     case R.id.action_update_cover:

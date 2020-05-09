@@ -42,12 +42,9 @@ public class AboutFragment extends BaseFragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         //Set an action bar
-        //mToolbar = view.findViewById(R.id.toolbar);
         //Set UI elements
         MaterialButton shareButton = view.findViewById(R.id.share_button);
         MaterialButton rateButton = view.findViewById(R.id.rate_button);
-        MaterialButton drawerButton = view.findViewById(R.id.drawer_button);
-        MaterialButton jaudiotaggerButton = view.findViewById(R.id.jaudio_tagger_button);
         MaterialButton contactButton = view.findViewById(R.id.bug_report_button);
         //Set listener for UI elements
         shareButton.setOnClickListener(v -> {
@@ -67,20 +64,11 @@ public class AboutFragment extends BaseFragment {
         contactButton.setOnClickListener(v ->
                 AndroidUtils.openInExternalApp(Intent.ACTION_SENDTO,
                         "mailto: dark.yellow.studios@gmail.com", getActivity()));
-
-        jaudiotaggerButton.setOnClickListener(v ->
-                AndroidUtils.openInExternalApp(Intent.ACTION_VIEW,
-                        "http://www.jthink.net/jaudiotagger/", getActivity()));
-
-        drawerButton.setOnClickListener(v ->
-                AndroidUtils.openInExternalApp(Intent.ACTION_VIEW,
-                        "https://tgs266.deviantart.com/", getActivity()));
     }
 
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        //((MainActivity)getActivity()).actionBarDrawerToggle.syncState();
         ((MainActivity)getActivity()).actionBar.setTitle(getString(R.string.about));
         ((MainActivity)getActivity()).startTaskFab.hide();
     }

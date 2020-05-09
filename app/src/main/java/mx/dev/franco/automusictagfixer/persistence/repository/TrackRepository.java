@@ -74,7 +74,6 @@ public class TrackRepository {
         mTracks = mTrackDao.getAllTracks(sqLiteQuery);
 
         mMediatorTrackData.addSource(mTracks, tracks -> {
-            //mMediatorTrackData.removeSource(mTracks);
             if(tracks == null || tracks.size() == 0) {
                 mMediatorTrackData.setValue(Resource.error(new ArrayList<>()));
             }

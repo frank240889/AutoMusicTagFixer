@@ -13,6 +13,7 @@
     <dimen name="image_view_cover_item">64dp</dimen>
 
     <dimen name="track_detail_cover_size">470dp</dimen>
-    <dimen name="default_title_track_item_size">20sp</dimen>
+    <dimen name="default_title_track_item_size">18sp</dimen>
+    <dimen name="cv_default_elevation">4dp</dimen>
 
 </resources>

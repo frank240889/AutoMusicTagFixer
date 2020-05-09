@@ -25,7 +25,7 @@
         <item name="actionOverflowMenuStyle">@style/Widget.MaterialComponents.PopupMenu.Overflow</item>
         <item name="android:navigationBarColor">@color/dark_gray</item>
         <item name="popupMenuStyle">@style/ShapeAppearanceOverlay.AutomusicTagFixer.PopupMenu</item>
-        <item name="fontFamily">@font/montserrat_google</item>
+        <item name="fontFamily">@font/montserrat</item>
     </style>
 
     <style name="AppTheme.NoActivityTransition.AutomusicTagFixer" parent="AppTheme">
@@ -35,6 +35,7 @@
 
     <style name="SettingsTheme" parent="Theme.MaterialComponents.DayNight">
         <item name="colorPrimary">@color/primaryColor</item>
+        <item name="colorAccent">@color/accentPreferenceCategoryTextColor</item>
         <item name="colorControlNormal">@color/colorControlNormal</item>
         <item name="colorControlActivated">@color/colorControlActivated</item>
         <item name="actionBarStyle">@style/Widget.AutomusicTagFixer.ActionBar</item>
@@ -52,6 +53,7 @@
         <item name="actionOverflowMenuStyle">@style/Widget.MaterialComponents.PopupMenu.Overflow</item>
         <item name="android:navigationBarColor">@color/dark_gray</item>
         <item name="popupMenuStyle">@style/ShapeAppearanceOverlay.AutomusicTagFixer.PopupMenu</item>
+        <item name="fontFamily">@font/montserrat</item>
     </style>
 
     <style name="ShapeAppearance.MyApp.SmallComponent" parent="ShapeAppearance.MaterialComponents.SmallComponent">

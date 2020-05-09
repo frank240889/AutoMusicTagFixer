@@ -9,8 +9,8 @@ import javax.inject.Inject;
 import mx.dev.franco.automusictagfixer.utilities.resource_manager.ResourceManager;
 
 public class IdentifierFactory {
-    public static final int FINGERPRINT_IDENTIFIER = 1;
-    public static final int METADATA_IDENTIFIER = 2;
+    public static final int FINGERPRINT_IDENTIFIER = 0;
+    public static final int METADATA_IDENTIFIER = 1;
 
     private GnApiService gnApiService;
     private ResourceManager resourceManager;
@@ -26,6 +26,6 @@ public class IdentifierFactory {
         if(identifierType == FINGERPRINT_IDENTIFIER)
             return new AudioFingerprintIdentifier(gnApiService, resourceManager);
         else
-            return null;
+            return new AudioMetadataIdentifier(gnApiService, resourceManager);
     }
 }

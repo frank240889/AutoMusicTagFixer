@@ -95,10 +95,10 @@ public class AndroidUtils {
     public static Snackbar createSnackbar(@NonNull View view, boolean dismissible) {
         Snackbar snackbar;
         if (dismissible) {
-            snackbar = getNoDismissibleSnackbar(view, view.getContext());
+            snackbar = getSnackbar(view, view.getContext());
         }
         else {
-            snackbar = getSnackbar(view, view.getContext());
+            snackbar = getNoDismissibleSnackbar(view, view.getContext());
         }
 
         return snackbar;
@@ -112,6 +112,7 @@ public class AndroidUtils {
 
     private static Snackbar getNoDismissibleSnackbar(@NonNull View viewToAttach, @NonNull Context context){
         Snackbar snackbar = getSnackbar(viewToAttach, context);
+        snackbar.setDuration(Snackbar.LENGTH_INDEFINITE);
         snackbar.setBehavior(new Snackbar.Behavior(){
             @Override
             public boolean canSwipeDismissView(View child) {

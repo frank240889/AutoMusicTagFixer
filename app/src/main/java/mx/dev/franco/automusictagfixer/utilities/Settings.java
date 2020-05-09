@@ -19,46 +19,47 @@ public class Settings {
         GnImageSize size;
         switch (preferenceSaved){
             case "-1":
-                size = null;
-                break;
+                return null;
             case "0":
-                size = GnImageSize.kImageSizeThumbnail;
-                break;
+                return GnImageSize.kImageSizeThumbnail;
             case "1":
-                size = GnImageSize.kImageSizeSmall;
-                break;
+                return GnImageSize.kImageSizeSmall;
             case "5":
-                size = GnImageSize.kImageSizeMedium;
-                break;
+                return GnImageSize.kImageSizeMedium;
             case "7":
-                size = GnImageSize.kImageSize720;
-                break;
+                return GnImageSize.kImageSize720;
             case "10":
-                size = GnImageSize.kImageSize1080;
-                break;
+                return GnImageSize.kImageSize1080;
             case "1000":
-                size= GnImageSize.kImageSizeXLarge;
-                break;
-                default:
-                    size = GnImageSize.kImageSize1080;
-                    break;
+                return GnImageSize.kImageSizeXLarge;
         }
-        return size;
+        return GnImageSize.kImageSize1080;
     }
 
     public static GnLanguage setValueLanguage(String preferenceSaved){
         GnLanguage language = null;
         switch (preferenceSaved){
             case "0":
-                language = GnLanguage.kLanguageSpanish;
-                break;
+                return GnLanguage.kLanguageSpanish;
             case "1":
-                language = GnLanguage.kLanguageEnglish;
-                break;
-            default:
-                language = GnLanguage.kLanguageSpanish;
-                break;
+                return GnLanguage.kLanguageEnglish;
+            case "2":
+                return GnLanguage.kLanguageGerman;
+            case "3":
+                return GnLanguage.kLanguageFrench;
+            case "4":
+                return GnLanguage.kLanguageItalian;
+            case "5":
+                return GnLanguage.kLanguagePortuguese;
+            case "6":
+                return GnLanguage.kLanguageRussian;
+            case "7":
+                return GnLanguage.kLanguageChineseTraditional;
+            case "8":
+                return GnLanguage.kLanguageJapanese;
+            case "9":
+                return GnLanguage.kLanguageKorean;
         }
-        return language;
+        return GnLanguage.kLanguageSpanish;
     }
 }

@@ -4,6 +4,7 @@
     <color name="primaryLightColor">#484848</color>
     <color name="primaryDarkColor">#121212</color>
     <color name="secondaryTextColor">#ffffff</color>
+    <color name="accentPreferenceCategoryTextColor">#fdd835</color>
 
     <color name="colorControlNormal">#ffffdd</color>
     <color name="colorControlActivated">#fdd835</color>

@@ -40,15 +40,7 @@ public class TrackAdapter extends RecyclerView.Adapter<AudioItemHolder> {
     }
 
     @Override
-    public void onAttachedToRecyclerView(@NonNull RecyclerView recyclerView) {
-        serviceUtils = ServiceUtils.getInstance(recyclerView.getContext());
-    }
-
-    @Override
     public void onDetachedFromRecyclerView(@NonNull RecyclerView recyclerView) {
-        serviceUtils = null;
-        if (mListener instanceof AsyncListDiffer.ListListener)
-            asyncListDiffer.removeListListener((AsyncListDiffer.ListListener<Track>) mListener);
         mListener = null;
         CoverLoader.cancelAll();
     }
