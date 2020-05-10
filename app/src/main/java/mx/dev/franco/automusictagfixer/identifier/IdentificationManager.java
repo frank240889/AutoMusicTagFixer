@@ -2,11 +2,13 @@ package mx.dev.franco.automusictagfixer.identifier;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.util.ArrayMap;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
+import androidx.preference.PreferenceManager;
 
 import com.gracenote.gnsdk.GnImageSize;
 
@@ -75,6 +77,8 @@ public class IdentificationManager implements Cancelable<Void> {
      */
     private SingleLiveEvent<Integer> mSuccessIdentification;
 
+    private IdentifierFactory mIdentifierFactory;
+
     @Inject
     public IdentificationManager(@NonNull IdentificationResultsCache cache,
                                  @NonNull IdentifierFactory identifierFactory,
@@ -84,8 +88,7 @@ public class IdentificationManager implements Cancelable<Void> {
         mApiService = gnApiService;
         mContext = context;
         mResultsCache = cache;
-        mIdentifier = identifierFactory.create(IdentifierFactory.FINGERPRINT_IDENTIFIER);
-
+        mIdentifierFactory = identifierFactory;
         mObservableMessage = new SingleLiveEvent<>();
         mObservableLoadingMessage = new SingleLiveEvent<>();
         mSuccessIdentification = new SingleLiveEvent<>();
@@ -173,6 +176,9 @@ public class IdentificationManager implements Cancelable<Void> {
                 mObservableMessage.setValue(msg);
             }
             else {
+                SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(mContext);
+                int identifier = Integer.parseInt(sharedPreferences.getString("key_identification_strategy", "0"));
+                mIdentifier = mIdentifierFactory.create(identifier);
                 mIdentifier.registerCallback(new IdentificationListener<List<? extends Identifier.IdentificationResults>>() {
                     @Override
                     public void onIdentificationStart() {

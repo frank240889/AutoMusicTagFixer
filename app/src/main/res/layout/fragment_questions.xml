@@ -1,10 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/cv_content_questions"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:clickable="true"
-    android:background="@color/primaryBackground">
+    android:padding="@dimen/default_margin"
+    app:cardElevation="@dimen/cv_default_elevation"
+    app:cardUseCompatPadding="true">
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/questions_recyclerview"
             android:layout_width="match_parent"
@@ -16,4 +19,4 @@
             android:scrollbars="vertical"
             android:layout_height="match_parent"
             app:layout_behavior="@string/appbar_scrolling_view_behavior"/>
-</FrameLayout>
+</com.google.android.material.card.MaterialCardView>

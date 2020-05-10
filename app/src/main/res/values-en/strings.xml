@@ -76,8 +76,32 @@
     <string-array name="pref_language_titles">
         <item>Spanish</item>
         <item>English</item>
+        <item>German</item>
+        <item>French</item>
+        <item>Italian</item>
+        <item>Portuguese</item>
+        <item>Russian</item>
+        <item>Chinese</item>
+        <item>Japanese</item>
+        <item>Korean</item>
     </string-array>
     <string-array name="pref_languages_values">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+        <item>5</item>
+        <item>6</item>
+        <item>7</item>
+        <item>8</item>
+        <item>9</item>
+    </string-array>
+    <string-array name="pref_identification_strategy">
+        <item>Audio fingerprint</item>
+        <item>Audio metadata</item>
+    </string-array>
+    <string-array name="pref_identification_strategy_values">
         <item>0</item>
         <item>1</item>
     </string-array>
@@ -300,4 +324,9 @@
     <string name="from_results">De resultados</string>
     <string name="identify_track_first">Identifica la canción primero.</string>
     <string name="please_wait_until_automatic_mode_finished">Corrección en curso, espera por favor...</string>
+    <string name="identification_strategy">Estrategia de identificación</string>
+    <string name="identification_strategy_summary">El tipo de identicación a usar.</string>
+    <string name="identification_strategy_title">Identificador</string>
+    <string name="identification">Identificación</string>
+    <string name="message_restart_current_task">Reinicia la correción en progreso.</string>
 </resources>

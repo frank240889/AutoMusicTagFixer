@@ -25,6 +25,7 @@ import javax.inject.Inject;
 
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.common.Action;
+import mx.dev.franco.automusictagfixer.covermanager.CoverLoader;
 import mx.dev.franco.automusictagfixer.filemanager.FileManager;
 import mx.dev.franco.automusictagfixer.filemanager.ImageFileSaver;
 import mx.dev.franco.automusictagfixer.fixer.AudioTagger;
@@ -261,10 +262,11 @@ public class TrackDetailViewModel extends AndroidViewModel {
     private void onWritingResult(AudioTagger.AudioTaggerResult<Map<FieldKey, Object>> writingResult) {
         mResultWriting.setValue(writingResult.getData());
         mLiveInformativeMessage.setValue(R.string.changes_applied);
-        boolean deleteCoverFromCache = (writingResult.getTaskExecuted() != AudioTagger.MODE_RENAME_FILE)
-                || (writingResult.getData() != null && writingResult.getData().containsKey(FieldKey.COVER_ART));
+        boolean deleteCoverFromCache = (writingResult.getTaskExecuted() == AudioTagger.MODE_OVERWRITE_ALL_TAGS) ||
+                (writingResult.getTaskExecuted() == AudioTagger.MODE_ADD_COVER) ||
+                (writingResult.getTaskExecuted() == AudioTagger.MODE_REMOVE_COVER);
         if (deleteCoverFromCache)
-            mResultsCache.delete(getCurrentTrack().getMediaStoreId()+"");
+            CoverLoader.removeCover(getCurrentTrack().getMediaStoreId()+"");
     }
 
     /**

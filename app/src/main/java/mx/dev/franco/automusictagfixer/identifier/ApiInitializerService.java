@@ -10,6 +10,7 @@ import androidx.annotation.Nullable;
 
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
+import mx.dev.franco.automusictagfixer.utilities.Settings;
 
 /**
  * @author Franco Castillo
@@ -21,7 +22,7 @@ public class ApiInitializerService extends Service {
     @Override
     public void onCreate() {
         mThread = new Thread(() -> {
-            GnApiService.getInstance(this).initializeAPI(null);
+            GnApiService.getInstance(this).initializeAPI(Settings.SETTING_LANGUAGE);
             Handler handler = new Handler(Looper.getMainLooper());
             if(GnApiService.getInstance(this).isApiInitialized()) {
                 handler.post(() ->

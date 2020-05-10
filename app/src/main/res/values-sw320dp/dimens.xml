@@ -4,5 +4,5 @@
     <dimen name="image_view_cover_item">48dp</dimen>
     <dimen name="default_margin">8dp</dimen>
     <dimen name="track_detail_cover_size">400dp</dimen>
-    <dimen name="default_title_track_item_size">18sp</dimen>
+    <dimen name="default_title_track_item_size">16sp</dimen>
 </resources>

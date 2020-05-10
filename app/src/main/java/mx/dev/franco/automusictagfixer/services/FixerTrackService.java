@@ -72,7 +72,7 @@ import static mx.dev.franco.automusictagfixer.persistence.repository.AsyncOperat
  * if app is closed.
  */
 
-public class FixerTrackService extends Service {
+public class FixerTrackService extends Service implements SharedPreferences.OnSharedPreferenceChangeListener {
     public static String CLASS_NAME = FixerTrackService.class.getName();
 
     @Inject
@@ -101,7 +101,9 @@ public class FixerTrackService extends Service {
     private Handler mHandler = new Handler(Looper.getMainLooper());
     private AtomicBoolean mCancelled = new AtomicBoolean(false);
     private Thread mCorrectionParamsThread;
-
+    private boolean mBackgroundCorrection = true;
+    private Track mCurrentTrack;
+    private int mIdentifierType = IdentifierFactory.METADATA_IDENTIFIER;
 
     /**
      * Creates a Service.  Invoked by your subclass's constructor.
@@ -114,8 +116,12 @@ public class FixerTrackService extends Service {
     public void onCreate(){
         AndroidInjection.inject(this);
         super.onCreate();
-        mIdentifier =  mIdentifierFactory.create(IdentifierFactory.FINGERPRINT_IDENTIFIER);
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        mSharedPreferences.registerOnSharedPreferenceChangeListener(this);
+        mBackgroundCorrection = mSharedPreferences.getBoolean("key_background_service", true);
+        mIdentifierType = Integer.parseInt(mSharedPreferences.getString("key_identification_strategy", "1"));
+        mIdentifier =  mIdentifierFactory.create(mIdentifierType);
+
     }
 
     /**
@@ -139,10 +145,6 @@ public class FixerTrackService extends Service {
                     Intent.ACTION_MEDIA_UNMOUNTED.equals(action)){
                 mCancelled.set(true);
                 actionStopTask();
-                /*stopTasks();
-                broadcastMessage(getString(R.string.task_cancelled));
-                broadcastCompleteCorrection();
-                stopServiceAndRemoveFromForeground();*/
             }
             //Service is running and correction task is about to begin.
             else {
@@ -154,6 +156,7 @@ public class FixerTrackService extends Service {
 
     @Override
     public void onDestroy() {
+        mSharedPreferences.unregisterOnSharedPreferenceChangeListener(this);
         this.mTrackWriter = null;
         this.mTrackLoader = null;
         this.mCorrectionParamsThread = null;
@@ -168,6 +171,7 @@ public class FixerTrackService extends Service {
             @Override
             public void onAsyncOperationFinished(Track track) {
                 if (track != null) {
+                    mCurrentTrack = track;
                     startIdentification(track);
                 }
                 else {
@@ -284,6 +288,9 @@ public class FixerTrackService extends Service {
                     return;
 
                 Map<String, String> map = new ArrayMap<>();
+                map.put(Identifier.Field.TITLE.name(), track.getTitle());
+                map.put(Identifier.Field.ARTIST.name(), track.getArtist());
+                map.put(Identifier.Field.ALBUM.name(), track.getAlbum());
                 map.put(Identifier.Field.FILENAME.name(), track.getPath());
                 track.setProcessing(1);
                 TrackUpdaterSync trackUpdaterSync = new TrackUpdaterSync(new AsyncOperation<Void, Integer, Void, Void>() {
@@ -420,13 +427,15 @@ public class FixerTrackService extends Service {
     }
 
     private void onStartIdentification(Track track) {
-        startNotification(AudioTagger.getPath(track.getPath()),
-                getString(R.string.correction_in_progress),
-                getString(R.string.identifying), track.getMediaStoreId());
+        if (mBackgroundCorrection)
+            startNotification(AudioTagger.getPath(track.getPath()),
+                    getString(R.string.correction_in_progress),
+                    getString(R.string.identifying), track.getMediaStoreId());
     }
 
     private void identificationError(String error, Track track) {
-        startNotification(getString(R.string.correction_in_progress), "", error, track.getMediaStoreId() );
+        if (mBackgroundCorrection)
+            startNotification(getString(R.string.correction_in_progress), "", error, track.getMediaStoreId() );
         broadcastMessage(error);
     }
 
@@ -436,12 +445,14 @@ public class FixerTrackService extends Service {
     }
 
     private void finishTrack(Track track) {
-        startNotification(AudioTagger.getFilename(track.getPath()),
+        if (mBackgroundCorrection)
+            startNotification(AudioTagger.getFilename(track.getPath()),
                 getString(R.string.success), "", track.getMediaStoreId() );
     }
 
     private void onCorrectionStarted(Track track) {
-        startNotification(AudioTagger.getFilename(track.getPath()), getString(R.string.starting_correction),
+        if (mBackgroundCorrection)
+            startNotification(AudioTagger.getFilename(track.getPath()), getString(R.string.starting_correction),
                 getString(R.string.applying_tags), track.getMediaStoreId() );
     }
 
@@ -514,16 +525,6 @@ public class FixerTrackService extends Service {
         stopSelf();
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O)
             stopForeground(true);
-    }
-
-    private void stopTasks(){
-        stopIdentification();
-        if (mCorrectionParamsThread != null && !mCorrectionParamsThread.isInterrupted())
-            mCorrectionParamsThread.interrupt();
-        if (mTrackLoader != null)
-            mTrackLoader.cancel(true);
-        if (mTrackWriter != null)
-            mTrackWriter.cancel(true);
     }
 
     private void broadcastStartingCorrection(){
@@ -621,6 +622,26 @@ public class FixerTrackService extends Service {
             notificationManager.createNotificationChannel(chan);
         }
         return channelId;
+    }
+
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        if ("key_background_service".equals(key)) {
+            mBackgroundCorrection = sharedPreferences.getBoolean(key, true);
+            if (!mBackgroundCorrection) {
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O)
+                    stopForeground(true);
+                else
+                    stopForeground(Service.STOP_FOREGROUND_REMOVE);
+            } else {
+                onStartIdentification(mCurrentTrack);
+            }
+        }
+        else if("key_identification_strategy".equals(key)) {
+            AndroidUtils.showToast(R.string.message_restart_current_task, this);
+            mCancelled.set(true);
+            actionStopTask();
+        }
     }
 }
 

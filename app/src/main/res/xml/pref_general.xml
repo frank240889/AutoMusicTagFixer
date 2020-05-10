@@ -1,7 +1,27 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
     <PreferenceCategory
+        android:title="@string/identification">
+        <ListPreference
+            android:defaultValue="1"
+            android:entries="@array/pref_identification_strategy"
+            android:entryValues="@array/pref_identification_strategy_values"
+            android:key="key_identification_strategy"
+            android:negativeButtonText="@null"
+            android:positiveButtonText="@null"
+            android:summary="@string/identification_strategy_summary"
+            android:title="@string/identification_strategy" />
+        <ListPreference
+            android:defaultValue="0"
+            android:entries="@array/pref_language_titles"
+            android:entryValues="@array/pref_languages_values"
+            android:key="key_language"
+            android:negativeButtonText="@null"
+            android:positiveButtonText="@null"
+            android:title="@string/pref_title_language"
+            android:summary="@string/pref_language_description"/>
+    </PreferenceCategory>
+    <PreferenceCategory
         android:title="@string/automatic_mode">
-
         <SwitchPreference
             android:defaultValue="true"
             android:key="key_rename_file_automatic_mode"
@@ -43,17 +63,5 @@
             android:key="key_enable_sd_card_access"
             android:summary="@string/pref_enable_sd_card_access_description"
             android:title="@string/pref_title_enable_sd_card_access" />
-    </PreferenceCategory>
-    <PreferenceCategory
-        android:title="@string/identification_results_language">
-        <ListPreference
-            android:defaultValue="0"
-            android:entries="@array/pref_language_titles"
-            android:entryValues="@array/pref_languages_values"
-            android:key="key_language"
-            android:negativeButtonText="@null"
-            android:positiveButtonText="@null"
-            android:title="@string/pref_title_language"
-            android:summary="@string/pref_language_description"/>
     </PreferenceCategory>
 </PreferenceScreen>

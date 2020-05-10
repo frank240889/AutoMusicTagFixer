@@ -1,78 +1,51 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/container_about"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:clickable="true"
-    android:background="@color/primaryBackground"
-    app:layout_behavior="@string/appbar_scrolling_view_behavior">
-
-    <ImageView
-        android:id="@+id/logo"
-        android:layout_width="256dp"
-        android:layout_height="256dp"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginTop="16dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.496"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/splash" />
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/share_button"
-        android:layout_width="wrap_content"
+<com.google.android.material.card.MaterialCardView
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/cv_content_about"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="32dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        android:text="@string/share"
-        app:layout_constraintTop_toBottomOf="@+id/logo"
-        app:icon="@drawable/ic_menu_share"/>
+        android:padding="@dimen/default_margin"
+        app:cardElevation="@dimen/cv_default_elevation"
+        app:cardUseCompatPadding="true">
+    <LinearLayout
+        android:id="@+id/ll_content_about"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+        <ImageView
+            android:id="@+id/logo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="@dimen/default_margin"
+            android:layout_gravity="center_horizontal"
+            app:srcCompat="@drawable/splash" />
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/rate_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="@string/rate"
-        app:icon="@drawable/ic_star_black_24dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/share_button" />
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/share_button"
+            style="@style/Widget.AutomusicTagFixer.OutlinedButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="@dimen/default_margin"
+            android:text="@string/share"
+            app:icon="@drawable/ic_menu_share"/>
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/drawer_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="@string/drawer"
-        app:icon="@drawable/ic_public_white_24dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/rate_button" />
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/rate_button"
+            style="@style/Widget.AutomusicTagFixer.OutlinedButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="@dimen/default_margin"
+            android:text="@string/rate"
+            app:icon="@drawable/ic_star_black_24dp" />
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/jaudio_tagger_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="@string/jaudio_credits"
-        app:icon="@drawable/ic_public_white_24dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/drawer_button" />
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/bug_report_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="@string/contact"
-        app:icon="@drawable/ic_email_white_24px"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/jaudio_tagger_button" />
-</androidx.constraintlayout.widget.ConstraintLayout>
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/bug_report_button"
+            style="@style/Widget.AutomusicTagFixer.OutlinedButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="@dimen/default_margin"
+            android:text="@string/contact"
+            app:icon="@drawable/ic_email_white_24px" />
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>
