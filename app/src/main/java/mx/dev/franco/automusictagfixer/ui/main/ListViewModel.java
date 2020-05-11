@@ -1,7 +1,6 @@
 package mx.dev.franco.automusictagfixer.ui.main;
 
 import android.app.Application;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -49,6 +48,7 @@ public class ListViewModel extends AndroidViewModel {
     private MediaStoreManager mMediaStoreManager;
     private MediatorLiveData<Boolean> mLoadingState = new MediatorLiveData<>();
     private boolean mIsSorting = false;
+    private boolean mHasAccessStoragePermission = false;
 
 
     @Inject
@@ -60,7 +60,6 @@ public class ListViewModel extends AndroidViewModel {
 
         mTrackRepository = trackRepository;
         mMediaStoreManager = mediaStoreManager;
-        mMediaStoreManager.registerMediaContentObserver();
 
         mServiceUtils = serviceUtils;
 
@@ -68,9 +67,7 @@ public class ListViewModel extends AndroidViewModel {
                 mLoadingState.setValue(aBoolean));
         mLoadingState.addSource(mTrackRepository.observeLoading(), aBoolean ->
                 mLoadingState.setValue(aBoolean));
-
         mResultsAudioFilesMediaStore = getMediaStoreResults();
-        Log.e(getClass().getName(), "CONSTRUCTOR");
     }
 
     public LiveData<ViewWrapper> observeAccessibleTrack(){
@@ -249,9 +246,19 @@ public class ListViewModel extends AndroidViewModel {
         return mIsSorting;
     }
 
+    public void setAccessMediaPermission(boolean hasAccessStoragePermission) {
+        mHasAccessStoragePermission = hasAccessStoragePermission;
+    }
+
+    public void addMediaObserver() {
+        if (mHasAccessStoragePermission)
+            mMediaStoreManager.registerMediaContentObserver();
+    }
+
     @Override
     protected void onCleared() {
-        mMediaStoreManager.unregisterMediaContentObserver();
+        if (mHasAccessStoragePermission)
+            mMediaStoreManager.unregisterMediaContentObserver();
     }
 
     List<Track> getTrackList() {

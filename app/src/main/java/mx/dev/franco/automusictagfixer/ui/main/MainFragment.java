@@ -190,8 +190,11 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
                 mViewModel.notifyPermissionNotGranted();
                 requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
                         RequiredPermissions.WRITE_EXTERNAL_STORAGE_PERMISSION);
+                mViewModel.setAccessMediaPermission(false);
             }
             else {
+                mViewModel.setAccessMediaPermission(true);
+                mViewModel.addMediaObserver();
                 boolean isPresentSD = storageHelper.isPresentRemovableStorage();
                 if(AndroidUtils.getUriSD(getActivity()) == null && isPresentSD) {
                     startActivityForResult(new Intent(getActivity(), SdCardInstructionsActivity.class),
