@@ -40,7 +40,6 @@ import mx.dev.franco.automusictagfixer.utilities.shared_preferences.AbstractShar
 public final class AutoMusicTagFixer extends Application implements HasActivityInjector, HasServiceInjector {
     public static final String DARK_MODE = BuildConfig.APPLICATION_ID + ".dark_mode";
 
-
     private static ExecutorService executorService;
     @Inject
     DispatchingAndroidInjector<Activity> dispatchingAndroidInjector;

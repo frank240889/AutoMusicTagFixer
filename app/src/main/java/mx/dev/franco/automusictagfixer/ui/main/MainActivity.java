@@ -1,11 +1,12 @@
 package mx.dev.franco.automusictagfixer.ui.main;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.Configuration;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.PersistableBundle;
 import android.view.MenuItem;
 import android.view.View;
@@ -40,7 +41,6 @@ import dagger.android.DispatchingAndroidInjector;
 import dagger.android.support.HasSupportFragmentInjector;
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.interfaces.AutomaticTaskListener;
-import mx.dev.franco.automusictagfixer.receivers.ResponseReceiver;
 import mx.dev.franco.automusictagfixer.services.FixerTrackService;
 import mx.dev.franco.automusictagfixer.ui.BaseFragment;
 import mx.dev.franco.automusictagfixer.ui.BaseViewModelFragment;
@@ -59,8 +59,7 @@ import static mx.dev.franco.automusictagfixer.utilities.Constants.Actions.ACTION
 import static mx.dev.franco.automusictagfixer.utilities.Constants.Actions.ACTION_START_TASK;
 import static mx.dev.franco.automusictagfixer.utilities.Constants.Actions.START_PROCESSING_FOR;
 
-public class MainActivity extends AppCompatActivity implements ResponseReceiver.OnResponse,
-        NavigationView.OnNavigationItemSelectedListener,
+public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener,
     HasSupportFragmentInjector {
     public static String TAG = MainActivity.class.getName();
 
@@ -80,7 +79,7 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
     AboutFragment mAboutFragment;
     QuestionsFragment mQuestionsFragment;
     // The receiver that handles the broadcasts from FixerTrackService
-    private ResponseReceiver mReceiver;
+    private BroadcastReceiver mReceiver;
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
@@ -125,24 +124,15 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
                 mAbstractSharedPreferences.putBoolean(DARK_MODE, false);
                 mDrawerLayout.addDrawerListener(new DrawerLayout.DrawerListener() {
                     @Override
-                    public void onDrawerSlide(@NonNull View drawerView, float slideOffset) {
-
-                    }
-
+                    public void onDrawerSlide(@NonNull View drawerView, float slideOffset) {}
                     @Override
-                    public void onDrawerOpened(@NonNull View drawerView) {
-
-                    }
-
+                    public void onDrawerOpened(@NonNull View drawerView) {}
+                    @Override
+                    public void onDrawerStateChanged(int newState) {}
                     @Override
                     public void onDrawerClosed(@NonNull View drawerView) {
                         mDrawerLayout.removeDrawerListener(this);
                         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
-                    }
-
-                    @Override
-                    public void onDrawerStateChanged(int newState) {
-
                     }
                 });
                 mDrawerLayout.closeDrawers();
@@ -153,18 +143,15 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
                 mDrawerLayout.addDrawerListener(new DrawerLayout.DrawerListener() {
                     @Override
                     public void onDrawerSlide(@NonNull View drawerView, float slideOffset) {}
-
                     @Override
                     public void onDrawerOpened(@NonNull View drawerView) {}
-
+                    @Override
+                    public void onDrawerStateChanged(int newState) {}
                     @Override
                     public void onDrawerClosed(@NonNull View drawerView) {
                         mDrawerLayout.removeDrawerListener(this);
                         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
                     }
-
-                    @Override
-                    public void onDrawerStateChanged(int newState) {}
                 });
                 mDrawerLayout.closeDrawers();
             }
@@ -229,7 +216,6 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
     public void onDestroy() {
         super.onDestroy();
         LocalBroadcastManager.getInstance(getApplicationContext()).unregisterReceiver(mReceiver);
-        mReceiver.clearReceiver();
         mReceiver = null;
     }
 
@@ -272,7 +258,12 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
         IntentFilter broadcastMessageFilter = new IntentFilter(ACTION_BROADCAST_MESSAGE);
         IntentFilter broadcastOpenMainActivity = new IntentFilter(ACTION_OPEN_MAIN_ACTIVITY);
 
-        mReceiver = new ResponseReceiver(this, new Handler());
+        mReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                processIntent(intent);
+            }
+        };
 
         LocalBroadcastManager localBroadcastManager = LocalBroadcastManager.getInstance(getApplicationContext());
 
@@ -420,9 +411,7 @@ public class MainActivity extends AppCompatActivity implements ResponseReceiver.
      * Handles responses from {@link FixerTrackService}
      * @param intent
      */
-    @Override
-    public void onResponse(Intent intent) {
-
+    private void processIntent(Intent intent) {
         //get action and handle it
         String action = intent.getAction();
         int id = intent.getIntExtra(Constants.MEDIA_STORE_ID, -1);

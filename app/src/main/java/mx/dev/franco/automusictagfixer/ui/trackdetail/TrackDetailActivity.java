@@ -1,7 +1,10 @@
 package mx.dev.franco.automusictagfixer.ui.trackdetail;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.graphics.ImageDecoder;
 import android.net.Uri;
@@ -20,6 +23,7 @@ import androidx.core.content.ContextCompat;
 import androidx.databinding.DataBindingUtil;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.google.android.material.appbar.AppBarLayout;
 import com.google.android.material.snackbar.Snackbar;
@@ -48,6 +52,7 @@ import mx.dev.franco.automusictagfixer.utilities.SnackbarMessage;
 
 import static android.view.View.GONE;
 import static android.view.View.VISIBLE;
+import static mx.dev.franco.automusictagfixer.utilities.Constants.Actions.ACTION_BROADCAST_MESSAGE;
 import static mx.dev.franco.automusictagfixer.utilities.Constants.CorrectionActions.MODE;
 import static mx.dev.franco.automusictagfixer.utilities.Constants.MEDIA_STORE_ID;
 
@@ -82,6 +87,7 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
     private Snackbar mNoDismissibleSnackbar;
     private MenuItem mRenameTrackItem;
     private AppBarLayout.OnOffsetChangedListener mOffsetChangeListener;
+    private BroadcastReceiver mReceiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -136,6 +142,7 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
                         commit();
             }
         });
+        setupReceivers();
     }
 
     @Override
@@ -209,6 +216,7 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(mReceiver);
         mIdentificationManager.cancel();
         if (mNoDismissibleSnackbar != null)
             mNoDismissibleSnackbar.dismiss();
@@ -264,7 +272,10 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
                     msg = getString(R.string.saf_denied);
                 }
 
-                AndroidUtils.createSnackbar(mViewDataBinding.rootContainerDetails, true).show();
+                AndroidUtils.
+                        createSnackbar(mViewDataBinding.rootContainerDetails, true).
+                        setText(msg).
+                        show();
                 break;
         }
     }
@@ -784,6 +795,35 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
         else {
             mViewDataBinding.progressView.setVisibility(GONE);
             enableEditModeElements();
+        }
+    }
+
+    /**
+     * Allows to register filters to handle
+     * only certain actions sent by FixerTrackService
+     */
+    private void setupReceivers() {
+        IntentFilter broadcastMessageFilter = new IntentFilter(ACTION_BROADCAST_MESSAGE);
+
+        mReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                processIntent(intent);
+            }
+        };
+
+        LocalBroadcastManager localBroadcastManager = LocalBroadcastManager.getInstance(getApplicationContext());
+        localBroadcastManager.registerReceiver(mReceiver, broadcastMessageFilter);
+    }
+
+    private void processIntent(Intent intent) {
+        //get action and handle it
+        String action = intent.getAction();
+        if (ACTION_BROADCAST_MESSAGE.equals(action)) {
+            String message = intent.getStringExtra("message");
+            if (message != null) {
+                onLoadingMessage(message);
+            }
         }
     }
 }

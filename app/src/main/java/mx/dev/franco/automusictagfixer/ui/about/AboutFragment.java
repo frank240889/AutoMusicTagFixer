@@ -4,6 +4,7 @@ import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -16,7 +17,16 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.ShareCompat;
 
+import com.android.billingclient.api.BillingClient;
+import com.android.billingclient.api.BillingClientStateListener;
+import com.android.billingclient.api.BillingFlowParams;
+import com.android.billingclient.api.BillingResult;
+import com.android.billingclient.api.SkuDetails;
+import com.android.billingclient.api.SkuDetailsParams;
 import com.google.android.material.button.MaterialButton;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.ui.BaseFragment;
@@ -25,11 +35,36 @@ import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
 import mx.dev.franco.automusictagfixer.utilities.Constants;
 
 public class AboutFragment extends BaseFragment {
-
+    BillingClient billingClient;
     public AboutFragment(){}
 
     public static AboutFragment newInstance() {
         return new AboutFragment();
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        billingClient = BillingClient.
+                newBuilder(requireActivity()).
+                enablePendingPurchases().
+                setListener((billingResult, list) -> {
+
+                }).
+                build();
+
+
+        billingClient.startConnection(new BillingClientStateListener() {
+            @Override
+            public void onBillingSetupFinished(BillingResult billingResult) {
+                Log.e(getClass().getName(), billingResult.getResponseCode()+"");
+            }
+
+            @Override
+            public void onBillingServiceDisconnected() {
+
+            }
+        });
     }
 
     @Nullable
@@ -43,9 +78,11 @@ public class AboutFragment extends BaseFragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         //Set an action bar
         //Set UI elements
-        MaterialButton shareButton = view.findViewById(R.id.share_button);
-        MaterialButton rateButton = view.findViewById(R.id.rate_button);
-        MaterialButton contactButton = view.findViewById(R.id.bug_report_button);
+        MaterialButton shareButton = view.findViewById(R.id.mb_share);
+        MaterialButton rateButton = view.findViewById(R.id.mb_rate);
+        MaterialButton contactButton = view.findViewById(R.id.mb_bug_report);
+        MaterialButton githubButton = view.findViewById(R.id.mb_github);
+        MaterialButton monetizationButton = view.findViewById(R.id.mb_donations);
         //Set listener for UI elements
         shareButton.setOnClickListener(v -> {
             String shareSubText = getString(R.string.app_name) + " " + getString(R.string.share);
@@ -64,6 +101,30 @@ public class AboutFragment extends BaseFragment {
         contactButton.setOnClickListener(v ->
                 AndroidUtils.openInExternalApp(Intent.ACTION_SENDTO,
                         "mailto: dark.yellow.studios@gmail.com", getActivity()));
+
+        githubButton.setOnClickListener(v -> {
+            Uri uri = Uri.parse("https://github.com/frank240889/AutoMusicTagFixer");
+            Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+            startActivity(intent);
+        });
+
+        monetizationButton.setOnClickListener(v -> {
+            List<String> skuList = new ArrayList<>();
+            skuList.add("automusictagfixer2008350092");
+            SkuDetailsParams.Builder params =  SkuDetailsParams.
+                    newBuilder().
+                    setSkusList(skuList).
+                    setType(BillingClient.SkuType.INAPP);
+            billingClient.querySkuDetailsAsync(params.build(), (billingResult, list) -> {
+                for (SkuDetails skuDetails : list) {
+                    Log.e(billingClient.getClass().getName(), skuDetails.getSku());
+                }
+                BillingFlowParams flowParams = BillingFlowParams.newBuilder().
+                        setSkuDetails(list.get(0)).
+                        build();
+                billingClient.launchBillingFlow(requireActivity(), flowParams);
+            });
+        });
     }
 
     @Override

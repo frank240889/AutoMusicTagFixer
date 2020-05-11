@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name" translatable="false">AutoMusicTagFixer</string>
+    <string name="appname" translatable="false">AutoMusicTagFixer</string>
 
     <string name="welcome">¡Bienvenido!</string>
     <string name="step_1">AutoMusicTagFixer te ayudará a mantener más organizada tu biblioteca musical.</string>
@@ -282,7 +282,7 @@
     <string name="identification_results_language">Idioma</string>
     <string name="pixels">Píxeles</string>
     <string name="missing_cover">Sin carátula</string>
-    <string name="app_version" translatable="false">v1.1</string>
+    <string name="app_version" translatable="false">v2.0</string>
     <string name="results_found">%1$d Coincidencias encontradas</string>
     <string name="cover_found">Carátula(s) encontrada(s)</string>
     <string name="loading_data_track">Cargando información de canción…</string>
@@ -348,10 +348,16 @@
     <string name="sd_track_message">Las canciones en la SD tardan unos segundos más en corregirse.</string>
     <string name="from_results">De resultados</string>
     <string name="identify_track_first">Identifica la canción primero.</string>
-    <string name="please_wait_until_automatic_mode_finished">Corrección en curso, espera por favor...</string>
+    <string name="please_wait_until_automatic_mode_finished">Corrección en curso, espera por favor…</string>
     <string name="identification_strategy">Estrategia de identificación</string>
     <string name="identification_strategy_summary">El tipo de estrategia de identificación a usar.</string>
     <string name="identification_strategy_title">Estrategia</string>
     <string name="identification">Identificación</string>
     <string name="message_restart_current_task">Reinicia la correción en progreso.</string>
+    <string name="github_repo">Repositorio</string>
+    <string name="about_text">Esta aplicación se ha hecho sin fines de lucro,
+        al final puedes encontrar el enlace al repositorio del código, puedes hacer un fork, probarla, mejorarla, o como material de estudio, se han usado
+        una variedad de librerías que puedes revisar en el archivo Gradle, además de patrones de diseño y prácticas recomendadas por Google. Toma en cuenta
+    que el código, la arquitectura y en general la aplicación siempre es mejorable. Si te ha servido puedes considerar hacer una donación.</string>
+    <string name="donations">Donaciones</string>
 </resources>

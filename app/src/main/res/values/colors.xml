@@ -32,48 +32,13 @@
 
     <color name="background_loading_color">#424242</color>
 
+    <color name="lineThumb">#212121</color>
+    <color name="thumb">#fdd835</color>
+
+
     <!--Fixed colors-->
     <color name="dark_gray_semitransparent">#ff212121</color>
     <color name="white">#ffffff</color>
 
-    <!--color name="primaryColor">#ffd600</color>
-    <color name="primaryLightColor">#ffff52</color>
-    <color name="primaryDarkColor">#c7a500</color>
-    <color name="secondaryColor">#ffd600</color>
-    <color name="secondaryLightColor">#ffff52</color>
-    <color name="secondaryDarkColor">#c7a500</color>
-    <color name="primaryTextColor">@color/dark_gray</color>
-    <color name="secondaryTextColor">@color/gray</color>
-
-    <color name="colorControlActivated">@color/dark_gray</color>
-    <color name="colorControlHighlight">@color/dark_gray</color>
-    <color name="iconColor">@color/dark_gray</color>
-
-    <color name="appBarLayoutTintColor">#FFFFFFFF</color>
-    <color name="bottomToolbarColorControlNormal">#000000</color>
-    <color name="bottomToolbarIconTintColor">#000000</color>
-    <color name="bottomToolbarOverflowTextColor">#CCCCCC</color>
-    <color name="fabColor">#ffd600</color>
-    <color name="primaryColorButton">#ffd600</color>
-    <color name="progressSwipeRefreshLayoutBackgroundTint">@color/dark_gray</color>
-    <color name="progressTintSwipeRefreshLayout">#ffd600</color>
-    <color name="previewItemListDrawableColor">#000000</color>
-    <color name="snackbarBackgroundColor">@color/gray</color>
-    <color name="snackbarTextColor">@color/primaryColor</color>
-    
-    <color name="introBackgroundColor">#ffd600</color>
-    <color name="introFabBackgroundColor">@color/dark_gray</color>
-
-    <color name="toolbarColor">#FFFFFFFF</color>
-    <color name="upperToolbarColorControlNormal">#000000</color>
-
-    <color name="textPrimary">#12121212</color>
-    <color name="textSecondary">#555555</color>
-    <color name="primaryBackground">#FFFFFF</color>
-    <color name="white">#FFFFFFFF</color>
-    <color name="black">#000000</color>
-    <color name="dark_gray">#121212</color>
-    <color name="gray">#212121</color>
-    <color name="light_gray">#424242</color-->
 </resources>
     

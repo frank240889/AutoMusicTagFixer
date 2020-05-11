@@ -2,8 +2,9 @@ package mx.dev.franco.automusictagfixer.identifier;
 
 import android.content.Context;
 import android.util.Log;
+
 import androidx.annotation.Nullable;
-import androidx.collection.ArrayMap;
+
 import com.crashlytics.android.Crashlytics;
 import com.gracenote.gnsdk.GnDescriptor;
 import com.gracenote.gnsdk.GnException;
@@ -16,65 +17,24 @@ import com.gracenote.gnsdk.GnRegion;
 import com.gracenote.gnsdk.GnString;
 import com.gracenote.gnsdk.GnUser;
 import com.gracenote.gnsdk.GnUserStore;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+
 import java.util.UUID;
+
+import mx.dev.franco.automusictagfixer.BuildConfig;
 
 /**
  * @author Franco Castillo
  */
 public class GnApiService {
-    public interface OnEventApiListener {
-        void onApiInitialized();
-        void onApiError(String error);
-    }
-
-
-    public static final String BEGIN_PROCESSING = "kMusicIdFileCallbackStatusProcessingBegin";
-    public static final String QUERYING_INFO = "kMusicIdFileCallbackStatusFileInfoQuery";
-    public static final String COMPLETE_IDENTIFICATION = "kMusicIdFileCallbackStatusProcessingComplete";
-    public static final String STATUS_ERROR = "kMusicIdFileCallbackStatusError";
-    public static final String STATUS_PROCESSING_ERROR = "kMusicIdFileCallbackStatusProcessingError";
-    public static final String BEGIN_PROCESSING_MSG = "Iniciando identificación...";
-    public static final String QUERYING_INFO_MSG = "Identificando, espere por favor...";
-    public static final String COMPLETE_IDENTIFICATION_MSG = "Identificación completa";
-    public static final String STATUS_ERROR_MSG = "Error";
-    public static final String STATUS_PROCESSING_ERROR_MSG = "Error al procesar ";
-    private static final int MAX_RETRIES = 5;
-
+    private static GnApiService sInstance;
+    private volatile boolean mApiInitialized = false;
+    private volatile boolean mIsInitializing = false;
     private Context mContext;
     private GnManager mGnManager;
     private GnUser mGnUser;
     private GnLocale mGnLocale;
-    private static GnApiService sInstance;
-
-    /******************Data required by API*****************************/
-    private static final String sGnsdkLicenseString =
-    "-- BEGIN LICENSE v1.0 0B64261A --\\r\\nname: \\r\\nnotes: " +
-            "Gracenote Open Developer Program\\r\\nstart_date: " +
-            "0000-00-00\\r\\nclient_id: 297011532\\r\\nmusicid_file: " +
-            "enabled\\r\\nmusicid_text: enabled\\r\\nmusicid_stream: " +
-            "enabled\\r\\nmusicid_cd: enabled\\r\\nplaylist: " +
-            "enabled\\r\\nvideoid: enabled\\r\\nvideo_explore: " +
-            "enabled\\r\\nlocal_images: enabled\\r\\nlocal_mood: " +
-            "enabled\\r\\nvideoid_explore: enabled\\r\\nacr: enabled\\r\\nepg: " +
-            "enabled\\r\\n-- SIGNATURE 0B64261A --\\r\\nlAADAgAeLXKgVttVCmTzGU8Lixv" +
-            "2VY0nKZECLARnmGWPPmpdAB8Bgp+dp5HRX8tQLJh1OvmV1ipXLqr6oy6Ds3ClSOE8\\r\\n-- " +
-            "END LICENSE 0B64261A --\\r\\n";
-
-    private static final String sGnsdkClientId = "297011532";
-    private static final String sGnsdkClientTag = "6CB01DB21FA7F47FDBF1FD6DCDFA8E88";
-    private static final String sAppString = "AutomaticMusicTagFixer";
-    /******************************************************************/
-
-    private volatile boolean mApiInitialized = false;
-    private volatile boolean mIsInitializing = false;
-    private int mCounter = 0;
-    private Map<String,String> mGnStatusToDisplay;
     private volatile GnLanguage mLanguage;
     private volatile GnException mInitializationError;
-    private List<OnEventApiListener> mListeners;
 
     /**
      * We don't need instances of this class
@@ -82,18 +42,7 @@ public class GnApiService {
     private GnApiService(Context context){
         if(mContext == null) {
             mContext = context.getApplicationContext();
-            mListeners = new ArrayList<>();
-            initStates();
         }
-    }
-
-    private void initStates() {
-        mGnStatusToDisplay = new ArrayMap<>();
-        mGnStatusToDisplay.put(BEGIN_PROCESSING,BEGIN_PROCESSING_MSG);
-        mGnStatusToDisplay.put(QUERYING_INFO,QUERYING_INFO_MSG);
-        mGnStatusToDisplay.put(COMPLETE_IDENTIFICATION,COMPLETE_IDENTIFICATION_MSG);
-        mGnStatusToDisplay.put(STATUS_ERROR,STATUS_ERROR_MSG);
-        mGnStatusToDisplay.put(STATUS_PROCESSING_ERROR,STATUS_PROCESSING_ERROR_MSG);
     }
 
     public static synchronized GnApiService getInstance(Context context) {
@@ -102,29 +51,13 @@ public class GnApiService {
         }
         return sInstance;
     }
-
-    public void addListener(OnEventApiListener listener) {
-        mListeners.add(listener);
-    }
     
     /**
      * Initializes the API making a max of {@link #MAX_RETRIES}.
      */
-    private void initializeAPI(){
+    private void internalInitializeAPI(@Nullable GnLanguage language){
         if(!isApiInitialized() && !isApiInitializing()) {
-            initApi();
-            if(isApiInitialized()) {
-                mCounter = 0;
-            }
-            else {
-                mCounter++;
-                if(mCounter <= MAX_RETRIES) {
-                    initializeAPI();
-                }
-                else {
-
-                }
-            }
+            initApi(language);
         }
     }
 
@@ -137,40 +70,40 @@ public class GnApiService {
             mLanguage = GnLanguage.kLanguageSpanish;
         else
             mLanguage = language;
-        initializeAPI();
+        internalInitializeAPI(language);
     }
 
     /**
      * Internal API initialization a setup of values required by API calls.
      */
-    private void initApi() {
+    private void initApi(GnLanguage gnLanguage) {
         setApiInitializing(true);
         try {
             GnManager gnManager = new GnManager(mContext.getApplicationContext(),
-                    sGnsdkLicenseString,
+                    BuildConfig.GNSDK_API_KEY,
                     GnLicenseInputMode.kLicenseInputModeString);
             setGnManager(gnManager);
             GnUserStore gnUserStore = new GnUserStore(
                     mContext.getApplicationContext());
 
             GnUser gnUser;
-            GnString gnStringId = gnUserStore.loadSerializedUser(sGnsdkClientId);
+            GnString gnStringId = gnUserStore.loadSerializedUser(BuildConfig.GNSDK_CLIENT_ID);
 
             if (!gnStringId.isEmpty() && !"null".equals(gnStringId.toString())) {
                 gnUser = new GnUser(gnStringId.toString());
             }
             else {
                 String randomId = UUID.randomUUID().toString();
-                gnUserStore.storeSerializedUser(sGnsdkClientId, randomId);
+                gnUserStore.storeSerializedUser(BuildConfig.GNSDK_CLIENT_ID, randomId);
                 gnUser = new GnUser(gnUserStore,
-                        sGnsdkClientId,
-                        sGnsdkClientTag,
-                        GnApiService.sAppString);
+                        BuildConfig.GNSDK_CLIENT_ID,
+                        BuildConfig.GNSDK_CLIENT_TAG,
+                        BuildConfig.APP_STRING);
             }
 
             setGnUser(gnUser);
             GnLocale gnLocale = new GnLocale(GnLocaleGroup.kLocaleGroupMusic,
-                    mLanguage,
+                    gnLanguage,
                     GnRegion.kRegionGlobal,
                     GnDescriptor.kDescriptorDetailed,
                     gnUser);
@@ -240,9 +173,5 @@ public class GnApiService {
 
     public GnLanguage getLanguage() {
         return mLanguage;
-    }
-
-    public Map<String, String> getStates() {
-        return mGnStatusToDisplay;
     }
 }

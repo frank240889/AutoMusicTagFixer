@@ -32,6 +32,9 @@
 
     <color name="background_loading_color">#fdd835</color>
 
+    <color name="lineThumb">#fdd835</color>
+    <color name="thumb">#212121</color>
+
 
     <!--color name="primaryColor">#212121</color>
     <color name="primaryLightColor">#484848</color>

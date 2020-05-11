@@ -29,7 +29,7 @@
         android:choiceMode="singleChoice"
         android:clipToPadding="false"
         android:overScrollMode="always"
-        android:scrollbarThumbVertical="@drawable/custom_scrollbar_thumb"
+        android:scrollbarThumbVertical="@drawable/thumb"
         android:scrollbars="vertical"
         tools:listitem="@layout/result_search_item"/>
 </com.google.android.material.card.MaterialCardView>

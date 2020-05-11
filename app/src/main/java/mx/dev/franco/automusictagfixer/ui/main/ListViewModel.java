@@ -60,6 +60,7 @@ public class ListViewModel extends AndroidViewModel {
 
         mTrackRepository = trackRepository;
         mMediaStoreManager = mediaStoreManager;
+        mMediaStoreManager.registerMediaContentObserver();
 
         mServiceUtils = serviceUtils;
 
@@ -175,7 +176,7 @@ public class ListViewModel extends AndroidViewModel {
 
     /**
      * Handles the click for items in list.
-     * @param wrapper A {@link ViewWrapper} object containing th info if the item.
+     * @param viewWrapper A {@link ViewWrapper} object containing th info if the item.
      */
     public void onItemClick(ViewWrapper viewWrapper){
         Track track = getTrackList().get(viewWrapper.position);
@@ -205,10 +206,6 @@ public class ListViewModel extends AndroidViewModel {
             mIsSorting = false;
             if(tracks != null && tracks.size() > 0) {
                 checkAllItems();
-            }
-            else {
-                mObservableCheckAllTracks.setValue(false);
-                mObservableMessage.setValue(R.string.please_wait_until_automatic_mode_finished);
             }
         }
     }
@@ -250,6 +247,11 @@ public class ListViewModel extends AndroidViewModel {
 
     public boolean isSortingOperation() {
         return mIsSorting;
+    }
+
+    @Override
+    protected void onCleared() {
+        mMediaStoreManager.unregisterMediaContentObserver();
     }
 
     List<Track> getTrackList() {

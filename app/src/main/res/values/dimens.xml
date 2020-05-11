@@ -15,5 +15,7 @@
     <dimen name="track_detail_cover_size">470dp</dimen>
     <dimen name="default_title_track_item_size">18sp</dimen>
     <dimen name="cv_default_elevation">4dp</dimen>
+    <dimen name="default_app_title_size">20sp</dimen>
+    <dimen name="default_about_text_size">16sp</dimen>
 
 </resources>

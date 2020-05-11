@@ -34,7 +34,7 @@
             android:orientation="vertical"
             android:overScrollMode="always"
             android:scrollbarStyle="outsideOverlay"
-            android:scrollbarThumbVertical="@drawable/custom_scrollbar_thumb"
+            android:scrollbarThumbVertical="@drawable/thumb"
             tools:context="mx.dev.franco.automusictagfixer.ui.sdcardinstructions.SdCardInstructionsActivity">
 
             <TextView

@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name" translatable="false">AutoMusicTagFixer</string>
+    <string name="appname" translatable="false">AutoMusicTagFixer</string>
 
     <string name="welcome">¡Welcome!</string>
     <string name="step_1">AutoMusicTagFixer will help you to keep your music library more organized.</string>
@@ -329,4 +329,7 @@
     <string name="identification_strategy_title">Identificador</string>
     <string name="identification">Identificación</string>
     <string name="message_restart_current_task">Reinicia la correción en progreso.</string>
+    <string name="github_repo">Repositorio</string>
+    <string name="about_text">Esta aplicación se ha hecho sin fines de lucro</string>
+    <string name="donations">Donaciones</string>
 </resources>

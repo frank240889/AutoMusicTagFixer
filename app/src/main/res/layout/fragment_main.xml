@@ -44,13 +44,14 @@
             android:layout_height="match_parent"
             android:splitMotionEvents="false"
             android:clipToPadding="false"
-            android:scrollbarAlwaysDrawVerticalTrack="true"
-            android:overScrollMode="always"
             android:paddingBottom="80dp"
-            android:scrollbarStyle="outsideOverlay"
-            android:scrollbarThumbVertical="@drawable/custom_scrollbar_thumb"
-            android:scrollbars="vertical"
             tools:listitem="@layout/track_item"
+            android:scrollbarSize="18dp"
+            app:fastScrollHorizontalThumbDrawable="@drawable/drawable_thumb"
+            app:fastScrollHorizontalTrackDrawable="@drawable/line_drawable"
+            app:fastScrollVerticalThumbDrawable="@drawable/drawable_thumb"
+            app:fastScrollVerticalTrackDrawable="@drawable/line_drawable"
+            app:fastScrollEnabled="true"
             app:layout_behavior="@string/appbar_scrolling_view_behavior">
         </androidx.recyclerview.widget.RecyclerView>
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>

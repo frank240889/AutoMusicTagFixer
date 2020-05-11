@@ -15,7 +15,7 @@
             android:dividerHeight="0dp"
             android:overScrollMode="always"
             android:scrollbarStyle="outsideOverlay"
-            android:scrollbarThumbVertical="@drawable/custom_scrollbar_thumb"
+            android:scrollbarThumbVertical="@drawable/thumb"
             android:scrollbars="vertical"
             android:layout_height="match_parent"
             app:layout_behavior="@string/appbar_scrolling_view_behavior"/>

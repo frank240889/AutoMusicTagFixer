@@ -31,12 +31,11 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import com.bumptech.glide.Glide;
 import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 
 import java.util.List;
-import java.util.Objects;
 
 import javax.inject.Inject;
 
@@ -81,7 +80,6 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
     //private AppBarLayout mAppBarLayout;
     //private Toolbar mToolbar;
     public ExtendedFloatingActionButton mStartTaskFab;
-    private FloatingActionButton mStopTaskFab;
     private Snackbar mStopCorrectionSnackbar;
     private ConstraintLayout mBlockingLayer;
 
@@ -168,6 +166,23 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
         mRecyclerView.setHapticFeedbackEnabled(true);
         mRecyclerView.setSoundEffectsEnabled(true);
         mRecyclerView.setAdapter(mAdapter);
+        mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
+                if (newState == RecyclerView.SCROLL_STATE_IDLE) {
+                    Glide.with(requireActivity()).resumeRequests();
+                }
+                if (newState == RecyclerView.SCROLL_STATE_DRAGGING
+                        || newState == RecyclerView.SCROLL_STATE_SETTLING) {
+                    Glide.with(requireActivity()).pauseRequests();
+                }
+            }
+
+            @Override
+            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+            }
+        });
 
         mSwipeRefreshLayout.setOnRefreshListener(()->{
             if(ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.WRITE_EXTERNAL_STORAGE)
@@ -579,7 +594,7 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
     private void startCorrection(int id) {
         Intent intent = new Intent(getActivity(),FixerTrackService.class);
         intent.setAction(Constants.Actions.ACTION_START_TASK);
-        Objects.requireNonNull(getActivity()).startService(intent);
+        requireActivity().startService(intent);
     }
 
     private void onCheckAll(Boolean checkAll) {
@@ -589,18 +604,18 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
 
     @Override
     public void onStartAutomaticTask() {
-        mStartTaskFab.hide();
         mBlockingLayer.setVisibility(View.VISIBLE);
-        mStopCorrectionSnackbar = AndroidUtils.createSnackbar(getView(), false);
+        mStartTaskFab.hide();
+        mStopCorrectionSnackbar = AndroidUtils.createSnackbar(mSwipeRefreshLayout, false);
         mStopCorrectionSnackbar.setText(R.string.correction_in_progress);
         mStopCorrectionSnackbar.setAction(R.string.cancel, v -> {
             Intent stopIntent = new Intent(getActivity(), FixerTrackService.class);
             stopIntent.setAction(Constants.Actions.ACTION_STOP_TASK);
             requireActivity().startService(stopIntent);
-            Toast t = AndroidUtils.getToast(requireActivity());
-            t.setDuration(LENGTH_SHORT);
-            t.setText(R.string.cancelling);
-            t.show();
+            Snackbar snackbar = AndroidUtils.createSnackbar(mSwipeRefreshLayout, true);
+            snackbar.setDuration(Snackbar.LENGTH_SHORT);
+            snackbar.setText(R.string.cancelling);
+            snackbar.show();
         });
         mStopCorrectionSnackbar.show();
     }
@@ -737,7 +752,10 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
 
     @Override
     public void onIncomingMessageListener(String message) {
-        AndroidUtils.showToast(message, requireActivity());
+        Snackbar snackbar = AndroidUtils.createSnackbar(mSwipeRefreshLayout, true);
+        snackbar.setText(message);
+        snackbar.setDuration(Snackbar.LENGTH_SHORT);
+        snackbar.show();
     }
 
     private void scrollTo() {

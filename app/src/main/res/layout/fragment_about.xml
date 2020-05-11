@@ -8,44 +8,102 @@
         android:padding="@dimen/default_margin"
         app:cardElevation="@dimen/cv_default_elevation"
         app:cardUseCompatPadding="true">
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/ncv_scrollable_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
     <LinearLayout
         android:id="@+id/ll_content_about"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical">
-        <ImageView
-            android:id="@+id/logo"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:id="@+id/ll_app_title"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="@dimen/default_margin"
-            android:layout_gravity="center_horizontal"
-            app:srcCompat="@drawable/splash" />
-
+            android:orientation="horizontal"
+            android:weightSum="1">
+            <ImageView
+                android:id="@+id/logo"
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:layout_gravity="center_vertical|start"
+                android:layout_margin="@dimen/default_margin"
+                app:srcCompat="@drawable/splash"
+                android:layout_weight="0.3"/>
+            <TextView
+                android:id="@+id/tv_app_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="@dimen/default_app_title_size"
+                android:layout_gravity="center"
+                android:text="@string/appname"
+                android:layout_weight="0.3"/>
+            <TextView
+                android:id="@+id/tv_app_version"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="@dimen/default_app_title_size"
+                android:layout_gravity="center"
+                android:text="@string/app_version"
+                android:layout_weight="0.1"/>
+        </LinearLayout>
+        <TextView
+            android:id="@+id/atv_about_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/default_margin"
+            android:layout_marginEnd="@dimen/default_margin"
+            android:textSize="@dimen/default_about_text_size"
+            android:text="@string/about_text"/>
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/share_button"
+            android:id="@+id/mb_share"
             style="@style/Widget.AutomusicTagFixer.OutlinedButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="@dimen/default_margin"
+            android:layout_marginStart="@dimen/default_margin"
+            android:layout_marginEnd="@dimen/default_margin"
             android:text="@string/share"
             app:icon="@drawable/ic_menu_share"/>
 
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/rate_button"
+            android:id="@+id/mb_rate"
             style="@style/Widget.AutomusicTagFixer.OutlinedButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="@dimen/default_margin"
+            android:layout_marginStart="@dimen/default_margin"
+            android:layout_marginEnd="@dimen/default_margin"
             android:text="@string/rate"
             app:icon="@drawable/ic_star_black_24dp" />
 
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/bug_report_button"
+            android:id="@+id/mb_bug_report"
             style="@style/Widget.AutomusicTagFixer.OutlinedButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="@dimen/default_margin"
+            android:layout_marginStart="@dimen/default_margin"
+            android:layout_marginEnd="@dimen/default_margin"
             android:text="@string/contact"
             app:icon="@drawable/ic_email_white_24px" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/mb_github"
+            style="@style/Widget.AutomusicTagFixer.OutlinedButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/default_margin"
+            android:layout_marginEnd="@dimen/default_margin"
+            android:text="@string/github_repo"
+            app:icon="@drawable/ic_github" />
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/mb_donations"
+            style="@style/Widget.AutomusicTagFixer.OutlinedButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/default_margin"
+            android:layout_marginEnd="@dimen/default_margin"
+            android:text="@string/donations"
+            app:icon="@drawable/ic_monetization_on" />
     </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
 </com.google.android.material.card.MaterialCardView>

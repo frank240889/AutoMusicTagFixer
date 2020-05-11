@@ -1,53 +1,57 @@
 package mx.dev.franco.automusictagfixer.identifier;
 
-import android.app.Service;
+import android.app.IntentService;
 import android.content.Intent;
 import android.os.Handler;
-import android.os.IBinder;
 import android.os.Looper;
 
 import androidx.annotation.Nullable;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
+import mx.dev.franco.automusictagfixer.BuildConfig;
 import mx.dev.franco.automusictagfixer.R;
-import mx.dev.franco.automusictagfixer.utilities.AndroidUtils;
+import mx.dev.franco.automusictagfixer.utilities.Constants;
 import mx.dev.franco.automusictagfixer.utilities.Settings;
 
 /**
  * @author Franco Castillo
  * The service that initialize the GNSDK.
  */
-public class ApiInitializerService extends Service {
-    private Thread mThread;
+public class ApiInitializerService extends IntentService {
+    public static final int MAX_API_INIT_ATTEMPTS = 5;
+    private int mCurrentAttempt = 0;
 
-    @Override
-    public void onCreate() {
-        mThread = new Thread(() -> {
-            GnApiService.getInstance(this).initializeAPI(Settings.SETTING_LANGUAGE);
-            Handler handler = new Handler(Looper.getMainLooper());
-            if(GnApiService.getInstance(this).isApiInitialized()) {
-                handler.post(() ->
-                        AndroidUtils.showToast(R.string.api_connected, ApiInitializerService.this));
-            }
-            else {
-                handler.post(() ->
-                        AndroidUtils.showToast(R.string.could_not_init_api, ApiInitializerService.this));
-            }
-            stopSelf();
-        });
-        mThread.start();
+    /**
+     * Creates an IntentService.  Invoked by your subclass's constructor.
+     *
+     * @param name Used to name the worker thread, important only for debugging.
+     */
+    public ApiInitializerService() {
+        super(BuildConfig.APP_STRING);
     }
 
     @Override
-    public void onDestroy() {
-        if(mThread != null && !mThread.isInterrupted()) {
-            mThread.interrupt();
+    protected void onHandleIntent(@Nullable Intent intent) {
+        GnApiService apiService = GnApiService.getInstance(this);
+        do {
+            apiService.initializeAPI(Settings.SETTING_LANGUAGE);
+            mCurrentAttempt++;
+            if (apiService.isApiInitialized()) break;
         }
-        mThread = null;
+        while (mCurrentAttempt < MAX_API_INIT_ATTEMPTS);
+
+        Handler handler = new Handler(Looper.getMainLooper());
+        if(apiService.isApiInitialized()) {
+            handler.post(() -> broadcastMessage(getString(R.string.api_connected)));
+        }
+        else {
+            handler.post(() -> broadcastMessage(getString(R.string.could_not_init_api)));
+        }
     }
 
-    @Nullable
-    @Override
-    public IBinder onBind(Intent intent) {
-        return null;
+    private void broadcastMessage(String message) {
+        Intent intent = new Intent(Constants.Actions.ACTION_BROADCAST_MESSAGE);
+        intent.putExtra("message", message);
+        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
     }
 }

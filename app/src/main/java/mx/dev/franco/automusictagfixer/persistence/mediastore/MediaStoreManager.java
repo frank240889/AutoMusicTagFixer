@@ -1,7 +1,11 @@
 package mx.dev.franco.automusictagfixer.persistence.mediastore;
 
 import android.content.Context;
+import android.database.ContentObserver;
+import android.database.Cursor;
 import android.media.MediaScannerConnection;
+import android.os.Handler;
+import android.provider.MediaStore;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
@@ -30,6 +34,8 @@ public class MediaStoreManager {
     private MediaStoreUpdater mMediaStoreUpdater;
     private Context mContext;
     private TrackDAO mTrackDAO;
+    private ContentObserver mDataSetObserver;
+    private Cursor mDataset;
 
 
     @Inject
@@ -39,6 +45,12 @@ public class MediaStoreManager {
         mLoadingStateLiveData = new SingleLiveEvent<>();
         mMediaStoreResultSingleLiveEvent = new SingleLiveEvent<>();
         mResult = new SingleLiveEvent<>();
+        mDataSetObserver = new ContentObserver(new Handler()) {
+            @Override
+            public void onChange(boolean selfChange) {
+                fetchAudioFiles();
+            }
+        };
 
     }
 
@@ -60,6 +72,31 @@ public class MediaStoreManager {
      */
     public void addFileToMediaStore(String path, MediaScannerConnection.OnScanCompletedListener onScanCompletedListener) {
         MediaStoreHelper.addFileToMediaStore(path, mContext, onScanCompletedListener);
+    }
+
+    public void registerMediaContentObserver() {
+        //Select all music
+        String selection = MediaStore.Audio.Media.IS_MUSIC + " != 0";
+
+        //Columns to retrieve
+        String[] projection = {
+                MediaStore.Audio.Media._ID,
+                MediaStore.Audio.Media.TITLE,
+                MediaStore.Audio.Media.ARTIST,
+                MediaStore.Audio.AlbumColumns.ALBUM ,
+                MediaStore.Audio.Media.DATA // absolute path to audio file
+        };
+
+        mDataset = mContext.getContentResolver().query(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                projection,
+                selection,
+                null,
+                null);
+        mDataset.registerContentObserver(mDataSetObserver);
+    }
+
+    public void unregisterMediaContentObserver() {
+        mDataset.unregisterContentObserver(mDataSetObserver);
     }
 
     /**

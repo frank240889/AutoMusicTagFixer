@@ -396,7 +396,6 @@ public class FixerTrackService extends Service implements SharedPreferences.OnSh
         if (errorCode == AudioTagger.COULD_NOT_GET_URI_SD_ROOT_TREE) {
             errorMessage = getString(R.string.message_uri_tree_not_set);
         } else {
-            int idStringResource;
             switch (errorCode) {
                 case AudioTagger.COULD_NOT_REMOVE_COVER:
                 case AudioTagger.COULD_NOT_APPLY_COVER:
@@ -638,9 +637,11 @@ public class FixerTrackService extends Service implements SharedPreferences.OnSh
             }
         }
         else if("key_identification_strategy".equals(key)) {
-            AndroidUtils.showToast(R.string.message_restart_current_task, this);
             mCancelled.set(true);
             actionStopTask();
+            Intent intent = new Intent(this,FixerTrackService.class);
+            intent.setAction(Constants.Actions.ACTION_START_TASK);
+            startService(intent);
         }
     }
 }
