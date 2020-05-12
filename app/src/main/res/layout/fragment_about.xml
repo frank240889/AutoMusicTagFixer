@@ -1,17 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.google.android.material.card.MaterialCardView
+<androidx.core.widget.NestedScrollView
         xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto"
-        android:id="@+id/cv_content_about"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="@dimen/default_margin"
-        app:cardElevation="@dimen/cv_default_elevation"
-        app:cardUseCompatPadding="true">
-    <androidx.core.widget.NestedScrollView
         android:id="@+id/ncv_scrollable_container"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="match_parent"
+    android:animateLayoutChanges="true">
     <LinearLayout
         android:id="@+id/ll_content_about"
         android:layout_width="match_parent"
@@ -106,4 +100,3 @@
             app:icon="@drawable/ic_monetization_on" />
     </LinearLayout>
     </androidx.core.widget.NestedScrollView>
-</com.google.android.material.card.MaterialCardView>

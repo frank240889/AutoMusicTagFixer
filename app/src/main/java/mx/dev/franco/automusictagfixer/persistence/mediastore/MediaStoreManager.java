@@ -4,6 +4,7 @@ import android.content.Context;
 import android.database.ContentObserver;
 import android.database.Cursor;
 import android.media.MediaScannerConnection;
+import android.net.Uri;
 import android.os.Handler;
 import android.provider.MediaStore;
 
@@ -47,7 +48,8 @@ public class MediaStoreManager {
         mResult = new SingleLiveEvent<>();
         mDataSetObserver = new ContentObserver(new Handler()) {
             @Override
-            public void onChange(boolean selfChange) {
+            public void onChange(boolean selfChange, Uri uri) {
+                super.onChange(selfChange, uri);
                 fetchAudioFiles();
             }
         };

@@ -36,11 +36,19 @@
                 android:layout_height="wrap_content"/>
         </com.google.android.material.appbar.MaterialToolbar>
     </com.google.android.material.appbar.AppBarLayout>
-        <FrameLayout
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/container_fragments"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="@dimen/default_margin"
+            app:cardElevation="@dimen/cv_default_elevation"
+            app:cardUseCompatPadding="true"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior"/>
+        <!--FrameLayout
             android:id="@+id/container_fragments"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            app:layout_behavior="@string/appbar_scrolling_view_behavior"/>
+            app:layout_behavior="@string/appbar_scrolling_view_behavior"/-->
         <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
             android:id="@+id/fab_start_stop"
             android:layout_width="wrap_content"

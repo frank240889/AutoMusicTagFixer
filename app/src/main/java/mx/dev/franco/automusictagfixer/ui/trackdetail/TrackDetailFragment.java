@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.inputmethod.InputMethodManager;
@@ -124,19 +125,19 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
         mFragmentTrackDetailBinding.ibInfoTrack.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                AndroidUtils.showToast(R.string.sd_track_message, TrackDetailFragment.this.getActivity());
+                AndroidUtils.showToast(R.string.sd_track_message, requireActivity());
             }
         });
     }
 
     private void onInputDataInvalid(ValidationWrapper validationWrapper) {
         EditText editText = mFragmentTrackDetailBinding.getRoot().findViewById(validationWrapper.getField());
-        Animation animation = AnimationUtils.loadAnimation(getActivity().getApplicationContext(), R.anim.blink);
+        Animation animation = AnimationUtils.loadAnimation(requireActivity(), R.anim.blink);
         editText.requestFocus();
         editText.setError(getString(validationWrapper.getMessage()));
         editText.setAnimation(animation);
         editText.startAnimation(animation);
-        InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+        InputMethodManager imm = (InputMethodManager) requireActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
         assert imm != null;
         imm.showSoftInput(editText, InputMethodManager.SHOW_IMPLICIT);
     }
@@ -150,18 +151,30 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
         //focus in editing tags
 
         //Enable edit text for edit them
+        //mFragmentTrackDetailBinding.trackNameDetails.setFocusable(true);
         mFragmentTrackDetailBinding.trackNameDetails.setEnabled(true);
-        mFragmentTrackDetailBinding.artistNameDetails.setEnabled(true);
-        mFragmentTrackDetailBinding.albumNameDetails.setEnabled(true);
-        mFragmentTrackDetailBinding.trackNumber.setEnabled(true);
-        mFragmentTrackDetailBinding.trackYear.setEnabled(true);
-        mFragmentTrackDetailBinding.trackGenre.setEnabled(true);
-        mFragmentTrackDetailBinding.changeImageButton.setVisibility(VISIBLE);
         mFragmentTrackDetailBinding.trackNameDetails.requestFocus();
-        InputMethodManager imm =(InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+
+        mFragmentTrackDetailBinding.artistNameDetails.setEnabled(true);
+        //mFragmentTrackDetailBinding.artistNameDetails.setFocusable(true);
+
+        mFragmentTrackDetailBinding.albumNameDetails.setEnabled(true);
+        //mFragmentTrackDetailBinding.albumNameDetails.setFocusable(true);
+
+        mFragmentTrackDetailBinding.trackNumber.setEnabled(true);
+        //mFragmentTrackDetailBinding.trackNumber.setFocusable(true);
+
+        mFragmentTrackDetailBinding.trackYear.setEnabled(true);
+        //mFragmentTrackDetailBinding.trackYear.setFocusable(true);
+
+        mFragmentTrackDetailBinding.trackGenre.setEnabled(true);
+        //mFragmentTrackDetailBinding.trackGenre.setFocusable(true);
+
+        mFragmentTrackDetailBinding.changeImageButton.setVisibility(VISIBLE);
+        InputMethodManager imm =(InputMethodManager) requireActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
         imm.showSoftInput(mFragmentTrackDetailBinding.trackNameDetails,
                 InputMethodManager.SHOW_IMPLICIT);
-        ((TrackDetailActivity)getActivity()).mEditMode = true;
+        ((TrackDetailActivity)requireActivity()).mEditMode = true;
     }
 
     /**
@@ -185,29 +198,43 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
      */
     void disableFields(){
         removeErrorTags();
-        mFragmentTrackDetailBinding.trackNameDetails.clearFocus();
+        //mFragmentTrackDetailBinding.trackNameDetails.setFocusable(false);
         mFragmentTrackDetailBinding.trackNameDetails.setEnabled(false);
+        mFragmentTrackDetailBinding.trackNameDetails.clearFocus();
+
         mFragmentTrackDetailBinding.artistNameDetails.clearFocus();
         mFragmentTrackDetailBinding.artistNameDetails.setEnabled(false);
+        //mFragmentTrackDetailBinding.artistNameDetails.setFocusable(false);
+
         mFragmentTrackDetailBinding.albumNameDetails.clearFocus();
         mFragmentTrackDetailBinding.albumNameDetails.setEnabled(false);
+        //mFragmentTrackDetailBinding.albumNameDetails.setFocusable(false);
+
         mFragmentTrackDetailBinding.trackNumber.clearFocus();
         mFragmentTrackDetailBinding.trackNumber.setEnabled(false);
+        //mFragmentTrackDetailBinding.trackNumber.setFocusable(false);
+
         mFragmentTrackDetailBinding.trackYear.clearFocus();
         mFragmentTrackDetailBinding.trackYear.setEnabled(false);
+        //mFragmentTrackDetailBinding.trackYear.setFocusable(false);
+
         mFragmentTrackDetailBinding.trackGenre.clearFocus();
         mFragmentTrackDetailBinding.trackGenre.setEnabled(false);
+        //mFragmentTrackDetailBinding.trackGenre.setFocusable(false);
 
         mFragmentTrackDetailBinding.changeImageButton.setVisibility(View.GONE);
         //to hide it, call the method again
-        InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+        InputMethodManager imm = (InputMethodManager) requireActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
         try {
             assert imm != null;
-            imm.hideSoftInputFromWindow(getActivity().getCurrentFocus().getWindowToken(), 0);
+            imm.hideSoftInputFromWindow(requireActivity().getCurrentFocus().getWindowToken(), 0);
+            requireActivity().
+                    getWindow().
+                    setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
         }
         catch (Exception ignored){}
 
-        ((TrackDetailActivity)getActivity()).mEditMode = false;
+        ((TrackDetailActivity)requireActivity()).mEditMode = false;
     }
 
     /**

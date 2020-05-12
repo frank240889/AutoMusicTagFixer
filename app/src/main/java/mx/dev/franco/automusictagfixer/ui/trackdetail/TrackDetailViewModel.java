@@ -74,7 +74,7 @@ public class TrackDetailViewModel extends AndroidViewModel {
     private MediatorLiveData<Boolean> mLoadingStateMerger = new MediatorLiveData<>();
     private MediatorLiveData<String> mMessageMerger = new MediatorLiveData<>();
 
-    private SingleLiveEvent<ValidationWrapper> mInputsInvalidLiveData = new SingleLiveEvent<>();
+    private MutableLiveData<ValidationWrapper> mInputsInvalidLiveData = new MutableLiveData<>();
     private SingleLiveEvent<Void> mLiveConfirmationDeleteCover = new SingleLiveEvent<>();
 
     private MediatorLiveData<AudioTagger.AudioFields> mResultReading = new MediatorLiveData<>();

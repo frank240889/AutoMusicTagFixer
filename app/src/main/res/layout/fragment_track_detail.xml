@@ -41,6 +41,7 @@
                     android:visibility="invisible"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
+                    android:focusedByDefault="true"
                     app:srcCompat="@drawable/ic_sms_failed_24dp" />
 
                 <com.google.android.material.textfield.TextInputLayout

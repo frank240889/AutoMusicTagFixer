@@ -158,6 +158,7 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
         mTrackDetailViewModel.observeLoadingMessage().observe(this, this::onLoadingMessage);
         mTrackDetailViewModel.observeReadingResult().observe(this, this::onSuccessLoad);
         mTrackDetailViewModel.observeAudioData().observe(this, aVoid -> {});
+        mTrackDetailViewModel.observeInvalidInputsValidation().observe(this, this::onInputDataInvalid);
         mTrackDetailViewModel.observeWritingFinishedEvent().observe(this, this::onWritingResult);
         mTrackDetailViewModel.observeTrackLoaded().observe(this, track ->
                 mIdentificationManager.
@@ -171,6 +172,10 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
         mTrackDetailViewModel.onMessage().observe(this, this::onLoadingMessage);
         setupIdentificationObserves();
         return true;
+    }
+
+    private void onInputDataInvalid(ValidationWrapper validationWrapper) {
+        mViewDataBinding.fabAutofix.hide();
     }
 
     @Override
@@ -238,6 +243,7 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
         switch (requestCode){
             case INTENT_GET_AND_UPDATE_FROM_GALLERY:
             case INTENT_OPEN_GALLERY:
+                mViewDataBinding.fabAutofix.hide();
                 if (data != null){
                     Uri imageData = data.getData();
                     AndroidUtils.AsyncBitmapDecoder asyncBitmapDecoder = new AndroidUtils.AsyncBitmapDecoder();
@@ -322,7 +328,6 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
     @Override
     public void onCancelManualCorrection() {
         enableEditModeElements();
-        mViewDataBinding.toolbarCoverArt.setEnabled(true);
         mTrackDetailFragment.disableFields();
         enableAppBarLayout();
         mTrackDetailViewModel.restorePreviousValues();

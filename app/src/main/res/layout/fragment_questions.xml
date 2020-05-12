@@ -1,22 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.google.android.material.card.MaterialCardView
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/cv_content_questions"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:padding="@dimen/default_margin"
-    app:cardElevation="@dimen/cv_default_elevation"
-    app:cardUseCompatPadding="true">
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/questions_recyclerview"
-            android:layout_width="match_parent"
-            android:divider="@null"
-            android:dividerHeight="0dp"
-            android:overScrollMode="always"
-            android:scrollbarStyle="outsideOverlay"
-            android:scrollbarThumbVertical="@drawable/thumb"
-            android:scrollbars="vertical"
-            android:layout_height="match_parent"
-            app:layout_behavior="@string/appbar_scrolling_view_behavior"/>
-</com.google.android.material.card.MaterialCardView>
+<androidx.recyclerview.widget.RecyclerView
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/questions_recyclerview"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scrollbarSize="18dp"
+        app:fastScrollHorizontalThumbDrawable="@drawable/drawable_thumb"
+        app:fastScrollHorizontalTrackDrawable="@drawable/line_drawable"
+        app:fastScrollVerticalThumbDrawable="@drawable/drawable_thumb"
+        app:fastScrollVerticalTrackDrawable="@drawable/line_drawable"
+        app:fastScrollEnabled="true"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"/>
