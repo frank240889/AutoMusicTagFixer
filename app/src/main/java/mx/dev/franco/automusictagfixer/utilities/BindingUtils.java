@@ -11,12 +11,15 @@ import androidx.lifecycle.MutableLiveData;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
 import com.bumptech.glide.request.RequestOptions;
+import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton;
 
 import mx.dev.franco.automusictagfixer.R;
 
 public class BindingUtils {
-    @BindingAdapter({"imageCover"})
-    public static void loadImage(ImageView view, MutableLiveData<byte[]> cover) {
+    @BindingAdapter({"imageCover", "attachedFab"})
+    public static void loadImage(ImageView view, MutableLiveData<byte[]> cover, ExtendedFloatingActionButton fab) {
+        //fab.hide();
+        //fab = null;
         DisplayMetrics dm = view.getResources().getDisplayMetrics();
         int screenWidthInPixels = view.getResources().getDisplayMetrics().widthPixels;
         float screenWidthInDp = screenWidthInPixels / dm.density;

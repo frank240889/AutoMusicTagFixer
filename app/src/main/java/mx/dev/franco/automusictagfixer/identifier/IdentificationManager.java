@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.util.ArrayMap;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
@@ -92,6 +93,7 @@ public class IdentificationManager implements Cancelable<Void> {
         mObservableMessage = new SingleLiveEvent<>();
         mObservableLoadingMessage = new SingleLiveEvent<>();
         mSuccessIdentification = new SingleLiveEvent<>();
+        Log.e(getClass().getName(), toString());
     }
 
     public LiveData<Integer> observeSuccessIdentification() {
@@ -137,11 +139,6 @@ public class IdentificationManager implements Cancelable<Void> {
         else {
             identify(track);
         }
-    }
-
-    public IdentificationManager addCallback(IdentificationListener<List<? extends Identifier.IdentificationResults>> callback) {
-        mIdentifier.registerCallback(callback);
-        return this;
     }
 
     /**

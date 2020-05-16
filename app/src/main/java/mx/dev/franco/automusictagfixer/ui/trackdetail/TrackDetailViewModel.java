@@ -4,6 +4,7 @@ import android.app.Application;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.ArrayMap;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
@@ -69,7 +70,7 @@ public class TrackDetailViewModel extends AndroidViewModel {
     public MutableLiveData<String> absolutePath = new MutableLiveData<>();
     public MutableLiveData<String> filename = new MutableLiveData<>();
 
-    private MutableLiveData<Integer> mLiveInformativeMessage = new MutableLiveData<>();
+    private MutableLiveData<Integer> mLiveInformativeMessage = new SingleLiveEvent<>();
     //MediatorLiveData to observe loading state of multiple sources.
     private MediatorLiveData<Boolean> mLoadingStateMerger = new MediatorLiveData<>();
     private MediatorLiveData<String> mMessageMerger = new MediatorLiveData<>();
@@ -122,6 +123,8 @@ public class TrackDetailViewModel extends AndroidViewModel {
 
         mTrackLoader.addSource(mTrackManager.observeTrack(), track ->
                 mTrackManager.readAudioFile(track));
+
+        Log.e(getClass().getName(), toString());
     }
 
     /**
@@ -129,7 +132,6 @@ public class TrackDetailViewModel extends AndroidViewModel {
      * @param trackId The id of track to load.
      */
     public void loadInfoTrack(int trackId) {
-        mLiveInformativeMessage.setValue(R.string.loading_data_track);
         mTrackManager.getDetails(trackId);
     }
 
@@ -209,6 +211,7 @@ public class TrackDetailViewModel extends AndroidViewModel {
             setEditableInfo(audioFields);
             setNoEditableInfo(audioFields);
             setFixedInfo(audioFields);
+            Log.e(getClass().getName(), "mLiveSuccessReading.setValue");
             mLiveSuccessReading.setValue(null);
             if (mInitialAction == Constants.CorrectionActions.SEMI_AUTOMATIC) {
                 mInitialAction = -1;

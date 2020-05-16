@@ -11,17 +11,20 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.transition.Transition;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.PopupMenu;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.databinding.DataBindingUtil;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
@@ -101,6 +104,14 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
         mTrackDetailViewModel = new ViewModelProvider(this, androidViewModelFactory).
                 get(TrackDetailViewModel.class);
 
+        mTrackDetailViewModel.observeLoadingMessage().observe(this, this::onLoadingMessage);
+
+        mTrackDetailViewModel.observeErrorWriting().observe(this, this::showSnackbarMessage);
+
+        mTrackDetailViewModel.observeConfirmationRemoveCover().observe(this, this::onConfirmRemovingCover);
+        mTrackDetailViewModel.observeCoverSavingResult().observe(this, this::showSnackbarMessage);
+        mTrackDetailViewModel.onMessage().observe(this, this::onLoadingMessage);
+
         mViewDataBinding.setViewModel(mTrackDetailViewModel);
         setSupportActionBar(mViewDataBinding.toolbar);
 
@@ -114,6 +125,10 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
 
         Intent intent = getIntent();
         Bundle bundle = intent.getBundleExtra(TrackDetailActivity.TRACK_DATA);
+
+        if (savedInstanceState != null)
+            mEditMode = savedInstanceState.getBoolean("edit_mode", false);
+
 
         mTrackDetailFragment = (TrackDetailFragment) getSupportFragmentManager().
                 findFragmentByTag(TrackDetailFragment.class.getName());
@@ -138,7 +153,8 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
             @Override
             public void onTransitionEnd(Transition transition) {
                 getSupportFragmentManager().beginTransaction().
-                        replace(R.id.track_detail_container_fragments, mTrackDetailFragment).
+                        replace(R.id.track_detail_container_fragments, mTrackDetailFragment,
+                                mTrackDetailFragment.getClass().getName()).
                         commit();
             }
         });
@@ -154,8 +170,6 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
         mTrackDetailsMenuItem = menu.findItem(R.id.action_details);
         mRenameTrackItem = menu.findItem(R.id.action_rename);
 
-        mTrackDetailViewModel.observeLoadingState().observe(this, this::loading);
-        mTrackDetailViewModel.observeLoadingMessage().observe(this, this::onLoadingMessage);
         mTrackDetailViewModel.observeReadingResult().observe(this, this::onSuccessLoad);
         mTrackDetailViewModel.observeAudioData().observe(this, aVoid -> {});
         mTrackDetailViewModel.observeInvalidInputsValidation().observe(this, this::onInputDataInvalid);
@@ -165,17 +179,35 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
                         setIdentificationType(IdentificationManager.ALL_TAGS).
                         verifyConnection(false).
                         startIdentification(track));
-        mTrackDetailViewModel.observeErrorWriting().observe(this, this::showSnackbarMessage);
-
-        mTrackDetailViewModel.observeConfirmationRemoveCover().observe(this, this::onConfirmRemovingCover);
-        mTrackDetailViewModel.observeCoverSavingResult().observe(this, this::showSnackbarMessage);
-        mTrackDetailViewModel.onMessage().observe(this, this::onLoadingMessage);
+        mTrackDetailViewModel.observeLoadingState().observe(this, this::loading);
         setupIdentificationObserves();
+
         return true;
     }
 
     private void onInputDataInvalid(ValidationWrapper validationWrapper) {
-        mViewDataBinding.fabAutofix.hide();
+        mViewDataBinding.fabIdentification.hide();
+    }
+
+    @Override
+    public void onMultiWindowModeChanged(boolean isInMultiWindowMode) {
+        super.onMultiWindowModeChanged(isInMultiWindowMode);
+        mTrackDetailFragment = (TrackDetailFragment) getSupportFragmentManager().
+                findFragmentByTag(TrackDetailFragment.class.getName());
+        if (mEditMode)
+            editMode();
+    }
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        outState.putBoolean("edit_mode", mEditMode);
+        super.onSaveInstanceState(outState);
+    }
+
+    @Override
+    protected void onRestoreInstanceState(@NonNull Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        mEditMode = savedInstanceState.getBoolean("edit_mode", false);
     }
 
     @Override
@@ -193,10 +225,10 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
     public void onBackPressed() {
         if(mEditMode) {
             enableEditModeElements();
-            showFabs();
             enableAppBarLayout();
             mTrackDetailFragment.disableFields();
             mTrackDetailViewModel.restorePreviousValues();
+            showFabs();
         }
         else {
             mViewDataBinding.appBarLayout.removeOnOffsetChangedListener(mOffsetChangeListener);
@@ -243,7 +275,6 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
         switch (requestCode){
             case INTENT_GET_AND_UPDATE_FROM_GALLERY:
             case INTENT_OPEN_GALLERY:
-                mViewDataBinding.fabAutofix.hide();
                 if (data != null){
                     Uri imageData = data.getData();
                     AndroidUtils.AsyncBitmapDecoder asyncBitmapDecoder = new AndroidUtils.AsyncBitmapDecoder();
@@ -331,6 +362,7 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
         mTrackDetailFragment.disableFields();
         enableAppBarLayout();
         mTrackDetailViewModel.restorePreviousValues();
+        showFabs();
     }
 
     @Override
@@ -436,7 +468,7 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
      * in layout
      */
     private void hideFabs(){
-        mViewDataBinding.fabAutofix.hide();
+        mViewDataBinding.fabIdentification.hide();
         mViewDataBinding.fabSaveInfo.hide();
     }
 
@@ -447,7 +479,7 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
 
     private void addFloatingActionButtonListeners(){
         //runs track id
-        mViewDataBinding.fabAutofix.setOnClickListener(v -> {
+        mViewDataBinding.fabIdentification.setOnClickListener(v -> {
 
             mIdentificationManager
                     .setIdentificationType(IdentificationManager.ALL_TAGS)
@@ -473,13 +505,13 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
             @Override
             public void onOffsetChanged(AppBarLayout appBarLayout, int verticalOffset) {
                 if (verticalOffset < 0) {
-                    if (!mViewDataBinding.fabAutofix.isExtended()) {
-                        mViewDataBinding.fabAutofix.extend();
+                    if (!mViewDataBinding.fabIdentification.isExtended()) {
+                        mViewDataBinding.fabIdentification.extend();
                         mViewDataBinding.fabSaveInfo.extend();
                     }
                 } else {
-                    if (mViewDataBinding.fabAutofix.isExtended()) {
-                        mViewDataBinding.fabAutofix.shrink();
+                    if (mViewDataBinding.fabIdentification.isExtended()) {
+                        mViewDataBinding.fabIdentification.shrink();
                         mViewDataBinding.fabSaveInfo.shrink();
                     }
                 }
@@ -501,8 +533,8 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
      * Disable the Save Fab button.
      */
     private void showFabs(){
-        mViewDataBinding.fabAutofix.show();
         mViewDataBinding.fabSaveInfo.hide();
+        mViewDataBinding.fabIdentification.show();
     }
 
 
@@ -512,7 +544,7 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
     private void editMode(){
         disableAppBarLayout();
         disableEditModeElements();
-        mViewDataBinding.fabAutofix.hide();
+        mViewDataBinding.fabIdentification.hide();
         mViewDataBinding.fabSaveInfo.show();
         mTrackDetailFragment.enableFieldsToEdit();
     }
@@ -521,14 +553,14 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
         mManualEditMenuItem.setEnabled(false);
         mViewDataBinding.coverArtMenu.setEnabled(false);
         mViewDataBinding.coverArtMenu.setVisibility(GONE);
-        mViewDataBinding.fabAutofix.hide();
+        mViewDataBinding.fabIdentification.hide();
     }
 
     private void enableEditModeElements() {
         mManualEditMenuItem.setEnabled(true);
         mViewDataBinding.coverArtMenu.setEnabled(true);
         mViewDataBinding.coverArtMenu.setVisibility(VISIBLE);
-        mViewDataBinding.fabAutofix.show();
+        mViewDataBinding.fabIdentification.show();
     }
 
     /**
@@ -562,6 +594,7 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
      * @param voids null object.
      */
     private void onSuccessLoad(Void voids) {
+        Log.e(getClass().getName(), "onSuccessLoad");
         mPlayer.setPath(mTrackDetailViewModel.getCurrentTrack().getPath());
         addFloatingActionButtonListeners();
         addAppBarOffsetListener();
@@ -569,7 +602,9 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
         addListenerCoverMenu();
         showFabs();
         mViewDataBinding.fabSaveInfo.shrink();
-        mViewDataBinding.fabAutofix.shrink();
+        mViewDataBinding.fabIdentification.shrink();
+        if (mEditMode)
+            editMode();
     }
 
     /**
@@ -624,7 +659,12 @@ public class TrackDetailActivity extends AppCompatActivity implements ManualCorr
             }
         });
 
-        mIdentificationManager.observeMessage().observe(this, this::showInformativeMessage);
+        mIdentificationManager.observeMessage().observe(this, new Observer<String>() {
+            @Override
+            public void onChanged(String message) {
+                showInformativeMessage(message);
+            }
+        });
     }
 
     /**

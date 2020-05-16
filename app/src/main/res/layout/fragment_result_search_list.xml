@@ -1,16 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.google.android.material.card.MaterialCardView
+<FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/cv_content_result_search"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="@dimen/default_margin"
-    app:cardUseCompatPadding="true"
-    app:cardElevation="@dimen/cv_default_elevation"
     android:animateLayoutChanges="true">
-
     <TextView
         android:id="@+id/found_message"
         android:layout_width="match_parent"
@@ -26,10 +22,14 @@
         android:id="@+id/found_tracks_recycler_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:splitMotionEvents="true"
         android:choiceMode="singleChoice"
+        android:scrollbarSize="18dp"
+        app:fastScrollHorizontalThumbDrawable="@drawable/drawable_thumb"
+        app:fastScrollHorizontalTrackDrawable="@drawable/line_drawable"
+        app:fastScrollVerticalThumbDrawable="@drawable/drawable_thumb"
+        app:fastScrollVerticalTrackDrawable="@drawable/line_drawable"
+        app:fastScrollEnabled="true"
         android:clipToPadding="false"
-        android:overScrollMode="always"
-        android:scrollbarThumbVertical="@drawable/thumb"
-        android:scrollbars="vertical"
         tools:listitem="@layout/result_search_item"/>
-</com.google.android.material.card.MaterialCardView>
+</FrameLayout>

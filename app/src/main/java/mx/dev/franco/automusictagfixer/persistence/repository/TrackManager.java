@@ -15,7 +15,6 @@ import java.util.concurrent.Executors;
 import javax.inject.Inject;
 
 import mx.dev.franco.automusictagfixer.AutoMusicTagFixer;
-import mx.dev.franco.automusictagfixer.R;
 import mx.dev.franco.automusictagfixer.covermanager.CoverLoader;
 import mx.dev.franco.automusictagfixer.fixer.AudioTagger;
 import mx.dev.franco.automusictagfixer.fixer.CorrectionParams;
@@ -94,7 +93,6 @@ public class TrackManager {
             @Override
             public void onAsyncOperationStarted(Void params) {
                 mLoadingStateLiveData.setValue(true);
-                mLiveMessage.setValue(R.string.loading_data_track);
             }
 
             @Override

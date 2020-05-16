@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,7 +15,6 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.ViewModelProvider;
 
@@ -53,6 +53,7 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Log.e(getClass().getName(), "onCreate");
         mBundle = getArguments();
         if(mBundle != null)
            mViewModel.setInitialAction(
@@ -60,32 +61,14 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
         else
             mViewModel.setInitialAction(CorrectionActions.VIEW_INFO);
 
-        mViewModel.observeReadingResult().observe(this, this::onSuccessLoad);
+        mViewModel.observeReadingResult().observe(requireActivity(), this::onSuccessLoad);
         mViewModel.observeAudioData().observe(this, aVoid -> {});
         mViewModel.observeInvalidInputsValidation().observe(this, this::onInputDataInvalid);
         mViewModel.observeWritingFinishedEvent().observe(requireActivity(), this::onWritingResult);
         mViewModel.observeIsStoredInSD().observe(this, aBoolean ->
                 mFragmentTrackDetailBinding.ibInfoTrack.setVisibility(aBoolean ? VISIBLE : View.INVISIBLE));
-    }
-
-
-    @Override
-    public void onSaveInstanceState(@NonNull Bundle outState) {
-        super.onSaveInstanceState(outState);
-        outState.putBoolean("edit_mode", ((TrackDetailActivity)getActivity()).mEditMode);
-    }
-
-    @Override
-    public void onViewStateRestored(@Nullable Bundle savedInstanceState) {
-        super.onViewStateRestored(savedInstanceState);
-        if (savedInstanceState != null) {
-            ((TrackDetailActivity)getActivity()).mEditMode =
-                    savedInstanceState.getBoolean("edit_mode", false);
-
-            if (((TrackDetailActivity)getActivity()).mEditMode) {
-                enableFieldsToEdit();
-            }
-        }
+        if (savedInstanceState == null)
+            mViewModel.loadInfoTrack(mBundle.getInt(Constants.MEDIA_STORE_ID,-1));
     }
 
     @Override
@@ -97,13 +80,13 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        Log.e(getClass().getName(), "onCreateView");
         mFragmentTrackDetailBinding = DataBindingUtil.inflate(inflater,
                 R.layout.fragment_track_detail,
                 container,
                 false);
         mFragmentTrackDetailBinding.setLifecycleOwner(this);
         mFragmentTrackDetailBinding.setViewmodel(mViewModel);
-        mViewModel.loadInfoTrack(mBundle.getInt(Constants.MEDIA_STORE_ID,-1));
 
         return mFragmentTrackDetailBinding.getRoot();
     }
@@ -119,9 +102,10 @@ public class TrackDetailFragment extends BaseViewModelFragment<TrackDetailViewMo
      * @param voids No object.
      */
     private void onSuccessLoad(Void voids) {
+        Log.e(getClass().getName(), "onSuccessLoad");
         mFragmentTrackDetailBinding.
                 changeImageButton.setOnClickListener(v ->
-                ((TrackDetailActivity)getActivity()).editCover(INTENT_OPEN_GALLERY));
+                ((TrackDetailActivity)getActivity()).editCover(TrackDetailActivity.INTENT_OPEN_GALLERY));
         mFragmentTrackDetailBinding.ibInfoTrack.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

@@ -45,7 +45,8 @@
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="parent">
+                        app:layout_constraintTop_toTopOf="parent"
+                        android:animateLayoutChanges="true">
                         <ImageView
                             android:id="@+id/toolbar_cover_art"
                             android:layout_width="@dimen/track_detail_cover_size"
@@ -54,6 +55,7 @@
                             android:adjustViewBounds="true"
                             android:scaleType="fitCenter"
                             app:srcCompat="@drawable/ic_album_white_24px"
+                            app:attachedFab="@{fabIdentification}"
                             app:imageCover="@{viewModel.cover}" />
                         <FrameLayout
                             android:id="@+id/fl_container_filename"
@@ -120,7 +122,7 @@
             app:layout_behavior="@string/appbar_scrolling_view_behavior"/>
 
         <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
-            android:id="@+id/fab_autofix"
+            android:id="@+id/fabIdentification"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom|end"

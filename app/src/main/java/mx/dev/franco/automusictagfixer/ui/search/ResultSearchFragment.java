@@ -131,7 +131,7 @@ public class ResultSearchFragment extends BaseViewModelFragment<SearchListViewMo
             @Override
             public void onClick(View v) {
                 hideKeyboard();
-                getFragmentManager().popBackStack();
+                getParentFragmentManager().popBackStack();
             }
         });
         ((MainActivity)getActivity()).searchBox.setVisibility(View.VISIBLE);

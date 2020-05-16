@@ -132,7 +132,11 @@ public class MainFragment extends BaseViewModelFragment<ListViewModel> implement
                 checkItem(sort.idResource);
             }
         });
+    }
 
+    @Override
+    public void onMultiWindowModeChanged(boolean isInMultiWindowMode) {
+        updateToolbar(mViewModel.getTrackList());
     }
 
     @Override
