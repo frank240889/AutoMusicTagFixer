@@ -147,7 +147,7 @@
     <string name="artist">Artista</string>
     <string name="track_year">Año de publicación</string>
 
-    <string name="tracks">canciones</string>
+    <string name="tracks">%1$s canciones</string>
     <string name="fixing_task">Corrigiendo canciones.</string>
     <string name="cover_saved">Imagen guardada.</string>
     <string name="cover_not_saved">No se pudo guardar la carátula.</string>
@@ -360,4 +360,5 @@
         una variedad de librerías que puedes revisar en el archivo Gradle, además de patrones de diseño y prácticas recomendadas por Google. Toma en cuenta
     que el código, la arquitectura y en general la aplicación siempre es mejorable. Si te ha servido puedes considerar hacer una donación.</string>
     <string name="donations">Donaciones</string>
+    <string name="invalid_audio">Audio inválido.</string>
 </resources>

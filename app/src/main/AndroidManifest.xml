@@ -88,17 +88,7 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider> <!-- We need this service for start or schedule GNSDK API initialization -->
-        <service
-            android:name=".services.FixerTrackService"
-            android:exported="false"
-            android:label="FixerTrackService" />
-        <service
-            android:name=".identifier.ApiInitializerService"
-            android:exported="false" />
 
-        <meta-data
-            android:name="io.fabric.ApiKey"
-            android:value="3d4995f2cd3e5757faec4a2dadce6e00f2d0814e" />
         <meta-data
             android:name="preloaded_fonts"
             android:resource="@array/preloaded_fonts" />

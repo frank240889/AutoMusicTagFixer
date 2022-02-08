@@ -1,5 +1,8 @@
 package mx.dev.franco.automusictagfixer.utilities;
 
+import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
+import static mx.dev.franco.automusictagfixer.utilities.Constants.DATE_PATTERN;
+
 import android.annotation.SuppressLint;
 import android.content.ActivityNotFoundException;
 import android.content.ContentResolver;
@@ -30,7 +33,6 @@ import androidx.annotation.StringRes;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 
-import com.crashlytics.android.Crashlytics;
 import com.google.android.material.snackbar.Snackbar;
 
 import org.jaudiotagger.tag.FieldKey;
@@ -43,23 +45,17 @@ import java.net.URL;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
 import mx.dev.franco.automusictagfixer.BuildConfig;
 import mx.dev.franco.automusictagfixer.R;
-import mx.dev.franco.automusictagfixer.common.Action;
 import mx.dev.franco.automusictagfixer.fixer.AudioTagger;
 import mx.dev.franco.automusictagfixer.fixer.CorrectionParams;
-import mx.dev.franco.automusictagfixer.identifier.Identifier;
 import mx.dev.franco.automusictagfixer.persistence.room.Track;
 import mx.dev.franco.automusictagfixer.utilities.Constants.CorrectionActions;
 import mx.dev.franco.automusictagfixer.utilities.resource_manager.ResourceManager;
-
-import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
-import static mx.dev.franco.automusictagfixer.utilities.Constants.DATE_PATTERN;
 
 public class AndroidUtils {
 
@@ -123,7 +119,7 @@ public class AndroidUtils {
     }
 
 
-    public static String getActionName(Action action,View view){
+    /*public static String getActionName(Action action,View view){
         if(action == Action.URI_ERROR)
             return view.getContext().getString(R.string.details);
         else if(action == Action.MANUAL_CORRECTION)
@@ -131,7 +127,7 @@ public class AndroidUtils {
         else if(action == Action.WATCH_IMAGE)
             return view.getContext().getString(R.string.see_image);
         return null;
-    }
+    }*/
 
 
     /**
@@ -158,7 +154,6 @@ public class AndroidUtils {
             }
             context.startActivity(intent);
         } catch (ActivityNotFoundException e) {
-            Crashlytics.logException(e);
             e.printStackTrace();
         }
     }
@@ -314,15 +309,6 @@ public class AndroidUtils {
         else return null;
     }
 
-    public static Identifier.IdentificationResults  findId(List<? extends Identifier.IdentificationResults> resultList, String idToSearch) {
-        for(Identifier.IdentificationResults r : resultList) {
-            if(r.getId().equals(idToSearch))
-                return r;
-        }
-
-        return null;
-    }
-
     public static class AudioTaggerErrorDescription {
         public static String getErrorMessage(ResourceManager resourceManager, int errorCode){
             String errorMessage;
@@ -402,7 +388,7 @@ public class AndroidUtils {
                                                           @Nullable String trackNumber,
                                                           @Nullable String trackYear,
                                                           @Nullable byte[] cover,
-    CorrectionParams inputParams) {
+                                         @NonNull CorrectionParams inputParams) {
 
         Map<FieldKey, Object> tags = new ArrayMap<>();
         if(title != null && !title.isEmpty())

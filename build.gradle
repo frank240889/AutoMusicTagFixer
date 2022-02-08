@@ -2,30 +2,29 @@
 
 buildscript {
     repositories {
-        jcenter()
         mavenCentral()
-        maven { url 'https://maven.fabric.io/public' }
         maven {
             url 'https://maven.google.com/'
             name 'Google'
         }
         google()
-        maven { url 'https://maven.fabric.io/public' }
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.5.0'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.4.32"
+        classpath 'com.android.tools.build:gradle:4.2.1'
 
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
-        classpath 'com.google.gms:google-services:4.3.3'
+        classpath 'com.google.gms:google-services:4.3.6'
 
-        classpath 'io.fabric.tools:gradle:1.31.2'
+        // Add the Crashlytics Gradle plugin (be sure to add version
+        // 2.0.0 or later if you built your app with Android Studio 4.1).
+        classpath 'com.google.firebase:firebase-crashlytics-gradle:2.6.0'
     }
 }
 
 allprojects {
     repositories {
-        jcenter()
         google()
     }
 }

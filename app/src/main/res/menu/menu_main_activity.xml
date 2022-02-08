@@ -14,11 +14,6 @@
         android:icon="@drawable/ic_refresh_white_24px"/>
 
     <item
-        android:id="@+id/action_select_all"
-        app:showAsAction="never"
-        android:title="@string/select_all_items"
-        android:icon="@drawable/ic_check_box_white_24px" />
-    <item
         android:id="@+id/sortBy"
         app:showAsAction="never"
         android:title="@string/sort_by">

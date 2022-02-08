@@ -17,7 +17,6 @@
 #}
 -dontwarn org.jaudiotagger.**
 -dontwarn com.google.android.gms.**
--dontwarn com.crashlytics.**
 
 -keep class com.gracenote.** { *; }
 -keep class org.jaudiotagger.** { *; }
@@ -31,8 +30,6 @@
 #Crashlytics will still function without this rule, but your crash reports will not include proper file names or line numbers.
 #if using custom exceptions:
 -keep public class * extends java.lang.Exception
-#To skip running ProGuard on Crashlytics
--keep class com.crashlytics.** { *; }
 #Exclude R from ProGuard to enable the font addon auto detection
 -keep class .R
 -keep class **.R$* {

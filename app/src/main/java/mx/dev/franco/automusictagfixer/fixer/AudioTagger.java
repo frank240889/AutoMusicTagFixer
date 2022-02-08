@@ -4,10 +4,8 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
-import android.os.Environment;
 import android.provider.DocumentsContract;
 import android.util.Log;
-import android.util.SparseArray;
 import android.webkit.MimeTypeMap;
 
 import androidx.annotation.NonNull;
@@ -15,8 +13,6 @@ import androidx.annotation.Nullable;
 import androidx.collection.ArrayMap;
 import androidx.core.content.ContextCompat;
 import androidx.documentfile.provider.DocumentFile;
-
-import com.crashlytics.android.Crashlytics;
 
 import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.audio.AudioFileIO;
@@ -38,11 +34,9 @@ import org.jaudiotagger.tag.images.Artwork;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.channels.FileChannel;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -555,7 +549,6 @@ public class AudioTagger {
         }
         catch (IOException | CannotReadException | TagException | ReadOnlyFileException | InvalidAudioFrameException e) {
             e.printStackTrace();
-            Crashlytics.logException(e);
         }
 
         return audioTaggerFile;
@@ -580,7 +573,6 @@ public class AudioTagger {
                 ((MP3File) audioFile).delete(((MP3File) audioFile).getID3v1Tag());
             } catch (IOException e) {
                 e.printStackTrace();
-                Crashlytics.logException(e);
             }
         }
         //WRITE ONLY MISSING TAGS
@@ -615,7 +607,6 @@ public class AudioTagger {
                         }
                     } catch (FieldDataInvalidException e) {
                         e.printStackTrace();
-                        Crashlytics.logException(e);
                     }
                 }
 
@@ -634,7 +625,6 @@ public class AudioTagger {
                         currentTag.setField(artwork);
                     } catch (FieldDataInvalidException e) {
                         e.printStackTrace();
-                        Crashlytics.logException(e);
                     }
                 }
                 else {
@@ -642,7 +632,6 @@ public class AudioTagger {
                         currentTag.setField((FieldKey) entry.getKey(), (String) entry.getValue());
                     } catch (FieldDataInvalidException e) {
                         e.printStackTrace();
-                        Crashlytics.logException(e);
                     }
                 }
 
@@ -703,7 +692,6 @@ public class AudioTagger {
 
         } catch (Exception e) {
             e.getMessage();
-            Crashlytics.logException(e);
             objs[0] = COULD_NOT_COPY_BACK_TO_ORIGINAL_LOCATION;
             return objs;
         }
@@ -772,7 +760,6 @@ public class AudioTagger {
             String fullPath = file.getCanonicalPath();
             relativePath = fullPath.substring(baseFolder.length() + 1);
         } catch (IOException e) {
-            Crashlytics.logException(e);
             return null;
         }
 
@@ -798,7 +785,6 @@ public class AudioTagger {
                 }
             }
         } catch (IOException e) {
-            Crashlytics.logException(e);
             return null;
         }
         return null;
@@ -828,7 +814,6 @@ public class AudioTagger {
                             path = new File(path).getCanonicalPath();
                             Log.w(TAG, "getting canonical path: " + path);
                         } catch (IOException e) {
-                            Crashlytics.logException(e);
                             // Keep non-canonical path.
                         }
                         paths.add(path);
@@ -1056,6 +1041,7 @@ public class AudioTagger {
      * @param newName The new name for the file, without extension.
      * @return string of new absolute path to file or null if could not be renamed;
      */
+    @Nullable
     public String renameFile(File currentFile, String newName){
         boolean isStoredInSd = mStorageHelper.isStoredInSD(currentFile);
 
@@ -1758,168 +1744,6 @@ public class AudioTagger {
 
         public void setFileSize(String fileSize) {
             this.fileSize = fileSize;
-        }
-    }
-
-    /**
-     * Created by franco on 12/01/18.
-     */
-
-    public static class StorageHelper {
-        private Context mContext;
-        private static StorageHelper sStorage;
-        private SparseArray<String> mBasePaths = new SparseArray<>();
-        private static final String PRIVATE_TEMP_FOLDER = "temp_tagged_files";
-        private StorageHelper(Context context){
-            mContext = context.getApplicationContext();
-        }
-
-        public static synchronized StorageHelper getInstance(Context context){
-            if(sStorage == null) {
-                sStorage = new StorageHelper(context);
-            }
-
-            return sStorage;
-        }
-
-        public int getNumberAvailableMediaStorage (){
-            return ContextCompat.getExternalFilesDirs(mContext, null).length;
-        }
-
-        public boolean isPresentRemovableStorage(){
-            return (mBasePaths.size() > 1);
-        }
-
-        /**
-         * Detect number of storage available.
-         */
-        public StorageHelper detectStorage(){
-            File[] storage = ContextCompat.getExternalFilesDirs(mContext, PRIVATE_TEMP_FOLDER);
-
-            int numberMountedStorage = 0;
-
-            for(File s : storage){
-                //When SD card is removed sometimes storage hold a reference to this
-                //folder, so if the reference is null, means the storage has unmounted or removed
-                //and is not available anymore
-                if(s != null) {
-                    int i = s.getPath().lastIndexOf("/Android/data");
-                    String basePath = s.getPath().substring(0,i);
-                    mBasePaths.put(numberMountedStorage,basePath);
-                    numberMountedStorage++;
-                    Log.d("storage", basePath);
-                }
-            }
-            return this;
-        }
-
-        /**
-         * Returns the base path of available storage.
-         * @return An {@link SparseArray} containing the base paths.
-         */
-        public SparseArray<String> getBasePaths(){
-            return mBasePaths;
-        }
-
-        /**
-         * Gets current available size
-         * @return available size of current storage
-         */
-        private static long getInternalAvailableSize(){
-            return Environment.getExternalStorageDirectory().getTotalSpace();
-        }
-
-        /**
-         * Creates a temp file in external non-removable storage,
-         * more known as shared Storage or internal storage
-         * @param sourceFile The source file to copy.
-         * @return The copy of file or null if could not be created.
-         */
-        public File createTempFileFrom(File sourceFile) {
-
-            //Before create temp file, check if exist enough space,
-            //to ensure we can perform correctly the operations, lets take the triple size of source file
-            //because operations of AudioTagger library.
-            long availableSize = getInternalAvailableSize();
-            long fileSize = sourceFile.getTotalSpace();
-            if(availableSize < (fileSize * 3) ) {
-
-                return null;
-            }
-
-
-            // Create a path where we will place our private file on non removable external
-            // storage.
-            File externalNonRemovableDevicePath = ContextCompat.
-                    getExternalFilesDirs(mContext, PRIVATE_TEMP_FOLDER)[0];
-
-            File fileDest = new File(externalNonRemovableDevicePath, sourceFile.getName());
-
-            FileChannel inChannel = null;
-            FileChannel outChannel = null;
-
-            try {
-                inChannel = new FileInputStream(sourceFile).getChannel();
-                outChannel = new FileOutputStream(fileDest).getChannel();
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-                Crashlytics.logException(e);
-                return null;
-            }
-
-            //Copy data
-            try {
-                inChannel.transferTo(0, inChannel.size(), outChannel);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            finally {
-                if (inChannel != null)
-                    try {
-                        inChannel.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                        Crashlytics.logException(e);
-                    }
-                if (outChannel != null)
-                    try {
-                        outChannel.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                        Crashlytics.logException(e);
-                    }
-            }
-            return fileDest;
-        }
-
-        public boolean isStoredInSD(File file){
-            return internalIsStoredInSD(file);
-        }
-
-        public boolean isStoredInSD(String path){
-            return isStoredInSD(new File(path));
-        }
-
-
-        /**
-         * Check if file is stored on SD card or Non removable storage.
-         * @return True if file is stored in SD, false otherwise.
-         */
-        private boolean internalIsStoredInSD(File file){
-            SparseArray<String> basePaths =  sStorage.getBasePaths();
-            int availableStorage = basePaths.size();
-            //If there are only one storage, no need to check
-            // where is stored file.
-            if(availableStorage < 2)
-                return false;
-
-            //The position 0 belongs to non removable external storage.
-            for(int d = 0  ; d < availableStorage ; d++){
-                if(d == 0 && file.getParent().contains(basePaths.get(d)) ){
-                    return false;
-                }
-            }
-            return true;
         }
     }
 
