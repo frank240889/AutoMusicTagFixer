@@ -1,5 +1,10 @@
 # AutoMusicTagFixer
 ********************************************************************************************************************************
+-ARCHIVED
+I haven't updated this repository in a long time. Furthermore, programming practices are changing, making this repository obsolete in terms of both best practices and components. Therefore, it will be archived. I will fondly remember this first Android project I did to learn. Regards.
+
+
+
 -VERY IMPORTANT:
 1. This app is released in PlayStore, you can download it from next link: https://play.google.com/store/apps/details?id=mx.dev.franco.automusictagfixer
 2. This app uses the awesome jAudioTagger library, visit http://www.jthink.net/jaudiotagger/ for more information.
